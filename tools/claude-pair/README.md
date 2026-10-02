@@ -265,11 +265,86 @@ The Director's current prompt, activity, reasoning summary, hopper, selected tas
 and completed batches with review receipts are visible in the dashboard. Older
 batch decisions also remain in the conversation history and log files.
 
+## Codex backend
+
+Every role can run on Claude Code (the default) or OpenAI's Codex CLI, and you
+can switch at any time, per role or for all of them:
+
+```sh
+python3 tools/claude-pair/pair.py backend codex                  # every role
+python3 tools/claude-pair/pair.py backend claude --role director # one role
+python3 tools/claude-pair/pair.py backend --clear-role director  # follow the default again
+python3 tools/claude-pair/pair.py backend --codex-model gpt-6-sol --codex-effort high
+```
+
+or use the **Claude | Codex toggle in the dashboard header** (all roles; a
+dashed outline means roles differ) or **Settings → Agent backend** (per role,
+plus the Codex model and reasoning). The choice is read at each call, so it
+works while a run is going: a turn in progress finishes on the backend it
+started on, and the role's next call uses the new one. Settings shows, per
+role, where it runs now and where its next call goes.
+
+**Code changes and restarts.** A running coordinator keeps the code it started
+with. It records a fingerprint of that code, and when the files in
+`tools/claude-pair` change the dashboard says so and offers **Restart after
+this turn**: the coordinator stops between turns, re-executes itself on the
+new code and carries on, interrupting nothing (`pair.py restart` does the same).
+A coordinator started before this existed offers **Restart now** instead: Stop,
+then Continue at once, with the turn in progress resuming in its own session.
+Prompt files never need a restart.
+
+**Automatic switching.** Before each call the coordinator checks both
+backends' latest usage readings (Claude's 5-hour and weekly windows from its
+stream, Codex's from its session rollouts). When the backend a role is set to
+has used 95% of a live window and the other backend has room and is installed,
+that call runs on the other backend; when the window resets, the role goes back
+by itself. Your setting is never rewritten, and each switch and return is
+journalled once. A usage limit actually hit does the same at once, instead of
+waiting for the reset. If both backends are nearly used up, or a backend
+reports a limit again right after a switch, the run waits or pauses exactly as
+before, so it never switches back and forth. Turn it off or move the point with
+`pair.py backend --auto-switch off` / `--switch-at 90`, or in Settings. The
+dashboard shows a usage meter per backend and a banner while a switch is in effect.
+
+**Continuity.** Everything that carries the run (batch, plan, checklist,
+assignment, reports, journal, decisions, ledger) belongs to the coordinator, not
+to either CLI. Sessions are the one thing that can't move: each session is
+tagged with the backend that started it and is only ever resumed there. A role
+whose backend changed starts a fresh session, exactly as it does for a new
+assignment, from the task contract and the notebook. A turn that was cut short
+(Stop, a crash, a usage limit, a failed call) and then switched is told it is
+continuing on the other backend and to check the folder for its partial work.
+`test_backends.py` locks this in for every direction and situation.
+
+**How each feature maps** (verified against codex-cli 0.157.1 on 2026-10-01):
+
+| | Claude Code | Codex CLI |
+|---|---|---|
+| Call | `claude --print --output-format stream-json` | `codex exec --json`, prompt on stdin |
+| Structured result | `--json-schema` | `--output-schema` (the same three schemas) |
+| Role instructions | `--append-system-prompt`, re-sent every call | `developer_instructions` on a new session; on resume Codex keeps the old ones, so changed instructions are restated at the top of the prompt |
+| Personal setup kept out | `--setting-sources project`, empty MCP, `--no-chrome` | `--ignore-user-config`; memories, browser, computer use and apps off |
+| Permissions | `--dangerously-skip-permissions` | `--dangerously-bypass-approvals-and-sandbox` |
+| Audit-only | read-only tools | read-only sandbox, no subagents |
+| Subagents | `--agents prompts/subagents.json` | the same file, as `pair_implementer` / `pair_reviewer` roles (`-c agents.<name>.…`, files in `.claude-pair/codex-agents/`) spawned with `spawn_agent` |
+| 10-second shell rule | Claude Code stops each command | no such setting: `shims/cargo` runs cargo under `within`, and the role is told to wrap other slow commands |
+| Fast mode | `fastMode` setting for `fast_roles` | off unless `codex.fast` is on (`backend --codex-fast on`, or Settings); then `service_tier = "priority"` for `fast_roles`. Off by default because the priority tier uses the allowance faster |
+| Usage limits | `rate_limit_event` in the stream | `rate_limits` in the session rollout (`~/.codex/sessions`), shown on the same meters |
+| Cost | dollar estimate per session | tokens only, so the dollar caps don't stop Codex calls (the journal says so); the turn time limit applies to both |
+| Model-turn cap | `--max-turns` | none (the journal says so) |
+| Dashboard | stream events | stream plus rollouts; subagent lanes come from their own rollouts. Codex encrypts subagent briefs, so a Codex lane shows its role, actions and reply but not its brief |
+
+**Setup.** `codex login` once, and keep the CLI current (`codex update`):
+0.157.1 lacked `gpt-6.1-sol`; 0.160.0 has it and was verified end to end on
+2026-10-01 (fresh call, exact instructions, resume after an instruction change,
+a `pair_reviewer` subagent, fast mode). `--codex-executable` points the run at
+another binary. Without `--codex-model` Codex uses its default.
+
 ## Verify the coordinator
 
 ```sh
 cd tools/claude-pair
-python3 -m unittest -v test_pair.py test_dashboard.py test_outer.py test_notebook.py test_workflow.py test_control.py
+python3 -m unittest -v test_pair.py test_dashboard.py test_outer.py test_notebook.py test_workflow.py test_control.py test_backends.py
 ```
 
 Tests exercise optional coordinator reruns, the in-place baseline (staged/unstaged/deleted/untracked files

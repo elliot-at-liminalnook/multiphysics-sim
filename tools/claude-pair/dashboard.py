@@ -8,12 +8,14 @@ import json
 import math
 from pathlib import Path
 import secrets
+import shutil
 import subprocess
 import sys
 import threading
 import time
 from urllib.parse import unquote, urlparse
 
+import codex_backend
 import pair
 import workflow
 import shared_notebook
@@ -85,7 +87,7 @@ def result_text(block):
 _events_cache = {}
 
 
-def events(path, deep=False):
+def events(path, deep=False, since=None, until=None):
     """Parsed activity for one call's stream, cached until the file changes.
     Only the live call needs the deep read that keeps its subagents' spawn
     calls in view; finished calls parse a smaller tail."""
@@ -94,19 +96,37 @@ def events(path, deep=False):
         key = (stat.st_mtime_ns, stat.st_size)
     except OSError:
         return [], None
-    key = key + (deep,)
+    key = key + (deep, since, until)
     hit = _events_cache.get(str(path))
-    if hit and hit[0] == key:
+    # A live Codex turn's subagents write their own rollouts while its stdout
+    # stays still, so a live Codex call is re-read every time.
+    if hit and hit[0] == key and not (deep and hit[2]):
         return hit[1]
-    parsed = parse_events(path, 4_000_000 if deep else 400_000)
-    _events_cache[str(path)] = (key, parsed)
+    parsed = parse_events(path, 4_000_000 if deep else 400_000, since, until)
+    _events_cache[str(path)] = (key, parsed, codex_stream(path))
     return parsed
 
 
-def parse_events(path, limit):
+def codex_stream(path):
+    """True when a call's stdout is a `codex exec --json` stream."""
+    try:
+        with path.open() as f:
+            return '"thread.started"' in f.readline()
+    except OSError:
+        return False
+
+
+def parse_events(path, limit, since=None, until=None):
     raw = tail(path, limit)
     if not raw.strip():
         return [], None
+    if codex_stream(path):
+        with path.open() as f:
+            tid = codex_backend.thread_id(f.readline())
+        activity, result = codex_backend.activity(raw, tid, since, until)
+        if result is not None:
+            result["session_id"] = tid
+        return activity, result
     try:
         whole = json.loads(raw)
         if isinstance(whole, dict) and (whole.get("type") == "result" or whole.get("subtype") in ("success", "error_during_execution")):
@@ -208,6 +228,86 @@ def git_summary(config):
     return summary
 
 
+def codex_model(config, result):
+    if (result or {}).get("backend") != "codex":
+        return None
+    return "Codex · " + ((config.get("codex") or {}).get("model") or "default model")
+
+
+def backend_view(config):
+    codex = {"executable": "codex", "model": None, "reasoning_effort": None, "fast": False, **(config.get("codex") or {})}
+    return {"default": config.get("backend") or "claude", "roles": config.get("role_backends") or {}, "codex": codex,
+            "codex_found": bool(shutil.which(codex["executable"])), "claude_found": bool(shutil.which(config.get("claude") or "claude"))}
+
+
+def coordinator_view(root, state, active):
+    """Whether the running coordinator runs the code now on disk. A process keeps
+    the code it started with, so a switch it doesn't know about would be ignored."""
+    stamp = state.get("coordinator") or {}
+    current = pair.code_digest()
+    legacy = active and not stamp
+    return {"code": stamp.get("code"), "code_on_disk": current, "features": stamp.get("features", []),
+            "outdated": bool(active and (legacy or stamp.get("code") != current)), "legacy": bool(legacy),
+            "restart_pending": (root / "RESTART").exists(), "restarting": state.get("status") == "restarting"}
+
+
+def role_backends(root, config, state):
+    """Per role: the backend it's set to, the one its next call actually uses
+    (an automatic switch can differ), and the one its current session is on."""
+    runner = pair.Runner(root)
+    sessions, owners = state.get("sessions", {}), state.get("session_backends", {})
+    inflight = state.get("inflight") or {}
+    out = {}
+    for role in ("director", "orchestrator", "worker"):
+        sid = sessions.get(role)
+        chosen, switch = runner.choose_backend(role)
+        out[role] = {"set": runner.backend(role), "next": chosen, "auto": switch,
+                     "session": (owners.get(sid, "claude") if sid else None),
+                     "running": inflight.get("backend", "claude") if inflight.get("role") == role else None}
+    return out
+
+
+def usage_view(root, state):
+    """Each backend's latest usage reading and how full its fullest live window is."""
+    runner = pair.Runner(root)
+    out = {}
+    for backend in pair.BACKENDS:
+        level, resets = runner.usage_level(backend)
+        reading = (state.get("usage") or {}).get(backend)
+        if reading is None and (state.get("rate_limits") or {}).get("backend", "claude") == backend:
+            reading = state.get("rate_limits")
+        if reading is None and backend == "claude":
+            reading = last_claude_reading(root)  # from before readings were kept per backend
+            if reading:
+                level = max([w.get("utilization") or 0 for w in (reading.get("unifiedWindows") or {}).values()
+                             if isinstance(w, dict) and (w.get("resetsAt") or 0) > time.time()] or [0])
+                resets = next((w.get("resetsAt") for w in (reading.get("unifiedWindows") or {}).values()
+                               if isinstance(w, dict) and (w.get("utilization") or 0) == level and (w.get("resetsAt") or 0) > time.time()), None)
+        limit = (state.get("backend_limits") or {}).get(backend)
+        out[backend] = {"level": level, "resets": resets, "reading": reading,
+                        "limited_until": limit["until"] if limit and limit.get("until", 0) > time.time() else None}
+    return {"backends": out, "auto_switch": runner.auto_switch()}
+
+
+_claude_reading = {}
+
+
+def last_claude_reading(root):
+    """The newest rate_limit_event in a Claude call's transcript (cached by log count)."""
+    logs = sorted((root / "logs").glob("*-*.stdout"), reverse=True)
+    key = (len(logs), logs[0].name if logs else None)
+    if _claude_reading.get("key") != key:
+        found = None
+        for output in logs[:200]:
+            if codex_stream(output):
+                continue
+            found = pair.rate_limit_info(tail(output, 400000))
+            if found:
+                break
+        _claude_reading.update(key=key, value=found)
+    return _claude_reading["value"]
+
+
 def latest_rate_limits(root, state):
     """Claude usage windows from the newest call's stream, else the last saved reading."""
     for output in sorted((root / "logs").glob("*-*.stdout"), reverse=True)[:3]:
@@ -232,13 +332,21 @@ def view(root):
     session_totals = {}
     active = running(root)
     now = time.time()
-    for prompt in sorted((root / "logs").glob("*-*.prompt.md")):
+    prompts = [p for p in sorted((root / "logs").glob("*-*.prompt.md"))
+               if p.name.partition("-")[0].isdigit() and p.name.removesuffix(".prompt.md").partition("-")[2] in ("director", "orchestrator", "worker")]
+    starts = [p.stat().st_mtime for p in prompts]
+    for index, prompt in enumerate(prompts):
         stem = prompt.name.removesuffix(".prompt.md")
         number, _, role = stem.partition("-")
-        if not number.isdigit() or role not in ("director", "orchestrator", "worker"):
-            continue
         live = active and state.get("inflight", {}).get("prefix") == str(root / "logs" / stem)
-        activity, result = events(root / "logs" / (stem + ".stdout"), deep=live)
+        # A Codex session's rollout spans all its calls: each call shows only
+        # what was written between its start and the next call's.
+        until = starts[index + 1] if index + 1 < len(starts) else None
+        try:
+            activity, result = events(root / "logs" / (stem + ".stdout"), deep=live, since=starts[index], until=until)
+        except Exception as error:  # one unreadable call must not take the whole page down
+            activity, result = [{"kind": "message", "text": f"The dashboard couldn't read this turn's activity: {error!r}",
+                                 "at": None, "parent": None}], None
         prompt_text = prompt.read_text()
         output = root / "logs" / (stem + ".stdout")
         updated = output.stat().st_mtime if output.exists() else prompt.stat().st_mtime
@@ -260,7 +368,9 @@ def view(root):
                         "result": (result or {}).get("structured_output"),
                         "error": (result or {}).get("result", "") if (result or {}).get("is_error") else "",
                         "stderr": tail(root / "logs" / (stem + ".stderr"), 12000),
-                        "model": next(iter((result or {}).get("modelUsage", {})), None),
+                        "model": next(iter((result or {}).get("modelUsage", {})), None) or codex_model(config, result),
+                        "backend": (result or {}).get("backend") or ("codex" if codex_stream(output) else "claude"),
+                        "tokens": (result or {}).get("usage"),
                         "started_at": prompt.stat().st_mtime,
                         "finished": bool(result), "subtype": (result or {}).get("subtype")})
     inflight = state.get("inflight", {})
@@ -304,7 +414,10 @@ def view(root):
             "checks": checks, "stop_requested": (root / "STOP").exists(), "now": time.time(),
             "fast_roles": config.get("fast_roles", []), "branch": config.get("branch"),
             "unverified_commits": pair.Runner(root).unverified_commits(), "verify_every": config.get("verify_every_commits", 0), "baseline": config.get("baseline"), "state_dir": str(root),
-            "git": git_summary(config), "captures": captures(root), "rate_limits": latest_rate_limits(root, state)}
+            "git": git_summary(config), "captures": captures(root), "rate_limits": latest_rate_limits(root, state),
+            "backend": backend_view(config), "tokens": state.get("tokens", {}),
+            "role_backends": role_backends(root, config, state), "coordinator": coordinator_view(root, state, active),
+            "usage": usage_view(root, state)}
 
 
 class Dashboard(ThreadingHTTPServer):
@@ -315,8 +428,17 @@ class Dashboard(ThreadingHTTPServer):
         self.token = secrets.token_urlsafe(32)
         self.control_lock = threading.Lock()
         self.child = None
+        self.relaunch = False  # set by a legacy restart: Continue once the stop has landed
         super().__init__(address, Handler)
         threading.Thread(target=self.watch_limits, daemon=True).start()
+        # Read every turn's transcript once now, so the first page load doesn't wait for it.
+        threading.Thread(target=self.warm, daemon=True).start()
+
+    def warm(self):
+        try:
+            view(self.root)
+        except Exception:
+            pass  # a request will report the problem
 
     def busy(self):
         return running(self.root) or bool(self.child and self.child.poll() is None)
@@ -332,9 +454,23 @@ class Dashboard(ThreadingHTTPServer):
         """If the coordinator exited while waiting out a usage limit (terminal
         closed, crash), relaunch it once the limit has reset."""
         while True:
-            time.sleep(15)
+            time.sleep(3)
             try:
                 state = pair.read_json(self.root / "state.json")
+                with self.control_lock:
+                    if not self.busy():
+                        if self.relaunch:
+                            # The stop a legacy restart asked for has landed.
+                            self.relaunch = False
+                            self.launch(retry=bool(state.get("inflight")))
+                            continue
+                        stalled = state.get("status") == "restarting" and time.time() - state.get("restarting_at", 0) > 20
+                        if stalled and not (self.root / "STOP").exists():
+                            # A between-turns restart re-execs itself; this only
+                            # covers a re-exec that didn't come back.
+                            (self.root / "RESTART").unlink(missing_ok=True)
+                            self.launch(retry=bool(state.get("inflight")))
+                            continue
                 due = state.get("status") == "waiting" and time.time() >= state.get("resume_at", float("inf"))
                 if due and not (self.root / "STOP").exists():
                     with self.control_lock:
@@ -441,6 +577,53 @@ class Handler(BaseHTTPRequestHandler):
                         return self.send(400, {"error": "Guidance must be at most 10,000 characters"})
                     pair.write_json(root / "steering.json", {"text": text.strip(), "updated_at": time.time()})
                     return self.send(200, {"ok": True, "message": "Guidance saved for the next orchestrator turn."})
+                if path == "/api/restart":
+                    if not self.server.busy():
+                        return self.send(409, {"error": "The run isn't going. Continue starts it on the current code."})
+                    state = pair.read_json(root / "state.json")
+                    if "restart" in (state.get("coordinator") or {}).get("features", []):
+                        (root / "RESTART").touch()
+                        return self.send(200, {"ok": True, "message": "Restarting after the current turn: nothing is "
+                                               "interrupted, and the next turn runs on the updated code."})
+                    if not data.get("now"):
+                        return self.send(409, {"error": "This coordinator predates restarts between turns. Restart now "
+                                               "stops it and continues at once; the turn in progress resumes in its own session.",
+                                               "legacy": True})
+                    (root / "STOP").touch()
+                    self.server.relaunch = True
+                    return self.send(200, {"ok": True, "message": "Stopping now and continuing on the updated code; the "
+                                           "turn in progress resumes in its own session."})
+                if path == "/api/backend":
+                    # Allowed while running: the coordinator reads it at each call.
+                    roles = data.get("roles") or {}
+                    if data.get("backend") not in pair.BACKENDS or not isinstance(roles, dict) or set(roles) - {"director", "orchestrator", "worker"} \
+                            or any(v not in (None, "", *pair.BACKENDS) for v in roles.values()):
+                        return self.send(400, {"error": "Choose claude or codex for the run, and for each role claude, codex or the run's default"})
+                    model, effort = data.get("codex_model"), data.get("codex_effort")
+                    if any(v is not None and (not isinstance(v, str) or len(v) > 100) for v in (model, effort)):
+                        return self.send(400, {"error": "Codex model and effort are short text, or empty for the default"})
+                    config = pair.read_json(root / "config.json")
+                    config["backend"] = data["backend"]
+                    config["role_backends"] = {r: b for r, b in roles.items() if b}
+                    fast = data.get("codex_fast")
+                    if fast is not None and type(fast) is not bool:
+                        return self.send(400, {"error": "Codex fast mode is on or off"})
+                    previous = config.get("codex") or {}
+                    config["codex"] = {"executable": "codex", **previous,
+                                       "model": (model or "").strip() or None, "reasoning_effort": (effort or "").strip() or None,
+                                       "fast": previous.get("fast", False) if fast is None else fast}
+                    auto = data.get("auto_switch")
+                    if auto is not None:
+                        if not isinstance(auto, dict) or type(auto.get("enabled")) is not bool or \
+                                not isinstance(auto.get("at"), (int, float)) or not 0 < auto["at"] <= 1:
+                            return self.send(400, {"error": "Auto-switch needs on or off and a switch point between 1% and 100%"})
+                        config["auto_switch"] = {"enabled": auto["enabled"], "at": float(auto["at"])}
+                    pair.write_json(root / "config.json", config)
+                    view_ = backend_view(config)
+                    uses_codex = "codex" in [view_["roles"].get(r) or view_["default"] for r in ("director", "orchestrator", "worker")]
+                    warning = "" if view_["codex_found"] or not uses_codex else " Warning: codex is not on PATH."
+                    return self.send(200, {"ok": True, "message": "Backend saved. Each role switches at its next call; a turn "
+                                           "in progress finishes where it started." + warning})
                 if path == "/api/limits":
                     if running(root) or (self.server.child and self.server.child.poll() is None):
                         return self.send(409, {"error": "Stop the pair before changing its limits"})

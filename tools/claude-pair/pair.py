@@ -20,11 +20,28 @@ import tempfile
 import time
 import uuid
 
+import codex_backend
 import outer_loop
 import shared_notebook
 import disk_preflight
 
 HERE = Path(__file__).resolve().parent
+BACKENDS = ("claude", "codex")
+# The modules a coordinator runs. A running process keeps the code it started
+# with, so the dashboard compares this fingerprint with the files on disk.
+CODE_FILES = ("pair.py", "codex_backend.py", "outer_loop.py", "shared_notebook.py", "disk_preflight.py")
+FEATURES = ("backends", "restart")
+
+
+def code_digest():
+    h = hashlib.sha256()
+    for name in CODE_FILES:
+        path = HERE / name
+        h.update(name.encode() + b"\0" + (path.read_bytes() if path.exists() else b"") + b"\0")
+    return h.hexdigest()[:16]
+
+
+CODE_DIGEST = code_digest()
 TEXT = {"type": "string"}
 STRINGS = {"type": "array", "items": TEXT}
 
@@ -97,16 +114,21 @@ def check_prefix(root, rounds, index, name):
 check_passed = outer_loop.check_passed
 
 
+class Restart(Exception):
+    """RESTART was requested: stop between turns so the process can re-exec
+    itself on the code now on disk. No turn is interrupted."""
+
+
 class CallFailed(RuntimeError):
     """An agent call failed in a way worth retrying (API error, crash, malformed
     result). The run backs off and continues the same session."""
 
 
 class UsageLimit(Exception):
-    """A Claude subscription or spend limit stopped a call; resume after reset_at."""
-    def __init__(self, reset_at, detail, weekly=False):
+    """A Claude or Codex usage limit stopped a call; resume after reset_at."""
+    def __init__(self, reset_at, detail, weekly=False, backend="claude"):
         super().__init__(detail)
-        self.reset_at, self.detail, self.weekly = reset_at, detail, weekly
+        self.reset_at, self.detail, self.weekly, self.backend = reset_at, detail, weekly, backend
 
 
 def weekly_limit(info, text, reset_at, now):
@@ -385,14 +407,97 @@ class Runner:
         except (OSError, ValueError):
             return self.config.get("fast_roles", [])
 
+    def fresh_config(self):
+        """config.json as it is now: backend and fast-mode switches apply at the next call."""
+        try:
+            return read_json(self.root / "config.json")
+        except (OSError, ValueError):
+            return self.config
+
+    def backend(self, role):
+        """Which agent CLI runs this role: `role_backends` over `backend`, default Claude Code."""
+        config = self.fresh_config()
+        choice = (config.get("role_backends") or {}).get(role) or config.get("backend") or "claude"
+        return choice if choice in BACKENDS else "claude"
+
+    def auto_switch(self):
+        """Switch a role to the other backend when its own is nearly used up.
+        On unless turned off; `at` is the fraction of a usage window."""
+        return {"enabled": True, "at": 0.95, **(self.fresh_config().get("auto_switch") or {})}
+
+    def available(self, backend):
+        if backend == "codex":
+            return bool(shutil.which(self.codex_settings()["executable"]))
+        return bool(shutil.which(self.config.get("claude") or "claude"))
+
+    def usage_level(self, backend, now=None):
+        """The most-used live window of a backend's latest reading (0..1), and
+        when it resets. A limit actually hit counts as fully used until reset;
+        a window whose reset has passed counts as empty."""
+        now = now or time.time()
+        hit = (self.state.get("backend_limits") or {}).get(backend) or {}
+        if (hit.get("until") or 0) > now:
+            return 1.0, hit["until"]
+        reading = (self.state.get("usage") or {}).get(backend)
+        if reading is None and (self.state.get("rate_limits") or {}).get("backend", "claude") == backend:
+            reading = self.state.get("rate_limits")  # saved before readings were kept per backend
+        level, resets = 0.0, None
+        for window in ((reading or {}).get("unifiedWindows") or {}).values():
+            if not isinstance(window, dict) or (window.get("resetsAt") or 0) <= now:
+                continue
+            if (window.get("utilization") or 0) > level:
+                level, resets = window["utilization"], window["resetsAt"]
+        return level, resets
+
+    def choose_backend(self, role):
+        """The backend this call runs on, and why when it isn't the role's own:
+        the role's own backend unless it has used `at` of a window and the other
+        backend is installed and has room."""
+        preferred = self.backend(role)
+        policy = self.auto_switch()
+        if not policy["enabled"]:
+            return preferred, None
+        level, resets = self.usage_level(preferred)
+        if level < policy["at"]:
+            return preferred, None
+        other = "codex" if preferred == "claude" else "claude"
+        other_level, _ = self.usage_level(other)
+        if other_level >= policy["at"] or not self.available(other):
+            return preferred, None
+        until = time.strftime("%a %H:%M", time.localtime(resets)) if resets else "its reset"
+        return other, {"from": preferred, "to": other, "level": level, "resets": resets,
+                       "why": f"{preferred} usage is at {level:.0%} (switch at {policy['at']:.0%}); "
+                              f"running on {other} until {until}"}
+
+    def note_switch(self, role, switch):
+        """Journal each automatic switch and each return, once per window."""
+        current = self.state.setdefault("auto_switched", {})
+        if switch:
+            if current.get(role, {}).get("resets") != switch["resets"]:
+                shared_notebook.append(self.root, {"id": f"auto-switch-{role}-{switch['from']}-{int(switch['resets'] or 0)}",
+                    "author": "coordinator", "kind": "Backend switched automatically",
+                    "summary": f"The {role}: {switch['why']}. It starts a fresh session there; the plan, checklist and notebook carry over.",
+                    "notes": [], "source": str(self.root / "state.json")})
+            current[role] = switch
+        elif role in current:
+            back = current.pop(role)
+            shared_notebook.append(self.root, {"id": f"auto-switch-back-{role}-{back['from']}-{int(back['resets'] or 0)}",
+                "author": "coordinator", "kind": "Backend switched back",
+                "summary": f"The {role} is back on {back['from']}: its usage window has room again.",
+                "notes": [], "source": str(self.root / "state.json")})
+
+    def codex_settings(self):
+        return {"executable": "codex", "model": None, "reasoning_effort": None, "fast": False, **(self.fresh_config().get("codex") or {})}
+
     def prompt_file(self, name):
         """Run-local prompt copy when present (edited while stopped), else the installed one."""
         local = self.root / "prompts" / name
         return (local if local.exists() else HERE / "prompts" / name).read_text()
 
-    def instructions(self, role):
+    def instructions(self, role, backend="claude"):
         text = "\n\n".join([self.prompt_file("mission.md"), self.prompt_file(f"{role}.md"),
-                             self.prompt_file("handbook.md"), shared_notebook.SYSTEM])
+                             self.prompt_file("handbook.md"), self.prompt_file("bevy.md"),
+                             shared_notebook.SYSTEM])
         text += ("\n# This run\n\n"
                  f"- Workspace: {self.repo}. This is the user's own project folder and your working "
                  f"directory. Edit here and commit to the current branch ({self.config.get('branch') or 'detached HEAD'}).\n"
@@ -411,19 +516,38 @@ class Runner:
                 text += outer_loop.contract_prompt(self)
         if self.config["audit_only"]:
             text += "\nAUDIT ONLY: do not modify files. The current task is a bounded inventory, not implementation. Report findings via structured output."
+        if backend == "codex":
+            capped = self.shell_limits(role)
+            text += "\n\n" + codex_backend.role_note(self.config.get("shell_seconds", 10) if capped else 0)
         return text
 
     def call(self, role, prompt, scope=None):
         """One agent turn. A role keeps its session only while `scope` (the
         assignment or batch) is unchanged and the session is short; otherwise it
-        starts fresh and relies on the task contract and notebook for context."""
+        starts fresh and relies on the task contract and notebook for context.
+        The backend (Claude Code or Codex CLI) is chosen per call, and a session
+        belongs to the backend that started it."""
         shared_notebook.setup(self.root, self.state, self.config)
         prompt += shared_notebook.context(self.root, role)
         prompt += disk_preflight.context(self.repo)
         schema = {"director": outer_loop.DIRECTOR_SCHEMA, "orchestrator": PLAN_SCHEMA, "worker": REPORT_SCHEMA}[role]
+        backend, switch = self.choose_backend(role)
+        self.note_switch(role, switch)
         scopes = self.state.setdefault("session_scopes", {})
         counts = self.state.setdefault("session_calls", {})
+        backends = self.state.setdefault("session_backends", {})
         session = self.state["sessions"].get(role)
+        if session and backends.get(session, "claude") != backend:
+            # Sessions don't move between backends. The new backend starts fresh
+            # from the task contract and the notebook; the folder keeps any edits.
+            if self.state.get("retry_session") == session:
+                self.state.pop("retry_session")
+                if self.state.get("limit_resume") == session:
+                    self.state.pop("limit_resume")
+                prompt = (f"(The previous {role} turn ran on {backends.get(session, 'claude')} and was cut short. You are "
+                          f"continuing it on {backend} in a fresh session. Its edits in the project folder are intact: "
+                          "check git status, CURRENT.md and the journal, then finish the same task.)\n\n" + prompt)
+            session = None
         # Resume tokens belong to one session; another role's call must not use them up.
         retrying = bool(session) and self.state.get("retry_session") == session
         if retrying:
@@ -439,7 +563,12 @@ class Runner:
         if session and not retrying and (role == "director" or scopes.get(role) != scope or
                                          counts.get(session, 0) >= self.config.get("max_session_calls", 8)):
             session = None
-        sid = session or str(uuid.uuid4())
+        # Claude Code takes the session ID we choose; Codex names a new session itself.
+        sid = session or (str(uuid.uuid4()) if backend == "claude" else None)
+        instructions = self.instructions(role, backend)
+        known = self.state.setdefault("session_instructions", {})
+        if backend == "codex" and session and known.get(session) != codex_backend.digest(instructions):
+            prompt = codex_backend.updated_instructions(instructions) + prompt
         self.state["calls"] += 1
         prefix = self.root / "logs" / f"{self.state['calls']:04d}-{role}"
         prefix.with_suffix(".prompt.md").write_text(prompt)
@@ -453,72 +582,100 @@ class Runner:
         # Reserve the entire cap before launch. Crashes cannot reset the ledger.
         self.state["cost_usd"] += reservation
         self.state["inflight"] = {"role": role, "session_id": sid, "prefix": str(prefix), "reserved_usd": reservation,
-                                  "started_at": time.time()}
+                                  "started_at": time.time(), "backend": backend}
         scopes[role] = scope
-        counts[sid] = counts.get(sid, 0) + 1
+        if sid:
+            counts[sid] = counts.get(sid, 0) + 1
+            backends[sid] = backend
         self.save()
-        argv = [self.config["claude"], "--print", "--output-format", "stream-json", "--verbose",
-                "--system-prompt-snapshot", "off",
-                "--json-schema", json.dumps(schema), "--append-system-prompt", self.instructions(role),
-                # Project settings, AGENTS.md/CLAUDE.md and project skills load; the
-                # user's personal settings, hooks and MCP servers do not.
-                "--setting-sources", "project",
-                "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}', "--no-chrome",
-                "--add-dir", str(self.root),
-                "--resume" if session else "--session-id", sid]
-        agents = self.root / "prompts" / "subagents.json"
-        agents = agents if agents.exists() else HERE / "prompts" / "subagents.json"
-        if agents.exists() and not self.config["audit_only"]:
-            argv += ["--agents", str(agents)]  # pair-implementer and pair-reviewer carry the run's rules
-        fast = role in self.fast_roles()
-        if fast:
-            argv += ["--settings", json.dumps({"fastMode": True})]
-        if cap is not None:
-            argv += ["--max-budget-usd", str(cap)]
-        if self.config.get("max_turns"):
-            argv += ["--max-turns", str(self.config["max_turns"])]
-        if self.config["audit_only"]:
-            argv += ["--permission-mode", "dontAsk", "--permission-prompts", "none",
-                     "--tools", "Read,Glob,Grep", "--allowedTools", "Read,Glob,Grep"]
+        # fast_roles picks the roles; Codex also needs codex.fast (off by default:
+        # its priority tier spends the usage allowance faster).
+        fast = role in self.fast_roles() and (backend == "claude" or bool(self.codex_settings().get("fast")))
+        if backend == "claude":
+            argv = [self.config["claude"], "--print", "--output-format", "stream-json", "--verbose",
+                    "--system-prompt-snapshot", "off",
+                    "--json-schema", json.dumps(schema), "--append-system-prompt", instructions,
+                    # Project settings, AGENTS.md/CLAUDE.md and project skills load; the
+                    # user's personal settings, hooks and MCP servers do not.
+                    "--setting-sources", "project",
+                    "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}', "--no-chrome",
+                    "--add-dir", str(self.root),
+                    "--resume" if session else "--session-id", sid]
+            agents = self.root / "prompts" / "subagents.json"
+            agents = agents if agents.exists() else HERE / "prompts" / "subagents.json"
+            if agents.exists() and not self.config["audit_only"]:
+                argv += ["--agents", str(agents)]  # pair-implementer and pair-reviewer carry the run's rules
+            if fast:
+                argv += ["--settings", json.dumps({"fastMode": True})]
+            if cap is not None:
+                argv += ["--max-budget-usd", str(cap)]
+            if self.config.get("max_turns"):
+                argv += ["--max-turns", str(self.config["max_turns"])]
+            if self.config["audit_only"]:
+                argv += ["--permission-mode", "dontAsk", "--permission-prompts", "none",
+                         "--tools", "Read,Glob,Grep", "--allowedTools", "Read,Glob,Grep"]
+            else:
+                argv += ["--dangerously-skip-permissions"]
+            if not session:
+                argv += ["--name", f"Pair {role} ({self.root.name})"]
+            if self.config.get("model"):
+                argv += ["--model", self.config["model"]]
+            env = self.env(**self.shell_limits(role))
         else:
-            argv += ["--dangerously-skip-permissions"]
-        if not session:
-            argv += ["--name", f"Pair {role} ({self.root.name})"]
-        if self.config.get("model"):
-            argv += ["--model", self.config["model"]]
+            argv, env = self.codex_command(role, schema, session, fast, instructions, cap)
         print(f"{role}: call {self.state['calls']} ({prefix.name}{', resumed' if session else ', fresh session'}"
-              f"{', fast mode' if fast else ''})", flush=True)
-        code, out, err = self.process(argv, prefix, prompt, env=self.env(**self.shell_limits(role)))
+              f"{', fast mode' if fast else ''}{', codex' if backend == 'codex' else ''})", flush=True)
+        code, out, err = self.process(argv, prefix, prompt, env=env)
         raw = out.read_text()
-        events = list(stream_events(raw))
-        try:
-            result = json.loads(raw)
-        except json.JSONDecodeError:
-            results = [event for event in events if event.get("type") == "result"]
-            result = results[-1] if results else None
-        info = rate_limit_info(raw)
+        if backend == "claude":
+            events = list(stream_events(raw))
+            try:
+                result = json.loads(raw)
+            except json.JSONDecodeError:
+                results = [event for event in events if event.get("type") == "result"]
+                result = results[-1] if results else None
+            info = rate_limit_info(raw)
+            started = any(e.get("type") == "assistant" for e in events)
+        else:
+            result = codex_backend.parse(raw, fast)
+            tid = (result or {}).get("session_id") or codex_backend.thread_id(raw)
+            if not sid and tid:
+                sid = tid
+                counts[sid] = counts.get(sid, 0) + 1
+                backends[sid] = backend
+            info = codex_backend.rate_limits(tid)
+            started = bool(sid) and codex_backend.started(raw)
         if info:
             self.state["rate_limits"] = {**info, "observed_at": time.time()}
+            self.state.setdefault("usage", {})[backend] = {**info, "backend": backend, "observed_at": time.time()}
         if result is None or code or result.get("is_error") or result.get("subtype") != "success":
             text = " ".join([str((result or {}).get("result", "")), (err.read_text()[-4000:] if err.exists() else ""), raw[-12000:]])
             reset = limit_reset(info, text, time.time(), self.config.get("limit_retry_minutes", 15) * 60)
             if reset:
-                self.settle_limited_call(role, sid, reservation, result,
-                                         any(e.get("type") == "assistant" for e in events))
-                raise UsageLimit(reset, f"{role} call {self.state['calls']} stopped by a Claude usage limit",
-                                 weekly_limit(info, text, reset, time.time()))
-        started = any(e.get("type") == "assistant" for e in events)
+                self.settle_limited_call(role, sid, reservation, result, started)
+                raise UsageLimit(reset, f"{role} call {self.state['calls']} stopped by a Claude usage limit"
+                                 if backend == "claude" else f"{role} call {self.state['calls']} stopped by a Codex usage limit",
+                                 weekly_limit(info, text, reset, time.time()), backend)
         if result is None:
-            self.fail_call(role, sid, reservation, started, "Claude's output ended without a final result (crash or cut-off)")
+            self.fail_call(role, sid, reservation, started, "Claude's output ended without a final result (crash or cut-off)"
+                           if backend == "claude" else "Codex's output ended without a turn result (crash or cut-off)")
         if result.get("session_id") != sid:
-            self.fail_call(role, sid, reservation, False, "Claude returned an unexpected session ID")
+            self.fail_call(role, sid, reservation, False, "Claude returned an unexpected session ID"
+                           if backend == "claude" else "Codex returned an unexpected session ID")
         self.state["sessions"][role] = sid
+        if backend == "codex":
+            known[sid] = codex_backend.digest(instructions)
+            tokens = self.state.setdefault("tokens", {}).setdefault(backend, {})
+            for key, value in (result.get("usage") or {}).items():
+                if isinstance(value, (int, float)):
+                    tokens[key] = tokens.get(key, 0) + value
         if fast and result.get("fast_mode_state") != "on":
             # Requested but refused (org setting, usage state): note it once per reason and carry on.
             reason = result.get("fast_mode_disabled_reason") or result.get("fast_mode_state") or "unknown"
             shared_notebook.append(self.root, {"id": f"fast-mode-off-{reason}", "author": "coordinator",
-                "kind": "Fast mode unavailable", "summary": f"Fast mode was requested for the {role} but Claude Code ran it "
-                f"at normal speed ({reason}). The run continues.", "notes": [], "source": str(out)})
+                "kind": "Fast mode unavailable", "summary": f"Fast mode was requested for the {role} but "
+                f"{'Claude Code' if backend == 'claude' else 'Codex'} ran it at normal speed ({reason}). The run continues.",
+                "notes": [], "source": str(out)})
         total = result.get("total_cost_usd")
         prior = self.state["session_costs"].get(sid, 0.0)
         spent = total - prior if isinstance(total, (float, int)) and math.isfinite(total) and total >= prior else 0.0
@@ -528,8 +685,8 @@ class Runner:
         self.state.pop("inflight")
         self.save()
         if code or result.get("is_error") or result.get("subtype") != "success":
-            self.fail_call(role, sid, 0.0, started, f"Claude reported {result.get('subtype') or 'an error'}: "
-                           + str(result.get("result") or "")[:300])
+            self.fail_call(role, sid, 0.0, started, f"{'Claude' if backend == 'claude' else 'Codex'} reported "
+                           f"{result.get('subtype') or 'an error'}: " + str(result.get("result") or "")[:300])
         if result.get("permission_denials"):
             # Not a boundary any more (agents run without permission prompts);
             # recorded so a refused interactive tool is visible in the journal.
@@ -544,6 +701,35 @@ class Runner:
         self.record_decisions(role, data)
         shared_notebook.response(self.root, role, self.state["calls"], data, out)
         return data
+
+    def codex_command(self, role, schema, session, fast, instructions, cap):
+        """argv and environment for a Codex turn (see codex_backend)."""
+        settings = self.codex_settings()
+        executable = shutil.which(settings["executable"]) or settings["executable"]
+        schemas = self.root / "schemas"
+        schemas.mkdir(exist_ok=True)
+        schema_path = schemas / f"{role}.json"
+        write_json(schema_path, schema)
+        agents = self.root / "prompts" / "subagents.json"
+        agents = agents if agents.exists() else HERE / "prompts" / "subagents.json"
+        argv = codex_backend.command(executable, session=session, schema_path=schema_path, instructions=instructions,
+                                     fast=fast, model=settings.get("model"), effort=settings.get("reasoning_effort"),
+                                     audit_only=self.config["audit_only"],
+                                     agents=[] if self.config["audit_only"] else codex_backend.agent_args(self.root, agents))
+        limits = self.shell_limits(role)
+        env = self.env(**limits)
+        if limits:
+            # Codex has no per-command timeout: cargo, the slow one, runs inside `within`.
+            env["PATH"] = str(HERE / "shims") + os.pathsep + env["PATH"]
+            env["PAIR_SHELL_SECONDS"] = str(self.config.get("shell_seconds", 10))
+        for name, value, why in (("dollar-caps", cap is not None, "Codex reports tokens, not dollars, so the dollar "
+                                  "ceilings don't stop Codex calls; the turn time limit and Codex's own usage limits still apply."),
+                                 ("max-turns", self.config.get("max_turns"), "Codex has no per-call model-turn limit, so "
+                                  "max_turns doesn't apply to Codex calls.")):
+            if value:
+                shared_notebook.append(self.root, {"id": f"codex-{name}", "author": "coordinator",
+                    "kind": "Limit not available on Codex", "summary": why, "notes": [], "source": str(self.root / "config.json")})
+        return argv, env
 
     def fail_call(self, role, sid, reserved, started, reason):
         """Settle a failed call and arrange a retry that continues its session."""
@@ -669,6 +855,8 @@ class Runner:
                 if (self.root / "STOP").exists():
                     self.state.pop("resume_at", None)
                     raise InterruptedError("Stopped while waiting for the Claude usage limit to reset")
+                if (self.root / "RESTART").exists():
+                    raise Restart()  # resume_at stays saved; the new process waits out the rest
                 if (self.root / "RETRY_NOW").exists():
                     # The dashboard's Retry now button: end the wait early.
                     (self.root / "RETRY_NOW").unlink(missing_ok=True)
@@ -794,6 +982,12 @@ class Runner:
             # A turn cut short by Stop, a crash or a closed terminal continues in
             # its own session; its edits in the folder are intact.
             interrupted = self.state.pop("inflight")
+            sid = interrupted.get("session_id")
+            if not sid and interrupted.get("backend") == "codex":
+                partial = Path(interrupted["prefix"]).with_suffix(".stdout")
+                sid = codex_backend.thread_id(partial.read_text()) if partial.exists() else None
+                if sid:
+                    self.state.setdefault("session_backends", {})[sid] = "codex"
             pending = git(self.repo, "status", "--short").decode(errors="replace").splitlines()
             shared_notebook.append(self.root, {"id": f"resume-{self.state['calls']:04d}-{int(time.time())}",
                 "author": "coordinator", "kind": "Resumed interrupted turn",
@@ -801,8 +995,15 @@ class Runner:
                            "continues when that role runs next. Uncommitted changes listed here are most likely that turn's "
                            "partial work, not the user's: check them against its log before treating them as the user's.",
                 "notes": pending[:40], "source": interrupted["prefix"]})
-            self.state["sessions"][interrupted["role"]] = interrupted["session_id"]
-            self.state["retry_session"] = interrupted["session_id"]
+            if sid:
+                self.state["sessions"][interrupted["role"]] = sid
+                self.state["retry_session"] = sid
+            else:
+                # It ended before Codex named a session: nothing to resume, so the
+                # role starts fresh and is told the folder may hold partial work.
+                self.state["retry_note"] = ("the previous attempt was interrupted before its session started; "
+                                            "check git status for partial work before redoing anything")
+                self.state["retry_note_role"] = interrupted["role"]
         if (self.root / "STOP").exists():
             raise RuntimeError("STOP is present. Use the resume command to clear it deliberately.")
         if self.state.get("run_started_at"):
@@ -816,6 +1017,7 @@ class Runner:
         self.state["message"] = "Coordinator running; consult logs for the active assignment."
         self.state["run_started_at"] = time.time()
         self.state["pid"] = os.getpid()
+        self.state["coordinator"] = {"pid": os.getpid(), "code": CODE_DIGEST, "features": list(FEATURES), "started_at": time.time()}
         self.save()
         count = 0
         try:
@@ -826,6 +1028,8 @@ class Runner:
                 try:
                     if time.monotonic() >= self.deadline or (self.root / "STOP").exists():
                         raise InterruptedError("Stopped at the saved phase")
+                    if (self.root / "RESTART").exists():
+                        raise Restart()
                     phase = self.state["phase"]
                     steering_path = self.root / "steering.json"
                     if phase == "worker" and steering_path.exists():
@@ -980,6 +1184,23 @@ class Runner:
                     self.wait_until(time.time() + delay - self.config.get("limit_margin_seconds", 60), reason, kind="retry")
                     continue
                 except UsageLimit as limit:
+                    # Remember the limit, then carry on with the other backend if it has room.
+                    # A backend already known to be limited reporting one again means the
+                    # switch didn't take: wait as before rather than retry in a loop.
+                    limits = self.state.setdefault("backend_limits", {})
+                    known = (limits.get(limit.backend) or {}).get("until", 0) > time.time()
+                    limits[limit.backend] = {"until": limit.reset_at, "weekly": limit.weekly}
+                    other = "codex" if limit.backend == "claude" else "claude"
+                    if (not known and self.auto_switch()["enabled"] and self.available(other)
+                            and self.usage_level(other)[0] < self.auto_switch()["at"]):
+                        clock = time.strftime("%a %H:%M", time.localtime(limit.reset_at))
+                        shared_notebook.append(self.root, {"id": f"limit-switch-{limit.backend}-{int(limit.reset_at)}",
+                            "author": "coordinator", "kind": "Usage limit: switched backend",
+                            "summary": f"{limit.detail}. Instead of waiting until {clock}, the interrupted turn continues on "
+                                       f"{other} in a fresh session; roles return to {limit.backend} after the reset.",
+                            "notes": [], "source": str(self.root / "state.json")})
+                        self.save()
+                        continue
                     if limit.weekly and not self.config.get("wait_for_weekly_limit"):
                         # The run's only ceiling: stop here and continue after the reset.
                         self.state["weekly_reset_at"] = limit.reset_at
@@ -989,6 +1210,9 @@ class Runner:
                     self.wait_until(limit.reset_at, "Claude 5-hour usage limit reached")
         except InterruptedError as e:
             self.state.update(status="paused", message=str(e))
+        except Restart:
+            self.state.update(status="restarting", restarting_at=time.time(),
+                              message="Restarting between turns to load the updated coordinator code.")
         except (Exception, KeyboardInterrupt) as e:
             self.state.update(status="blocked", message=f"{type(e).__name__}: {e}")
         finally:
@@ -1044,7 +1268,10 @@ def initialize(args):
               "baseline": baseline, "baseline_ref": ref, "branch": None if branch == "HEAD" else branch,
               "claude": claude, "model": args.model, "audit_only": args.audit_only,
               "checks": read_json(HERE / "checks.json"), "max_session_calls": 8, "precheck": False, "verify_every_commits": 0,
-              "fast_roles": list(args.fast_roles if getattr(args, "fast_roles", None) is not None else ["worker"])}
+              "fast_roles": list(args.fast_roles if getattr(args, "fast_roles", None) is not None else ["worker"]),
+              "backend": getattr(args, "backend", None) or "claude", "role_backends": {},
+              "codex": {"executable": "codex", "model": None, "reasoning_effort": None, "fast": False},
+              "auto_switch": {"enabled": True, "at": 0.95}}
     for name in ("max_rounds", "max_hours", "turn_minutes", "max_turns", "budget_usd", "call_budget_usd"):
         config[name] = getattr(args, name, None)
     config["checks"]["diff"] = ["git", "diff", "--check", config["baseline"]]
@@ -1059,6 +1286,45 @@ def initialize(args):
     dirty = "" if head == baseline else " Uncommitted edits were recorded in the baseline, so reviews show only agent work."
     print(f"Ready: agents will work in {repo} on {config['branch'] or 'detached HEAD'}.{dirty}\n"
           f"State: {root}\nRun: python3 {HERE / 'pair.py'} run")
+
+
+def switch_backend(root, name=None, role=None, clear_role=None, codex_model=None, codex_effort=None, codex_executable=None,
+                   codex_fast=None, auto_switch=None, switch_at=None):
+    """Change which CLI runs the agents. Safe while a coordinator runs: it reads
+    the choice at each call, a turn in progress finishes where it started, and a
+    role whose backend changed starts a fresh session on the new one."""
+    config = read_json(root / "config.json")
+    roles = dict(config.get("role_backends") or {})
+    if name and role:
+        roles[role] = name
+    elif name:
+        config["backend"] = name
+    if clear_role:
+        roles.pop(clear_role, None)
+    codex = {"executable": "codex", "model": None, "reasoning_effort": None, "fast": False, **(config.get("codex") or {})}
+    if codex_fast is not None:
+        codex["fast"] = bool(codex_fast)
+    for key, value in (("model", codex_model), ("reasoning_effort", codex_effort), ("executable", codex_executable)):
+        if value is not None:
+            codex[key] = value or (None if key != "executable" else "codex")
+    auto = {"enabled": True, "at": 0.95, **(config.get("auto_switch") or {})}
+    if auto_switch is not None:
+        auto["enabled"] = bool(auto_switch)
+    if switch_at is not None:
+        if not 0 < switch_at <= 1:
+            raise ValueError("The switch point is a fraction of a usage window, above 0 and at most 1 (0.95 = 95%)")
+        auto["at"] = switch_at
+    config.update(role_backends=roles, codex=codex, auto_switch=auto)
+    config.setdefault("backend", "claude")
+    write_json(root / "config.json", config)
+    effective = {r: roles.get(r) or config["backend"] for r in ("director", "orchestrator", "worker")}
+    found = shutil.which(codex["executable"]) if "codex" in effective.values() else True
+    uses_codex = "codex" in effective.values()
+    return ("Backends: " + ", ".join(f"{r} {b}" for r, b in effective.items())
+            + (f" · codex model {codex['model'] or 'default'}, effort {codex['reasoning_effort'] or 'default'}, "
+               f"fast {'on' if codex['fast'] else 'off'}" if uses_codex else "")
+            + (f" · auto-switch at {auto['at']:.0%}" if auto["enabled"] else " · auto-switch off")
+            + ("" if found else f"\nWarning: `{codex['executable']}` is not on PATH."))
 
 
 def configure_outer(root, enabled, max_batches):
@@ -1126,7 +1392,19 @@ def main():
     init.add_argument("--fast-roles", nargs="*", choices=["worker", "orchestrator", "director"],
                       help="Roles that run in Claude Code fast mode (default: worker)")
     init.add_argument("--no-director", action="store_true", help="Stop when the mission is done instead of choosing more batches")
-    for name in ("run", "resume", "status", "stop", "enable-outer", "watch-outer"):
+    init.add_argument("--backend", choices=BACKENDS, default="claude", help="Agent CLI for every role (default: claude)")
+    switch = sub.add_parser("backend", help="Show or switch the agent CLI; applies at each role's next call")
+    switch.add_argument("--state", help="Run state directory (default: <repo>/.claude-pair)")
+    switch.add_argument("name", nargs="?", choices=BACKENDS, help="Backend for all roles (or --role)")
+    switch.add_argument("--role", choices=["director", "orchestrator", "worker"], help="Switch only this role")
+    switch.add_argument("--clear-role", choices=["director", "orchestrator", "worker"], help="Make a role follow the default again")
+    switch.add_argument("--codex-model", help="Codex model (empty string: Codex's default)")
+    switch.add_argument("--codex-effort", help="Codex reasoning effort (empty string: the model's default)")
+    switch.add_argument("--codex-executable", help="Path or name of the codex binary")
+    switch.add_argument("--codex-fast", choices=["on", "off"], help="Codex fast mode (priority tier) for fast_roles; default off")
+    switch.add_argument("--auto-switch", choices=["on", "off"], help="Move a role to the other backend when its own is nearly used up (default on)")
+    switch.add_argument("--switch-at", type=float, help="Usage-window percentage that triggers it (default 95)")
+    for name in ("run", "resume", "status", "stop", "restart", "enable-outer", "watch-outer"):
         p = sub.add_parser(name)
         p.add_argument("--state", help="Run state directory (default: <repo>/.claude-pair)")
         if name == "enable-outer":
@@ -1140,6 +1418,13 @@ def main():
             initialize(args)
             return 0
         root = Path(args.state).expanduser().resolve() if args.state else default_state()
+        if args.command == "backend":
+            print(switch_backend(root, args.name, args.role, args.clear_role, args.codex_model,
+                                 args.codex_effort, args.codex_executable,
+                                 None if args.codex_fast is None else args.codex_fast == "on",
+                                 None if args.auto_switch is None else args.auto_switch == "on",
+                                 None if args.switch_at is None else args.switch_at / 100))
+            return 0
         if args.command == "enable-outer":
             configure_outer(root, True, args.max_batches)
             print("Director enabled; active work is preserved and upgrades at the next safe restart.")
@@ -1148,6 +1433,10 @@ def main():
             return watch_outer(root)
         if args.command == "status":
             print((root / "STATUS.md").read_text())
+            return 0
+        if args.command == "restart":
+            (root / "RESTART").touch()
+            print("Restart requested. The coordinator finishes the current turn, then reloads its code and continues.")
             return 0
         if args.command == "stop":
             (root / "STOP").touch()
@@ -1158,7 +1447,14 @@ def main():
         with lock(root):
             if args.command == "resume":
                 (root / "STOP").unlink(missing_ok=True)
-            return Runner(root).run(args.steps, args.retry_interrupted)
+            code = Runner(root).run(args.steps, args.retry_interrupted)
+        if (root / "RESTART").exists() and read_json(root / "state.json").get("status") == "restarting":
+            # The lock is released; replace this process with the code on disk.
+            (root / "RESTART").unlink()
+            sys.stdout.flush()
+            sys.stderr.flush()
+            os.execv(sys.executable, [sys.executable, str(HERE / "pair.py"), "resume", "--state", str(root)])
+        return code
     except (Exception, KeyboardInterrupt) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1

@@ -22,7 +22,7 @@ const STAGE_DONE = { assign: 'Wrote the assignment', review: 'Reviewed the resul
 const LIMIT_KEYS = ['max_rounds', 'max_hours', 'budget_usd', 'call_budget_usd', 'turn_minutes', 'max_turns'];
 
 let data = null, view = 'overview', pinnedRole = null, liveTab = 'activity', busy = false;
-const dirty = { guidance: false, limits: false, outer: false };
+const dirty = { guidance: false, limits: false, outer: false, backend: false };
 const rendered = {};
 
 /* ---------- formatting ---------- */
@@ -127,7 +127,7 @@ function render() {
   $('stop').disabled = !data.active || data.stop_requested || busy;
   text('start', data.calls.length ? 'Continue' : 'Start');
   if (!data.active) document.title = `${st.label} · Claude Pair`;
-  renderBanner(); renderNow(); renderTabs();
+  renderBanner(); renderNow(); renderTabs(); renderBackendToggle();
   if (view === 'overview') renderOverview();
   if (view === 'timeline') renderTimeline();
   if (view === 'notebook') renderNotebook();
@@ -146,6 +146,21 @@ function renderBanner() {
   } else if (s.status === 'waiting' && s.resume_at) {
     kind = 'warn'; act = 'Try now'; bannerAction = 'retry-now';
     message = `<strong>Claude usage limit reached</strong>Resuming automatically at ${esc(clock(s.resume_at))} · in ${esc(dur(s.resume_at - data.now))}. Nothing is lost; the interrupted session continues where it stopped.`;
+  } else if (data.coordinator?.outdated && !data.coordinator.restarting) {
+    const c = data.coordinator;
+    kind = 'warn';
+    if (c.restart_pending) message = `<strong>Restarting after the current turn</strong>The coordinator reloads its code between turns. Nothing is interrupted.`;
+    else {
+      act = c.legacy ? 'Restart now' : 'Restart after this turn'; bannerAction = c.legacy ? 'restart-now' : 'restart';
+      message = `<strong>The coordinator is running older code</strong>It started before the latest changes in tools/claude-pair, so it doesn't apply them yet, including backend switches.` +
+        (c.legacy ? ' It predates restarts between turns: Restart now stops it and continues at once, and the turn in progress resumes in its own session.' : ' It can reload between turns without interrupting anyone.');
+    }
+  } else if (data.coordinator?.restarting && data.active) {
+    kind = 'warn'; message = '<strong>Restarting</strong>Loading the updated coordinator code; the run continues from its saved handoff.';
+  } else if (Object.values(data.role_backends || {}).some(x => x.auto)) {
+    const x = Object.values(data.role_backends).find(x => x.auto).auto;
+    kind = 'warn';
+    message = `<strong>${esc(BACKEND_NAME[x.from])} usage is at ${Math.round(x.level * 100)}%</strong>Roles set to ${esc(BACKEND_NAME[x.from])} run on ${esc(BACKEND_NAME[x.to])}${x.resets ? ` until ${esc(clock(x.resets))}` : ' until it resets'}, then switch back by themselves.`;
   } else if (!data.active && s.status === 'paused' && s.weekly_reset_at) {
     kind = 'warn';
     message = `<strong>Weekly Claude limit used up</strong>It resets ${esc(clock(s.weekly_reset_at))}${s.weekly_reset_at > data.now ? ' · in ' + esc(dur(s.weekly_reset_at - data.now)) : ''}. Press Continue after that; the interrupted session picks up where it stopped.`;
@@ -189,11 +204,26 @@ function renderNow() {
 
   const items = s.plan?.checklist || [], verified = items.filter(i => i.status === 'verified').length;
   const L = data.limits, spent = data.estimated_spent, g = data.git || {};
-  const rl = data.rate_limits, five = rl?.unifiedWindows?.five_hour, week = rl?.unifiedWindows?.seven_day;
+  // A server older than this page sends only the latest single reading: build the meters from it.
+  const legacyUsage = () => {
+    const rl = data.rate_limits; if (!rl) return {};
+    const live = Object.values(rl.unifiedWindows || {}).filter(w => (w.resetsAt || 0) > data.now);
+    const top = live.reduce((a, w) => (w.utilization || 0) > (a?.utilization || 0) ? w : a, null);
+    return { [rl.backend || 'claude']: { level: top?.utilization || 0, resets: top?.resetsAt || null, reading: rl, limited_until: null } };
+  };
+  const usage = data.usage?.backends || legacyUsage(), switchAt = data.usage?.auto_switch?.enabled ? data.usage.auto_switch.at : null;
+  const usageMeter = b => {
+    const u = usage[b]; if (!u) return '';
+    const w = u.reading?.unifiedWindows || {}, part = (k, label) => w[k] && (w[k].resetsAt || 0) > data.now ? `${label} ${Math.round(w[k].utilization * 100)}%` : null;
+    const parts = [part('five_hour', '5-hour'), part('seven_day', 'weekly')].filter(Boolean).join(' · ');
+    const p = u.level * 100;
+    const small = u.limited_until ? `limit hit · resets ${clock(u.limited_until)}` : u.reading ? `${parts || 'windows reset'}${u.resets ? ` · resets ${clock(u.resets)}` : ''}` : 'no reading yet';
+    return meter(`${BACKEND_NAME[b]} usage`, u.reading || u.limited_until ? `${Math.round(p)}%` : '—', small, p, tone(p),
+      (switchAt ? `Roles move to the other backend at ${Math.round(switchAt * 100)}% of a window, and come back after it resets. ` : '') + 'The fullest live 5-hour or weekly window.');
+  };
   const meter = (label, value, small, width, cls, hint = '') =>
     `<div title="${esc(hint)}"><div class="meter-label"><span>${label}</span></div><div class="meter-value">${value}${small ? ` <small>${small}</small>` : ''}</div><div class="bar ${cls}"><span style="width:${width}%"></span></div></div>`;
   const tone = p => p >= 90 ? 'bad' : p >= 70 ? 'warn' : '';
-  const fiveP = five ? five.utilization * 100 : null, weekP = week ? week.utilization * 100 : null;
   const capped = (value, cap) => cap ? [pct(value, cap), tone(pct(value, cap))] : [0, 'none'];
   const [turnW, turnT] = capped(s.rounds, L.max_rounds), [costW, costT] = capped(spent, L.budget_usd);
   html('meters', [
@@ -201,10 +231,7 @@ function renderNow() {
     meter('Worker turns', `${s.rounds}`, L.max_rounds ? `of ${L.max_rounds}` : `${dur(data.elapsed_seconds)} active`, turnW, turnT,
       L.max_hours ? `Active time limit: ${L.max_hours}h` : 'No turn or time limit'),
     meter('Usage estimate', money(spent), L.budget_usd ? `of ${money(L.budget_usd)}` : 'no ceiling', costW, costT, 'API-price estimate of the subscription usage, not a bill'),
-    meter('Claude 5-hour', fiveP === null ? '—' : `${Math.round(fiveP)}%`, five ? `resets ${clock(five.resetsAt)}` : 'no reading yet', fiveP ?? 0, tone(fiveP ?? 0),
-      'The run pauses when this is used up and resumes after the reset'),
-    meter('Claude weekly', weekP === null ? '—' : `${Math.round(weekP)}%`, week ? `resets ${clock(week.resetsAt)}` : 'no reading yet', weekP ?? 0, tone(weekP ?? 0),
-      'The run stops when this is used up: it is the only limit'),
+    usageMeter('claude'), usageMeter('codex'),
     meter('Changes', `${(g.commits || []).length}`, `${plural((g.commits || []).length, 'commit').replace(/^\d+ /, '')} · <span class="plusminus"><span class="plus">+${g.insertions || 0}</span> <span class="minus">−${g.deletions || 0}</span></span>`,
       data.verify_every ? pct(data.unverified_commits, data.verify_every) : 0, data.verify_every ? '' : 'none',
       data.verify_every ? `${data.unverified_commits} of ${data.verify_every} commits until the next verification pass` : ''),
@@ -392,6 +419,7 @@ function renderLive() {
       if (call.model) foot.push(`<span><b>${esc(call.model)}</b>${call.fast ? ' · <b>fast</b>' : ''}</span>`);
       foot.push(`<span>${call.live ? 'running' : 'took'} <b>${dur(call.elapsed_seconds)}</b></span>`);
       if (call.cost_usd != null) foot.push(`<span><b>${money(call.cost_usd)}</b></span>`);
+      else if (call.tokens) foot.push(`<span><b>${tokens(call.tokens)}</b> tokens</span>`);
       if (call.subagents?.length) foot.push(`<span><b>${esc(subagentSummary(call))}</b></span>`);
       foot.push(`<span>updated <b>${esc(ago(call.last_activity_at))}</b></span>`);
       foot.push(`<span style="margin-left:auto">${call.live ? '<span class="chip small running"><span class="dot"></span>live</span>' : call.finished ? (call.subtype === 'success' ? '<span class="chip small ok">finished</span>' : '<span class="chip small bad">error</span>') : '<span class="chip small warn">interrupted</span>'}</span>`);
@@ -473,11 +501,13 @@ function renderTimeline() {
   html('timeline', [...data.calls].reverse().map(c => {
     const role = ROLES[c.role], title = c.live ? ({ assign: 'Writing the assignment', review: 'Reviewing the result', worker: 'Implementing', director: 'Choosing the next batch' })[c.stage] : STAGE_DONE[c.stage] || role.name;
     const summary = c.result?.summary || c.error || c.prompt.split('\n').find(l => l.trim()) || '';
-    return `<button class="turn" data-call="${esc(c.id)}" style="--role:${role.color}"><span class="stripe"></span><span class="avatar">${role.letter}</span><span style="min-width:0"><span class="turn-title">${esc(title)} <span class="num">#${c.number} · ${esc(role.name)}</span></span><div class="turn-sum">${esc(summary)}</div></span><span class="turn-meta">${c.subagents?.length ? `<span title="subagents">⇉ ${c.subagents.length}</span>` : ''}${c.cost_usd != null ? `<span>${money(c.cost_usd)}</span>` : ''}<span>${dur(c.elapsed_seconds)}</span>${callStatus(c)}</span></button>`;
+    return `<button class="turn" data-call="${esc(c.id)}" style="--role:${role.color}"><span class="stripe"></span><span class="avatar">${role.letter}</span><span style="min-width:0"><span class="turn-title">${esc(title)} <span class="num">#${c.number} · ${esc(role.name)}</span></span><div class="turn-sum">${esc(summary)}</div></span><span class="turn-meta">${c.subagents?.length ? `<span title="subagents">⇉ ${c.subagents.length}</span>` : ''}${c.cost_usd != null ? `<span>${money(c.cost_usd)}</span>` : c.tokens ? `<span title="Codex reports tokens, not dollars">${tokens(c.tokens)}</span>` : ''}<span>${dur(c.elapsed_seconds)}</span>${callStatus(c)}</span></button>`;
   }).join(''));
 }
 function openCall(id) {
   const c = data.calls.find(x => x.id === id); if (!c) return;
+  // Label this turn's subagent actions with this turn's subagents (not the live feed's).
+  subagentNames = Object.fromEntries((c.subagents || []).map(s => [s.id, `${s.type}${s.description ? ': ' + s.description : ''}`]));
   const act = c.activity?.length ? `<div class="section-label">Activity</div>${c.activity.map(e => eventHTML(e, c.role)).join('')}` : '';
   modal(`Turn #${c.number} · ${ROLES[c.role].name}`, (c.result ? resultHTML(c.result, c.role) : '') + act +
     `<div class="section-label">Prompt</div>${pre(c.prompt)}` + (c.error ? `<div class="section-label">Error</div>${pre(c.error)}` : '') + (c.stderr ? `<div class="section-label">Error log</div>${pre(c.stderr)}` : ''));
@@ -523,12 +553,52 @@ function renderDirector() {
 }
 
 /* ---------- settings ---------- */
+const BACKEND_ROLES = ['director', 'orchestrator', 'worker'];
+function tokens(u) { const n = (u.input_tokens || 0) + (u.output_tokens || 0); return n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : Math.round(n / 1000) + 'k'; }
+function renderBackend() {
+  const b = data.backend; if (!b) return;
+  if (!dirty.backend) {
+    $('backend-default').value = b.default;
+    for (const r of BACKEND_ROLES) $('backend-' + r).value = b.roles[r] || '';
+    if (document.activeElement !== $('codex-model')) $('codex-model').value = b.codex.model || '';
+    $('codex-effort').value = b.codex.reasoning_effort || '';
+    $('codex-fast').checked = !!b.codex.fast;
+    const auto = data.usage?.auto_switch || { enabled: true, at: 0.95 };
+    $('auto-switch').checked = auto.enabled;
+    if (document.activeElement !== $('switch-at')) $('switch-at').value = Math.round(auto.at * 100);
+  }
+  const uses = BACKEND_ROLES.map(r => b.roles[r] || b.default);
+  text('backend-note', uses.includes('codex') && !b.codex_found ? 'codex is not on PATH' : uses.join(' · '));
+}
+const BACKEND_NAME = { claude: 'Claude', codex: 'Codex' };
+function backendSummary() {
+  const rb = data.role_backends || {};
+  return BACKEND_ROLES.map(r => {
+    const x = rb[r] || {}, now = x.running || x.session;
+    const note = x.running && x.running !== x.next ? ` (this turn finishes on ${BACKEND_NAME[x.running]})` : now && now !== x.next ? ' (fresh session at its next call)' : '';
+    const auto = x.auto ? ` · switched from ${BACKEND_NAME[x.auto.from]}: its usage is at ${Math.round(x.auto.level * 100)}%` : '';
+    return [ROLES[r].name, `${BACKEND_NAME[x.next] || '—'}${note}${auto}`];
+  });
+}
+function renderBackendToggle() {
+  const rb = data.role_backends; if (!rb) return;
+  const next = BACKEND_ROLES.map(r => rb[r].set || rb[r].next), same = next.every(b => b === next[0]);
+  document.querySelectorAll('#backend-toggle button').forEach(btn => {
+    btn.setAttribute('aria-pressed', String(same && btn.dataset.backend === next[0]));
+    btn.disabled = busy;
+  });
+  $('backend-toggle').classList.toggle('mixed', !same);
+  $('backend-toggle').title = (same ? '' : 'Mixed: set per role in Settings.\n') + backendSummary().map(([r, b]) => `${r}: ${b}`).join('\n') +
+    (data.coordinator?.outdated ? '\nThe running coordinator applies switches after it restarts.' : '');
+}
 function renderSettings() {
+  renderBackend();
+  html('backend-roles', backendSummary().map(([r, b]) => `<dt>${esc(r)}</dt><dd>${esc(b)}</dd>`).join(''));
   for (const k of LIMIT_KEYS) { $(k).disabled = data.active; $(k).placeholder = 'No limit'; if (!dirty.limits && document.activeElement !== $(k)) $(k).value = data.limits[k] ?? ''; }
   $('save-limits').disabled = data.active || busy;
   text('limit-note', data.active ? 'Stop the run to change limits' : '');
   const sessions = Object.entries(data.state.sessions || {}).map(([r, id]) => `${r}: ${id}`).join('\n') || 'none yet';
-  html('run-info', [['Workspace', data.workspace], ['Branch', data.branch || 'detached HEAD'], ['Baseline', data.baseline], ['Run state', data.state_dir], ['Fast mode', (data.fast_roles || []).join(', ') || 'off'], ['Sessions', sessions]]
+  html('run-info', [['Workspace', data.workspace], ['Branch', data.branch || 'detached HEAD'], ['Baseline', data.baseline], ['Run state', data.state_dir], ['Fast mode', ((data.fast_roles || []).join(', ') || 'off') + (data.backend?.codex?.fast ? '' : ' (Claude only; Codex fast is off)')], ['Backend', BACKEND_ROLES.map(r => `${r}: ${data.backend?.roles?.[r] || data.backend?.default || 'claude'}`).join('\n')], ['Sessions', sessions]]
     .map(([k, v]) => `<dt>${k}</dt><dd style="white-space:pre-wrap">${esc(v)}</dd>`).join(''));
 }
 
@@ -594,13 +664,38 @@ $('follow').onclick = () => { pinnedRole = null; rendered.feedInit = false; rend
 $('start').onclick = () => act('start');
 $('stop').onclick = () => act('stop');
 let bannerAction = 'resume';
-$('banner-action').onclick = () => bannerAction === 'retry-now' ? act('retry-now') : act('start', { retry_interrupted: true });
+$('banner-action').onclick = () => bannerAction === 'retry-now' ? act('retry-now')
+  : bannerAction === 'restart' ? act('restart') : bannerAction === 'restart-now' ? act('restart', { now: true })
+  : act('start', { retry_interrupted: true });
 $('modal-close').onclick = closeModal;
 $('modal').onclick = e => { if (e.target === $('modal')) closeModal(); };
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('modal').hidden) closeModal(); });
 $('guidance').oninput = () => dirty.guidance = true;
 $('save-guidance').onclick = async () => { try { toast((await post('steering', { text: $('guidance').value })).message); dirty.guidance = false; await refresh(); } catch (e) { toast(e.message); } };
 LIMIT_KEYS.forEach(k => $(k).oninput = () => dirty.limits = true);
+document.querySelectorAll('#backend-toggle button').forEach(btn => btn.onclick = async () => {
+  if (busy) return;
+  const target = btn.dataset.backend, rb = data.role_backends || {};
+  const finishing = BACKEND_ROLES.filter(r => rb[r]?.running && rb[r].running !== target);
+  busy = true; render();
+  try {
+    await post('backend', { backend: target, roles: {}, codex_model: data.backend?.codex?.model || '', codex_effort: data.backend?.codex?.reasoning_effort || '' });
+    let msg = `All roles switch to ${BACKEND_NAME[target]} at their next call.`;
+    if (finishing.length) msg += ` The ${ROLES[finishing[0]].name.toLowerCase()}'s turn in progress finishes on ${BACKEND_NAME[rb[finishing[0]].running]}.`;
+    if (data.coordinator?.outdated) msg += ' The running coordinator applies it after it restarts (see the banner).';
+    if (target === 'codex' && !data.backend?.codex_found) msg += ' Warning: codex is not on PATH.';
+    dirty.backend = false; toast(msg); await refresh();
+  } catch (e) { toast(e.message); } finally { busy = false; render(); }
+});
+for (const id of ['backend-default', 'codex-model', 'codex-effort', 'codex-fast', 'auto-switch', 'switch-at', ...BACKEND_ROLES.map(r => 'backend-' + r)]) $(id).addEventListener('input', () => { dirty.backend = true; });
+$('save-backend').onclick = async () => {
+  try {
+    toast((await post('backend', { backend: $('backend-default').value, roles: Object.fromEntries(BACKEND_ROLES.map(r => [r, $('backend-' + r).value || null])),
+      codex_model: $('codex-model').value, codex_effort: $('codex-effort').value, codex_fast: $('codex-fast').checked,
+      auto_switch: { enabled: $('auto-switch').checked, at: Math.min(100, Math.max(1, Number($('switch-at').value) || 95)) / 100 } })).message);
+    dirty.backend = false; await refresh();
+  } catch (e) { toast(e.message); }
+};
 $('save-limits').onclick = async () => { try { toast((await post('limits', Object.fromEntries(LIMIT_KEYS.map(k => [k, $(k).value.trim() === '' ? null : Number($(k).value)])))).message); dirty.limits = false; await refresh(); } catch (e) { toast(e.message); } };
 $('outer-enabled').onchange = $('max-batches').oninput = () => dirty.outer = true;
 $('save-outer').onclick = async () => { try { toast((await post('outer', { enabled: $('outer-enabled').checked, max_batches: $('max-batches').value.trim() === '' ? null : Number($('max-batches').value) })).message); dirty.outer = false; await refresh(); } catch (e) { toast(e.message); } };

@@ -20,8 +20,9 @@ code when something looks stale, and say so in coordination_notes.
 ## The native viewer: `sim-spatial` (Bevy)
 
 - Target shape: `docs/architecture/native-viewer.md`. Bevy is pinned in the
-  workspace `Cargo.toml`; check that version's docs (docs.rs/bevy/<version>) and
+  workspace `Cargo.toml` (0.19.1); check that version's docs (docs.rs/bevy/<version>) and
   the migration guides on bevy.org rather than recalling APIs.
+- Bevy practice for this codebase: `tools/claude-pair/prompts/bevy.md`.
 
 - Build mode (System Builder): `cargo run -p sim-spatial -- --system examples/systems-builder/motor-driver-board/board.system.json`
   (other examples: `examples/systems-builder/*/*.system.json`).

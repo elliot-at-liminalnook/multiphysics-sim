@@ -59,7 +59,11 @@ use its abstractions:
 
 Where one of them doesn't exist yet and your epic needs it, create it properly
 and use it, rather than working around it. For any Bevy API, check the pinned
-version's docs and migration guides; don't rely on memory. If you must depart
+version's docs and migration guides; don't rely on memory. Follow
+`tools/claude-pair/prompts/bevy.md` (the Bevy practice section of your
+instructions): read each signature in the 0.19.1 source before using it, and
+never write a pattern from its "Never write these" table. Tell every
+subagent that writes or reviews Bevy code to follow it too. If you must depart
 from the document, record the decision, and update the document in the same
 commit when the shape really changes.
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Future authorized fresh-binary HW-01–HW-09 verification; never builds.
+"""Future authorized fresh-binary HW-01–HW-11 verification; never builds.
 
 Screenshots are captured only with the opt-in `--screenshots` flag. The
 `receipt` subcommand writes the fresh-build receipt from already-built
 binaries and retained build logs; it builds nothing.
 
 Only a bench-owned capability socket can reach the calibration server. The
-positive HW-01–HW-09 path connects the native viewer DIRECTLY to the owned
+positive HW-01–HW-11 path connects the native viewer DIRECTLY to the owned
 server. The loopback proxy exists only for the separately labelled
 physical/unknown identity FIXTURE phase (a second owned viewer); it is not
 another calibration engine. All outputs are retained, including failures.
@@ -67,11 +67,26 @@ CHECKPOINTS = (
 # reports "Still settling" (serve_actuator_calibration.rs, sweep sample
 # callback). The viewer polls the server every 150 ms, so six stable samples
 # take about 0.75 s of server sampling; the driver waits this long inside those
-# bounds before each capture, then retries while the server still settles.
+# bounds before each capture. A capture answers only once the server saved
+# the pose or refused it; an unsettled one answers an error with the
+# server's "Still settling" text and is retried.
 STILL_SECONDS = 0.5
 CAPTURE_TRIES = 5
-CAPTURE_SECONDS = 5
 SETTLING = ("Still settling",)
+# HW-10/HW-11 texts (grep the Rust before changing): the virtual label on the
+# Leg gait status line and on simulated Recent leg runs headings; the
+# server's run_gait misfit refusal (serve_actuator_calibration.rs `run_gait`);
+# robot mode's Run refusal while mirroring (hardware/mirror.rs `MIRRORING`).
+VIRTUAL_SIMULATED = "VIRTUAL (simulated)"
+VIRTUAL_RUN_PREFIX = VIRTUAL_SIMULATED + " · "
+MISFIT = ("of the gait fits its taught poses",)
+MIRRORING = ("the leg mirror is showing the real leg on the robot; turn the mirror off",)
+# HW-10 leg teaching: wider than HW-06 so a gait mapped through an alignment
+# at mid-window fits (run_gait needs 95 % of samples inside the taught window
+# less 6 counts; the catalog's gaits move a joint up to about 1.3 rad, about
+# 850 counts, from its alignment angle).
+WIDE_LOWER_COUNTS = 1600
+WIDE_UPPER_COUNTS = 3200
 # Errors that leave a queued viewer job unanswered. On Python 3.9 a read
 # timeout is socket.timeout (not yet TimeoutError) and a connect failure is
 # URLError; all of them must reach the job-cancel and direct-STOP path.
@@ -197,6 +212,50 @@ def stop_interrupted(state, kind):
     caller must also check that the motor still has no gains."""
     work = state["server"][kind]
     return work["running"] is False and bool(work.get("error")) and not work.get("result")
+
+
+def leg_line(status):
+    """The Leg gait status line (view.rs `render_gait`, multi-line text):
+    "VIRTUAL (simulated) · Leg: {phase} · error {role} {n}, … counts", as
+    {virtual, phase, errors, line}; None when no line has "Leg: ". `errors`
+    is the text between "error " and " counts" (None before the first
+    errors); `virtual` means the line carries the VIRTUAL (simulated) label."""
+    if not isinstance(status, str):
+        return None
+    for line in status.splitlines():
+        found = re.search(r"(?:^|\s)Leg: (.*)$", line)
+        if not found:
+            continue
+        phase, _, tail = found.group(1).partition(" · ")
+        errors = re.search(r"(?:^| · )error (.+?) counts(?: · |$)", " · " + tail if tail else "")
+        return {"virtual": VIRTUAL_SIMULATED in line, "phase": phase.strip(),
+                "errors": errors.group(1) if errors else None, "line": line}
+    return None
+
+
+def virtual_runs(runs):
+    """Recent leg runs headings (`panel.gait.runs`: [heading, rows] pairs)
+    labelled as simulated."""
+    if not isinstance(runs, list):
+        return []
+    return [r[0] for r in runs if isinstance(r, (list, tuple)) and r and isinstance(r[0], str)
+            and r[0].startswith(VIRTUAL_RUN_PREFIX)]
+
+
+# The saved reference is the held reading at the save, so the line reads
+# "0.0°" from the status the save answers with (delta exactly 0). A later
+# poll may differ by the hold's jitter: the capture itself needs six samples
+# within 2 counts, so allow 3.4 counts (0.3°), not a strict 0.0.
+ALIGNED_DEG = 0.3
+
+
+def mirror_degrees(status, role):
+    """`{role}: {deg}° from its alignment pose` in the mirror line, as a
+    float; None when the role has no such reading."""
+    if not isinstance(status, str) or not isinstance(role, str):
+        return None
+    found = re.search(r"(?<![\w/])" + re.escape(role) + r": (-?\d+(?:\.\d+)?)° from its alignment pose", status)
+    return float(found.group(1)) if found else None
 
 
 def stop_reply_latched(code, value):
@@ -489,7 +548,11 @@ class Run:
             record["server_stop"] = self.direct_stop(f"job timeout {path}")
             self.append("cancelled-jobs.jsonl", record)
 
-    def command(self, command, args=None, refusal=False, base=None, seconds=25):
+    def command(self, command, args=None, refusal=False, base=None, seconds=25, either=False):
+        """One command job. `refusal`: it must fail with an error (the
+        result is returned); `either`: success or failure is the caller's
+        verdict (the result {ok, value | error} is returned); else it must
+        succeed and its value is returned."""
         base = base or self.base
         try:
             code, accepted = self.http(base, "POST", "/v1/batch",
@@ -512,6 +575,10 @@ class Run:
             self.cancel_job(base, path)
             raise
         result = job["results"][0]
+        if either:
+            assert job["status"] in {"succeeded", "failed"} and isinstance(result.get("ok"), bool) \
+                and (job["status"] == "succeeded") == result["ok"], job
+            return result
         if refusal:
             assert job["status"] == "failed" and result["ok"] is False and result.get("error"), job
             return result
@@ -545,10 +612,18 @@ class Run:
             assert has_text(result.get("error"), expect), (name, expect, result)
         return result
 
-    def click(self, name, expect=None, base=None, seconds=25, activates=None):
+    def click(self, name, expect=None, base=None, seconds=25, activates=None, label=None, either=False):
         """Activate a listed control. `activates` names the hardware action
         the control must currently stand for (e.g. a jog toggle's
-        `jog_release` while held); `seconds` bounds the activation job."""
+        `jog_release` while held); `label` is the label it must show now
+        (e.g. Play/Pause/Resume); `seconds` bounds the activation job.
+
+        A `system_ui` activation sent over REST is forwarded to the hardware
+        handler with a REST reply (robot/actions/mod.rs, `Replies::submit`),
+        so the job answers the hardware verdict: after the ticket resolves
+        for a queued command, with the handler's error on a refusal.
+        `either`: return that result ({ok, value | error}) for the caller
+        to judge instead of requiring success."""
         listing = self.command("system_ui", {"action": {"operation": "controls"}}, base=base)
         identity = name if name.startswith("mode:") else "hardware:" + name
         controls = [c for c in listing["controls"] if c.get("id") == identity]
@@ -560,9 +635,11 @@ class Run:
         if activates is not None:
             action = (controls[0].get("action") or {}).get("hardware")
             assert isinstance(action, dict) and list(action) == [activates], (identity, activates, controls[0])
+        if label is not None:
+            assert controls[0].get("label") == label, (identity, label, controls[0])
         result = self.command("system_ui", {"action": {"operation": "activate",
             "id": identity, "ui_revision": listing["ui_revision"]}}, refusal=expect is not None, base=base,
-            seconds=seconds)
+            seconds=seconds, either=either and expect is None)
         if expect is not None:
             assert has_text(result.get("error"), expect), (identity, expect, result)
         return result
@@ -794,37 +871,42 @@ class Run:
         return len(list((self.out / "records").glob("calibration-*.json")))
 
     def capture(self, boundary, axis):
-        """Save a pose and prove it was saved, retrying while it settles.
+        """Save a pose; the activation's own answer is the verdict.
 
-        A capture the server judges unsettled is dropped with "Still
-        settling", and an earlier value (e.g. the reference after
-        reset_poses) can already be non-null, so success is a NEW
-        calibration file plus `Saved <boundary> pose` plus the value.
+        A capture answers only after the server saved the pose, or with
+        its refusal. An error with the server's "Still settling" text is
+        retried after holding still again (up to CAPTURE_TRIES); any other
+        error fails. An OK answer carries hardware_status, which must
+        already show the value (else the next hardware_status, read once,
+        must); a new records/calibration-*.json is checked once as
+        evidence. Nothing is polled for: an earlier value (e.g. the
+        reference after reset_poses) is never mistaken for this save.
         """
         attempts = []
+        saved_value = lambda v: v["server"]["axes"][axis][boundary] is not None
         for attempt in range(1, CAPTURE_TRIES + 1):
             self.still()
             before = self.calibration_saves()
-            self.click("capture_" + boundary)
-            end = min(self.deadline, time.monotonic() + CAPTURE_SECONDS)
-            while True:
-                s = self.state()
-                # hardware_status may report "server": null or empty axes:
-                # missing fields mean "not saved yet".
-                server = s.get("server") if isinstance(s, dict) else None
-                message = server.get("capture_message") if isinstance(server, dict) else None
-                if (self.calibration_saves() > before and message == f"Saved {boundary} pose"
-                        and satisfied(lambda v: v["server"]["axes"][axis][boundary] is not None, s)):
-                    self.append("captures.jsonl", {"step": self.step, "axis": axis, "boundary": boundary,
-                                                   "attempts": attempts + [{"attempt": attempt, "saved": True}]})
-                    return s
-                if time.monotonic() >= end:
-                    break
-                time.sleep(.12)
-            attempts.append({"attempt": attempt, "saved": False, "capture_message": message,
-                             "settling": has_text(message, SETTLING)})
+            result = self.click("capture_" + boundary, either=True)
+            if result["ok"] is not True:
+                error = result.get("error")
+                settling = has_text(error, SETTLING)
+                attempts.append({"attempt": attempt, "saved": False, "error": error, "settling": settling})
+                if settling:
+                    continue
+                self.append("captures.jsonl", {"step": self.step, "axis": axis, "boundary": boundary, "attempts": attempts})
+                raise AssertionError(f"{boundary} pose of motor {axis} refused: {error}")
+            answered = result.get("value")
+            state = answered if satisfied(saved_value, answered) else self.state()
+            files = self.calibration_saves()
+            attempts.append({"attempt": attempt, "saved": True, "value_in_answer": satisfied(saved_value, answered),
+                             "value": satisfied(saved_value, state), "new_calibration_file": files > before})
+            self.append("captures.jsonl", {"step": self.step, "axis": axis, "boundary": boundary, "attempts": attempts})
+            assert satisfied(saved_value, state), (f"{boundary} pose of motor {axis} answered saved but absent", state)
+            assert files > before, f"{boundary} pose of motor {axis} answered saved but no new calibration file"
+            return state
         self.append("captures.jsonl", {"step": self.step, "axis": axis, "boundary": boundary, "attempts": attempts})
-        raise AssertionError(f"{boundary} pose of motor {axis} not saved after {CAPTURE_TRIES} tries: {attempts}")
+        raise AssertionError(f"{boundary} pose of motor {axis} still settling after {CAPTURE_TRIES} tries: {attempts}")
 
     def teaching(self, motor=2):
         axis = str(motor)
@@ -838,6 +920,109 @@ class Run:
 
     def settled(self, seconds=30, label="bounded target reached"):
         return self.wait(lambda s: abs(self.position(s) - s["session"]["target_raw"]) <= 32, seconds, label)
+
+    # ---- HW-10 / HW-11 helpers ------------------------------------------
+    def wide_teaching(self, motor):
+        """Reset and re-teach `motor` with a wide window (WIDE_*_COUNTS),
+        so a gait mapped through a mid-window alignment fits."""
+        axis = str(motor)
+        self.selected(motor)
+        self.action("speed", {"percent": 80})
+        self.wait(lambda s: s["form"]["speed_percent"] == 80, 10, "teaching speed")
+        self.click("reset_poses")
+        self.wait(lambda s: s["server"]["axes"][axis]["lower"] is None and s["server"]["axes"][axis]["upper"] is None)
+        self.wait(lambda s: s["session"]["ready"] and s["session"]["id"] == motor)
+        self.jog("lower", WIDE_LOWER_COUNTS)
+        lower = self.capture("lower", axis)["server"]["axes"][axis]["lower"]
+        self.jog("upper", WIDE_UPPER_COUNTS)
+        taught = self.capture("upper", axis)
+        assert abs(taught["server"]["axes"][axis]["upper"] - lower) >= WIDE_UPPER_COUNTS - 400, taught["server"]["axes"][axis]
+        return taught
+
+    def mirror_loaded(self, seconds=60):
+        """Show the mirror and wait until its robot model is loaded and shown."""
+        self.click("mirror_on", activates="mirror_enabled")
+        return self.wait(lambda s: s["mirror"]["enabled"] is True and s["mirror"]["shown"] is True
+                         and s["mirror"]["coordinates"] >= 1, seconds, "mirror model loaded and shown")
+
+    def mirror_hidden(self):
+        self.click("mirror_off", activates="mirror_enabled")
+        return self.wait(lambda s: s["mirror"]["enabled"] is False and s["mirror"]["shown"] is False, 15,
+                         "mirror no longer shown")
+
+    def align_mid(self, motor):
+        """Move `motor` to mid-window and Save sim alignment there, with the
+        mirror model loaded, so the saved reference carries its alignment
+        joint angle (`Mirror::alignment_angle`, sent with the capture)."""
+        axis = str(motor)
+        self.selected(motor)
+        self.action("target", {"percent": 50})
+        self.action("target_commit")
+        self.settled()
+        aligned = self.capture("reference", axis)
+        joint = aligned["server"]["axes"][axis].get("reference_joint_rad")
+        assert isinstance(joint, (int, float)) and math.isfinite(joint), \
+            ("alignment saved without the mirror's joint angle", aligned["server"]["axes"][axis])
+        return aligned
+
+    def gait_form(self, mode, speed, effort):
+        """The gait's mode, playback speed and leg effort, set and observed."""
+        self.click(f"gait_mode_{mode}")
+        self.action("gait_speed", {"percent": speed})
+        self.action("gait_effort", {"percent": effort})
+        return self.wait(lambda s: s["form"]["gait_mode"] == mode and s["form"]["gait_speed_percent"] == speed
+                         and s["form"]["gait_effort_percent"] == effort, 10, f"gait form {mode} {speed}% {effort}%")
+
+    def gait_confirmed(self, on):
+        if self.state()["form"]["gait_ok"] is not on:
+            self.click("gait_confirm")
+        return self.wait(lambda s: s["form"]["gait_ok"] is on, 10, f"gait confirmation {on}")
+
+    def leg_gait(self, mode, roles):
+        """Play the selected gait on the virtual leg in `mode` (leg/both) and
+        stop it: the play's own verdict (a refusal is reported as a misfit
+        or not), the VIRTUAL Leg line reaching `playing` with errors, the
+        server running, the gait Stop ending it and a new VIRTUAL run row."""
+        before = self.state()
+        runs_before = [r[0] for r in before["panel"]["gait"]["runs"]]
+        # The verdict comes after the link's stop, select-all-held and
+        # gait_start (the hardware ticket's own deadline is 45 s).
+        played = self.click("gait_play", label="Play", either=True, seconds=50)
+        if played["ok"] is not True:
+            error = played.get("error")
+            self.retain(f"hw10-{mode}-refused.json", {"error": error, "misfit": has_text(error, MISFIT)})
+            raise AssertionError(f"{mode} gait refused ({'MISFIT' if has_text(error, MISFIT) else 'not a misfit'}): {error}")
+        phases = []
+
+        def playing(s):
+            line = leg_line(s["panel"]["gait"]["status"])
+            if line is not None and (not phases or phases[-1] != line["phase"]):
+                phases.append(line["phase"])
+            return (s["server"]["gait"]["running"] is True and s["session"]["gait"]["mode"] == mode
+                    and s["session"]["gait"]["leg"] is True and line["virtual"] and line["phase"] == "playing"
+                    and line["errors"] is not None and s["server"]["gait"]["phase"] == "playing"
+                    # Both: the mirror shows the gait (the bound leg on the encoders) on live data.
+                    and (mode != "both" or (s["mirror"]["gait"] is True and s["link_state"] == "live")))
+        live = self.wait(playing, 60, f"virtual {mode} gait playing")
+        skipped = live["session"]["gait"]["skipped"]
+        driven = [roles["2"], roles["3"]]
+        assert not any(x.startswith(role + " ") for x in skipped for role in driven), ("taught motor not driven", skipped)
+        evidence = {"mode": mode, "phases_seen": phases, "skipped": skipped,
+                    "status_line": leg_line(live["panel"]["gait"]["status"]), "server_gait": live["server"]["gait"]}
+        if mode == "both":
+            t_read = live["session"]["gait"]["t"]
+            later = self.wait(lambda s: s["link_state"] == "live" and s["session"]["gait"]["mode"] == "both"
+                              and s["session"]["gait"]["t"] > t_read, 10, "both gait clock advances while live")
+            evidence["t"] = [t_read, later["session"]["gait"]["t"]]
+        self.click("gait_stop")
+        ended = self.wait(lambda s: not (s["server"].get("gait") or {}).get("running") and s["session"]["gait"] is None
+                          and bool(virtual_runs(s["panel"]["gait"]["runs"]))
+                          and [r[0] for r in s["panel"]["gait"]["runs"]] != runs_before, 30,
+                          f"{mode} gait stopped with a VIRTUAL run row")
+        evidence["runs"] = virtual_runs(ended["panel"]["gait"]["runs"])
+        self.retain(f"hw10-{mode}.json", evidence)
+        self.stopped()
+        return evidence
 
     # ---- the verification ----------------------------------------------
     def verify(self):
@@ -1133,10 +1318,15 @@ class Run:
         self.screenshot("terminal")
         self.done()
 
+        self.verify_gait()
+        self.verify_mirror()
+
         self.begin("LC1-real-server-refusal")
         self.click("stop")
         self.stopped()
-        for name in ["raw_step", "gait_play", "sync_start"]:
+        # gait_play is in the virtual scope since HW-10 (it would play here),
+        # so the out-of-scope probes are commands the bench does not simulate.
+        for name in ["raw_step", "flip", "sync_start"]:
             self.action(name, None, expect=OUT_OF_SCOPE)
         token = self.server_token_value()
         # No identity headers: the virtual server refuses execution as a binding.
@@ -1220,6 +1410,98 @@ class Run:
         self.stop_viewer("fixture")
         self.done(fixture=observations)
         self.results["ok"] = True
+
+    def verify_gait(self):
+        """HW-10 on the virtual bench: Sim only, then Leg and Both."""
+        self.begin("HW-10a-sim")
+        self.click("stop")
+        self.stopped()
+        gaits = self.command("hardware_gaits")
+        assert isinstance(gaits, dict) and gaits.get("gaits"), gaits
+        self.retain("hw10-gaits.json", gaits)
+        self.wait(lambda s: len(s["panel"]["gait"]["options"]) >= 1, 15, "gait options listed")
+        self.click("gait_select_0", activates="gait_select")
+        self.gait_form("sim", 100, 50)
+        self.wait(lambda s: s["form"]["gait_index"] == 0 and s["session"]["gait"] is None, 10, "gait 0 chosen, none playing")
+        self.click("gait_play", label="Play")
+        started = self.wait(lambda s: s["session"]["gait"]["mode"] == "sim" and s["session"]["gait"]["playing"] is True
+                            and s["session"]["gait"]["leg"] is False, 30, "sim gait playing")
+        t0 = started["session"]["gait"]["t"]
+        moving = self.wait(lambda s: s["session"]["gait"]["t"] >= t0 + 0.5, 5, "sim gait time advances")
+        self.click("gait_play", label="Pause")
+        paused = self.wait(lambda s: s["session"]["gait"]["playing"] is False, 10, "sim gait paused")
+        held_t = paused["session"]["gait"]["t"]
+        time.sleep(.6)
+        later = self.state()
+        assert later["session"]["gait"]["playing"] is False and later["session"]["gait"]["t"] == held_t, \
+            ("paused gait time moved", held_t, later["session"]["gait"])
+        self.click("gait_play", label="Resume")
+        resumed = self.wait(lambda s: s["session"]["gait"]["playing"] is True and s["session"]["gait"]["t"] > held_t, 10,
+                            "sim gait resumed and advancing")
+        self.action("gait_speed", {"percent": 50})
+        scaled = self.wait(lambda s: abs(s["session"]["gait"]["scale"] - 0.5) < 1e-9, 10, "sim gait at 50 % speed")
+        self.click("gait_stop")
+        self.wait(lambda s: s["session"]["gait"] is None, 10, "sim gait stopped")
+        self.done(sim_times={"start": t0, "moving": moving["session"]["gait"]["t"], "paused": held_t,
+                             "resumed": resumed["session"]["gait"]["t"], "scaled": scaled["session"]["gait"]["scale"]})
+
+        # Leg and Both preconditions: both driven motors taught wide, aligned
+        # at mid-window with the mirror model loaded, watchdogs proven by a
+        # selection that holds the others. The knee (motor 1) is untaught,
+        # so the mirror's bindings skip it ("poses not taught").
+        self.begin("HW-10b-leg")
+        self.explicit_form()
+        for motor in (3, 2):
+            self.wide_teaching(motor)
+        self.mirror_loaded()
+        for motor in (3, 2):
+            self.align_mid(motor)
+        ready = self.selected(2)
+        assert ready["form"]["hold_others"] is True and "watchdog check failed" not in str(ready["server"]["message"]), \
+            ready["server"]["message"]
+        roles = {k: a["role"] for k, a in ready["server"]["axes"].items()}
+        self.gait_form("leg", 25, 50)
+        self.gait_confirmed(True)
+        leg = self.leg_gait("leg", roles)
+        self.done(leg=leg)
+
+        self.begin("HW-10b-both")
+        self.selected(2)
+        self.gait_form("both", 25, 50)
+        self.gait_confirmed(True)
+        both = self.leg_gait("both", roles)
+        # Leave the panel as Sim only, unconfirmed and without the mirror.
+        self.gait_form("sim", 100, 50)
+        self.gait_confirmed(False)
+        self.mirror_hidden()
+        self.done(both=both)
+
+    def verify_mirror(self):
+        """HW-11 on the virtual bench: alignment reads 0.0°, a jog moves the
+        reading, Run is refused while mirroring, hiding ends the display."""
+        self.begin("HW-11")
+        self.mirror_loaded()
+        self.selected(2)
+        self.action("target", {"percent": 50})
+        self.action("target_commit")
+        self.settled()
+        self.held()
+        role = self.state()["server"]["axes"]["2"]["role"]
+        self.capture("reference", "2")
+        zero = self.wait(lambda s: s["mirror"]["leg_data"] == "live"
+                         and abs(mirror_degrees(s["mirror"]["status"], role)) <= ALIGNED_DEG, 10,
+                         "mirror reads 0.0° from its alignment pose after Save sim alignment")
+        self.jog("upper", 100)
+        moved = self.wait(lambda s: s["mirror"]["leg_data"] == "live"
+                          and abs(mirror_degrees(s["mirror"]["status"], role)) >= 1.0, 10,
+                          "mirror reading follows the jog")
+        refused = self.command("robot_run", {"action": "start"}, refusal=True)
+        assert has_text(refused.get("error"), MIRRORING), refused
+        self.mirror_hidden()
+        self.click("stop")
+        self.stopped()
+        self.done(mirror={"role": role, "after_save": zero["mirror"]["status"], "after_jog": moved["mirror"]["status"],
+                          "run_refusal": refused.get("error")})
 
     # ---- cleanup --------------------------------------------------------
     def cleanup_server_stop(self):

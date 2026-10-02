@@ -116,6 +116,101 @@ class CaptureAndStopPredicates(unittest.TestCase):
         self.assertFalse(DRIVER.satisfied(lambda s: DRIVER.stop_interrupted(s, "campaign"), running))
 
 
+class CaptureVerdict(unittest.TestCase):
+    """`capture` judges by the activation's own answer and never polls."""
+    SAVED = {"server": {"axes": {"2": {"lower": 10}}}}
+    SETTLING = {"ok": False, "error": "Still settling. Release Q/A, wait for Holding, then save the pose."}
+
+    def run_capture(self, answers, files, state=None):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        args = type("Args", (), {"out": Path(temporary.name), "total_timeout": 60, "screenshots": False})()
+        run = DRIVER.Run(args)
+        with patch.object(run, "still") as still, patch.object(run, "click", side_effect=answers) as click, \
+                patch.object(run, "calibration_saves", side_effect=files), \
+                patch.object(run, "state", return_value=state) as read:
+            try:
+                return run.capture("lower", "2"), click, still, read
+            except AssertionError as e:
+                return e, click, still, read
+
+    def test_settling_retries_then_an_ok_answer_with_a_new_file_saves(self):
+        result, click, still, read = self.run_capture([self.SETTLING, {"ok": True, "value": self.SAVED}], [0, 0, 1])
+        self.assertEqual(result, self.SAVED)
+        self.assertEqual(click.call_count, 2)
+        self.assertEqual(still.call_count, 2)
+        read.assert_not_called()
+        click.assert_called_with("capture_lower", either=True)
+
+    def test_another_refusal_fails_at_once(self):
+        result, click, _, _ = self.run_capture([{"ok": False, "error": "no motor is ready: select one first"}], [0])
+        self.assertIsInstance(result, AssertionError)
+        self.assertIn("refused", str(result))
+        self.assertEqual(click.call_count, 1)
+
+    def test_ok_without_a_new_calibration_file_fails(self):
+        result, _, _, _ = self.run_capture([{"ok": True, "value": self.SAVED}], [3, 3])
+        self.assertIsInstance(result, AssertionError)
+        self.assertIn("no new calibration file", str(result))
+
+    def test_ok_answer_without_the_value_reads_status_once(self):
+        result, _, _, read = self.run_capture([{"ok": True, "value": None}], [0, 1], state=self.SAVED)
+        self.assertEqual(result, self.SAVED)
+        read.assert_called_once()
+        result, _, _, _ = self.run_capture([{"ok": True, "value": None}], [0, 1],
+                                           state={"server": {"axes": {"2": {"lower": None}}}})
+        self.assertIsInstance(result, AssertionError)
+
+    def test_settling_every_try_fails_after_the_limit(self):
+        tries = DRIVER.CAPTURE_TRIES
+        result, click, _, _ = self.run_capture([self.SETTLING] * tries, [0] * tries)
+        self.assertIsInstance(result, AssertionError)
+        self.assertIn("still settling", str(result))
+        self.assertEqual(click.call_count, tries)
+
+
+class GaitAndMirrorPredicates(unittest.TestCase):
+    def test_leg_line_reads_the_virtual_phase_and_errors(self):
+        status = ("Leg only · gait time 1.20 s of 0.90 s period · 25% speed\nLimits: worm ≤ 300 counts/s, 900 counts/s²\n"
+                  "VIRTUAL (simulated) · Leg: playing · error worm 12, belt/hip — counts · 2 targets clamped to taught poses\n"
+                  "Not driven: knee (poses not taught)")
+        line = DRIVER.leg_line(status)
+        self.assertEqual((line["virtual"], line["phase"], line["errors"]), (True, "playing", "worm 12, belt/hip —"))
+        approach = DRIVER.leg_line("Sim + leg · gait time 0.00 s of 0.90 s period · 25% speed\nVIRTUAL (simulated) · Leg: approach")
+        self.assertEqual((approach["phase"], approach["errors"]), ("approach", None))
+        unlabelled = DRIVER.leg_line("Leg only · gait time 0.00 s\nLeg: playing · error worm 3 counts")
+        self.assertEqual((unlabelled["virtual"], unlabelled["errors"]), (False, "worm 3"))
+        # "Leg only" and "Last leg gait stopped" are not the Leg line.
+        self.assertIsNone(DRIVER.leg_line("Leg only · gait time 0.00 s of 0.90 s period · 25% speed"))
+        self.assertIsNone(DRIVER.leg_line("Last leg gait stopped: Browser heartbeat lost"))
+        self.assertIsNone(DRIVER.leg_line(None))
+
+    def test_only_virtual_run_headings_count(self):
+        runs = [["VIRTUAL (simulated) · 3701-Bayesian-020 · effort 50% · speed 25% · 4.2 s · stopped", []],
+                ["3701-Bayesian-020 · effort 50% · speed 25% · 4.2 s · stopped", []], "junk", []]
+        self.assertEqual(DRIVER.virtual_runs(runs), [runs[0][0]])
+        self.assertEqual(DRIVER.virtual_runs(None), [])
+
+    def test_mirror_degrees_reads_one_role(self):
+        line = "belt/hip: 11.3° from its alignment pose · worm: -0.0° from its alignment pose · knee: not aligned — shown at mid-travel"
+        self.assertEqual(DRIVER.mirror_degrees(line, "worm"), 0.0)
+        self.assertEqual(DRIVER.mirror_degrees(line, "belt/hip"), 11.3)
+        self.assertIsNone(DRIVER.mirror_degrees(line, "hip"))
+        self.assertIsNone(DRIVER.mirror_degrees(line, "knee"))
+        stale = "Leg data stale — last read 3 s ago; not live · last reading: worm: 2.1° from its alignment pose"
+        self.assertEqual(DRIVER.mirror_degrees(stale, "worm"), 2.1)
+        self.assertIsNone(DRIVER.mirror_degrees(None, "worm"))
+
+    def test_texts_match_their_rust_owners(self):
+        root = DRIVER.ROOT
+        server = (root / "crates/sim-runtime/examples/serve_actuator_calibration.rs").read_text()
+        self.assertIn(DRIVER.MISFIT[0], server)
+        self.assertIn(DRIVER.SETTLING[0], server)
+        mirror = (root / "crates/sim-spatial/src/robot/hardware/mirror.rs").read_text()
+        self.assertIn(DRIVER.MIRRORING[0], mirror)
+        self.assertIn("° from its alignment pose", mirror)
+
+
 class PendingJobTransportErrors(unittest.TestCase):
     def test_read_timeout_reaches_job_cancel(self):
         # Python 3.9: a urllib read timeout is socket.timeout, not TimeoutError.

@@ -3,6 +3,34 @@ use super::*;
 use crate::robot::hardware::{HardwareConfig, settings};
 
 #[test]
+fn close_stop_is_immediate_while_preferences_are_loading() {
+    use crate::app::{close::{CloseAction, ClosePlugin}, actions::Act, settings::SettingsOwner};
+    let mut hw = Hardware::new(HardwareConfig::default(), settings::Settings::default());
+    hw.form.held_upper = true;
+    hw.form.held_lower = true;
+    let mut app = App::new();
+    app.add_message::<bevy::window::WindowCloseRequested>()
+        .init_resource::<crate::app::actions::Replies>()
+        .insert_resource(SettingsOwner::default())
+        .insert_resource(hw)
+        .insert_resource(crate::ui_kit::UiFonts {
+            regular:default(), italic:default(), mono:default(), medium:default(), semibold:default(),
+            icons:std::collections::BTreeMap::new(),
+        });
+    crate::app::configure_sets(&mut app);
+    app.add_plugins(ClosePlugin);
+    let window = app.world_mut().spawn(Window::default()).id();
+    app.world_mut().write_message(Act::ui(CloseAction::CloseRequest));
+    app.update();
+    let hw = app.world().resource::<Hardware>();
+    assert!(!hw.form.held_upper && !hw.form.held_lower);
+    assert!(app.world().resource::<crate::app::close::CloseOwner>().pending());
+    assert!(app.world().get::<Window>(window).is_some());
+    assert!(!app.world().resource::<SettingsOwner>().drain_ready());
+    assert!(hw.link.is_none() && !hw.sync.engaged());
+}
+
+#[test]
 fn late_publication_changes_only_inactive_remembered_choices() {
     let mut hw = Hardware::new(HardwareConfig::default(), settings::Settings::default());
     hw.form.target_percent = 31.0;

@@ -44,37 +44,53 @@ fn tick(
     mut group: ResMut<PreferenceGroup>,
     redraw: Option<MessageWriter<bevy::window::RequestRedraw>>,
 ) {
+    let previous_status = owner.status();
     let previous_diagnostic = owner.diagnostic.clone();
+    // Polling handles is not a semantic projection change.
+    let state = owner.bypass_change_detection();
+    tick_owner(state);
+    if previous_status != owner.status() { owner.set_changed(); }
+    if previous_diagnostic != owner.diagnostic
+        && let Some(error) = &owner.diagnostic
+    {
+        bevy::log::warn!("viewer preferences: {error}; retry with settings_retry");
+    }
+    let next = PreferenceGroup {
+        recents: serde_json::to_string(&owner.recents).unwrap_or_default(),
+        hardware: serde_json::to_string(&owner.hardware).unwrap_or_default(),
+        cad: serde_json::to_string(&owner.cad).unwrap_or_default(),
+    };
+    if group.recents != next.recents || group.hardware != next.hardware || group.cad != next.cad {
+        *group = next;
+    }
+    if (owner.load.is_some() || owner.save.is_some() || owner.canonical.is_some()
+        || owner.dirty() && !owner.blocked && owner.normalization_error.is_none())
+        && let Some(mut redraw) = redraw
+    { redraw.write(bevy::window::RequestRedraw); }
+}
+fn tick_owner(owner: &mut SettingsOwner) {
     let load = owner.load.as_ref().and_then(Job::poll);
     if let Some(answer) = load {
-        land_load(&mut owner, answer);
+        land_load(owner, answer);
     }
     if owner.ready {
         if let Some(answer) = owner.canonical.as_ref().and_then(Job::poll) {
-            owner.canonical = None;
-            owner.records.pop_front();
-            match answer {
-                Ok((mode, document, now)) => {
-                    owner.recents.record(mode, &document, now);
-                    owner.revision += 1;
-                }
-                Err(e) => owner.diagnostic = Some(e),
-            }
+            land_canonical(owner, answer);
         }
-        if owner.canonical.is_none() {
+        if owner.canonical.is_none() && owner.normalization_error.is_none() {
             if let Some((mode, document, now)) = owner.records.front().cloned() {
                 owner.canonical = Some(Job::spawn(
                     Pool::Io,
                     owner.revision,
                     "recent path normalization",
-                    move |_| Ok((mode, super::super::recent::absolute(&document), now)),
+                    move |_| Ok((mode, jobs::normalize(&document)?, now)),
                 ));
             }
         }
     }
     if let Some(answer) = owner.save.as_ref().and_then(Job::poll) {
         owner.save = None;
-        land_save(&mut owner, answer);
+        land_save(owner, answer);
     }
     if owner.ready
         && !owner.blocked
@@ -86,6 +102,8 @@ fn tick(
     {
         match (owner.paths.clone(), owner.snapshot()) {
             (Some(paths), Ok(snapshot)) => {
+                owner.snapshot_error = None;
+                owner.save_revision = Some(owner.revision);
                 owner.save = Some(jobs::save_job(
                     paths,
                     snapshot,
@@ -94,43 +112,48 @@ fn tick(
                 ))
             }
             (_, Err(error)) => {
+                owner.snapshot_error = Some(error.clone());
                 owner.diagnostic = Some(error);
                 owner.retry_at = Instant::now() + Duration::from_secs(5);
             }
             _ => {}
         }
     }
-    if previous_diagnostic != owner.diagnostic
-        && let Some(error) = &owner.diagnostic
-    {
-        bevy::log::warn!("viewer preferences: {error}; retry with settings_retry");
-    }
-    // This registered settings resource is the durable group's published,
-    // validated representation. Consumers use the typed owner projections.
-    let next = PreferenceGroup {
-        recents: serde_json::to_string(&owner.recents).unwrap_or_default(),
-        hardware: serde_json::to_string(&owner.hardware).unwrap_or_default(),
-        cad: serde_json::to_string(&owner.cad).unwrap_or_default(),
-    };
-    if group.recents != next.recents || group.hardware != next.hardware || group.cad != next.cad {
-        *group = next;
-    }
-    if (owner.load.is_some()
-        || owner.save.is_some()
-        || owner.canonical.is_some()
-        || owner.dirty() && !owner.blocked)
-        && let Some(mut redraw) = redraw
-    {
-        redraw.write(bevy::window::RequestRedraw);
+}
+
+pub(super) fn land_canonical(owner: &mut SettingsOwner, answer: Result<(ViewerMode, Document, u64), String>) {
+    owner.canonical = None;
+    match answer {
+        Ok((mode, document, now)) => {
+            owner.records.pop_front();
+            owner.recents.record(mode, &document, now);
+            owner.revision += 1;
+            owner.normalization_error = None;
+            if owner.snapshot_error.is_none() && owner.publication_error.is_none() {
+                owner.diagnostic = None;
+            }
+        }
+        Err(e) => {
+            // The accepted record remains required, including after failure.
+            owner.normalization_error = Some(e.clone());
+            owner.diagnostic = Some(e);
+        }
     }
 }
 
 pub(super) fn land_load(owner: &mut SettingsOwner, answer: Result<jobs::Loaded, String>) {
     owner.load = None;
+    owner.drain_epoch += 1;
+    owner.ready = false;
     match answer {
         Ok(loaded) => {
-            if let Ok(mut gate) = owner.gate.lock() {
-                gate.expected = loaded.previous;
+            match owner.gate.try_lock() {
+                Ok(mut gate) => gate.expected = loaded.previous,
+                Err(e) => {
+                    owner.blocked = true;
+                    owner.diagnostic = Some(format!("Preference publication gate unavailable: {e}"));
+                    return;
+                }
             }
             owner.raw = loaded.raw;
             // Recents records are queued until the loaded base is ready;
@@ -196,12 +219,22 @@ pub(super) fn land_load(owner: &mut SettingsOwner, answer: Result<jobs::Loaded, 
 }
 
 pub(super) fn land_save(owner: &mut SettingsOwner, answer: Result<u64, String>) {
+    let captured = owner.save_revision.take();
     match answer {
-        Ok(revision) => {
-            owner.saved_revision = owner.saved_revision.max(revision);
-            owner.diagnostic = None;
+        Ok(revision) if captured == Some(revision) && revision <= owner.revision && revision >= owner.saved_revision => {
+            // A completion acknowledges only the immutable captured snapshot.
+            owner.saved_revision = revision;
+            owner.publication_error = None;
+            if owner.normalization_error.is_none() && owner.snapshot_error.is_none() {
+                owner.diagnostic = None;
+            }
         }
-        Err(error) => {
+        answer => {
+            let error = match answer {
+                Ok(revision) => format!("Preference publication acknowledgment mismatch: captured {captured:?}, returned {revision}"),
+                Err(error) => error,
+            };
+            owner.publication_error = Some(error.clone());
             owner.diagnostic = Some(error);
             owner.retry_at = Instant::now() + Duration::from_secs(5);
         }

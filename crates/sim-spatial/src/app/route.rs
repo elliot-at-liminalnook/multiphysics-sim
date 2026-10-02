@@ -42,6 +42,13 @@ fn mode_control(command: &sim_api::Command) -> bool {
 /// `fit`).
 pub(crate) fn route(mode: ViewerMode, window: bool, command: &sim_api::Command) -> Result<&'static Feature, String> {
     let name = command.command.as_str();
+    if name.starts_with("close_") || (name == "system_ui"
+        && command.args["action"]["operation"] == "activate"
+        && command.args["action"]["id"].as_str().is_some_and(|id| id.starts_with("close:")))
+    {
+        return if window { Ok(actions::named("close")) }
+            else { Err("close lifecycle requires the native window".into()) };
+    }
     if name == "system_ui" && command.args["action"]["operation"] == "activate"
         && command.args["action"]["id"].as_str().is_some_and(|id| id.starts_with("study:"))
     {

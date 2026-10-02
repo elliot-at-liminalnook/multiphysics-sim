@@ -113,6 +113,41 @@ fn self_started(dirty: bool) -> (CadDocument, u32) {
     (doc, pid)
 }
 
+/// Written only: ordinary close reaches the existing release owner after
+/// acknowledged preferences and actual Window destruction, preserving CAD.
+#[cfg(unix)]
+#[test]
+fn ordinary_acknowledged_close_detaches_unsaved_service() {
+    use crate::app::{close::{CloseAction, ClosePlugin}, actions::Act, settings::SettingsOwner};
+    let (doc, pid) = self_started(true);
+    let mut app = App::new();
+    app.add_plugins(MinimalPlugins)
+        .init_resource::<crate::app::actions::Replies>()
+        .add_message::<bevy::window::WindowCloseRequested>()
+        .insert_resource(SettingsOwner::fixture_durable())
+        .insert_resource(crate::ui_kit::UiFonts {
+            regular:default(), italic:default(), mono:default(), medium:default(), semibold:default(),
+            icons:std::collections::BTreeMap::new(),
+        })
+        .insert_resource(doc);
+    crate::app::configure_sets(&mut app);
+    app.add_plugins(ClosePlugin)
+        .add_systems(Last, bevy::window::exit_on_all_closed.in_set(bevy::window::ExitSystems))
+        .add_systems(Last, sync::on_exit.after(bevy::window::ExitSystems));
+    let window = app.world_mut().spawn(Window::default()).id();
+    app.world_mut().write_message(Act::ui(CloseAction::CloseRequest));
+    app.update();
+    assert!(app.world().get::<Window>(window).is_some());
+    assert!(app.world().resource::<CadDocument>().child.is_some());
+    app.update();
+    assert!(app.world().get::<Window>(window).is_none());
+    let doc = app.world().resource::<CadDocument>();
+    assert!(doc.child.closed() && !doc.child.is_some());
+    let alive = stays_alive(pid, Duration::from_millis(400));
+    if alive { kill_detached(pid); }
+    assert!(alive, "ordinary close must detach unsaved CAD, never kill it");
+}
+
 #[cfg(unix)]
 #[test]
 fn closing_the_window_detaches_a_dirty_self_started_service() {

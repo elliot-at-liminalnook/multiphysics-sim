@@ -143,10 +143,7 @@ fn newer_snapshot_suppresses_older_publication() {
     let p = paths("ordering");
     let gate = Mutex::new(jobs::Publication::default());
     jobs::publish_ordered(&p, &json!({"new":true}), 9, &gate).unwrap();
-    assert_eq!(
-        jobs::publish_ordered(&p, &json!({"old":true}), 3, &gate).unwrap(),
-        9
-    );
+    assert!(jobs::publish_ordered(&p, &json!({"old":true}), 3, &gate).is_err());
     assert_eq!(
         serde_json::from_slice::<Value>(&std::fs::read(p.unified.unwrap()).unwrap()).unwrap(),
         json!({"new":true})
@@ -195,12 +192,14 @@ fn shutdown_does_not_claim_durability_or_persist_active_state() {
 fn delayed_save_completion_cannot_acknowledge_newer_dirty_choices() {
     let mut owner = SettingsOwner::default();
     owner.revision = 8;
+    owner.save_revision = Some(5);
     plugin::land_save(&mut owner, Ok(5));
     assert!(owner.dirty());
     assert_eq!(owner.saved_revision, 5);
     plugin::land_save(&mut owner, Err("directory sync failed".into()));
     assert!(owner.dirty());
     assert!(owner.diagnostic.is_some());
+    owner.save_revision = Some(8);
     plugin::land_save(&mut owner, Ok(8));
     assert!(!owner.dirty());
     assert!(owner.diagnostic.is_none());

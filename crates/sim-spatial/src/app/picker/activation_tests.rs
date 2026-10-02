@@ -118,3 +118,32 @@ fn pointer_press(app: &mut App, window: Entity, entity: Entity) {
         }, entity,
     ));
 }
+
+#[test]
+fn higher_modal_escape_and_wheel_leave_suspended_picker_draft_and_scroll_intact() {
+    use crate::ui_kit::activation::{ModalFocus,ModalPriority};
+    use crate::ui_kit::text::{FieldId,TextField};
+    use bevy::input::keyboard::Key;
+    use bevy::input::mouse::{MouseWheel,MouseScrollUnit};
+    let mut app=fixture();
+    let window=app.world_mut().query_filtered::<Entity,With<bevy::window::PrimaryWindow>>().iter(app.world()).next().unwrap();
+    let anchor=app.world_mut().query::<(Entity,&PickerPart)>().iter(app.world())
+        .find_map(|(e,part)|matches!(part.0,PickHit::Path(PathHit::Field)).then_some(e)).unwrap();
+    pointer_press(&mut app,window,anchor);app.update();app.update();
+    let field=app.world_mut().query::<(Entity,&FieldId)>().iter(app.world())
+        .find_map(|(e,id)|(*id==PATH).then_some(e)).unwrap();
+    let original=app.world().resource::<Picker>().draft.clone();
+    let higher=app.world_mut().spawn((Node::default(),ModalFocus,ModalPriority(100),bevy::ui::prelude::AccessibleLabel("Pending close".into()))).id();
+    app.world_mut().spawn((Node::default(),Button,Enabled(true),Ordinary,ChildOf(higher),bevy::ui::prelude::AccessibleLabel("Cancel close".into())));
+    app.update();
+    assert!(app.world().get::<TextField>(field).unwrap().suspended);
+    let mut logical=ButtonInput::<Key>::default();logical.press(Key::Escape);
+    app.insert_resource(logical).add_message::<MouseWheel>();
+    app.world_mut().write_message(MouseWheel{unit:MouseScrollUnit::Line,x:0.,y:-3.,window,phase:bevy::input::touch::TouchPhase::Moved});
+    app.update();
+    assert!(app.world().resource::<Picker>().open.is_some());
+    assert_eq!(app.world().resource::<Picker>().draft,original);
+    assert_eq!(app.world().resource::<Picker>().scroll,0.);
+    assert!(app.world().get::<TextField>(field).unwrap().suspended);
+    assert!(app.world().resource::<ButtonInput<Key>>().pressed(Key::Escape),"lower picker must not consume higher-modal keys");
+}

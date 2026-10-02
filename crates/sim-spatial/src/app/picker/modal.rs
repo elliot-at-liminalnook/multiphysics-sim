@@ -23,6 +23,7 @@ use bevy::prelude::*;
 /// frame), so a draft that differs here was changed by the picker since.
 pub(crate) fn sync(picker: Option<Res<Picker>>, mut text: TextFocus, mut was_open: Local<bool>) {
     let Some(picker) = picker else { return };
+    if text.suspended(PATH) { return; }
     let open = picker.open.is_some();
     if open && !*was_open {
         text.focus_draft(PATH, picker.draft.clone());
@@ -60,6 +61,7 @@ pub(crate) fn sync(picker: Option<Res<Picker>>, mut text: TextFocus, mut was_ope
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn keys(
     picker: Option<ResMut<Picker>>,
+    closing: Option<Res<crate::app::close::CloseOwner>>,
     // The field's messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
     mut field: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     wheel: Option<ResMut<Messages<MouseWheel>>>,
@@ -78,6 +80,13 @@ pub(crate) fn keys(
         }
         return;
     };
+    // The higher pending-close scope owns input even when the picker was
+    // tabbed to a button and has no suspended path editor. Drain lower field
+    // occurrences/cursor only; do not consume keys or wheel from that scope.
+    if field.p1().suspended(PATH) || closing.as_ref().is_some_and(|owner| owner.pending()) {
+        if let Some(wheel) = &wheel { *cursor = Some(wheel.get_cursor_current()); }
+        return;
+    }
     let delta: f32 = match &wheel {
         Some(messages) => cursor
             .get_or_insert_with(|| messages.get_cursor_current())

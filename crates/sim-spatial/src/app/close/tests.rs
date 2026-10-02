@@ -160,3 +160,30 @@ fn dirty_retained_study_refuses_even_preference_only_exit() {
     assert!(app.world().resource::<StudyOwner>().active().unwrap().dirty());
     finish(app);
 }
+
+#[test]
+fn cancelled_and_abandoned_rest_close_calls_never_change_intent_or_loss_consent() {
+    let (mut app,window)=fixture(SettingsOwner::default());
+    let cancelled=app.world_mut().resource_mut::<Replies>().open();
+    app.world_mut().resource_mut::<Replies>().cancel(cancelled);
+    app.world_mut().write_message(Act{action:CloseAction::CloseRequest,origin:actions::Origin::Rest(cancelled)});
+    app.update();
+    assert!(!app.world().resource::<CloseOwner>().pending());
+    assert!(app.world().get::<Window>(window).is_some());
+    action(&mut app,CloseAction::CloseRequest);
+    let bypass=app.world_mut().resource_mut::<Replies>().open();
+    app.world_mut().resource_mut::<Replies>().cancel(bypass);
+    app.world_mut().write_message(Act{action:CloseAction::CloseWithoutPreferences,origin:actions::Origin::Rest(bypass)});
+    app.update();
+    assert!(app.world().resource::<CloseOwner>().pending());
+    assert!(app.world().resource::<CloseOwner>().bypass.is_none());
+    assert!(app.world().get::<ClosingWindow>(window).is_none());
+    let abandoned=app.world_mut().resource_mut::<Replies>().open();
+    app.world_mut().resource_mut::<Replies>().answer(abandoned,Outcome::Done(Ok(serde_json::Value::Null)));
+    app.world_mut().resource_mut::<Replies>().take(abandoned);
+    app.world_mut().write_message(Act{action:CloseAction::CloseCancel,origin:actions::Origin::Rest(abandoned)});
+    app.update();
+    assert!(app.world().resource::<CloseOwner>().pending());
+    assert!(app.world().get::<Window>(window).is_some());
+    finish(app);
+}

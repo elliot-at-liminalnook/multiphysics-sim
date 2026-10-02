@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 pub(crate) const FIELD: FieldId = FieldId("build.measured-study");
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Field {
-    Archive, Review, Save, Export, Parameter(bool, String), Condition(&'static str), Step,
+    Archive, Review, OpenPortable, Save, SavePortable, Export, Parameter(bool, String), Condition(&'static str), Step,
     Limit(&'static str), Filter(&'static str), Notes, DecisionNotes(usize),
     Electrical(String), Refinement(String), RefineDecision(String,usize), Recording(String),
 }
@@ -83,7 +83,7 @@ fn stage(ui:&mut StudyUi,owner:&StudyOwner,stamp:Option<StudyStamp>,field:Field,
     let key=draft_key(stamp,field.clone());
     if ui.awaiting_key(&key) {return Err("Measured field submission is awaiting its action acknowledgment".into());}
     ui.drafts.insert(key.clone(),text.into());
-    if matches!(field,Field::Archive|Field::Review|Field::Save|Field::Export){ui.paths.insert(field.clone(),text.into());}
+    if matches!(field,Field::Archive|Field::Review|Field::OpenPortable|Field::Save|Field::SavePortable|Field::Export){ui.paths.insert(field.clone(),text.into());}
     let action=submission(owner,stamp,&field,text)?;
     let fingerprint=serde_json::to_string(&action).map_err(|e|e.to_string())?;
     if ui.awaiting.contains_key(&fingerprint){return Err("An equivalent measured field action already awaits acknowledgment; both raw field drafts are retained".into());}
@@ -132,12 +132,14 @@ pub(crate) fn submission(owner: &StudyOwner, stamp: Option<StudyStamp>, field: &
     match field {
         Field::Archive => return Ok(StudyAction::OpenArchive { path: path() }),
         Field::Review => return Ok(StudyAction::OpenReview { path: path() }),
+        Field::OpenPortable => return Ok(StudyAction::OpenPortable { path: path() }),
         _ => {}
     }
     let stamp = stamp.ok_or("No retained study is selected")?;
     let retained = owner.active().filter(|r| r.stamp() == stamp).ok_or("The displayed study was replaced or edited; text is retained. Focus the field again to edit the current revision.")?;
     match field {
         Field::Save => return Ok(StudyAction::Save {stamp,path:path()}),
+        Field::SavePortable => return Ok(StudyAction::SavePortable {stamp,path:path()}),
         Field::Export => return Ok(StudyAction::Export {stamp,path:path()}),
         _ => {}
     }

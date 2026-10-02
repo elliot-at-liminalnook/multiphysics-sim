@@ -30,11 +30,11 @@ fn study()->Study {
     study.refinement.experiment.electrical=Some(super::forms::electrical_forms::controller_preset());
     study
 }
-fn terminal(owner:&mut StudyOwner,captured:Study,path:&Path,result:Result<jobs::JobOutput,String>,cancelled:bool,displaced:bool) {
+fn terminal(owner:&mut StudyOwner,captured:Study,path:&Path,result:Result<jobs::JobOutput,String>,cancelled:bool,displaced:bool,kind:JobKind) {
     let stamp=owner.active().unwrap().stamp();
     let gate=Arc::new(Mutex::new(PublicationGate::default()));
     let mut pending=PendingJob {
-        id:1,kind:JobKind::Save,stamp:Some(stamp),document:None,source:path.display().to_string(),
+        id:1,kind,stamp:Some(stamp),document:None,source:path.display().to_string(),
         trial_ids:vec![],launch:serde_json::Value::Null,cancel_requested:false,
         job:Job::finished(1,result),selection_epoch:owner.selection_epoch,gate:Some(gate),captured:Some(captured),
     };
@@ -50,8 +50,8 @@ fn every_writer_failure_reaches_retained_receipt_without_saved_ack() {
         let mut owner=StudyOwner::default();let mut input=study();
         let bytes=b"exact invalid additional source".to_vec();let reference=input.input_contents.capture(bytes.clone());
         owner.retain(input.clone(),"source".into(),None,false,true);
-        let result=jobs::publish_artifact(&input,&path,false,&Fail{destination:path.clone(),stage});
-        terminal(&mut owner,input,&path,result,false,false);
+        let result=jobs::publish_artifact(&input,&path,jobs::PublicationKind::Json,&Fail{destination:path.clone(),stage});
+        terminal(&mut owner,input,&path,result,false,false,JobKind::Save);
         assert!(owner.active().unwrap().dirty());assert_eq!(owner.active().unwrap().saved_revision,None);
         assert_eq!(owner.active().unwrap().study.input_contents.resolve(&reference.blake3).unwrap(),bytes);
         let receipt=owner.receipts.last().unwrap();assert!(receipt.error.is_some());
@@ -70,9 +70,9 @@ fn cancelled_and_displaced_failed_capture_retains_bytes_without_any_publication(
     let bytes=b"cancelled malformed source".to_vec();let reference=input.input_contents.capture(bytes.clone());
     owner.retain(input.clone(),"source".into(),None,false,true);
     let mut gate=PublicationGate{started:false,cancelled:true};
-    let result=jobs::authorize_publication(&mut gate,false).and_then(|_|jobs::publish_artifact(&input,&path,false,&NoHooks));
+    let result=jobs::authorize_publication(&mut gate,false).and_then(|_|jobs::publish_artifact(&input,&path,jobs::PublicationKind::Json,&NoHooks));
     assert!(!gate.started);
-    terminal(&mut owner,input,&path,result,true,true);
+    terminal(&mut owner,input,&path,result,true,true,JobKind::Save);
     let receipt=owner.receipts.last().unwrap();assert!(receipt.cancelled && receipt.displaced && receipt.error.is_some());
     let captured=receipt.captured.as_ref().unwrap();
     assert_eq!(captured.input_contents.resolve(&reference.blake3).unwrap(),bytes);
@@ -87,12 +87,49 @@ fn visible_failure_displaced_after_publication_retains_capture_and_destination()
     let mut owner=StudyOwner::default();let mut input=study();
     let bytes=b"displaced exact source".to_vec();let reference=input.input_contents.capture(bytes.clone());
     owner.retain(input.clone(),"source".into(),None,false,true);
-    let result=jobs::publish_artifact(&input,&path,false,&Fail{destination:path.clone(),stage:Stage::DirectorySync});
-    terminal(&mut owner,input,&path,result,false,true);
+    let result=jobs::publish_artifact(&input,&path,jobs::PublicationKind::Json,&Fail{destination:path.clone(),stage:Stage::DirectorySync});
+    terminal(&mut owner,input,&path,result,false,true,JobKind::Save);
     let receipt=owner.receipts.last().unwrap();assert!(receipt.displaced && receipt.error.is_some());
     assert_eq!(receipt.captured.as_ref().unwrap().input_contents.resolve(&reference.blake3).unwrap(),bytes);
     assert!(path.exists());
     let existing=std::fs::read(&path).unwrap();
     assert!(receipt.captured.as_ref().unwrap().save_new(&path).is_err());
     assert_eq!(std::fs::read(&path).unwrap(),existing);
+}
+
+/// T53 portable writes use the actual publication adapter and terminal owner.
+/// UNEXECUTED: includes visible-unconfirmed failure and immutable retry refusal.
+#[test]
+fn portable_writer_stages_conflict_and_displaced_cancel_retain_exact_capture() {
+    for stage in [Stage::CreateTemp,Stage::Write,Stage::FileSync,Stage::Publish,Stage::DirectorySync] {
+        let dir=Directory::new();let path=dir.0.join("study.simstudy");
+        let mut owner=StudyOwner::default();let mut input=study();
+        let bytes=vec![0xff,0,0x42];let reference=input.input_contents.capture(bytes.clone());
+        owner.retain(input.clone(),"old source".into(),None,false,true);
+        let result=jobs::publish_artifact(&input,&path,jobs::PublicationKind::Portable,&Fail{destination:path.clone(),stage});
+        terminal(&mut owner,input,&path,result,false,false,JobKind::SavePortable);
+        let receipt=owner.receipts.last().unwrap();assert!(receipt.error.is_some());
+        assert!(owner.active().unwrap().dirty());assert_eq!(owner.active().unwrap().saved_revision,None);
+        assert_eq!(receipt.captured.as_ref().unwrap().input_contents.resolve(&reference.blake3).unwrap(),bytes);
+        assert_eq!(path.exists(),stage==Stage::DirectorySync);
+        if stage==Stage::DirectorySync {
+            assert!(receipt.error.as_ref().unwrap().contains("visible but durability unconfirmed"));
+            let exact=Study::read_source_bytes(&path).unwrap();
+            assert!(jobs::publish_artifact(receipt.captured.as_ref().unwrap(),&path,jobs::PublicationKind::Portable,&NoHooks).is_err());
+            assert_eq!(Study::read_source_bytes(&path).unwrap(),exact);
+            assert_eq!(Study::load(&path).unwrap().input_contents.resolve(&reference.blake3).unwrap(),bytes);
+        }
+        assert!(!dir.0.join(".study-inputs").exists());
+    }
+    let dir=Directory::new();let path=dir.0.join("cancelled.simstudy");
+    let mut owner=StudyOwner::default();let mut input=study();
+    let reference=input.input_contents.capture(b"exact cancelled portable evidence".to_vec());
+    owner.retain(input.clone(),"source".into(),None,false,true);
+    let mut gate=PublicationGate{started:false,cancelled:true};
+    let result=jobs::authorize_publication(&mut gate,false).and_then(|_|jobs::publish_artifact(&input,&path,jobs::PublicationKind::Portable,&NoHooks));
+    terminal(&mut owner,input,&path,result,true,true,JobKind::SavePortable);
+    let receipt=owner.receipts.last().unwrap();assert!(receipt.cancelled&&receipt.displaced&&receipt.error.is_some());
+    assert!(!path.exists());assert!(!gate.started);
+    let recovered=dir.0.join("recovered.simstudy");receipt.captured.as_ref().unwrap().save_portable_new(&recovered).unwrap();
+    assert_eq!(Study::load(&recovered).unwrap().input_contents.resolve(&reference.blake3).unwrap(),b"exact cancelled portable evidence");
 }

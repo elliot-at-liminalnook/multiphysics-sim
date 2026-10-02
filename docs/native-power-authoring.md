@@ -28,8 +28,10 @@ Review captured electrical samples, sampled peaks, energy, calibrated channel
 residuals, circuit locations, signed gain/offset, uncertainty and observation windows
 separately from motion tracking. Full traces stay in retained evidence; the native
 panel shows bounded exact numeric previews. Review decisions do not promote values.
-Use existing **Save new review** or export controls with a fresh destination; reopen
-through **Saved study JSON** with its sibling `.study-inputs` companions intact.
+Use **Save portable study** with a fresh destination for a self-contained snapshot,
+or retain **Save new review** / export controls. JSON reopen through **Saved study JSON**
+requires its sibling `.study-inputs` companions intact. T52 was accepted by source
+review in call-0396 across `d9bc1455`/`929f6833`.
 
 Actual buttons/text entry and `system_ui` resolve the same rendered `Hit` values.
 They produce stamped `StudyAction::RefineApply`, `RefineRun` or `ImportElectrical`.
@@ -159,3 +161,14 @@ sampled summary otherwise passes (`experiment_study/report/cancellation_fixtures
 No compilation, fixture execution, export, GUI parity or durability qualification
 was performed. Existing source identities, revision acknowledgments, publication
 failure recovery and external requirements above remain unchanged.
+
+
+## Portable publication — T53
+
+The existing Study surface adds explicit portable open/save alongside JSON and HTML.
+[Portable format, retained-evidence inventory and lifecycle](portable-study-artifacts.md)
+records the shared owner and limits. Portable reopen needs only the artifact;
+JSON reopen continues to require its referenced sibling `.study-inputs` objects.
+HTML remains an inspection report and cannot reopen an editable Study. Existing
+inputs, opaque fields, raw rejected forms and unscored terminal diagnostics remain
+preserved. This update is source-reviewed only; fixtures and compilation are unexecuted.

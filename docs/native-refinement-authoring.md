@@ -163,3 +163,14 @@ controller import/setup/assignment/prediction and recording/combined fits now be
 to the bounded T50 implementation. FPGA, electrical/power, raw sweeps, hardware
 acquisition, CAD acceptance and registry promotion remain deferred reference paths.
 T49 ordinary activation/focus was accepted in call-0378 by source review only.
+
+
+## Portable publication — T53
+
+The existing Study surface adds explicit portable open/save alongside JSON and HTML.
+[Portable format, retained-evidence inventory and lifecycle](portable-study-artifacts.md)
+records the shared owner and limits. Portable reopen needs only the artifact;
+JSON reopen continues to require its referenced sibling `.study-inputs` objects.
+HTML remains an inspection report and cannot reopen an editable Study. Existing
+inputs, opaque fields, raw rejected forms and unscored terminal diagnostics remain
+preserved. This update is source-reviewed only; fixtures and compilation are unexecuted.

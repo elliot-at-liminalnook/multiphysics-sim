@@ -107,6 +107,13 @@ unverified
 
 ### Leg calibration in the native viewer
 
+Portable retained studies use **Open portable study** and **Save portable study**
+in the existing offline Study panel. Transfer the one SIMSTUDY artifact, then reopen
+at its new path; referenced exact inputs travel inside it. JSON saves still need
+sibling `.study-inputs` companions, and HTML exports are inspection reports.
+See the [portable Study guide](docs/portable-study-artifacts.md) for bounds,
+compatibility and the source-only verification limits.
+
 Offline measured-PWM studies use **Build → Actuators → Measured evidence** in
 this same window. Open an identification archive or saved review, edit exploratory
 candidate parameters and conditions, evaluate captured trial sets, inspect comparison

@@ -69,10 +69,10 @@ impl Store {
         Ok(())
     }
     pub fn hydrate(&mut self, manifest: &Path) -> Result<(), String> {
-        self.validate()?;
+        super::portable::store_bounds(self)?;
         for (hash, reference) in &self.references {
             let path = Self::artifact_path(manifest, hash);
-            let bytes = std::fs::read(&path).map_err(|e| format!("input_contents.{hash}: missing/unreadable artifact {}: {e}", path.display()))?;
+            let bytes = super::portable::read_bounded(&path, super::portable::MAX_OBJECT_BYTES).map_err(|e| format!("input_contents.{hash}: missing/unreadable artifact {}: {e}", path.display()))?;
             Self::verify(reference, &bytes, &path)?;
             self.contents.insert(hash.clone(), Arc::new(bytes));
         }
@@ -84,13 +84,14 @@ impl Store {
         self.publish_with(manifest, &NoHooks)
     }
     pub fn publish_with(&self, manifest: &Path, hooks: &dyn Hooks) -> Result<(), String> {
-        self.validate()?;
+        super::portable::store_bounds(self)?;
         for (hash, reference) in &self.references {
             let path = Self::artifact_path(manifest, hash);
             let bytes = self.resolve(hash)?;
             Self::verify(reference, bytes, &path)?;
-            let result = match std::fs::read(&path) {
-                Ok(existing) => {
+            let result = match std::fs::File::open(&path) {
+                Ok(_) => {
+                    let existing=super::portable::read_bounded(&path, super::portable::MAX_OBJECT_BYTES)?;
                     Self::verify(reference, &existing, &path)?;
                     // Readable identity is insufficient: synchronize reused evidence too.
                     publication::confirm_existing_with(&path, hooks)
@@ -106,7 +107,7 @@ impl Store {
                                 return Outcome::Unpublished(failure).into_result().map_err(|e|
                                     format!("input_contents.{hash}: publication {}: {e}", path.display()));
                             }
-                            let existing = std::fs::read(&path).map_err(|e|
+                            let existing = super::portable::read_bounded(&path, super::portable::MAX_OBJECT_BYTES).map_err(|e|
                                 format!("input_contents.{hash}: concurrent artifact {}: {e}", path.display()))?;
                             Self::verify(reference, &existing, &path)?;
                             publication::confirm_existing_with(&path, hooks)

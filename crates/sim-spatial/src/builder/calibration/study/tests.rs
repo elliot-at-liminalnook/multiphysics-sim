@@ -233,3 +233,22 @@ fn actual_poll_system_preserves_idle_ticks_but_marks_terminal_publication_change
     world.run_system_once(jobs::poll).unwrap();
     assert!(!world.resource_ref::<StudyOwner>().is_changed());
 }
+
+/// T53 UNEXECUTED actual job terminal consumer: only matching portable capture saves.
+#[test]
+fn portable_acknowledgment_is_revision_scoped_and_report_never_saves() {
+    let (mut owner,registry)=owner();
+    finished(&mut owner,JobKind::SavePortable,Ok(JobOutput::Published));
+    assert!(owner.blocking_reason().unwrap().contains("pending"));
+    let stamp=owner.active().unwrap().stamp();
+    apply_action(&mut owner,&registry,&StudyAction::Apply{stamp,command:Command::SetNotes("newer portable intent".into())}).unwrap();
+    jobs::poll_owner(&mut owner,&registry);
+    assert!(owner.active().unwrap().dirty());assert!(owner.receipts.last().unwrap().stale);
+    assert!(owner.blocking_reason().unwrap().contains("unsaved"));
+    finished(&mut owner,JobKind::Export,Ok(JobOutput::Published));jobs::poll_owner(&mut owner,&registry);
+    assert!(owner.active().unwrap().dirty());
+    finished(&mut owner,JobKind::SavePortable,Err("immutable destination exists".into()));jobs::poll_owner(&mut owner,&registry);
+    assert!(owner.active().unwrap().dirty());assert!(owner.receipts.last().unwrap().captured.is_some());
+    finished(&mut owner,JobKind::SavePortable,Ok(JobOutput::Published));jobs::poll_owner(&mut owner,&registry);
+    assert!(!owner.active().unwrap().dirty());assert!(owner.blocking_reason().is_none());
+}

@@ -8,7 +8,14 @@ use serde_json::json;
 use sim_runtime::experiment_study::refinement;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum JobKind { Archive, Review, Evaluate, Refinement, RecordingImport, RecordingAuthoring, Save, Export }
+pub enum JobKind { Archive, Review, Evaluate, Refinement, RecordingImport, RecordingAuthoring, Save, SavePortable, Export }
+/// Publication representation belongs to the existing immutable job owner.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PublicationKind { Json, Portable, Html }
+impl PublicationKind {
+    fn job_kind(self)->JobKind { match self {Self::Json=>JobKind::Save,Self::Portable=>JobKind::SavePortable,Self::Html=>JobKind::Export} }
+    fn label(self)->&'static str { match self {Self::Json=>"save_new",Self::Portable=>"save_portable_new",Self::Html=>"export_new"} }
+}
 impl JobKind { pub fn is_load(self)->bool { matches!(self,Self::Archive|Self::Review) } }
 
 /// The tiny gate linearizes cancel acceptance and the start of irreversible
@@ -163,22 +170,22 @@ pub(crate) fn retain_form_inputs(captured:&mut Study,stamp:StudyStamp,inputs:Opt
 
 /// The existing publication owner captures without disk work; immutable blobs stay
 /// Arc-backed in the Study snapshot until the adopted file job publishes them.
-pub(super) fn prepare_publication_capture(study:&Study,stamp:StudyStamp,destination:&std::path::Path,export:bool,source:&str,document:Option<&DocumentCapture>,inputs:Option<serde_json::Value>)->Study {
+pub(super) fn prepare_publication_capture(study:&Study,stamp:StudyStamp,destination:&std::path::Path,kind:PublicationKind,source:&str,document:Option<&DocumentCapture>,inputs:Option<serde_json::Value>)->Study {
     let mut captured=study.clone();
-    retain_durable(&mut captured,"native_publication_captures",json!({"study":stamp,"destination":destination.display().to_string(),"kind":if export {"export_new"} else {"save_new"},"source":source,"document":document.map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),"execution":experiment_study::execution_identity(),"status":"immutable captured revision prepared for publication"}));
+    retain_durable(&mut captured,"native_publication_captures",json!({"study":stamp,"destination":destination.display().to_string(),"kind":kind.label(),"source":source,"document":document.map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),"execution":experiment_study::execution_identity(),"status":"immutable captured revision prepared for publication"}));
     retain_form_inputs(&mut captured,stamp,inputs);
     captured
 }
 
-pub fn start_publication(owner:&mut StudyOwner,stamp:StudyStamp,value:&str,export:bool)->Result<u64,String> {
-    start_publication_with_inputs(owner,stamp,value,export,None)
+pub fn start_publication(owner:&mut StudyOwner,stamp:StudyStamp,value:&str,kind:PublicationKind)->Result<u64,String> {
+    start_publication_with_inputs(owner,stamp,value,kind,None)
 }
-pub fn start_publication_with_inputs(owner:&mut StudyOwner,stamp:StudyStamp,value:&str,export:bool,inputs:Option<serde_json::Value>)->Result<u64,String> {
+pub fn start_publication_with_inputs(owner:&mut StudyOwner,stamp:StudyStamp,value:&str,kind:PublicationKind,inputs:Option<serde_json::Value>)->Result<u64,String> {
     let destination=path(value)?;
-    if owner.pending.iter().any(|p|matches!(p.kind,JobKind::Save|JobKind::Export) && p.source==destination.display().to_string()) { return Err("study.path: publication to this destination is already pending".into()); }
+    if owner.pending.iter().any(|p|matches!(p.kind,JobKind::Save|JobKind::SavePortable|JobKind::Export) && p.source==destination.display().to_string()) { return Err("study.path: publication to this destination is already pending".into()); }
     let retained=owner.validate_stamp(stamp)?;
     let document=retained.document.clone();
-    let captured=prepare_publication_capture(&retained.study,stamp,&destination,export,&retained.source,document.as_ref(),inputs);
+    let captured=prepare_publication_capture(&retained.study,stamp,&destination,kind,&retained.source,document.as_ref(),inputs);
     // Full saved-schema validation/serialization belongs to the file job.
     let gate=Arc::new(Mutex::new(PublicationGate::default()));
     let worker_gate=gate.clone();
@@ -194,9 +201,9 @@ pub fn start_publication_with_inputs(owner:&mut StudyOwner,stamp:StudyStamp,valu
         }
         // After this linearization point cancellation cannot promise rollback.
         ctx.message("Publishing new immutable evidence; cancellation can no longer revoke publication");
-        publish_artifact(&worker, &output, export, &sim_runtime::publication::NoHooks)
+        publish_artifact(&worker, &output, kind, &sim_runtime::publication::NoHooks)
     }).complete_on_drop();
-    owner.pending.push(PendingJob{id,kind:if export {JobKind::Export}else{JobKind::Save},stamp:Some(stamp),document,source:destination.display().to_string(),trial_ids:vec![],launch:serde_json::Value::Null,cancel_requested:false,job,selection_epoch:owner.selection_epoch,gate:Some(gate),captured:Some(captured)});
+    owner.pending.push(PendingJob{id,kind:kind.job_kind(),stamp:Some(stamp),document,source:destination.display().to_string(),trial_ids:vec![],launch:serde_json::Value::Null,cancel_requested:false,job,selection_epoch:owner.selection_epoch,gate:Some(gate),captured:Some(captured)});
     Ok(id)
 }
 
@@ -207,8 +214,8 @@ pub(super) fn authorize_publication(gate:&mut PublicationGate,cancelled:bool)->R
     Ok(())
 }
 /// The same artifact/acknowledgment adapter used by the adopted job and source fixtures.
-pub(super) fn publish_artifact(study:&Study,path:&std::path::Path,export:bool,hooks:&dyn sim_runtime::publication::Hooks)->Result<JobOutput,String> {
-    if export { study.export_html_new_with(path,hooks) } else { study.save_new_with(path,hooks) }
+pub(super) fn publish_artifact(study:&Study,path:&std::path::Path,kind:PublicationKind,hooks:&dyn sim_runtime::publication::Hooks)->Result<JobOutput,String> {
+    match kind {PublicationKind::Json=>study.save_new_with(path,hooks),PublicationKind::Portable=>study.save_portable_new_with(path,hooks),PublicationKind::Html=>study.export_html_new_with(path,hooks)}
         .map_err(|e|format!("study.publish {}: {e}",path.display()))?;
     Ok(JobOutput::Published)
 }
@@ -349,7 +356,7 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
             receipt.refinement=Some(retained_outcome);
         }
         Ok(JobOutput::Published)=>{
-            if pending.kind==JobKind::Save {
+            if matches!(pending.kind,JobKind::Save|JobKind::SavePortable) && !pending.cancel_requested {
                 if let Some(stamp)=pending.stamp {
                     if let Some(s)=owner.get_mut(stamp.id).filter(|s|s.revision==stamp.revision) {s.saved_revision=Some(stamp.revision);}
                 }

@@ -27,6 +27,7 @@ pub(crate) enum Command {
         #[serde(default)]
         html: bool,
     },
+    SavePortable { path: String },
     Cancel,
     Review {
         index: usize,
@@ -42,7 +43,7 @@ pub(crate) enum Command {
     },
 }
 pub(crate) fn capabilities() -> Value {
-    json!({"operations":["state","study","open","select","configure","evaluate","refine","save","cancel","review","plot","panel"],
+    json!({"operations":["state","study","open","select","configure","evaluate","refine","save","save_portable","cancel","review","plot","panel"],
         "configure_fields":["draft","view","limits","notes","experiment","coordinates","scenarios","capture_contexts","recording_assignments","fpga_design_drafts"],
         "refine_actions":["simulate","sensitivity","fit","fit_recordings","fit_combined","robustness","import","review_fpga","fit_fpga","design_fpga","export_fpga_plan","review_fpga_fit","predict","compare_electrical","propose","accept"],
         "refine_encoding":"serde externally tagged snake_case Action; unit: simulate; tuple: {review_fpga:[0,mode]}; struct: {fit_combined:{selected:[],additional_study:path}}",
@@ -207,28 +208,12 @@ impl ExperimentsPanel {
                             self.run(ids, ctx);
                         }
                         Command::Save { path, html } => {
-                            let index = self.current;
-                            let s = self.studies.get(index).ok_or("no study loaded")?.clone();
-                            let revision = self.revisions[index];
-                            let path = PathBuf::from(path);
-                            self.start_job(
-                                "Saving captured evidence",
-                                0,
-                                Some(ctx),
-                                move |_, _| {
-                                    let r = if html {
-                                        s.export_html_new(&path)
-                                    } else {
-                                        s.save_new(&path)
-                                    };
-                                    ResultMessage::Saved(
-                                        index,
-                                        revision,
-                                        html,
-                                        r.map(|_| format!("Saved {}", path.display())),
-                                    )
-                                },
-                            );
+                            self.studies.get(self.current).ok_or("no study loaded")?;
+                            self.publish_captured(PathBuf::from(path),if html { PublicationKind::Html } else { PublicationKind::Json },ctx);
+                        }
+                        Command::SavePortable { path } => {
+                            self.studies.get(self.current).ok_or("no study loaded")?;
+                            self.publish_captured(PathBuf::from(path),PublicationKind::Portable,ctx);
                         }
                         Command::Refine { action } => {
                             let index = self.current;

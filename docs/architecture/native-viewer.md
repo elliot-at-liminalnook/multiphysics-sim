@@ -40,6 +40,14 @@ records immutable-new versus replacement policy, typed visibility/durability
 outcomes, synchronization/retry limits and retained recovery. Existing actions,
 public scheduling, jobs and document/lifecycle owners remain authoritative.
 
+T52 native offline electrical and power authoring was accepted by source review
+in call-0396 across `d9bc1455`/`929f6833`. Cancelled and incomplete terminal
+content reopens as unapplied UNSCORED diagnostics; native and report completeness
+gates agree. [T52 evidence](../native-power-authoring.md) records the bounded batch.
+T53 portable retained-study artifacts extends the same Study and publication owners;
+[format, focused inventory and source traces](../portable-study-artifacts.md) record
+its implementation and written unexecuted fixtures. No execution or parity follows.
+
 Rust changes after the historical `aa34ef48` execution checkpoint remain
 uncompiled and unexecuted. The former opening ten-epic count was a stale dated
 snapshot and is superseded by this statement. Historical Python results below
@@ -7234,7 +7242,8 @@ CAD/registry authority and independent hardware safety remain unchanged. Python/
 FPGA refinement, raw sweeps and hardware acquisition/driving remain external; reference
 implementations remain available until separately authorized parity proves migration.
 
-T52 cancellation repair (call-0394): terminal ResultData uses the existing Study
+T52 was accepted in call-0396 by source review across `d9bc1455` and `929f6833`,
+including the cancellation repair requested in call-0394. In that repair, terminal ResultData uses the existing Study
 content companion owner and bounded references; serialization and reopen decoding
 remain in existing jobs. Partial, failed and late-cancelled electrical terminals
 are inspectable after reopen as unapplied UNSCORED diagnostics, without restoring
@@ -7243,3 +7252,24 @@ gating even when sampled summaries pass declared limits. This decision prevents
 cancellation from erasing evidence or presenting incomplete sampled results as
 accepted. Source-review fixtures are written but unexecuted; all seven T52 checklist
 IDs and the §§8–9 boundaries remain unchanged. See the linked T52 source map.
+
+
+## Portable retained-study artifacts — T53 (2026-10-02)
+
+[The focused format, inventory and checklist](../portable-study-artifacts.md)
+realizes §§2–4 and §7 through existing Study, Store, native StudyOwner/StudyUi,
+typed actions, adopted jobs and immutable publication. SIMSTUDY v1 adds one
+self-contained file beside existing JSON/companion and HTML workflows. Shared
+loading detects it independent of extension, recovers exact objects into Store,
+restores diagnostic caches and validates Study. Portable publication never extracts
+paths, fetches inputs, nests receipt snapshots or rewrites sources. Resource limits
+and duplicate refusal precede hydration. The same captured revision/destination,
+publication gate, cancellation, displaced receipt and close-preservation owners apply.
+Reports remain inspection outputs and never acknowledge editable-study saving.
+
+Decision: package the complete existing manifest and Store membership under the
+shared owner, preserving identities and opaque compatibility fields. JSON keeps its
+sibling companion contract; no automatic migration or reference retirement occurs.
+§§8–9, CAD physical authority and hardware safety remain unchanged. Source reading
+and written unexecuted fixtures establish implementation evidence only; compilation,
+GUI parity, execution and platform durability remain unverified.

@@ -4,6 +4,9 @@ pub mod commands;
 pub mod input_content;
 pub mod terminal;
 mod publication;
+pub mod portable;
+#[cfg(test)]
+mod portable_fixtures;
 mod report;
 #[cfg(test)]
 mod publication_fixtures;

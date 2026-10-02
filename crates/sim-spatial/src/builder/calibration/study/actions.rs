@@ -13,6 +13,7 @@ use sim_runtime::experiment_study::refinement;
 pub enum StudyAction {
     OpenArchive { path:String },
     OpenReview { path:String },
+    OpenPortable { path:String },
     Choose { id:u64 },
     Apply { stamp:StudyStamp, command:Command },
     Evaluate { stamp:StudyStamp, set:EvaluationSelection },
@@ -23,12 +24,13 @@ pub enum StudyAction {
     FitCombined { stamp:StudyStamp, additional_path:Option<String> },
     Cancel { job:u64 },
     Save { stamp:StudyStamp, path:String },
+    SavePortable { stamp:StudyStamp, path:String },
     Export { stamp:StudyStamp, path:String },
     SystemUi { id:String, #[serde(default)] text:Option<String> },
     Status,
 }
 impl Action for StudyAction {
-    fn commands()->Vec<Spec> { vec![actions::spec("system_measured_study",actions::BUILDER,json!({"op":"status"}),"Offline retained measured-PWM authoring. Typed operations open_archive/open_review/choose/apply/evaluate/refine_apply/refine_run/import_recording/import_electrical/fit_combined/cancel/save/export/status. Apply commands use shared experiment_study validation; all scoped operations require stamp {id,revision}. Publication creates new destinations only; accepted jobs return an id and retain receipts.")] }
+    fn commands()->Vec<Spec> { vec![actions::spec("system_measured_study",actions::BUILDER,json!({"op":"status"}),"Offline retained measured-PWM authoring. Typed operations open_archive/open_review/open_portable/choose/apply/evaluate/refine_apply/refine_run/import_recording/import_electrical/fit_combined/cancel/save/save_portable/export/status. Apply commands use shared experiment_study validation; all scoped operations require stamp {id,revision}. Publication creates new destinations only; accepted jobs return an id and retain receipts.")] }
     fn parse(c:&sim_api::Command)->Result<Self,String> {
         if c.command=="system_ui" {
             let a=&c.args["action"];
@@ -75,7 +77,7 @@ pub fn apply(mut owner:ResMut<StudyOwner>, registry:Res<DocumentRegistry>, mut u
     if ui.epoch!=ui_before {ui.set_changed();}
 }
 fn publication_inputs(ui:&super::forms::StudyUi,action:&StudyAction)->Option<serde_json::Value> {
-    match action {StudyAction::Save{stamp,..}|StudyAction::Export{stamp,..}=>Some(ui.publication_inputs(stamp.id)),_=>None}
+    match action {StudyAction::Save{stamp,..}|StudyAction::SavePortable{stamp,..}|StudyAction::Export{stamp,..}=>Some(ui.publication_inputs(stamp.id)),_=>None}
 }
 pub fn handle(owner:&mut StudyOwner, registry:&DocumentRegistry, action:&StudyAction, call:&mut Call)->Outcome {
     handle_with_inputs(owner,registry,action,call,None)
@@ -123,9 +125,9 @@ fn apply_action_with_inputs(owner:&mut StudyOwner,registry:&DocumentRegistry,act
             }
             return Ok(owner.snapshot());
         }
-        StudyAction::OpenArchive{path}|StudyAction::OpenReview{path}=>{
+        StudyAction::OpenArchive{path}|StudyAction::OpenReview{path}|StudyAction::OpenPortable{path}=>{
             if owner.pending.iter().any(|p|p.kind.is_load()) { return Err("study.load: another archive/review is loading; cancel or wait".into()); }
-            let review=matches!(action,StudyAction::OpenReview{..});
+            let review=!matches!(action,StudyAction::OpenArchive{..});
             let id=jobs::start_load(owner,path,review,DocumentCapture::current(registry))?;
             return Ok(json!({"job":id,"message":"Opening retained evidence; existing studies are preserved"}));
         }
@@ -186,12 +188,12 @@ fn apply_action_with_inputs(owner:&mut StudyOwner,registry:&DocumentRegistry,act
             let message=pending.cancel();
             return Ok(json!({"job":job,"message":message}));
         }
-        StudyAction::Save{stamp,path}|StudyAction::Export{stamp,path}=>{
+        StudyAction::Save{stamp,path}|StudyAction::SavePortable{stamp,path}|StudyAction::Export{stamp,path}=>{
             // Publication remains possible after unexpected document displacement:
             // this publishes captured evidence, not a mutation of that document.
             owner.validate_stamp(*stamp)?;
-            let export=matches!(action,StudyAction::Export{..});
-            let id=jobs::start_publication_with_inputs(owner,*stamp,path,export,inputs)?;
+            let kind=match action {StudyAction::SavePortable{..}=>jobs::PublicationKind::Portable,StudyAction::Export{..}=>jobs::PublicationKind::Html,_=>jobs::PublicationKind::Json};
+            let id=jobs::start_publication_with_inputs(owner,*stamp,path,kind,inputs)?;
             return Ok(json!({"job":id,"message":"Publishing a new immutable captured review revision"}));
         }
         StudyAction::SystemUi{..}=>return Err("study.system_ui: rendered controls must be resolved by the apply owner".into()),

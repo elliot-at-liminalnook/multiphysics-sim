@@ -794,3 +794,20 @@ fn virtual_policy_and_tolerant_status_fail_closed() {
         assert!(!calibration::virtual_command_allowed(action));
     }
 }
+
+#[test]
+fn only_binding_refusals_and_lost_links_revoke_the_pin() {
+    let (endpoint, server) = serve(vec![
+        (400, r#"{"error":"Out of virtual calibration scope: jog is refused on a virtual bench"}"#.into()),
+        (409, format!(r#"{{"error":"{}: identity/generation mismatch"}}"#, calibration::BINDING_REFUSED)),
+    ]);
+    let c = client(endpoint);
+    let scope = c.post(calibration::COMMAND, &calibration::stop(Some(1), 1)).unwrap_err();
+    assert!(matches!(scope, ClientError::Server { status: 400, .. }));
+    assert!(!calibration::binding_lost(&scope), "an out-of-scope refusal keeps the binding");
+    let binding = c.post(calibration::COMMAND, &calibration::stop(Some(1), 2)).unwrap_err();
+    assert_eq!(binding, ClientError::Server { status: calibration::BINDING_REFUSED_STATUS, error: format!("{}: identity/generation mismatch", calibration::BINDING_REFUSED) });
+    assert!(calibration::binding_lost(&binding));
+    assert!(calibration::binding_lost(&ClientError::Transport("Connection refused".into())));
+    server.join().unwrap();
+}

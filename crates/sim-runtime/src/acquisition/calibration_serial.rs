@@ -334,6 +334,13 @@ impl CalibrationBus {
         }
         Ok(())
     }
+    /// Torque-off with stationary readback: up to three attempts, each
+    /// transmitting STOP, with a bus resync (itself a STOP broadcast) between
+    /// them. A failed resync ends the retries: its STOP write already went out
+    /// (or the link is dead), and a bus that will not quiet cannot verify
+    /// another attempt, so returning promptly lets the caller stop the other
+    /// axes. Every failure, the resync's included, is in the returned error.
+    /// Failure logging is best-effort, so a full disk never skips a retry.
     pub fn stop(&mut self, id: u8) -> R<Telemetry> {
         let mut failures = Vec::new();
         for attempt in 0..3 {
@@ -343,10 +350,13 @@ impl CalibrationBus {
                     return Ok(t);
                 }
                 Err(e) => {
-                    self.log_event(serde_json::json!({"event":"stop_verification_failed","id":id,"attempt":attempt,"error":e}))?;
+                    let _ = self.log_event(serde_json::json!({"event":"stop_verification_failed","id":id,"attempt":attempt,"error":e}));
                     failures.push(e);
                     if attempt < 2 {
-                        self.resync_stopped()?;
+                        if let Err(e) = self.resync_stopped() {
+                            failures.push(format!("bus resync failed: {e}"));
+                            break;
+                        }
                         self.stop_reply_recoveries += 1;
                     }
                 }
@@ -356,6 +366,30 @@ impl CalibrationBus {
             "Stop readback unverified after bounded retries: {}",
             failures.join("; ")
         ))
+    }
+    /// One logged torque-off and readback attempt, without [`Self::stop`]'s
+    /// resync-and-retry budget. For axes from which no readback is expected
+    /// (operator-disabled motors): the STOP is still transmitted (the
+    /// supervisor latch is global), but an absent motor costs one reply
+    /// timeout instead of three plus two bus resyncs. A failed attempt is
+    /// followed by one bus resync (a STOP broadcast, then at most 1 s of
+    /// draining; about 100 ms on a quiet bus) so a late reply cannot poison
+    /// the next axis's first attempt. The resync's own failure is only logged:
+    /// the attempt's error is the one returned.
+    pub fn stop_single_attempt(&mut self, id: u8) -> R<Telemetry> {
+        match self.stop_once(id) {
+            Ok(t) => {
+                self.log_event(serde_json::json!({"event":"stop_verified","id":id,"position_raw":t.position_raw,"retries":0,"single_attempt":true}))?;
+                Ok(t)
+            }
+            Err(e) => {
+                let _ = self.log_event(serde_json::json!({"event":"stop_verification_failed","id":id,"attempt":0,"error":e,"single_attempt":true}));
+                if let Err(resync) = self.resync_stopped() {
+                    let _ = self.log_event(serde_json::json!({"event":"stop_resync_failed","id":id,"error":resync,"single_attempt":true}));
+                }
+                Err(e)
+            }
+        }
     }
     fn stop_once(&mut self, id: u8) -> R<Telemetry> {
         // Transmit STOP even if the receive parser is faulted. Never report a physical
@@ -1616,6 +1650,37 @@ mod tests {
         t.join().unwrap();
     }
     #[test]
+    fn single_attempt_stop_transmits_once_and_never_reports_verified() {
+        let (mut bus, mut peer) = pair();
+        let t = std::thread::spawn(move || {
+            let mut bytes = Vec::new();
+            peer.read_to_end(&mut bytes).unwrap();
+            // The attempt's STOP, then the resync's STOP broadcast (the same
+            // bytes); a retried attempt would add more (stop() sends five).
+            assert_eq!(bytes, packet(254, 0xa0, &[0]).unwrap().repeat(2), "one attempt and one resync, no retries");
+        });
+        let e = bus.stop_single_attempt(3).unwrap_err();
+        assert!(!e.contains("bounded retries") && e.contains("serial reply timeout"), "{e}");
+        assert_eq!(bus.stop_reply_recoveries, 0);
+        drop(bus);
+        t.join().unwrap();
+    }
+    #[test]
+    fn failed_resync_ends_stop_retries_with_every_error_reported() {
+        let (mut bus, mut peer) = pair();
+        let t = std::thread::spawn(move || {
+            // Take the first STOP, then vanish: the resync's write finds no peer.
+            let mut first = vec![0; packet(254, 0xa0, &[0]).unwrap().len()];
+            peer.read_exact(&mut first).unwrap();
+            assert_eq!(first, packet(254, 0xa0, &[0]).unwrap());
+        });
+        let e = bus.stop(3).unwrap_err();
+        t.join().unwrap();
+        assert!(e.starts_with("Stop readback unverified after bounded retries: ID 254: serial reply timeout"), "{e}");
+        assert!(e.contains("; bus resync failed: ") && e.to_ascii_lowercase().contains("broken pipe"), "{e}");
+        assert_eq!(bus.stop_reply_recoveries, 0, "no retry after the failed resync");
+    }
+    #[test]
     fn out_of_range_pwm_rejected_before_serial_io() {
         let (mut bus, _peer) = pair();
         assert!(
@@ -2108,6 +2173,10 @@ mod tests {
                 peer.read_exact(&mut greeting).unwrap();
                 assert_eq!(&greeting, b"HX-VIRTUAL-CALIBRATION/1\n");
                 writeln!(peer,"{}",serde_json::json!({"schema_version":1,"kind":"virtual_calibration","bench_instance":peer_instance})).unwrap();
+                // Stay connected until the client closes, like the real bench:
+                // on macOS, setsockopt on a socket whose peer has gone answers
+                // EINVAL, so closing here would fail the client's timeout reset.
+                let _ = peer.read_to_end(&mut Vec::new());
             });
             let opened = CalibrationBus::open_virtual(&socket, expected, &log);
             if expected == Some(instance.as_str()) {

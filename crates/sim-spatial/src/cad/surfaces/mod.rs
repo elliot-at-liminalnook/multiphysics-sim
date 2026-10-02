@@ -39,7 +39,7 @@ use serde::{Deserialize, Serialize};
 
 pub(super) mod registry;
 mod context_menu;
-mod form;
+pub(in crate::cad) mod form;
 mod menus;
 mod palette;
 mod radial;
@@ -336,7 +336,7 @@ pub(super) fn build(app: &mut App) {
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 fn input(
     doc: Option<ResMut<CadDocument>>,
-    clicks: Query<(&Interaction, &SurfaceEntry, Option<&Enabled>), (Changed<Interaction>, With<Button>)>,
+    clicks: Query<(&SurfaceEntry, Option<&Enabled>), (With<crate::ui_kit::activation::Activated>, With<Button>)>,
     roots: Query<(&ComputedNode, &UiGlobalTransform), With<SurfaceRoot>>,
     bar: Query<(&ComputedNode, &UiGlobalTransform), With<menus::MenuRow>>,
     buttons: Option<Res<ButtonInput<MouseButton>>>,
@@ -357,10 +357,7 @@ fn input(
     }
     *popup_was_open = popup;
     let mut clicked = false;
-    for (interaction, entry, enabled) in &clicks {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
+    for (entry, enabled) in &clicks {
         clicked = true;
         if enabled.is_some_and(|e| !e.0) {
             if let Some(why) = &entry.refusal {
@@ -368,9 +365,9 @@ fn input(
             }
             continue;
         }
-        out.write(Act::ui(entry.action.clone()));
+        out.write(Act::ui(crate::cad::activation::guard(&doc, entry.action.clone())));
         if entry.closes {
-            out.write(Act::ui(CadAction::CadSurface { surface: Surface::Closed }));
+            out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadSurface { surface: Surface::Closed })));
         }
     }
     let open = doc.ops.surface.as_ref().map(|o| o.surface.clone());
@@ -382,16 +379,16 @@ fn input(
     {
         let inside = roots.iter().chain(bar.iter()).any(|(node, t)| rect_of(node, t).contains(cursor));
         if !inside {
-            out.write(Act::ui(CadAction::CadSurface { surface: Surface::Closed }));
+            out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadSurface { surface: Surface::Closed })));
         }
     }
     // A typing field's Escape is its own (the kit consumes it: the palette's
     // and the form's fields close or cancel on their `Cancel`).
     if keys.is_some_and(|k| k.just_pressed(KeyCode::Escape)) {
         if open.is_some() {
-            out.write(Act::ui(CadAction::CadSurface { surface: Surface::Closed }));
+            out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadSurface { surface: Surface::Closed })));
         } else if doc.ops.form.is_some() || doc.ops.active.is_some() {
-            out.write(Act::ui(CadAction::CadFormCancel));
+            out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadFormCancel)));
         }
     }
 }

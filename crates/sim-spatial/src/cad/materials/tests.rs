@@ -185,3 +185,28 @@ fn a_properties_dialog_takes_the_keyboard_and_the_defaults_when_they_land() {
     doc.materials.form = Some(f);
     assert_eq!(super::refilled_form(&doc), None, "once");
 }
+
+/// Written T49 fixture: rendered OK refuses a reopened same-document dialog.
+#[test]
+fn rendered_material_ok_retains_modal_session() {
+    use bevy::prelude::*;
+    use bevy::ecs::system::RunSystemOnce;
+    use crate::ui_kit::{UiFonts, activation::Activated, form::FormHit};
+    let mut doc = document();
+    doc.materials.form = Some(form::new_form(4));
+    doc.materials.form_sequence = 1;
+    let mut world = World::new();
+    world.insert_resource(doc);
+    world.insert_resource(UiFonts { regular: default(), italic: default(), mono: default(), icons: default(), medium: default(), semibold: default() });
+    world.run_system_once(panel::draw_form).unwrap();
+    let mut parts = world.query::<(Entity, &panel::FormPart)>();
+    let ok = parts.iter(&world).find(|(_, part)| matches!(part.0, FormHit::Ok)).unwrap().0;
+    world.run_system_once(crate::cad::activation::stamp).unwrap();
+    world.entity_mut(ok).insert(Activated);
+    let intent = crate::cad::activation::guard(world.resource::<CadDocument>(), MaterialsArgs::of(MaterialsOp::FormSubmit, None));
+    world.resource_mut::<CadDocument>().materials.form_sequence += 1;
+    world.run_system_once(crate::cad::activation::refuse).unwrap();
+    assert!(world.get::<Activated>(ok).is_none());
+    let CadAction::Captured { source, .. } = intent else { panic!("missing modal source") };
+    assert!(!crate::cad::activation::current(&source, world.resource::<CadDocument>()));
+}

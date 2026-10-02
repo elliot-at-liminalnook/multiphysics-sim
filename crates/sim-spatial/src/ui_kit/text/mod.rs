@@ -71,6 +71,11 @@ pub(crate) enum TabKey {
 /// The kit's text field: the working draft and how it is edited.
 #[derive(Component, Clone, Debug, Default)]
 pub(crate) struct TextField {
+    /// Transient rendered navigation anchor; never owns or parents the draft.
+    pub(crate) focus_anchor: Option<Entity>,
+    pub(crate) navigation_back: bool,
+    pub(crate) navigation_identity: Option<String>,
+    pub(crate) navigation_source: Option<super::activation::RenderSource>,
     /// The draft the input system edits while the field has the keyboard.
     pub draft: TextDraft,
     /// Characters a typed text may contain (`None`: any).
@@ -184,6 +189,8 @@ pub(crate) struct TextFocus<'w, 's> {
     focus: Option<ResMut<'w, InputFocus>>,
     fields: Query<'w, 's, (Entity, &'static FieldId, &'static mut TextField)>,
     commands: Commands<'w, 's>,
+    inputs: Query<'w, 's, (&'static super::activation::InputIdentity, Option<&'static super::activation::RenderSource>), With<KitInput>>,
+    ordinary: Query<'w, 's, (), With<super::activation::Ordinary>>,
 }
 impl TextFocus<'_, '_> {
     fn entity(&self, id: FieldId) -> Option<Entity> {
@@ -197,6 +204,12 @@ impl TextFocus<'_, '_> {
     pub(crate) fn focused(&self, id: FieldId) -> bool {
         self.focused_entity().is_some_and(|e| self.fields.get(e).is_ok_and(|(_, f, _)| *f == id))
     }
+    /// Navigation currently targets a rendered ordinary control, including a
+    /// modal submit/cancel button. Owners must not steal that focus back.
+    pub(crate) fn ordinary_focused(&self) -> bool {
+        self.focus.as_ref().and_then(|f| f.get()).is_some_and(|e| self.ordinary.contains(e))
+    }
+
     /// Any field has the keyboard (the same answer as [`typing`]).
     pub(crate) fn typing(&self) -> bool {
         self.focused_entity().is_some()
@@ -223,7 +236,15 @@ impl TextFocus<'_, '_> {
         {
             self.commands.write_message(FieldMsg { field, event: FieldEvent::Blur });
         }
+        let anchor = self.focus.as_ref().and_then(|f| f.get()).filter(|e| self.inputs.contains(*e));
         if let Ok((_, _, mut field)) = self.fields.get_mut(entity) {
+            if let Some(anchor) = anchor {
+                field.focus_anchor = Some(anchor);
+                if let Ok((identity, source)) = self.inputs.get(anchor) {
+                    field.navigation_identity = Some(identity.0.clone());
+                    field.navigation_source = source.cloned();
+                }
+            }
             field.draft = draft;
         }
         let Some(focus) = self.focus.as_mut() else { return false };
@@ -286,9 +307,33 @@ impl TextFieldApp for App {
             if !field.placeholder.is_empty() {
                 node.set_placeholder(field.placeholder.as_str());
             }
-            world.spawn((id, field, node));
+            world.spawn((id, field, node)).observe(focused_text_keys);
         }
         self
+    }
+}
+
+/// Text owns typing; bubbling never turns an editor Space into a button press.
+/// Tab delegates to pinned navigation using the transient rendered anchor.
+fn focused_text_keys(
+    mut event: On<bevy::input_focus::FocusedInput<bevy::input::keyboard::KeyboardInput>>,
+    fields: Query<&TextField>,
+    nav: bevy::input_focus::tab_navigation::TabNavigation,
+    mut focus: ResMut<InputFocus>,
+    mut visible: ResMut<bevy::input_focus::InputFocusVisible>,
+) {
+    let Ok(field) = fields.get(event.focused_entity) else { return };
+    event.propagate(false);
+    if field.tab == TabKey::Emit && event.input.key_code == KeyCode::Tab
+        && event.input.state == bevy::input::ButtonState::Pressed && !event.input.repeat
+        && let Some(anchor) = field.focus_anchor
+    {
+        use bevy::input_focus::tab_navigation::NavAction;
+        let action = if field.navigation_back { NavAction::Previous } else { NavAction::Next };
+        if let Ok(next) = nav.navigate(&InputFocus::from_entity(anchor), action) {
+            focus.set(next, FocusCause::Navigated);
+            visible.0 = true;
+        }
     }
 }
 
@@ -309,7 +354,7 @@ pub(crate) struct TextInputSet;
 
 /// Shared with the windowless ordering-cycle test.
 pub(crate) fn configure_sets(app: &mut App) {
-    app.configure_sets(PreUpdate, TextInputSet.after(bevy::input::InputSystems).after(bevy::ui::UiSystems::Focus));
+    app.configure_sets(PreUpdate, TextInputSet.after(bevy::input::InputSystems).after(bevy::ui::UiSystems::Focus).after(bevy::picking::PickingSystems::Last).before(bevy::input_focus::InputFocusSystems::Dispatch));
 }
 
 /// The text entry's resources, messages and input system (windowless:
@@ -323,6 +368,7 @@ impl Plugin for TextEntryPlugin {
             .add_message::<KeyboardInput>()
             .add_message::<KeyboardFocusLost>()
             .init_resource::<InputFocus>()
+            .init_resource::<bevy::input_focus::InputFocusVisible>()
             .init_resource::<ButtonInput<KeyCode>>()
             .init_resource::<ButtonInput<Key>>()
             .add_systems(PreUpdate, input::keys.in_set(TextInputSet))

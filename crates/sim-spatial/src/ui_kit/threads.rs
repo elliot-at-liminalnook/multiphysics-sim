@@ -88,6 +88,7 @@ pub(crate) fn list<'t, A: Anchor + 't, H: Host<A>>(body: &mut ChildSpawnerComman
         let edge = host.color(&t.id).unwrap_or(ACCENT);
         body.spawn((
             Button,
+            crate::ui_kit::activation::Ordinary,
             host.open(&t.id),
             bevy::ui::prelude::AccessibleLabel::new(t.title.clone()),
             if selected { Tint::new(ACCENT_BG, HOVER_BG) } else { Tint::RAISED },
@@ -162,6 +163,7 @@ pub(crate) fn card<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k: &K
         // than a kit button (whose label colour comes from its look).
         card.spawn((
             Button,
+            crate::ui_kit::activation::Ordinary,
             host.open(&thread.id),
             Tint::CLEAR,
             bevy::ui::prelude::AccessibleLabel::new(thread.title.as_str()),
@@ -178,6 +180,8 @@ pub(crate) fn card<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k: &K
 /// A reply field that shows the draft (the host's kit text field's, with a
 /// caret) while focused.
 pub(crate) struct Composer<'a, Act> {
+    /// Source-linked composer identity, excluding mutable draft text.
+    pub identity: String,
     pub label: &'a str,
     pub draft: Option<&'a str>,
     pub placeholder: &'a str,
@@ -197,6 +201,8 @@ pub(crate) fn composer<Act: Component + Clone>(body: &mut ChildSpawnerCommands, 
     // A multi-line text area (taller, 14 px), not the kit's one-line `input`.
     body.spawn((
         Button,
+        crate::ui_kit::activation::Ordinary,
+        crate::ui_kit::activation::InputIdentity(c.identity),
         c.focus,
         KitInput,
         AccessibleLabel::new(if focused && !shown.is_empty() { format!("{}: {shown}", c.label) } else { c.label.to_string() }),

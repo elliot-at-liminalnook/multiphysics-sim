@@ -23,7 +23,7 @@ fn outline_body(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn) {
         let folded = l.folded.contains(&g.category.id);
         let holds_current = g.lessons.iter().any(|e| l.slug() == Some(e.slug.as_str()));
         col.spawn((
-            Button,
+            Button, crate::ui_kit::activation::Ordinary,
             LessonAction::ToggleCategory(g.category.id.clone()),
             Tint::CLEAR,
             AccessibleLabel::new(g.category.title.as_str()),
@@ -44,7 +44,7 @@ fn outline_body(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn) {
                 None => format!("{}{} scene{}", e.minutes.map(|m| format!("{m} min · ")).unwrap_or_default(), e.scenes, if e.scenes == 1 { "" } else { "s" }),
             };
             col.spawn((
-                Button,
+                Button, crate::ui_kit::activation::Ordinary,
                 LessonAction::Open(e.slug.clone()),
                 Tint::selectable(current),
                 AccessibleLabel::new(format!("{}, {subtitle}", e.title)),
@@ -70,7 +70,7 @@ fn outline_body(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn) {
                 continue;
             }
             col.spawn((
-                Button,
+                Button, crate::ui_kit::activation::Ordinary,
                 LessonAction::Goto(b.id.clone()),
                 Tint::CLEAR,
                 AccessibleLabel::new(text),
@@ -117,7 +117,7 @@ fn concepts_outline(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn) {
         let target = m.taught_by.first().cloned();
         let mut row = col.spawn(Node { border_radius: BorderRadius::all(Val::Px(4.)), flex_direction: FlexDirection::Column, row_gap: Val::Px(3.), padding: UiRect::axes(Val::Px(6.), Val::Px(4.)), flex_shrink: 0., ..default() });
         if let Some(t) = &target {
-            row.insert((Button, LessonAction::Open(t.clone()), Tint::CLEAR, AccessibleLabel::new(format!("{}, {}/{}", m.title, m.solid, m.questions)), BackgroundColor(Color::NONE)));
+            row.insert((Button, crate::ui_kit::activation::Ordinary, LessonAction::Open(t.clone()), Tint::CLEAR, AccessibleLabel::new(format!("{}, {}/{}", m.title, m.solid, m.questions)), BackgroundColor(Color::NONE)));
         }
         row.with_children(|r| {
             r.spawn(Node { justify_content: JustifyContent::SpaceBetween, ..default() }).with_children(|t| {

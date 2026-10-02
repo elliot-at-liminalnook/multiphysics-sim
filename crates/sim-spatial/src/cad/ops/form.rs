@@ -91,6 +91,7 @@ pub(super) fn open_form_with(doc: &mut CadDocument, entry: &'static OpEntry, env
         _ => None,
     };
     let began = doc.shown_revision();
+    doc.ops.form_sequence = doc.ops.form_sequence.wrapping_add(1);
     doc.ops.form = Some(FormState { op: entry.id, texts, focus, select_all: true, began, error: None });
     doc.touch();
     json!({"opened": entry.id, "form": form_json(doc)})

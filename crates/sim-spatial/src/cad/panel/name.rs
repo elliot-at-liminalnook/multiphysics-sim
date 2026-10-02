@@ -68,14 +68,19 @@ pub(super) fn end(draft: &mut ResMut<NameDraft>) {
 /// Input: a pressed, enabled CAD button writes its action (and ends a name
 /// draft: the field is sticky, so the kit does not end it on that press).
 #[allow(clippy::type_complexity)]
-pub(super) fn buttons(clicks: Query<(&Interaction, &CadButton, Option<&Enabled>), (Changed<Interaction>, With<Button>)>, mut draft: ResMut<NameDraft>, mut text: TextFocus, mut out: MessageWriter<Act<CadAction>>) {
-    for (interaction, button, enabled) in &clicks {
-        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) {
+pub(super) fn buttons(doc: Option<Res<CadDocument>>, files: Option<Res<crate::cad::files::CadFiles>>, clicks: Query<(&CadButton, Option<&Enabled>), (With<crate::ui_kit::activation::Activated>, With<Button>)>, mut draft: ResMut<NameDraft>, mut text: TextFocus, mut out: MessageWriter<Act<CadAction>>) {
+    let Some(doc) = doc else { return };
+    for (button, enabled) in &clicks {
+        if enabled.is_some_and(|e| !e.0) {
             continue;
         }
         text.blur(NAME);
         end(&mut draft);
-        out.write(Act::ui(button.0.clone()));
+        let action = if matches!(&button.0, CadAction::CadFile(a) if a.op == crate::cad::files::FileOp::Close) {
+            let Some(files) = files.as_deref() else { continue };
+            crate::cad::activation::guard_files(&doc, files, button.0.clone())
+        } else { crate::cad::activation::guard(&doc, button.0.clone()) };
+        out.write(Act::ui(action));
     }
 }
 
@@ -96,7 +101,7 @@ fn refusal(doc: Option<&CadDocument>, id: &str, text: &str) -> (bool, Option<Str
 /// Input: the name field's messages and presses (see the module doc).
 pub(in crate::cad) fn name_entry(
     mut draft: ResMut<NameDraft>,
-    fields: Query<(&Interaction, &NameField), Changed<Interaction>>,
+    fields: Query<&NameField, With<crate::ui_kit::activation::Activated>>,
     doc: Option<Res<CadDocument>>,
     mut msgs: MessageReader<FieldMsg>,
     mut text: TextFocus,
@@ -144,8 +149,8 @@ pub(in crate::cad) fn name_entry(
         text.blur(NAME);
         end(&mut draft);
     }
-    for (interaction, field) in &fields {
-        if *interaction == Interaction::Pressed && draft.node.as_deref() != Some(field.id.as_str()) && text.focus(NAME, field.name.clone()) {
+    for field in &fields {
+        if draft.node.as_deref() != Some(field.id.as_str()) && text.focus(NAME, field.name.clone()) {
             draft.node = Some(field.id.clone());
             draft.text = field.name.clone();
             draft.refusal = None;

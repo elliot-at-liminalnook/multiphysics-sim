@@ -41,6 +41,8 @@ fn idle_controls_are_actual_kit_buttons_and_leave_window_alive() {
     let mut app = fixture(CloseSnapshot { request_enabled: true, ..default() });
     let entity = actual_button(&mut app, CloseAction::CloseRequest);
     assert!(app.world().get::<Enabled>(entity).unwrap().0);
+    assert!(app.world().get::<crate::ui_kit::activation::Ordinary>(entity).is_some());
+    assert!(app.world().get::<bevy::ui_widgets::ActivateOnPress>(entity).is_some());
     assert_eq!(controls_in(app.world())[0]["id"], "close:request");
     assert_eq!(windows(&mut app), 1);
     let mut roots = app.world_mut().query_filtered::<Entity, With<ClosePanel>>();
@@ -73,12 +75,12 @@ fn authored_blocker_disables_actual_preference_loss_button_and_click_producer() 
         cancel_enabled: true, preference_exit_enabled: false, ..default()
     });
     let loss = actual_button(&mut app, CloseAction::CloseWithoutPreferences);
-    app.world_mut().entity_mut(loss).insert(Interaction::Pressed);
+    app.world_mut().entity_mut(loss).insert(crate::ui_kit::activation::Activated);
     app.update();
     assert_eq!(app.world().resource::<Messages<Act<CloseAction>>>().len(), 0);
     assert_eq!(windows(&mut app), 1);
     let cancel = actual_button(&mut app, CloseAction::CloseCancel);
-    app.world_mut().entity_mut(cancel).insert(Interaction::Pressed);
+    app.world_mut().entity_mut(cancel).insert(crate::ui_kit::activation::Activated);
     app.update();
     let actions: Vec<_> = app.world_mut().resource_mut::<Messages<Act<CloseAction>>>().drain().collect();
     assert_eq!(actions.len(), 1);
@@ -89,7 +91,7 @@ fn authored_blocker_disables_actual_preference_loss_button_and_click_producer() 
 fn request_button_only_writes_the_shared_typed_action() {
     let mut app = fixture(CloseSnapshot { request_enabled: true, ..default() });
     let entity = actual_button(&mut app, CloseAction::CloseRequest);
-    app.world_mut().entity_mut(entity).insert(Interaction::Pressed);
+    app.world_mut().entity_mut(entity).insert(crate::ui_kit::activation::Activated);
     app.update();
     let actions: Vec<_> = app.world_mut().resource_mut::<Messages<Act<CloseAction>>>().drain().collect();
     assert_eq!(actions.len(), 1);

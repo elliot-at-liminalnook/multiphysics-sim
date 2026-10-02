@@ -336,9 +336,9 @@ pub(crate) fn build(app: &mut App) {
         // Modal keys: after Bevy's input systems and the kit's (which types
         // into the path field first), before anything reads them; the
         // picker's own draft changes reach the field before the kit types.
-        .add_systems(PreUpdate, picker::sync.before(crate::ui_kit::text::TextInputSet))
-        .add_systems(PreUpdate, picker::keys.after(bevy::input::InputSystems).after(crate::ui_kit::text::TextInputSet))
-        .add_systems(Update, picker::clicks.in_set(ViewerSet::Input))
+        .add_systems(PreUpdate, picker::sync.before(crate::ui_kit::activation::ActivationSet::Eligibility))
+        .add_systems(PreUpdate, picker::keys.after(crate::ui_kit::activation::ActivationSet::Consume))
+        .add_systems(Update, picker::clicks.in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input))
         .add_systems(Update, picker::receive.after(crate::app::settings::SettingsSet::Publish).in_set(ViewerSet::JobResults))
         // The REST poll is Input's first step; the screen requests follow it
         // (in Input, unordered against the window's input, as before).

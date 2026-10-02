@@ -63,7 +63,8 @@ pub(super) fn field(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:Stud
     let shown=ui.shown(Some(stamp),&field,value);
     body.spawn(k.text(label,size::DETAIL,FAINT,1));
     body.spawn(k.input(&shown,"Enter to apply",Hit::Focus{stamp:Some(stamp),field:field.clone(),text:shown.clone()},ui.focused(Some(stamp),&field)))
-        .insert((Enabled(enabled),ControlId(format!("study:field:{}:{field:?}",stamp.id))));
+        .insert((Enabled(enabled),ControlId(format!("study:field:{}:{field:?}",stamp.id)),
+            crate::ui_kit::activation::InputIdentity(format!("study:field:{}:{field:?}",stamp.id))));
 }
 fn path(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:Option<StudyStamp>,field:Field,label:&str,submit:&str,enabled:bool) {
     let text=ui.shown(stamp,&field,String::new());

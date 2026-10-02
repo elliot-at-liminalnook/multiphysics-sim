@@ -166,7 +166,7 @@ fn draw(
             );
             let pin = Pin { point: entry.point, colour: entry.colour };
             let mut root = match &entry.thread {
-                Some(id) => commands.spawn((Button, PinPress(id.clone()), AccessibleLabel::new(format!("Comment {}", entry.label)), node, pin)),
+                Some(id) => commands.spawn((Button, crate::ui_kit::activation::Ordinary, PinPress(id.clone()), AccessibleLabel::new(format!("Comment {}", entry.label)), node, pin)),
                 None => commands.spawn((node, pin, Pickable::IGNORE, FocusPolicy::Pass, AccessibleLabel::new("New comment pin"))),
             };
             root.insert((BackgroundColor(Color::NONE), ZIndex(-1), DespawnOnExit(ModeScope::Cad))).with_children(|p| {
@@ -198,9 +198,9 @@ fn draw(
 }
 
 /// Input: a press on a thread's pin opens it.
-fn press(presses: Query<(&Interaction, &PinPress), Changed<Interaction>>, mut out: MessageWriter<Act<CadAction>>) {
-    for (interaction, pin) in &presses {
-        if *interaction == Interaction::Pressed {
+fn press(presses: Query<&PinPress, With<crate::ui_kit::activation::Activated>>, mut out: MessageWriter<Act<CadAction>>) {
+    for pin in &presses {
+        {
             out.write(Act::ui(ThreadsArgs::thread(ThreadsOp::Open, Some(&pin.0))));
         }
     }

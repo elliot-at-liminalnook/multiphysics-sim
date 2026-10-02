@@ -659,25 +659,21 @@ pub(crate) fn overlay_bar(mut commands: Commands, scene: Res<SpatialScene>, came
 /// only, no refit): each press carries the flip of the value shown now, which
 /// `inspect::apply` sets later in the same frame. Quiet: a refused toggle is
 /// ignored, as before, not logged.
-pub(crate) fn overlay_clicks(toggles: Query<(&Interaction, &OverlayToggle), Changed<Interaction>>, views: Query<(&Interaction, &ViewToggle), Changed<Interaction>>, scene: Res<SpatialScene>, mut out: MessageWriter<crate::app::actions::Act<crate::inspect::InspectAction>>) {
+pub(crate) fn overlay_clicks(toggles: Query<&OverlayToggle, With<crate::ui_kit::activation::Activated>>, views: Query<&ViewToggle, With<crate::ui_kit::activation::Activated>>, scene: Res<SpatialScene>, mut out: MessageWriter<crate::app::actions::Act<crate::inspect::InspectAction>>) {
     use crate::app::actions::Act;
     use crate::inspect::InspectAction;
     use sim_inspect::spatial::SpatialCommand as C;
-    for (interaction, toggle) in &views {
-        if *interaction == Interaction::Pressed {
-            let command = match toggle {
-                ViewToggle::Xray => C::SetXray { enabled: !scene.state.xray },
-                ViewToggle::Explode => C::SetExploded { enabled: !scene.state.exploded },
-                ViewToggle::Strobe => C::SetStrobe { enabled: !scene.state.strobe },
-            };
-            out.write(Act::quiet(InspectAction::View(command)));
-        }
+    for toggle in &views {
+        let command = match toggle {
+            ViewToggle::Xray => C::SetXray { enabled: !scene.state.xray },
+            ViewToggle::Explode => C::SetExploded { enabled: !scene.state.exploded },
+            ViewToggle::Strobe => C::SetStrobe { enabled: !scene.state.strobe },
+        };
+        out.write(Act::quiet(InspectAction::View(command)));
     }
-    for (interaction, toggle) in &toggles {
-        if *interaction == Interaction::Pressed {
-            let enabled = !scene.state.overlays.contains(&toggle.0);
-            out.write(Act::quiet(InspectAction::View(C::SetOverlay { layer: toggle.0, enabled })));
-        }
+    for toggle in &toggles {
+        let enabled = !scene.state.overlays.contains(&toggle.0);
+        out.write(Act::quiet(InspectAction::View(C::SetOverlay { layer: toggle.0, enabled })));
     }
 }
 

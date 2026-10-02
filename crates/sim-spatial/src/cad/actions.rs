@@ -42,6 +42,9 @@ pub const CAD: &[ViewerMode] = &[ViewerMode::Cad];
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
 pub enum CadAction {
+    /// Internal window occurrence; never a public REST command.
+    #[serde(skip)]
+    Captured { source: super::activation::SourceStamp, action: Box<CadAction> },
     /// `state` (as every mode answers it): the same as `cad_state`.
     State,
     /// The document as this window shows it: connection, service, document
@@ -468,7 +471,12 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
     }
     let done = |r: Result<Value, String>| Outcome::Done(r);
     let doc = &mut *cx.doc;
+    if let CadAction::Captured { source, action } = action {
+        if !super::activation::current(source, doc) || !super::activation::files_current(source, cx.files.as_deref()) { return done(Err("CAD control belongs to a replaced source or form".into())); }
+        return handle(action, call, cx);
+    }
     match action {
+        CadAction::Captured { .. } => unreachable!("captured intent handled above"),
         CadAction::State | CadAction::CadState => done(Ok(state_json(doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref()).authoring(cx.components, cx.composition).experiments(cx.experiments, cx.review, cx.motion).defaults(&cx.settings.cad)))),
         CadAction::CadOpen { path, url } => {
             cx.review.request_cancel();

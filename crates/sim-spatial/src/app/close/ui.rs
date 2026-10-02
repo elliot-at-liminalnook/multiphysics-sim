@@ -31,17 +31,17 @@ pub(crate) fn controls_in(world: &World) -> Vec<serde_json::Value> {
 pub(super) struct ClosePanel;
 
 pub(super) fn register(app: &mut App) {
-    app.add_systems(Update, clicks.in_set(ViewerSet::Input))
+    app.add_systems(Update, clicks.in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input))
         .add_systems(Update, render.in_set(ViewerSet::Present).after(super::CloseSet::Publish));
 }
 
 /// A stale enabled projection cannot authorize anything: Actions validates again.
 pub(super) fn clicks(
-    buttons: Query<(&Interaction, &CloseAction, &Enabled), (With<Button>, Changed<Interaction>)>,
+    buttons: Query<(&CloseAction, &Enabled), (With<Button>, With<crate::ui_kit::activation::Activated>)>,
     mut actions: MessageWriter<Act<CloseAction>>,
 ) {
-    for (interaction, action, enabled) in &buttons {
-        if *interaction == Interaction::Pressed && enabled.0 {
+    for (action, enabled) in &buttons {
+        if enabled.0 {
             actions.write(Act::ui(action.clone()));
         }
     }

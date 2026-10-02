@@ -24,7 +24,7 @@ pub(crate) fn build(app: &mut App) {
 }
 fn input(
     mut st: ResMut<CadCompositionState>,
-    fields: Query<(&Interaction, &Input), Changed<Interaction>>,
+    fields: Query<&Input, With<crate::ui_kit::activation::Activated>>,
     mut text: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     mut out: MessageWriter<Act<CadAction>>,
 ) {
@@ -56,8 +56,8 @@ fn input(
             _ => {}
         }
     }
-    for (interaction, field) in &fields {
-        if *interaction == Interaction::Pressed {
+    for field in &fields {
+        {
             let value = if field.0 == "check_id" {
                 st.check_draft.clone()
             } else {

@@ -25,7 +25,7 @@ pub(crate) fn build(a: &mut App) {
 }
 fn input(
     mut s: ResMut<MotionState>,
-    q: Query<(&Interaction, &MotionField), Changed<Interaction>>,
+    q: Query<&MotionField, With<crate::ui_kit::activation::Activated>>,
     mut text: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     mut out: MessageWriter<Act<CadAction>>,
 ) {
@@ -84,8 +84,8 @@ fn input(
             _ => {}
         }
     }
-    for (i, f) in &q {
-        if *i == Interaction::Pressed && f.1 == s.sequence {
+    for f in &q {
+        if f.1 == s.sequence {
             s.focus = Some(f.0.into());
             let value = match f.0 {
                 "path" => s.path.clone(),

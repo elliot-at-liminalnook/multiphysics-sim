@@ -10,9 +10,9 @@ use bevy::prelude::*;
 
 /// Input: a pressed panel button's action (not while disabled). The jog
 /// buttons are hold-to-move ([`jog_buttons`]).
-pub(super) fn buttons(clicks: Query<(&Interaction, &HardwareAction, Option<&Enabled>), (Changed<Interaction>, Without<JogButton>)>, mut out: MessageWriter<Act<HardwareAction>>) {
-    for (interaction, action, enabled) in &clicks {
-        if *interaction == Interaction::Pressed && enabled.is_none_or(|e| e.0) {
+pub(super) fn buttons(clicks: Query<(&HardwareAction, Option<&Enabled>), (With<crate::ui_kit::activation::Activated>, Without<JogButton>)>, mut out: MessageWriter<Act<HardwareAction>>) {
+    for (action, enabled) in &clicks {
+        if enabled.is_none_or(|e| e.0) {
             out.write(Act::ui(action.clone()));
         }
     }
@@ -131,4 +131,89 @@ pub(super) fn sliders(sliders: Query<(&bevy::ui_widgets::SliderValue, Has<bevy::
         held.moved_target = false;
     }
     held.which = now;
+}
+
+#[cfg(test)]
+mod activation_fixtures {
+    use super::*;
+    use crate::ui_kit::{Kit, UiFonts};
+
+    // Render the real panel fragments, with placeholder font/image handles.
+    fn render(mut commands: Commands) {
+        let fonts = UiFonts { regular: Handle::default(), italic: Handle::default(), mono: Handle::default(), icons: Default::default(), medium: Handle::default(), semibold: Handle::default() };
+        let k = Kit::new(&fonts);
+        commands.spawn(Node::default()).with_children(|root| {
+            crate::robot::hardware::panel_sections::top_bar(root, &k);
+            crate::robot::hardware::panel_sections::body(root, &k, Handle::default(), Handle::default());
+        });
+    }
+
+    fn fixture() -> App {
+        let mut app = App::new();
+        app.add_plugins(crate::ui_kit::text::TextEntryPlugin)
+            .add_message::<Act<HardwareAction>>()
+            .add_systems(Startup, render)
+            .add_systems(Update, buttons.in_set(crate::app::ViewerSet::Input));
+        crate::ui_kit::activation::install(&mut app);
+        app.update();
+        // Run eligibility for the newly spawned real controls.
+        app.update();
+        app
+    }
+
+    /// Written/source-inspected only: captured ordinary STOP reaches the existing
+    /// action owner once; a held jog cannot enter generic activation at all.
+    #[test]
+    fn rendered_hardware_stop_activates_once_and_jog_is_explicitly_excluded() {
+        let mut app = fixture();
+        let world = app.world_mut();
+        let stop = world.query::<(Entity, &HardwareAction)>().iter(world)
+            .find_map(|(entity, action)| matches!(action, HardwareAction::Stop).then_some(entity)).unwrap();
+        let jogs: Vec<Entity> = world.query_filtered::<Entity, With<JogButton>>().iter(world).collect();
+        assert_eq!(jogs.len(), 2);
+        for jog in &jogs {
+            assert!(world.get::<crate::ui_kit::activation::HeldControl>(*jog).is_some());
+            assert!(world.get::<bevy::ui_widgets::Button>(*jog).is_none());
+            assert!(world.get::<crate::ui_kit::activation::Ordinary>(*jog).is_none());
+            world.trigger(bevy::ui_widgets::Activate { entity: *jog });
+        }
+        // Drive the pinned press observer on the actual rendered STOP control.
+        // No release/click is supplied: activation is intentionally on press.
+        let window = world.spawn_empty().id();
+        let camera = world.spawn_empty().id();
+        world.trigger(bevy::picking::events::Pointer::new(
+            bevy::picking::pointer::PointerId::Mouse,
+            bevy::picking::pointer::Location {
+                target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(),
+                position: Vec2::ZERO,
+            },
+            bevy::picking::events::Press {
+                button: bevy::picking::pointer::PointerButton::Primary,
+                hit: bevy::picking::backend::HitData::new(camera, 0.0, None, None),
+                count: 1,
+            },
+            stop,
+        ));
+        app.update();
+        let actions: Vec<_> = app.world_mut().resource_mut::<Messages<Act<HardwareAction>>>().drain().map(|a| a.action).collect();
+        assert_eq!(actions.len(), 1);
+        assert!(matches!(actions[0], HardwareAction::Stop));
+        app.update();
+        assert_eq!(app.world_mut().resource_mut::<Messages<Act<HardwareAction>>>().drain().count(), 0);
+    }
+
+    /// The actual STOP control remains visible to system_ui through UI Button,
+    /// but disabled state refuses generic activation before typed conversion.
+    #[test]
+    fn rendered_disabled_hardware_control_refuses_activation() {
+        let mut app = fixture();
+        let world = app.world_mut();
+        let stop = world.query::<(Entity, &HardwareAction)>().iter(world)
+            .find_map(|(entity, action)| matches!(action, HardwareAction::Stop).then_some(entity)).unwrap();
+        assert!(world.get::<Button>(stop).is_some());
+        world.entity_mut(stop).insert(Enabled(false));
+        world.trigger(bevy::ui_widgets::Activate { entity: stop });
+        app.update();
+        assert_eq!(app.world_mut().resource_mut::<Messages<Act<HardwareAction>>>().drain().count(), 0);
+    }
 }

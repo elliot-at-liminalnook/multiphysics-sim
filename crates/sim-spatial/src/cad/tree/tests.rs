@@ -296,3 +296,38 @@ fn renames_and_groups_are_checked_before_sending() {
     assert!(refused(&apply(&tree_args(TreeOp::Search, |a| a.locked = Some(true)), &mut doc, &mut f), "locked belongs to op lock"));
     assert_eq!(doc.edit_seq, seq);
 }
+
+/// Written T49 fixture: actual tree renderer retains compound pointer behavior
+/// while focused keyboard activation captures a stable node id.
+#[test]
+fn rendered_tree_row_keyboard_activation_keeps_stable_selection_intent() {
+    use bevy::prelude::*;
+    use bevy::ecs::system::RunSystemOnce;
+    use crate::app::actions::Act;
+    use crate::ui_kit::{Kit, UiFonts, activation::{Activated, HeldControl, KeyboardOnly, Ordinary}};
+    fn render(mut commands: Commands, doc: Res<CadDocument>) {
+        let fonts = UiFonts { regular: default(), italic: default(), mono: default(), icons: default(), medium: default(), semibold: default() };
+        commands.spawn((Node::default(), DespawnOnExit(crate::app::ModeScope::Cad))).with_children(|p| {
+            super::rows::draw(p, &Kit::new(&fonts), &doc, &[]);
+        });
+    }
+    let mut world = World::new();
+    world.insert_resource(document());
+    world.insert_resource(Messages::<Act<CadAction>>::default());
+    world.run_system_once(render).unwrap();
+    let mut rows = world.query::<(Entity, &super::rows::TreeRowId)>();
+    let entity = rows.iter(&world).find(|(_, row)| row.id == "b1").unwrap().0;
+    assert!(world.get::<Ordinary>(entity).is_some());
+    assert!(world.get::<KeyboardOnly>(entity).is_some());
+    assert!(world.get::<HeldControl>(entity).is_some());
+    world.run_system_once(crate::cad::activation::stamp).unwrap();
+    world.entity_mut(entity).insert(Activated);
+    world.run_system_once(crate::cad::activation::tree_keyboard).unwrap();
+    let actions = world.resource_mut::<Messages<Act<CadAction>>>().drain().collect::<Vec<_>>();
+    assert_eq!(actions.len(), 1);
+    let CadAction::Captured { action, .. } = &actions[0].action else { panic!("keyboard selection must retain source") };
+    assert_eq!(**action, select_action(world.resource::<CadDocument>(), "b1", false, false));
+    world.resource_mut::<CadDocument>().generation += 1;
+    world.run_system_once(crate::cad::activation::refuse).unwrap();
+    assert!(world.get::<Activated>(entity).is_none());
+}

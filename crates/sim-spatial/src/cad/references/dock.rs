@@ -136,6 +136,7 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
             if let Some((_, _, action, _)) = row {
                 line.spawn((
                     Button,
+                    crate::ui_kit::activation::Ordinary,
                     CadButton(action.clone()),
                     Tint::selectable(selected),
                     AccessibleLabel::new(n.name.clone()),

@@ -117,6 +117,7 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
         let text = label.trim_start_matches('■').trim_start().to_string();
         p.spawn((
             Button,
+            crate::ui_kit::activation::Ordinary,
             MaterialRow(m.id.clone()),
             // A press on a row keeps the search typing, as before.
             crate::ui_kit::text::KitInput,
@@ -139,8 +140,8 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
 }
 
 /// Write `cad_materials {op, material}` as a click.
-fn write(out: &mut MessageWriter<Act<CadAction>>, op: MaterialsOp, material: Option<&str>) {
-    out.write(Act::ui(MaterialsArgs::of(op, material)));
+fn write(doc: &CadDocument, out: &mut MessageWriter<Act<CadAction>>, op: MaterialsOp, material: Option<&str>) {
+    out.write(Act::ui(crate::cad::activation::guard(doc, MaterialsArgs::of(op, material))));
 }
 
 /// Dialog row `i`'s text.
@@ -167,9 +168,10 @@ fn focus(text: &mut TextFocus, doc: &CadDocument, f: Focus) -> bool {
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub(in crate::cad) fn input(
     doc: Option<ResMut<CadDocument>>,
-    fields: Query<(&Interaction, &MaterialsInput), Changed<Interaction>>,
-    parts: Query<(&Interaction, &FormPart, Option<&Enabled>), Changed<Interaction>>,
-    rows: Query<(&Interaction, &MaterialRow), Changed<Interaction>>,
+    fields: Query<&MaterialsInput, With<crate::ui_kit::activation::Activated>>,
+    parts: Query<(&FormPart, Option<&Enabled>), With<crate::ui_kit::activation::Activated>>,
+    rows: Query<&MaterialRow, With<crate::ui_kit::activation::Activated>>,
+    pointer_rows: Query<(&Interaction, &MaterialRow), Changed<Interaction>>,
     mut msgs: MessageReader<FieldMsg>,
     mut text: TextFocus,
     mut out: MessageWriter<Act<CadAction>>,
@@ -232,12 +234,12 @@ pub(in crate::cad) fn input(
                 }
                 // OK: a refusal stays in the form, the field keeps the keyboard.
                 if modal {
-                    write(&mut out, MaterialsOp::FormSubmit, None);
+                    write(&doc, &mut out, MaterialsOp::FormSubmit, None);
                 }
             }
             (FORM, FieldEvent::Cancel) => {
                 if modal {
-                    write(&mut out, MaterialsOp::FormCancel, None);
+                    write(&doc, &mut out, MaterialsOp::FormCancel, None);
                 }
                 at = None;
                 closing = true;
@@ -254,16 +256,13 @@ pub(in crate::cad) fn input(
             _ => {}
         }
     }
-    for (interaction, f) in &fields {
-        if *interaction == Interaction::Pressed && at != Some(f.0) {
+    for f in &fields {
+        if at != Some(f.0) {
             at = Some(f.0);
             select_all = focus(&mut text, &doc, f.0);
         }
     }
-    for (interaction, part, enabled) in &parts {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
+    for (part, enabled) in &parts {
         match part.0 {
             FormHit::Field(i) => {
                 if at != Some(Focus::Field(i)) {
@@ -271,29 +270,32 @@ pub(in crate::cad) fn input(
                     select_all = focus(&mut text, &doc, Focus::Field(i));
                 }
             }
-            FormHit::Ok if enabled.is_none_or(|e| e.0) => write(&mut out, MaterialsOp::FormSubmit, None),
+            FormHit::Ok if enabled.is_none_or(|e| e.0) => write(&doc, &mut out, MaterialsOp::FormSubmit, None),
             FormHit::Cancel => {
-                write(&mut out, MaterialsOp::FormCancel, None);
+                write(&doc, &mut out, MaterialsOp::FormCancel, None);
                 closing = true;
             }
             _ => {}
         }
     }
-    for (interaction, row) in &rows {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
+    for row in &rows {
         // Rows are kit inputs so a press keeps the search typing; any other
         // non-sticky field's entry ends, as for a press elsewhere.
         if !text.focused(SEARCH) {
             text.release(false);
         }
+        // Keyboard selection is ordinary activation, never a fabricated double-click.
+        if !pointer_rows.iter().any(|(interaction, pointer)| *interaction == Interaction::Pressed && pointer.0 == row.0) {
+            write(&doc, &mut out, MaterialsOp::Select, Some(row.0.as_str()));
+            *last_row = None;
+            continue;
+        }
         let now = Instant::now();
         if last_row.as_ref().is_some_and(|(id, t)| *id == row.0 && now.duration_since(*t) <= DOUBLE_CLICK) {
-            write(&mut out, MaterialsOp::Apply, Some(row.0.as_str()));
+            write(&doc, &mut out, MaterialsOp::Apply, Some(row.0.as_str()));
             *last_row = None;
         } else {
-            write(&mut out, MaterialsOp::Select, Some(row.0.as_str()));
+            write(&doc, &mut out, MaterialsOp::Select, Some(row.0.as_str()));
             *last_row = Some((row.0.clone(), now));
         }
     }
@@ -324,7 +326,7 @@ pub(in crate::cad) fn input(
         text.blur(SEARCH);
     }
     // The modal dialog owns the keyboard: with no field focused, its field takes it again.
-    if modal && !closing && !text.typing() {
+    if modal && !closing && !text.typing() && !text.ordinary_focused() {
         let row = match before {
             Some(Focus::Field(i)) => i,
             _ => 0,
@@ -350,7 +352,7 @@ pub(in crate::cad) fn input(
 fn form_key(doc: &CadDocument) -> Option<String> {
     let f = doc.materials.form.as_ref()?;
     let ids: Vec<String> = list(doc).into_iter().map(|m| m.id).collect();
-    Some(format!("{:?}", (doc.generation, f, doc.materials.focus, doc.materials.select_all, doc.edit_refusal(), ids, doc.physical_job.is_some())))
+    Some(format!("{:?}", (doc.generation, doc.materials.form_sequence, f, doc.materials.focus, doc.materials.select_all, doc.edit_refusal(), ids, doc.physical_job.is_some())))
 }
 
 /// Present: the dialog, rebuilt when what it shows changes (its scroll offset kept).

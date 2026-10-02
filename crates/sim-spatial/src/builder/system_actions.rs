@@ -134,6 +134,8 @@ pub(crate) enum SystemAction {
     /// A button, key or marker: the chrome's action, applied by `dispatch`.
     #[serde(skip)]
     Ui(BuildAction),
+    #[serde(skip)]
+    RenderedUi(super::actions::RenderStamp, BuildAction),
 }
 
 /// `system_ui`: discover the builder's live controls and activate one (its
@@ -270,6 +272,11 @@ fn no_builder(action: &SystemAction) -> String {
 fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, pick: &mut Picked, lessons: bool, switch: &mut MessageWriter<Act<WindowAction>>, action: &SystemAction, call: &mut Call) -> Outcome {
     let object = |args: &serde_json::Map<String, Value>| Value::Object(args.clone());
     let result = match action {
+        SystemAction::RenderedUi(stamp,action) => {
+            if !stamp.matches(builder) || stamp.document!=pick.document() {return Outcome::Done(Err("Rendered Build control source changed; activate the current panel".into()));}
+            dispatch(builder,scene,camera,pick,action.clone());
+            return Outcome::Done(Ok(Value::Null));
+        }
         SystemAction::Ui(action) => {
             dispatch(builder, scene, camera, pick, action.clone());
             return Outcome::Done(Ok(Value::Null));
@@ -420,8 +427,8 @@ pub(super) fn apply(
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
         let opening = match action {
             SystemAction::SystemOpen(_) => call.continuation.get("open").is_none(),
-            SystemAction::Ui(BuildAction::OpenSystem(_)) => true,
-            SystemAction::Ui(BuildAction::SubmitDraft) => builder.input.as_ref().is_some_and(|i| i.purpose == Purpose::OpenSystem),
+            SystemAction::Ui(BuildAction::OpenSystem(_)) | SystemAction::RenderedUi(_,BuildAction::OpenSystem(_)) => true,
+            SystemAction::Ui(BuildAction::SubmitDraft) | SystemAction::RenderedUi(_,BuildAction::SubmitDraft) => builder.input.as_ref().is_some_and(|i| i.purpose == Purpose::OpenSystem),
             SystemAction::SystemUi { action, .. } => builder.opens_system_ui(action),
             _ => false,
         };

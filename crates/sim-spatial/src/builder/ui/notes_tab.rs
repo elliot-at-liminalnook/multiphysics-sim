@@ -93,6 +93,7 @@ pub(super) fn discussion_composer(body:&mut ChildSpawnerCommands,k:&Kit,b:&Build
     let submit=if special||b.discussion.editing.is_some(){"Save"}else if b.discussion.selected.is_none(){"Post note"}else{"Post reply"};
     // A persistent footer keeps the reply field in reach while messages scroll.
     threads::composer(body,k,threads::Composer{
+        identity:format!("builder-composer:{:?}:{:?}:{label}",b.discussion.selected,b.discussion.editing),
         label,draft:input.map(|i|i.buffer.as_str()),placeholder:"Write a reply…",min_height:if special{36.}else{76.},
         focus:BuildAction::Discussion(A::Reply),submit:BuildAction::Discussion(A::Submit),submit_label:submit,cancel:BuildAction::Discussion(A::CancelDraft),
         author:Some((b.discussion.author.as_str(),BuildAction::Discussion(A::Author))),error:b.discussion.error.as_deref(),

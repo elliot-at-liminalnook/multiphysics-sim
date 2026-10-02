@@ -68,7 +68,7 @@ pub(super) struct FormPart(pub FormHit);
 
 /// The form's root.
 #[derive(Component, Clone, Copy, Debug, Default)]
-pub(super) struct FormRoot;
+pub(in crate::cad) struct FormRoot;
 
 /// The form's width (px).
 const WIDTH: f32 = 340.0;
@@ -166,7 +166,7 @@ fn next_text(entry: &OpEntry, texts: &[String], i: usize) -> usize {
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub(super) fn input(
     doc: Option<ResMut<CadDocument>>,
-    parts: Query<(&Interaction, &FormPart, Option<&Enabled>), Changed<Interaction>>,
+    parts: Query<(&FormPart, Option<&Enabled>), With<crate::ui_kit::activation::Activated>>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
     buttons: Option<Res<ButtonInput<MouseButton>>>,
     // The field's messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
@@ -235,12 +235,12 @@ pub(super) fn input(
             // OK; the field keeps the keyboard until the form closes (a
             // refusal shows under it and the typing goes on).
             FieldEvent::Submit(_) => {
-                out.write(Act::ui(CadAction::CadFormSubmit));
+                out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadFormSubmit)));
             }
             // Escape cancels the form (the kit has taken the keyboard away).
             FieldEvent::Cancel => {
                 at = None;
-                out.write(Act::ui(CadAction::CadFormCancel));
+                out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadFormCancel)));
             }
             FieldEvent::Tab { .. } => {
                 if let Some(i) = at {
@@ -256,10 +256,7 @@ pub(super) fn input(
         }
     }
     let mut pressed_part = false;
-    for (interaction, part, enabled) in &parts {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
+    for (part, enabled) in &parts {
         pressed_part = true;
         let param = |i: usize| entry.params.get(i);
         match part.0 {
@@ -272,13 +269,13 @@ pub(super) fn input(
             FormHit::Option(i, k) => match param(i).map(|p| (p, p.kind)) {
                 Some((p, FieldKind::Choice { options })) => {
                     if let Some(o) = options.get(k) {
-                        out.write(Act::ui(CadAction::CadFormSet { name: p.name.to_string(), value: Value::String(o.to_string()) }));
+                        out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadFormSet { name: p.name.to_string(), value: Value::String(o.to_string()) })));
                     }
                 }
                 // The choice's key, as the form showed the list (read again now: the same document).
                 Some((p, FieldKind::Pick { source })) => {
                     if let Some((key, _)) = ops::picks(source, &doc).into_iter().nth(k) {
-                        out.write(Act::ui(CadAction::CadFormSet { name: p.name.to_string(), value: Value::String(key) }));
+                        out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadFormSet { name: p.name.to_string(), value: Value::String(key) })));
                     }
                 }
                 _ => {}
@@ -286,14 +283,14 @@ pub(super) fn input(
             FormHit::Check(i) => {
                 if let Some(p) = param(i) {
                     let on = texts.get(i).map_or(p.default, String::as_str) == "true";
-                    out.write(Act::ui(CadAction::CadFormSet { name: p.name.to_string(), value: Value::Bool(!on) }));
+                    out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadFormSet { name: p.name.to_string(), value: Value::Bool(!on) })));
                 }
             }
             FormHit::Ok if enabled.is_none_or(|e| e.0) => {
-                out.write(Act::ui(CadAction::CadFormSubmit));
+                out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadFormSubmit)));
             }
             FormHit::Cancel => {
-                out.write(Act::ui(CadAction::CadFormCancel));
+                out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadFormCancel)));
             }
             _ => {}
         }
@@ -319,7 +316,7 @@ pub(super) fn input(
     // `SketchTool.key` takes Enter only to finish a spline
     // (`sketch::interact`), and its Tab values commit from the numeric bar.
     if at.is_none() && !started && free && !sketching && keys.as_ref().is_some_and(|k| k.just_pressed(KeyCode::Enter)) {
-        out.write(Act::ui(CadAction::CadFormSubmit));
+        out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadFormSubmit)));
     }
     // The kit field follows the row: it takes the keyboard for a row asked
     // for here or by an action (the catalogue's first field, `numeric.entry`,
@@ -358,7 +355,7 @@ fn lists(doc: &CadDocument, entry: &OpEntry, form: &FormState) -> (Vec<Vec<(Stri
 fn form_key(doc: &CadDocument) -> Option<String> {
     let form = doc.ops.form.as_ref()?;
     let entry = ops::entry(form.op)?;
-    Some(format!("{:?}", (doc.generation, form, doc.ops.active, lists(doc, entry, form))))
+    Some(format!("{:?}", (doc.generation, doc.ops.form_sequence, form, doc.ops.active, lists(doc, entry, form))))
 }
 
 /// Present: the form, rebuilt when its drafts, focus or error change;
@@ -412,6 +409,8 @@ pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts:
                 FocusPolicy::Block,
                 GlobalZIndex(POPUP_Z - 2),
                 AccessibleLabel::new(format!("{} parameters", entry.label)),
+                crate::ui_kit::activation::ModalFocus,
+                bevy::input_focus::tab_navigation::TabGroup::modal(),
                 FormRoot,
                 DespawnOnExit(ModeScope::Cad),
             ))

@@ -137,7 +137,7 @@ fn looks_paint_the_builder_palette() {
 /// which no compile step catches), and the slider starts where it is told.
 #[test]
 fn kit_bundles_spawn() {
-    #[derive(Component)]
+    #[derive(Component, Debug)]
     struct Marker;
     let fonts = UiFonts { regular: default(), italic: default(), mono: default(), icons: Default::default(), medium: default(), semibold: default() };
     let k = Kit::new(&fonts);
@@ -329,7 +329,7 @@ fn text_drafts_edit_as_the_numeric_bar() {
 /// The pie, palette and form spawn (no duplicate component in a bundle).
 #[test]
 fn modify_widgets_spawn() {
-    #[derive(Component)]
+    #[derive(Component, Debug)]
     struct Marker;
     let fonts = UiFonts { regular: default(), italic: default(), mono: default(), icons: Default::default(), medium: default(), semibold: default() };
     let k = Kit::new(&fonts);
@@ -474,7 +474,7 @@ fn document_picker_spawns_labelled_buttons() {
     use crate::builder::ui_api::Enabled;
     use path_field::{Listing, PathHit, PathView};
     use picker::{PickHit, PickerEntry, PickerSection};
-    #[derive(Component)]
+    #[derive(Component, Debug)]
     struct Part(PickHit);
     let fonts = UiFonts { regular: default(), italic: default(), mono: default(), icons: Default::default(), medium: default(), semibold: default() };
     let k = Kit::new(&fonts);

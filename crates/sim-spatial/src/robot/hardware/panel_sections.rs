@@ -118,7 +118,8 @@ pub(super) fn body(p: &mut ChildSpawnerCommands, k: &Kit, dial: Handle<Image>, m
     p.spawn(row()).with_children(|r| {
         for (id, label, direction) in [("jog_upper", "Q  Upper ↑", Direction::Upper), ("jog_lower", "A  Lower ↓", Direction::Lower)] {
             let mut e = control(r, k, id, label, HardwareAction::JogPress { direction }, Look::Secondary, false);
-            e.insert(JogButton { direction, held: false });
+            // Hold-to-move requires paired release; never generic Enter/Space activation.
+            e.insert((JogButton { direction, held: false }, crate::ui_kit::activation::HeldControl));
             grow(e);
         }
     });

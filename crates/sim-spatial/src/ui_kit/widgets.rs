@@ -12,8 +12,8 @@ pub(crate) type TextBundle = (Text, TextFont, TextColor, TextLayout);
 /// The widget builder. Holds the fonts; every method returns a bundle (or
 /// spawns into a parent) and takes the widget's action as a component.
 /// Widgets decide how things look, never what a click means: the action
-/// component is read by the mode's own input system (`Changed<Interaction>`
-/// on a `Button`) and applied by the mode's `apply`.
+/// component is read on a captured `activation::Activated` occurrence by
+/// the mode input converter and validated by its existing `apply` owner.
 pub(crate) struct Kit<'a> {
     pub(crate) f: &'a UiFonts,
 }
@@ -103,12 +103,13 @@ impl Kit<'_> {
     /// A button with its label. `action` is what a press means (a typed
     /// action component read by the mode's input system); `enabled` is
     /// the `Enabled` flag `system_ui` reports. The button is a `bevy::ui`
-    /// `Button` (press-time `Interaction`, see the kit decisions) with an
+    /// `Button` plus the pinned widget Button/ActivateOnPress contract with an
     /// accessible label and its `Look`, which `repaint_buttons` keeps painted.
     pub(crate) fn button<A: Component>(&self, label: &str, action: A, look: Look, enabled: bool) -> impl Bundle + use<A> {
         let p = look.paint(enabled);
         (
             Button,
+            super::activation::Ordinary,
             action,
             Enabled(enabled),
             look,
@@ -169,6 +170,7 @@ impl Kit<'_> {
     pub(crate) fn list_item<A: Component>(&self, icon: &str, accent: Color, title: &str, subtitle: &str, action: A, selected: bool) -> impl Bundle + use<A> {
         (
             Button,
+            super::activation::Ordinary,
             action,
             Tint::selectable(selected),
             AccessibleLabel::new(if subtitle.is_empty() { title.to_string() } else { format!("{title}, {subtitle}") }),
@@ -209,6 +211,7 @@ impl Kit<'_> {
                     Some(action) => {
                         row.spawn((
                             Button,
+                            super::activation::Ordinary,
                             action,
                             Tint::new(if editing { RAISED } else { Color::NONE }, HOVER_BG),
                             AccessibleLabel::new(format!("{key}: {value_text}")),
@@ -231,14 +234,15 @@ impl Kit<'_> {
     /// the placeholder), with a caret while `focused`. A press on it is
     /// `action` (typically "focus this field"); the node is tagged
     /// `KitInput`, so the press does not take the keyboard away.
-    pub(crate) fn input<A: Component>(&self, shown: &str, placeholder: &str, action: A, focused: bool) -> impl Bundle + use<A> {
+    pub(crate) fn input<A: Component + std::fmt::Debug>(&self, shown: &str, placeholder: &str, action: A, focused: bool) -> impl Bundle + use<A> {
         self.input_selectable(shown, placeholder, action, focused, false)
     }
 
     /// [`Kit::input`] whose text can be shown selected (`selected`, while
     /// `focused`: the next key replaces it): the text on the accent fill,
     /// without the caret.
-    pub(crate) fn input_selectable<A: Component>(&self, shown: &str, placeholder: &str, action: A, focused: bool, selected: bool) -> impl Bundle + use<A> {
+    pub(crate) fn input_selectable<A: Component + std::fmt::Debug>(&self, shown: &str, placeholder: &str, action: A, focused: bool, selected: bool) -> impl Bundle + use<A> {
+        let identity = super::activation::InputIdentity(format!("{}:{action:?}", std::any::type_name::<A>()));
         let empty = shown.is_empty();
         let marked = focused && selected && !empty;
         let line = if empty && !focused {
@@ -250,8 +254,10 @@ impl Kit<'_> {
         };
         (
             Button,
+            super::activation::Ordinary,
             action,
             super::text::KitInput,
+            identity,
             Tint::RAISED,
             AccessibleLabel::new(if empty { placeholder.to_string() } else { shown.to_string() }),
             Node { border_radius: BorderRadius::all(Val::Px(5.)), padding: UiRect::axes(Val::Px(10.), Val::Px(7.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },

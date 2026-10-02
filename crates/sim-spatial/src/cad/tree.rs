@@ -97,8 +97,8 @@
 mod controls;
 mod handle;
 mod input;
-mod popup;
-mod rows;
+pub(in crate::cad) mod popup;
+pub(in crate::cad) mod rows;
 mod state;
 #[cfg(test)]
 mod tests;
@@ -107,7 +107,7 @@ pub use handle::{TreeArgs, TreeOp};
 pub use state::TreeState;
 
 pub(in crate::cad) use controls::controls;
-pub(in crate::cad) use handle::{handle, specs, state_json};
+pub(in crate::cad) use handle::{handle, specs, state_json, select_action};
 pub(in crate::cad) use input::search;
 pub(in crate::cad) use rows::{EyeChip, TreeRowId, draw, highlight, key, tools, tools_key};
 pub(in crate::cad) use popup::{TreeDialogRoot, TreeMenuRoot};

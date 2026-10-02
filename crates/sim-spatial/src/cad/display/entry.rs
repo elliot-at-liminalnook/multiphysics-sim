@@ -69,7 +69,7 @@ pub fn offset_action(text: &str) -> Result<Option<CadAction>, String> {
 /// Input: the offset field (see the module doc).
 pub(super) fn input(
     entry: Option<ResMut<SectionEntry>>,
-    presses: Query<(&Interaction, Option<&Enabled>), (Changed<Interaction>, With<OffsetInput>)>,
+    presses: Query<Option<&Enabled>, (With<crate::ui_kit::activation::Activated>, With<OffsetInput>)>,
     mut msgs: MessageReader<FieldMsg>,
     mut text: TextFocus,
     display: Option<Res<CadDisplay>>,
@@ -113,8 +113,8 @@ pub(super) fn input(
             FieldEvent::Blur | FieldEvent::Tab { .. } | FieldEvent::Arrow { .. } => {}
         }
     }
-    for (interaction, enabled) in &presses {
-        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) || typing.is_some() {
+    for enabled in &presses {
+        if enabled.is_some_and(|e| !e.0) || typing.is_some() {
             continue;
         }
         // RoboCAD's field opens at 0.

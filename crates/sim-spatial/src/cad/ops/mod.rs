@@ -409,6 +409,8 @@ pub struct FormState {
 /// CAD mode's catalogue state on the document (reset with it).
 #[derive(Default)]
 pub struct OpsState {
+    /// Monotonic local form lifetime, including reopening the same operation.
+    pub form_sequence: u64,
     pub form: Option<FormState>,
     /// The `PickThenForm`, `Place` or `AtCursorSnap` op whose interaction is
     /// active (its form stays open while it is).

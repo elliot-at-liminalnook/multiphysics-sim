@@ -19,9 +19,8 @@
 //!   for `system_ui` and REST (edits arrive as `Changed`; the picker's own
 //!   changes reach the field through [`sync`]). Opening the picker gives
 //!   it the keyboard (so no field underneath types while the modal is up);
-//!   it is sticky: a press on the listing, "..", Open or the sections keeps
-//!   typing; Tab gives the keyboard up (Tab again, or a press on the field,
-//!   takes it back, selected); Escape, closing and a mode switch end it.
+//!   it retains its draft while Tab/Shift+Tab use the kit navigation contract;
+//!   Escape, closing and a mode switch end it.
 //! - **Choices are switches**: an entry, the path field's Open (and Enter)
 //!   write the same `WindowAction::Switch` that `viewer_mode {mode, path |
 //!   preset | url}` builds ([`Picker::choice`], [`Picker::typed`]); there
@@ -32,8 +31,8 @@
 //!   path field gives up the keyboard.
 //! - **Modal** ([`keys`], PreUpdate after the kit's input system): while
 //!   open, keys and the wheel go to the picker only; it reads no keyboard
-//!   message (the field's text is the kit's), its Enter / Escape / Tab
-//!   without the field come from the key states, then the wheel messages
+//!   message (the field's text is the kit's), Escape without the field comes from the key states, while ordinary
+//!   Enter/Space and Tab use the shared activation/navigation contract, then the wheel messages
 //!   are cleared and the held keys released (not reset, so a held W or Q/A
 //!   underneath sees its release and stops), so no mode shortcut fires
 //!   underneath. It does not open over robot mode's Leg calibration panel,
@@ -401,7 +400,7 @@ fn blur_path(world: &mut World) {
 
 /// A clickable part of the picker.
 #[derive(Component, Clone, Copy, Debug, PartialEq)]
-pub(crate) struct PickerPart(pub PickHit);
+pub(crate) struct PickerPart(pub PickHit, pub u64);
 
 /// The picker's root (the backdrop).
 #[derive(Component)]
@@ -479,13 +478,14 @@ pub(crate) fn receive(
 }
 
 /// Input: a press on the picker (an entry, the path field's parts, Close).
-pub(crate) fn clicks(picker: Option<ResMut<Picker>>, parts: Query<(&Interaction, &PickerPart, Option<&Enabled>), Changed<Interaction>>, mut text: TextFocus, mut out: MessageWriter<Act<WindowAction>>) {
+pub(crate) fn clicks(picker: Option<ResMut<Picker>>, parts: Query<(&PickerPart, Option<&Enabled>), With<crate::ui_kit::activation::Activated>>, mut text: TextFocus, mut out: MessageWriter<Act<WindowAction>>) {
     let Some(mut picker) = picker else { return };
     if picker.open.is_none() {
         return;
     }
-    for (interaction, part, enabled) in &parts {
-        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) {
+    for (part, enabled) in &parts {
+        // Refuse the old rendered source snapshot before resolving positional rows.
+        if part.1 != picker.revision || enabled.is_some_and(|e| !e.0) {
             continue;
         }
         match part.0 {
@@ -586,9 +586,11 @@ pub(crate) fn draw(mut commands: Commands, picker: Option<Res<Picker>>, switch: 
     };
     let title = title(mode);
     commands.spawn((k.backdrop(&title, false), PickerRoot, Persistent)).with_children(|backdrop| {
-        k.document_picker(backdrop, &title, &picker.reason, status, &sections, &view, picker.scroll, PickerList, PickerPart);
+        k.document_picker(backdrop, &title, &picker.reason, status, &sections, &view, picker.scroll, PickerList, |hit| PickerPart(hit, picker.revision));
     });
 }
 
 #[cfg(test)]
 mod settings_tests;
+#[cfg(test)]
+mod activation_tests;

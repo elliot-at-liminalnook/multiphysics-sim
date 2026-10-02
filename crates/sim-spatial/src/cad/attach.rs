@@ -85,7 +85,7 @@ fn attach_action(text: &str) -> Result<CadAction, String> {
 pub(super) fn input(
     mut state: ResMut<AttachDraft>,
     doc: Option<Res<CadDocument>>,
-    presses: Query<(&Interaction, &AttachPart), Changed<Interaction>>,
+    presses: Query<&AttachPart, With<crate::ui_kit::activation::Activated>>,
     roots: Query<(), With<AttachRoot>>,
     // The field's messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
     mut field: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
@@ -114,10 +114,7 @@ pub(super) fn input(
             FieldEvent::Cancel | FieldEvent::Blur | FieldEvent::Tab { .. } | FieldEvent::Arrow { .. } => {}
         }
     }
-    for (interaction, part) in &presses {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
+    for part in &presses {
         match part {
             AttachPart::Field if !text.focused(ATTACH) => {
                 s.error = None;

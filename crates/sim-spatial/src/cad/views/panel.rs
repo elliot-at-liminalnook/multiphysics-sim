@@ -113,7 +113,7 @@ fn keep_name(views: &mut ResMut<CadViews>, typing: Option<&Typing>) {
 pub(super) fn input(
     views: Option<ResMut<CadViews>>,
     doc: Option<Res<CadDocument>>,
-    presses: Query<(&Interaction, &ViewInput, Option<&Enabled>), Changed<Interaction>>,
+    presses: Query<(&ViewInput, Option<&Enabled>), With<crate::ui_kit::activation::Activated>>,
     mut msgs: MessageReader<FieldMsg>,
     mut text: TextFocus,
     mut out: MessageWriter<Act<CadAction>>,
@@ -183,8 +183,8 @@ pub(super) fn input(
             FieldEvent::Blur | FieldEvent::Tab { .. } | FieldEvent::Arrow { .. } => {}
         }
     }
-    for (interaction, f, enabled) in &presses {
-        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) || typing.as_ref().is_some_and(|t| t.field == f.0) {
+    for (f, enabled) in &presses {
+        if enabled.is_some_and(|e| !e.0) || typing.as_ref().is_some_and(|t| t.field == f.0) {
             continue;
         }
         let (shown, select_all) = match &f.0 {

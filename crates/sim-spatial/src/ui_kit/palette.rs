@@ -135,7 +135,7 @@ impl Kit<'_> {
     /// component, `row(i)` row `i`'s; `list` goes on the scrolling list
     /// (the caller's wheel-scroll marker, or `()`).
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn palette<F: Component, A: Component, L: Bundle>(
+    pub(crate) fn palette<F: Component + std::fmt::Debug, A: Component, L: Bundle>(
         &self,
         parent: &mut ChildSpawnerCommands,
         query: &str,
@@ -175,6 +175,7 @@ impl Kit<'_> {
                         let main = warn.as_deref().and_then(|w| r.text.strip_suffix(w)).unwrap_or(r.text.as_str());
                         list.spawn((
                             Button,
+                            crate::ui_kit::activation::Ordinary,
                             row(i),
                             Enabled(enabled),
                             Tint::selectable(on),

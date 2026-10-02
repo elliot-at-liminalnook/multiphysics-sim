@@ -278,20 +278,19 @@ pub(super) fn apply(
 
 /// Input: a pressed lesson button's action (and which part a hovered
 /// part chip points at, for the 3D highlight).
-pub(super) fn buttons(actions: Query<(&Interaction, &LessonAction, Option<&crate::builder::ui_api::Enabled>), Changed<Interaction>>, mut learn: ResMut<Learn>, mut out: MessageWriter<Act<LessonCommand>>) {
+pub(super) fn buttons(actions: Query<(&Interaction, &LessonAction, Option<&crate::builder::ui_api::Enabled>, Has<crate::ui_kit::activation::Activated>), Or<(Changed<Interaction>, With<crate::ui_kit::activation::Activated>)>>, mut learn: ResMut<Learn>, mut out: MessageWriter<Act<LessonCommand>>) {
     if !learn.active {
         return;
     }
     let mut hover = learn.hover_part.clone();
-    for (interaction, action, enabled) in &actions {
+    for (interaction, action, enabled, activated) in &actions {
         if enabled.is_some_and(|e| !e.0) {
             continue;
         }
+        if activated && !matches!(action, LessonAction::Seek) {
+            out.write(Act::ui(LessonCommand::Ui(action.clone())));
+        }
         match (interaction, action) {
-            (Interaction::Pressed, LessonAction::Seek) => {}
-            (Interaction::Pressed, a) => {
-                out.write(Act::ui(LessonCommand::Ui(a.clone())));
-            }
             (Interaction::Hovered, LessonAction::Part(_, p)) => hover = Some(p.clone()),
             (Interaction::None, LessonAction::Part(_, p)) if hover.as_deref() == Some(p) => hover = None,
             _ => {}

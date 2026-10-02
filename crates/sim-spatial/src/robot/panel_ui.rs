@@ -142,12 +142,10 @@ pub(super) fn seek_fraction(times: &[f64], t: f64) -> f32 {
 }
 
 /// Input: the inspector's toggles (UI state only).
-pub(super) fn toggles(presses: Query<(&Interaction, &PanelToggle), Changed<Interaction>>, mut ui: ResMut<RobotPanelUi>) {
-    for (interaction, toggle) in &presses {
-        if *interaction == Interaction::Pressed {
-            match toggle {
-                PanelToggle::Recordings => ui.recordings_expanded = !ui.recordings_expanded,
-            }
+pub(super) fn toggles(presses: Query<&PanelToggle, With<crate::ui_kit::activation::Activated>>, mut ui: ResMut<RobotPanelUi>) {
+    for toggle in &presses {
+        match toggle {
+            PanelToggle::Recordings => ui.recordings_expanded = !ui.recordings_expanded,
         }
     }
 }
@@ -186,7 +184,7 @@ pub(super) fn recorded_seek(bars: Query<(&bevy::ui_widgets::SliderValue, Has<bev
 pub(super) fn gait_path_input(
     mut ui: ResMut<RobotPanelUi>,
     view: Res<RobotView>,
-    parts: Query<(&Interaction, &GaitPathPart), Changed<Interaction>>,
+    parts: Query<&GaitPathPart, With<crate::ui_kit::activation::Activated>>,
     // The field's messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
     mut field: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     hardware: Option<Res<crate::robot::hardware::Hardware>>,
@@ -213,10 +211,7 @@ pub(super) fn gait_path_input(
             FieldEvent::Cancel | FieldEvent::Tab { .. } | FieldEvent::Arrow { .. } | FieldEvent::Blur => {}
         }
     }
-    for (interaction, part) in &parts {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
+    for part in &parts {
         match part.0 {
             PathHit::Field if !focused => {
                 if picker_open {

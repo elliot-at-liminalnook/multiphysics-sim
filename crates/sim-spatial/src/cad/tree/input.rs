@@ -229,7 +229,7 @@ pub(super) fn rows(
                 let double = !shift && !ctrl && g.last.as_ref().is_some_and(|(id, t)| *id == row.id && now.duration_since(*t) <= DOUBLE_CLICK);
                 if double {
                     g.last = None;
-                    out.write(Act::ui(TreeArgs::on(TreeOp::BeginRename, &row.id).action()));
+                    out.write(Act::ui(crate::cad::activation::guard(&doc, TreeArgs::on(TreeOp::BeginRename, &row.id).action())));
                     continue;
                 }
                 g.last = Some((row.id.clone(), now));
@@ -237,7 +237,7 @@ pub(super) fn rows(
                 if selected && !shift && !ctrl {
                     g.pending = Some((ev.entity, row.id.clone()));
                 } else {
-                    out.write(Act::ui(select(&row.id, shift, ctrl)));
+                    out.write(Act::ui(crate::cad::activation::guard(&doc, select(&row.id, shift, ctrl))));
                 }
             }
             PointerButton::Secondary => {
@@ -245,9 +245,9 @@ pub(super) fn rows(
                 if let Ok(row) = look.rows.get(ev.entity) {
                     let mut a = TreeArgs::on(TreeOp::Menu, &row.id);
                     (a.open, a.at) = (Some(true), Some([at.x, at.y]));
-                    out.write(Act::ui(a.action()));
+                    out.write(Act::ui(crate::cad::activation::guard(&doc, a.action())));
                 } else if look.ends.contains(ev.entity) {
-                    out.write(Act::ui(end_menu(at)));
+                    out.write(Act::ui(crate::cad::activation::guard(&doc, end_menu(at))));
                 }
             }
             PointerButton::Middle => {}
@@ -257,7 +257,7 @@ pub(super) fn rows(
         if ev.button == PointerButton::Primary
             && let Some((_, id)) = g.pending.take_if(|(e, _)| *e == ev.entity)
         {
-            out.write(Act::ui(select(&id, false, false)));
+            out.write(Act::ui(crate::cad::activation::guard(&doc, select(&id, false, false))));
         }
     }
     for ev in msgs.start.read() {
@@ -317,7 +317,7 @@ pub(super) fn rows(
             DropTarget::Before(id) => a.before = Some(id),
             DropTarget::TopLevel => {}
         }
-        out.write(Act::ui(a.action()));
+        out.write(Act::ui(crate::cad::activation::guard(&doc, a.action())));
         dropped = true;
     }
     // The drag ends with its `DragEnd`, or once the left button is up
@@ -347,8 +347,8 @@ pub(in crate::cad) struct DialogPart(pub FormHit);
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub(super) fn fields(
     doc: Option<ResMut<CadDocument>>,
-    presses: Query<(&Interaction, &TreeField), Changed<Interaction>>,
-    parts: Query<(&Interaction, &DialogPart, Option<&crate::builder::ui_api::Enabled>), Changed<Interaction>>,
+    presses: Query<&TreeField, With<crate::ui_kit::activation::Activated>>,
+    parts: Query<(&DialogPart, Option<&crate::builder::ui_api::Enabled>), With<crate::ui_kit::activation::Activated>>,
     mut msgs: MessageReader<FieldMsg>,
     mut text: TextFocus,
     mut out: MessageWriter<Act<CadAction>>,
@@ -366,7 +366,7 @@ pub(super) fn fields(
                 if doc.tree.search != d.text {
                     let mut a = TreeArgs::of(TreeOp::Search);
                     a.text = Some(d.text.clone());
-                    out.write(Act::ui(a.action()));
+                    out.write(Act::ui(crate::cad::activation::guard(&doc, a.action())));
                 }
             }
             (SEARCH, FieldEvent::Submit(_)) => text.blur(SEARCH),
@@ -384,7 +384,7 @@ pub(super) fn fields(
                 if let Some(r) = &doc.tree.rename {
                     let mut a = TreeArgs::on(TreeOp::Rename, &r.id);
                     (a.text, a.revision) = (Some(typed.clone()), Some(r.began));
-                    out.write(Act::ui(a.action()));
+                    out.write(Act::ui(crate::cad::activation::guard(&doc, a.action())));
                 }
             }
             (RENAME, FieldEvent::Cancel) => {
@@ -405,20 +405,17 @@ pub(super) fn fields(
             }
             (GROUP_NAME, FieldEvent::Submit(typed)) => {
                 if let Some(dialog) = &doc.tree.dialog {
-                    out.write(Act::ui(ok(typed, dialog.began)));
+                    out.write(Act::ui(crate::cad::activation::guard(&doc, ok(typed, dialog.began))));
                 }
             }
             (GROUP_NAME, FieldEvent::Cancel) => {
-                out.write(Act::ui(close_dialog()));
+                out.write(Act::ui(crate::cad::activation::guard(&doc, close_dialog())));
                 closing = true;
             }
             _ => {}
         }
     }
-    for (interaction, field) in &presses {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
+    for field in &presses {
         match field {
             TreeField::Search if !text.focused(SEARCH) => {
                 text.focus_draft(SEARCH, TextDraft::new(doc.tree.search.clone(), false));
@@ -431,10 +428,7 @@ pub(super) fn fields(
             _ => {}
         }
     }
-    for (interaction, part, enabled) in &parts {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
+    for (part, enabled) in &parts {
         match part.0 {
             FormHit::Field(_) if !text.focused(GROUP_NAME) => {
                 if let Some(d) = &doc.tree.dialog {
@@ -443,11 +437,11 @@ pub(super) fn fields(
             }
             FormHit::Ok if enabled.is_none_or(|e| e.0) => {
                 if let Some(d) = &doc.tree.dialog {
-                    out.write(Act::ui(ok(&d.draft, d.began)));
+                    out.write(Act::ui(crate::cad::activation::guard(&doc, ok(&d.draft, d.began))));
                 }
             }
             FormHit::Cancel => {
-                out.write(Act::ui(close_dialog()));
+                out.write(Act::ui(crate::cad::activation::guard(&doc, close_dialog())));
                 closing = true;
             }
             _ => {}
@@ -484,7 +478,7 @@ pub(super) fn fields(
     }
     match &doc.tree.dialog {
         // The modal dialog owns the keyboard (its field is sticky).
-        Some(d) if !text.typing() && !closing => {
+        Some(d) if !text.typing() && !text.ordinary_focused() && !closing => {
             text.focus_draft(GROUP_NAME, TextDraft::new(d.draft.clone(), false));
         }
         Some(_) => {}

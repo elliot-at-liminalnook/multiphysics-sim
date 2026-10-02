@@ -61,11 +61,9 @@ pub(crate) fn spawn_switcher(mut commands: Commands, fonts: Res<UiFonts>, mode: 
 
 /// Input: a click on the switcher asks for a switch (no document: the mode
 /// reopens its own, or is refused naming what it needs).
-pub(crate) fn switcher_clicks(buttons: Query<(&Interaction, &ModeButton), Changed<Interaction>>, mut switch: MessageWriter<Act<WindowAction>>) {
-    for (interaction, button) in &buttons {
-        if *interaction == Interaction::Pressed {
-            switch.write(Act::ui(WindowAction::Switch(ModeSwitch { mode: button.0, document: None })));
-        }
+pub(crate) fn switcher_clicks(buttons: Query<&ModeButton, With<crate::ui_kit::activation::Activated>>, mut switch: MessageWriter<Act<WindowAction>>) {
+    for button in &buttons {
+        switch.write(Act::ui(WindowAction::Switch(ModeSwitch { mode: button.0, document: None })));
     }
 }
 
@@ -105,4 +103,31 @@ pub(crate) fn publish(mode: Res<State<ViewerMode>>, switch: Res<Switcher>, docum
     }
     *last = Some(key);
     rest.0.publish("viewer_mode", switch.json(*mode.get(), &documents, &registry));
+}
+
+#[cfg(test)]
+mod activation_tests {
+    use super::*;
+    #[test]
+    fn actual_switcher_segment_converts_shared_activation_to_existing_window_action() {
+        let mut app=App::new();
+        app.insert_resource(UiFonts { regular:default(),medium:default(),semibold:default(),
+            italic:default(),mono:default(),icons:default() })
+            .insert_resource(State::new(ViewerMode::Inspect))
+            .add_message::<Act<WindowAction>>()
+            .add_systems(Startup,spawn_switcher)
+            .add_systems(Update,switcher_clicks);
+        app.update();
+        let world=app.world_mut();
+        let entity=world.query::<(Entity,&ModeButton)>().iter(world)
+            .find_map(|(e,b)|(b.0==ViewerMode::Build).then_some(e)).unwrap();
+        assert!(world.get::<crate::ui_kit::activation::Ordinary>(entity).is_some());
+        assert!(world.get::<bevy::ui_widgets::ActivateOnPress>(entity).is_some());
+        world.entity_mut(entity).insert(crate::ui_kit::activation::Activated);
+        app.update();
+        let actions:Vec<_>=app.world_mut().resource_mut::<Messages<Act<WindowAction>>>().drain().collect();
+        assert_eq!(actions.len(),1);
+        let WindowAction::Switch(request)=&actions[0].action else{panic!("wrong action")};
+        assert_eq!(request,&ModeSwitch{mode:ViewerMode::Build,document:None});
+    }
 }

@@ -218,9 +218,12 @@ impl Plugin for CadCorePlugin {
 
 /// CAD mode in the window: the core, the 3D view, the meshes, the keys and
 /// the panels.
+mod activation;
+
 pub struct CadPlugin;
 impl Plugin for CadPlugin {
     fn build(&self, app: &mut App) {
+        activation::install(app);
         app.add_plugins(CadCorePlugin)
             .add_systems(OnEnter(ModeScope::Cad), (scene::setup, |mut commands: Commands| commands.insert_resource(CadView::default())))
             .add_systems(OnExit(ModeScope::Cad), scene::teardown)

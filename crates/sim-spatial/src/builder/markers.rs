@@ -244,7 +244,7 @@ pub(super) fn sync(
         let marker = commands
             .spawn((
                 Marker { key: key.clone() },
-                Button,
+                Button, crate::ui_kit::activation::Ordinary,
                 Node { border_radius: BorderRadius::MAX,
                     position_type: PositionType::Absolute,
                     left: Val::Px(info.center_px[0] - 15.),

@@ -14,6 +14,8 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 /// document, so per connection generation and document).
 #[derive(Default, Debug)]
 pub struct TreeState {
+    /// Monotonic local modal lifetime; drafts and focus do not change it.
+    pub(crate) form_sequence: u64,
     /// The search text as typed (RoboCAD lowercases and strips it to match).
     pub(crate) search: String,
     /// Whether the search field has the keyboard (mirrored from the kit's

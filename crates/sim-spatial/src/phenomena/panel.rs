@@ -246,9 +246,9 @@ pub(super) fn setup(mut commands: Commands, fonts: Res<UiFonts>, mut images: Res
 
 /// Input: a press on a kit button or list row writes its action (a
 /// disabled button writes nothing; its control names why).
-pub(super) fn buttons(clicks: Query<(&Interaction, &PhenomenaButton, Option<&Enabled>), Changed<Interaction>>, mut out: MessageWriter<Act<PhenomenaAction>>) {
-    for (interaction, button, enabled) in &clicks {
-        if *interaction == Interaction::Pressed && enabled.is_none_or(|e| e.0) {
+pub(super) fn buttons(clicks: Query<(&PhenomenaButton, Option<&Enabled>), With<crate::ui_kit::activation::Activated>>, mut out: MessageWriter<Act<PhenomenaAction>>) {
+    for (button, enabled) in &clicks {
+        if enabled.is_none_or(|e| e.0) {
             out.write(Act::ui(button.0.clone()));
         }
     }

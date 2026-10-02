@@ -159,6 +159,7 @@ pub(in crate::cad) fn open(cx: &mut Cx, kind: FormKind) -> Result<Value, String>
     }
     let form = PathForm::new(kind, doc_path(cx.doc).as_deref());
     let shown = form.json();
+    cx.doc.results.form_sequence = cx.doc.results.form_sequence.wrapping_add(1);
     cx.doc.results.form = Some(form);
     cx.doc.touch();
     Ok(json!({"opened": shown}))
@@ -219,14 +220,14 @@ pub(super) enum Part {
 
 /// The form's root (the backdrop).
 #[derive(Component)]
-pub(super) struct ResultsFormRoot;
+pub(in crate::cad) struct ResultsFormRoot;
 
 /// Input: the open form's clicks, its path field's events and the keys it
 /// reads with no field typing (see the module doc).
 #[allow(clippy::type_complexity)]
 pub(super) fn input(
     doc: Option<ResMut<CadDocument>>,
-    parts: Query<(&Interaction, &Part, Option<&Enabled>), Changed<Interaction>>,
+    parts: Query<(&Part, Option<&Enabled>), With<crate::ui_kit::activation::Activated>>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
     // The field's messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
     mut field: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
@@ -264,8 +265,8 @@ pub(super) fn input(
             FieldEvent::Blur => form.focused = false,
         }
     }
-    for (interaction, part, enabled) in &parts {
-        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) {
+    for (part, enabled) in &parts {
+        if enabled.is_some_and(|e| !e.0) {
             continue;
         }
         match *part {
@@ -295,7 +296,7 @@ pub(super) fn input(
     }
     // The row not typing (the kit consumes a typing field's keys): the
     // form's own Enter, Escape and Tab, as before.
-    if !text.typing() && !submit && !close
+    if !text.typing() && !text.ordinary_focused() && !submit && !close
         && let Some(keys) = keys.as_ref()
     {
         if keys.just_pressed(KeyCode::Enter) {
@@ -310,7 +311,7 @@ pub(super) fn input(
     // Modal: with no other field typing the row takes the keyboard back, so
     // CAD keys stay off under the form (as when it held the keyboard every
     // frame it was open).
-    if !form.focused && !close && !text.typing() {
+    if !form.focused && !close && !text.typing() && !text.ordinary_focused() {
         form.focused = true;
     }
     // The kit field follows the row: it has the keyboard while the row is
@@ -326,11 +327,11 @@ pub(super) fn input(
         text.blur(RESULTS);
     }
     if close {
-        out.write(Act::ui(super::ResultsArgs::of(ResultsOp::FormCancel)));
+        out.write(Act::ui(crate::cad::activation::guard_results(&doc, super::ResultsArgs::of(ResultsOp::FormCancel))));
     } else if submit {
         match form.action() {
             Ok(action) => {
-                out.write(Act::ui(action));
+                out.write(Act::ui(crate::cad::activation::guard_results(&doc, action)));
             }
             Err(e) => form.error = Some(e),
         }
@@ -355,7 +356,7 @@ pub(super) fn input(
 pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, roots: Query<Entity, With<ResultsFormRoot>>, mut last: Local<Option<String>>) {
     let form = doc.as_deref().and_then(|d| d.results.form.as_ref());
     let listed = doc.as_deref().and_then(|d| d.results.listed.as_ref());
-    let key = form.map(|f| format!("{f:?}{listed:?}"));
+    let key = form.map(|f| format!("{f:?}{listed:?}{:?}", doc.as_deref().map(|d| d.results.form_sequence)));
     let shown = roots.iter().next().is_some();
     if key == *last && shown == key.is_some() {
         return;

@@ -297,22 +297,24 @@ pub(crate) fn apply(
 /// keyboard (a builder draft, a document field) takes them.
 pub(crate) fn input(
     keys: Res<ButtonInput<KeyCode>>,
-    buttons: Query<(&Interaction, &InspectAction), (Changed<Interaction>, With<Button>)>,
+    buttons: Query<&InspectAction, (With<crate::ui_kit::activation::Activated>, With<Button>)>,
     scene: Res<SpatialScene>,
     typing: crate::ui_kit::text::Typing,
     mode: Option<Res<State<ViewerMode>>>,
     mut out: MessageWriter<Act<InspectAction>>,
 ) {
-    if typing.get() || mode.is_some_and(|m| *m.get() == ViewerMode::Lessons) {
+    if mode.is_some_and(|m| *m.get() == ViewerMode::Lessons) {
+        return;
+    }
+    // Ordinary activation remains valid while an editor retains its draft.
+    for action in &buttons {
+        out.write(Act::ui(action.clone()));
+    }
+    if typing.get() {
         return;
     }
     if keys.just_pressed(KeyCode::KeyF) {
         out.write(Act::ui(InspectAction::FlyTo));
-    }
-    for (interaction, action) in &buttons {
-        if *interaction == Interaction::Pressed {
-            out.write(Act::ui(action.clone()));
-        }
     }
     for (key, action) in [
         (KeyCode::Escape, InspectAction::Select { target: SelectionTarget::None }),

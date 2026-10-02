@@ -44,7 +44,7 @@
 //!   uniformly by its governing failure index 1 / safety factor; RoboCAD's
 //!   own window samples a per-voxel field), with their own staleness line.
 mod export;
-mod forms;
+pub(in crate::cad) mod forms;
 mod link;
 mod overlay;
 #[cfg(test)]
@@ -190,6 +190,8 @@ pub(crate) struct Noted {
 /// This part's state on the document (reset with it).
 #[derive(Default)]
 pub struct ResultsState {
+    /// Monotonic local modal lifetime; drafts and focus do not change it.
+    pub(crate) form_sequence: u64,
     /// The stress overlay is on.
     pub(crate) overlay: bool,
     /// The open path form.

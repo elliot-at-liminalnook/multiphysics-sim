@@ -110,7 +110,7 @@ pub(super) fn margin(commands: &mut Commands, k: &Kit, l: &Learn, builder: Optio
                         _ if l.thread.is_none() => ("Write a note", "Post note"),
                         _ => ("Reply", "Post reply"),
                     };
-                    threads::composer(f, k, Composer { label, draft, placeholder: "Write…", min_height: 64., focus: LessonAction::Compose, submit: LessonAction::Submit, submit_label: submit, cancel: LessonAction::CancelDraft, author: Some((l.author.as_str(), LessonAction::Author)), error: None });
+                    threads::composer(f, k, Composer { identity: format!("lesson-composer:{:?}:{:?}:{label}", l.thread, l.input.as_ref().map(|i| &i.purpose)), label, draft, placeholder: "Write…", min_height: 64., focus: LessonAction::Compose, submit: LessonAction::Submit, submit_label: submit, cancel: LessonAction::CancelDraft, author: Some((l.author.as_str(), LessonAction::Author)), error: None });
                 });
             }
         });

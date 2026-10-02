@@ -339,7 +339,7 @@ pub(super) fn pane(commands: &mut Commands, k: &Kit, b: &Builder, selected: &BTr
             },
             BackgroundColor(BAR),
             BorderColor::all(BORDER),
-            BuilderPanel,
+            BuilderPanel, actions::RenderStamp::capture(b),
         ))
         .with_children(|pane| {
             pane.spawn(Node { height: Val::Px(HEAD), padding: UiRect::axes(Val::Px(PAD), Val::Px(0.)), align_items: AlignItems::Center, justify_content: JustifyContent::SpaceBetween, column_gap: Val::Px(8.), flex_shrink: 0., overflow: Overflow::clip(), ..default() })
@@ -400,7 +400,7 @@ fn draw(canvas: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, l: &Laid, highl
             BorderColor::all(if on { PICK } else { EDGE }),
         ));
         if let Some(name) = instance {
-            e.insert((Button, bevy::ui::prelude::AccessibleLabel::new(name.clone()), BuildAction::SchematicSelect(name), ui_api::Enabled(enabled), Tint::new(fill, hover)));
+            e.insert((Button, crate::ui_kit::activation::Ordinary, bevy::ui::prelude::AccessibleLabel::new(name.clone()), BuildAction::SchematicSelect(name), ui_api::Enabled(enabled), Tint::new(fill, hover)));
         }
         e.with_children(|card| {
             card.spawn(k.text(label, size::CAPTION, INK, 2));

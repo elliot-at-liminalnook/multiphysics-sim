@@ -51,7 +51,7 @@
 //!   The Blender live link and web share (`bridge.*`) are desktop-only
 //!   servers started by RoboCAD's window, deliberately not ported.
 mod formats;
-mod form;
+pub(in crate::cad) mod form;
 mod jobs;
 #[cfg(test)]
 mod tests;
@@ -76,6 +76,8 @@ use crate::ui_kit::path_field::Listing;
 /// The file forms, exports and renders in flight.
 #[derive(Resource, Default)]
 pub struct CadFiles {
+    /// Monotonic local modal lifetime; drafts and focus do not change it.
+    pub(crate) form_sequence: u64,
     /// The open path form (modal), if any.
     pub(crate) form: Option<FileForm>,
     /// Writes and reads in flight (export, render, new, unit guess).
@@ -433,6 +435,7 @@ fn open_form(cx: &mut Cx, kind: form::Kind, format: Option<&str>) -> Result<Valu
     let files = files(cx)?;
     let form = FileForm::new(kind, &dir, &stem, format, &context, &files.export_settings)?;
     let shown = form.json();
+    files.form_sequence = files.form_sequence.wrapping_add(1);
     files.form = Some(form);
     // One modal path form at a time: a results, identification or export form closes (cad-physical-inspect).
     cx.doc.results.form = None;

@@ -409,7 +409,7 @@ fn enter(doc: &CadDocument, n: &NodeSummary, d: &EditDraft) -> Result<Option<Cad
 /// Input: the editors' drafts (see the module doc).
 pub(in crate::cad) fn entry(
     doc: Option<ResMut<CadDocument>>,
-    presses: Query<(&Interaction, &EditField), Changed<Interaction>>,
+    presses: Query<&EditField, With<crate::ui_kit::activation::Activated>>,
     mut msgs: MessageReader<FieldMsg>,
     mut text: TextFocus,
     mut out: MessageWriter<Act<CadAction>>,
@@ -460,9 +460,9 @@ pub(in crate::cad) fn entry(
         }
     }
     let mut started = false;
-    for (interaction, f) in &presses {
+    for f in &presses {
         // A press on the open editor keeps its draft.
-        if *interaction != Interaction::Pressed || draft.as_ref().is_some_and(|d| d.node == f.node && d.key == f.key) {
+        if draft.as_ref().is_some_and(|d| d.node == f.node && d.key == f.key) {
             continue;
         }
         let Some(n) = node(&doc, &f.node) else { continue };

@@ -210,7 +210,7 @@ impl Kit<'_> {
     /// (at least 320 px when `None`). Accessible labels name each field and
     /// button.
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn form<A: Component>(&self, parent: &mut ChildSpawnerCommands, title: &str, rows: &[FormRow], ok_enabled: bool, width: Option<f32>, hit: impl Fn(FormHit) -> A, footer: impl FnOnce(&mut ChildSpawnerCommands)) {
+    pub(crate) fn form<A: Component + std::fmt::Debug>(&self, parent: &mut ChildSpawnerCommands, title: &str, rows: &[FormRow], ok_enabled: bool, width: Option<f32>, hit: impl Fn(FormHit) -> A, footer: impl FnOnce(&mut ChildSpawnerCommands)) {
         // The numeric bar's panel (cad/numeric.rs `spawn`).
         parent
             .spawn((
@@ -243,7 +243,7 @@ impl Kit<'_> {
 
     /// One form row: its label, then its field (with the evaluation or the
     /// error under it, as the numeric bar shows them), options or checkbox.
-    fn form_row<A: Component>(&self, cell: &mut ChildSpawnerCommands, i: usize, row: &FormRow, hit: &impl Fn(FormHit) -> A) {
+    fn form_row<A: Component + std::fmt::Debug>(&self, cell: &mut ChildSpawnerCommands, i: usize, row: &FormRow, hit: &impl Fn(FormHit) -> A) {
         match row.kind {
             FieldKind::Choice { options } => {
                 cell.spawn(self.text(row.label, size::CAPTION, SUBTLE, 1));

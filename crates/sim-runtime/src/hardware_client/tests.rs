@@ -790,9 +790,48 @@ fn virtual_policy_and_tolerant_status_fail_closed() {
         let status: calibration::Status = serde_json::from_value(value).unwrap();
         assert!(status.execution.is_none());
     }
-    for action in ["jog", "flip", "direction", "gait_start", "gait_update", "lab_step"] {
-        assert!(!calibration::virtual_command_allowed(action));
+    for action in ["jog", "step", "flip", "direction", "lab_step"] {
+        assert!(!calibration::virtual_command_allowed(action), "{action}");
     }
+}
+
+#[test]
+fn virtual_gait_is_in_scope_but_physical_and_unknown_servers_stay_refused() {
+    for action in ["gait_start", "gait_update"] {
+        assert!(calibration::virtual_command_allowed(action), "{action}");
+    }
+    for action in ["step", "flip", "direction"] {
+        assert!(!calibration::virtual_command_allowed(action), "{action}");
+    }
+    // Scope never authorizes: a gait still needs a verified virtual server.
+    let mut identity = calibration::ExecutionIdentity { schema_version: 1, kind: "physical".into(),
+        server_instance: new_client_id(), bench_instance: new_client_id() };
+    assert!(calibration::authorize_virtual(None, 1, 1, true, true).is_err(), "unknown server");
+    assert!(calibration::authorize_virtual(Some(&identity), 1, 1, true, true).is_err(), "physical server");
+    identity.kind = "virtual_calibration".into();
+    assert!(calibration::authorize_virtual(Some(&identity), 1, 1, true, true).is_ok());
+}
+
+#[test]
+fn gait_runs_and_state_carry_the_simulated_label() {
+    let identity = calibration::ExecutionIdentity { schema_version: 1, kind: "virtual_calibration".into(),
+        server_instance: new_client_id(), bench_instance: new_client_id() };
+    let status: calibration::Status = serde_json::from_value(json!({
+        "gait": {"running": true, "simulated": true, "execution": identity},
+        "gait_runs": [
+            {"file": "run-2.json", "gait": "g", "simulated": true, "execution": identity},
+            {"file": "run-1.json", "gait": "g"},
+        ],
+    })).unwrap();
+    let gait = status.gait.unwrap();
+    assert!(gait.running && gait.simulated);
+    assert_eq!(status.gait_runs.len(), 2);
+    assert!(status.gait_runs[0].simulated);
+    assert_eq!(status.gait_runs[0].execution.as_ref(), Some(&identity));
+    assert!(!status.gait_runs[1].simulated, "an older record without the field is not simulated");
+    assert_eq!(status.gait_runs[1].execution, None);
+    let older: calibration::GaitState = serde_json::from_value(json!({"running": false})).unwrap();
+    assert!(!older.simulated);
 }
 
 #[test]

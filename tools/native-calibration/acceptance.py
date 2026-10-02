@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Future authorized fresh-binary HW-01–HW-09 verification; never builds/captures.
+"""Future authorized fresh-binary HW-01–HW-09 verification; never builds.
+
+Screenshots are captured only with the opt-in `--screenshots` flag. The
+`receipt` subcommand writes the fresh-build receipt from already-built
+binaries and retained build logs; it builds nothing.
 
 Only a bench-owned capability socket can reach the calibration server. The
 positive HW-01–HW-09 path connects the native viewer DIRECTLY to the owned
@@ -46,6 +50,23 @@ CLIENT_DIRECT = "00000000-0000-4000-8000-000000000003"
 CLIENT_MISMATCH = "00000000-0000-4000-8000-000000000004"
 CLIENT_CLEANUP = "00000000-0000-4000-8000-000000000005"
 FOREIGN_SERVER = "00000000-0000-4000-8000-000000000002"
+# Screenshot checkpoints, `<step>-<checkpoint>`; README "Screenshot
+# checkpoints" lists exactly these (fixtures.py compares them).
+CHECKPOINTS = (
+    "HW-01-identity", "HW-01-fresh", "HW-01-stale", "HW-01-reconnect",
+    "HW-02-disabled",
+    "HW-03-held",
+    "HW-04-stop-tune", "HW-04-stop-campaign", "HW-04-stop-advanced",
+    "HW-06-taught", "HW-06-target", "HW-06-reset",
+    "HW-08-stages", "HW-08-terminal",
+    "HW-07-learned", "HW-07-sweep-all",
+    "HW-09-saved", "HW-09-stopped", "HW-09-terminal",
+)
+# Job plus file, per checkpoint (bounded also by the total deadline).
+SCREENSHOT_SECONDS = 20
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+# The IEND chunk (length 0, type, CRC) that ends every complete PNG.
+PNG_TRAILER = b"\x00\x00\x00\x00IEND\xaeB`\x82"
 
 
 def sha(path):
@@ -145,6 +166,36 @@ def has_text(message, texts):
 def stop_reply_latched(code, value):
     return (code == 200 and isinstance(value, dict) and value.get("stop_latched") is True
             and value.get("enabled_id") is None and value.get("busy") is False)
+
+
+def settle_step(step, semantic_passed):
+    """A step's verdict comes only from its semantic assertions.
+
+    Screenshot entries are evidence and are left untouched: a failed or
+    missing screenshot never fails a passing step, and a captured one never
+    passes a failing step.
+    """
+    step["status"] = "passed" if semantic_passed is True else "failed"
+    return step
+
+
+def png_complete(data):
+    """A whole PNG: signature first and the IEND trailer last."""
+    return len(data) > len(PNG_SIGNATURE) + len(PNG_TRAILER) and data.startswith(PNG_SIGNATURE) \
+        and data.endswith(PNG_TRAILER)
+
+
+def screenshot_summary(enabled, steps):
+    """Truthful screenshot reporting for results.json: off, or captured N of M."""
+    if not enabled:
+        return {"mode": "off", "note": "--screenshots not given; nothing was captured"}
+    shots = [s for step in steps for s in step.get("screenshots", [])]
+    failed = [{"checkpoint": s["checkpoint"], "error": s["error"]} for s in shots if not s["ok"]]
+    attempted = {s["checkpoint"] for s in shots}
+    return {"mode": "on", "planned": len(CHECKPOINTS), "attempted": len(shots),
+            "captured": len(shots) - len(failed), "failed": failed,
+            "not_reached": [c for c in CHECKPOINTS if c not in attempted],
+            "note": "screenshots supplement semantic assertions; they never decide a step"}
 
 
 def vacant_port():
@@ -269,8 +320,9 @@ class Run:
         self.identity = None
         self.deadline = time.monotonic() + args.total_timeout
         self.step = "preflight"
+        self.screenshots = bool(getattr(args, "screenshots", False))
         self.results = {"schema_version": 2, "fidelity": "SIMULATED virtual bench; uncalibrated model",
-                        "ok": False, "steps": [], "screenshots": "none; future manual checkpoints in README"}
+                        "ok": False, "steps": [], "screenshots": screenshot_summary(self.screenshots, [])}
 
     # ---- evidence -------------------------------------------------------
     def retain(self, name, value):
@@ -505,8 +557,84 @@ class Run:
         self.retain("results.json", self.results)
 
     def done(self, **extra):
-        self.results["steps"][-1].update(status="passed", state=self.state(), **extra)
+        step = self.results["steps"][-1]
+        step.update(state=self.state(), **extra)
+        settle_step(step, True)
         self.retain("results.json", self.results)
+
+    def screenshot(self, checkpoint):
+        """Opt-in evidence: the viewer's own REST `screenshot` of the main window.
+
+        Never raises (except KeyboardInterrupt) and never decides the step:
+        every outcome is recorded in the step's `screenshots` list. The
+        command answers when the capture is QUEUED (switch/mod.rs
+        `screenshot`); Bevy's `save_to_disk` writes the PNG after the next
+        frame, so the file is polled until it is a complete PNG. A stuck job
+        is cancelled with DELETE only: it holds no hardware ticket, and a
+        direct server STOP here would change the semantic sequence. A real
+        stall then surfaces in the next semantic command's own deadline.
+        """
+        if not self.screenshots:
+            return None
+        step = self.results["steps"][-1]
+        name = f"{step['id']}-{checkpoint}"
+        path = self.out / "screenshots" / f"{name}.png"
+        entry = {"checkpoint": name, "path": str(path), "ok": False, "error": None}
+        step.setdefault("screenshots", []).append(entry)
+        job_path = None
+        end = min(self.deadline, time.monotonic() + SCREENSHOT_SECONDS)
+        try:
+            if name not in CHECKPOINTS:
+                raise ValueError(f"unlisted checkpoint {name}")
+            path.parent.mkdir(exist_ok=True)
+            if path.exists() or path.is_symlink():
+                raise FileExistsError(f"{path} exists; never overwritten")
+            code, accepted = self.http(self.base, "POST", "/v1/batch",
+                {"commands": [{"command": "screenshot", "args": {"path": str(path)}}], "stop_on_error": True})
+            job_path = accepted.get("url") if code == 202 and isinstance(accepted, dict) else None
+            if not isinstance(job_path, str) or not JOB_PATH.match(job_path):
+                job_path = None
+                raise RuntimeError(f"screenshot not queued: {code} {accepted}")
+            job = None
+            while True:
+                code, job = self.http(self.base, "GET", job_path, timeout=2)
+                if isinstance(job, dict) and job.get("status") in TERMINAL:
+                    break
+                if time.monotonic() >= end:
+                    raise TimeoutError(f"screenshot job not terminal within {SCREENSHOT_SECONDS} s")
+                time.sleep(.12)
+            finished, job_path = job_path, None
+            results = job.get("results") or [{}]
+            result = results[0] if isinstance(results[0], dict) else {}
+            if job["status"] != "succeeded" or result.get("ok") is not True:
+                raise RuntimeError(f"screenshot refused: {result.get('error') or job}")
+            value = result.get("value")
+            if not isinstance(value, dict) or value.get("path") != str(path):
+                raise RuntimeError(f"screenshot answered another path: {value} ({finished})")
+            while True:
+                data = path.read_bytes() if path.is_file() else b""
+                if png_complete(data):
+                    break
+                if time.monotonic() >= end:
+                    raise TimeoutError(f"no complete PNG at {path} within {SCREENSHOT_SECONDS} s "
+                                       f"({len(data)} bytes, signature {data.startswith(PNG_SIGNATURE)})")
+                time.sleep(.12)
+            entry.update(ok=True, bytes=len(data), sha256=hashlib.sha256(data).hexdigest())
+        except Exception as e:  # recorded; semantic assertions continue
+            entry["error"] = f"{type(e).__name__}: {e}"
+            if job_path is not None:
+                try:
+                    code, raw = request(self.base, "DELETE", job_path, timeout=2)
+                    entry["cancel"] = {"job": job_path, "http": code, "response": decode_safe(raw)}
+                except Exception as cancel:
+                    entry["cancel"] = {"job": job_path, "error": f"{type(cancel).__name__}: {cancel}"}
+        finally:
+            self.results["screenshots"] = screenshot_summary(self.screenshots, self.results["steps"])
+            try:
+                self.retain("results.json", self.results)
+            except Exception as e:  # results.json is rewritten by the next step and by cleanup
+                entry["retain_error"] = f"{type(e).__name__}: {e}"
+        return entry
 
     def position(self, state, motor=None):
         motor = motor or state["session"]["id"] or 2
@@ -571,9 +699,11 @@ class Run:
         assert connected["url"] == self.server, "positive path must connect directly to the owned server"
         assert connected["server"]["fidelity"] == "virtual_simulated"
         assert connected["session"]["id"] is None and connected["server"]["enabled_id"] is None
+        self.screenshot("identity")
         assert self.server_status()["execution"] == self.identity
         self.retain("execution.json", self.identity)
         generation = connected["generation"]
+        self.screenshot("fresh")
         # Simulated disconnection: the owned server process is stalled
         # (SIGSTOP) and stays stalled until the native link has REVOKED this
         # generation. Stale alone is not enough: an in-flight status request
@@ -583,6 +713,7 @@ class Run:
         self.pause_server()
         try:
             self.wait(lambda s: s["stale"], 15, "stale while server stalled")
+            self.screenshot("stale")
             self.wait(lambda s: s["authorization_revoked"] is True, 25, "revoked while server stalled")
         finally:
             self.resume_server()
@@ -600,6 +731,7 @@ class Run:
         listing = self.command("system_ui", {"action": {"operation": "controls"}})
         chip = [c for c in listing["controls"] if c.get("id") == "hardware:select_2"]
         assert len(chip) == 1 and chip[0]["enabled"], chip
+        self.screenshot("reconnect")
         self.done(revoked_generation=generation, restored_generation=fresh["generation"])
 
         self.begin("HW-02")
@@ -608,6 +740,7 @@ class Run:
             self.selected(motor)
         self.click("set_disabled")
         self.wait(lambda s: s["server"]["axes"]["2"]["disabled"] and not s["session"]["ready"])
+        self.screenshot("disabled")
         self.click("select_2")
         assert not self.state()["session"]["ready"]
         self.click("set_disabled")
@@ -630,6 +763,7 @@ class Run:
         end = time.monotonic() + 1
         while time.monotonic() < end:
             assert abs(self.position(self.state()) - before) <= 32, "opposed/released input failed to hold"
+        self.screenshot("held")
         self.done()
 
         self.begin("HW-04")
@@ -637,6 +771,8 @@ class Run:
             self.click("section_" + section)
             listing = self.command("system_ui", {"action": {"operation": "controls"}})
             assert any(c.get("id") == "hardware:stop" and c.get("enabled") for c in listing["controls"])
+            if section != "mirror":
+                self.screenshot("stop-" + section)
             self.selected()
             self.click("jog_upper")
             self.wait(lambda s: s["session"]["run"] is not None)
@@ -677,6 +813,7 @@ class Run:
         self.selected()
         self.action("speed", {"percent": 80})
         self.teaching()
+        self.screenshot("taught")
         # Range validation after poses exist, so `stepped` refuses rather
         # than a disabled slider (handlers.rs remote_check/target_enabled).
         for bad in [-1, 101]:
@@ -688,8 +825,10 @@ class Run:
             reached = self.settled()
             a = reached["server"]["axes"]["2"]
             assert min(a["lower"], a["upper"]) + 4 <= reached["session"]["target_raw"] <= max(a["lower"], a["upper"]) - 4
+        self.screenshot("target")
         self.click("reset_poses")
         self.wait(lambda s: s["server"]["axes"]["2"]["lower"] is None and s["server"]["axes"]["2"]["upper"] is None)
+        self.screenshot("reset")
         self.wait(lambda s: s["session"]["ready"])
         self.teaching()
         self.selected(3)
@@ -708,6 +847,9 @@ class Run:
         self.click("tune_confirm")
         self.click("tune")
         self.wait(lambda s: (s["server"].get("tuning") or {}).get("running"), 15)
+        self.screenshot("stages")
+        # The STOP below must land on a running tune, however long the capture took.
+        self.wait(lambda s: (s["server"].get("tuning") or {}).get("running"), 1, "tune running at STOP")
         self.click("stop")
         self.stopped()
         self.selected()
@@ -726,6 +868,7 @@ class Run:
         record = (self.out / "records" / tuning["record"]).resolve()
         assert record.is_relative_to(self.out / "records") and record.is_file()
         self.retain("tune-stages.json", sorted(str(x) for x in stages))
+        self.screenshot("terminal")
         self.selected(3)
         self.action("target", {"percent": 50})
         self.action("target_commit")
@@ -769,6 +912,7 @@ class Run:
                     and s["session"]["intent"] == "hold")
         learned_state = self.wait(learned, 150, "terminal learned stopping evidence")
         self.retain("learning-terminal.json", learned_state)
+        self.screenshot("learned")
         # Learning already ended in hold; pressing Learn again would START a
         # new learning run (session/buttons.rs `learn`). Go straight to STOP.
         self.click("stop")
@@ -785,6 +929,7 @@ class Run:
         self.retain("sweep-all-ends.json", ends)
         self.wait(lambda s: not s["session"]["sweep_all"] and not (s["server"].get("sweep") or {}).get("running"),
                   20, "sweep-all terminal")
+        self.screenshot("sweep-all")
         self.selected()
         self.click("sweep_all")
         self.wait(lambda s: s["session"]["sweep_all"])
@@ -802,9 +947,13 @@ class Run:
         receipts = {k: v for k, v in self.record_hashes().items()
                     if "/receipts/" in k and not k.endswith(".execution.json")}
         assert len(receipts) >= completed, receipts
+        self.screenshot("saved")
+        # The STOP below must land on a running campaign, however long the capture took.
+        self.wait(lambda s: s["server"]["campaign"]["running"], 1, "campaign running at STOP")
         self.click("stop")
         self.stopped()
         assert self.state()["server"]["campaign"]["completed"] >= completed
+        self.screenshot("stopped")
         self.selected()
         self.click("campaign_confirm")
         self.click("campaign_resume")
@@ -815,6 +964,7 @@ class Run:
         assert directory.is_relative_to(self.out / "records") and (directory / "report.json").is_file()
         now = self.record_hashes()
         assert all(now.get(k) == v for k, v in receipts.items()), "completed stage rewritten during resume"
+        self.screenshot("terminal")
         self.done()
 
         self.begin("LC1-real-server-refusal")
@@ -993,6 +1143,7 @@ class Run:
                     stages.append(entry)
         finally:
             self.results["cleanup"] = stages
+            self.results["screenshots"] = screenshot_summary(self.screenshots, self.results["steps"])
             try:
                 self.results["record_sha256"] = self.record_hashes()
             finally:
@@ -1000,8 +1151,88 @@ class Run:
                 self.retain("results.json", self.results)
 
 
+BINARIES = ("bench", "server", "viewer")
+
+
+def nonempty_file(path, label, executable=False):
+    """Refusal text for a missing/empty (or non-executable) input, else None."""
+    path = Path(path)
+    if not path.is_file():
+        return f"{label} {path} is missing or not a regular file"
+    if path.stat().st_size == 0:
+        return f"{label} {path} is empty"
+    if executable and not os.access(path, os.X_OK):
+        return f"{label} {path} is not executable"
+    return None
+
+
+def build_receipt(binaries, build_logs):
+    """The fresh-build receipt `run` validates (source_sha256, binaries.<label>.sha256).
+
+    Hashes bind already-built binaries to the current source tree; they do
+    not prove compilation happened. The verifier inspects the build logs.
+    """
+    commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    if not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", commit):
+        raise ValueError(f"unexpected git rev-parse HEAD output {commit!r}")
+    status = subprocess.check_output(["git", "status", "--porcelain=v1", "-z", "--untracked-files=normal"], cwd=ROOT)
+    provenance = source_hash()
+    return {
+        "source_sha256": provenance["sha256"],
+        "source_commit": commit,
+        "source_dirty": bool(status.strip(b"\0")),
+        "source_provenance": provenance,
+        "build_logs": [{"path": str(log), "bytes": log.stat().st_size, "sha256": sha(log)} for log in build_logs],
+        "binaries": {label: {"path": str(path), "bytes": path.stat().st_size, "sha256": sha(path)}
+                     for label, path in binaries.items()},
+        "written_by": "tools/native-calibration/acceptance.py receipt (builds nothing)",
+        "written_at": time.time(),
+    }
+
+
+def receipt_main(argv):
+    p = argparse.ArgumentParser(prog="acceptance.py receipt",
+        description="Write fresh-build-receipt.json for already-built binaries; builds nothing.")
+    for label in BINARIES:
+        p.add_argument(f"--{label}", type=Path, required=True)
+    p.add_argument("--build-log", type=Path, action="append", default=[],
+                   help="retained full build log; repeat for each")
+    p.add_argument("--out", type=Path, required=True)
+    args = p.parse_args(argv)
+    out = args.out.absolute()
+    binaries = {label: getattr(args, label).resolve() for label in BINARIES}
+    logs = [log.resolve() for log in args.build_log]
+    problems = [] if logs else ["no --build-log given; the verifier must be able to inspect the build"]
+    problems += [m for label, path in binaries.items() if (m := nonempty_file(path, label, executable=True))]
+    problems += [m for log in logs if (m := nonempty_file(log, "build log"))]
+    if out.exists() or out.is_symlink():
+        problems.append(f"{out} exists; a receipt is never overwritten")
+    if problems:
+        for problem in problems:
+            print(f"REFUSED: {problem}", file=sys.stderr)
+        return 2
+    text = json.dumps(build_receipt(binaries, logs), indent=2, allow_nan=False) + "\n"
+    try:
+        with out.open("x") as f:
+            f.write(text)
+    except OSError as e:
+        print(f"REFUSED: {out}: {e}", file=sys.stderr)
+        return 2
+    print(json.dumps({"receipt": str(out), "source_sha256": json.loads(text)["source_sha256"]}))
+    return 0
+
+
 def main():
-    p = argparse.ArgumentParser(description=__doc__)
+    argv = sys.argv[1:]
+    if argv[:1] == ["receipt"]:
+        return receipt_main(argv[1:])
+    if argv[:1] == ["run"]:
+        argv = argv[1:]
+    return run_main(argv)
+
+
+def run_main(argv):
+    p = argparse.ArgumentParser(prog="acceptance.py [run]", description=__doc__)
     p.add_argument("--config", type=Path, default=ROOT / "tools/native-calibration/server.virtual.json")
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--fresh-build-receipt", type=Path, required=True)
@@ -1009,7 +1240,9 @@ def main():
     p.add_argument("--server", type=Path, required=True)
     p.add_argument("--viewer", type=Path, required=True)
     p.add_argument("--total-timeout", type=int, default=1800)
-    args = p.parse_args()
+    p.add_argument("--screenshots", action="store_true",
+                   help="capture the README checkpoints with the viewer's REST screenshot (default off)")
+    args = p.parse_args(argv)
     args.out = args.out.resolve()
     args.out.mkdir(parents=True, exist_ok=False)
     run = Run(args)
@@ -1033,7 +1266,7 @@ def main():
         run.retain("source-provenance.json", provenance)
         run.results["source_provenance"] = provenance
         assert receipt["source_sha256"] == provenance["sha256"], "stale source build receipt"
-        for label in ["bench", "server", "viewer"]:
+        for label in BINARIES:
             binary = getattr(args, label).resolve()
             assert binary.is_file() and os.access(binary, os.X_OK)
             assert receipt["binaries"][label]["sha256"] == sha(binary), "stale binary receipt"
@@ -1097,10 +1330,11 @@ def main():
     except (Exception, KeyboardInterrupt) as e:
         run.results["error"] = {"step": run.step, "type": type(e).__name__, "message": str(e)}
         if run.results["steps"]:
-            run.results["steps"][-1]["status"] = "failed"
+            settle_step(run.results["steps"][-1], False)
     finally:
         run.cleanup()
-    print(json.dumps({"ok": run.results["ok"], "evidence": str(run.out), "error": run.results.get("error")}))
+    print(json.dumps({"ok": run.results["ok"], "evidence": str(run.out), "error": run.results.get("error"),
+                      "screenshots": run.results.get("screenshots")}))
     return 0 if run.results["ok"] else 1
 
 

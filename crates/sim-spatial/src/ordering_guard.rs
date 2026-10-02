@@ -236,7 +236,49 @@ fn imports(tokens: &[Token], caller: &[String], roots: &BTreeSet<String>) -> BTr
     imports_in_scope(tokens, caller, roots, &[])
 }
 
-type Symbols = BTreeMap<Vec<String>, BTreeMap<String, Vec<String>>>;
+#[derive(Clone, PartialEq, Eq)]
+struct Binding {
+    target: Vec<String>,
+    // Only declarations can end resolution at their own spelling. An import
+    // of itself is an unresolved cycle, not evidence of local ownership.
+    declaration: bool,
+}
+impl Binding {
+    fn import(target: Vec<String>) -> Self { Self { target, declaration: false } }
+}
+type Symbols = BTreeMap<Vec<String>, BTreeMap<String, Binding>>;
+
+/// Resolve every module prefix, not just the edge's first visible name.
+/// Resolve a binding's target before appending the suffix: the recursion stack
+/// catches alias cycles (including growing paths), but permits using a binding
+/// again after its expansion finished. Identity entries are local declarations.
+fn resolve_path(path: &[String], tables: &Symbols, stack: &mut BTreeSet<(Vec<String>, String)>) -> Result<Vec<String>, String> {
+    let mut resolved = path.to_vec();
+    loop {
+        let mut substitution = None;
+        for at in 0..resolved.len() {
+            let owner = resolved[..at].to_vec();
+            let name = resolved[at].clone();
+            let Some(entry) = tables.get(&owner).and_then(|names| names.get(&name)) else { continue };
+            let target = &entry.target;
+            if entry.declaration && target == &resolved[..=at] { continue; }
+            let binding = (owner, name);
+            if !stack.insert(binding.clone()) {
+                return Err(format!("cyclic import/reexport at {}", resolved[..=at].join("::")));
+            }
+            let expanded = resolve_path(target, tables, stack);
+            stack.remove(&binding);
+            let mut expanded = expanded?;
+            expanded.extend_from_slice(&resolved[at + 1..]);
+            substitution = Some(expanded);
+            break;
+        }
+        match substitution {
+            Some(path) => resolved = path,
+            None => return Ok(resolved),
+        }
+    }
+}
 
 /// Resolve glob imports through other source modules, including root reexports.
 /// Local declarations and explicit imports take precedence over glob names.
@@ -244,22 +286,28 @@ fn symbol_tables(sources: &[(Vec<String>, String)], roots: &BTreeSet<String>) ->
     let mut tables = Symbols::new();
     for (caller, source) in sources {
         let tokens = production_tokens(source);
-        let mut names = imports(&tokens, caller, roots);
+        let mut names: BTreeMap<String, Binding> = imports(&tokens, caller, roots).into_iter().map(|(name, path)| (name, Binding::import(path))).collect();
         let scopes = scopes(&tokens);
         for (at, pair) in tokens.windows(2).enumerate() {
             if scopes[at].is_empty() && matches!(pair[0].text.as_str(), "fn" | "mod" | "struct" | "enum" | "type" | "const" | "static") && identifier(&pair[1].text) {
                 let mut path = caller.clone();
                 path.push(pair[1].text.clone());
-                names.insert(pair[1].text.clone(), path);
+                names.insert(pair[1].text.clone(), Binding { target: path, declaration: true });
             }
         }
         tables.insert(caller.clone(), names);
     }
+    expand_globs(&mut tables);
+    tables
+}
+
+fn expand_globs(tables: &mut Symbols) {
     loop {
         let before = tables.clone();
         for names in tables.values_mut() {
-            let globs: Vec<Vec<String>> = names.iter().filter(|(name, _)| name.starts_with('*')).map(|(_, path)| path.clone()).collect();
+            let globs: Vec<Vec<String>> = names.iter().filter(|(name, _)| name.starts_with('*')).map(|(_, binding)| binding.target.clone()).collect();
             for target in globs {
+                let Ok(target) = resolve_path(&target, &before, &mut BTreeSet::new()) else { continue };
                 if let Some(exports) = before.get(&target) {
                     for (name, path) in exports.iter().filter(|(name, _)| !name.starts_with('*')) {
                         names.entry(name.clone()).or_insert_with(|| path.clone());
@@ -267,7 +315,7 @@ fn symbol_tables(sources: &[(Vec<String>, String)], roots: &BTreeSet<String>) ->
                 }
             }
         }
-        if tables == before { return tables; }
+        if *tables == before { return; }
     }
 }
 
@@ -275,23 +323,39 @@ fn violations_with_symbols(source: &str, file: &Path, roots: &BTreeSet<String>, 
     let caller = module(file);
     let tokens = production_tokens(source);
     let token_scopes = scopes(&tokens);
+    // Fixtures may supply other modules separately. This file's own module
+    // bindings always come from its actual source, never from a block overlay.
+    let own = symbol_tables(&[(caller.clone(), source.to_string())], roots);
+    let mut modules = tables.clone();
+    modules.insert(caller.clone(), own.get(&caller).cloned().unwrap_or_default());
+    expand_globs(&mut modules);
     edges(&tokens).into_iter().filter_map(|(index, line, path)| {
-        let mut names = tables.get(&caller).cloned().unwrap_or_default();
-        names.extend(imports_in_scope(&tokens, &caller, roots, &token_scopes[index]));
-        let globs: Vec<Vec<String>> = names.iter().filter(|(name, _)| name.starts_with('*')).map(|(_, path)| path.clone()).collect();
+        let mut names = modules.get(&caller).cloned().unwrap_or_default();
+        names.extend(imports_in_scope(&tokens, &caller, roots, &token_scopes[index]).into_iter().map(|(name, target)| (name, Binding::import(target))));
+        let globs: Vec<Vec<String>> = names.iter().filter(|(name, _)| name.starts_with('*')).map(|(_, binding)| binding.target.clone()).collect();
         for target in globs {
-            if let Some(exports) = tables.get(&target) {
-                for (name, path) in exports.iter().filter(|(name, _)| !name.starts_with('*')) {
-                    names.entry(name.clone()).or_insert_with(|| path.clone());
+            let target = match resolve_path(&target, &modules, &mut BTreeSet::new()) {
+                Ok(target) => target,
+                Err(error) => return Some(format!("{}:{line}: {error}; cannot establish ordering ownership", file.display())),
+            };
+            if let Some(exports) = modules.get(&target) {
+                for (name, binding) in exports.iter().filter(|(name, _)| !name.starts_with('*')) {
+                    names.entry(name.clone()).or_insert_with(|| binding.clone());
                 }
             }
         }
-        let resolved = if let Some(import) = names.get(&path[0]) {
-            let mut resolved = import.clone();
-            resolved.extend_from_slice(&path[1..]);
-            resolved
-        } else { absolute(&path, &caller, roots) };
-        (resolved.first() != caller.first()).then(|| format!("{}:{line}: {} resolves to {}; order against a public SystemSet", file.display(), path.join("::"), resolved.join("::")))
+        // Lexical shadowing selects only an unqualified use-site name. Once
+        // selected, its import target (self::/super:: included) resolves through
+        // the defining module tables, unaffected by block-level aliases.
+        let start = names.get(&path[0]).map(|binding| {
+            let mut start = binding.target.clone();
+            start.extend_from_slice(&path[1..]);
+            start
+        }).unwrap_or_else(|| absolute(&path, &caller, roots));
+        match resolve_path(&start, &modules, &mut BTreeSet::new()) {
+            Ok(resolved) => (resolved.first() != caller.first()).then(|| format!("{}:{line}: {} resolves to {}; order against a public SystemSet", file.display(), path.join("::"), resolved.join("::"))),
+            Err(error) => Some(format!("{}:{line}: {}: {error}; cannot establish ordering ownership", file.display(), path.join("::"))),
+        }
     }).collect()
 }
 
@@ -381,4 +445,86 @@ fn guard_keeps_imports_in_their_lexical_scope() {
     let hits = violations_with_symbols(source, Path::new("builder.rs"), &roots, &tables);
     assert_eq!(hits.len(), 1, "{hits:?}");
     assert!(hits[0].contains("inspect_view::update_parts"));
+}
+
+#[test]
+fn guard_resolves_chained_module_aliases_and_qualified_reexports() {
+    let roots = ["cad", "robot"].into_iter().map(str::to_string).collect();
+    let panel = "use crate::robot as remote; use self::remote::apply_frames as frames; fn build() { sys.after(frames).before(remote::apply_frames).after(super::apply_frames); }";
+    let sources = vec![
+        (vec![], "mod cad; mod robot;".to_string()),
+        (vec!["robot".to_string()], "pub fn apply_frames() {}".to_string()),
+        (vec!["cad".to_string()], "pub use crate::robot::apply_frames; mod panel;".to_string()),
+        (vec!["cad".to_string(), "panel".to_string()], panel.to_string()),
+    ];
+    let tables = symbol_tables(&sources, &roots);
+    let hits = violations_with_symbols(panel, Path::new("cad/panel.rs"), &roots, &tables);
+    assert_eq!(hits.len(), 3, "{hits:?}");
+    assert!(hits.iter().all(|hit| hit.contains("resolves to robot::apply_frames")));
+}
+
+#[test]
+fn guard_preserves_same_feature_chains_and_lexical_shadowing() {
+    let roots = ["cad", "robot"].into_iter().map(str::to_string).collect();
+    let panel = "use crate::cad::local as remote; use self::remote as next; use self::next::apply_frames as frames; fn build() { sys.after(frames).before(super::apply_frames); }";
+    let sources = vec![
+        (vec![], "mod cad; mod robot;".to_string()),
+        (vec!["cad".to_string()], "mod local; mod panel; pub use self::local::apply_frames;".to_string()),
+        (vec!["cad".to_string(), "local".to_string()], "pub fn apply_frames() {}".to_string()),
+        (vec!["robot".to_string()], "pub fn apply_frames() {}".to_string()),
+        (vec!["cad".to_string(), "panel".to_string()], panel.to_string()),
+    ];
+    let tables = symbol_tables(&sources, &roots);
+    assert!(violations_with_symbols(panel, Path::new("cad/panel.rs"), &roots, &tables).is_empty());
+    let shadowed = "use crate::robot as remote; use self::remote::apply_frames as frames; fn local() { use crate::cad::local::apply_frames as frames; sys.after(frames); } fn other() { sys.after(frames); }";
+    let hits = violations_with_symbols(shadowed, Path::new("cad/panel.rs"), &roots, &tables);
+    assert_eq!(hits.len(), 1, "{hits:?}");
+    assert!(hits[0].contains("resolves to robot::apply_frames"));
+}
+
+#[test]
+fn guard_reports_alias_cycles_instead_of_accepting_local_ownership() {
+    let roots = ["cad"].into_iter().map(str::to_string).collect();
+    for imports in [
+        "use self::a as a;",
+        "use self::b as a; use self::a as b;",
+        // The suffix grows on each expansion, so a visited-path-only check
+        // would never terminate. Rust rejects both unresolved import cycles.
+        "use self::b::child as a; use self::a as b;",
+    ] {
+        let source = format!("{imports} fn build() {{ sys.after(a::apply_frames); }}");
+        let sources = vec![(vec!["cad".to_string(), "panel".to_string()], source.clone())];
+        let tables = symbol_tables(&sources, &roots);
+        let hits = violations_with_symbols(&source, Path::new("cad/panel.rs"), &roots, &tables);
+        assert_eq!(hits.len(), 1, "{hits:?}");
+        assert!(hits[0].contains("cyclic import/reexport"));
+    }
+    // Reusing a completed expansion is not a cycle: c is used first by the
+    // edge and again while following cad::frames, both valid Rust aliases.
+    let sources = vec![
+        (vec![], "mod cad; use crate::cad as c;".to_string()),
+        (vec!["cad".to_string()], "mod local; pub use crate::c::local::apply_frames as frames;".to_string()),
+        (vec!["cad".to_string(), "local".to_string()], "pub fn apply_frames() {}".to_string()),
+    ];
+    let tables = symbol_tables(&sources, &roots);
+    assert!(violations_with_symbols("sys.after(crate::c::frames)", Path::new("cad/panel.rs"), &roots, &tables).is_empty());
+}
+
+#[test]
+fn guard_resolves_module_imports_independently_of_block_aliases() {
+    let roots = ["cad", "robot"].into_iter().map(str::to_string).collect();
+    let source = "use crate::robot as remote; use self::remote::apply_frames as frames; fn build() { use crate::cad::local as remote; sys.after(frames).after(self::remote::apply_frames).after(remote::apply_frames); }";
+    let sources = vec![
+        (vec![], "mod cad; mod robot;".to_string()),
+        (vec!["cad".to_string(), "local".to_string()], "pub fn apply_frames() {}".to_string()),
+        (vec!["robot".to_string()], "pub fn apply_frames() {}".to_string()),
+    ];
+    let tables = symbol_tables(&sources, &roots);
+    let hits = violations_with_symbols(source, Path::new("cad/panel.rs"), &roots, &tables);
+    assert_eq!(hits.len(), 2, "{hits:?}");
+    assert!(hits.iter().all(|hit| hit.contains("resolves to robot::apply_frames")));
+    let glob = "use crate::robot as remote; use self::remote::*; fn build() { sys.after(apply_frames); }";
+    let hits = violations_with_symbols(glob, Path::new("cad/panel.rs"), &roots, &tables);
+    assert_eq!(hits.len(), 1, "{hits:?}");
+    assert!(hits[0].contains("resolves to robot::apply_frames"));
 }

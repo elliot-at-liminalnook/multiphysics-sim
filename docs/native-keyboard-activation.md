@@ -259,3 +259,23 @@ Blur. This closes the Tab timing race without retaining a sticky owner mapping.
 Catalogue/file fixtures use full OS-close lifecycle and pinned Tab dispatch;
 materials and results fixtures isolate their actual renderer/consumer boundaries.
 No fixture result is represented as an executed pass.
+
+
+## Correction of 090d608d: public pointer ordering
+
+ActivationSet::Containment runs after Eligibility and before PickingSystems::Hover,
+where pinned InteractionPlugin emits pointer events. Eligibility's deferred widget
+state is published across its normal dependency edge before containment initializes
+navigation. The kit then records departing editor suspension through direct writes
+before any pointer observer can assign focus to a newly rendered close button.
+Pinned Hover → PostHover → Last precedes TextInputSet → Dispatch → Consume; this
+orders the full path without a private cross-feature edge or schedule cycle.
+
+Actual catalogue/file pointer-first fixtures enter pending close through the real
+WindowCloseRequested owner and one render frame, then queue a press inside the
+PreUpdate picking stage rather than triggering it outside App::update. The scheduled
+press inspects suspension before focus replacement; cancellation, return, further
+editing and single submission use the actual consumers. The backend hit target is
+fixture input, not rendering/parity evidence. Existing keyboard, genuine Blur and
+source-replacement fixtures remain intact. All batch task/outcome IDs and previously
+reviewed source traces are retained; all fixtures remain written and unexecuted.

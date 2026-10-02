@@ -743,6 +743,23 @@ mod suspension_tests {
         assert_ne!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(field));
     }
     #[test]
+    fn actual_file_first_close_pointer_preserves_height_owner() {
+        let (mut app, window) = fixture();
+        let editor = fx::field(&mut app, FILES);
+        let saved = app.world().get::<TextField>(editor).unwrap().draft.clone();
+        fx::first_pointer_cancel(&mut app, window, FILES);
+        assert_eq!(app.world().get::<TextField>(editor).unwrap().draft, saved);
+        assert_eq!(app.world().resource::<CadFiles>().form.as_ref().unwrap().focus.as_deref(), Some("h"));
+        assert!(app.world().resource::<Messages<Act<CadAction>>>().is_empty());
+        fx::key(&mut app, window, KeyCode::Digit8, Key::Character("8".into()));
+        let form = app.world().resource::<CadFiles>().form.as_ref().unwrap();
+        assert_eq!(form.text("h"), "7008"); assert_eq!(form.text("w"), "1200");
+        fx::key(&mut app, window, KeyCode::Enter, Key::Enter);
+        let actions: Vec<_> = app.world_mut().resource_mut::<Messages<Act<CadAction>>>().drain().collect();
+        assert_eq!(actions.len(), 1);
+        assert!(matches!(&actions[0].action, CadAction::Captured { action, .. } if matches!(&**action, CadAction::CadRender(args) if args.h == Some(7008))));
+    }
+    #[test]
     fn actual_file_document_replacement_refuses_suspended_editor() {
         let (mut app, window) = fixture(); let field = fx::field(&mut app, FILES);
         fx::request(&mut app, window);

@@ -7120,3 +7120,29 @@ means the existing TextDraft text/selection and its existing implicit end insert
 position; this repair introduces no alternate text editor or caret model. All
 T49 task/outcome IDs remain in scope. Fixtures, compilation and GUI behavior are
 unexecuted; STOP, unconditional releases and close preservation remain unchanged.
+
+
+### T49 correction: suspension before pointer focus
+
+Call-0376 identifies an ordering race in `090d608d`: if picking assigns focus to
+a close button before modal containment, the departing editor is no longer visible
+to suspension capture. PreUpdate now explicitly orders the public kit set
+ActivationSet::Eligibility → ActivationSet::Containment → PickingSystems::Hover.
+Containment holds modal_focus; it remains before TextInputSet and focused Dispatch.
+Pinned picking chains ProcessInput → Backend → Hover → PostHover → Last, with
+pointer_events in Hover. TextInputSet follows Last and UI Focus, then Dispatch and
+shortcut consumption follow text input. No edge requires containment after picking.
+
+Eligibility uses Commands to publish TabIndex/InteractionDisabled. Its normal
+`.after` edge to Containment uses pinned Bevy's default automatic ApplyDeferred
+insertion; no ignore_deferred edge or disabled synchronization is introduced.
+Suspension and InputFocus updates inside containment are direct resource/component
+writes. They are visible before Hover emits any press that can replace focus.
+Pointer-down activation, real Tab-away Blur, source/form refusal and unconditional
+release/STOP behavior retain their existing owners and contracts.
+
+The actual catalogue/file pointer-first fixtures queue the first close interaction
+for the scheduled picking stage after one OS-request frame renders pending controls.
+They inspect suspension before press emission, then use the existing observers,
+close cancellation owner, form input and continued editing/submission. All prior
+T49.1–T49.3 and outcome traces remain; fixtures and compilation are unexecuted.

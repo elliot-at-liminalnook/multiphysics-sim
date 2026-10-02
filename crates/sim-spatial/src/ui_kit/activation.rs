@@ -42,7 +42,7 @@ pub(crate) struct RenderSource {
 
 
 #[derive(SystemSet, Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub(crate) enum ActivationSet { Eligibility, Consume, Validate, Clear }
+pub(crate) enum ActivationSet { Eligibility, Containment, Consume, Validate, Clear }
 
 pub(crate) fn install(app: &mut App) {
     if !app.is_plugin_added::<bevy::ui_widgets::ButtonPlugin>() {
@@ -53,11 +53,15 @@ pub(crate) fn install(app: &mut App) {
         .init_resource::<PointerGate>()
         .init_resource::<InputFocusVisible>()
         .configure_sets(PreUpdate, ActivationSet::Eligibility.after(bevy::input::InputSystems).before(InputFocusSystems::Dispatch).before(bevy::picking::PickingSystems::Hover))
+        // Eligibility Commands publish TabIndex/InteractionDisabled before
+        // containment reads them; containment records suspension before Hover
+        // emits pointer observers that can replace the departing InputFocus.
+        .configure_sets(PreUpdate, ActivationSet::Containment.after(ActivationSet::Eligibility).before(bevy::picking::PickingSystems::Hover).before(super::text::TextInputSet).before(InputFocusSystems::Dispatch))
         .configure_sets(Update, ActivationSet::Validate.after(crate::app::InputSet::Rest).before(crate::app::InputSet::Window).in_set(crate::app::ViewerSet::Input))
         .configure_sets(PreUpdate, ActivationSet::Consume.after(InputFocusSystems::Dispatch).after(super::text::TextInputSet))
         .add_systems(PreUpdate, eligibility.in_set(ActivationSet::Eligibility))
         .add_systems(PreUpdate, consume_keys.in_set(ActivationSet::Consume))
-        .add_systems(PreUpdate, modal_focus.after(ActivationSet::Eligibility).before(super::text::TextInputSet).before(InputFocusSystems::Dispatch))
+        .add_systems(PreUpdate, modal_focus.in_set(ActivationSet::Containment))
         .add_systems(Update, focus_inputs.after(crate::app::InputSet::Rest).before(ActivationSet::Validate).in_set(crate::app::ViewerSet::Input))
         .add_observer(pointer_intent)
         .add_observer(key_intent)

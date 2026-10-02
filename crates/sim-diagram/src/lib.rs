@@ -1,5 +1,6 @@
 //! Reusable schematic widget over inspection data. No physics dependency.
 pub mod analysis;
+pub mod composition;
 pub mod layout;
 pub mod plot;
 pub mod projection;

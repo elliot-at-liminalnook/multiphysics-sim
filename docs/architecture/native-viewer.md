@@ -10,10 +10,12 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (public-system-sets done pending verification, uncompiled: written and reviewed by reading only; see [Public system sets](#public-system-sets-2026-10-01); re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01); one-text-entry done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [One text entry](#one-text-entry-2026-10-01); cad-organize done pending verification (2026-10-01; written and reviewed by reading; nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), see [CAD organize](#cad-organize-2026-10-01))
+## Where it is today (cad-components written, source-reviewed, execution unverified; public-system-sets done pending verification, uncompiled: written and reviewed by reading only; see [Public system sets](#public-system-sets-2026-10-01); re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01); one-text-entry done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [One text entry](#one-text-entry-2026-10-01); cad-organize done pending verification (2026-10-01; written and reviewed by reading; nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), see [CAD organize](#cad-organize-2026-10-01))
 
-**Nothing has been compiled, tested or run since aa34ef48** (the last
-verified commit). Five epics since were written by reading only, stacked
+**Rust changes since aa34ef48 have not been compiled or executed.** Historical
+Python executions remain recorded below (including the cad-organize gap route's
+two passing tests at b476b28e); they do not verify native workflow parity.
+Seven implemented epics since are stacked
 uncompiled: unified-selection-document (f5546fbd, 5e9c34d5, af0bb4be),
 cad-physical-inspect (3fb34225..61f1bea5: 3fb34225, f26842fa, review
 fixes 697a15c1, docs 61f1bea5), cad-print (35ea6de0, 17f90d08, review
@@ -22,10 +24,9 @@ fixes 6c6b1a5a, docs 9afd63f5, fixes 0a1147b3), one-text-entry
 and one kit text field; see [One text entry](#one-text-entry-2026-10-01))
 and cad-organize (b476b28e and the commits after it: the outliner's
 organization, RoboCAD's comment threads, reference images and the system
-link; see [CAD organize](#cad-organize-2026-10-01); nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)).
-cad-organize is done pending verification and
-uncompiled, like the four before it. Their counts and "done" states below are by
-reading, not by a build.
+link; see [CAD organize](#cad-organize-2026-10-01); nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), and public-system-sets (180b3a54, 5c874455; source review only), plus cad-components (T42; source review only).
+All seven remain uncompiled. Their counts and "done" states below describe
+source review, not an executed build or native parity result.
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -5293,7 +5294,7 @@ doc comment listing what it does and its deliberate differences.
 | `cad/references/dock.rs`, `form.rs`, `input.rs` | The References section (`Part::References`: `draw`, `key`); the placement form (`ROWS`, `PlacementForm::load`, `apply`, `update`); the kit fields (the placement rows, the path field of Add and Link, the calibrate tool's "Real distance"). |
 | `cad/references/edits.rs`, `reads.rs` | The edits (add with `image_path`, visible, `placement`, link, accept, unlink, remove), each one RoboCAD call through `edit_at`; the windowless reads (`tick`: placements per (generation, shown revision), the system status) and `receive` (the align after an import, Open in builder's window action, the path listing). |
 | `cad/references/align.rs`, `calibrate.rs`, `planes.rs`, `drop.rs`, `system_link.rs` | Align view and Sketch over this (`align`, `sketch`); Calibrate scale (`start`, `click`, `pick`, `distance`, `escape`, `markers`); the textured planes (`sync`, `decodable`, `decode`); dropped files (`drops`); the status line and Open in builder (`line`, `builder_target`, `open_builder`, `switch_action`). |
-| `cad/surfaces/registry.rs` | `Do::Organize(id)` → `organize_action` (`tree::command_action`, else `threads::command_action`, else `references::command_action`) for `view.references`, `reference.import`, `tool.annotate` (N), `view.comments` and `view.comment_pins`; `components.show` and `components.make` are `Native::Later("cad-components")`. |
+| `cad/surfaces/registry.rs` | `Do::Organize(id)` → `organize_action` (`tree::command_action`, else `threads::command_action`, else `references::command_action`) for `view.references`, `reference.import`, `tool.annotate` (N), `view.comments` and `view.comment_pins`; At the cad-organize checkpoint, `components.show` and `components.make` were `Native::Later("cad-components")`; T42 now resolves both through `components::command_action` to typed native actions. |
 | `cad/keys.rs`, `cad/panel.rs`, `cad/pick.rs`, `builder/drafts.rs` | The clash table's Ctrl+F, N and Escape rows; `Part::TreeTools` above the tree and `Part::Comments`, `Part::References` at the top of the right dock (the panel's wheel stands aside over the outliner's popups); a press that dismisses the outliner menu or began with a click tool does not select (`tool_press`, `tree::menu_open`); Build mode's `drops` skips the frame Build mode is entered. |
 
 ### Decisions
@@ -6048,7 +6049,7 @@ image planes and the calibrate tool, and the linked system file with Open
 in builder as an in-window switch to Build mode, with one api.py gap
 route (`GET /nodes/{id}/image`); it is written and reviewed by reading
 and pending verification: nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified). Its components and system-graph rows
-moved to cad-components. Next: cad-components, then cad-experiments-motion; public-system-sets
+moved to cad-components. Next: cad-experiments-motion (cad-components implemented by T42); public-system-sets
 is done by reading and remains uncompiled pending verification.
 
 #### Later CAD epics (planned 2026-09-30)
@@ -6213,10 +6214,10 @@ by the parity harness. Planned order:
    and `transform_components`. *Why separate:* it shares `sim_system`'s
    graph types with Build mode and needs its own design (one graph model
    for the builder and CAD, not a second editor). Routes:
-   `GET /components`, `/component-jobs/{id}` (GUI only), `GET/PUT /system`,
+   `GET /components`, `/component-jobs/{id}` (headless and Qt; shared service owner), `GET/PUT /system`,
    `/system/components|connections`,
    `POST /ops/make_component|place_component|set_component_parameters|set_component_overrides|detach_component|import_component|export_component|…`.
-   Gap: the geometry-rule recipes (`component_derivation.RECIPES`).
+   Closed in T42: `/component-recipes` serves authoritative geometry-rule recipes and inputs; `/component-library` discovers archives off the UI thread. See the T42 section below.
 9. **cad-experiments-motion** (63 rows). The experiments panel (Rhai
    editors, profiles, runs, cancel, baseline and compare, linked files,
    restore inputs, auto-rerun, the catalogue), run review, candidate
@@ -6331,10 +6332,10 @@ The Director re-ranks with evidence, but this is the default:
    is done pending verification (written and reviewed by reading;
    nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)); its components and system-graph rows became the new epic
    cad-components.
-   Next: **cad-components**; public-system-sets is done by reading,
+   Next: **cad-experiments-motion**; cad-components and public-system-sets are implemented by reading,
    pending verification and uncompiled.
    Remaining, in order (§9 "Later CAD epics"):
-   cad-components, cad-experiments-motion.
+   cad-experiments-motion (T42 component implementation remains unexecuted).
 8. **Parity harness** (§9 phase 2).
 9. **Derivations in Rust** (§9 phase 3). Several epics, one derivation family
    each.
@@ -6347,7 +6348,7 @@ The Director re-ranks with evidence, but this is the default:
 **Bevy-practice epics** (added 2026-10-01; structural; the gaps are listed under
 "Bevy-practice gaps" in "Where it is today"). one-text-entry and
 cad-organize and **public-system-sets** are done (pending verification,
-uncompiled). Next is **cad-components**, then cad-experiments-motion.
+uncompiled). Next is **cad-experiments-motion**; T42 implements cad-components by source review only.
 Interleave the other two with the remaining CAD epics, keeping at least
 one epic in three structural:
 
@@ -6622,4 +6623,117 @@ rule (these are future checks, not receipts):
 - [x] Source size and whitespace inspection; no build, test, screenshot
       or hardware operation performed.
 
-Next in the default order: **cad-components**.
+Next in the default order: **cad-experiments-motion** (cad-components is implemented by T42; execution and exact parity remain unverified).
+
+
+## CAD components ownership and integration (T42, 2026-10-01)
+
+Implemented with source-only verification; compilation, fixtures and exact parity are unexecuted. The seven stacked Rust
+epics include this batch; historical Python receipts above remain historical.
+
+Before implementation, the ownership contract is: Python/OCCT owns durable CAD
+definitions, occurrences, bodies, graph bindings, derivation provenance and undo.
+`ComponentJobService` owns preparation snapshots and the one guarded commit; Qt
+and REST advance that owner, with Qt retaining only widgets and selection. Rust
+`cad_client::components` carries explicit operation, document identity and revision
+payloads; no geometry is calculated by these forms.
+
+The persistent native `ComponentsState` owns drafts, catalogue snapshots and
+pending start/poll/cancel jobs. Source mutations have one writer, the authoritative
+service. `CadDocument.component_busy` blocks source edits and replacement until
+completion is acknowledged. Cancellation is durable state, not an expiring
+mode-gated message. UI fields/buttons write `Act<CadAction>` in Input; the existing
+apply system consumes them in Actions; job results land after public
+`CadSet::Results` in JobResults; presentation is Present. The CAD panel spawns
+transient descendants of its mode-scoped roots, which linked despawn and
+`DespawnOnExit` remove. Kit text entities retain their drafts through the existing
+InputFocus/TextDraft service. Network, geometry and directory work belongs on jobs
+or the Python worker; no simulation is added to frame systems.
+
+The explicit version-1 CAD graph envelope and the hierarchical Build document
+remain separate persisted schemas. Both adapt to a shared composition description
+and presentation; CAD identity, imported bindings, multi-terminal connections and
+geometry recipes are retained in the source envelope. Display position and zoom
+are presentation state and never physical transforms. Unsupported metadata is
+refused by path, rather than filled with invented physical parameters.
+
+### T42 source trace and review boundary
+
+Launch remains `cargo run -p sim-spatial -- path/to/model.rcad` or
+`--cad-url http://127.0.0.1:8420` to attach to an existing RoboCAD service. These
+are launch instructions, not commands executed in this batch. Python/OCCT and
+the existing registry executable remain required. Component authoring and jobs
+need no Qt panel. Creating a new experiment/check still requires the external
+reference workflow; the native graph imports metadata from an existing completed
+check ID and never runs experiments in this batch.
+
+The window Components section, `system_ui` controls and REST `cad_components`
+all reach `cad/components/mod.rs::handle`. `form::open/set/operation` retains
+selection-backed drafts, definition metadata, variants, nested mappings and branch
+overrides; `validate::validate_operation` applies member restrictions and typed bindings.
+`jobs::Active` captures generation, document ID and revision before POST. The
+service `component_service::start` checks the source stamp, `ComponentJob` prepares
+snapshots in its worker, and `commit` checks the stamp again before ComponentChange.
+Qt's panel starts/polls this same owner.
+
+End-to-end reading trace: make from shared Selection → guarded make operation →
+ready commit → refreshed definition/selection; Place twice submits two separate
+occurrence requests; Edit defaults sends definitions/nested parameter mappings;
+Apply occurrence sends the selected branch's overrides; Reset removes overrides;
+Cancel repeats DELETE until terminal (an acknowledgment can still say Running).
+Lost POST recovery uses nonpublishing discovery, never a second POST, so pending
+cancel can precede commit. Export prepares a temporary archive and publishes it
+only after the same revision guard. Save uses the existing `cad/files` guarded
+path after tracked rebuild completion. Drafts remain available after refusal or
+mode teardown. Active work blocks document/mode replacement; unexpected identity
+displacement cancels through the captured client. An unresolved network outcome
+keeps a named blocker rather than assuming the service did nothing.
+
+CAD graph intents similarly reach `cad/composition::handle` and typed
+`cad_client::composition` commands, then revision-guarded `Service.system_request`
+and `component_graph.edit_graph` undo. `sim_system::composition` preserves the
+CAD source envelope and adapts catalogue/import metadata into shared inspection
+topology. Build's Resolver uses shared port validation; Build's schematic and CAD
+use `sim_diagram::composition::present` and `graph_presentation::route`. Focus,
+zoom and layout are disposable display state. Body links, imported bindings, IDs,
+multi-terminal connections and derivation/provenance remain source-owned.
+
+Decisions: keep both persisted formats through explicit adapters; refuse unknown
+metadata instead of inventing physical values; keep dimensional Current expressions
+labelled unevaluated; use kit path fields instead of Qt file dialogs; import only
+completed check metadata. Structural metadata freshness uses the existing
+`cad_derivation_hash` (excluding graph edits) while measured result freshness
+continues using full physical_hash; legacy records without that stamp use the
+stricter physical hash. Revisit these choices when independent execution or parity
+evidence warrants a change. No schemas, measured values or simulation paths change.
+
+Independent reading reviews covered service/client commit races, native actions/
+forms/jobs and shared graph consumers. Written regression fixtures cover headless
+undo, start/commit revision refusal, queued-ready cancellation, nonpublishing
+recovery, staged export, retained drafts, metadata freshness, CAD envelope round
+trips and connection/geometry validation. No fixture was executed. The ledger
+contains 775 rows: 540 done-by-reading, 172 deliberately different and 63 deferred
+to cad-experiments-motion; all 38 cad-components rows have current owners.
+
+Graph review repairs retain source/catalogue snapshots even when adaptation fails,
+so users can repair/remove invalid components or replace the complete graph with
+a validated retained JSON draft. Retained graph drafts expose Resume and explicit
+Copy to current revision; recipe changes preserve the prior draft and clear only
+obsolete recipe fields. Display pan/arrange offsets are in-memory and are not
+written into either persisted schema. Shared Build validation runs before
+subsystem scoping, so external signal drivers do not invalidate focused drawings.
+Imported-check changes invalidate prior reads and completions check the run ID.
+`/system` responses now carry document identity; native graph mutations send it
+alongside the revision guard, including DELETE queries. Legacy clients may omit
+the new wire guard; persisted .rcad and sim.system schemas remain unchanged.
+Body links and derivation provenance survive in the CAD envelope. The disposable
+inspection adapter leaves CadReference absent without an actual CAD artifact
+digest, rather than labelling a graph hash as a geometry artifact hash. Custom
+connector definitions absent from the authoritative built-in metadata are refused
+by path; they are not silently treated as compatible.
+
+Queued component and graph text actions carry the draft index that spawned their
+field. Selecting another form does not redirect the old field's unsaved text.
+Component Apply refuses if its displayed draft is no longer selected; graph Copy
+explicitly captures a new document stamp. This chooses preserved drafts and named
+refusal over silently applying inputs to a different form/document.

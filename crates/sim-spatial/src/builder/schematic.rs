@@ -105,12 +105,13 @@ fn level_description(d: &SystemDescription, level: &str) -> SystemDescription {
 /// `route_cancellable` routes. None when cancelled.
 pub(crate) fn lay_out(description: &SystemDescription, key: Key, cancel: &AtomicBool) -> Option<Laid> {
     let started = std::time::Instant::now();
-    let scoped = level_description(description, &key.level);
+    let composition = sim_system::composition::Composition::new(description.clone()).ok()?;
+    let scoped = level_description(&composition.description, &key.level);
     let parent = (!key.level.is_empty()).then_some(key.level.as_str());
     let collapsed: BTreeSet<String> = scoped.groups.values().filter(|g| g.parent.as_deref() == parent).map(|g| g.id.clone()).collect();
-    let projection = projection::project(&scoped, &collapsed, None);
-    let state = diagram_layout::initial_state_cancellable(&projection.view, cancel)?;
-    let layout = diagram_layout::route_cancellable(&projection.view, &state, cancel)?;
+    let presented = sim_diagram::composition::present(&scoped, &collapsed, None, cancel)?;
+    let projection = presented.projection;
+    let layout = presented.layout;
     let instances = projection
         .nodes
         .iter()
@@ -375,24 +376,7 @@ fn draw(canvas: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, l: &Laid, highl
         let color = rgb!(style::net_domain(view, id).color);
         let thick = if incident.contains(id) { 3. } else { 1.5 };
         let color = if highlighted.is_empty() || incident.contains(id) { color } else { color.with_alpha(0.45) };
-        for branch in &net.branches {
-            for pair in branch.windows(2) {
-                let (a, c) = (at(pair[0]), at(pair[1]));
-                // Routes are orthogonal; an oblique pair is drawn as an elbow.
-                for (p, q) in [(a, Vec2::new(c.x, a.y)), (Vec2::new(c.x, a.y), c)] {
-                    if p == q {
-                        continue;
-                    }
-                    let lo = p.min(q);
-                    let (wd, ht) = ((p.x - q.x).abs().max(thick), (p.y - q.y).abs().max(thick));
-                    canvas.spawn((Node { position_type: PositionType::Absolute, left: Val::Px(lo.x - (thick / 2.).floor()), top: Val::Px(lo.y - (thick / 2.).floor()), width: Val::Px(wd), height: Val::Px(ht), ..default() }, BackgroundColor(color)));
-                }
-            }
-        }
-        for j in &net.junctions {
-            let p = at(*j);
-            canvas.spawn((Node { border_radius: BorderRadius::all(Val::Px(3.)), position_type: PositionType::Absolute, left: Val::Px(p.x - 3.), top: Val::Px(p.y - 3.), width: Val::Px(6.), height: Val::Px(6.), ..default() }, BackgroundColor(color)));
-        }
+        crate::graph_presentation::route(canvas,net,at,color,thick);
     }
     let row = diagram_layout::ROW * scale;
     for (id, node) in &l.layout.nodes {
@@ -447,6 +431,22 @@ fn draw(canvas: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, l: &Laid, highl
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn scoped_external_signal_source_is_presentation_context_not_invalid_source() {
+        let mut d:SystemDescription=serde_json::from_str(include_str!("../../../../examples/systems-viewer/full-robot.description.json")).unwrap();
+        let template=d.components.values().next().unwrap().clone();
+        d.components.clear();d.ports.clear();d.nets.clear();d.groups.clear();
+        d.groups.insert("inside".into(),sim_inspect::GroupDescription{id:"inside".into(),label:"Inside".into(),parent:None});
+        for (id,group,output) in [("source",None,true),("inside/a",Some("inside"),false),("inside/b",Some("inside"),false)] {
+            let mut c=template.clone();c.id=id.into();c.group=group.map(str::to_string);d.components.insert(id.into(),c);
+            let pid=format!("{id}/signal");d.ports.insert(pid.clone(),sim_inspect::PortDescription{id:pid,component:id.into(),name:"signal".into(),schema:if output {sim_inspect::PortKind::SignalOutput{signal_type:sim_core::definitions::SignalType::Any}}else{sim_inspect::PortKind::SignalInput{signal_type:sim_core::definitions::SignalType::Any}},composite_parent:None});
+        }
+        d.nets.insert("signal-node".into(),sim_inspect::NetDescription{id:"signal-node".into(),ports:d.ports.keys().cloned().collect()});
+        sim_system::composition::Composition::new(d.clone()).unwrap();
+        assert_eq!(level_description(&d,"inside").nets["signal-node"].ports.len(),2);
+        let laid=lay_out(&d,Key{description_id:d.id.clone(),revision:23,level:"inside".into()},&AtomicBool::new(false)).unwrap();
+        assert_eq!(laid.projection.view.nets["signal-node"].ports.len(),2);
+    }
 
     /// The pane's layout comes from the shared sim_diagram path on a worker,
     /// one node per instance at the level; a schematic activation runs the

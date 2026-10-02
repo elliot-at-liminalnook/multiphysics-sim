@@ -313,6 +313,8 @@ pub enum CadAction {
     /// calibrate tool and the linked system file with Open in builder
     /// (`references`).
     CadReferences(super::references::ReferencesArgs),
+    CadComponents(super::components::ComponentsArgs),
+    CadComposition(super::composition::CadCompositionArgs),
     /// `system_ui` in CAD mode: `{action: {operation: controls | activate, id?, ui_revision?}}`.
     SystemUi(Map<String, Value>),
 }
@@ -354,6 +356,7 @@ pub(super) fn apply(
     (mut display, mut views, mut files): (Option<ResMut<super::display::CadDisplay>>, Option<ResMut<super::views::CadViews>>, Option<ResMut<super::files::CadFiles>>),
     camera_out: Option<ResMut<Messages<Act<crate::camera::CameraAction>>>>,
     (mut selection, mut registry): (ResMut<Selection>, ResMut<DocumentRegistry>),
+    (mut components, mut composition): (ResMut<super::components::ComponentsState>, ResMut<super::composition::CadCompositionState>),
 ) {
     let Some(mut doc) = doc else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("CAD mode has no document open".into())));
@@ -376,6 +379,8 @@ pub(super) fn apply(
             display: display.as_deref_mut(),
             views: views.as_deref_mut(),
             files: files.as_deref_mut(),
+            components: &mut *components,
+            composition: &mut *composition,
             camera: Vec::new(),
         };
         let outcome = handle(action, call, &mut cx);
@@ -422,6 +427,8 @@ pub(super) struct Cx<'a> {
     pub views: Option<&'a mut super::views::CadViews>,
     /// The file dialogs, exports and renders in flight.
     pub files: Option<&'a mut super::files::CadFiles>,
+    pub components: &'a mut super::components::ComponentsState,
+    pub composition: &'a mut super::composition::CadCompositionState,
     /// Camera intents a CAD command stands for (a named view, ortho, a
     /// saved view's restore), written as `Act<CameraAction>` after the
     /// handler (the shared camera applies them).
@@ -437,7 +444,7 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
     let done = |r: Result<Value, String>| Outcome::Done(r);
     let doc = &mut *cx.doc;
     match action {
-        CadAction::State | CadAction::CadState => done(Ok(state_json(doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref())))),
+        CadAction::State | CadAction::CadState => done(Ok(state_json(doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref()).authoring(cx.components, cx.composition)))),
         CadAction::CadOpen { path, url } => done(open(doc, &mut cx.shared, path.as_ref(), url.as_deref())),
         CadAction::CadSelect { .. }
         | CadAction::CadSelectMode { .. }
@@ -489,10 +496,19 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
             Err(e) => done(Err(e)),
         },
         CadAction::CadCommand { id } => {
+            if let Some(action) = super::components::command_action(id) {
+                return handle(&action, call, cx);
+            }
             let id = id.clone();
             edit(doc, call, format!("Command {id}"), move |c| c.run_command(&id).map(|r| EditDone { message: format!("Ran RoboCAD command {}", r.ran), result: value(&r) }))
         }
         CadAction::CadOp { name, args, kwargs } => {
+            if ["create_component_family", "link_component_family", "create_component", "make_component", "new_parametric_component", "place_component", "set_component_parameters", "set_component_overrides", "detach_component", "import_component", "export_component", "transform_components"].contains(&name.as_str()) {
+                return done(Err(format!("{name}: use the typed cad_components operation so rebuild progress and cancellation remain tracked")));
+            }
+            if name == "set_component_graph" {
+                return done(Err("set_component_graph: use cad_composition so source identities and typed connections are validated".into()));
+            }
             let (name, args, kwargs) = (name.clone(), args.clone(), kwargs.clone());
             edit(doc, call, format!("Op {name}"), move |c| c.op(&name, &args, &kwargs).map(|r| EditDone { message: format!("Ran {name}"), result: value(&r) }))
         }
@@ -512,6 +528,8 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         CadAction::CadTree(_) => super::tree::handle(action, call, cx),
         CadAction::CadThreads(_) => super::threads::handle(action, call, cx),
         CadAction::CadReferences(_) => super::references::handle(action, call, cx),
+        CadAction::CadComponents(args) => super::components::handle(args, call, cx),
+        CadAction::CadComposition(args) => super::composition::handle(args, call, cx),
         CadAction::SystemUi(args) => system_ui(call, cx, args),
     }
 }
@@ -684,6 +702,8 @@ fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Result<(), String>)> {
     out.extend(super::tree::controls(cx));
     out.extend(super::threads::controls(cx));
     out.extend(super::references::controls(cx));
+    out.extend(super::components::controls(cx));
+    out.extend(super::composition::controls_of(cx.doc, cx.composition));
     out
 }
 
@@ -698,7 +718,7 @@ fn system_ui(call: &mut Call, cx: &mut Cx, args: &Map<String, Value>) -> Outcome
                 .into_iter()
                 .map(|(id, label, action, ready)| json!({"id": id, "label": label, "enabled": ready.is_ok(), "disabled_reason": ready.err(), "action": super::rest_form::rest_form(&action)}))
                 .collect();
-            Outcome::Done(Ok(json!({"ui_revision": cx.doc.revision, "ready": true, "controls": items, "state": state_json(cx.doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref()))})))
+            Outcome::Done(Ok(json!({"ui_revision": cx.doc.revision, "ready": true, "controls": items, "state": state_json(cx.doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref()).authoring(cx.components, cx.composition))})))
         }
         Some("activate") => {
             let Some(id) = action["id"].as_str() else { return Outcome::Done(Err("system_ui activate needs an id; request controls".into())) };

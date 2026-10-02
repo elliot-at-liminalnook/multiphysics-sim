@@ -101,6 +101,9 @@ pub struct CadDocument {
     pub references: super::references::ReferencesState,
     /// The mutating request in flight.
     pub edit: Option<Edit>,
+    /// Service-owned component preparation held by the persistent components
+    /// feature. Blocks source edits and document replacement until acknowledged.
+    pub component_busy: Option<String>,
     /// The latest outcome line (Ok message or the refusal / error).
     pub status: Option<Result<String, String>>,
     /// Bumped whenever anything the panels show changes.
@@ -208,6 +211,7 @@ impl CadDocument {
             threads: Default::default(),
             references: Default::default(),
             edit: None,
+            component_busy: None,
             status: None,
             revision: 0,
             connect: None,

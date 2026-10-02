@@ -482,6 +482,9 @@ class Service:
         from .experiments import RevisionConflict
         try:
             with self.doc._lock:
+                identity = (query or {}).get('document_id') if method == 'DELETE' else body.get('document_id')
+                if method != 'GET' and identity is not None and identity != self.doc.document_id:
+                    raise RevisionConflict('system.document_id: document changed; draft preserved')
                 imported = ()
                 if imported_check is not None:
                     if imported_check['document_id'] != self.doc.document_id or imported_check['revision'] != self.doc.revision:
@@ -507,7 +510,9 @@ class Service:
                     elif method == 'DELETE' and len(parts) == 3:
                         operation = {'action': 'delete_component' if section == 'components' else 'delete_connection', 'id': parts[2]}
                     else: raise ApiError(405, 'Unsupported system edit')
-                    return edit_graph(self.doc, self.ops, operation, expected, self.experiments.catalogue(), imported)
+                    result = edit_graph(self.doc, self.ops, operation, expected, self.experiments.catalogue(), imported)
+                    result['document_id'] = self.doc.document_id
+                    return result
                 if method == 'PUT':
                     check_revision(self.doc, body.get('expected_revision'))
                     from .component_graph import validate_graph, RegistryView
@@ -518,7 +523,7 @@ class Service:
                     self.ops.set_component_graph(graph)
                 elif method != 'GET':
                     raise ApiError(405, 'Use GET or PUT for the document system graph')
-                return {'revision': self.doc.revision, 'graph': deepcopy(self.doc.component_graph)}
+                return {'revision': self.doc.revision, 'document_id': self.doc.document_id, 'graph': deepcopy(self.doc.component_graph)}
         except RevisionConflict as error: raise ApiError(409, str(error))
         except KeyError as error: raise ApiError(404, str(error))
         except (KernelError, ValueError, TypeError) as error: raise ApiError(422, str(error))

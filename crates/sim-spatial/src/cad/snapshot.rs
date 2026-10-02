@@ -17,10 +17,17 @@ pub(in crate::cad) struct Parts<'a> {
     display: Option<&'a super::display::CadDisplay>,
     views: Option<&'a super::views::CadViews>,
     files: Option<&'a super::files::CadFiles>,
+    components: Option<&'a super::components::ComponentsState>,
+    composition: Option<&'a super::composition::CadCompositionState>,
 }
 impl<'a> Parts<'a> {
     pub(in crate::cad) fn of(display: Option<&'a super::display::CadDisplay>, views: Option<&'a super::views::CadViews>, files: Option<&'a super::files::CadFiles>) -> Self {
-        Self { display, views, files }
+        Self { display, views, files, components: None, composition: None }
+    }
+    pub(in crate::cad) fn authoring(mut self, components: &'a super::components::ComponentsState, composition: &'a super::composition::CadCompositionState) -> Self {
+        self.components = Some(components);
+        self.composition = Some(composition);
+        self
     }
 }
 
@@ -103,6 +110,8 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem],
     state["tree"] = super::tree::state_json(doc);
     state["threads"] = super::threads::state_json(doc);
     state["references"] = super::references::state_json(doc);
+    state["components"] = parts.components.map_or(Value::Null, |s| super::components::state_json(doc, s));
+    state["composition"] = parts.composition.map_or(Value::Null, |s| super::composition::state_json(doc, s));
     state
 }
 
@@ -117,10 +126,11 @@ pub(in crate::cad) fn publish(
     views: Option<Res<super::views::CadViews>>,
     files: Option<Res<super::files::CadFiles>>,
     selection: CadSelection,
+    (components, composition): (Res<super::components::ComponentsState>, Res<super::composition::CadCompositionState>),
 ) {
     let (Some(mut rest), Some(doc)) = (rest, doc) else { return };
     if rest.0.snapshot_due() {
-        let state = state_json(&doc, &selection.items(), meshes.as_deref(), plane.as_deref(), Parts::of(display.as_deref(), views.as_deref(), files.as_deref()));
+        let state = state_json(&doc, &selection.items(), meshes.as_deref(), plane.as_deref(), Parts::of(display.as_deref(), views.as_deref(), files.as_deref()).authoring(&components, &composition));
         let mut shown = state.clone();
         shown["viewer_mode"] = json!(ViewerMode::Cad.name());
         rest.0.publish("cad_state", state);

@@ -30,6 +30,8 @@
 //! - **No file writes by accident**: [`CadClient::physical`] never passes
 //!   `path` (RoboCAD would write the description to that file).
 pub mod files;
+pub mod components;
+pub mod composition;
 pub mod organize;
 pub mod physical;
 pub mod print;
@@ -45,6 +47,8 @@ pub mod types;
 pub mod views;
 #[cfg(test)]
 mod files_tests;
+#[cfg(test)]
+mod components_tests;
 #[cfg(test)]
 mod organize_tests;
 #[cfg(test)]
@@ -72,6 +76,7 @@ pub use sketch::{PlaneFrame, SKETCH_CALLS, SketchCall, SketchCurve, SketchGeomet
 pub use types::*;
 // cad-views-export: saved views, sections, files/export/render.
 pub use files::*;
+pub use components::*;
 pub use physical::*;
 pub use print::*;
 // cad-organize: threads, the outliner's organization, references, the linked system file.

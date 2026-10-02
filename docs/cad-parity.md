@@ -59,18 +59,12 @@ is written in full; a backticked symbol after a path is in that file.
 
 **Status legend.**
 
-- `done-by-reading`: the cad-mode, cad-select-transform, cad-modify,
-  cad-sketch, cad-views-export, cad-physical-inspect, cad-print or
-  cad-organize epic implements it (native-viewer.md, CAD mode section;
-  "CAD selection and transform"; "CAD modify"; "CAD sketch"; "Shared
-  camera and CAD views"; "CAD physical properties"; "CAD print"; "CAD
-  organize"). It is built and tested in that epic's verification pass
-  (still to come for cad-physical-inspect, cad-print and cad-organize) and moves to `done` only when the user's checklist
-  ([cad-checklist.md](cad-checklist.md)) passes. Nothing is `done` yet: no
-  epic's checklist has been signed off (cad-sketch was verified at
-  cc7ac194 and cad-views-export at bcf0c56c), and none of
-  cad-physical-inspect, cad-print and cad-organize has been through its
-  verification pass.
+- `done-by-reading`: implementation has a source trace. Historical executed
+  verification is recorded separately for the earlier epics;
+  cad-physical-inspect, cad-print, one-text-entry, cad-organize,
+  public-system-sets and cad-components remain uncompiled. This batch ran no
+  checks of behavior. Rows move to `done` only when the user's checklist
+  ([cad-checklist.md](cad-checklist.md)) passes. No checklist has been signed off.
 - `later-epic: <name>`: owned by a later CAD epic (see "Epics" below).
   No row of an epic that has been worked is left open: every
   `later-epic` row names an epic not yet started.
@@ -199,12 +193,14 @@ Its one new route in `api.py` (`GET /nodes/{id}/image`,
 `cad/tests/test_api_reference_image.py`) adds one row to the REST routes
 table (`done-by-reading`) and closes two flagged rows and two gaps: the
 reference image pixels in the viewport and in the list's preview (the
-same data). The geometry-rule row stays flagged under cad-components.
+same data). The geometry-rule gap was closed by T42’s authoritative recipe metadata route.
 
-**Every Ops method is already reachable natively, but only by REST.** The
-`cad_op` REST command (`CadAction::CadOp` → `CadClient::op`) can call any
-`POST /ops/{name}` in this epic. "Later epic" rows mean the *viewer UI* for
-the feature is later, not that it cannot be reached at all.
+**Ops compatibility and typed authoring.** `cad_op` reaches compatible Ops
+through `CadClient::op`. Since T42, reusable component mutations are refused
+there with a named instruction to use typed `cad_components`, which tracks
+preparation and cancellation. `set_component_graph` uses typed `cad_composition`
+and shared graph validation. Direct service/browser reference routes remain.
+A route alone does not establish native workflow parity.
 
 ## File and document
 
@@ -707,19 +703,19 @@ that difference.
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "Components library" dock (`components.show`; category "Window", which has no menu, so it lands in Help) | ui/app.py:362, ui/components.py:93-131 | `GET /components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| Definitions "name · rN · n placed"; "Find a component…" | ui/components.py:102-105, ui/components.py:133-136, ui/components.py:184-197 | `GET /components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| "Make from selection" (and "Make linked component…", `components.make`) | ui/app.py:363, ui/components.py:107, ui/components.py:224-226 | `POST /ops/make_component` (GUI: a job, `{"job"}`) | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| "New parametric…" (box or cylinder) | ui/components.py:107, ui/components.py:228-230 | `POST /ops/new_parametric_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| "Place…" (Name, Origin, Rotation around Z, Variant, port bindings) | ui/components.py:109, ui/components.py:232-249 | `POST /ops/place_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| "Edit defaults…" (tabs Parameters with Name/Default/Unit/Min/Max/Provenance/Description; "Geometry and joints" JSON; "Nested parameters"; "Family variants") | ui/components.py:22-90, ui/components.py:251-255 | `POST /ops/set_component_parameters` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| "Import…", "Save to library…", saved library list, "Choose folder…", "Import selected" (`~/Documents/RoboCAD/Components`) | ui/components.py:111-115, ui/components.py:278-295 | `POST /ops/import_component`, `POST /ops/export_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| "Occurrence" tab: overrides table (Parameter, Current, Override, Value), "Occurrence origin (mm)", "Apply occurrence", "Reset to inherited", "Detach outer occurrence" | ui/components.py:117-124, ui/components.py:199-276 | `POST /ops/set_component_overrides`, `POST /ops/detach_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| Rebuild progress and "Cancel rebuild" | ui/components.py:125-182 | `GET/DELETE /component-jobs/{id}` (GUI only) | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| System graph: type chooser and "New"; imports from a check ("Use existing", "Check") | ui/system_graph.py:114-141, ui/system_graph.py:207-258, ui/system_graph.py:352-361 | `GET /experiments/catalogue`, `GET /experiments/{id}/components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| Component form: Name, CAD body, "Bind existing", "Specific heat · J/(kg·K)", "Fluid direction", "Attach to selected CAD body", parameters table, "+ Parameter", "Apply", "Remove" | ui/system_graph.py:143-175, ui/system_graph.py:377-412 | `GET /system`, `POST /system/components`, `PATCH /system/components/{id}`, `DELETE /system/components/{id}` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| "Geometry rule" choices and their derived outputs ("Derived from CAD") | ui/system_graph.py:154-155, ui/system_graph.py:414-429 | none: needs a Python route (`component_derivation.RECIPES` is not served) | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| Connection graph: "Overview", "Focus selected", "−"/"+", click ports to connect, "Leave port open", "Remove connection" | ui/system_graph.py:12-112, ui/system_graph.py:179-196, ui/system_graph.py:431-459 | `POST /system/connections`, `DELETE /system/connections/{id}` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| "Components library" dock (`components.show`; category "Window", which has no menu, so it lands in Help) | ui/app.py:362, ui/components.py:93-131 | `GET /components` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| Definitions "name · rN · n placed"; "Find a component…" | ui/components.py:102-105, ui/components.py:133-136, ui/components.py:184-197 | `GET /components` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| "Make from selection" (and "Make linked component…", `components.make`) | ui/app.py:363, ui/components.py:107, ui/components.py:224-226 | `POST /ops/make_component` (service-owned job, `{"job"}`) | `cad/components/jobs.rs:tick` (persistent `Job` start/status/cancel) → typed `cad_client::components` → RoboCAD `component_service.ComponentJobService` → `ComponentJob.commit`; Qt observes the same owner; no required Qt panel | done-by-reading |
+| "New parametric…" (box or cylinder) | ui/components.py:107, ui/components.py:228-230 | `POST /ops/new_parametric_component` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| "Place…" (Name, Origin, Rotation around Z, Variant, port bindings) | ui/components.py:109, ui/components.py:232-249 | `POST /ops/place_component` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| "Edit defaults…" (tabs Parameters with Name/Default/Unit/Min/Max/Provenance/Description; "Geometry and joints" JSON; "Nested parameters"; "Family variants") | ui/components.py:22-90, ui/components.py:251-255 | `POST /ops/set_component_parameters` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| "Import…", "Save to library…", saved library list, "Choose folder…", "Import selected" (`~/Documents/RoboCAD/Components`) | ui/components.py:111-115, ui/components.py:278-295 | `POST /ops/import_component`, `POST /ops/export_component` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | deliberately different: service-host folder/path kit fields and file list replace Qt file dialogs; import/export use the same guarded worker |
+| "Occurrence" tab: overrides table (Parameter, Current, Override, Value), "Occurrence origin (mm)", "Apply occurrence", "Reset to inherited", "Detach outer occurrence" | ui/components.py:117-124, ui/components.py:199-276 | `POST /ops/set_component_overrides`, `POST /ops/detach_component` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | deliberately different: native fields retain and label unevaluated expressions; computed Current values remain reference-only (no native geometry/expression evaluator) |
+| Rebuild progress and "Cancel rebuild" | ui/components.py:125-182 | `GET/DELETE /component-jobs/{id}` (headless and Qt) | `cad/components/jobs.rs:tick` (persistent `Job` start/status/cancel) → typed `cad_client::components` → RoboCAD `component_service.ComponentJobService` → `ComponentJob.commit`; Qt observes the same owner; no required Qt panel | done-by-reading |
+| System graph: type chooser and "New"; imports from a check ("Use existing", "Check") | ui/system_graph.py:114-141, ui/system_graph.py:207-258, ui/system_graph.py:352-361 | `GET /experiments/catalogue`, `GET /experiments/{id}/components` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::{adapter,validate_port_schemas}` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_checked` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | deliberately different: native reads an existing completed check ID; creating/checking experiments remains cad-experiments-motion, requiring the external runner/reference workflow |
+| Component form: Name, CAD body, "Bind existing", "Specific heat · J/(kg·K)", "Fluid direction", "Attach to selected CAD body", parameters table, "+ Parameter", "Apply", "Remove" | ui/system_graph.py:143-175, ui/system_graph.py:377-412 | `GET /system`, `POST /system/components`, `PATCH /system/components/{id}`, `DELETE /system/components/{id}` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::{adapter,validate_port_schemas}` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_checked` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
+| "Geometry rule" choices and their derived outputs ("Derived from CAD") | ui/system_graph.py:154-155, ui/system_graph.py:414-429 | `GET /component-recipes` (`component_derivation.RECIPES`, including input constraints) | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::{adapter,validate_port_schemas}` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_checked` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
+| Connection graph: "Overview", "Focus selected", "−"/"+", click ports to connect, "Leave port open", "Remove connection" | ui/system_graph.py:12-112, ui/system_graph.py:179-196, ui/system_graph.py:431-459 | `POST /system/connections`, `DELETE /system/connections/{id}` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::{adapter,validate_port_schemas}` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_checked` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | deliberately different: shared routed graph plus typed port/connection controls replace Qt scene gestures; physical nets stay multi-terminal and layout is display-only |
 
 ## References
 
@@ -786,14 +782,14 @@ calls. Who uses each route, by reading:
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
 | Health: ok, app, version, path, dirty, gui, nodes, document_id, revision (client: base URL) | api.py:1109-1110, api.py:387-388 | `GET /` | `CadClient::health` (`cad::sync` poll; `service::wait_until_live`) | done-by-reading |
-| System graph and revision (client) | api.py:1112-1113, api.py:413-448 | `GET /system` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| Replace the system graph (expected_revision; client) | api.py:442-445 | `PUT /system` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| Read components or connections | api.py:423-425 | `GET /system/{components\|connections}[/{id}]` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| Add a system component (client) | api.py:432-433 | `POST /system/components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| Update a system component (client) | api.py:434-435 | `PATCH /system/components/{id}` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| Delete a system component (`?expected_revision=`; client) | api.py:426-430, api.py:436-437 | `DELETE /system/components/{id}` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| Connect ports (client) | api.py:432-433 | `POST /system/connections` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| Remove a connection (client) | api.py:436-437 | `DELETE /system/connections/{id}` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| System graph and revision (client) | api.py:1112-1113, api.py:413-448 | `GET /system` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::{adapter,validate_port_schemas}` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_checked` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
+| Replace the system graph (expected_revision; client) | api.py:442-445 | `PUT /system` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::{adapter,validate_port_schemas}` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_checked` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
+| Read components or connections | api.py:423-425 | `GET /system/{components\|connections}[/{id}]` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::{adapter,validate_port_schemas}` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_checked` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
+| Add a system component (client) | api.py:432-433 | `POST /system/components` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::{adapter,validate_port_schemas}` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_checked` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
+| Update a system component (client) | api.py:434-435 | `PATCH /system/components/{id}` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::{adapter,validate_port_schemas}` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_checked` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
+| Delete a system component (`?expected_revision=`; client) | api.py:426-430, api.py:436-437 | `DELETE /system/components/{id}` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::{adapter,validate_port_schemas}` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_checked` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
+| Connect ports (client) | api.py:432-433 | `POST /system/connections` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::{adapter,validate_port_schemas}` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_checked` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
+| Remove a connection (client) | api.py:436-437 | `DELETE /system/connections/{id}` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::{adapter,validate_port_schemas}` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_checked` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
 | Run a repository model script as one undo step (client) | api.py:1114-1115, api.py:483-510 | `POST /doc/script` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | Print registry: printers and materials | api.py:1116-1119, api.py:269-274 | `GET /print/registry` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_registry` (`Ordered` keeps the registry's order); read once per connection generation in `cad/print/studies.rs:tick` | done-by-reading |
 | Print study and split groups (read-only; 405 otherwise) | api.py:312-318 (`Service.print_request`) | `GET /print/study` (added with cad-print: `revision`, `robot_settings["print_study"]` or null, and the split group ids in tree order; pytests `cad/tests/test_api_print_routes.py`) | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_study`; read per (generation, shown revision) in `cad/print/studies.rs:tick` | done-by-reading |
@@ -864,9 +860,9 @@ calls. Who uses each route, by reading:
 | RoboCAD's camera and display state (headless `{}`) | api.py:1190-1191, api.py:747-752 | `GET /view` | the viewer's own camera (`cad::scene`) | deliberately different: the native view is the viewer's own; RoboCAD's `/view` describes only RoboCAD's window |
 | Set RoboCAD's camera and display (409 "no GUI: /view needs the app" headless) | api.py:1192, api.py:754-793 | `PUT /view` | the viewer's own camera | deliberately different: the native camera is not RoboCAD's |
 | Fit RoboCAD's camera | api.py:1188-1189 | `POST /view/fit` | `CadAction::CadFit` (native camera) | deliberately different: `cad_fit` frames the viewer's camera and leaves RoboCAD's alone |
-| Component catalogue | api.py:1193-1194, components.py:648-650 | `GET /components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| Component job status | api.py:1195-1196, api.py:713-717 | `GET /component-jobs/{id}` (GUI only) | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| Cancel a component job | api.py:1195-1196, api.py:713-717 | `DELETE /component-jobs/{id}` (GUI only) | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| Component catalogue | api.py:1193-1194, components.py:648-650 | `GET /components` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| Component job status | api.py:1195-1196, api.py:713-717 | `GET /component-jobs/{id}` (headless and Qt) | `cad/components/jobs.rs:tick` (persistent `Job` start/status/cancel) → typed `cad_client::components` → RoboCAD `component_service.ComponentJobService` → `ComponentJob.commit`; Qt observes the same owner; no required Qt panel | done-by-reading |
+| Cancel a component job | api.py:1195-1196, api.py:713-717 | `DELETE /component-jobs/{id}` (headless and Qt) | `cad/components/jobs.rs:tick` (persistent `Job` start/status/cancel) → typed `cad_client::components` → RoboCAD `component_service.ComponentJobService` → `ComponentJob.commit`; Qt observes the same owner; no required Qt panel | done-by-reading |
 | Pose panel state | api.py:1197-1198, api.py:315 | `GET /motion` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | Motion programs | api.py:296-297 | `GET /motion/programs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
 | Save a motion program | api.py:298 | `POST /motion/programs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
@@ -929,7 +925,7 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
 | `configure_robot` (assembly metadata and connectors as one edit) | commands.py:257 | `POST /ops/configure_robot` | the catalogue's `ops.configure_robot` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::configure_robot` | done-by-reading |
-| `set_component_graph` | commands.py:262 | `POST /ops/set_component_graph` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `set_component_graph` | commands.py:262 | `POST /ops/set_component_graph` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::{adapter,validate_port_schemas}` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_checked` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
 | `print_split` | commands.py:299 | `POST /ops/print_split` | the catalogue's REST-only `ops.print_split` (`cad/ops/catalogue/print.rs`: Printer, Joints; one undo step, no job); `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_split_op` | done-by-reading |
 | `undo` | commands.py:305 | `POST /undo` | `CadAction::CadUndo` | done-by-reading |
 | `redo` | commands.py:308 | `POST /redo` | `CadAction::CadRedo` | done-by-reading |
@@ -1052,19 +1048,19 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `add_comment` | annotations.py:276 | `POST /threads/{id}/comments` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::add_comment` from `cad/threads/source.rs` `Request::send` | done-by-reading |
 | `update_comment` | annotations.py:284 | `PATCH /comments/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::update_comment` from `cad/threads/source.rs` `Request::send` | done-by-reading |
 | `delete_comment` | annotations.py:287 | `DELETE /comments/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::delete_comment` from `cad/threads/source.rs` `Request::send` | done-by-reading |
-| `transform_components` | components.py:490 | `POST /ops/transform_components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| `make_component` | components.py:515 | `POST /ops/make_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| `create_component_family` | components.py:541 | `POST /ops/create_component_family` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| `link_component_family` | components.py:554 | `POST /ops/link_component_family` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| `new_parametric_component` | components.py:566 | `POST /ops/new_parametric_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| `export_component` | components.py:593 | `POST /ops/export_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| `import_component` | components.py:612 | `POST /ops/import_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| `component_catalogue` | components.py:648 | `GET /components` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| `create_component` | components.py:652 | `POST /ops/create_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| `place_component` | components.py:658 | `POST /ops/place_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| `set_component_parameters` | components.py:677 | `POST /ops/set_component_parameters` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| `set_component_overrides` | components.py:715 | `POST /ops/set_component_overrides` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
-| `detach_component` | components.py:735 | `POST /ops/detach_component` | cad-components epic (shares `sim_system`'s graph types with Build mode and needs its own design; deferred from cad-organize by the Director 2026-10-01) | later-epic: cad-components |
+| `transform_components` | components.py:490 | `POST /ops/transform_components` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| `make_component` | components.py:515 | `POST /ops/make_component` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| `create_component_family` | components.py:541 | `POST /ops/create_component_family` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| `link_component_family` | components.py:554 | `POST /ops/link_component_family` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| `new_parametric_component` | components.py:566 | `POST /ops/new_parametric_component` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| `export_component` | components.py:593 | `POST /ops/export_component` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| `import_component` | components.py:612 | `POST /ops/import_component` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| `component_catalogue` | components.py:648 | `GET /components` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| `create_component` | components.py:652 | `POST /ops/create_component` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| `place_component` | components.py:658 | `POST /ops/place_component` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| `set_component_parameters` | components.py:677 | `POST /ops/set_component_parameters` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| `set_component_overrides` | components.py:715 | `POST /ops/set_component_overrides` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
+| `detach_component` | components.py:735 | `POST /ops/detach_component` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
 
 ## Keymap
 
@@ -1169,7 +1165,11 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 
 ## Counts
 
-Recounted from the tables above (2026-10-01, after the cad-organize
+Recounted after cad-components: 38 rows become 34 done-by-reading and four
+deliberately different; none remains later-epic: cad-components. Total remains
+775. Source review only; no parity or fixture execution.
+
+Historical recount from the tables (2026-10-01, after the cad-organize
 epic, by reading against its code (nothing compiled): of its 108 rows,
 38 moved to `later-epic: cad-components`, 44 became `done-by-reading`
 and 26 `deliberately different`; none stays open; one row was added,
@@ -1238,16 +1238,15 @@ changes were the four outliner context-menu rows above.
 | Status | Rows |
 |---|---|
 | done | 0 |
-| done-by-reading | 506 |
-| later-epic | 101 |
-| deliberately different | 168 |
+| done-by-reading | 540 |
+| later-epic | 63 |
+| deliberately different | 172 |
 | **total** | **775** |
 
 | Later epic | Rows |
 |---|---|
-| cad-components | 38 |
 | cad-experiments-motion | 63 |
-| **total** | **101** |
+| **total** | **63** |
 
 Some rows repeat a feature from another angle: as a UI feature, as a REST
 route, as an Ops method and as a key. The ledger checks each of those
@@ -1503,3 +1502,42 @@ service is stopped and reaped. An attached RoboCAD is never stopped.
   - "Open in builder" starts a second `sim-spatial` process
     (ui/references.py:119-130). The native viewer switches its own
     window to Build mode instead.
+
+## cad-components (T42, 2026-10-01; source review only)
+
+All 38 formerly deferred component rows above now name their actual consumers.
+No fixture, native binary or parity harness was executed in this batch. These
+statuses record written behavior assessed by reading, not signed-off exact parity.
+Python/OCCT and the existing native registry runner remain dependencies. Qt is
+not required for reusable component preparation, polling, cancellation or undo
+publication. Experiment creation/check execution remains an external workflow
+until cad-experiments-motion; importing completed check metadata does not run it.
+
+Deliberate differences: service-host path fields replace Qt file dialogs; library
+and occurrence forms are dock sections; parameter expressions are explicitly
+unevaluated (RoboCAD alone evaluates dimensional expressions and rebuilds solids);
+graph ports are typed controls accompanying shared routed presentation. Retained
+drafts have Resume controls, and stale drafts are refused rather than rebased
+without consent. Legacy Python/Qt and browser references remain available.
+
+Component recipes and library discovery are read-only authoritative metadata
+routes. Component start carries document ID and expected revision; the service
+checks both again before its one ComponentChange undo commit. Export uses a
+staged archive and guarded atomic publication. The native document guard blocks
+other source edits and replacement while tracked component work is active.
+Cancellation cannot undo a commit that the service already accepted. A lost POST
+reply is recovered by nonpublishing status discovery, never retried as another
+mutation; cancellation repeats DELETE until terminal.
+
+Graph storage adapters preserve the version-1 CAD envelope; they do not pretend
+it is a hierarchical sim.system document. Geometry recipes/body bindings remain
+source-owned. Shared composition validation also feeds Build's Resolver, and
+shared projection/layout and native route drawing feed both real graph consumers.
+
+Source repair controls retain invalid-adaptation graphs and their diagnostics; a
+complete replacement is also available as a retained native kit draft. Graph
+Resume/Copy preserve rejected configurations. Pan/arrange are temporary display
+choices. `/system` identity guards are an additive wire compatibility field, not
+a persisted schema change. Body links remain in the CAD envelope; no artifact
+digest is invented for disposable inspection snapshots. Custom connector types
+without authoritative registry descriptors fail with path-named errors.

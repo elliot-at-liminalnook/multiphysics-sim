@@ -415,6 +415,33 @@ verification pass yet**.
 | CAD-195 Link, Accept, Unlink | **Link system file…**: `<system>` in the path form, OK; edit `<system>` on disk (e.g. change its title); **Accept changes**; **Unlink** | **Link system file…** (file dialog), the same edit, **Accept changes**, **Unlink** | The same status line in both after each: "System: title · revision n · n definitions", "· CHANGED since linked (was revision r)" after the edit, back without it after Accept, "none linked" after Unlink; each one RoboCAD undo step |
 | CAD-196 Open in builder | Link `<system>` again; **Open in builder**; then unlink and press it again | **Open in builder** | The viewer switches this window to Build mode on `<system>` (no new process; RoboCAD starts a second `sim-spatial --system … --schematic`: recorded); leaving CAD follows the usual rule (refused over unsaved edits of a self-started service); with no system linked both refuse "Link an existing system file first" |
 
+## Part J: reusable components and composition (cad-components, T42)
+
+Written acceptance sequence, **not executed or signed off**. Use the native
+CAD window on an editable copy of a real `.rcad`; Python/OCCT remains the kernel.
+These checks do not substitute for the parity harness.
+
+| Step | Native workflow | Reference/observable acceptance |
+|---|---|---|
+| CAD-197 Library and find | Components; find a definition | Names, definition revision and occurrence count match GET /components and RoboCAD |
+| CAD-198 Capture/parametric | Select bodies; Make from selection; separately New parametric box/cylinder | Matching identity relationships and recipe defaults; preserved IDs across native/service serialization (independent captures may generate different fresh IDs); one ComponentChange undo; headless service needs no Qt |
+| CAD-199 Place twice | Place the captured definition twice with name, origin, Z angle, variant and typed bindings | Distinct occurrence IDs; definition identity shared; binding kinds match source ports |
+| CAD-200 Defaults/nesting | Edit defaults including units, bounds, provenance, recipes, nested maps and family variants | Rebuild updates inherited occurrences; local branch overrides win; rejected draft remains resumable |
+| CAD-201 Overrides/reset | Select a linked part/nested occurrence; edit override and origin; disable/reset override | Correct branch node_map target; nested movement refused; reset inherits; native expression text labelled unevaluated |
+| CAD-202 Detach/transform | Detach outer occurrence; rigidly transform top-level occurrence | Undo restores links; member transform restrictions match source |
+| CAD-203 Progress/cancel | Start rebuild then Cancel, including while POST is pending | Durable cancellation; queued ready cannot commit after accepted cancel; already-applied commit is reported truthfully |
+| CAD-204 Stale/network | Mutate source externally during preparation; interrupt start response | Revision refusal preserves edit; status-list recovery adopts only captured operation/document/revision; POST never resent |
+| CAD-205 Graph forms | System composition; choose type, body, parameters and geometry rule | Authoritative metadata/units/input bounds; derived output cannot also be explicit; layout never edits physical geometry |
+| CAD-206 Imported bindings | Read an existing completed check ID; bind existing imported component | Imported port names and type preserved; graph-only edits may stale results while structural metadata remains current; physical edits refuse stale metadata |
+| CAD-207 Typed nets | Connect/open/remove ports; add third physical terminal; focus/overview/zoom | One shared net with all terminals and preserved ID; Rust and source reject incompatible schemas; presentation is display-only |
+| CAD-208 Save/library | Save document; choose folder; export/import .rcomp | Preserved source identities/provenance; cancelled/stale export leaves existing destination intact |
+| CAD-209 Draft/mode | Close/resume rejected draft; switch/reopen while rebuild active | Draft retained; active work blocks document replacement/mode exit until terminal; stale retained draft refused |
+
+Creating/running a check remains cad-experiments-motion and requires the external
+runner/reference workflow. Native expression fields do not provide RoboCAD's
+computed Current-value table. Path fields, dock sections and graph port controls
+are deliberate presentation differences, so this sequence cannot claim exact parity.
+
 ## Known differences (deliberate)
 
 - RoboCAD asks Save/Discard/Cancel when closing; the viewer never saves for
@@ -547,3 +574,20 @@ verification pass yet**.
 
 When every step passes, record it in the coordination journal; the ledger's
 `done-by-reading` rows then become `done`.
+
+
+## T42 batch evidence IDs (source review; execution unverified)
+
+| Required ID | Reading evidence |
+| --- | --- |
+| cad-components:outcome-1 | `cad/components/{form,validate,ui}.rs`, typed `cad_client/components.rs`, authoritative `components.py` |
+| cad-components:outcome-2 | `component_service.py`, `component_jobs.py`, API routes and Qt delegation; `cad/components/jobs.rs` |
+| cad-components:outcome-3 | `sim-system/composition*`, Resolver, `sim-diagram/composition.rs`, CAD/Build shared route presentation |
+| cad-components:outcome-4 | All 38 component ledger rows mapped; current inventory and architecture T42 trace |
+| cad-components:task-T42.1 | Shared typed payloads; headless service owner; component/import/recipe metadata routes and fixtures |
+| cad-components:task-T42.2 | Native library/occurrence dock, kit forms, selection and durable jobs/recovery/refusal paths |
+| cad-components:task-T42.3 | Explicit source envelope adaptation, shared validation/layout and guarded graph commands |
+| cad-components:task-T42.4 | Independent reading reviews, written windowless/fake-service fixtures, Part J and architecture trace |
+
+These IDs describe implementation and reading evidence. Part J, compilation and
+exact reference parity remain unexecuted; no historical receipt is replaced.

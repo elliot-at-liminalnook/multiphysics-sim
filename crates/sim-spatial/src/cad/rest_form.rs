@@ -74,6 +74,7 @@ pub(in crate::cad) fn rest_form(action: &CadAction) -> Value {
         CadAction::CadTree(a) => tagged("cad_tree", a),
         CadAction::CadThreads(a) => tagged("cad_threads", a),
         CadAction::CadReferences(a) => tagged("cad_references", a),
+        CadAction::CadComponents(a) => tagged("cad_components", a),
+        CadAction::CadComposition(a) => tagged("cad_composition", a),
     }
 }
-

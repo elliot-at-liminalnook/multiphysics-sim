@@ -715,6 +715,41 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   `system_snap` on a compatible port, then `system_state` shows the new
   instance and a net. `system_undo` restores the previous revision.
 
+**CAD components update (T42, 2026-10-01; reading evidence only).** The
+native entry is CAD → Components and System composition; `components.show` and
+`components.make` now resolve to typed `CadComponents` actions. The library dock
+finds embedded definitions, authors parametric definitions/families/defaults and
+nested mappings, places linked occurrences with typed bindings, edits branch
+overrides, resets, detaches and rigidly transforms occurrences, and imports or
+exports `.rcomp` libraries through service-host kit path fields.
+
+Reusable layers: `sim_runtime::cad_client::{components,composition}`,
+`sim_system::composition` (explicit CAD envelope/adapter and shared port
+validation), `sim_diagram::composition::present`, and native
+`graph_presentation::route`, consumed by both CAD and Build. CAD document source
+values and undo remain Python/OCCT-owned; viewer draft, zoom, focus and layout
+are presentation state. `component_service.ComponentJobService` owns preparation
+and revision-guarded ComponentChange publication for both Qt and headless REST.
+The viewer owns one persistent server-job tracker through `jobs::Job`; pending
+cancellation survives mode boundaries and lost start replies use status discovery.
+
+Native UI differences: dock forms replace Qt tabs/dialogs; expressions are
+explicitly unevaluated; graph port buttons accompany the shared routed view.
+Imported bindings read an existing completed check. Structural metadata freshness
+is distinct from measured-result freshness: graph-only edits retain CAD-derived
+port metadata, while result labels still become stale. Running a new check remains
+an external experiment workflow (CLI/reference UI) outside this batch.
+
+Dependencies: Python/OCCT environment, existing registry runner for catalogue
+discovery, and external completed check artifacts for imported bindings. No Qt
+panel/window is needed for reusable component jobs. Reference paths stay available
+until executed corpus parity. Observable source evidence is the trace in
+`docs/architecture/native-viewer.md` and every one of the 38 rows in
+`docs/cad-parity.md`; fixtures in cad/tests, cad_client, sim-system and
+`cad/{components,composition}` are written and unexecuted. Launch after an
+independent build: `sim-spatial path/to/model.rcad`, or attach with
+`--cad-url http://127.0.0.1:8420`; no launch was performed here.
+
 ### e. Live controls and graphs
 - **Entry today:** sim-spatial build-mode toolbar Run/Resume, Pause, Step
   (enabled only while the run is not running) and Reset; REST

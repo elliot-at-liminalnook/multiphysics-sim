@@ -1,6 +1,7 @@
 //! T49 rendered-control conversion fixtures. Written and inspected, unexecuted.
 use super::*;
 use crate::ui_kit::activation::{Activated, Ordinary};
+use crate::ui_kit::text::TextFieldApp;
 
 fn fixture() -> App {
     let mut picker = Picker::default();
@@ -22,8 +23,19 @@ fn fixture() -> App {
         .add_message::<crate::ui_kit::text::FieldMsg>()
         .add_message::<Act<WindowAction>>()
         .add_systems(Startup, draw)
-        .add_systems(Update, clicks);
-    app.update();
+        .add_systems(Update, clicks.in_set(crate::app::InputSet::Window));
+    app.add_plugins(crate::ui_kit::text::TextEntryPlugin)
+        .add_text_field(PATH, path_text_field());
+    crate::app::configure_sets(&mut app);
+    crate::ui_kit::activation::install(&mut app);
+    app.add_systems(PreUpdate, (
+        modal::sync.before(crate::ui_kit::activation::ActivationSet::Eligibility),
+        modal::keys.after(crate::ui_kit::activation::ActivationSet::Consume),
+        bevy::input_focus::dispatch_focused_input::<bevy::input::keyboard::KeyboardInput>
+            .in_set(bevy::input_focus::InputFocusSystems::Dispatch).after(bevy::input::InputSystems),
+    ));
+    app.world_mut().spawn((Window::default(), bevy::window::PrimaryWindow));
+    app.update(); app.update();
     app
 }
 fn entry(app: &mut App) -> Entity {
@@ -64,4 +76,45 @@ fn actual_picker_disabled_projection_refuses_captured_activation() {
     app.world_mut().entity_mut(entity).insert((Enabled(false),Activated));
     app.update();
     assert_eq!(app.world().resource::<Messages<Act<WindowAction>>>().len(),0);
+}
+
+/// Real pointer observers run before the real text/modal PreUpdate path. A
+/// focus-only Blur must not change the rendered positional source lifetime.
+#[test]
+fn first_pointer_from_durable_path_dispatches_once() {
+    let mut app = fixture();
+    let window = app.world_mut().query_filtered::<Entity, With<bevy::window::PrimaryWindow>>().iter(app.world()).next().unwrap();
+    // Activate the actual rendered PATH field first: its production converter
+    // calls TextFocus::focus_draft and captures the live navigation anchor.
+    let anchor = app.world_mut().query::<(Entity, &PickerPart)>().iter(app.world())
+        .find_map(|(e, part)| matches!(part.0, PickHit::Path(PathHit::Field)).then_some(e)).unwrap();
+    pointer_press(&mut app, window, anchor);
+    app.update(); app.update();
+    let field = app.world_mut().query::<(Entity, &crate::ui_kit::text::FieldId)>().iter(app.world())
+        .find_map(|(e, id)| (*id == PATH).then_some(e)).unwrap();
+    assert_eq!(app.world().resource::<InputFocus>().get(), Some(field));
+    assert_eq!(app.world().get::<crate::ui_kit::text::TextField>(field).unwrap().focus_anchor, Some(anchor));
+    let selected = entry(&mut app);
+    pointer_press(&mut app, window, selected);
+    app.update();
+    let actions: Vec<_> = app.world_mut().resource_mut::<Messages<Act<WindowAction>>>().drain().collect();
+    assert_eq!(actions.len(), 1);
+    assert!(matches!(&actions[0].action, WindowAction::Switch(request)
+        if request.document == Some(Document::Preset("original".into()))));
+    app.update();
+    assert!(app.world().resource::<Messages<Act<WindowAction>>>().is_empty());
+}
+
+fn pointer_press(app: &mut App, window: Entity, entity: Entity) {
+    let camera = app.world_mut().spawn_empty().id();
+    app.world_mut().trigger(bevy::picking::events::Pointer::new(
+        bevy::picking::pointer::PointerId::Mouse,
+        bevy::picking::pointer::Location {
+            target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO,
+        },
+        bevy::picking::events::Press {
+            button: bevy::picking::pointer::PointerButton::Primary,
+            hit: bevy::picking::backend::HitData::new(camera, 0., None, None), count: 1,
+        }, entity,
+    ));
 }

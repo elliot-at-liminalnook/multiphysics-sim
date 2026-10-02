@@ -498,7 +498,6 @@ pub(crate) fn clicks(picker: Option<ResMut<Picker>>, parts: Query<(&PickerPart, 
                 picker.draft.select_all = true;
                 let draft = picker.draft.clone();
                 text.focus_draft(PATH, draft);
-                picker.revision += 1;
             }
             PickHit::Path(PathHit::Entry(i)) => {
                 let pick = picker.current_listing().and_then(|l| l.entries.get(i).map(|(name, is_dir)| path_field::pick(&picker.draft.text, &l.dir, name, *is_dir, false)));
@@ -541,10 +540,10 @@ pub(crate) fn draw(mut commands: Commands, picker: Option<Res<Picker>>, switch: 
     let open = picker.as_deref().filter(|p| p.open.is_some());
     // A later outcome of the switcher (a refused choice, a load in progress) is the status line.
     let status = open.zip(switch.as_deref()).and_then(|(p, s)| (s.revision > p.opened_revision).then(|| s.message.clone()).flatten());
-    // Every change the picker shows bumps its revision (not the scroll offset,
-    // which is the node's own); the field's focus is the kit's.
+    // Source/presentation content changes rebuild the picker; focus alone is
+    // owned by the kit ring and must retain the PATH anchor for modal return.
     let focused = typing.focused(PATH);
-    let key = open.map(|p| format!("{:?}|{}|{focused}|{status:?}", p.open, p.revision));
+    let key = open.map(|p| format!("{:?}|{}|{status:?}", p.open, p.revision));
     let shown = roots.iter().next().is_some();
     if key == *last && shown == key.is_some() {
         return;

@@ -377,7 +377,7 @@ fn scroll(
 #[derive(Default)]
 struct Drawn {
     root: Option<Entity>,
-    stamp: Option<(u64, u64)>,
+    stamp: Option<String>,
 }
 
 /// Present: rebuild the parts whose content changed (see the module doc);
@@ -402,7 +402,7 @@ fn refresh(
     (experiments, review, motion): (Res<super::experiments::ExperimentsState>, Res<super::experiment_review::ReviewState>, Res<super::motion::MotionState>),
 ) {
     let root = roots.iter().next();
-    let stamp = doc.as_ref().map(|d| (d.generation, d.revision));
+    let stamp = doc.as_deref().map(super::activation::render_key);
     let added = doc.as_ref().is_some_and(|d| d.is_added());
     let epoch = topology.as_ref().map(|t| t.epoch);
     // The header's active-plane line follows the plane (cad-sketch).
@@ -411,7 +411,7 @@ fn refresh(
         return;
     }
     drawn.root = root;
-    drawn.stamp = stamp;
+    drawn.stamp = stamp.clone();
     *seen_epoch = epoch;
     let doc = doc.as_deref();
     let topology = topology.as_deref();
@@ -423,7 +423,7 @@ fn refresh(
     let k = Kit::new(&fonts);
     for (entity, mut list) in &mut lists {
         let part = list.part;
-        let key = match part {
+        let content_key = match part {
             Part::Experiments => format!("{}:{stamp:?}", super::experiments::key(&experiments)),
             Part::ExperimentReview => format!("{}:{stamp:?}", super::experiment_review::key(&review)),
             Part::Motion => format!("{}:{stamp:?}", super::motion::key(&motion)),
@@ -431,6 +431,7 @@ fn refresh(
             Part::Composition => format!("{}:{stamp:?}", super::composition::key(&composition)),
             _ => part_key(part, doc, &selection, topology, &draft, plane),
         };
+        let key = format!("{content_key}|source={:?}", doc.map(super::activation::render_key));
         if list.key.as_ref() == Some(&key) {
             continue;
         }
@@ -647,3 +648,6 @@ fn status(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
         }
     }
 }
+
+#[cfg(test)]
+mod activation_tests;

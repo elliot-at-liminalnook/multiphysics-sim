@@ -33,6 +33,11 @@ pub(in crate::cad) struct TreeRowId {
     pub(super) group: bool,
 }
 
+impl TreeRowId {
+    /// Stable node identity; sibling activation code does not own row state.
+    pub(in crate::cad) fn id(&self) -> &str { &self.id }
+}
+
 /// A row's visibility chip (enabled while edits can be sent).
 #[derive(Component)]
 pub(in crate::cad) struct EyeChip;

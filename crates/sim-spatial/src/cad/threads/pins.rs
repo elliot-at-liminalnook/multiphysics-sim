@@ -136,7 +136,7 @@ fn draw(
     view: Option<Res<CadView>>,
     fonts: Res<UiFonts>,
     mut pins: Query<(Entity, &Pin, &mut Node)>,
-    mut last: Local<Option<(u64, u64, bool, bool)>>,
+    mut last: Local<Option<(String, bool, bool)>>,
     mut gizmos: Gizmos<ToolGizmos>,
 ) {
     let (Some(doc), Some(view)) = (doc, view) else {
@@ -147,8 +147,8 @@ fn draw(
         return;
     };
     let on = display.as_deref().is_none_or(|d| d.comment_pins);
-    let key = (doc.generation, doc.revision, on, view.valid);
-    if *last != Some(key) {
+    let key = (crate::cad::activation::render_key(&doc), on, view.valid);
+    if last.as_ref() != Some(&key) {
         *last = Some(key);
         for (e, ..) in &pins {
             commands.entity(e).despawn();

@@ -609,6 +609,7 @@ pub(super) fn draw(mut commands: Commands, files: Option<Res<CadFiles>>, doc: Op
     let rule = form.zip(doc.as_deref()).and_then(|(f, d)| open_rule(f, d));
     let guessing = files.as_deref().is_some_and(|f| f.jobs.iter().any(|j| j.kind == "guess_unit"));
     let key = form.map(|form| format!("{form:?}{:?}{:?}{rule:?}{guessing}{:?}", files.as_deref().map(|f| &f.listed), files.as_deref().map(|f| &f.guess), files.as_deref().map(|f| f.form_sequence)));
+    let key = key.map(|key| format!("{key}|source={:?}", doc.as_deref().map(crate::cad::activation::render_key)));
     let shown = roots.iter().next().is_some();
     if key == *last && shown == key.is_some() {
         return;

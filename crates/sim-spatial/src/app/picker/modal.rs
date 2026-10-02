@@ -101,7 +101,8 @@ pub(crate) fn keys(
             // The kit has already taken the keyboard away.
             FieldEvent::Cancel => close = true,
             FieldEvent::Tab { .. } => {}
-            FieldEvent::Blur => picker.revision += 1,
+            // Focus is presentation state, not a new positional choice lifetime.
+            FieldEvent::Blur => {},
             FieldEvent::Arrow { .. } => {}
         }
     }

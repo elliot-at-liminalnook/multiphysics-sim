@@ -68,7 +68,7 @@ pub(super) fn render(
 /// Kept separate so isolated fixtures inspect the very same rendered controls.
 pub(super) fn spawn_panel(commands: &mut Commands, fonts: &UiFonts, state: &CloseSnapshot) {
     let k = Kit::new(fonts);
-    commands.spawn((
+    let mut root = commands.spawn((
         Persistent,
         ClosePanel,
         Node {
@@ -85,7 +85,11 @@ pub(super) fn spawn_panel(commands: &mut Commands, fonts: &UiFonts, state: &Clos
         BackgroundColor(SURFACE),
         BorderColor::all(BORDER),
         GlobalZIndex(MODAL_Z + 1),
-    )).with_children(|panel| {
+    ));
+    if state.pending {
+        root.insert((crate::ui_kit::activation::ModalFocus, crate::ui_kit::activation::ModalPriority(100), AccessibleLabel("Pending viewer close".into())));
+    }
+    root.with_children(|panel| {
         if state.pending || !state.blockers.is_empty() {
             panel.spawn(k.title("Close viewer"));
             panel.spawn(k.caption(&state.status));

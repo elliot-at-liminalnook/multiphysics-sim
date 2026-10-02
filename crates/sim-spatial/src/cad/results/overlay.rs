@@ -258,7 +258,7 @@ fn panel_key(doc: &CadDocument, paint: Option<&StressPaint>) -> Option<String> {
 /// runs or the live link is on: the overlay's legend and staleness, the
 /// export's progress and Cancel, the link with "Show in Robot mode".
 pub(super) fn panel(mut commands: Commands, doc: Option<Res<CadDocument>>, paint: Option<Res<StressPaint>>, fonts: Res<UiFonts>, roots: Query<Entity, With<ResultsPanelRoot>>, mut shown: Local<Option<String>>) {
-    let want = doc.as_deref().and_then(|d| panel_key(d, paint.as_deref()));
+    let want = doc.as_deref().and_then(|d| panel_key(d, paint.as_deref()).map(|key| format!("{key}|source={}", crate::cad::activation::render_key(d))));
     let present = roots.iter().next().is_some();
     if *shown == want && present == want.is_some() {
         return;

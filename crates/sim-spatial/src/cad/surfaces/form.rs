@@ -361,7 +361,7 @@ fn form_key(doc: &CadDocument) -> Option<String> {
 /// Present: the form, rebuilt when its drafts, focus or error change;
 /// despawned when it closes.
 pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, roots: Query<Entity, With<FormRoot>>, mut last: Local<Option<String>>) {
-    let key = doc.as_deref().and_then(form_key);
+    let key = doc.as_deref().and_then(|d| form_key(d).map(|key| format!("{key}|source={}", crate::cad::activation::render_key(d))));
     let shown_now = roots.iter().next().is_some();
     if key == *last && shown_now == key.is_some() {
         return;

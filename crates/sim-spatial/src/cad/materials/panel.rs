@@ -357,7 +357,7 @@ fn form_key(doc: &CadDocument) -> Option<String> {
 
 /// Present: the dialog, rebuilt when what it shows changes (its scroll offset kept).
 pub(in crate::cad) fn draw_form(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, roots: Query<Entity, With<FormRoot>>, scrolls: Query<&ScrollPosition, With<FormScroll>>, mut last: Local<Option<String>>) {
-    let key = doc.as_deref().and_then(form_key);
+    let key = doc.as_deref().and_then(|d| form_key(d).map(|key| format!("{key}|source={}", crate::cad::activation::render_key(d))));
     let present = roots.iter().next().is_some();
     if key == *last && present == key.is_some() {
         return;

@@ -22,6 +22,13 @@ impl SourceStamp {
     }
 }
 
+/// Every retained CAD renderer includes this source lifetime in its key.
+/// A new source gets new entities; old entities and captured actions keep their
+/// immutable stamps and are refused rather than being silently re-authorized.
+pub(in crate::cad) fn render_key(doc: &CadDocument) -> String {
+    format!("{:?}", (doc.generation, &doc.doc_key, doc.revision))
+}
+
 pub(super) fn install(app: &mut App) {
     app.add_systems(PostUpdate, stamp.after(bevy::ui::UiSystems::Layout).run_if(in_state(ViewerMode::Cad)))
         .add_systems(Update, tree_keyboard.in_set(crate::app::InputSet::Window).run_if(in_state(ViewerMode::Cad)))
@@ -55,9 +62,9 @@ pub(in crate::cad) fn stamp(
             if file { source.files = files.as_deref().map(|f| (f.form_sequence, f.form.is_some())); }
             if scope.is_some_and(|s| s.0 == ModeScope::Cad) || (parent.is_none() && node) {
                 if let Some(identity) = identity {
-                    // Editor rebind includes the physical/form lifetime, not just
+                    // Editor rebind retains document and form identity across a revision rebuild, not just
                     // FormHit's positional index in a new form.
-                    commands.entity(entity).insert(crate::ui_kit::activation::InputIdentity(format!("{}|{source:?}", identity.0)));
+                    commands.entity(entity).insert(crate::ui_kit::activation::InputIdentity(format!("{}|editor={:?}", identity.0, (source.generation, source.document.as_ref().map(|d| &d.0), &source.form, source.material, source.results, source.tree, source.files, &source.numeric, &source.rename))));
                 }
                 commands.entity(entity).insert(source.clone());
                 break;
@@ -129,8 +136,8 @@ pub(in crate::cad) fn guard_results(doc: &CadDocument, action: super::actions::C
 pub(in crate::cad) fn tree_keyboard(doc: Option<Res<CadDocument>>, rows: Query<&super::tree::rows::TreeRowId, With<Activated>>, mut out: MessageWriter<crate::app::actions::Act<super::actions::CadAction>>) {
     let Some(doc) = doc else { return };
     for row in &rows {
-        if doc.has_node(&row.id) {
-            let action = super::tree::select_action(&doc, &row.id, false, false);
+        if doc.has_node(row.id()) {
+            let action = super::tree::select_action(&doc, row.id(), false, false);
             out.write(crate::app::actions::Act::ui(guard(&doc, action)));
         }
     }

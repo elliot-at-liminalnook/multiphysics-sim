@@ -2,6 +2,7 @@
 //! programs remain CAD-owned undoable commands. No physics or hardware commands.
 mod controls;
 mod export;
+mod sampling;
 #[cfg(test)]
 mod tests;
 mod ui;
@@ -106,7 +107,9 @@ pub(crate) struct MotionState {
     pub cancel_requested: bool,
     pub(crate) identity: Option<Stamp>,
     pub(crate) loading: Option<(Stamp, Job<(PoseMetadata, BTreeMap<String, Value>)>)>,
-    pub(crate) sampling: Option<(Stamp, u64, Job<PoseSample>)>,
+    pub(crate) sampling: Option<sampling::Pending>,
+    pub(crate) queued_sample: Option<sampling::Intent>,
+    pub(crate) sample_sequence: u64,
     pub(crate) program_job: Option<(Stamp, u64, Job<Value>)>,
     pub(crate) export: Option<export::Export>,
     pub history: Vec<Value>,
@@ -132,8 +135,9 @@ impl MotionState {
         if let Some((_, j)) = &self.loading {
             j.cancel();
         }
-        if let Some((_, _, j)) = &self.sampling {
-            j.cancel();
+        self.queued_sample = None;
+        if let Some(pending) = &self.sampling {
+            pending.job.cancel();
         }
         if let Some((_, _, j)) = &self.program_job {
             j.cancel();
@@ -463,27 +467,7 @@ fn guard(d: &CadDocument, id: &Stamp) -> Result<(), String> {
     }
 }
 fn sample(d: &CadDocument, s: &mut MotionState, program: Option<Value>) -> Result<(), String> {
-    let id = s.identity.clone().ok_or("Enter pose mode first")?;
-    guard(d, &id)?;
-    let c = d.client.clone().ok_or("Not connected")?;
-    let request = PoseRequest {
-        document_id: id.document.clone().ok_or("Document ID missing")?,
-        expected_revision: id.revision,
-        positions: s.positions.clone(),
-        program,
-        time: s.cursor,
-    };
-    s.sampling = Some((
-        id,
-        s.sequence,
-        Job::spawn(
-            Pool::Dedicated,
-            d.generation,
-            "reference pose sample",
-            move |_| c.sample_pose(&request).map_err(|e| e.to_string()),
-        ),
-    ));
-    Ok(())
+    sampling::request(d, s, program)
 }
 fn tick(doc: Option<Res<CadDocument>>, mut s: ResMut<MotionState>) {
     let Some(d) = doc else {
@@ -532,33 +516,7 @@ fn tick(doc: Option<Res<CadDocument>>, mut s: ResMut<MotionState>) {
         }
         s.touch();
     }
-    if let Some(answer) = s.sampling.as_ref().and_then(|(_, _, j)| j.poll()) {
-        let (stamp, seq, _) = s.sampling.take().unwrap();
-        if stamp.matches(&d)
-            && stamp.revision == d.shown_revision()
-            && seq == s.sequence
-            && !s.cancel_requested
-        {
-            match answer {
-                Ok(p) => {
-                    if p.identity.document_id == stamp.document
-                        && p.identity.revision == Some(stamp.revision)
-                    {
-                        s.sample = Some(p);
-                    } else {
-                        s.error = Some("Reference sample identity mismatch".into());
-                        s.active = false;
-                    }
-                }
-                Err(e) => {
-                    s.error = Some(e);
-                    s.active = false;
-                    s.playing = false;
-                }
-            }
-            s.touch();
-        }
-    }
+    sampling::receive(&d, &mut s);
     if let Some(answer) = s.program_job.as_ref().and_then(|(_, _, j)| j.poll()) {
         let (stamp, seq, _) = s.program_job.take().unwrap();
         if stamp.matches(&d)

@@ -4,6 +4,7 @@
 //! Field occurrences write CadExperiments in Input; the sole CAD apply handler
 //! validates them in Actions. Jobs poll in public JobResults after Cad Results,
 //! without a mode gate. Blocking IO/catalogue/linked reads are jobs, never frames.
+mod automatic;
 mod form;
 mod lifecycle;
 mod reads;
@@ -74,6 +75,8 @@ pub(crate) struct ExperimentsArgs {
     pub draft_sequence: Option<u64>,
     #[serde(default)]
     pub revision: Option<u64>,
+    #[serde(default)]
+    pub automatic_epoch: Option<u64>,
 }
 impl ExperimentsArgs {
     pub(crate) fn of(op: ExperimentsOp) -> Self {
@@ -125,6 +128,8 @@ impl Stamp {
 #[derive(Resource, Default)]
 pub(crate) struct ExperimentsState {
     pub open: bool,
+    pub automatic_epoch: u64,
+    pub(crate) queued_automatic: Option<automatic::Queued>,
     pub drafts: Vec<Draft>,
     pub current: Option<usize>,
     pub focus: Option<String>,
@@ -228,13 +233,7 @@ pub(crate) fn handle(a: &ExperimentsArgs, call: &mut Call, cx: &mut Cx) -> Outco
         match a.op {
             O::State => return Ok(state_json(doc, st)),
             O::Dock => {
-                st.open = a.open.unwrap_or(!st.open);
-                st.focus = None;
-                if !st.open {
-                    if let Some(active) = st.active.as_mut() {
-                        active.cancel_requested = true;
-                    }
-                }
+                automatic::dock(st, a.open.unwrap_or(!st.open));
             }
             O::New => {
                 let index = st.drafts.len();
@@ -243,7 +242,7 @@ pub(crate) fn handle(a: &ExperimentsArgs, call: &mut Call, cx: &mut Cx) -> Outco
                 st.current = Some(index);
                 st.focus = None;
                 st.focus_index = None;
-                st.open = true;
+                automatic::dock(st, true);
             }
             O::Rebase => {
                 if let Some(error) = doc.commit_refusal(None) {
@@ -274,7 +273,7 @@ pub(crate) fn handle(a: &ExperimentsArgs, call: &mut Call, cx: &mut Cx) -> Outco
                 }
                 st.current = Some(index);
                 st.focus = None;
-                st.open = true;
+                automatic::dock(st, true);
             }
             O::Set => form::set(st, a)?,
             O::CloseDraft => {
@@ -318,9 +317,7 @@ pub(crate) fn handle(a: &ExperimentsArgs, call: &mut Call, cx: &mut Cx) -> Outco
             O::Compare => lifecycle::compare(st, doc)?,
             O::Link => form::link(st, a)?,
             O::Auto => {
-                let index = st.current.ok_or("Open a draft first")?;
-                st.drafts[index].auto = a.open.unwrap_or(!st.drafts[index].auto);
-                st.drafts[index].edited = std::time::Instant::now();
+                automatic::configure(st, a.open)?;
             }
             O::CandidateSelect | O::CandidateRead => {
                 if st.read.is_some() {
@@ -363,7 +360,7 @@ pub(crate) fn handle(a: &ExperimentsArgs, call: &mut Call, cx: &mut Cx) -> Outco
     Outcome::Done(result)
 }
 pub(crate) fn state_json(_doc: &CadDocument, st: &ExperimentsState) -> Value {
-    json!({"open":st.open,"drafts":st.drafts,"current":st.current,"selected":st.selected,"candidate":st.candidate,"baseline":st.baseline,"history":st.history,"candidates":st.candidates,"catalogue":st.catalogue,"diagnostics":st.diagnostics,"comparison":st.comparison,"inputs":st.inputs,"error":st.error,"completed_check":st.completed_check,"active":st.active.as_ref().map(lifecycle::Active::json),"revision":st.revision})
+    json!({"open":st.open,"automatic_epoch":st.automatic_epoch,"drafts":st.drafts,"current":st.current,"selected":st.selected,"candidate":st.candidate,"baseline":st.baseline,"history":st.history,"candidates":st.candidates,"catalogue":st.catalogue,"diagnostics":st.diagnostics,"comparison":st.comparison,"inputs":st.inputs,"error":st.error,"completed_check":st.completed_check,"active":st.active.as_ref().map(lifecycle::Active::json),"revision":st.revision})
 }
 pub(crate) type Control = (String, String, CadAction, Result<(), String>);
 pub(crate) fn controls(cx: &Cx) -> Vec<Control> {

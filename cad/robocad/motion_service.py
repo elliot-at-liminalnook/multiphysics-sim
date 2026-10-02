@@ -40,13 +40,15 @@ def resolve_program(doc, program):
 def sample_model(model, positions):
     """Shared Qt/headless primitive: reference solver updates resolved positions."""
     matrices = model.matrices(positions)
-    return {'matrices': matrices, 'positions': dict(model.last_positions),
+    return {'matrices': matrices, 'positions': {jid: float(v) for jid, v in model.last_positions.items()},
             'closure_error_mm': model.last_error_mm}
 
 
 def sample(doc, body):
     guard(doc, body)
     model = PoseModel(doc)
+    from .motion_continuation import restore_prior
+    restore_prior(model, body.get('prior'), identity(doc))
     seconds = body.get('time', 0.)
     if type(seconds) not in (int,float) or not math.isfinite(seconds): raise KernelError('Time must be finite')
     program = body.get('program')
@@ -59,7 +61,8 @@ def sample(doc, body):
     if any(type(v) not in (int,float) or not math.isfinite(v) for v in positions.values()): raise KernelError('Positions must be finite radians/mm')
     resolved = sample_model(model, {**model.home, **positions})
     resolved['matrices'] = {nid: m.tolist() for nid, m in resolved['matrices'].items()}
-    return {'identity': identity(doc), 'time': seconds, 'program': program, **resolved}
+    return {'identity': identity(doc), 'time': seconds, 'program': program,
+            'prior_applied': body.get('prior') is not None, **resolved}
 
 
 def sweep(doc, body):

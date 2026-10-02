@@ -49,6 +49,7 @@ pub(crate) fn start(
     doc: &CadDocument,
     a: &ExperimentsArgs,
 ) -> Result<(), String> {
+    automatic::validate(st, a)?;
     if st.busy() {
         return Err(
             "experiments.start: pending operation has not reached a terminal outcome".into(),
@@ -128,6 +129,7 @@ pub(crate) fn start(
         last: None,
         operation: a.op,
     });
+    automatic::submitted(st, a);
     st.error = None;
     Ok(())
 }
@@ -585,7 +587,7 @@ pub(crate) fn tick(
         st.linked = Some(Linked {
             stamp: s.clone(),
             job: Job::spawn(
-                Pool::Io,
+                Pool::Dedicated,
                 s.generation,
                 "linked experiment sources",
                 move |_| {
@@ -604,50 +606,8 @@ pub(crate) fn tick(
         });
         st.last_read = Some(Instant::now());
     }
-    // CAD-only edits capture a new retained draft rather than silently
-    // changing a source-mutation guard on the existing authored draft.
-    if !st.busy() && doc.stale.is_none() && doc.commit_refusal(None).is_none() {
-        if let Some(mut d) = st
-            .draft()
-            .filter(|d| {
-                d.auto && d.stamp.document_matches(doc) && d.stamp.revision != doc.shown_revision()
-            })
-            .cloned()
-        {
-            d.stamp.revision = doc.shown_revision();
-            d.stamp.draft_index = st.drafts.len();
-            d.stamp.sequence += 1;
-            d.edited = Instant::now();
-            d.submitted_sequence = None;
-            st.current = Some(st.drafts.len());
-            st.focus = None;
-            st.focus_index = None;
-            st.drafts.push(d);
-            st.touch();
-        }
-    }
-    if !st.busy()
-        && st.linked.is_none()
-        && let Some(d) = st.draft().filter(|d| {
-            d.auto
-                && d.edited.elapsed() >= Duration::from_millis(750)
-                && d.submitted_sequence != Some(d.stamp.sequence)
-                && d.stamp.document_matches(doc)
-                && doc.shown_revision() == d.stamp.revision
-        })
-    {
-        actions.write(crate::app::actions::Act::ui(
-            ExperimentsArgs {
-                draft_index: st.current,
-                draft_sequence: Some(d.stamp.sequence),
-                ..ExperimentsArgs::of(ExperimentsOp::Run)
-            }
-            .action(),
-        ));
-        // Record queued sequence to avoid enqueueing each frame before Actions.
-        let sequence = d.stamp.sequence;
-        if let Some(i) = st.current {
-            st.drafts[i].submitted_sequence = Some(sequence);
-        }
+    automatic::rebase(&mut st, doc);
+    if let Some(args) = automatic::enqueue(&mut st, doc) {
+        actions.write(crate::app::actions::Act::ui(args.action()));
     }
 }

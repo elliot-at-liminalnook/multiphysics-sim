@@ -1510,8 +1510,10 @@ No fixture, native binary or parity harness was executed in this batch. These
 statuses record written behavior assessed by reading, not signed-off exact parity.
 Python/OCCT and the existing native registry runner remain dependencies. Qt is
 not required for reusable component preparation, polling, cancellation or undo
-publication. Experiment creation/check execution remains an external workflow
-until cad-experiments-motion; importing completed check metadata does not run it.
+publication. At T42 acceptance, experiment creation/check execution was external;
+T43 now provides native authoring and check/run controls feeding completed metadata
+to composition. Python/OCCT and the shared registry/experiment executables remain
+required; creating a check no longer requires Qt.
 
 Deliberate differences: service-host path fields replace Qt file dialogs; library
 and occurrence forms are dock sections; parameter expressions are explicitly

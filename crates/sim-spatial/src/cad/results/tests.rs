@@ -28,7 +28,7 @@ fn request(link: bool, label: &str) -> ExportRequest {
 
 /// A finished export of `request` (as `export::start` would leave it once RoboCAD answered).
 fn landed(request: ExportRequest, generation: u64) -> Running {
-    Running { request, job: crate::jobs::Job::finished(generation, Ok(Written { links: 4, flexible: 0 })), started: Instant::now(), shown: 0 }
+    Running { request, job: crate::jobs::Job::finished(generation, Ok(Written { links: 4, flexible: 0 })), started: Instant::now(), shown: 0, cancel_requested: false }
 }
 
 /// The live link's export, once written: the first after toggling on asks
@@ -258,4 +258,90 @@ fn commands_and_the_spec_map_to_actions() {
         let action: CadAction = serde_json::from_value(v).unwrap_or_else(|e| panic!("{}: {e}", s.name));
         assert!(matches!(action, CadAction::CadResults(ResultsArgs { op: ResultsOp::Load, .. })));
     }
+}
+
+#[test]
+fn cancel_keeps_export_owned_until_terminal_and_reports_late_write() {
+    let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
+    let first = request(false, "physical model");
+    doc.results.exports.running = Some(landed(first.clone(), doc.generation));
+    doc.results.exports.queued = Some(request(true, "queued link"));
+    let response = export::cancel(&mut doc).unwrap();
+    assert_eq!(response["cancelling"], first.label);
+    assert!(doc.results.exports.running.as_ref().unwrap().cancel_requested);
+    assert!(doc.results.exports.queued.is_some(), "cancel must not start overlapping work");
+    assert!(link::show_target(&doc).is_err(), "close/switch remains blocked until the outcome");
+    let landed = export::poll(&mut doc).unwrap();
+    assert_eq!(landed.path, first.path);
+    assert_eq!(doc.results.exports.written.as_ref(), Some(&first.path));
+    assert!(doc.results.exports.last.as_ref().unwrap().2.as_ref().unwrap().contains("could not revoke"));
+}
+
+#[test]
+fn cancelled_export_failure_remains_observable_and_preserves_previous_write() {
+    let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
+    let prior = PathBuf::from("/work/previous.simrobot.json");
+    doc.results.exports.written = Some(prior.clone());
+    let mut running = landed(request(false, "physical model"), doc.generation);
+    running.job = crate::jobs::Job::finished(doc.generation, Err("cancelled".into()));
+    doc.results.exports.running = Some(running);
+    export::cancel(&mut doc).unwrap();
+    assert!(export::poll(&mut doc).is_none());
+    assert_eq!(doc.results.exports.written.as_ref(), Some(&prior));
+    assert!(doc.results.exports.last.as_ref().unwrap().2.as_ref().unwrap_err().contains("cancelled"));
+}
+
+#[test]
+fn profiles_read_captures_source_and_refuses_changed_generation_or_revision() {
+    for change_generation in [true, false] {
+        let mut world = World::default();
+        world.init_resource::<Messages<Act<CadAction>>>();
+        world.insert_resource(LiveLink::default());
+        let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
+        let input = json!({"motor-a": {"opaque": [1, 2, 3]}});
+        let captured = crate::cad::activation::guard(&doc, ResultsArgs::of(ResultsOp::Profiles));
+        doc.results.profiles_read = Some(("/work/profiles.json".into(), crate::jobs::Job::finished(doc.generation, Ok(input.clone())), captured, doc.revision));
+        if change_generation { doc.generation += 1; } else { doc.revision += 1; }
+        world.insert_resource(doc);
+        world.run_system_once(link::receive).unwrap();
+        assert_eq!(world.resource_mut::<Messages<Act<CadAction>>>().drain().count(), 0);
+        let doc = world.resource::<CadDocument>();
+        assert!(doc.edit.is_none());
+        assert_eq!(doc.results.profiles_retained, Some(("/work/profiles.json".into(), input)));
+        assert!(doc.status.as_ref().unwrap().as_ref().unwrap_err().contains("input retained"));
+    }
+}
+
+#[test]
+fn profiles_completion_emits_captured_revision_and_retains_input() {
+    let mut world = World::default();
+    world.init_resource::<Messages<Act<CadAction>>>();
+    world.insert_resource(LiveLink::default());
+    let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
+    let input = json!({"motor-a": {"opaque": [1, 2, 3]}});
+    let captured = crate::cad::activation::guard(&doc, ResultsArgs::of(ResultsOp::Profiles));
+    let revision = doc.revision;
+    doc.results.profiles_read = Some(("/work/profiles.json".into(), crate::jobs::Job::finished(doc.generation, Ok(input.clone())), captured, revision));
+    world.insert_resource(doc);
+    world.run_system_once(link::receive).unwrap();
+    let sent: Vec<_> = world.resource_mut::<Messages<Act<CadAction>>>().drain().collect();
+    assert_eq!(sent.len(), 1);
+    let CadAction::Captured { source, action } = &sent[0].action else { panic!("unstamped profiles action") };
+    let doc = world.resource::<CadDocument>();
+    assert!(crate::cad::activation::current(source, doc));
+    assert!(matches!(action.as_ref(), CadAction::CadResults(args) if args.revision == Some(revision) && args.profiles.as_ref() == Some(&input)));
+    assert_eq!(doc.results.profiles_retained, Some(("/work/profiles.json".into(), input)));
+    // An edit between JobResults emission and Actions must also refuse the
+    // captured revision, even when generation/document identity is unchanged.
+    let mut doc = world.remove_resource::<CadDocument>().unwrap();
+    doc.revision += 1;
+    let mut selection = crate::cad::selection::Fixture::new();
+    let mut plane = crate::cad::sketch::CadActivePlane::default();
+    let (mut continuation, mut replies) = (serde_json::Value::Null, crate::app::actions::Replies::default());
+    let mut call = crate::app::actions::Call { origin: crate::app::actions::Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
+    let mut cx = crate::cad::actions::Cx { settings: &mut crate::app::settings::SettingsOwner::default(), doc: &mut doc, shared: selection.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches: None, display: None, views: None, files: None, components: &mut crate::cad::components::ComponentsState::default(), composition: &mut crate::cad::composition::CadCompositionState::default(), experiments: &mut crate::cad::experiments::ExperimentsState::default(), review: &mut crate::cad::experiment_review::ReviewState::default(), motion: &mut crate::cad::motion::MotionState::default(), camera: Vec::new() };
+    let sim_api::Outcome::Done(Err(error)) = crate::cad::actions::handle(&sent[0].action, &mut call, &mut cx) else { panic!("stale profiles accepted") };
+    assert!(error.contains("captured revision changed"), "{error}");
+    assert!(cx.doc.edit.is_none());
+    assert_eq!(cx.doc.results.profiles_retained.as_ref().unwrap().0, "/work/profiles.json");
 }

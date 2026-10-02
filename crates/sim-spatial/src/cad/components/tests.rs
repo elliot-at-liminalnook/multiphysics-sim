@@ -264,3 +264,26 @@ fn queued_field_edit_targets_original_retained_draft() {
     assert_eq!(st.drafts[original].fields["name"], "Unsaved old name");
     assert_eq!(st.draft().unwrap().fields["name"], "Parametric box");
 }
+
+#[test]
+fn cancelled_submit_and_selected_import_leave_all_authored_state_untouched() {
+    use crate::app::actions::{Call, Origin, Replies};
+    use crate::cad::actions::Cx;
+    for op in [ComponentsOp::Submit, ComponentsOp::ImportSelected] {
+        let (mut doc, mut st) = fixture();
+        st.files.push("/work/retained.component.json".into());
+        form::open(&mut st, &doc, ComponentsFormKind::Make, Some("child"), &[]).unwrap();
+        let before = state_json(&doc, &st);
+        let mut selection = crate::cad::selection::Fixture::new();
+        let mut plane = crate::cad::sketch::CadActivePlane::default();
+        let (mut continuation, mut replies) = (Value::Null, Replies::default());
+        let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: true, replies: &mut replies };
+        let mut cx = Cx { settings: &mut crate::app::settings::SettingsOwner::default(), doc: &mut doc, shared: selection.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches: None, display: None, views: None, files: None, components: &mut st, composition: &mut crate::cad::composition::CadCompositionState::default(), experiments: &mut crate::cad::experiments::ExperimentsState::default(), review: &mut crate::cad::experiment_review::ReviewState::default(), motion: &mut crate::cad::motion::MotionState::default(), camera: Vec::new() };
+        let args = ComponentsArgs { op, path: Some("/work/retained.component.json".into()), ..Default::default() };
+        let Outcome::Done(Err(error)) = handle(&args, &mut call, &mut cx) else { panic!("cancelled mutation accepted") };
+        assert!(error.contains("cancelled"));
+        assert_eq!(state_json(cx.doc, cx.components), before);
+        assert!(cx.components.active.is_none());
+        assert!(cx.doc.edit.is_none());
+    }
+}

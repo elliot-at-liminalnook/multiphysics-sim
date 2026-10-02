@@ -343,7 +343,7 @@ fn body(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, paint: Option<
             p.spawn(k.note(format!("Next: {} (the latest save)", q.label)));
         }
         p.spawn(wrap()).with_children(|row| button(row, k, controls, "cad:results:export_cancel", "Cancel export", Look::Danger));
-        p.spawn(k.note("Cancel writes nothing; RoboCAD still finishes deriving the model."));
+        p.spawn(k.note("Cancel requests a stop; a file already published stays written. The terminal status reports the outcome."));
     }
     if link_active(doc) {
         p.spawn(k.title("Live link"));

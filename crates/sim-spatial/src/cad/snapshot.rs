@@ -14,6 +14,7 @@ use sim_runtime::cad_client::SelectionItem;
 /// cad-views-export's parts of `cad_state` (None without CAD mode's window).
 #[derive(Clone, Copy, Default)]
 pub(in crate::cad) struct Parts<'a> {
+    defaults: Option<&'a crate::app::settings::CadDefaults>,
     display: Option<&'a super::display::CadDisplay>,
     views: Option<&'a super::views::CadViews>,
     files: Option<&'a super::files::CadFiles>,
@@ -24,8 +25,11 @@ pub(in crate::cad) struct Parts<'a> {
     motion: Option<&'a super::motion::MotionState>,
 }
 impl<'a> Parts<'a> {
+    pub(in crate::cad) fn defaults(mut self, defaults: &'a crate::app::settings::CadDefaults) -> Self {
+        self.defaults = Some(defaults); self
+    }
     pub(in crate::cad) fn of(display: Option<&'a super::display::CadDisplay>, views: Option<&'a super::views::CadViews>, files: Option<&'a super::files::CadFiles>) -> Self {
-        Self { display, views, files, components: None, composition: None, experiments: None, review: None, motion: None }
+        Self { defaults: None, display, views, files, components: None, composition: None, experiments: None, review: None, motion: None }
     }
     pub(in crate::cad) fn experiments(mut self, experiments: &'a super::experiments::ExperimentsState, review: &'a super::experiment_review::ReviewState, motion: &'a super::motion::MotionState) -> Self {
         self.experiments = Some(experiments);
@@ -117,7 +121,7 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem],
     state["materials"] = super::materials::state_json(doc, selection);
     state["inspector_physical"] = super::inspector::physical_state_json(doc);
     state["results"] = super::results::state_json(doc);
-    state["print"] = super::print::state_json(doc);
+    state["print"] = super::print::state_json(doc, parts.defaults);
     // cad-organize.
     state["tree"] = super::tree::state_json(doc);
     state["threads"] = super::threads::state_json(doc);
@@ -133,6 +137,7 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem],
 /// Present: `/v1/state` (with `viewer_mode`) and `/v1/cad_state`, at most every 100 ms.
 #[allow(clippy::too_many_arguments)]
 pub(in crate::cad) fn publish(
+    settings: Res<crate::app::settings::SettingsOwner>,
     rest: Option<ResMut<crate::rest::Rest>>,
     doc: Option<Res<CadDocument>>,
     meshes: Option<Res<CadMeshes>>,
@@ -146,7 +151,7 @@ pub(in crate::cad) fn publish(
 ) {
     let (Some(mut rest), Some(doc)) = (rest, doc) else { return };
     if rest.0.snapshot_due() {
-        let state = state_json(&doc, &selection.items(), meshes.as_deref(), plane.as_deref(), Parts::of(display.as_deref(), views.as_deref(), files.as_deref()).authoring(&components, &composition).experiments(&experiments, &review, &motion));
+        let state = state_json(&doc, &selection.items(), meshes.as_deref(), plane.as_deref(), Parts::of(display.as_deref(), views.as_deref(), files.as_deref()).authoring(&components, &composition).experiments(&experiments, &review, &motion).defaults(&settings.cad));
         let mut shown = state.clone();
         shown["viewer_mode"] = json!(ViewerMode::Cad.name());
         rest.0.publish("cad_state", state);

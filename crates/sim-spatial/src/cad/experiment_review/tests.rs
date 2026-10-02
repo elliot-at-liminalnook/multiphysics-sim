@@ -142,6 +142,7 @@ fn retained_capture_cannot_publish_annotation_into_a_replaced_document() {
         replies: &mut replies,
     };
     let mut cx = Cx {
+        settings: &mut crate::app::settings::SettingsOwner::default(),
         doc: &mut doc,
         shared: fixture.shared(),
         meshes: None,

@@ -56,8 +56,6 @@ pub(super) fn cache_key(generation: u64, node: &str, revision: u64, threshold: f
 /// The checks' state on the document.
 #[derive(Default)]
 pub(crate) struct ChecksState {
-    /// The threshold the last wall check ran with (None: none yet).
-    pub(super) threshold: Option<f64>,
     /// Thin reads by [`CacheKey`] (kept for one generation and revision).
     pub(super) cache: HashMap<CacheKey, NodeThin>,
     /// The last wall check, with its points.
@@ -212,9 +210,19 @@ pub(super) fn build(call: PrintCall, entry: &OpEntry, r: &Resolved, values: &Map
     }
 }
 
-pub(super) fn send(doc: &mut CadDocument, _call: &mut Call, plan: CheckPlan) -> Outcome {
+pub(super) fn send(doc: &mut CadDocument, _call: &mut Call, plan: CheckPlan, settings: &mut crate::app::settings::SettingsOwner) -> Outcome {
     Outcome::Done(match plan {
-        CheckPlan::Wall { threshold, nodes } => start_wall(doc, threshold, nodes),
+        CheckPlan::Wall { threshold, nodes } => {
+            let mut defaults = settings.cad.clone();
+            defaults.wall_threshold = Some(threshold);
+            if let Err(e) = defaults.validate() { return Outcome::Done(Err(e)); }
+            let answer = start_wall(doc, threshold, nodes);
+            if answer.is_ok() {
+                let _ = settings.set_cad(defaults);
+                settings.claim_cad("wall_threshold");
+            }
+            answer
+        },
         CheckPlan::Validate { bodies } => start_validate(doc, bodies),
     })
 }
@@ -242,7 +250,6 @@ pub(super) fn start_wall(doc: &mut CadDocument, threshold: f64, nodes: Vec<Strin
     let answer = json!({"reading": "thin", "nodes": nodes, "threshold": threshold, "revision": revision, "cached": known.len(), "sent": missing.len()});
     let meta = WallMeta { threshold, revision, generation, nodes, known };
     let checks = &mut doc.print.checks;
-    checks.threshold = Some(threshold);
     // A check running is replaced (dropping its job cancels it).
     checks.wall_job = None;
     if missing.is_empty() {
@@ -363,8 +370,8 @@ pub(super) fn drawn(doc: &CadDocument) -> Option<&WallResult> {
 }
 
 /// A newly opened Wall thickness form: the last threshold a check ran with.
-pub(super) fn seed(entry: &OpEntry, doc: &CadDocument, texts: &mut [String]) {
-    let Some(t) = doc.print.checks.threshold else { return };
+pub(super) fn seed(entry: &OpEntry, env: &Env, texts: &mut [String]) {
+    let Some(t) = env.defaults.and_then(|d| d.wall_threshold) else { return };
     if let Some(slot) = entry.params.iter().position(|p| p.name == "threshold").and_then(|i| texts.get_mut(i)) {
         *slot = py_float(t);
     }
@@ -372,14 +379,14 @@ pub(super) fn seed(entry: &OpEntry, doc: &CadDocument, texts: &mut [String]) {
 
 /// `cad_print {op: clear}`: the wall check's points are cleared (RoboCAD's
 /// `temp_shapes = []`); its counts stay in the state.
-pub(super) fn clear(doc: &mut CadDocument) -> Value {
+pub(super) fn clear(doc: &mut CadDocument, defaults: Option<&crate::app::settings::CadDefaults>) -> Value {
     let cleared = doc.print.checks.wall.as_mut().map_or(0, |w| std::mem::take(&mut w.points).len());
     doc.touch();
-    json!({"cleared": cleared, "checks": state_json(doc)})
+    json!({"cleared": cleared, "checks": state_json(doc, defaults)})
 }
 
 /// `cad_state.print.checks`.
-pub(super) fn state_json(doc: &CadDocument) -> Value {
+pub(super) fn state_json(doc: &CadDocument, defaults: Option<&crate::app::settings::CadDefaults>) -> Value {
     let c = &doc.print.checks;
     let current = |generation: u64, revision: u64| generation == doc.generation && revision == doc.shown_revision();
     let wall = c.wall.as_ref().map(|w| {
@@ -407,8 +414,8 @@ pub(super) fn state_json(doc: &CadDocument) -> Value {
         })
     });
     json!({
-        "threshold": c.threshold.unwrap_or(DEFAULT_THRESHOLD),
-        "threshold_remembered": c.threshold.is_some(),
+        "threshold": defaults.and_then(|d| d.wall_threshold).unwrap_or(DEFAULT_THRESHOLD),
+        "threshold_remembered": defaults.and_then(|d| d.wall_threshold).is_some(),
         "wall_check": wall,
         "wall_check_running": c.wall_job.as_ref().map(|(m, _)| json!({"threshold": m.threshold, "revision": m.revision, "nodes": m.nodes, "cached": m.known.len()})),
         "validation": validation,

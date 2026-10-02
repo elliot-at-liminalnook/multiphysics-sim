@@ -114,7 +114,7 @@ pub(super) fn pick(args: &PrintArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
         Some(f) if f.op == id && f.texts.len() == entry.params.len() => f.texts.clone(),
         _ => {
             let mut texts: Vec<String> = entry.params.iter().map(|p| p.default.to_string()).collect();
-            super::edits::seed(entry, cx.doc, &Env::default(), &mut texts);
+            super::edits::seed(entry, cx.doc, &Env { defaults: Some(&cx.settings.cad), ..Env::default() }, &mut texts);
             texts
         }
     };

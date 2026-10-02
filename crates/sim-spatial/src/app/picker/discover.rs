@@ -5,7 +5,7 @@
 //! section cut by the walk's budget or [`CAP`] says so in its title.
 use super::{Choice, Section, Sources};
 use crate::app::ViewerMode;
-use crate::app::recent;
+use crate::app::recent::Recents;
 use crate::app::switch::Document;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -102,12 +102,8 @@ fn relative(root: Option<&Path>, path: &Path) -> String {
 }
 
 /// The mode's recent documents (a path that no longer exists is disabled, "missing").
-fn recent_section(mode: ViewerMode, root: Option<&Path>, recents: Option<&Path>) -> Section {
-    let Some(file) = recents else {
-        return Section { title: "Recent".into(), empty: "No recent documents: this system has no config directory to keep them in.".into(), choices: Vec::new() };
-    };
-    let choices = recent::load(file)
-        .list(mode)
+fn recent_section(mode: ViewerMode, root: Option<&Path>, recents: &Recents, ready: bool) -> Section {
+    let choices = recents.list(mode)
         .into_iter()
         .map(|document| {
             let (label, detail, enabled) = match &document {
@@ -119,7 +115,7 @@ fn recent_section(mode: ViewerMode, root: Option<&Path>, recents: Option<&Path>)
             Choice { label, detail, enabled, document }
         })
         .collect();
-    Section { title: "Recent".into(), empty: format!("Nothing opened in {} mode yet.", mode.label()), choices }
+    Section { title: "Recent".into(), empty: if ready { format!("Nothing opened in {} mode yet.", mode.label()) } else { "Preferences are still loading; recent documents will appear here.".into() }, choices }
 }
 
 /// The robot presets in `presets` (the browser's list), each with its id
@@ -204,9 +200,9 @@ fn example_section(mode: ViewerMode, root: Option<&Path>, cancel: &AtomicBool) -
 /// presets, (CAD) the RoboCAD service at the default URL, then the
 /// workspace's examples. Reads files: call it on `Pool::Io`, with the job's
 /// cancel flag (`jobs::Ctx::cancel_flag`): the walk stops once it is set.
-pub(crate) fn discover(mode: ViewerMode, root: Option<PathBuf>, presets: Option<PathBuf>, recents: Option<PathBuf>, cancel: &AtomicBool) -> Sources {
+pub(crate) fn discover(mode: ViewerMode, root: Option<PathBuf>, presets: Option<PathBuf>, recents: Recents, ready: bool, cancel: &AtomicBool) -> Sources {
     let root = root.as_deref();
-    let mut sections = vec![recent_section(mode, root, recents.as_deref())];
+    let mut sections = vec![recent_section(mode, root, &recents, ready)];
     match mode {
         ViewerMode::Robot => {
             sections.push(preset_section(root, presets.as_deref()));

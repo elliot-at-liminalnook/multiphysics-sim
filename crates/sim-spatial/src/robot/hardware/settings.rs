@@ -1,32 +1,12 @@
-//! The Leg calibration panel's persisted display preferences: one JSON file
-//! (`path()`: `$SIM_SPATIAL_PREFERENCES`, else
-//! `$HOME/.config/sim-spatial/hardware-preferences.json`). It replaces the
-//! browser pages' `localStorage` keys:
-//!
-//! - `calibration-drive-mode` and `calibration-hold-others`
-//!   (web/viewer/calibration-ui.mjs:199-202) → [`CalibrationPrefs`];
-//! - `calibration-mirror-v1` (calibration-mirror.mjs:8,18,46) → [`MirrorSettings`];
-//! - `walking-hardware-map-v1` (hardware-sync.mjs:19,30) → [`SyncSettings`].
-//!
-//! Display and form preferences only: never calibration data, taught poses,
-//! alignments or limits (those live on the calibration server and in CAD).
-//!
-//! - **Tolerant reading.** Every field defaults and unknown fields are
-//!   ignored. A missing or unreadable file gives the defaults; a file that is
-//!   not valid JSON for this shape gives the defaults and is left as it is
-//!   (its bytes are copied aside, once, to `<file>.corrupt.json` before the
-//!   first save replaces it).
-//! - **Writing off the UI thread.** [`Settings::save`] hands a snapshot to a
-//!   `jobs::Pool::Io` job (`complete_on_drop`), which writes a temporary file
-//!   beside the target and renames it over (atomic on one file system). Saves
-//!   are numbered; an older save that runs after a newer one is skipped, so
-//!   the file always ends with the newest preferences.
+//! Hardware form preference data and the exact legacy migration path.
+//! Disk loading, migration and saving belong exclusively to `app::settings`.
+//! These choices contain no measured calibration, travel limits, operator
+//! confirmations or active drive intent. `align` names a CAD pose reference;
+//! it is not a measured alignment angle.
 use super::actions::{Align, DriveMode};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
-use std::sync::Mutex;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::path::PathBuf;
 
 /// The file's format version (written on every save).
 pub const VERSION: u32 = 1;
@@ -135,90 +115,41 @@ fn positive() -> i8 {
 /// `$HOME/.config/sim-spatial/hardware-preferences.json` (relative to the
 /// working directory when `HOME` is unset).
 pub fn path() -> PathBuf {
-    if let Some(p) = std::env::var_os(PATH_VARIABLE).filter(|p| !p.is_empty()) {
-        return PathBuf::from(p);
-    }
-    let home = std::env::var_os("HOME").map(PathBuf::from).unwrap_or_default();
-    home.join(".config").join("sim-spatial").join("hardware-preferences.json")
+    path_from(std::env::var_os(PATH_VARIABLE).filter(|p|!p.is_empty()).map(PathBuf::from), std::env::var_os("HOME").map(PathBuf::from))
 }
-
-/// Reads [`path()`] (see [`load_from`]).
-pub fn load() -> Settings {
-    load_from(&path())
+pub(crate) fn path_from(override_path:Option<PathBuf>,home:Option<PathBuf>)->PathBuf {
+    override_path.unwrap_or_else(||home.unwrap_or_default().join(".config").join("sim-spatial").join("hardware-preferences.json"))
 }
-
-/// Missing or unreadable: the defaults. Not this shape: the defaults, with a
-/// warning; the file is not changed.
-pub fn load_from(path: &Path) -> Settings {
-    let Ok(text) = std::fs::read_to_string(path) else { return Settings::default() };
-    match serde_json::from_str::<Settings>(&text) {
-        Ok(s) => s,
-        Err(e) => {
-            bevy::log::warn!("hardware preferences {}: {e}; using the defaults (the file is left as it is)", path.display());
-            Settings::default()
-        }
-    }
-}
-
-/// Save numbers: each save takes the next; the writer skips any older than the last written.
-static SAVES: AtomicU64 = AtomicU64::new(0);
-static WRITTEN: Mutex<u64> = Mutex::new(0);
 
 impl Settings {
-    /// Writes these preferences to [`path()`] off the UI thread (returns at once).
-    pub fn save(&self) {
-        let mut snapshot = self.clone();
-        snapshot.version = VERSION;
-        let target = path();
-        let number = SAVES.fetch_add(1, Ordering::SeqCst) + 1;
-        let job = crate::jobs::Job::spawn(crate::jobs::Pool::Io, number, "hardware-preferences save", move |_| {
-            let mut written = WRITTEN.lock().unwrap_or_else(|p| p.into_inner());
-            if *written > number {
-                return Ok(());
+    /// Validate choices before the owner publishes them; retain incomplete
+    /// bindings and normalize polarity exactly as the existing form adapters do.
+    pub fn validate(&mut self) -> Result<(), String> {
+        if !super::mirror::LEGS.contains(&self.mirror.leg.as_str()) {
+            return Err(format!("hardware.mirror.leg: unsupported leg `{}`", self.mirror.leg));
+        }
+        for (id, binding) in &mut self.mirror.bindings {
+            if !super::mirror::JOINTS.iter().any(|(joint, _)| *joint == binding.joint) {
+                return Err(format!("hardware.mirror.bindings.{id}.joint: unsupported joint `{}`", binding.joint));
             }
-            write_to(&target, &snapshot)?;
-            *written = number;
-            Ok(())
-        })
-        .complete_on_drop();
-        drop(job);
-    }
-}
-
-/// Writes `settings` to `path` atomically: parent directories created, a
-/// temporary file beside it, renamed over. An existing file that does not
-/// parse as preferences is copied to `<file>.corrupt.json` first (once).
-pub fn write_to(path: &Path, settings: &Settings) -> Result<(), String> {
-    let name = |p: &Path| p.display().to_string();
-    if let Some(dir) = path.parent().filter(|d| !d.as_os_str().is_empty()) {
-        std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-    }
-    if let Ok(text) = std::fs::read_to_string(path) {
-        if serde_json::from_str::<Settings>(&text).is_err() {
-            let aside = PathBuf::from(format!("{}.corrupt.json", name(path)));
-            if !aside.exists() {
-                std::fs::copy(path, &aside).map_err(|e| format!("keeping the unreadable {} as {}: {e}", name(path), aside.display()))?;
+            binding.polarity = sign(binding.polarity);
+        }
+        if let Some(amplitude) = self.sync.amplitude {
+            if !super::sync::SCALES.iter().any(|(scale, _)| *scale == amplitude) {
+                return Err("hardware.sync.amplitude: expected 0.03, 0.05 or 0.09".into());
             }
         }
+        for binding in &mut self.sync.bindings {
+            binding.polarity = sign(binding.polarity);
+        }
+        self.version = VERSION;
+        Ok(())
     }
-    let text = serde_json::to_string_pretty(settings).map_err(|e| format!("hardware preferences: {e}"))?;
-    let tmp = PathBuf::from(format!("{}.tmp-{}", name(path), std::process::id()));
-    std::fs::write(&tmp, text).map_err(|e| format!("{}: {e}", tmp.display()))?;
-    std::fs::rename(&tmp, path).map_err(|e| {
-        let _ = std::fs::remove_file(&tmp);
-        format!("{}: {e}", name(path))
-    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn scratch(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("sim-spatial-prefs-{}-{name}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        dir.join("nested").join("hardware-preferences.json")
-    }
 
     #[test]
     fn defaults_are_the_pages_initial_values() {
@@ -253,33 +184,28 @@ mod tests {
     }
 
     #[test]
-    fn round_trip_through_the_file() {
-        let path = scratch("round-trip");
+    fn round_trip_preserves_form_and_pose_references() {
         let mut s = Settings::default();
         s.calibration.drive_mode = Some(DriveMode::ServoSpeed);
         s.calibration.hold_others = Some(false);
         s.mirror.bindings.insert(3, MirrorBinding { joint: "Foot servo output".into(), polarity: -1, align: Align::Mid });
         s.sync = SyncSettings { leg: Some("+X".into()), amplitude: Some(0.05), bindings: vec![SyncBinding { coordinate: "joint.+X | Hip servo output".into(), motor_id: 2, polarity: 1 }] };
-        write_to(&path, &s).unwrap();
-        assert_eq!(load_from(&path), s);
-        // Integer map keys are written as strings, as the page's JSON has them.
-        let raw: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        let text = serde_json::to_string_pretty(&s).unwrap();
+        assert_eq!(serde_json::from_str::<Settings>(&text).unwrap(), s);
+        let raw: serde_json::Value = serde_json::from_str(&text).unwrap();
         assert_eq!(raw["mirror"]["bindings"]["3"]["align"], "mid");
-        let _ = std::fs::remove_dir_all(path.parent().unwrap().parent().unwrap());
     }
 
     #[test]
-    fn missing_and_corrupt_files_give_defaults_and_the_bad_file_is_kept() {
-        let path = scratch("corrupt");
-        assert_eq!(load_from(&path), Settings::default());
-        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-        std::fs::write(&path, "{not json").unwrap();
-        assert_eq!(load_from(&path), Settings::default());
-        assert_eq!(std::fs::read_to_string(&path).unwrap(), "{not json", "loading leaves the file alone");
-        write_to(&path, &Settings::default()).unwrap();
-        let aside = PathBuf::from(format!("{}.corrupt.json", path.display()));
-        assert_eq!(std::fs::read_to_string(aside).unwrap(), "{not json", "the bad bytes are kept aside before the first save");
-        assert_eq!(load_from(&path), Settings::default());
-        let _ = std::fs::remove_dir_all(path.parent().unwrap().parent().unwrap());
+    fn validation_rejects_invalid_choices_and_normalizes_signs() {
+        let mut s = Settings::default();
+        s.sync.bindings.push(SyncBinding { coordinate: String::new(), motor_id: 0, polarity: -7 });
+        s.validate().unwrap();
+        assert_eq!(s.sync.bindings[0].polarity, -1);
+        s.sync.amplitude = Some(0.5);
+        assert!(s.validate().unwrap_err().contains("hardware.sync.amplitude"));
+        s.sync.amplitude = Some(0.05);
+        s.mirror.leg = "wrong".into();
+        assert!(s.validate().unwrap_err().contains("hardware.mirror.leg"));
     }
 }

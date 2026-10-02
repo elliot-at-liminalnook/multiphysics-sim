@@ -349,6 +349,7 @@ use std::collections::HashSet;
 /// (Pending with the edit's sequence in the continuation).
 #[allow(clippy::too_many_arguments)]
 pub(super) fn apply(
+    mut settings: ResMut<crate::app::settings::SettingsOwner>,
     mut messages: ResMut<Messages<Act<CadAction>>>,
     mut in_flight: ResMut<InFlight<CadAction>>,
     mut replies: ResMut<Replies>,
@@ -377,6 +378,7 @@ pub(super) fn apply(
     let mut camera: Vec<crate::camera::CameraAction> = Vec::new();
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
         let mut cx = Cx {
+            settings: &mut settings,
             shared: Shared { selection: &mut *selection, registry: &mut *registry },
             doc: &mut *doc,
             meshes: meshes.as_deref_mut(),
@@ -418,6 +420,7 @@ pub(super) fn apply(
 /// selection arms (`selection::handle`) and the tool arms
 /// (`transform::handle`) take the same context.
 pub(super) struct Cx<'a> {
+    pub settings: &'a mut crate::app::settings::SettingsOwner,
     pub doc: &'a mut CadDocument,
     /// The one selection and the document registry (CAD's items are the
     /// shared selection's; `selection::Shared`).
@@ -466,7 +469,7 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
     let done = |r: Result<Value, String>| Outcome::Done(r);
     let doc = &mut *cx.doc;
     match action {
-        CadAction::State | CadAction::CadState => done(Ok(state_json(doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref()).authoring(cx.components, cx.composition).experiments(cx.experiments, cx.review, cx.motion)))),
+        CadAction::State | CadAction::CadState => done(Ok(state_json(doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref()).authoring(cx.components, cx.composition).experiments(cx.experiments, cx.review, cx.motion).defaults(&cx.settings.cad)))),
         CadAction::CadOpen { path, url } => {
             cx.review.request_cancel();
             cx.experiments.request_cancel();

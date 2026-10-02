@@ -41,7 +41,6 @@ pub fn apply(hw: &mut Hardware, action: &HardwareAction) -> Result<(), String> {
     }
     m.revision += 1;
     hw.settings.mirror = hw.mirror.to_save();
-    hw.settings.save();
     Ok(())
 }
 

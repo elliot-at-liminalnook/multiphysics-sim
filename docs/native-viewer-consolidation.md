@@ -1614,15 +1614,16 @@ independent build: `sim-spatial path/to/model.rcad`, or attach with
 > out in `docs/architecture/native-viewer.md` §8–§9. The notes below describe
 > today's state until those epics land.
 
-- **RoboCAD (Python/OCCT/Qt) stays** for geometry authoring: sketching,
-  booleans, direct edits, print splitting, and physical property editing on
-  B-reps. Rewriting OCCT in Rust is not planned. For now, geometry edits
-  require the RoboCAD window.
-- **Proposed boundary:** RoboCAD REST (`cad/robocad/api.py`) as a CAD
+- **Current CAD boundary:** Python/OCCT remains authoritative for B-rep
+  geometry and derivations. Native sim-spatial CAD forms use the shared typed
+  `sim_runtime::cad_client` over headless REST for sketching, direct edits,
+  print tools and physical property commands; assigned native paths require
+  no Qt window. Rust derivation/kernel replacement remains gated on executed
+  independent parity. Qt remains the available reference UI.
+- **Implemented service boundary:** RoboCAD REST (`cad/robocad/api.py`) as a CAD
   service. It runs headless (`python -m robocad.api model.rcad --port 8420`) or
   inside the GUI, where requests are marshalled onto the Qt thread, so undo
-  stays single. The shell would use a small Rust client (a new module in a
-  shared crate, not in the UI) for: `GET /robot`, `/physical`, `/nodes/{id}`
+  stays single. The native shell uses the shared typed Rust CAD client for: `GET /robot`, `/physical`, `/nodes/{id}`
   (mass properties), `/threads`, `POST /export`, `/render` thumbnails, and
   `PATCH`/`/ops/*` edits. The shell never writes CAD files itself. Edits go
   through the CAD command layer, so CAD undo and provenance stay intact. Long
@@ -1632,9 +1633,9 @@ independent build: `sim-spatial path/to/model.rcad`, or attach with
   loop works without a Python or browser UI. The edit is a CAD command
   (`PATCH /nodes/{id}`), the export is `GET /physical?path=` (RoboCAD writes
   the simrobot with tmp + `os.replace`, so the viewer never sees a partial
-  CAD export), and the native viewer's watch reloads that file. The file is
-  the whole interface: sim-spatial has no CAD client and never writes CAD
-  data. A wheeled-robot `flex=1` export took 9.8–12.8 s headless; the
+  CAD export), and the native viewer's watch reloads that file. This dated robot-cad-reload receipt used a file-only interface.
+  Native CAD now also uses the typed client; guarded source commands and
+  service-owned save/undo preserve CAD authority. A wheeled-robot `flex=1` export took 9.8–12.8 s headless; the
   viewer's reload after it took about 0.05–0.3 s.
 - **Open questions:**
   1. Which RoboCAD endpoints are safe to call while a person is editing (unsaved
@@ -2396,10 +2397,28 @@ fixtures and source reading are not executed parity. Python/OCCT and optional
 registry/experiment executables remain dependencies; no Qt window is required
 by these headless paths. Positive captured-run corpus evidence and whole-ledger
 coverage remain missing. T43 was accepted by source review at 4d2725f2/e6f6ed10;
-no compilation, execution or user checklist completion is inferred.
+T44 was accepted by source review at 8a7c0cd7/fe2a6eb1; no compilation, execution or user checklist completion is inferred.
 
 The T44 shutdown repair keeps actual partial reference receipts and separately
 reports interruption/cleanup issues. Group cleanup completes its signalling before
 reaping releases the leader identity. Source review and unexecuted fixtures support
 these paths; they provide no executed parity or stronger descendant containment
 than the documented owned process group.
+
+
+## Persisted-settings inventory update — T45 (2026-10-02)
+
+One `app::settings::SettingsOwner` now owns recents, inactive hardware form
+choices and validated CAD print defaults, with pinned Bevy SettingsGroup contracts
+and jobs-owned disk publication. Independent recents/hardware loaders and writers
+are replaced. [Viewer preferences](viewer-preferences.md) records field ownership,
+legacy/unified precedence, overrides, raw unknown preservation, readiness races,
+publication errors, retry and best-effort shutdown. Tool forms and REST actions
+share the accepted dispatch update point; source geometry, undo, measured actuator
+models, travel limits and active hardware intent remain outside preferences.
+
+Ten Rust epics since aa34ef48 are now uncompiled, including T44 and T45. T44 was
+accepted by source review at 8a7c0cd7/fe2a6eb1; its harness and parity remain
+unexecuted. T45 fixtures and all builds/tests/launches remain unexecuted. Historical
+receipts above are preserved as dated evidence and do not establish present native
+parity. Python/OCCT and optional registry/experiment executables remain dependencies.

@@ -12,7 +12,6 @@ use sim_inspect::animation::{FlowBinding, FlowDomain, InternalElement, scalar};
 use sim_inspect::spatial::Overlay;
 use std::collections::{HashMap, VecDeque};
 use std::f32::consts::TAU;
-
 #[derive(Component)]
 pub(crate) struct InternalPiece(pub usize);
 /// The split view's copy of an internal piece, posed by the companion run.
@@ -21,7 +20,7 @@ pub(crate) struct CompanionPiece;
 #[derive(Component)]
 pub(crate) struct Rope(pub usize);
 #[derive(Component)]
-pub(crate) struct PhysicsLabel;
+pub(crate) struct PhysicsLabel(String);
 #[derive(Component)]
 pub(crate) struct OverlayBar;
 #[derive(Component, Clone, Copy)]
@@ -33,7 +32,6 @@ pub(crate) enum ViewToggle {
     Explode,
     Strobe,
 }
-
 const DRIVE: Color = Color::srgb(0.98, 0.62, 0.22);
 const ABSORB: Color = Color::srgb(0.30, 0.78, 0.95);
 const CURRENT: Color = Color::srgb(1.0, 0.86, 0.30);
@@ -514,10 +512,9 @@ const TEXT_REFRESH_S: f64 = 0.25;
 const EASE_S: f32 = 0.18;
 const SNAP_PX: f32 = 90.;
 
-pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<SpatialScene>, time: Res<Time>, window: Single<&Window>, camera: Single<(&Camera, &GlobalTransform), With<Orbit>>, inset: Query<&Camera, (With<crate::view::InsetCamera>, Without<Orbit>)>, fonts: Option<Res<crate::ui_kit::UiFonts>>, existing: Query<Entity, With<PhysicsLabel>>, mut steady: Local<Steady>) {
-    for e in &existing {
-        commands.entity(e).despawn();
-    }
+pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<SpatialScene>, time: Res<Time>, window: Single<&Window>, camera: Single<(&Camera, &GlobalTransform), With<Orbit>>, inset: Query<&Camera, (With<crate::view::InsetCamera>, Without<Orbit>)>, fonts: Option<Res<crate::ui_kit::UiFonts>>, mut existing: Query<(Entity, &PhysicsLabel, &mut Node, &Children)>, mut texts: Query<&mut Text>, mut steady: Local<Steady>) {
+    let mut remaining: HashMap<String, Entity> = existing.iter().map(|(e, label, _, _)| (label.0.clone(), e)).collect();
+    let mut occurrences: HashMap<String, usize> = HashMap::new();
     let now = time.elapsed_secs_f64();
     let dt = time.delta_secs();
     steady.by_key.retain(|_, l| now - l.seen < 1.0);
@@ -526,13 +523,20 @@ pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<Spa
     steady.sim_time = sim_time;
     let (cam, gt) = *camera;
     let scale = window.scale_factor();
-    let Some(viewport) = cam.viewport.as_ref() else { return };
+    let Some(viewport) = cam.viewport.as_ref() else {
+        for e in remaining.values() { commands.entity(*e).despawn(); }
+        return;
+    };
     if viewport.physical_size.x < 40 || viewport.physical_size.y < 40 {
+        for e in remaining.values() { commands.entity(*e).despawn(); }
         return;
     }
     let origin = viewport.physical_position.as_vec2() / scale;
     let size = viewport.physical_size.as_vec2() / scale;
-    let Some(fonts) = fonts else { return };
+    let Some(fonts) = fonts else {
+        for e in remaining.values() { commands.entity(*e).despawn(); }
+        return;
+    };
     let k = crate::ui_kit::Kit::new(&fonts);
     // Keep clear of the hint line (and the builder's layer chips) along the top.
     let mut placed: Vec<Rect> = vec![Rect::new(0., 0., size.x, if scene.learn_view.is_some() { 22. } else { 60. })];
@@ -554,7 +558,7 @@ pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<Spa
         // Keyed by name and colour: an emphasis arrow's name is not the
         // force label that shares it.
         let key = format!("{}|{:?}", label_key(text), color.to_srgba());
-        let entry = steady.by_key.entry(key).or_insert_with(|| SteadyLabel { text: text.clone(), changed: now, at: target, dy: None, seen: now });
+        let entry = steady.by_key.entry(key.clone()).or_insert_with(|| SteadyLabel { text: text.clone(), changed: now, at: target, dy: None, seen: now });
         if entry.text != *text && (!playing || now - entry.changed >= TEXT_REFRESH_S) {
             entry.text = text.clone();
             entry.changed = now;
@@ -586,16 +590,23 @@ pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<Spa
         let r = rect(dy);
         placed.push(r);
         // A label floats at its anchor over the 3D view, the scene showing through.
-        commands.spawn((
-            PhysicsLabel,
-            Node { border_radius: BorderRadius::all(Val::Px(3.)), position_type: PositionType::Absolute, left: Val::Px(origin.x + r.min.x), top: Val::Px(origin.y + r.min.y), padding: UiRect::axes(Val::Px(5.), Val::Px(1.)), ..default() },
-            BackgroundColor(crate::view::BACKDROP.with_alpha(0.72)),
-            GlobalZIndex(24),
-            Pickable::IGNORE,
-            // Word wrapping as before (the kit's text also breaks inside words).
-            children![({ let mut label = k.text(text, 11., *color, 2); label.3 = TextLayout::default(); label }, Pickable::IGNORE)],
-        ));
+        let occurrence = occurrences.entry(key.clone()).or_default();
+        let identity = format!("{key}|{occurrence}");
+        *occurrence += 1;
+        let node = Node { border_radius: BorderRadius::all(Val::Px(3.)), position_type: PositionType::Absolute, left: Val::Px(origin.x + r.min.x), top: Val::Px(origin.y + r.min.y), padding: UiRect::axes(Val::Px(5.), Val::Px(1.)), ..default() };
+        if let Some(entity) = remaining.remove(&identity) {
+            if let Ok((_, _, mut current, children)) = existing.get_mut(entity) {
+                current.set_if_neq(node);
+                for &child in children {
+                    if let Ok(mut current) = texts.get_mut(child) { current.set_if_neq(Text(text.clone())); }
+                }
+            }
+        } else {
+            commands.spawn((PhysicsLabel(identity), node, BackgroundColor(crate::view::BACKDROP.with_alpha(0.72)), GlobalZIndex(24), Pickable::IGNORE,
+                children![({ let mut label = k.text(text, 11., *color, 2); label.3 = TextLayout::default(); label }, Pickable::IGNORE)]));
+        }
     }
+    for e in remaining.values() { commands.entity(*e).despawn(); }
 }
 
 /// A node whose children are the layer switches. The builder floats one over

@@ -397,8 +397,8 @@ pub(crate) struct Preferences(pub super::settings::Settings);
 
 /// Registers the action type, the saved preferences ([`Preferences`]), the
 /// lifecycle (OnEnter/OnExit of the Robot scope) and the systems: input
-/// mappings in Input (after the REST poll), [`apply`] in Actions (after
-/// robot mode's own, which passes `system_ui` activations on), the job
+/// mappings in Input's window step (after the REST poll), [`apply`] in Actions (after
+/// robot mode's own, `RobotSet::Actions`, which passes `system_ui` activations on), the job
 /// results in JobResults; and [`stop_on_exit`] in `Last`, after Bevy's
 /// exit systems, in every mode (it needs only the `Hardware` resource).
 pub(crate) fn build(app: &mut App) {
@@ -407,8 +407,8 @@ pub(crate) fn build(app: &mut App) {
     app.add_systems(OnEnter(ModeScope::Robot), enter).add_systems(OnExit(ModeScope::Robot), leave).add_systems(
         Update,
         (
-            (buttons, jog_buttons, keys, window_loss, sliders).chain().after(actions::serve).in_set(ViewerSet::Input),
-            apply.after(super::super::actions::apply).in_set(ViewerSet::Actions),
+            (buttons, jog_buttons, keys, window_loss, sliders).chain().in_set(crate::app::InputSet::Window),
+            apply.after(crate::robot::RobotSet::Actions).in_set(ViewerSet::Actions),
             poll_jobs.in_set(ViewerSet::JobResults),
         )
             .run_if(in_state(ViewerMode::Robot)),

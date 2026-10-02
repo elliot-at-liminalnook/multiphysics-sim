@@ -584,10 +584,10 @@ pub(in crate::cad) fn build(app: &mut App) {
     app.add_systems(OnEnter(ModeScope::Cad), |mut commands: Commands| commands.insert_resource(CadFiles::default())).add_systems(
         Update,
         (
-            form::input.after(crate::app::actions::serve).before(crate::cad::keys::keys).in_set(ViewerSet::Input),
+            form::input.in_set(crate::app::InputSet::Window).in_set(crate::cad::CadKeySet::Focus).in_set(ViewerSet::Input),
             // Before the edits' results: a finished edit's status line (`sync::finish_edit`) is
             // the one `views::sync` reads as a view save's answer (found by review).
-            jobs::receive.before(crate::cad::sync::receive).in_set(ViewerSet::JobResults),
+            jobs::receive.before(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults),
             (form::draw, jobs::strip).in_set(ViewerSet::Present),
         )
             .run_if(in_state(ViewerMode::Cad)),

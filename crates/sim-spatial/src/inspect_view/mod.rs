@@ -302,6 +302,29 @@ impl SpatialScene {
     }
 }
 
+/// The spatial view's public ordering points (native-viewer.md "Public
+/// system sets"), configured once in [`SpatialViewerPlugin`], all in
+/// SimSync: the builder and the lesson pages that draw into this view order
+/// against these, not against its functions.
+#[derive(SystemSet, Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub(crate) enum InspectViewSet {
+    /// The notes' navigation (`notes::update`), first in the layout chain.
+    Notes,
+    /// The linked peer's selection exchange, after projection in Inspect.
+    Link,
+    /// The view's camera data goes to the shared camera (`sync_camera`),
+    /// last in the layout chain, before `CameraSet::Viewport`.
+    Camera,
+    /// The parts follow the placed camera (`update_parts`, after `CameraSet::Place`).
+    Parts,
+}
+
+/// [`InspectViewSet`] in the pipeline (SpatialViewerPlugin, and the
+/// windowless schedule test).
+pub(crate) fn configure_sets(app: &mut App) {
+    app.configure_sets(Update, (InspectViewSet::Notes, InspectViewSet::Link, InspectViewSet::Camera, InspectViewSet::Parts).in_set(ViewerSet::SimSync));
+}
+
 /// The spatial assembly view: Inspect's whole screen, and the 3D scene the
 /// builder (Build) and the lesson pages (Lessons) draw into. Its entities are
 /// spawned on entering the Inspect or Builder scope (and despawned on leaving
@@ -311,12 +334,13 @@ pub struct SpatialViewerPlugin;
 impl Plugin for SpatialViewerPlugin {
     fn build(&self, app: &mut App) {
         app::actions::register::<inspect::InspectAction>(app);
+        configure_sets(app);
         app.init_resource::<physics_view::Labels>()
             .init_resource::<view::PartHover>()
             .add_systems(OnEnter(ModeScope::Inspect), (setup_scene, setup_ui))
             .add_systems(OnEnter(ModeScope::Builder), (setup_scene, setup_ui))
             // Buttons, keys, the notes panel and the overlay bar write the view's actions.
-            .add_systems(Update, (inspect::input, notes::clicks, physics_view::overlay_clicks).chain().after(app::actions::serve).in_set(ViewerSet::Input).run_if(in_state(SpatialScreen)))
+            .add_systems(Update, (inspect::input, notes::clicks, physics_view::overlay_clicks).chain().in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input).run_if(in_state(SpatialScreen)))
             .add_systems(Update, inspect::apply.in_set(ViewerSet::Actions).run_if(in_state(SpatialScreen)))
             // Inspect's shared selection, shown (and re-checked after a
             // reload): after the notes' navigation, before the link's
@@ -324,12 +348,12 @@ impl Plugin for SpatialViewerPlugin {
             // here, and never a reloaded document's dropped items; a peer's
             // change it applies it shows itself) and before the parts and
             // the inspector read what is shown.
-            .add_systems(Update, projection::project_selection.after(notes::update).before(linked::sync_link).before(update_parts).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Inspect)))
+            .add_systems(Update, projection::project_selection.after(InspectViewSet::Notes).before(InspectViewSet::Link).before(InspectViewSet::Parts).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Inspect)))
             .add_systems(
                 Update,
                 // The layout first: the camera's data (bounds, view area)
                 // goes to the shared camera before it sets the viewport.
-                (notes::update, buttons, linked::sync_link, animation::sync_live, update_layout, sync_camera)
+                (notes::update.in_set(InspectViewSet::Notes), buttons, linked::sync_link.in_set(InspectViewSet::Link), animation::sync_live, update_layout, sync_camera.in_set(InspectViewSet::Camera))
                     .chain()
                     .before(CameraSet::Viewport)
                     .in_set(ViewerSet::SimSync)
@@ -338,7 +362,7 @@ impl Plugin for SpatialViewerPlugin {
             .add_systems(
                 Update,
                 // Then what reads the placed camera.
-                (scroll_inspector, update_parts, linked::update_nets, update_ui, draw_guides, notes::guides, animation::draw_markers)
+                (scroll_inspector, update_parts.in_set(InspectViewSet::Parts), linked::update_nets, update_ui, draw_guides, notes::guides, animation::draw_markers)
                     .chain()
                     .after(CameraSet::Place)
                     .in_set(ViewerSet::SimSync)
@@ -348,7 +372,6 @@ impl Plugin for SpatialViewerPlugin {
                 Update,
                 (view::animate, physics_view::update_internals, physics_view::draw, view::draw_pins, view::draw_ghost, view::split, view::inset, physics_view::labels, physics_view::overlay_bar, inspect::publish)
                     .chain()
-                    .after(animation::draw_markers)
                     .in_set(ViewerSet::Present)
                     .run_if(in_state(SpatialScreen)),
             );

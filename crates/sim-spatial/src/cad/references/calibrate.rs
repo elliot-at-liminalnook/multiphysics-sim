@@ -306,8 +306,8 @@ pub(super) fn build(app: &mut App) {
     app.add_systems(
         Update,
         (
-            click.after(crate::app::actions::serve).in_set(ViewerSet::Input),
-            escape.after(crate::app::actions::serve).after(crate::cad::keys::gate).run_if(crate::cad::keys::free).before(crate::cad::keys::keys).before(crate::cad::transform::keys).in_set(ViewerSet::Input),
+            click.in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input),
+            escape.in_set(crate::app::InputSet::Window).after(crate::cad::CadKeySet::Gate).run_if(crate::cad::keys::free).in_set(crate::cad::CadKeySet::Focus).before(crate::cad::CadKeySet::ToolKeys).in_set(ViewerSet::Input),
             markers.in_set(ViewerSet::Present),
         )
             .run_if(in_state(ViewerMode::Cad)),

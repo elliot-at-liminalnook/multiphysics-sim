@@ -546,12 +546,12 @@ pub(in crate::cad) fn build(app: &mut App) {
             ui::cube_press.in_set(ViewerSet::Input),
             // The offset field's messages and presses (the kit's one text field).
             entry::input
-                .after(crate::app::actions::serve)
-                .before(crate::cad::keys::keys)
+                .in_set(crate::app::InputSet::Window)
+                .in_set(crate::cad::CadKeySet::Focus)
                 .in_set(ViewerSet::Input),
             section::exact_jobs.in_set(ViewerSet::JobResults),
             // After the bodies' meshes and materials are set for this frame (`mesh::sync`, `mesh::highlight`).
-            (section::preview, draw::materials, draw::edges_sync).chain().after(crate::cad::mesh::highlight).in_set(ViewerSet::SimSync),
+            (section::preview, draw::materials, draw::edges_sync).chain().after(crate::cad::CadSet::Highlight).in_set(ViewerSet::SimSync),
             (draw::lines, draw::quads, draw::lights, ui::toolbar).in_set(ViewerSet::Present),
         )
             .run_if(in_state(ViewerMode::Cad)),

@@ -194,5 +194,5 @@ fn click(
 
 /// CadPlugin: the fastener tool's 3D clicks.
 pub(super) fn build(app: &mut App) {
-    app.add_systems(Update, click.after(crate::app::actions::serve).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)));
+    app.add_systems(Update, click.in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)));
 }

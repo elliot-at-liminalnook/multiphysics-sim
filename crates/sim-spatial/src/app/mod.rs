@@ -9,7 +9,9 @@
 //!   drawn over the builder's scene) and [`SpatialScreen`] (the spatial
 //!   assembly view is drawn: Inspect, Build and Lessons).
 //! - **One pipeline of sets** in `Update`: [`ViewerSet`] Input → Actions →
-//!   JobResults → SimSync → Present, configured once here.
+//!   JobResults → SimSync → Present, configured once here, with Input's
+//!   steps [`InputSet`] Rest → Window. Features order against each other
+//!   only through public sets (native-viewer.md "Public system sets").
 //! - **The core** ([`CorePlugin`]): window, winit, clear colour and light per
 //!   mode, fonts, mesh picking, occlusion, the UI kit (`ui_kit::UiKitPlugin`), the REST wake,
 //!   the mode switcher and the one REST server (`rest::Rest`, bound once by
@@ -37,6 +39,8 @@ pub mod switcher;
 mod picker_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod ordering_tests;
 
 use bevy::prelude::*;
 use bevy::window::{PrimaryWindow, WindowResizeConstraints};
@@ -164,6 +168,20 @@ pub enum ViewerSet {
     Present,
 }
 
+/// The steps of [`ViewerSet::Input`], chained in this order (native-viewer.md
+/// "Public system sets"). A feature's buttons, keys, picks and drops go in
+/// [`InputSet::Window`], so they write their actions after REST's, as the
+/// old REST ordering edges ordered them; Input work with no such
+/// relation stays in `ViewerSet::Input` alone, unordered against both steps.
+#[derive(SystemSet, Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum InputSet {
+    /// The one REST poll (`actions::serve`): REST's actions are written first.
+    Rest,
+    /// The window's own input: buttons, keys, pointer presses, drops and
+    /// slider releases.
+    Window,
+}
+
 /// Core entities that live across every mode (the mode switcher).
 #[derive(Component)]
 pub struct Persistent;
@@ -239,6 +257,12 @@ pub fn run(launch: Launch) {
     .run();
 }
 
+/// Configure the public viewer pipeline without window or state plugins.
+pub(crate) fn configure_sets(app: &mut App) {
+    app.configure_sets(Update, (ViewerSet::Input, ViewerSet::Actions, ViewerSet::JobResults, ViewerSet::SimSync, ViewerSet::Present).chain())
+        .configure_sets(Update, (InputSet::Rest, InputSet::Window).chain().in_set(ViewerSet::Input));
+}
+
 /// States, the pipeline sets and mode switching: everything about modes that
 /// needs no window (so the state-transition test runs it on MinimalPlugins).
 pub struct ModesPlugin {
@@ -249,8 +273,8 @@ impl Plugin for ModesPlugin {
         app.insert_state(self.initial)
             .add_computed_state::<ModeScope>()
             .add_computed_state::<SpatialScreen>()
-            .configure_sets(Update, (ViewerSet::Input, ViewerSet::Actions, ViewerSet::JobResults, ViewerSet::SimSync, ViewerSet::Present).chain())
             .add_systems(Last, scope_new_entities);
+        configure_sets(app);
         switch::build(app);
         // The one selection and the document registry (native-viewer.md §7).
         crate::selection::build(app);

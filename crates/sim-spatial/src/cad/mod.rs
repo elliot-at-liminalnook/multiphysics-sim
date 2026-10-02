@@ -105,8 +105,56 @@ pub use surfaces::Surface;
 pub use topology::{CadTopology, NodeTopology};
 pub use view::CadView;
 
-use crate::app::{ModeScope, ViewerMode, ViewerSet};
+use crate::app::{InputSet, ModeScope, ViewerMode, ViewerSet};
 use bevy::prelude::*;
+
+/// CAD's public ordering points (native-viewer.md "Public system sets"):
+/// CAD's own systems, and any other feature, order against these instead of
+/// CAD's functions. Configured once, in [`CadCorePlugin`].
+#[derive(SystemSet, Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum CadSet {
+    /// JobResults: the service's answers land (`sync::receive`). A job's
+    /// own results that must see this frame's document run after it.
+    Results,
+    /// SimSync: the bodies' meshes are synced to the document (`mesh::sync`).
+    Mesh,
+    /// SimSync: each body's own material and highlight (`mesh::highlight`).
+    Highlight,
+    /// SimSync: the active sketch plane follows the plane frames (`sketch::plane::sync`).
+    Plane,
+    /// SimSync, after `CameraSet::Place`: this frame's view snapshot (`view::update`).
+    View,
+}
+
+/// CAD's key arbitration in Input's window step (`keys.rs`, the module doc's
+/// key table). Only the relations that held as function edges are
+/// configured: the two-step key gate comes before RoboCAD's shortcuts and the
+/// Select tool's keys, and every field-focusing reader before the shortcuts.
+/// `Focus` is not ordered against `Gate` (readers that must follow the gate
+/// say so), and `Keys` is not ordered against `ToolKeys`.
+#[derive(SystemSet, Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum CadKeySet {
+    /// The two-step key gate (`keys::gate`). Readers that take a key first
+    /// (an open popup's Escape, the docks' typing) run before it.
+    Gate,
+    /// Readers that give a field the keyboard, or consume a key, this frame:
+    /// before RoboCAD's shortcuts, which then stand aside.
+    Focus,
+    /// RoboCAD's shortcuts (`keys::keys`).
+    Keys,
+    /// The Select tool's keys (`transform::keys`).
+    ToolKeys,
+}
+
+/// [`CadSet`] and [`CadKeySet`] in the pipeline (CadCorePlugin, and the
+/// windowless schedule test).
+pub(crate) fn configure_sets(app: &mut App) {
+    app.configure_sets(Update, CadSet::Results.in_set(ViewerSet::JobResults))
+        .configure_sets(Update, (CadSet::Mesh, CadSet::Highlight, CadSet::Plane, CadSet::View).in_set(ViewerSet::SimSync))
+        .configure_sets(Update, (CadKeySet::Gate, CadKeySet::Focus, CadKeySet::Keys, CadKeySet::ToolKeys).in_set(InputSet::Window))
+        .configure_sets(Update, CadKeySet::Gate.before(CadKeySet::Keys).before(CadKeySet::ToolKeys))
+        .configure_sets(Update, CadKeySet::Focus.before(CadKeySet::Keys));
+}
 
 /// What CAD mode needs without a window (the switch test runs it with
 /// `ModesPlugin` on MinimalPlugins + StatesPlugin): the action, its
@@ -119,6 +167,7 @@ pub struct CadCorePlugin;
 impl Plugin for CadCorePlugin {
     fn build(&self, app: &mut App) {
         crate::app::actions::register::<CadAction>(app);
+        configure_sets(app);
         app.init_resource::<CadActivePlane>()
             .add_systems(
                 OnEnter(ModeScope::Cad),
@@ -133,12 +182,12 @@ impl Plugin for CadCorePlugin {
                 Update,
                 (
                     actions::apply.in_set(ViewerSet::Actions),
-                    sync::receive.in_set(ViewerSet::JobResults),
+                    sync::receive.in_set(CadSet::Results),
                     // A read's result (copy, control points, comb, continuity), with or without a window.
-                    analysis_overlay::receive.in_set(ViewerSet::JobResults).after(sync::receive),
+                    analysis_overlay::receive.in_set(ViewerSet::JobResults).after(CadSet::Results),
                     topology::sync.in_set(ViewerSet::SimSync),
                     // Sketch geometry and plane frames, then the active plane follows them (cad-sketch).
-                    (sketch::cache::sync, sketch::plane::sync).chain().in_set(ViewerSet::SimSync),
+                    (sketch::cache::sync, sketch::plane::sync.in_set(CadSet::Plane)).chain().in_set(ViewerSet::SimSync),
                     snapshot::publish.in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Cad)),
@@ -170,12 +219,12 @@ impl Plugin for CadPlugin {
                 (
                     // Not while a text field has the keyboard (`keys::keys` reads `Typing`); after
                     // the two-step key gate, which gives a pending chord the frame's key.
-                    keys::keys.after(crate::app::actions::serve).after(keys::gate).in_set(ViewerSet::Input),
+                    keys::keys.in_set(CadKeySet::Keys),
                     // The shared camera (`crate::camera`) navigates, sets the viewport and places
                     // the view in its sets: the bounds, a node fit and the gesture gates go in
                     // before the place step (`scene::fit`), and the snapshot is taken after it.
-                    (mesh::sync, mesh::highlight, scene::fit).chain().before(crate::camera::CameraSet::Place).in_set(ViewerSet::SimSync),
-                    view::update.after(crate::camera::CameraSet::Place).in_set(ViewerSet::SimSync),
+                    (mesh::sync.in_set(CadSet::Mesh), mesh::highlight.in_set(CadSet::Highlight), scene::fit).chain().before(crate::camera::CameraSet::Place).in_set(ViewerSet::SimSync),
+                    view::update.after(crate::camera::CameraSet::Place).in_set(CadSet::View),
                 )
                     .run_if(in_state(ViewerMode::Cad)),
             );

@@ -32,7 +32,7 @@ struct MirrorStatus;
 pub(crate) fn build(app: &mut App) {
     app.add_systems(
         Update,
-        (mirror_sync.in_set(ViewerSet::SimSync).before(crate::robot::apply_frames), mirror_panel.in_set(ViewerSet::Present)).run_if(in_state(ViewerMode::Robot)),
+        (mirror_sync.in_set(ViewerSet::SimSync).before(crate::robot::RobotSet::Frames), mirror_panel.in_set(ViewerSet::Present)).run_if(in_state(ViewerMode::Robot)),
     );
 }
 

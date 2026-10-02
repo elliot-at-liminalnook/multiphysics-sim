@@ -135,7 +135,7 @@ impl Plugin for PlacePlugin {
         app.add_systems(OnEnter(ModeScope::Place), setup).add_systems(
             Update,
             (
-                keys.after(actions::serve).in_set(ViewerSet::Input).run_if(not(crate::ui_kit::text::typing)),
+                keys.in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input).run_if(not(crate::ui_kit::text::typing)),
                 apply.in_set(ViewerSet::Actions),
                 publish.in_set(ViewerSet::Present),
                 viewport.in_set(ViewerSet::Present),

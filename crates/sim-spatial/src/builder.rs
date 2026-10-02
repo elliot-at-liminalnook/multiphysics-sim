@@ -529,22 +529,22 @@ impl Plugin for BuilderPlugin {
         drafts::add_fields(app);
         // Buttons and keys write the builder's actions (after REST's, as the old chain
         // applied them); its one handler applies them and REST's in Actions.
-        app.add_systems(Update, (actions::buttons, actions::keys.run_if(building.clone()).run_if(not(crate::ui_kit::text::typing))).chain().after(crate::app::actions::serve).in_set(ViewerSet::Input).run_if(in_state(ModeScope::Builder)))
+        app.add_systems(Update, (actions::buttons, actions::keys.run_if(building.clone()).run_if(not(crate::ui_kit::text::typing))).chain().in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input).run_if(in_state(ModeScope::Builder)))
             .add_systems(Update, system_actions::apply.in_set(ViewerSet::Actions).run_if(in_state(ModeScope::Builder)));
         app.add_systems(
             Update,
             (frame_timing, watch, agent::tick, reference::tick, sync_field.run_if(building.clone()), drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, picked::track, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
                 .chain()
                 // Docks and home requests reach the shared camera before it is placed.
-                .before(crate::inspect_view::sync_camera)
-                .before(update_parts)
+                .before(crate::inspect_view::InspectViewSet::Camera)
+                .before(crate::inspect_view::InspectViewSet::Parts)
                 .in_set(ViewerSet::SimSync)
                 .run_if(in_state(ModeScope::Builder)),
         )
         // Picks and handles read the placed camera.
-        .add_systems(Update, placement::update.after(update_parts).after(crate::camera::CameraSet::Place).in_set(ViewerSet::SimSync).run_if(building.clone()))
+        .add_systems(Update, placement::update.after(crate::inspect_view::InspectViewSet::Parts).after(crate::camera::CameraSet::Place).in_set(ViewerSet::SimSync).run_if(building.clone()))
         .add_systems(Update, (placement::apply_preview, placement::draw_handles).chain().after(placement::update).in_set(ViewerSet::SimSync).run_if(building.clone()))
-        .add_systems(Update, discussion::hover.after(notes::update).in_set(ViewerSet::SimSync).run_if(building.clone()))
+        .add_systems(Update, discussion::hover.after(crate::inspect_view::InspectViewSet::Notes).in_set(ViewerSet::SimSync).run_if(building.clone()))
         .add_systems(Update, markers::sync.after(placement::apply_preview).after(discussion::hover).in_set(ViewerSet::SimSync).run_if(building.clone()))
         .add_systems(Update, ui_api::collect.after(markers::sync).after(ui::rebuild_panel).in_set(ViewerSet::SimSync).run_if(building))
         .add_observer(placement::end_drag);

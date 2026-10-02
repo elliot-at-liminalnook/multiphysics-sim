@@ -318,9 +318,9 @@ pub(super) fn build(app: &mut App) {
         .add_systems(OnEnter(ModeScope::Cad), toolbar::spawn)
         .add_systems(
             Update,
-            (form::input, palette::input, input, radial::input, context_menu::input, popup_scroll, toolbar::scroll, super::keys::gate)
+            (form::input, palette::input, input, radial::input, context_menu::input, popup_scroll, toolbar::scroll, super::keys::gate.in_set(crate::cad::CadKeySet::Gate))
                 .chain()
-                .after(crate::app::actions::serve)
+                .in_set(crate::app::InputSet::Window)
                 // The form's Tab focuses its first field before the numeric
                 // bar reads Tab (it stands aside while a field types).
                 .before(super::numeric::entry)

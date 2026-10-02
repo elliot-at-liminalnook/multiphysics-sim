@@ -361,7 +361,7 @@ pub(super) fn build(app: &mut App) {
     app.init_resource::<StressPaint>().add_systems(
         Update,
         (
-            paint.after(crate::cad::mesh::sync).before(crate::cad::mesh::highlight).in_set(ViewerSet::SimSync),
+            paint.after(crate::cad::CadSet::Mesh).before(crate::cad::CadSet::Highlight).in_set(ViewerSet::SimSync),
             panel.in_set(ViewerSet::Present),
         )
             .run_if(in_state(ViewerMode::Cad)),

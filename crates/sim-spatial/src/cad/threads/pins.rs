@@ -208,5 +208,5 @@ fn press(presses: Query<(&Interaction, &PinPress), Changed<Interaction>>, mut ou
 
 /// CadPlugin: the pins (Present) and their presses (Input).
 pub(super) fn build(app: &mut App) {
-    app.add_systems(Update, (press.after(crate::app::actions::serve).in_set(ViewerSet::Input), draw.in_set(ViewerSet::Present)).run_if(in_state(ViewerMode::Cad)));
+    app.add_systems(Update, (press.in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input), draw.in_set(ViewerSet::Present)).run_if(in_state(ViewerMode::Cad)));
 }

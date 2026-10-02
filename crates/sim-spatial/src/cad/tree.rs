@@ -167,13 +167,13 @@ pub(in crate::cad) fn build(app: &mut App) {
             Update,
             (popup::input, input::rows, input::fields)
                 .chain()
-                .after(crate::app::actions::serve)
-                .before(super::keys::gate)
+                .in_set(crate::app::InputSet::Window)
+                .before(crate::cad::CadKeySet::Gate)
                 .in_set(ViewerSet::Input)
                 .run_if(in_state(ViewerMode::Cad)),
         )
         // Ctrl+F: after the gate (a pending two-step key owns the frame:
         // `keys::free`), before CAD's keys, which it takes the key from.
-        .add_systems(Update, search.run_if(super::keys::free).after(super::keys::gate).before(super::keys::keys).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)))
+        .add_systems(Update, search.run_if(super::keys::free).after(crate::cad::CadKeySet::Gate).in_set(crate::cad::CadKeySet::Focus).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)))
         .add_systems(Update, popup::draw.in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }

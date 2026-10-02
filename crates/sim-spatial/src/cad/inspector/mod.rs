@@ -62,8 +62,8 @@ pub(super) fn build(app: &mut App) {
     app.add_text_field(editors::EDITOR, editors::editor_field()).add_systems(
         Update,
         editor_entry
-            .after(crate::app::actions::serve)
-            .before(super::keys::keys)
+            .in_set(crate::app::InputSet::Window)
+            .in_set(crate::cad::CadKeySet::Focus)
             .in_set(ViewerSet::Input)
             .run_if(in_state(ViewerMode::Cad)),
     );

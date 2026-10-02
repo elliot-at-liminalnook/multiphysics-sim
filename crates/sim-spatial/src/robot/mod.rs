@@ -175,6 +175,23 @@ use ui::{
     SpeedButton, SpeedLabel, StatusText, StressText, TabButton, TitleText, setup,
 };
 
+/// Robot mode's public ordering points (native-viewer.md "Public system
+/// sets"), configured once in [`RobotPlugin`]; the hardware panels order
+/// against these, not against robot mode's functions.
+#[derive(SystemSet, Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum RobotSet {
+    /// Actions: robot mode's one handler (`actions::apply`), which also
+    /// passes `system_ui` activations on to the hardware panel's.
+    Actions,
+    /// SimSync: this frame's posed links (`scene::apply_frames`).
+    Frames,
+}
+
+/// [`RobotSet`] in the pipeline (RobotPlugin, and the windowless schedule test).
+pub(crate) fn configure_sets(app: &mut App) {
+    app.configure_sets(Update, RobotSet::Actions.in_set(ViewerSet::Actions)).configure_sets(Update, RobotSet::Frames.in_set(ViewerSet::SimSync));
+}
+
 /// Robot mode: worker load, posed link meshes, link list, inspector and
 /// REST. Its entities are spawned on entering the Robot scope; its two
 /// chains run in robot mode in their original order (the frame chain in
@@ -184,6 +201,7 @@ pub struct RobotPlugin;
 impl Plugin for RobotPlugin {
     fn build(&self, app: &mut App) {
         crate::app::actions::register::<RobotAction>(app);
+        configure_sets(app);
         hardware::build(app);
         panel_ui::add_field(app);
         app.insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
@@ -199,14 +217,13 @@ impl Plugin for RobotPlugin {
                     // The gait path field first: a press that focuses it this frame already stops robot keys (`ui_kit::text::Typing`).
                     (panel_ui::gait_path_input, panel_ui::toggles, panel_ui::recorded_seek, actions::motion_keys, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons)
                         .chain()
-                        .after(crate::app::actions::serve)
-                        .in_set(ViewerSet::Input),
-                    actions::apply.in_set(ViewerSet::Actions),
+                        .in_set(crate::app::InputSet::Window),
+                    actions::apply.in_set(RobotSet::Actions),
                     panel_ui::receive_listing.in_set(ViewerSet::JobResults),
                     // Before the shared camera (`crate::camera`): its viewport reads the
                     // ViewArea `view_area` sets, its place step frames the bounds `receive`
                     // and `planar_sync` write.
-                    (watch, receive, stress_paint, apply_frames, planar_sync, scroll, view_area, highlight).chain().in_set(ViewerSet::SimSync).before(CameraSet::Viewport),
+                    (watch, receive, stress_paint, apply_frames.in_set(RobotSet::Frames), planar_sync, scroll, view_area, highlight).chain().in_set(ViewerSet::SimSync).before(CameraSet::Viewport),
                     (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, recorded_panel, gait_panel, panel_ui::gait_path_draw, graph_dock, draw, actions::publish).chain().in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Robot)),

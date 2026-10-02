@@ -321,8 +321,8 @@ pub(in crate::cad) fn build_physical(app: &mut App) {
     app.add_text_field(super::entry::PHYSICAL, super::entry::field()).add_systems(
         Update,
         super::entry::entry
-            .after(crate::app::actions::serve)
-            .before(crate::cad::keys::keys)
+            .in_set(crate::app::InputSet::Window)
+            .in_set(crate::cad::CadKeySet::Focus)
             .in_set(ViewerSet::Input)
             .run_if(in_state(ViewerMode::Cad)),
     );
@@ -336,7 +336,7 @@ impl Plugin for CoreParts {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (exact::sync, super::refresh::sync).after(crate::cad::sync::receive).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)),
+            (exact::sync, super::refresh::sync).after(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)),
         );
     }
 }

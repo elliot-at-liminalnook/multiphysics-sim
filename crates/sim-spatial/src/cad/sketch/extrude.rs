@@ -133,7 +133,7 @@ pub(in crate::cad) fn build(app: &mut App) {
         // After the camera snapshot (this frame's view), the mesh sync and the
         // sketch cache and active plane (`cache::sync` then `plane::sync`), so
         // a press never reads the previous revision's sketch or plane.
-        pointer.after(crate::cad::view::update).after(crate::cad::mesh::sync).after(crate::cad::sketch::plane::sync).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
+        pointer.after(crate::cad::CadSet::View).after(crate::cad::CadSet::Mesh).after(crate::cad::CadSet::Plane).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
     )
     .add_systems(Update, draw.in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }

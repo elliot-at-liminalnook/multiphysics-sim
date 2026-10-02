@@ -69,7 +69,7 @@ pub(in crate::cad) fn build(app: &mut App) {
         Update,
         // After this frame's camera snapshot, the drawn bodies and the sketch
         // cache and active plane (`cache::sync` then `sync`): the picks read all of them.
-        picks.after(crate::cad::view::update).after(crate::cad::mesh::sync).after(sync).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
+        picks.after(crate::cad::CadSet::View).after(crate::cad::CadSet::Mesh).after(sync).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
     )
     .add_systems(Update, draw.in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }

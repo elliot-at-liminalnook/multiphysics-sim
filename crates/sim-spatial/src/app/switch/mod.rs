@@ -336,11 +336,13 @@ pub(crate) fn build(app: &mut App) {
         // Modal keys: after Bevy's input systems and the kit's (which types
         // into the path field first), before anything reads them; the
         // picker's own draft changes reach the field before the kit types.
-        .add_systems(PreUpdate, picker::sync.before(crate::ui_kit::text::input::keys))
-        .add_systems(PreUpdate, picker::keys.after(bevy::input::InputSystems).after(crate::ui_kit::text::input::keys))
+        .add_systems(PreUpdate, picker::sync.before(crate::ui_kit::text::TextInputSet))
+        .add_systems(PreUpdate, picker::keys.after(bevy::input::InputSystems).after(crate::ui_kit::text::TextInputSet))
         .add_systems(Update, picker::clicks.in_set(ViewerSet::Input))
         .add_systems(Update, picker::receive.in_set(ViewerSet::JobResults))
-        .add_systems(Update, (actions::serve, lesson_screen_requests).chain().in_set(ViewerSet::Input))
+        // The REST poll is Input's first step; the screen requests follow it
+        // (in Input, unordered against the window's input, as before).
+        .add_systems(Update, (actions::serve.in_set(crate::app::InputSet::Rest), lesson_screen_requests).chain().in_set(ViewerSet::Input))
         .add_systems(Update, handle.in_set(ViewerSet::Actions))
         .add_systems(Update, finish_load.in_set(ViewerSet::JobResults))
         .add_systems(OnExit(ModeScope::Inspect), leave_inspect)

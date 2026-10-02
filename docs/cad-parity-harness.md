@@ -254,3 +254,13 @@ instead of reaping during polling. It separates shutdown issues from operation
 receipts instead of relabelling recorded mutations. Revisit these choices if an
 OS-specific identity capability or executed lifecycle evidence provides a stronger
 containment guarantee. No phase-2 implementation is qualified by this source review.
+
+The 2026-10-02 verification pass found that Darwin reports `EPERM` when a
+retained process group contains only zombies. Cleanup accepts that result only
+when bounded libproc enumeration verifies the exact group, its unreaped leader,
+and exclusively zombie members in two stable observations. A live, inaccessible,
+changed or oversized group still fails cleanup. Any wait-ownership observation
+error permanently disables further PID/group operations. This keeps the existing
+containment owner and avoids reaping before the last signal or ignoring `EPERM`
+for live processes. Actual-child fixtures cover natural exit, a live descendant,
+and external reaping; their execution results belong to the verification report.

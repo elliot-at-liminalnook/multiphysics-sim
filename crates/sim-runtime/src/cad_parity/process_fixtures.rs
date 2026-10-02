@@ -205,3 +205,52 @@ fn term_failure_and_later_identity_loss_both_survive_completion() {
     assert!(owned.cleanup().is_err());
     assert_eq!(events, owned.backend.events);
 }
+
+#[test]
+#[cfg(target_os = "macos")]
+fn darwin_natural_exit_accepts_only_verified_zombie_group_without_reaping_early() {
+    let mut command=Command::new("/bin/sh");command.args(["-c","exit 0"]);
+    let mut owned=OwnedProcess::spawn(&mut command).unwrap();
+    let deadline=Instant::now()+Duration::from_secs(2);
+    while !owned.lifecycle.observe().unwrap() {
+        assert!(Instant::now()<deadline);std::thread::sleep(Duration::from_millis(10));
+    }
+    assert!(owned.lifecycle.backend.zombie_only_group().unwrap());
+    assert_eq!(owned.lifecycle.phase,Phase::Owned);
+    let completion=owned.wait_completion(deadline,&||false);
+    assert!(completion.cleanup_error.is_none(),"{:?}",completion.cleanup_error);
+    assert!(completion.exit.unwrap().success());
+}
+
+#[test]
+#[cfg(target_os = "macos")]
+fn darwin_exited_leader_with_live_descendant_never_qualifies_zombie_only() {
+    let mut command=Command::new("/bin/sh");
+    command.args(["-c","trap '' TERM; /bin/sleep 30 & exit 0"]);
+    let mut owned=OwnedProcess::spawn(&mut command).unwrap();
+    let deadline=Instant::now()+Duration::from_secs(2);
+    while !owned.lifecycle.observe().unwrap() {
+        assert!(Instant::now()<deadline);std::thread::sleep(Duration::from_millis(10));
+    }
+    assert!(!owned.lifecycle.backend.zombie_only_group().unwrap());
+    let completion=owned.wait_completion(Instant::now()+Duration::from_secs(4),&||false);
+    assert!(completion.cleanup_error.is_none(),"{:?}",completion.cleanup_error);
+    assert!(completion.exit.unwrap().success());
+}
+
+#[test]
+#[cfg(unix)]
+fn backend_wait_ownership_loss_is_permanent_even_outside_lifecycle_observation() {
+    let mut command=Command::new("/bin/sh");command.args(["-c","exit 0"]);
+    let mut owned=OwnedProcess::spawn(&mut command).unwrap();
+    // Only this fixture's owned child is reaped externally. This reproduces
+    // the platform fallback's direct backend observation after identity loss.
+    assert!(owned.lifecycle.backend.child.wait().unwrap().success());
+    assert!(owned.lifecycle.backend.observe().unwrap_err().contains("ownership abandoned"));
+    assert!(!owned.lifecycle.backend.signal_owned);
+    // Neither call may consult/signify a now-reusable numeric PID/PGID.
+    assert_eq!(owned.lifecycle.backend.observe().unwrap_err(),"child wait ownership permanently lost");
+    assert_eq!(owned.lifecycle.backend.signal(GROUP_TERM).unwrap_err(),"child signal ownership permanently lost");
+    assert!(owned.lifecycle.cleanup().is_err());
+    assert_eq!(owned.lifecycle.phase,Phase::Lost);
+}

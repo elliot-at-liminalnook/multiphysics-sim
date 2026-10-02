@@ -162,3 +162,12 @@ browser page at the server's URL stays available until the
 | [Control roadmap](control-roadmap.md) · [Domain roadmap](domain-roadmap.md) | Controller seam, sensing, domains and status |
 | [Phenomena tests](surprise-tests.md) | The physics acceptance suite |
 | [Project rules](AGENTS.md) | How the codebase is meant to grow |
+
+
+Native offline electrical studies: use sim-spatial **Build → Actuators → Offline
+measured-PWM study**, open an archive or saved review, then configure the source and
+controller electrical feedback, simulate/predict, compare captured servo voltage or
+a calibrated sidecar, review and save-new/reopen. See
+[the bounded T52 navigation and source map](docs/native-power-authoring.md).
+Implementation is source-reviewed only; no executed parity is claimed. Hardware
+acquisition/driving, FPGA refinement, raw sweeps and Python/OCCT CAD remain external.

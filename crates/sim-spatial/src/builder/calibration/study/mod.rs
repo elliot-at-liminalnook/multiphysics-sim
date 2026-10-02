@@ -35,3 +35,6 @@ mod recording_lifecycle;
 
 #[cfg(test)]
 mod publication_lifecycle;
+
+#[cfg(test)]
+mod electrical_lifecycle;

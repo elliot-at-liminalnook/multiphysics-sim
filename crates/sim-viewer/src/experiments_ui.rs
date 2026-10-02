@@ -179,6 +179,7 @@ impl ExperimentsPanel {
                 ResultMessage::Saved(_, _, _, r) => r.as_ref().err().cloned(),
                 ResultMessage::Refined(_, _, r) => r.as_ref().err().cloned(),
             };
+            let cancellation_requested=self.job.as_ref().is_some_and(|job|job.cancel.load(Ordering::Relaxed));
             self.job = None;
             match result {
                 ResultMessage::Loaded(Ok(mut s)) => {
@@ -236,7 +237,15 @@ impl ExperimentsPanel {
                 }
                 ResultMessage::Refined(index, label, result) => {
                     let result = match result {
-                        Ok(refinement::Outcome::Shared(outcome)) => {
+                        Ok(refinement::Outcome::SharedInputs(mut outcome,inputs)) => {
+                            outcome.cancelled|=cancellation_requested;
+                            sim_runtime::experiment_study::refinement::apply_outcome_with_inputs(&mut self.studies[index],outcome,inputs);
+                            self.revisions[index]+=1;
+                            self.message=Some(format!("{label}: captured shared result retained in this review."));
+                            return;
+                        }
+                        Ok(refinement::Outcome::Shared(mut outcome)) => {
+                            outcome.cancelled|=cancellation_requested;
                             sim_runtime::experiment_study::refinement::apply_outcome(&mut self.studies[index],outcome);
                             self.revisions[index]+=1;
                             self.message=Some(format!("{label}: captured shared result retained in this review."));
@@ -246,7 +255,7 @@ impl ExperimentsPanel {
                     };
                     let w = &mut self.studies[index].refinement;
                     match result {
-                        Ok(refinement::Outcome::Shared(_))=>unreachable!("shared result applied above"),
+                        Ok(refinement::Outcome::Shared(_) | refinement::Outcome::SharedInputs(_, _))=>unreachable!("shared result applied above"),
                         Ok(refinement::Outcome::FpgaRecording(report)) => {
                             w.fpga_recordings.push(report)
                         }
@@ -267,9 +276,6 @@ impl ExperimentsPanel {
                                 self.studies[index].refinement.failures.push(error);
                             }
                         },
-                        Ok(refinement::Outcome::Electrical(report)) => {
-                            w.electrical_comparisons.push(report)
-                        }
                         Ok(refinement::Outcome::Proposal(report)) => w.cad_proposals.push(report),
                         Ok(refinement::Outcome::Accepted(report)) => w.cad_acceptances.push(report),
                         Err(error) => w.failures.push(format!("{label}: {error}")),
@@ -353,7 +359,7 @@ impl ExperimentsPanel {
             });
             if self.refinement_tab {
                 let busy = self.loading();
-                let (action, changed) = self.refinement_ui.show(ui, &mut self.studies[self.current], busy);
+                let (action, changed) = self.refinement_ui.show(ui, &mut self.studies[self.current], busy, self.current);
                 if changed { self.revisions[self.current] += 1; }
                 if let Some(action) = action {
                     let index = self.current;

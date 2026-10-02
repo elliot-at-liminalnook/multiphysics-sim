@@ -144,9 +144,22 @@ impl ExperimentsPanel {
                             }
                             let mut next: Study =
                                 serde_json::from_value(value).map_err(|e| e.to_string())?;
+                            // Typed legacy decoding must not erase future electrical keys.
+                            if let Some(power)=fields.get("draft").and_then(|draft|draft.get("power")).filter(|v|!v.is_null()) {
+                                super::power_ui::parse_source(&power.to_string())?;
+                            }
+                            if let Some(controller)=fields.get("experiment").and_then(|e|e.get("electrical")).filter(|v|!v.is_null()) {
+                                study::refinement::electrical::parse_controller(controller)?;
+                            }
                             let mut shared=original.clone();
                             for command in [study::commands::Command::SetCandidate(next.draft.clone()), study::commands::Command::SetLimits(next.limits), study::commands::Command::SetView(next.view.clone()), study::commands::Command::SetNotes(next.notes.clone())] { study::commands::apply(&mut shared,command)?; }
                             use study::refinement::{self as refinement_shared,Command as RefinementCommand};
+                            // Electrical fields use the same explicit transactional commands as the
+                            // native authoring forms, within this whole-configure transaction.
+                            use refinement_shared::electrical::Command as Electrical;
+                            refinement_shared::apply(&mut shared,RefinementCommand::Electrical(Electrical::SetSource(next.draft.power.clone())))?;
+                            refinement_shared::apply(&mut shared,RefinementCommand::Electrical(Electrical::SetVoltage(next.draft.conditions.voltage_v)))?;
+                            refinement_shared::apply(&mut shared,RefinementCommand::Electrical(Electrical::SetController(next.refinement.experiment.electrical.clone())))?;
                             refinement_shared::apply(&mut shared,RefinementCommand::SetExperiment(next.refinement.experiment.clone()))?;
                             refinement_shared::apply(&mut shared,RefinementCommand::SetCoordinates(next.refinement.coordinates.clone()))?;
                             refinement_shared::apply(&mut shared,RefinementCommand::SetScenarios(next.refinement.scenarios.clone()))?;

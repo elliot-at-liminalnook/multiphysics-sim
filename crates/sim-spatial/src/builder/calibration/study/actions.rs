@@ -19,6 +19,7 @@ pub enum StudyAction {
     RefineApply { stamp:StudyStamp, command:refinement::Command },
     RefineRun { stamp:StudyStamp, operation:refinement::Operation },
     ImportRecording { stamp:StudyStamp, path:String },
+    ImportElectrical { stamp:StudyStamp, path:String, prediction:usize },
     FitCombined { stamp:StudyStamp, additional_path:Option<String> },
     Cancel { job:u64 },
     Save { stamp:StudyStamp, path:String },
@@ -27,7 +28,7 @@ pub enum StudyAction {
     Status,
 }
 impl Action for StudyAction {
-    fn commands()->Vec<Spec> { vec![actions::spec("system_measured_study",actions::BUILDER,json!({"op":"status"}),"Offline retained measured-PWM authoring. Typed operations open_archive/open_review/choose/apply/evaluate/refine_apply/refine_run/import_recording/fit_combined/cancel/save/export/status. Apply commands use shared experiment_study validation; all scoped operations require stamp {id,revision}. Publication creates new destinations only; accepted jobs return an id and retain receipts.")] }
+    fn commands()->Vec<Spec> { vec![actions::spec("system_measured_study",actions::BUILDER,json!({"op":"status"}),"Offline retained measured-PWM authoring. Typed operations open_archive/open_review/choose/apply/evaluate/refine_apply/refine_run/import_recording/import_electrical/fit_combined/cancel/save/export/status. Apply commands use shared experiment_study validation; all scoped operations require stamp {id,revision}. Publication creates new destinations only; accepted jobs return an id and retain receipts.")] }
     fn parse(c:&sim_api::Command)->Result<Self,String> {
         if c.command=="system_ui" {
             let a=&c.args["action"];
@@ -84,7 +85,7 @@ pub fn handle_with_inputs(owner:&mut StudyOwner, registry:&DocumentRegistry, act
     if matches!(action,StudyAction::Status) { return Outcome::Done(apply_action(owner,registry,action)); }
     let result=apply_action_with_inputs(owner,registry,action,inputs);
     if let Err(error)=&result {
-        let stamp=match action {StudyAction::RefineApply{stamp,..}|StudyAction::RefineRun{stamp,..}|StudyAction::ImportRecording{stamp,..}|StudyAction::FitCombined{stamp,..}=>Some(*stamp),_=>None};
+        let stamp=match action {StudyAction::RefineApply{stamp,..}|StudyAction::RefineRun{stamp,..}|StudyAction::ImportElectrical{stamp,..}|StudyAction::ImportRecording{stamp,..}|StudyAction::FitCombined{stamp,..}=>Some(*stamp),_=>None};
         if let Some(stamp)=stamp {
             if let Some(retained)=owner.get_mut(stamp.id) {
                 jobs::retain_durable(&mut retained.study,"native_refinement_rejections",json!({"stamp":stamp,"action":action,"error":error}));
@@ -147,7 +148,7 @@ fn apply_action_with_inputs(owner:&mut StudyOwner,registry:&DocumentRegistry,act
             checked(owner,registry,*stamp)?;
             // Sample/source/dataset validation belongs in jobs for every recording
             // authoring consumer, including typed REST payloads and rendered controls.
-            if matches!(command,refinement::Command::ImportRecording{..}|refinement::Command::SelectRecording{..}|refinement::Command::SelectFitCase{..}|refinement::Command::SetPredictionPurpose(_)|refinement::Command::AppendContext{..}|refinement::Command::AssignRecording{..}|refinement::Command::UseRecordingFit{..}) {
+            if matches!(command,refinement::Command::Electrical(_)|refinement::Command::ImportRecording{..}|refinement::Command::SelectRecording{..}|refinement::Command::SelectFitCase{..}|refinement::Command::SetPredictionPurpose(_)|refinement::Command::AppendContext{..}|refinement::Command::AssignRecording{..}|refinement::Command::UseRecordingFit{..}) {
                 let id=super::recording_jobs::start_command(owner,*stamp,command.clone())?;
                 return Ok(json!({"job":id,"message":"Validating immutable recording authoring inputs in a retained job"}));
             }
@@ -159,6 +160,11 @@ fn apply_action_with_inputs(owner:&mut StudyOwner,registry:&DocumentRegistry,act
             checked(owner,registry,*stamp)?;
             let id=jobs::start_refinement(owner,*stamp,operation.clone())?;
             return Ok(json!({"job":id,"message":"Running shared refinement from immutable captured inputs; results never adopt candidates automatically"}));
+        }
+        StudyAction::ImportElectrical{stamp,path,prediction}=>{
+            checked(owner,registry,*stamp)?;
+            let id=super::recording_jobs::start_electrical(owner,*stamp,path.clone(),*prediction)?;
+            return Ok(json!({"job":id,"message":"Reading exact calibrated sidecar and comparing immutable captured prediction in retained job"}));
         }
         StudyAction::ImportRecording{stamp,path}=>{
             checked(owner,registry,*stamp)?;

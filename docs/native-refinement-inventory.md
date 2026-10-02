@@ -100,3 +100,13 @@ Decision: prediction requires explicitly authored Study or frozen assignment lim
 instead of a hidden three/five encoder-quantum fallback. Why: scoring assumptions
 must be inspectable and captured. Alternative: preserve silent legacy defaults.
 Revisit if a shared labelled default-limit authoring command is introduced.
+
+
+## T52 bounded electrical extension
+
+Earlier external electrical/power gaps in this inventory describe the pre-T52
+surface. [The T52 field inventory](native-power-legacy-inventory.md) and
+[native navigation/source map](native-power-authoring.md) cover offline source and
+feedback authoring, simulation, both recording predictions and calibrated comparison.
+FPGA, raw sweep, acquisition/hardware and CAD requirements remain external. No
+executed parity or reference retirement is claimed.

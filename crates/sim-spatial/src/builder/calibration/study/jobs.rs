@@ -318,11 +318,20 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
                 receipt.launch["recording_applied"]=json!(!stale && !displaced && !execution_cancelled && receipt.error.is_none());
                 // Prepared prediction choice is already shared-validated in the job.
                 // A later edit/selection must never be overwritten by terminal delivery.
-                if !stale && !displaced && matches!(&outcome.result,Ok(refinement::ResultData::Prediction(_))) {
+                if !stale && !displaced && !pending.cancel_requested && matches!(&outcome.result,Ok(refinement::ResultData::Prediction(_))) {
                     study.study.refinement_evidence.selected_recording=outcome.capture.study.refinement_evidence.selected_recording.clone();
                     study.study.refinement_evidence.prediction_purpose=outcome.capture.study.refinement_evidence.prediction_purpose;
                 }
-                refinement::apply_outcome_with_inputs(&mut study.study,outcome.clone(),inputs);
+                // A late user cancellation cannot publish a scored electrical comparison.
+                // The receipt still retains the actual completed execution for inspection.
+                let mut attached=outcome.clone();
+                if pending.cancel_requested && match &attached.result {Ok(refinement::ResultData::Electrical(_))=>true,Ok(refinement::ResultData::Controller(run))=>run.electrical.is_some(),Ok(refinement::ResultData::Prediction(prediction))=>prediction.electrical.is_some(),_=>false} {
+                    attached.cancelled=true;
+                    attached.result=Err("study.electrical: cancellation requested before attachment; completed execution retained unapplied and unscored in receipt".into());
+                    receipt.error=attached.result.as_ref().err().cloned();
+                    receipt.launch["recording_applied"]=json!(false);
+                }
+                refinement::apply_outcome_with_inputs(&mut study.study,attached,inputs);
                 study.revision+=1;
                 if displaced {study.displaced=Some("Refinement completed for a displaced document; captured settings remain linked to the original study".into());}
                 receipt.message=if execution_cancelled || receipt.error.is_some() {"Refinement failed or cancelled; captured attempt retained and unscored"} else if stale||displaced {"Refinement retained on its original study as stale/displaced evidence"} else {"Refinement retained for review; candidate adoption requires an explicit action"}.into();

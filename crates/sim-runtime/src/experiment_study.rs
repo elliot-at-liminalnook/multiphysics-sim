@@ -440,6 +440,9 @@ impl Study {
         }
         self.input_contents.validate()?;
         for (i, receipt) in self.refinement_evidence.receipts.iter().enumerate() {
+            if let Some(envelope)=receipt.inputs.get("electrical") {
+                self.input_contents.validate_envelope(envelope,&format!("refinement_evidence.receipts.{i}.inputs.electrical"))?;
+            }
             if let Some(envelope) = receipt.inputs.get("additional_input") {
                 self.input_contents.validate_envelope(envelope, &format!("refinement_evidence.receipts.{i}.inputs.additional_input"))?;
             }

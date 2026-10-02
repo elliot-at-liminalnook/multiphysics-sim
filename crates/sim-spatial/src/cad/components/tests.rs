@@ -199,6 +199,58 @@ fn family_form_can_choose_an_explicit_default_variant() {
 }
 
 #[test]
+fn link_family_explicit_id_is_occurrence_not_selected_family() {
+    let (doc, mut st) = fixture();
+    let family = serde_json::from_value(json!({
+        "id":"family", "name":"Child family", "parameters":{},
+        "features":[], "ports":{}, "nested":{},
+        "variants":{"short":{"definition_id":"parent","parameter_bindings":{}}},
+        "default_variant":"short"
+    }))
+    .unwrap();
+    st.catalogue.as_mut().unwrap().1.definitions.push(family);
+    st.selected = Some("family".into());
+    // An explicit REST/system_ui occurrence wins over an unrelated source
+    // selection, while the selected library definition remains independent.
+    form::open(
+        &mut st,
+        &doc,
+        ComponentsFormKind::LinkFamily,
+        Some("outer"),
+        &["joint-a".into()],
+    )
+    .unwrap();
+    let explicit = form::operation(st.draft().unwrap(), &st, &doc).unwrap();
+    let ComponentOperation::LinkFamily {
+        instance_id,
+        definition_id,
+        variant,
+        ..
+    } = &explicit
+    else {
+        panic!("linked family expected")
+    };
+    assert_eq!(instance_id, "outer");
+    assert_eq!(definition_id, "family");
+    assert_eq!(variant, "short");
+    validate::validate_operation(&explicit, &st, &doc).unwrap();
+    // The window's no-id path resolves exactly the same typed operation.
+    form::open(
+        &mut st,
+        &doc,
+        ComponentsFormKind::LinkFamily,
+        None,
+        &["outer".into()],
+    )
+    .unwrap();
+    let window = form::operation(st.draft().unwrap(), &st, &doc).unwrap();
+    assert_eq!(
+        serde_json::to_value(explicit).unwrap(),
+        serde_json::to_value(window).unwrap()
+    );
+}
+
+#[test]
 fn queued_field_edit_targets_original_retained_draft() {
     let (doc, mut st) = fixture();
     form::open(&mut st, &doc, ComponentsFormKind::Defaults, None, &[]).unwrap();

@@ -56,6 +56,7 @@ pub(crate) struct ComponentsArgs {
     #[serde(default)]
     pub open: Option<bool>,
     #[serde(default)]
+    /// For open(link_family), occurrence-only; family comes from library selection.
     pub id: Option<String>,
     #[serde(default)]
     pub kind: Option<ComponentsFormKind>,
@@ -502,6 +503,6 @@ pub(crate) fn specs() -> Vec<crate::app::actions::Spec> {
         "cad_components",
         crate::cad::actions::CAD,
         json!({"op":"open","kind":"place"}),
-        "Reusable assemblies. op: state, dock(open), find(value), select(id definition), open(kind make/create/parametric/place/defaults/overrides/reset/detach/transform/import/export/family/link_family; id optional definition or occurrence), form_set(name,value text), submit (retained form or typed operation with required revision), close_form (retains draft), resume(id draft index), folder(path absolute on service host; absent uses RoboCAD default), import_selected(path,revision), cancel (durable request). Every window and system_ui control uses this handler; source edits are guarded by document ID and revision and prepared by RoboCAD. Rebuilds block other edits and document/mode changes until terminal. Unsaved/rejected form drafts survive close and mode exit.",
+        "Reusable assemblies. op: state, dock(open), find(value), select(id definition), open(kind make/create/parametric/place/defaults/overrides/reset/detach/transform/import/export/family/link_family; id optional: definition for place/defaults/export, occurrence for overrides/reset/detach/link_family; link_family uses the selected library family), form_set(name,value text), submit (retained form or typed operation with required revision), close_form (retains draft), resume(id draft index), folder(path absolute on service host; absent uses RoboCAD default), import_selected(path,revision), cancel (durable request). Every window and system_ui control uses this handler; source edits are guarded by document ID and revision and prepared by RoboCAD. Rebuilds block other edits and document/mode changes until terminal. Unsaved/rejected form drafts survive close and mode exit.",
     )]
 }

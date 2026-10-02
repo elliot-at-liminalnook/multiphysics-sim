@@ -5,6 +5,7 @@
 //! No layout, zoom or focus intent sends a source mutation.
 mod adapter;
 mod jobs;
+mod ports;
 use jobs::imports_current;
 #[cfg(test)]
 mod tests;
@@ -44,6 +45,8 @@ pub(crate) enum CompositionOp {
     Remove,
     Port,
     Open,
+    LeaveOpen,
+    CancelPort,
     ImportCheck,
     ClearCheck,
     Overview,
@@ -105,7 +108,8 @@ pub(crate) struct CadCompositionState {
     pub drafts: Vec<Draft>,
     pub current: Option<usize>,
     pub selected: Option<String>,
-    pub pending_port: Option<CadEndpoint>,
+    pub pending_port: Option<ports::PendingPort>,
+    pub(super) submitted_port: Option<ports::SubmittedPort>,
     pub imports: Option<ImportedSnapshot>,
     pub check_id: String,
     pub check_draft: String,
@@ -139,7 +143,11 @@ fn set_check(st: &mut CadCompositionState, check: String) {
     st.imports = None;
     st.imported_job = None;
     st.failed = None;
-    st.pending_port = None;
+    if st.pending_port.take().is_some() {
+        st.error = Some(
+            "composition.port: pending connection cancelled because imported check changed".into(),
+        );
+    }
     st.check_id = check;
 }
 pub(crate) fn handle(a: &CadCompositionArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
@@ -375,26 +383,9 @@ pub(crate) fn handle(a: &CadCompositionArgs, call: &mut Call, cx: &mut Cx) -> Ou
                 sim_diagram::composition::zoom(if st.zoom == 0. { 1. } else { st.zoom }, factor);
             Ok(json!({"zoom":st.zoom}))
         }
-        CompositionOp::Port => {
-            let endpoint = a.port.clone().ok_or("composition.port: required")?;
-            if let Some(first) = st.pending_port.clone() {
-                let result = mutation(
-                    doc,
-                    st,
-                    call,
-                    GraphCommand::Connect {
-                        ports: vec![first, endpoint],
-                    },
-                    a.revision.unwrap_or(doc.shown_revision()),
-                );
-                if result.is_ok() {
-                    st.pending_port = None;
-                }
-                return result;
-            }
-            st.pending_port = Some(endpoint);
-            Ok(json!({"connecting":st.pending_port}))
-        }
+        CompositionOp::Port => ports::pick(doc, st, call, a),
+        CompositionOp::LeaveOpen => ports::leave_open(doc, st, call, a.revision),
+        CompositionOp::CancelPort => Ok(ports::cancel(st)),
         CompositionOp::Remove => mutation(
             doc,
             st,
@@ -664,7 +655,7 @@ fn mutation(
     }
 }
 pub(crate) fn state_json(_doc: &CadDocument, st: &CadCompositionState) -> Value {
-    json!({"open":st.open,"drafts":st.drafts,"current":st.current,"selected":st.selected,"pending_port":st.pending_port,"error":st.error,"graph":st.snapshot.as_ref().map(|s|&s.graph),"types":st.snapshot.as_ref().map(|s|&s.types),"recipes":st.snapshot.as_ref().map(|s|&s.recipes),"imports":st.imports,"zoom":st.zoom,"pan":st.pan,"focus":st.focus,"reading":st.read.is_some(),"revision":st.revision})
+    json!({"open":st.open,"drafts":st.drafts,"current":st.current,"selected":st.selected,"pending_port":st.pending_port,"submitted_port":st.submitted_port,"error":st.error,"graph":st.snapshot.as_ref().map(|s|&s.graph),"types":st.snapshot.as_ref().map(|s|&s.types),"recipes":st.snapshot.as_ref().map(|s|&s.recipes),"imports":st.imports,"zoom":st.zoom,"pan":st.pan,"focus":st.focus,"reading":st.read.is_some(),"revision":st.revision})
 }
 pub(crate) fn key(st: &CadCompositionState) -> String {
     format!("{}:{}:{:?}", st.open, st.revision, st.typing)
@@ -674,7 +665,7 @@ pub(crate) fn specs() -> Vec<Spec> {
         "cad_composition",
         CAD,
         json!({"op":"state"}),
-        "CAD composition: metadata-backed types, parameters, geometry recipes, imported bindings and typed connections. Mutations require source revision; overview/focus/zoom/layout are presentation only. Drafts survive refusals.",
+        "CAD composition: metadata-backed types, parameters, geometry recipes, imported bindings and typed connections. port(endpoint,revision) captures the displayed document/generation/revision; leave_open(revision) creates an unused singleton at that stamp; cancel_port clears pending intent without a source edit; open(id,revision) removes an existing whole connection. Mutations require source revision; overview/focus/zoom/layout are presentation only. Drafts survive refusals.",
     )]
 }
 pub(crate) fn controls_of(
@@ -682,4 +673,13 @@ pub(crate) fn controls_of(
     st: &CadCompositionState,
 ) -> Vec<(String, String, CadAction, Result<(), String>)> {
     ui::controls(doc, st)
+}
+
+pub(crate) fn port_edit_answered(
+    st: &mut CadCompositionState,
+    generation: u64,
+    seq: u64,
+    result: Result<(), String>,
+) {
+    ports::answered(st, generation, seq, result);
 }

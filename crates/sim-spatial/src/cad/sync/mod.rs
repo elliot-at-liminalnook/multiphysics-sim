@@ -252,7 +252,7 @@ pub(crate) fn enter(mut commands: Commands, doc: Option<ResMut<CadDocument>>, re
 /// The selection and the registry are borrowed mutably only by the steps
 /// that change them (a new snapshot, an answered edit), so their change
 /// detection is not tripped every frame.
-pub(crate) fn receive(doc: Option<ResMut<CadDocument>>, mut selection: ResMut<Selection>, mut registry: ResMut<DocumentRegistry>, redraw: Option<MessageWriter<bevy::window::RequestRedraw>>) {
+pub(crate) fn receive(doc: Option<ResMut<CadDocument>>, mut selection: ResMut<Selection>, mut registry: ResMut<DocumentRegistry>, redraw: Option<MessageWriter<bevy::window::RequestRedraw>>, mut composition: Option<ResMut<crate::cad::composition::CadCompositionState>>) {
     let Some(mut doc) = doc else { return };
     let doc = &mut *doc;
     if super::selection::cad_id(&registry).is_none() {
@@ -272,7 +272,7 @@ pub(crate) fn receive(doc: Option<ResMut<CadDocument>>, mut selection: ResMut<Se
     // it created, after its Ops call returned (`ops::started` noted which);
     // a selection changed meanwhile is the user's newer one and is kept.
     // Set through the shared selection.
-    if let Some((was, now)) = finish_edit(doc)
+    if let Some((was, now)) = finish_edit(doc, composition.as_deref_mut())
         && (View { selection: &*selection, registry: &*registry }).items() == was
         && let Err(e) = (Shared { selection: &mut *selection, registry: &mut *registry }).set(now)
     {
@@ -528,7 +528,7 @@ fn take_snapshot(doc: &mut CadDocument, shared: &mut Shared) {
 /// nothing (an op that clears it) or the robot node it created (add motor,
 /// joint, sensor, cable: `OpsState::selects_created`). `receive` sets the
 /// shared selection to it if the selection is still the first.
-fn finish_edit(doc: &mut CadDocument) -> Option<(Vec<SelectionItem>, Vec<SelectionItem>)> {
+fn finish_edit(doc: &mut CadDocument, composition: Option<&mut crate::cad::composition::CadCompositionState>) -> Option<(Vec<SelectionItem>, Vec<SelectionItem>)> {
     let Some(edit) = &doc.edit else { return None };
     let Some(result) = edit.job.poll() else { return None };
     let generation = edit.job.generation();
@@ -537,10 +537,14 @@ fn finish_edit(doc: &mut CadDocument) -> Option<(Vec<SelectionItem>, Vec<Selecti
     // The note goes with its edit, whatever the outcome.
     let selects = doc.ops.selects_created.take().filter(|(at, _)| *at == seq).map(|(_, was)| was);
     if generation != doc.generation {
+        if let Some(state) = composition { crate::cad::composition::port_edit_answered(state, generation, seq, Err("composition.port: document changed while the submitted source edit waited".into())); }
         crate::cad::sketch::specs::polygon_edit_done(doc, seq, false);
         return None;
     }
     let answer = result.map(|EditDone { message, result }| (message, result));
+    // Resolve pending connection intent from this authoritative answer, without
+    // consuming the independent REST caller's result or starting another lifecycle.
+    if let Some(state) = composition { crate::cad::composition::port_edit_answered(state, generation, seq, answer.as_ref().map(|_| ()).map_err(Clone::clone)); }
     // cad-print: a print start's answer is the job it started (tracked from now on).
     crate::cad::print::edit_answered(doc, seq, answer.as_ref().ok().map(|(_, r)| r));
     // cad-organize: a thread commit lands in its source's `annotations::InFlight`;

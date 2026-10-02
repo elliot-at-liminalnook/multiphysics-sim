@@ -125,9 +125,12 @@ pub(crate) fn open(
             ComponentsFormKind::Place
                 | ComponentsFormKind::Defaults
                 | ComponentsFormKind::Export
-                | ComponentsFormKind::LinkFamily
         ) {
             id.map(str::to_owned).or_else(|| st.selected.clone())
+        } else if kind == ComponentsFormKind::LinkFamily {
+            // LinkFamily's optional id addresses only the occurrence. The
+            // independent library selection supplies the family definition.
+            st.selected.clone()
         } else {
             None
         },

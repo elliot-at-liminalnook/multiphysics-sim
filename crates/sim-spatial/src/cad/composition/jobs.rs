@@ -18,7 +18,7 @@ pub(super) fn tick(doc: Option<ResMut<CadDocument>>, mut st: ResMut<CadCompositi
         st.snapshot = None;
         st.snapshot_key = None;
         st.imports = None;
-        st.pending_port = None;
+        // Retain stamped intent; its next consumer refuses the changed document.
         st.failed = None;
     }
     if let Some((generation, job)) = &st.imported_job {

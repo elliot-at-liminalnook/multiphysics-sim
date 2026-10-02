@@ -234,12 +234,28 @@ pub(super) fn controls(
             a.revision = Some(snapshot.graph.revision);
             add(
                 format!("open:{id}"),
-                format!("Open connection {id}"),
+                format!("Remove connection {id}"),
                 a,
                 doc.commit_refusal(Some(snapshot.graph.revision))
                     .map_or(Ok(()), Err),
             );
         }
+    }
+    if let Some(pending) = &st.pending_port {
+        let mut a = CadCompositionArgs::of(CompositionOp::LeaveOpen);
+        a.revision = Some(pending.revision);
+        add(
+            "leave_open".into(),
+            "Leave port open".into(),
+            a,
+            ports::validate_pending(doc, st, Some(pending.revision)).map(|_| ()),
+        );
+        add(
+            "cancel_port".into(),
+            "Cancel connection".into(),
+            CadCompositionArgs::of(CompositionOp::CancelPort),
+            Ok(()),
+        );
     }
     if let Some(d) = st.current.and_then(|i| st.drafts.get(i)) {
         add(

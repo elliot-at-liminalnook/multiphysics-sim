@@ -317,3 +317,126 @@ fn delayed_link_control_cannot_change_edited_draft_and_linked_source_is_readonly
         "Run remains refused until linked bundle capture"
     );
 }
+fn due_auto(d: &CadDocument) -> ExperimentsState {
+    let mut st = state(d);
+    st.drafts[0].auto = true;
+    st.drafts[0].edited = std::time::Instant::now() - std::time::Duration::from_secs(1);
+    st
+}
+#[test]
+fn closing_before_debounce_enqueues_nothing_and_preserves_draft() {
+    let d = document();
+    let mut st = state(&d);
+    st.drafts[0].auto = true;
+    automatic::dock(&mut st, false);
+    st.drafts[0].edited = std::time::Instant::now() - std::time::Duration::from_secs(1);
+    assert!(automatic::enqueue(&mut st, &d).is_none());
+    assert_eq!(st.drafts.len(), 1);
+    assert!(st.drafts[0].submitted_sequence.is_none());
+}
+#[test]
+fn closing_after_enqueue_refuses_queued_apply_and_releases_only_automatic_marker() {
+    let d = document();
+    let mut st = due_auto(&d);
+    let queued = automatic::enqueue(&mut st, &d).unwrap();
+    assert!(automatic::validate(&st, &queued).is_ok());
+    automatic::dock(&mut st, false);
+    assert!(
+        automatic::validate(&st, &queued)
+            .unwrap_err()
+            .contains("dock closed")
+    );
+    assert!(st.drafts[0].submitted_sequence.is_none());
+    assert!(st.queued_automatic.is_none());
+    // Closed native UI/REST intent is explicit and therefore unaffected.
+    assert!(automatic::validate(&st, &ExperimentsArgs::of(ExperimentsOp::Run)).is_ok());
+    assert!(form::request(&d, &st, false).is_ok());
+}
+#[test]
+fn closed_revision_changes_do_not_rebase_and_reopen_waits_for_fresh_debounce() {
+    let mut d = document();
+    let mut st = due_auto(&d);
+    let old = automatic::enqueue(&mut st, &d).unwrap();
+    automatic::dock(&mut st, false);
+    d.doc_key = Some((Some("doc".into()), 8));
+    d.doc.as_mut().unwrap().revision = 8;
+    d.health.as_mut().unwrap().revision = 8;
+    automatic::rebase(&mut st, &d);
+    assert_eq!(st.drafts.len(), 1);
+    assert_eq!(st.drafts[0].stamp.revision, 7);
+    automatic::dock(&mut st, true);
+    assert!(automatic::validate(&st, &old).is_err());
+    assert!(automatic::enqueue(&mut st, &d).is_none());
+    automatic::rebase(&mut st, &d);
+    assert_eq!(st.drafts.len(), 2);
+    assert_eq!(st.drafts[1].stamp.revision, 8);
+    assert!(automatic::enqueue(&mut st, &d).is_none());
+    st.drafts[1].edited = std::time::Instant::now() - std::time::Duration::from_secs(1);
+    let resumed = automatic::enqueue(&mut st, &d).unwrap();
+    assert_ne!(resumed.automatic_epoch, old.automatic_epoch);
+    assert!(automatic::validate(&st, &resumed).is_ok());
+}
+#[test]
+fn closing_keeps_submitted_automatic_and_explicit_receipts() {
+    let d = document();
+    let mut st = due_auto(&d);
+    let queued = automatic::enqueue(&mut st, &d).unwrap();
+    st.active = Some(active(st.drafts[0].stamp.clone()));
+    automatic::submitted(&mut st, &queued);
+    automatic::dock(&mut st, false);
+    assert_eq!(st.drafts[0].submitted_sequence, Some(0));
+    assert!(st.active.as_ref().unwrap().cancel_requested);
+    let mut st = due_auto(&d);
+    let _queued = automatic::enqueue(&mut st, &d).unwrap();
+    st.active = Some(active(st.drafts[0].stamp.clone()));
+    automatic::submitted(&mut st, &ExperimentsArgs::of(ExperimentsOp::Run));
+    automatic::dock(&mut st, false);
+    assert_eq!(st.drafts[0].submitted_sequence, Some(0));
+    assert!(st.queued_automatic.is_none());
+}
+#[test]
+fn reopening_same_revision_resumes_cancelled_queue_after_debounce() {
+    let d = document();
+    let mut st = due_auto(&d);
+    let old = automatic::enqueue(&mut st, &d).unwrap();
+    automatic::dock(&mut st, false);
+    automatic::dock(&mut st, true);
+    assert!(automatic::enqueue(&mut st, &d).is_none());
+    st.drafts[0].edited = std::time::Instant::now() - std::time::Duration::from_secs(1);
+    let resumed = automatic::enqueue(&mut st, &d).unwrap();
+    assert!(automatic::validate(&st, &old).is_err());
+    assert!(automatic::validate(&st, &resumed).is_ok());
+}
+#[test]
+fn changing_auto_settings_invalidates_old_queue_even_if_reenabled_before_apply() {
+    let d = document();
+    let mut st = due_auto(&d);
+    let old = automatic::enqueue(&mut st, &d).unwrap();
+    automatic::configure(&mut st, Some(false)).unwrap();
+    automatic::configure(&mut st, Some(true)).unwrap();
+    assert!(automatic::validate(&st, &old).is_err());
+    assert!(automatic::enqueue(&mut st, &d).is_none());
+    st.drafts[0].edited = std::time::Instant::now() - std::time::Duration::from_secs(1);
+    let renewed = automatic::enqueue(&mut st, &d).unwrap();
+    assert!(automatic::validate(&st, &old).is_err());
+    assert!(automatic::validate(&st, &renewed).is_ok());
+    automatic::configure(&mut st, Some(true)).unwrap();
+    assert!(automatic::validate(&st, &renewed).is_err());
+    assert!(automatic::enqueue(&mut st, &d).is_none());
+}
+#[test]
+fn candidate_work_with_same_stamp_cannot_claim_a_queued_experiment_receipt() {
+    let d = document();
+    let mut st = due_auto(&d);
+    let _queued = automatic::enqueue(&mut st, &d).unwrap();
+    let mut candidate = active(st.drafts[0].stamp.clone());
+    candidate.operation = ExperimentsOp::CandidateCreate;
+    st.active = Some(candidate);
+    automatic::dock(&mut st, false);
+    assert!(st.drafts[0].submitted_sequence.is_none());
+    assert!(st.active.as_ref().unwrap().cancel_requested);
+    st.active = None;
+    automatic::dock(&mut st, true);
+    st.drafts[0].edited = std::time::Instant::now() - std::time::Duration::from_secs(1);
+    assert!(automatic::enqueue(&mut st, &d).is_some());
+}

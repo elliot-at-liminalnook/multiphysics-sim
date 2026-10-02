@@ -21,6 +21,8 @@ pub(crate) struct Export {
     sender: Option<SyncSender<Pixels>>,
     encode: Job<PathBuf>,
     sample: Option<Job<PoseSample>>,
+    continuation: Option<sim_runtime::cad_client::motion::PoseContinuation>,
+    requested_time: Option<f64>,
     prepared: bool,
     capture_started: Option<std::time::Instant>,
     cancelled: bool,
@@ -48,7 +50,23 @@ impl Export {
 pub(crate) fn build(a: &mut App) {
     a.add_systems(Update, capture.in_set(crate::app::ViewerSet::Present));
 }
+pub(crate) fn preview_ready(d: &CadDocument, s: &MotionState) -> Result<(), String> {
+    let stamp = s.identity.as_ref().ok_or("Enter reference pose first")?;
+    guard(d, stamp)?;
+    if s.sampling.is_some() || s.queued_sample.is_some() {
+        return Err("Pause and wait for the pending preview pose before exporting; seek intent is preserved".into());
+    }
+    let sample = s
+        .sample
+        .as_ref()
+        .ok_or("Wait for a published reference pose before exporting")?;
+    if !sampling::matches(sample, stamp, s.cursor) {
+        return Err("Wait for the current preview cursor to publish before exporting".into());
+    }
+    Ok(())
+}
 pub(crate) fn start(d: &CadDocument, s: &mut MotionState) -> Result<(), String> {
+    preview_ready(d, s)?;
     if s.program_job.is_some() || s.loading.is_some() {
         return Err("Wait for reference metadata/program validation before exporting".into());
     }
@@ -88,10 +106,8 @@ pub(crate) fn start(d: &CadDocument, s: &mut MotionState) -> Result<(), String> 
         },
     );
     s.playing = false;
-    if let Some((_, _, job)) = s.sampling.take() {
-        job.cancel();
-    }
     s.cancel_requested = false;
+    let continuation = sampling::prior(s.sample.as_ref(), &stamp);
     s.export = Some(Export {
         gate,
         sequence: s.sequence,
@@ -106,6 +122,8 @@ pub(crate) fn start(d: &CadDocument, s: &mut MotionState) -> Result<(), String> 
         sender: Some(tx),
         encode,
         sample: None,
+        continuation,
+        requested_time: None,
         prepared: false,
         capture_started: None,
         cancelled: false,
@@ -187,6 +205,17 @@ fn capture(
         e.sample = None;
         match answer {
             Ok(sample) => {
+                if e.requested_time
+                    .is_none_or(|time| !sampling::matches(&sample, &e.stamp, time))
+                {
+                    s.error = Some(
+                        "Export reference sample identity/time mismatch; continuation unchanged"
+                            .into(),
+                    );
+                    e.cancel();
+                    return;
+                }
+                e.continuation = Some(sample.continuation());
                 s.sample = Some(sample);
                 e.prepared = true;
                 return;
@@ -210,7 +239,9 @@ fn capture(
                 positions: s.positions.clone(),
                 program: Some(e.program.clone()),
                 time: e.next as f64 / e.fps as f64,
+                prior: e.continuation.clone(),
             };
+            e.requested_time = Some(r.time);
             e.sample = Some(Job::spawn(
                 Pool::Dedicated,
                 d.generation,
@@ -284,8 +315,7 @@ fn capture(
 pub(crate) fn poll(s: &mut MotionState, doc: Option<&CadDocument>) {
     if let Some(result) = s.export.as_ref().and_then(|e| e.encode.poll()) {
         let e = s.export.take().unwrap();
-        let current =
-            doc.is_some_and(|d| e.stamp.matches(d) && e.stamp.revision == d.shown_revision());
+        let current = doc.is_some_and(|d| guard(d, &e.stamp).is_ok());
         if current {
             s.sample = e.saved_sample.clone();
             s.cursor = e.saved_cursor;

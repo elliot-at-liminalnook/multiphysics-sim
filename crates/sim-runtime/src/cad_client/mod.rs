@@ -34,6 +34,8 @@ pub mod candidates;
 pub mod motion;
 #[cfg(test)]
 mod experiments_tests;
+#[cfg(test)]
+mod motion_continuation_tests;
 pub mod files;
 pub mod components;
 pub mod composition;

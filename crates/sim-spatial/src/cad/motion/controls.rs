@@ -46,6 +46,7 @@ fn ready(d: &CadDocument, s: &MotionState, op: MotionOp) -> Result<(), String> {
         return Err("Enter active reference pose preview first".into());
     }
     if op == MotionOp::Export {
+        export::preview_ready(d, s)?;
         if s.program_job.is_some() || s.loading.is_some() {
             return Err("Wait for reference metadata/program validation before exporting".into());
         }

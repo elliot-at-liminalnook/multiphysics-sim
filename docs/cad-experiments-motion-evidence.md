@@ -125,3 +125,46 @@ mutation outcomes losing visibility; missing evidence navigation; export cancel
 racing publication; transient capture cleanup, missing explicit frame/evidence navigation controls, initial-sample chart invalidation and stale display restoration and completed-capture document replacement after the read job was gone. Mutating server failures and candidate receipt failures after source publication now explicitly retain unknown outcomes.
 Compilation, visual correctness, process execution, exact feature parity,
 performance and physical qualification remain unverified.
+
+## T43 review repairs (2026-10-01; unexecuted)
+
+The eight batch checklist IDs above remain unchanged. Closure suspends automatic
+draft rebasing and debounce dispatch; stamped automatic intents refuse after
+closure even if already queued. Explicit UI/REST Run remains distinct and usable.
+Drafts and remote cancellation/unknown receipts survive; reopening resumes a
+fresh debounce instead of releasing an old hidden intent.
+
+Reference pose samples carry optional `prior` resolved state. Python validates
+its exact identity/revision, complete coordinates, finite bounds, couplings and
+closure before seeding PoseModel.last_positions; the existing reference solver
+continues its assembly branch through intermediate steps. Preview and export
+carry separate prior-state copies. Arbitrary seek/program changes continue the
+last published pose; Enter/replacement resets. Stale/cancelled/out-of-order
+responses are refused before advancing continuation. Export restoration uses
+the preserved preview sample, never its final export state. No global headless
+session or Rust numerical solver was introduced.
+
+Decision: use explicit validated prior state rather than server sessions, avoiding
+remote cleanup and cross-consumer mutable state. Revisit on measured performance
+evidence or a parity-qualified authority migration. Closing a dock suspends auto
+intent while explicit Run remains automation-compatible; revisit this policy only
+with explicit product guidance.
+
+Job-site reading audit: all T43 HTTP requests use Dedicated (including linked
+Rhai bundles); captured chart rasterization uses Compute; the video publication
+fixture's local-file work uses Io. Written fixtures cover close-before-debounce,
+close-after-enqueue, closed revision changes/reopen, explicit closed Run, successive
+closed-loop branch continuation, invalid/stale/replaced priors, independent
+consumers and export/preview isolation. These are written source evidence only,
+not executed behavior or exact parity. Current dependency and next-work claims
+are reconciled at their original documentation locations.
+
+Changing or reapplying Auto invalidates its queued epoch and starts a fresh
+interval. The client requires `prior_applied` acknowledgment when a prior was
+sent; absent/false acknowledgment refuses an older service response without
+retrying. Export starts only when preview has a matching published pose and no
+pending seek: refusal preserves that seek instead of cancelling and restoring
+an unrelated cursor. This keeps restoration aligned with the visible preview.
+Revisit the export readiness policy if asynchronous preview capture is designed.
+Dedicated fixtures include missing/false continuation acknowledgment, Auto
+configuration races, and export refusal before encoder work while retaining seek.

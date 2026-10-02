@@ -224,3 +224,38 @@ The lower-modal rebuild fixture additionally retains both return targets when an
 underlying editor rebuilds beneath close: cancelling close restores its draft,
 then closing that underlying scope restores its original pre-modal focus. This
 repairs the extra source-review finding without changing held-input semantics.
+
+
+## Correction of 6b61a495: actual-owner suspension
+
+Higher-modal takeover now marks TextField::suspended before TextInputSet, suppressing
+only temporary Blur. InputFocus still belongs to the higher scope. Actual consumers
+query TextFocus::suspended after draining input occurrences, retain their active
+property mapping and avoid refocus/reset/application. Valid cancellation restores
+the same editor and clears the marker before those consumers resume. Replacement
+of document/form/field intent, hiding or ambiguous rebinding clears suspension,
+emits real Blur even to a suspended owner, and invalidates return navigation.
+Explicit owner blur invalidates the anchor too. Ordinary Tab-away remains real Blur.
+
+The audit covers catalogue/file, materials, results, tree dialogs, retained studies
+and thread forms, plus name/numeric/inspector/section/views/reference reconciliation
+loops that formerly cleared mappings merely because the editor lost keyboard focus.
+Motion, composition, components, experiments and experiment review clear mappings
+only on actual field events and use the shared temporary-Blur suppression.
+
+Actual catalogue/file fixtures include their renderers and input consumers, a
+non-first field, unapplied typing, real OS-close owner/navigation/cancellation,
+continued editing/submission and replacement refusal. The shared fixture separately
+checks suppressed suspension Blur versus genuine Tab-away Blur. TextDraft's existing
+text and select_all state are preserved; insertion remains its existing end position.
+No applied values, source stamps, hardware behavior or public command identities
+are changed. All fixtures and compilation remain unexecuted. T49.1–T49.3 and all
+five native-keyboard-activation outcomes remain the acceptance scope.
+
+
+Catalogue/file/results reconciliation also respects a newly focused ordinary
+control during the dispatch frame, before the next TextInputSet delivers real
+Blur. This closes the Tab timing race without retaining a sticky owner mapping.
+Catalogue/file fixtures use full OS-close lifecycle and pinned Tab dispatch;
+materials and results fixtures isolate their actual renderer/consumer boundaries.
+No fixture result is represented as an executed pass.

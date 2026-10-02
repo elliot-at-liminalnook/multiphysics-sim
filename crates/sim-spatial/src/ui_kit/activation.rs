@@ -196,6 +196,23 @@ fn modal_focus(
             focus.clear();
         }
     }
+    // A suspended owner is valid only while its original intent still names a
+    // unique current eligible control. Replacement invalidation tells the real
+    // owner Blur even though the higher modal still holds the keyboard.
+    for entity in &field_entities {
+        let Ok(mut field) = fields.get_mut(entity) else { continue };
+        if !field.suspended { continue; }
+        let valid = field.focus_anchor.is_some_and(|anchor| eligible(anchor, &nodes)
+            && inputs.get(anchor).is_ok_and(|(_, identity, source)|
+                field.navigation_identity.as_deref() == Some(identity.0.as_str())
+                && source == field.navigation_source.as_ref()
+                && source.is_none_or(|s| registry.as_ref().is_none_or(|r| r.current(s.mode) == s.document))));
+        if !valid {
+            field.suspended = false;
+            field.focus_anchor = None;
+            if let Ok(&id) = field_ids.get(entity) { out.write(super::text::FieldMsg { field: id, event: super::text::FieldEvent::Blur }); }
+        }
+    }
     // Order all live scopes independently of ECS query iteration. Highest
     // priority wins; nested scopes precede their parent on equal priority.
     let mut ordered: Vec<_> = modals.iter().filter(|(e, _, _)| eligible(*e, &nodes)).map(|(e, label, priority)| {
@@ -234,7 +251,15 @@ fn modal_focus(
     if let Some((modal, _, _)) = stack.0.last() {
         let anchor = focus.get().and_then(|e| fields.get(e).ok().and_then(|f| f.focus_anchor).or(Some(e)));
         let inside = anchor.is_some_and(|e| e == *modal || parents.iter_ancestors(e).any(|p| p == *modal));
-        if !inside && let Ok(first) = nav.initialize(*modal, NavAction::First) { focus.set(first, FocusCause::Navigated); }
+        if !inside && let Ok(first) = nav.initialize(*modal, NavAction::First) {
+            if let Some(entity) = focus.get() && let Ok(mut field) = fields.get_mut(entity)
+                && field.focus_anchor.is_some_and(|anchor| eligible(anchor, &nodes) && inputs.contains(anchor))
+            { field.suspended = true; }
+            focus.set(first, FocusCause::Navigated);
+        }
+    }
+    if let Some(entity) = focus.get() && let Ok(mut field) = fields.get_mut(entity) {
+        field.suspended = false;
     }
 }
 

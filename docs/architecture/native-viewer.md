@@ -7093,3 +7093,30 @@ InputFocus, pinned TabNavigation and typed CloseOwner lifecycle above existing f
 Fixtures feed KeyboardInput through pinned public dispatch rather than constructing
 private FocusedInput fields, and inspect results only after deferred delivery.
 All repair evidence remains source-only, with fixtures and compilation unexecuted.
+
+
+### T49 correction: higher-modal editor suspension
+
+Restoring InputFocus alone is insufficient when a real form owner has discarded
+its active-property mapping on Blur. The shared kit now marks a valid durable
+TextField as suspended before a higher ModalFocus takes the keyboard. Suspension
+is transient per-editor navigation state, owned by modal containment; it is not
+another focus resource, an activation occurrence or an applied document edit.
+The text input writer suppresses only that temporary Blur. Actual field owners
+query TextFocus::suspended, drain occurrences, retain their property mapping and
+refrain from refocusing, resetting the draft or applying text during suspension.
+
+Cancellation restores only eligible current document/form/field identities.
+The kit clears suspension before the existing consumer resumes editing. A missing,
+hidden, ambiguous or replaced identity emits real Blur to the owner even while
+the higher modal has the keyboard, invalidates the return anchor and leaves the
+draft unapplied. Explicit owner blur also invalidates the anchor. Ordinary Tab or
+pointer departure remains real Blur; suspension never makes an editor sticky.
+
+Catalogue and file fixtures use their actual renderers and input consumers with
+WindowCloseRequested, keyboard cancellation, continued editing and submission.
+Other form owners and reconciliation loops follow the same contract. Editor state
+means the existing TextDraft text/selection and its existing implicit end insertion
+position; this repair introduces no alternate text editor or caret model. All
+T49 task/outcome IDs remain in scope. Fixtures, compilation and GUI behavior are
+unexecuted; STOP, unconditional releases and close preservation remain unchanged.

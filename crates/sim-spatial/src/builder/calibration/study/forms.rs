@@ -184,6 +184,9 @@ pub(crate) fn input(
     selection: Option<Res<crate::selection::Selection>>, registry:Option<Res<crate::document::DocumentRegistry>>,
 ) {
     if ui.blur_requested {focus.blur(FIELD);ui.blur_requested=false;}
+    // Do not discard the retained field mapping or consume pending intent
+    // while a higher modal temporarily holds keyboard focus.
+    if focus.suspended(FIELD) { fields.clear(); return; }
     for msg in fields.read().filter(|m|m.field==FIELD) {
         match &msg.event {
             FieldEvent::Changed(draft) => {

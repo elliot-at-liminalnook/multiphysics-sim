@@ -249,6 +249,11 @@ pub(super) fn input(
     if files.is_some_and(|f| f.form.is_some()) {
         return;
     }
+    // Events were drained above; a valid temporary suspension must neither
+    // clear the path owner nor claim focus from the higher modal.
+    if text.suspended(RESULTS) {
+        return;
+    }
     let mut form = before.clone();
     let (mut submit, mut close) = (false, false);
     for event in events {
@@ -318,9 +323,9 @@ pub(super) fn input(
     // focused, and shows the path when it changed from outside (a listing
     // pick, "..", `form_set`).
     if form.focused && !close {
-        if !text.focused(RESULTS) {
+        if !text.focused(RESULTS) && !text.ordinary_focused() {
             text.focus_draft(RESULTS, form.draft.clone());
-        } else if text.draft(RESULTS) != Some(&form.draft) {
+        } else if text.focused(RESULTS) && text.draft(RESULTS) != Some(&form.draft) {
             text.set(RESULTS, form.draft.clone());
         }
     } else {
@@ -415,4 +420,44 @@ pub(super) fn build(app: &mut App) {
         )
             .run_if(in_state(ViewerMode::Cad)),
     );
+}
+
+
+#[cfg(test)]
+mod suspension_tests {
+    use super::*;
+    use crate::cad::document::CadTarget;
+    use crate::ui_kit::text::{TextEntryPlugin, TextField, TextFieldApp};
+    use bevy::ecs::{message::Messages, system::RunSystemOnce};
+
+    /// Unexecuted actual-renderer consumer boundary: pinned navigation can
+    /// focus OK before the next-frame real Blur reaches the form owner.
+    #[test]
+    fn tab_away_does_not_reclaim_results_path_before_blur() {
+        let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
+        let mut form = PathForm::new(FormKind::Load, None);
+        form.draft = TextDraft::new("/tmp/unapplied.simresult.json", false);
+        form.listing_asked = form.listing_key().map(|(key, _)| key);
+        let draft = form.draft.clone();
+        doc.results.form = Some(form);
+        let mut app = App::new();
+        app.add_plugins(TextEntryPlugin)
+            .add_message::<Act<CadAction>>()
+            .add_text_field(RESULTS, TextField::new("Results path").sticky())
+            .insert_resource(doc)
+            .insert_resource(UiFonts { regular: default(), italic: default(), mono: default(), icons: default(), medium: default(), semibold: default() });
+        app.world_mut().run_system_once(draw).unwrap();
+        app.world_mut().run_system_once(|mut text: TextFocus| { text.focus_draft(RESULTS, TextDraft::new("/tmp/unapplied.simresult.json", false)); }).unwrap();
+        let mut parts = app.world_mut().query::<(Entity, &Part)>();
+        let ok = parts.iter(app.world()).find(|(_, part)| matches!(part, Part::Form(FormHit::Ok))).unwrap().0;
+        app.world_mut().resource_mut::<bevy::input_focus::InputFocus>().set(ok, bevy::input_focus::FocusCause::Navigated);
+        app.world_mut().run_system_once(input).unwrap();
+        assert_eq!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(ok));
+        assert_eq!(app.world().resource::<CadDocument>().results.form.as_ref().unwrap().draft, draft);
+        app.world_mut().resource_mut::<Messages<FieldMsg>>().write(FieldMsg { field: RESULTS, event: FieldEvent::Blur });
+        app.world_mut().run_system_once(input).unwrap();
+        assert!(!app.world().resource::<CadDocument>().results.form.as_ref().unwrap().focused);
+        assert_eq!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(ok));
+        assert_eq!(app.world().resource::<Messages<Act<CadAction>>>().len(), 0);
+    }
 }

@@ -210,3 +210,50 @@ fn rendered_material_ok_retains_modal_session() {
     let CadAction::Captured { source, .. } = intent else { panic!("missing modal source") };
     assert!(!crate::cad::activation::current(&source, world.resource::<CadDocument>()));
 }
+
+/// Source-only consumer fixture: real rendered row selection, then the kit's
+/// valid-suspension boundary. Full WindowCloseRequested coverage lives with
+/// catalogue/file fixtures; this isolates materials' authoritative row mirror.
+#[test]
+fn suspended_material_row_keeps_owner_and_real_blur_still_ends_it() {
+    use bevy::prelude::*;
+    use bevy::ecs::{message::Messages, system::RunSystemOnce};
+    use crate::app::actions::Act;
+    use crate::ui_kit::{UiFonts, activation::Activated, form::FormHit};
+    use crate::ui_kit::text::{FieldEvent, FieldMsg, TextDraft, TextEntryPlugin, TextField, TextFieldApp};
+    let mut doc = document();
+    doc.materials.form = Some(form::new_form(4));
+    doc.materials.form_sequence = 1;
+    let mut app = App::new();
+    app.add_plugins(TextEntryPlugin)
+        .add_message::<Act<CadAction>>()
+        .add_text_field(SEARCH, panel::search_field())
+        .add_text_field(FORM, panel::form_field())
+        .insert_resource(doc)
+        .insert_resource(UiFonts { regular: default(), italic: default(), mono: default(), icons: default(), medium: default(), semibold: default() });
+    app.world_mut().run_system_once(panel::draw_form).unwrap();
+    let mut rows = app.world_mut().query::<(Entity, &panel::FormPart)>();
+    let row = rows.iter(app.world()).find(|(_, part)| matches!(part.0, FormHit::Field(1))).unwrap().0;
+    app.world_mut().entity_mut(row).insert(Activated);
+    app.world_mut().run_system_once(panel::input).unwrap();
+    app.world_mut().entity_mut(row).remove::<Activated>();
+    let mut fields = app.world_mut().query::<(Entity, &crate::ui_kit::text::FieldId)>();
+    let editor = fields.iter(app.world()).find(|(_, id)| **id == FORM).unwrap().0;
+    let draft = TextDraft::new("unapplied row one", false);
+    app.world_mut().get_mut::<TextField>(editor).unwrap().draft = draft.clone();
+    app.world_mut().get_mut::<TextField>(editor).unwrap().suspended = true;
+    app.world_mut().resource_mut::<bevy::input_focus::InputFocus>().clear();
+    app.world_mut().run_system_once(panel::input).unwrap();
+    assert_eq!(app.world().resource::<CadDocument>().materials.focus, Some(Focus::Field(1)));
+    assert_eq!(app.world().get::<TextField>(editor).unwrap().draft, draft);
+    app.world_mut().get_mut::<TextField>(editor).unwrap().suspended = false;
+    app.world_mut().resource_mut::<Messages<FieldMsg>>().write(FieldMsg { field: FORM, event: FieldEvent::Blur });
+    // Ordinary Tab-away lands on a real rendered OK button, not on another
+    // field. The owner must not reclaim or retain the old row mapping.
+    let mut parts = app.world_mut().query::<(Entity, &panel::FormPart)>();
+    let ok = parts.iter(app.world()).find(|(_, part)| matches!(part.0, FormHit::Ok)).unwrap().0;
+    app.world_mut().resource_mut::<bevy::input_focus::InputFocus>().set(ok, bevy::input_focus::FocusCause::Navigated);
+    app.world_mut().run_system_once(panel::input).unwrap();
+    assert_eq!(app.world().resource::<CadDocument>().materials.focus, None);
+    assert_eq!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(ok));
+}

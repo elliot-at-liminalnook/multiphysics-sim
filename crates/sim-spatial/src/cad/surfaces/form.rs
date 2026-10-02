@@ -189,6 +189,10 @@ pub(super) fn input(
         text.blur(FORM);
         return;
     };
+    // A higher modal temporarily owns InputFocus. Keep the authoritative row
+    // mapping and its unapplied text; the kit validates source/field identity
+    // before resuming. Real Tab-away still delivers Blur below.
+    if text.suspended(FORM) { return; }
     // An open command surface has the keyboard: the field gives it up and
     // takes it back (its row kept) once the surface closes.
     if doc.ops.surface.is_some() {
@@ -325,9 +329,9 @@ pub(super) fn input(
     match at {
         Some(i) => {
             let want = TextDraft::new(texts.get(i).cloned().unwrap_or_default(), select_all);
-            if !text.focused(FORM) {
+            if !text.focused(FORM) && !text.ordinary_focused() {
                 text.focus_draft(FORM, want);
-            } else if text.draft(FORM) != Some(&want) {
+            } else if text.focused(FORM) && text.draft(FORM) != Some(&want) {
                 text.set(FORM, want);
             }
         }
@@ -444,4 +448,122 @@ fn body(p: &mut ChildSpawnerCommands, k: &Kit, entry: &OpEntry, rows: &[FormRow]
             p.spawn(k.note(entry.hint));
         }
     });
+}
+
+/// Written actual-consumer fixtures only: no execution or GUI evidence.
+#[cfg(test)]
+pub(in crate::cad) mod suspension_fixture {
+    use bevy::prelude::*;
+    use bevy::input::keyboard::{Key, KeyboardInput};
+    use crate::ui_kit::{activation, text::{TextEntryPlugin, TextFieldApp, TextField, FieldId}, UiFonts};
+    use crate::cad::document::{CadDocument, CadTarget};
+    use crate::cad::actions::CadAction;
+    use crate::app::{close::{ClosePlugin, CloseAction, CloseOwner}, actions::{Act, Replies}, settings::SettingsOwner};
+    pub fn app(id: FieldId) -> (App, Entity) {
+        let mut app = App::new();
+        app.insert_resource(UiFonts { regular: default(), italic: default(), mono: default(), medium: default(), semibold: default(), icons: default() })
+            .insert_resource(CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into())))
+            .add_plugins(TextEntryPlugin).add_text_field(id, TextField::new("Actual CAD form").sticky())
+            .init_resource::<Replies>().init_resource::<SettingsOwner>()
+            .add_message::<Act<CadAction>>().add_message::<bevy::window::WindowCloseRequested>()
+            .add_plugins(ClosePlugin)
+            .add_systems(PreUpdate, bevy::input_focus::dispatch_focused_input::<KeyboardInput>
+                .in_set(bevy::input_focus::InputFocusSystems::Dispatch).after(bevy::input::InputSystems))
+            .add_systems(PostUpdate, crate::cad::activation::stamp);
+        crate::app::configure_sets(&mut app);
+        activation::install(&mut app);
+        let window = app.world_mut().spawn((Window::default(), bevy::window::PrimaryWindow)).id();
+        (app, window)
+    }
+    pub fn field(app: &mut App, id: FieldId) -> Entity {
+        app.world_mut().query::<(Entity, &FieldId)>().iter(app.world()).find_map(|(e,i)| (*i == id).then_some(e)).unwrap()
+    }
+    pub fn key(app: &mut App, window: Entity, code: KeyCode, logical_key: Key) {
+        app.world_mut().write_message(KeyboardInput { key_code: code, logical_key, state: bevy::input::ButtonState::Pressed, text: None, repeat: false, window });
+        app.update();
+    }
+    pub fn press(app: &mut App, window: Entity, entity: Entity) {
+        let camera = app.world_mut().spawn_empty().id();
+        app.world_mut().trigger(bevy::picking::events::Pointer::new(
+            bevy::picking::pointer::PointerId::Mouse,
+            bevy::picking::pointer::Location { target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO },
+            bevy::picking::events::Press { button: bevy::picking::pointer::PointerButton::Primary, hit: bevy::picking::backend::HitData::new(camera, 0., None, None), count: 1 }, entity));
+        app.update();
+    }
+    pub fn request(app: &mut App, window: Entity) {
+        app.world_mut().write_message(bevy::window::WindowCloseRequested { window });
+        app.update(); app.update();
+        assert!(app.world().resource::<CloseOwner>().pending());
+    }
+    pub fn cancel(app: &mut App, window: Entity) {
+        let cancel = app.world_mut().query::<(Entity, &CloseAction)>().iter(app.world()).find_map(|(e,a)| (*a == CloseAction::CloseCancel).then_some(e)).unwrap();
+        for _ in 0..5 {
+            if app.world().resource::<bevy::input_focus::InputFocus>().get() == Some(cancel) { break; }
+            key(app, window, KeyCode::Tab, Key::Tab);
+        }
+        assert_eq!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(cancel));
+        key(app, window, KeyCode::Enter, Key::Enter);
+        app.update();
+        assert!(!app.world().resource::<CloseOwner>().pending());
+    }
+}
+
+#[cfg(test)]
+mod suspension_tests {
+    use super::*;
+    use super::suspension_fixture as fx;
+    use crate::ui_kit::text::TextField;
+    use bevy::input::keyboard::Key;
+    fn fixture() -> (App, Entity) {
+        let (mut app, window) = fx::app(FORM);
+        let entry = ops::entry("ops.box").unwrap();
+        app.world_mut().resource_mut::<CadDocument>().ops.form = Some(FormState {
+            op: entry.id, texts: entry.params.iter().map(|p| p.default.to_string()).collect(),
+            focus: None, select_all: false, began: 1, error: None,
+        });
+        app.add_systems(Update, input.in_set(crate::app::InputSet::Window))
+            .add_systems(Update, draw.in_set(crate::app::ViewerSet::Present));
+        app.update(); app.update();
+        let second = app.world_mut().query::<(Entity, &FormPart)>().iter(app.world()).find_map(|(e,p)| (p.0 == FormHit::Field(1)).then_some(e)).unwrap();
+        fx::press(&mut app, window, second);
+        fx::key(&mut app, window, KeyCode::Digit7, Key::Character("7, 7, 7".into()));
+        (app, window)
+    }
+    #[test]
+    fn actual_catalogue_nonfirst_field_survives_close_then_edits_and_submits_once() {
+        let (mut app, window) = fixture();
+        let field = fx::field(&mut app, FORM);
+        let saved = app.world().get::<TextField>(field).unwrap().draft.clone();
+        assert!(app.world().resource::<Messages<Act<CadAction>>>().is_empty(), "draft editing emits no applied action");
+        fx::request(&mut app, window);
+        assert!(app.world().get::<TextField>(field).unwrap().suspended);
+        assert_eq!(app.world().resource::<CadDocument>().ops.form.as_ref().unwrap().focus, Some(1));
+        fx::cancel(&mut app, window);
+        assert_eq!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(field));
+        assert_eq!(app.world().get::<TextField>(field).unwrap().draft, saved);
+        fx::key(&mut app, window, KeyCode::Digit8, Key::Character("8".into()));
+        let form = app.world().resource::<CadDocument>().ops.form.as_ref().unwrap();
+        assert_eq!(form.texts[1], "7, 7, 78"); assert_ne!(form.texts[0], "7, 7, 78");
+        fx::key(&mut app, window, KeyCode::Enter, Key::Enter);
+        let actions: Vec<_> = app.world_mut().resource_mut::<Messages<Act<CadAction>>>().drain().collect();
+        assert_eq!(actions.len(), 1);
+        assert!(matches!(&actions[0].action, CadAction::Captured { action, .. } if matches!(&**action, CadAction::CadFormSubmit)));
+        // Ordinary navigation is a true Blur, not temporary suspension.
+        fx::key(&mut app, window, KeyCode::Tab, Key::Tab);
+        app.update();
+        assert!(!app.world().get::<TextField>(field).unwrap().suspended);
+        assert_eq!(app.world().resource::<CadDocument>().ops.form.as_ref().unwrap().focus, None);
+        assert_ne!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(field));
+    }
+    #[test]
+    fn actual_catalogue_replaced_form_refuses_suspended_editor() {
+        let (mut app, window) = fixture(); let field = fx::field(&mut app, FORM);
+        fx::request(&mut app, window);
+        app.world_mut().resource_mut::<CadDocument>().ops.form_sequence += 1;
+        app.update(); app.update();
+        fx::cancel(&mut app, window);
+        assert!(!app.world().get::<TextField>(field).unwrap().suspended);
+        assert_ne!(app.world().resource::<CadDocument>().ops.form.as_ref().unwrap().focus, Some(1));
+        assert_ne!(app.world().get::<TextField>(field).unwrap().draft.text, "7, 7, 7", "a current first field may acquire focus; the stale size may not");
+    }
 }

@@ -483,7 +483,7 @@ pub(in crate::cad) fn entry(
     }
     // The kit's focus is the record: a draft whose field lost the keyboard
     // without a message read here (or one a handler cleared) ends.
-    if draft.is_some() && !text.focused(EDITOR) {
+    if draft.is_some() && !text.focused(EDITOR) && !text.suspended(EDITOR) {
         draft = None;
     }
     if draft.is_none() {

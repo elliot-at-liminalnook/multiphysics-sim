@@ -283,7 +283,7 @@ pub(super) fn entry(
     if open.is_none_or(|i| i >= n) && text.focused(NUMERIC) {
         text.blur(NUMERIC);
     }
-    if open.is_some() && !text.focused(NUMERIC) {
+    if open.is_some() && !text.focused(NUMERIC) && !text.suspended(NUMERIC) {
         let s = &mut doc.tool_state.numeric;
         s.focus = None;
         s.began = None;

@@ -90,6 +90,9 @@ fn input(doc: Option<ResMut<CadDocument>>, presses: Query<&ThreadsInput, With<cr
         return;
     };
     let messages: Vec<FieldMsg> = msgs.read().filter(|m| field_of(m.field).is_some()).cloned().collect();
+    if [COMPOSE, AUTHOR, LABEL].into_iter().any(|id| text.suspended(id)) {
+        return;
+    }
     let pressed: Vec<ThreadsInput> = presses.iter().map(|a| *a).collect();
     let kit_focus = [Field::Compose, Field::Author, Field::Label].into_iter().find(|f| text.focused(id_of(*f)));
     // Read first: a `ResMut` deref would mark the document changed every frame.

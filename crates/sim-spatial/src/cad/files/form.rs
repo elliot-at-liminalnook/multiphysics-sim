@@ -463,6 +463,9 @@ pub(super) fn input(
         text.blur(FILES);
         return;
     };
+    // Suspension is not a field change: retain the name, draft and selection,
+    // and do not start jobs or reclaim focus from the higher modal.
+    if text.suspended(FILES) { return; }
     let mut form = before.clone();
     let rows = form.rows();
     let (mut submit, mut close, mut guess) = (false, false, false);
@@ -572,9 +575,9 @@ pub(super) fn input(
     match form.focus.clone().filter(|_| !close) {
         Some(name) => {
             let want = TextDraft::new(form.text(&name), form.select_all);
-            if !text.focused(FILES) {
+            if !text.focused(FILES) && !text.ordinary_focused() {
                 text.focus_draft(FILES, want);
-            } else if text.draft(FILES) != Some(&want) {
+            } else if text.focused(FILES) && text.draft(FILES) != Some(&want) {
                 text.set(FILES, want);
             }
         }
@@ -693,4 +696,62 @@ fn footer(p: &mut ChildSpawnerCommands, k: &Kit, files: &CadFiles, form: &FileFo
         _ => {}
     }
     k.path_listing(p, path, listing, &|h| FilePart(Hit::Path(h)));
+}
+
+/// Written actual file-renderer/input fixtures; deliberately unexecuted.
+#[cfg(test)]
+mod suspension_tests {
+    use super::*;
+    use crate::cad::surfaces::form::suspension_fixture as fx;
+    use crate::ui_kit::text::TextField;
+    use bevy::input::keyboard::Key;
+    fn fixture() -> (App, Entity) {
+        let (mut app, window) = fx::app(FILES);
+        let context = formats::Context { sketch: None, title: "fixture".into(), section: None };
+        let form = FileForm::new(Kind::Render, "/tmp/", "fixture", None, &context, &BTreeMap::new()).unwrap();
+        app.insert_resource(CadFiles { form: Some(form), ..default() })
+            .add_systems(Update, input.in_set(crate::app::InputSet::Window))
+            .add_systems(Update, draw.in_set(crate::app::ViewerSet::Present));
+        app.update(); app.update();
+        // Height is neither the initial path field nor the first editable row.
+        let height = app.world_mut().query::<(Entity, &FilePart)>().iter(app.world()).find_map(|(e,p)| matches!(p.0, Hit::Form(FormHit::Field(2))).then_some(e)).unwrap();
+        fx::press(&mut app, window, height);
+        fx::key(&mut app, window, KeyCode::Digit7, Key::Character("700".into()));
+        (app, window)
+    }
+    #[test]
+    fn actual_file_nonfirst_field_survives_close_then_edits_and_submits_once() {
+        let (mut app, window) = fixture(); let field = fx::field(&mut app, FILES);
+        let saved = app.world().get::<TextField>(field).unwrap().draft.clone();
+        assert!(app.world().resource::<Messages<Act<CadAction>>>().is_empty(), "draft editing emits no applied action");
+        fx::request(&mut app, window);
+        assert!(app.world().get::<TextField>(field).unwrap().suspended);
+        assert_eq!(app.world().resource::<CadFiles>().form.as_ref().unwrap().focus.as_deref(), Some("h"));
+        fx::cancel(&mut app, window);
+        assert_eq!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(field));
+        assert_eq!(app.world().get::<TextField>(field).unwrap().draft, saved);
+        fx::key(&mut app, window, KeyCode::Digit8, Key::Character("8".into()));
+        let form = app.world().resource::<CadFiles>().form.as_ref().unwrap();
+        assert_eq!(form.text("h"), "7008"); assert_eq!(form.text("w"), "1200");
+        fx::key(&mut app, window, KeyCode::Enter, Key::Enter);
+        let actions: Vec<_> = app.world_mut().resource_mut::<Messages<Act<CadAction>>>().drain().collect();
+        assert_eq!(actions.len(), 1);
+        assert!(matches!(&actions[0].action, CadAction::Captured { action, .. } if matches!(&**action, CadAction::CadRender(args) if args.h == Some(7008))));
+        fx::key(&mut app, window, KeyCode::Tab, Key::Tab); app.update();
+        assert!(!app.world().get::<TextField>(field).unwrap().suspended);
+        assert_eq!(app.world().resource::<CadFiles>().form.as_ref().unwrap().focus, None);
+        assert_ne!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(field));
+    }
+    #[test]
+    fn actual_file_document_replacement_refuses_suspended_editor() {
+        let (mut app, window) = fixture(); let field = fx::field(&mut app, FILES);
+        fx::request(&mut app, window);
+        app.world_mut().resource_mut::<CadDocument>().generation += 1;
+        app.update(); app.update();
+        fx::cancel(&mut app, window);
+        assert!(!app.world().get::<TextField>(field).unwrap().suspended);
+        assert_ne!(app.world().resource::<CadFiles>().form.as_ref().unwrap().focus.as_deref(), Some("h"));
+        let current = app.world().get::<TextField>(field).unwrap().draft.text.clone();
+        assert_ne!(current, "700", "new source may focus its own initial field, never the suspended height");
+    }
 }

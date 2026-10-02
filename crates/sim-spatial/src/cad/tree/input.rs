@@ -357,6 +357,10 @@ pub(super) fn fields(
         msgs.clear();
         return;
     };
+    if [SEARCH, RENAME, GROUP_NAME].into_iter().any(|id| text.suspended(id)) {
+        msgs.clear();
+        return;
+    }
     let mut touched = false;
     // Cancel this frame: the dialog closes when the handler runs, so its field does not take the keyboard again.
     let mut closing = false;

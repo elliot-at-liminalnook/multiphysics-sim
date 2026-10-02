@@ -181,6 +181,12 @@ pub(in crate::cad) fn input(
         msgs.clear();
         return;
     };
+    // Higher modal takeover is not an owner blur. The kit validates the
+    // suspended source/field identity before exposing this state.
+    if text.suspended(FORM) || text.suspended(SEARCH) {
+        msgs.clear();
+        return;
+    }
     let modal = doc.materials.form.is_some();
     let (before, before_all) = (doc.materials.focus, doc.materials.select_all);
     let mut at = before;

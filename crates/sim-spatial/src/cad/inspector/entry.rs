@@ -121,7 +121,7 @@ pub(in crate::cad) fn entry(
     }
     // The kit's focus is the record: a draft whose field lost the keyboard
     // without a message read here ends, and a field without a draft blurs.
-    if draft.is_some() && !text.focused(PHYSICAL) {
+    if draft.is_some() && !text.focused(PHYSICAL) && !text.suspended(PHYSICAL) {
         draft = None;
     }
     if draft.is_none() {

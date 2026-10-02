@@ -6898,7 +6898,20 @@ not. Picks, cached reads, results, source stamps and jobs remain on CadDocument.
 Geometry and undo continue through RoboCAD's guarded command path (§9). Preferences
 are tool inputs, never physical truth. Hardware choices remain inactive intent (§8):
 connection/config validation, STOP, release/loss handling and explicit activation
-retain their existing owners. Loading cannot issue hardware commands.
+retain their existing owners. Late publication uses the existing host-only Inputs
+assignment through `inputs_changed` to synchronize an already connected session
+with the displayed drive-mode/hold-others choices. That assignment makes no physical
+request and restores no activation; subsequent explicit Select/jog consumes it.
+
+Active mirror maps are rebuilt from current motor keys, preserving nested metadata
+only for retained identities. Removed mirror/sync rows stay outside active projections.
+Initial `preserved_source` remains immutable; subsequent removals append deduplicated
+raw-row records to flat version-1 `retained_rows`, never enclosing archive snapshots.
+A 256-record/1-MiB cap fails closed without eviction or publication; dirty diagnostics
+remain retryable. Later-startup unknown metadata is recoverable without reactivating
+removed rows. The preferences guide specifies identities and recovery. T45 repair
+fixtures are written and source-reviewed only; compilation and execution remain
+unverified. The SettingsGroup seam, jobs owner and public schedule ordering remain.
 
 Shutdown submits best-effort jobs for dirty latest snapshots, serialized with any
 in-flight save by the publication gate; the UI never blocks on disk. Dropping a job

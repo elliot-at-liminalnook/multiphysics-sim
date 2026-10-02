@@ -560,15 +560,20 @@ pub(crate) fn apply(
     });
 }
 
-/// Seed only remembered choices. No link command, connection, controller,
-/// operator confirmation or session activation is produced by publication.
-fn seed_preferences(hw: &mut Hardware, settings: &super::settings::Settings) {
+/// Seed remembered choices and publish the form's host-only Inputs through
+/// the same path as an accepted form edit. This does not request hardware,
+/// connect, confirm an operator action or activate a session.
+pub(super) fn seed_preferences(hw: &mut Hardware, settings: &super::settings::Settings) {
     if let Some(mode) = settings.calibration.drive_mode {
         hw.form.inputs.drive_mode = mode;
     }
     if let Some(on) = settings.calibration.hold_others {
         hw.form.inputs.hold_others = on;
     }
+    // Connection can precede settings readiness. Keep the connected session's
+    // send-time configuration coherent with the displayed form, in FIFO order
+    // before any explicit Select/Press handled later in this apply system.
+    inputs_changed(hw);
     hw.mirror.load_preferences(&settings.mirror);
     hw.sync.load_preferences(&settings.sync);
     hw.settings = settings.clone();

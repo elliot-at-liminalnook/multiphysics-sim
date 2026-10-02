@@ -164,6 +164,11 @@ fn unknown_nested_document_metadata_and_removed_bindings_are_retained() {
     let out = jobs::snapshot(&raw, &r, &Settings::default(), &CadDefaults::default()).unwrap();
     assert_eq!(out["preferences"]["recents"]["modes"]["cad"][0]["note"], 2);
     assert_eq!(out["preserved_source"], raw);
+    assert_eq!(
+        out["preferences"]["hardware"]["sync"]["bindings"],
+        json!([])
+    );
+    assert_eq!(out["retained_rows"]["entries"].as_array().unwrap().len(), 2);
 }
 #[test]
 fn shutdown_does_not_claim_durability_or_persist_active_state() {
@@ -343,4 +348,175 @@ fn early_visibility_choice_does_not_claim_materialized_binding_defaults() {
         "Foot servo output"
     );
     assert_eq!(owner.hardware.mirror.bindings[&1].polarity, -1);
+}
+
+#[test]
+fn removed_rows_stay_inactive_and_later_metadata_survives_existing_archive() {
+    let p = paths("removed-rows");
+    write(
+        &p.hardware,
+        json!({"mirror":{"bindings":{"4":{"vendor":{"first":1}},"5":{"vendor":{"retained":2}}}},"sync":{"bindings":[{"coordinate":"a","vendor":7},{"coordinate":"b","vendor":8}]}}),
+    );
+    let loaded = jobs::load(&p).unwrap();
+    let mut current = loaded.hardware.clone();
+    current.mirror.bindings.remove(&4);
+    current.sync.bindings.reverse();
+    let first = jobs::snapshot(&loaded.raw, &loaded.recents, &current, &loaded.cad).unwrap();
+    assert!(
+        first["preferences"]["hardware"]["mirror"]["bindings"]
+            .get("4")
+            .is_none()
+    );
+    assert_eq!(
+        first["preferences"]["hardware"]["mirror"]["bindings"]["5"]["vendor"]["retained"],
+        2
+    );
+    assert_eq!(
+        first["preferences"]["hardware"]["sync"]["bindings"][0]["vendor"],
+        8
+    );
+    jobs::publish(p.unified.as_ref().unwrap(), &first, 1).unwrap();
+    assert!(
+        !jobs::load(&p)
+            .unwrap()
+            .hardware
+            .mirror
+            .bindings
+            .contains_key(&4)
+    );
+    let original = first["preserved_source"].clone();
+    // A later startup sees new vendor metadata absent from immutable migration evidence.
+    let mut later = first;
+    later["preferences"]["hardware"]["mirror"]["bindings"]["5"]["vendor"]["later"] = json!(3);
+    later["preferences"]["hardware"]["sync"]["bindings"][0]["later"] = json!(9);
+    write(p.unified.as_ref().unwrap(), later);
+    let loaded = jobs::load(&p).unwrap();
+    let mut current = loaded.hardware.clone();
+    current.mirror.bindings.clear();
+    current.sync.bindings.clear();
+    let out = jobs::snapshot(&loaded.raw, &loaded.recents, &current, &loaded.cad).unwrap();
+    assert_eq!(out["preserved_source"], original);
+    assert_eq!(
+        out["preferences"]["hardware"]["mirror"]["bindings"],
+        json!({})
+    );
+    assert_eq!(
+        out["preferences"]["hardware"]["sync"]["bindings"],
+        json!([])
+    );
+    let entries = out["retained_rows"]["entries"].as_array().unwrap();
+    assert!(entries.iter().any(|e| e["collection"] == "mirror"
+        && e["identity"] == "5"
+        && e["value"]["vendor"]["later"] == 3));
+    assert!(entries.iter().any(|e| e["collection"] == "sync"
+        && e["identity"] == "coordinate:b"
+        && e["value"]["later"] == 9));
+    jobs::publish(p.unified.as_ref().unwrap(), &out, 2).unwrap();
+    let loaded = jobs::load(&p).unwrap();
+    assert!(loaded.hardware.mirror.bindings.is_empty());
+    assert!(loaded.hardware.sync.bindings.is_empty());
+    assert_eq!(
+        jobs::snapshot(&loaded.raw, &loaded.recents, &loaded.hardware, &loaded.cad).unwrap(),
+        out
+    );
+}
+
+#[test]
+fn malformed_future_or_overfull_removal_archive_blocks_loading_and_snapshot() {
+    let p = paths("archive-refusal");
+    let loaded = jobs::load(&p).unwrap();
+    let base = jobs::snapshot(&loaded.raw, &loaded.recents, &loaded.hardware, &loaded.cad).unwrap();
+    let row = json!({"collection":"mirror","identity":"4","value":{}});
+    for archive in [
+        json!({"version":2,"entries":[]}),
+        json!({"version":1,"entries":[{"collection":"mirror","identity":4,"value":{}}]}),
+        json!({"version":1,"entries":vec![row;257]}),
+        json!({"version":1,"entries":[{"collection":"sync","identity":"coordinate:a","value":{"vendor":"x".repeat(1024*1024)}}]}),
+    ] {
+        let mut raw = base.clone();
+        raw["retained_rows"] = archive;
+        write(p.unified.as_ref().unwrap(), raw.clone());
+        assert!(jobs::load(&p).err().unwrap().contains("retained_rows"));
+        assert!(jobs::snapshot(&raw, &loaded.recents, &loaded.hardware, &loaded.cad).is_err());
+        assert_eq!(
+            serde_json::from_slice::<Value>(&std::fs::read(p.unified.as_ref().unwrap()).unwrap())
+                .unwrap(),
+            raw
+        );
+    }
+}
+
+#[test]
+fn removing_another_row_at_archive_capacity_refuses_instead_of_evicting_evidence() {
+    let p = paths("archive-growth");
+    write(
+        &p.hardware,
+        json!({"mirror":{"bindings":{"4":{"vendor":"new removal"}}}}),
+    );
+    let loaded = jobs::load(&p).unwrap();
+    let mut raw = loaded.raw.clone();
+    raw["retained_rows"] = json!({"version":1,"entries":(0..256).map(|i| json!({"collection":"mirror","identity":i.to_string(),"value":{"vendor":i}})).collect::<Vec<_>>()});
+    let before = raw.clone();
+    let mut owner = SettingsOwner::default();
+    owner.revision = 2;
+    owner.saved_revision = 1;
+    assert!(
+        jobs::snapshot(&raw, &loaded.recents, &Settings::default(), &loaded.cad)
+            .err()
+            .unwrap()
+            .contains("capacity exceeded")
+    );
+    assert_eq!(raw, before);
+    assert!(owner.dirty());
+}
+
+#[test]
+fn duplicate_coordinates_consume_rows_once_and_archive_removed_later_metadata() {
+    let p = paths("duplicate-sync-rows");
+    write(
+        &p.hardware,
+        json!({"sync":{"bindings":[{"coordinate":"a","motor_id":4,"vendor":"first"},{"coordinate":"a","motor_id":5,"vendor":"second"}]}}),
+    );
+    let loaded = jobs::load(&p).unwrap();
+    let first =
+        jobs::snapshot(&loaded.raw, &loaded.recents, &loaded.hardware, &loaded.cad).unwrap();
+    assert_eq!(
+        first["preferences"]["hardware"]["sync"]["bindings"][0]["vendor"],
+        "first"
+    );
+    assert_eq!(
+        first["preferences"]["hardware"]["sync"]["bindings"][1]["vendor"],
+        "second"
+    );
+    let original = first["preserved_source"].clone();
+    let mut later = first;
+    later["preferences"]["hardware"]["sync"]["bindings"][1]["new_vendor"] = json!(42);
+    write(p.unified.as_ref().unwrap(), later);
+    let loaded = jobs::load(&p).unwrap();
+    let mut current = loaded.hardware.clone();
+    current.sync.bindings.pop();
+    let out = jobs::snapshot(&loaded.raw, &loaded.recents, &current, &loaded.cad).unwrap();
+    assert_eq!(out["preserved_source"], original);
+    let rows = out["preferences"]["hardware"]["sync"]["bindings"]
+        .as_array()
+        .unwrap();
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0]["vendor"], "first");
+    assert!(rows[0].get("new_vendor").is_none());
+    assert!(
+        out["retained_rows"]["entries"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|e| e["identity"] == "coordinate:a"
+                && e["value"]["vendor"] == "second"
+                && e["value"]["new_vendor"] == 42)
+    );
+    jobs::publish(p.unified.as_ref().unwrap(), &out, 2).unwrap();
+    let loaded = jobs::load(&p).unwrap();
+    assert_eq!(loaded.hardware.sync.bindings.len(), 1);
+    assert_eq!(
+        jobs::snapshot(&loaded.raw, &loaded.recents, &loaded.hardware, &loaded.cad).unwrap(),
+        out
+    );
 }

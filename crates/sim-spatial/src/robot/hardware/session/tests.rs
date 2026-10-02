@@ -1,7 +1,8 @@
 //! The session against an in-process fake calibration server (plain HTTP on
 //! 127.0.0.1:0, served from a `jobs::Pool::Dedicated` job): no window, no
-//! hardware. Each test drives [`Session`]'s handlers directly, except the
-//! disconnect test, which runs [`run`] on the test thread. The heartbeats
+//! hardware. Most tests drive [`Session`]'s handlers directly; the disconnect
+//! test runs [`run`] on the test thread, and late preference publication drives
+//! the real [`super::super::link::Link`] against the fake server. The heartbeats
 //! come from the session's beat thread, as in the viewer; the fake answers
 //! each connection on its own job, as the real server does, so a request it
 //! holds does not hold the others.
@@ -148,6 +149,51 @@ impl Session {
 fn session(fake: &Fake, epoch: Arc<AtomicU64>) -> (Session, Arc<Mutex<LinkSnapshot>>) {
     let shared = Arc::new(Mutex::new(LinkSnapshot::default()));
     (Session::new(fake.client(), 1, Arc::new(AtomicU64::new(0)), epoch, shared.clone()), shared)
+}
+
+/// Written only: the real connected link receives publication before later
+/// explicit selection/jog. Its client is an isolated loopback fake, never leg
+/// hardware; no settings file or connection job is used.
+#[test]
+fn connected_link_uses_late_published_form_inputs_without_publication_motion() {
+    use crate::robot::hardware::{Hardware, HardwareConfig, actions, link, settings};
+    let fake = Fake::start(motor_server(1));
+    let mut hw = Hardware::new(HardwareConfig::default(), settings::Settings::default());
+    let connected = link::Link::spawn(fake.client(), 1);
+    // Match poll_jobs: initialize the connected host from the startup form.
+    connected.send(LinkCommand::Inputs(hw.form.inputs.clone()));
+    hw.link = Some(connected);
+    let mut loaded = settings::Settings::default();
+    loaded.calibration.drive_mode = Some(actions::DriveMode::ServoSpeed);
+    loaded.calibration.hold_others = Some(false);
+    actions::seed_preferences(&mut hw, &loaded);
+    assert_eq!(hw.form.inputs.drive_mode, actions::DriveMode::ServoSpeed);
+    assert!(!hw.form.inputs.hold_others);
+    assert!(!hw.form.tune_ok && !hw.form.campaign_ok && !hw.form.gait_ok);
+    assert!(!hw.form.held_upper && !hw.form.held_lower);
+    assert!(!hw.sync.engaged());
+    // Inputs itself cannot issue a request: verify the actual Session handler
+    // independently, without relying on asynchronous timing for that claim.
+    let (mut host, _) = session(&fake, Arc::default());
+    host.handle(LinkCommand::Inputs(hw.form.inputs.clone()));
+    assert!(fake.commands().is_empty(), "publication sends no hardware command");
+    assert_eq!(host.input().drive_mode, "servo_speed");
+    assert!(!host.input().hold_others);
+    let connected = hw.link.as_ref().unwrap();
+    // These are explicit user commands, FIFO after the publication Inputs.
+    connected.send(LinkCommand::Select { id: 1 });
+    connected.send(LinkCommand::Press { direction: Direction::Upper });
+    let deadline = Instant::now() + Duration::from_secs(2);
+    while !fake.commands().iter().any(|c| c["action"] == "motion_start") {
+        assert!(Instant::now() < deadline, "explicit jog did not reach fake");
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    let commands = fake.commands();
+    assert_eq!(commands[0]["action"], "select");
+    assert_eq!(commands[0]["hold_others"], false);
+    let jog = commands.iter().find(|c| c["action"] == "motion_start").unwrap();
+    assert_eq!(jog["drive_mode"], "servo_speed");
+    assert_eq!(jog["hold_others"], false);
 }
 
 #[test]

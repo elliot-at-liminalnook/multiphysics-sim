@@ -70,12 +70,17 @@ pub fn binding_lost(error: &super::ClientError) -> bool {
         E::Server { status, .. } => *status == BINDING_REFUSED_STATUS,
     }
 }
-/// In-scope wire commands. Raw jog, direction/flip, gait and lesson motion are
-/// intentionally excluded; a generic remote-motion override does not exist.
+/// In-scope wire commands on a virtual bench. Gait playback (`gait_start` and
+/// its lease heartbeat `gait_update`) is in scope: it runs the same governed,
+/// taught-window-clamped session as on the leg, against the bench's motor
+/// models, and its records are labelled simulated. Raw jog (`step`/`jog`),
+/// direction/flip and lesson motion (`lab_step`) stay out; a generic
+/// remote-motion override does not exist. STOP is never gated.
 pub fn virtual_command_allowed(action: &str) -> bool {
     matches!(action, "inspect" | "select" | "set_disabled" | "enable" | "clear"
         | "capture" | "capture_hold" | "halt" | "motion_start" | "motion_update"
-        | "sweep_start" | "sweep_update" | "sweep_all" | "tune" | "campaign")
+        | "sweep_start" | "sweep_update" | "sweep_all" | "tune" | "campaign"
+        | "gait_start" | "gait_update")
 }
 
 /// `GET /calibration/status`.
@@ -403,6 +408,10 @@ pub struct CampaignResult {
 pub struct GaitState {
     #[serde(default, deserialize_with = "lenient")]
     pub running: bool,
+    /// The gait plays on a virtual bench (`execution` names it in the
+    /// status); absent from an older server, which means physical.
+    #[serde(default, deserialize_with = "lenient")]
+    pub simulated: bool,
     /// The gait's repository path.
     #[serde(default, deserialize_with = "lenient")]
     pub gait: Option<String>,
@@ -497,6 +506,14 @@ pub struct GaitRun {
     pub outcome: Option<String>,
     #[serde(default, deserialize_with = "lenient")]
     pub statistics: BTreeMap<String, GaitStatistics>,
+    /// The run was on a virtual bench. A record written before runs were
+    /// labelled carries no such field and is not simulated (false).
+    #[serde(default, deserialize_with = "lenient")]
+    pub simulated: bool,
+    /// The execution (server and bench instances) that wrote the record;
+    /// `None` for an older record or an unreadable identity.
+    #[serde(default, deserialize_with = "lenient")]
+    pub execution: Option<ExecutionIdentity>,
 }
 
 /// `GET /calibration/gaits`.

@@ -144,8 +144,79 @@ struct BrowserSweep {
     last_seen: Instant,
     motion: MotionCommand,
     teaching: bool,
-    /// Pose to save once settled, with the alignment joint angle for `reference`.
-    capture: Option<(String, Option<f64>)>,
+    /// Pose to save once settled, awaited by its `capture_hold` request.
+    capture: Option<PendingCapture>,
+}
+/// A `capture_hold` the hold session performs at its next sample of the axis.
+/// The session answers `done` with the outcome: `Ok` once the calibration,
+/// `capture_message` and the axis's sample are all in the state, or the
+/// refusal (still settling, validation, save failure).
+struct PendingCapture {
+    boundary: String,
+    /// The alignment joint angle, for `reference`.
+    joint_rad: Option<f64>,
+    /// The request's sequence: with the session's run, which capture this is.
+    sequence: u64,
+    done: mpsc::SyncSender<R<()>>,
+}
+/// How long `capture_hold` waits for the hold session to take its capture.
+/// The motion lease is 1.5 s and a client cannot heartbeat while this
+/// request is in flight, so the wait stays well under it.
+const CAPTURE_WAIT: Duration = Duration::from_millis(1000);
+/// Once the session has taken the capture, how much longer to wait for its
+/// outcome (it is computed at once; this only bounds a slow disk).
+const CAPTURE_OUTCOME_WAIT: Duration = Duration::from_secs(2);
+/// Waits for the hold session's answer to the capture (`run_id`,
+/// `sequence`) and returns the state to answer with (the full status, as
+/// `capture` answers, so a client can adopt it). A capture the session never
+/// took within [`CAPTURE_WAIT`] is withdrawn, so it cannot be saved later.
+fn await_capture(app: &App, run_id: u64, sequence: u64, done: &mpsc::Receiver<R<()>>) -> R<Value> {
+    let outcome = match done.recv_timeout(CAPTURE_WAIT) {
+        Err(mpsc::RecvTimeoutError::Timeout) => {
+            {
+                let mut lock = app.sweep.lock().unwrap();
+                if let Some(ctl) = lock.as_mut()
+                    && ctl.run_id == run_id
+                    && ctl.capture.as_ref().is_some_and(|c| c.sequence == sequence)
+                {
+                    ctl.capture = None;
+                    return Err("Pose not saved: the hold session did not take the capture within 1 s".into());
+                }
+            }
+            // Taken (or the session ended, dropping it): its answer is due.
+            done.recv_timeout(CAPTURE_OUTCOME_WAIT)
+        }
+        other => other,
+    };
+    match outcome {
+        Ok(Ok(())) => Ok(app.state.lock().unwrap().clone()),
+        Ok(Err(e)) => Err(e),
+        Err(mpsc::RecvTimeoutError::Disconnected) => {
+            // The session ended (dropping the capture); the worker publishes
+            // its reason just after, so wait briefly for it before falling
+            // back to the current message.
+            let deadline = Instant::now() + Duration::from_millis(500);
+            let detail = loop {
+                let s = app.state.lock().unwrap();
+                // This session's own reason only: the top-level `error` may
+                // still hold an earlier job's failure.
+                let reason = s["sweep"]["motion_error"].as_str().filter(|_| s["sweep"]["run_id"].as_u64() == Some(run_id)).map(str::to_string);
+                if reason.is_some() || Instant::now() >= deadline {
+                    break reason.or_else(|| s["message"].as_str().map(str::to_string)).unwrap_or_default();
+                }
+                drop(s);
+                std::thread::sleep(Duration::from_millis(20));
+            };
+            Err(if detail.is_empty() {
+                "Pose not saved: the hold session ended before the capture".to_string()
+            } else {
+                format!("Pose not saved: the hold session ended before the capture ({detail})")
+            })
+        }
+        Err(mpsc::RecvTimeoutError::Timeout) => {
+            Err("Pose save not confirmed: the hold session took the capture but did not report within 3 s; check the saved poses".into())
+        }
+    }
 }
 impl BrowserSweep {
     fn update(&mut self, client: &str, r: &Request, tuning: &SweepTuning) -> R<()> {
@@ -262,6 +333,27 @@ fn export_document(app: &App) -> Value {
     doc.insert("execution".into(), serde_json::to_value(&app.execution).unwrap());
     doc.insert("simulated".into(), json!(true));
     Value::Object(doc)
+}
+/// `value` (a JSON object) with the execution that produced it and whether it
+/// is simulated, the keys `export_document` adds: gait run records, their log
+/// events and the live gait status carry them in both modes (`simulated`
+/// false and the physical identity on hardware).
+fn labelled(app: &App, mut value: Value) -> Value {
+    value["execution"] = json!(app.execution);
+    value["simulated"] = json!(app.execution.is_virtual_calibration());
+    value
+}
+/// What a virtual gait run cannot stand for (a gait run record's
+/// `virtual_limits`), and the supply its governor limits assumed.
+fn virtual_gait_limits(measured_supply: Option<f64>, supply: f64) -> String {
+    let supply = match measured_supply {
+        Some(v) => format!("the bench's reported supply, {v:.2} V"),
+        None => format!("an assumed {supply:.1} V supply (the bench reported no usable voltage)"),
+    };
+    format!("SIMULATED virtual bench run, not measured hardware: the bench's motor models stand in for the leg. \
+        Its supply sag and winding heating are simplified bench models, not this leg's supply or windings; \
+        belt slip, backlash, compliance, cable drag and serial/FPGA timing jitter are not emulated. \
+        Governor limits come from the accepted physical actuator registry at {supply}; the bench's models are not registry families.")
 }
 /// Refusal of a command outside the virtual calibration scope: a business
 /// refusal (HTTP 400) that does not revoke the execution binding.
@@ -827,12 +919,25 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config, initial_bus: Opti
                 owner.clear();
                 let mut s = app.state.lock().unwrap();
                 s["busy"] = json!(false);
+                // Labelled even when refused before run_gait published it.
+                let gait = s["gait"].take();
+                s["gait"] = labelled(&app, gait);
                 s["gait"]["running"] = json!(false);
                 s["enabled_id"] = Value::Null;
                 match outcome {
                     Ok(message) => s["message"] = json!(format!("{message}. Torque off and stationary encoder verified.")),
                     Err(e) => {
                         probe_link = virtual_mode;
+                        // As the sweep path: a lost readback may have hidden
+                        // encoder turns of every bound axis.
+                        if readback_lost(&e) {
+                            for g in &r.bindings {
+                                b.reset_turn_tracking_for(g.id);
+                            }
+                            if r.bindings.iter().any(|g| cal.axes.get(&g.id).is_some_and(multi_turn)) {
+                                s["coordinate_session"] = json!(stamp().to_string());
+                            }
+                        }
                         s["gait"]["error"] = json!(e);
                         s["message"] = json!(format!("Gait stopped: {e}. Torque off."));
                     }
@@ -984,19 +1089,35 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config, initial_bus: Opti
                     {let mut p=progress.borrow_mut();let e=p.entry(id).or_insert((sample.half_cycles as u64,sample.half_cycles as u64));e.1=sample.half_cycles as u64;}
                     if id!=r.id {return Ok(());}
                     history.push_back(json!(sample));if history.len()>300 {history.pop_front();}
-                    let capture={let mut lock=app.sweep.lock().unwrap();lock.as_mut().and_then(|ctl|ctl.capture.take())};
-                    if let Some((boundary,joint_rad))=capture {
+                    // Taking a capture renews the lease: its client is present (it waits on this
+                    // capture_hold) but cannot heartbeat until the answer, so the save cannot let it lapse.
+                    let capture={let mut lock=app.sweep.lock().unwrap();lock.as_mut().and_then(|ctl|{let c=ctl.capture.take();if c.is_some(){ctl.last_seen=Instant::now();}c})};
+                    if let Some(capture)=capture {
                         let stable=history.len()>=6 && history.iter().rev().take(6).all(|s|s["position_continuous"].as_i64().is_some_and(|p|(p-t.position_continuous.unwrap_or(t.position_raw as i32) as i64).abs()<=2));
                         if sample.holding && sample.velocity_counts_s.abs()<2. && (sample.target_raw-t.position_continuous.unwrap_or(t.position_raw as i32) as f64).abs()<3. && stable {
-                            let mut next=cal.clone();let a=next.axes.get_mut(&r.id).unwrap();
-                            match boundary.as_str(){"lower"=>a.lower=Some(t.position_continuous.ok_or("Missing continuous encoder coordinate")?),"upper"=>a.upper=Some(t.position_continuous.ok_or("Missing continuous encoder coordinate")?),"reference"=>a.reference=Some(t.position_continuous.ok_or("Missing continuous encoder coordinate")?),_=>return Err("Unknown pose".into())};
-                            if a.lower.into_iter().chain(a.upper).any(|p|!(0..=4095).contains(&p)) {a.coordinate_session=Some(app.state.lock().unwrap()["coordinate_session"].as_str().unwrap().to_string());}
-                            if boundary=="reference" {a.reference_session=a.reference.filter(|p|!(0..=4095).contains(p)).map(|_|app.state.lock().unwrap()["coordinate_session"].as_str().unwrap().to_string());a.reference_joint_rad=joint_rad;}
-                            next.validate()?;
-                            if next.axes[&r.id].reversed()!=cal.axes[&r.id].reversed(){return Err("Pose would reverse upper/lower direction; swap direction explicitly first".into());}
-                            save(&cfg.output.join(format!("calibration-{}.json",stamp())),&next)?;save(&path,&next)?;cal=next;
-                            let mut s=app.state.lock().unwrap();s["calibration"]=json!(cal);s["capture_message"]=json!(format!("Saved {boundary} pose"));
-                        }else{app.state.lock().unwrap()["capture_message"]=json!("Still settling. Release Q/A, wait for Holding, then save the pose.");}
+                            let boundary=capture.boundary.as_str();
+                            // The waiting request learns every outcome, including a refusal that ends the session.
+                            let saved=(||->R<()>{
+                                let mut next=cal.clone();let a=next.axes.get_mut(&r.id).unwrap();
+                                match boundary{"lower"=>a.lower=Some(t.position_continuous.ok_or("Missing continuous encoder coordinate")?),"upper"=>a.upper=Some(t.position_continuous.ok_or("Missing continuous encoder coordinate")?),"reference"=>a.reference=Some(t.position_continuous.ok_or("Missing continuous encoder coordinate")?),_=>return Err("Unknown pose".into())};
+                                if a.lower.into_iter().chain(a.upper).any(|p|!(0..=4095).contains(&p)) {a.coordinate_session=Some(app.state.lock().unwrap()["coordinate_session"].as_str().unwrap().to_string());}
+                                if boundary=="reference" {a.reference_session=a.reference.filter(|p|!(0..=4095).contains(p)).map(|_|app.state.lock().unwrap()["coordinate_session"].as_str().unwrap().to_string());a.reference_joint_rad=capture.joint_rad;}
+                                next.validate()?;
+                                if next.axes[&r.id].reversed()!=cal.axes[&r.id].reversed(){return Err("Pose would reverse upper/lower direction; swap direction explicitly first".into());}
+                                save(&cfg.output.join(format!("calibration-{}.json",stamp())),&next)?;save(&path,&next)?;cal=next;
+                                // The reading saved is the one the answer shows.
+                                let mut s=app.state.lock().unwrap();s["calibration"]=json!(cal);s["capture_message"]=json!(format!("Saved {boundary} pose"));s["samples"][r.id.to_string()]=json!(t);
+                                Ok(())
+                            })();
+                            // Renewed again after the (possibly slow) save, for the same reason.
+                            if let Some(ctl)=app.sweep.lock().unwrap().as_mut(){if ctl.run_id==run_id{ctl.last_seen=Instant::now();}}
+                            let _=capture.done.try_send(saved.clone());
+                            saved?;
+                        }else{
+                            let settling="Still settling. Release Q/A, wait for Holding, then save the pose.";
+                            app.state.lock().unwrap()["capture_message"]=json!(settling);
+                            let _=capture.done.try_send(Err(settling.into()));
+                        }
                     }
                     let mut s=app.state.lock().unwrap();s["samples"][r.id.to_string()]=json!(t);
                     s["sweep"]["samples"]=json!(history);s["sweep"]["latest"]=json!(sample);
@@ -1420,25 +1541,35 @@ fn handle(mut stream: TcpStream, app: Arc<App>) {
         app.check_execution(&request.action, client, execution.as_ref())?;
         let mut stop_epoch = *app.safety.lock().unwrap();
         if request.action == "capture_hold" {
-            let mut lock = app.sweep.lock().unwrap();
-            let ctl = lock
-                .as_mut()
-                .ok_or("Move then release to hold before saving")?;
-            if app.stop.load(Ordering::SeqCst)
-                || app.cancel.load(Ordering::SeqCst)
-                || motion_request(&request)? != MotionCommand::Hold
-                || !ctl.teaching
-                || ctl.motion != MotionCommand::Hold
-                || !matches!(request.boundary.as_str(), "upper" | "lower" | "reference")
-            {
-                return Err("Release to hold before saving a pose".into());
-            }
-            ctl.update(client, &request, &app.sweep_tuning)?;
-            if ctl.motion != MotionCommand::Hold {
-                return Err("Release before saving".into());
-            }
-            ctl.capture = Some((request.boundary.clone(), request.reference_joint_rad));
-            return Ok(("application/json".into(), b"{\"ok\":true}".to_vec()));
+            // Answered only once the hold session saved the pose (200 with
+            // the full state) or refused it (400), never before.
+            let (done, outcome) = mpsc::sync_channel(1);
+            let run_id = {
+                let mut lock = app.sweep.lock().unwrap();
+                let ctl = lock
+                    .as_mut()
+                    .ok_or("Move then release to hold before saving")?;
+                if app.stop.load(Ordering::SeqCst)
+                    || app.cancel.load(Ordering::SeqCst)
+                    || motion_request(&request)? != MotionCommand::Hold
+                    || !ctl.teaching
+                    || ctl.motion != MotionCommand::Hold
+                    || !matches!(request.boundary.as_str(), "upper" | "lower" | "reference")
+                {
+                    return Err("Release to hold before saving a pose".into());
+                }
+                if ctl.capture.is_some() {
+                    return Err("A pose save is already pending; wait for its answer".into());
+                }
+                ctl.update(client, &request, &app.sweep_tuning)?;
+                if ctl.motion != MotionCommand::Hold {
+                    return Err("Release before saving".into());
+                }
+                ctl.capture = Some(PendingCapture { boundary: request.boundary.clone(), joint_rad: request.reference_joint_rad, sequence: request.sequence, done });
+                ctl.run_id
+            }; // The session takes the capture under this lock: release it before waiting.
+            let state = await_capture(&app, run_id, request.sequence, &outcome)?;
+            return Ok(("application/json".into(), state.to_string().into_bytes()));
         }
         if request.action == "gait_update" {
             let mut lock = app.gait.lock().unwrap();
@@ -1668,14 +1799,18 @@ fn gait_statistics(rows: &[Value], ids: &[u8], roles: &std::collections::BTreeMa
     }
     Value::Object(out)
 }
-/// Recent leg gait runs (summaries only), newest first.
+/// Recent leg gait runs (summaries only), newest first. Each row says whether
+/// the run was simulated and which execution wrote it; a record written
+/// before runs were labelled has no `simulated` field and is listed as not
+/// simulated (its `execution` is null).
 fn gait_run_history(cfg: &Config) -> Value {
     let dir = cfg.output.join("gait-runs");
     let mut runs: Vec<(String, Value)> = fs::read_dir(&dir).ok().into_iter().flatten().flatten()
         .filter_map(|e| {
             let name = e.file_name().to_string_lossy().to_string();
             let v: Value = serde_json::from_slice(&fs::read(e.path()).ok()?).ok()?;
-            Some((name.clone(), json!({"file": name, "gait": v["gait"], "effort": v["effort"], "speed_scale": v["speed_scale"], "gait_time_s": v["gait_time_s"], "statistics": v["statistics"], "outcome": v["outcome"]})))
+            Some((name.clone(), json!({"file": name, "gait": v["gait"], "effort": v["effort"], "speed_scale": v["speed_scale"], "gait_time_s": v["gait_time_s"], "statistics": v["statistics"], "outcome": v["outcome"],
+                "simulated": v["simulated"].as_bool().unwrap_or(false), "execution": v["execution"]})))
         }).collect();
     runs.sort_by(|a, b| b.0.cmp(&a.0));
     json!(runs.into_iter().take(12).map(|r| r.1).collect::<Vec<_>>())
@@ -1688,7 +1823,10 @@ fn gait_run_history(cfg: &Config) -> Value {
 /// poses (the desired reference is clamped before the governor), goes
 /// through the shared feedback controller and the FPGA window, needs a live
 /// browser lease, and starts from the leg's measured pose. Every period is
-/// recorded; per-motor statistics are saved with the run.
+/// recorded; per-motor statistics are saved with the run. On a virtual bench
+/// the same loop runs against the bench's motor models; the status, log
+/// events and record are labelled (`execution`, `simulated`) and the record
+/// says what the bench cannot stand for (`virtual_limits`).
 #[allow(clippy::too_many_arguments)]
 fn run_gait(
     app: &App,
@@ -1778,7 +1916,11 @@ fn run_gait(
     // measured supply), belt acceleration from the campaign plan.
     let registry = sim_runtime::actuator_registry::Registry::load(&repo_root().join("examples/actuators/hx30hm/accepted/registry.json"))?;
     let plan_limits: Value = cfg.campaign_plan.as_ref().and_then(|p| fs::read(p).ok()).and_then(|b| serde_json::from_slice::<Value>(&b).ok()).map(|v| v["limits"].clone()).unwrap_or(Value::Null);
-    let supply = app.state.lock().unwrap()["samples"].as_object().and_then(|m| m.values().filter_map(|t| t["voltage_v"].as_f64()).reduce(f64::min)).unwrap_or(12.0);
+    // A zero or non-finite reading is no supply (family_limits would divide by
+    // it and govern every motor to zero speed); such readings are skipped.
+    let measured_supply = app.state.lock().unwrap()["samples"].as_object()
+        .and_then(|m| m.values().filter_map(|t| t["voltage_v"].as_f64()).filter(|v| v.is_finite() && *v > 0.).reduce(f64::min));
+    let supply = measured_supply.unwrap_or(12.0);
     let mut governed = GovernedGait::new(gait.clone());
     let mut limits = serde_json::Map::new();
     for (bd, a) in bindings.iter().zip(&axes) {
@@ -1813,16 +1955,16 @@ fn run_gait(
     {
         let mut s = app.state.lock().unwrap();
         s["busy"] = json!(true);
-        s["gait"] = json!({"running": true, "phase": "approach", "gait": r.gait, "t": 0., "speed_scale": speed_scale, "effort": effort,
+        s["gait"] = labelled(app, json!({"running": true, "phase": "approach", "gait": r.gait, "t": 0., "speed_scale": speed_scale, "effort": effort,
             "motor_ids": ids, "bindings": bindings.iter().map(|b| json!(b)).collect::<Vec<_>>(), "limits": limits,
-            "gait_governor": gait.info.governor, "targets": {}, "errors": {}, "clamped": 0, "statistics": {}});
+            "gait_governor": gait.info.governor, "targets": {}, "errors": {}, "clamped": 0, "statistics": {}}));
         s["gait_runs"] = gait_run_history(cfg);
         s["message"] = json!("Moving the leg to the gait's first pose through the gait's governor. Z stops drive.");
         reply(&s);
     }
     *app.gait.lock().unwrap() = Some(GaitLease { owner: client.into(), speed_scale, playing: true, last_seen: Instant::now() });
     let run_started = Instant::now();
-    writeln_log(cfg, json!({"event": "gait_start", "gait": r.gait, "bindings": bindings, "speed_scale": speed_scale, "effort": effort, "limits": limits}))?;
+    writeln_log(cfg, labelled(app, json!({"event": "gait_start", "gait": r.gait, "bindings": bindings, "speed_scale": speed_scale, "effort": effort, "limits": limits, "supply_v": supply, "supply_assumed": measured_supply.is_none()})))?;
     let started = std::cell::Cell::new(false);
     let clock = std::cell::Cell::new((0f64, Instant::now()));
     let governed = std::cell::RefCell::new(governed);
@@ -1938,13 +2080,18 @@ fn run_gait(
     let outcome = result.motion_error.clone().unwrap_or_else(|| "stopped".into());
     let dir = cfg.output.join("gait-runs");
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    let record = json!({"version": 1, "gait": r.gait, "gait_governor": gait.info.governor, "effort": effort, "speed_scale": speed_scale,
+    let mut record = labelled(app, json!({"version": 1, "gait": r.gait, "gait_governor": gait.info.governor, "effort": effort, "speed_scale": speed_scale,
         "pwm_ceiling": pwm_ceiling, "drive_mode": r.drive_mode, "bindings": bindings, "limits": limits, "registry": registry.identity(),
+        // The supply the limits were computed at, and whether it was assumed (no usable reading).
+        "supply_v": supply, "supply_assumed": measured_supply.is_none(),
         "gait_time_s": clock.get().0, "wall_s": run_started.elapsed().as_secs_f64(), "outcome": outcome, "clamped_targets": clamped.get(),
         "statistics": statistics, "samples": *rows.borrow(),
-        "scope": "Suspended leg (no ground contact); tracking error is actual minus the governed command sent to the shared controller."});
+        "scope": "Suspended leg (no ground contact); tracking error is actual minus the governed command sent to the shared controller."}));
+    if app.execution.is_virtual_calibration() {
+        record["virtual_limits"] = json!(virtual_gait_limits(measured_supply, supply));
+    }
     fs::write(dir.join(format!("run-{}.json", stamp())), serde_json::to_vec(&record).unwrap()).map_err(|e| e.to_string())?;
-    writeln_log(cfg, json!({"event": "gait_end", "gait": r.gait, "motion_error": result.motion_error, "clamped_targets": clamped.get(), "statistics": statistics}))?;
+    writeln_log(cfg, labelled(app, json!({"event": "gait_end", "gait": r.gait, "motion_error": result.motion_error, "clamped_targets": clamped.get(), "statistics": statistics})))?;
     {
         let mut s = app.state.lock().unwrap();
         s["gait"]["statistics"] = statistics;
@@ -2441,7 +2588,7 @@ mod tests {
         let pin = identity();
         let client = sim_runtime::hardware_client::new_client_id();
         let (app, rx) = app_fixture(pin.clone());
-        for action in ["jog", "flip", "direction", "gait_start", "gait_update", "lab_step"] {
+        for action in ["jog", "step", "flip", "direction", "lab_step"] {
             let answer = wire_post(app.clone(), &client, json!({"action":action,"id":1}), Some((&pin, 1)));
             assert!(answer.starts_with("HTTP/1.1 400") && !answer.contains(BINDING_REFUSED) && answer.contains(&out_of_scope(action)), "{action}: {answer}");
             assert!(rx.try_recv().is_err(), "{action} never reaches acquisition");
@@ -2453,6 +2600,137 @@ mod tests {
         let mut replaced = pin.clone(); replaced.bench_instance = sim_runtime::hardware_client::new_client_id();
         assert!(app.check_execution("jog", &client, Some(&(replaced, 1))).is_err_and(|e| e.starts_with(BINDING_REFUSED)));
         assert!(app.check_execution("jog", &client, Some(&(pin, 2))).is_err_and(|e| e.starts_with(BINDING_REFUSED)), "generation mismatch first");
+    }
+    #[test]
+    fn virtual_gait_is_in_scope_and_keeps_every_other_refusal() {
+        let pin = identity();
+        let client = sim_runtime::hardware_client::new_client_id();
+        let (app, rx) = app_fixture(pin.clone());
+        app.generations.lock().unwrap().insert(client.clone(), 1);
+        // A pinned virtual gait passes the binding and scope checks (never
+        // posted here: it would queue to the absent worker).
+        for action in ["gait_start", "gait_update"] {
+            assert_eq!(app.check_execution(action, &client, Some(&(pin.clone(), 1))), Ok(()), "{action}");
+        }
+        // The lease heartbeat is handled inline: with no gait playing it is an
+        // ordinary refusal, not a scope or binding one.
+        let answer = wire_post(app.clone(), &client, json!({"action":"gait_update","speed_scale":0.5,"playing":true}), Some((&pin, 1)));
+        assert!(answer.starts_with("HTTP/1.1 400") && answer.contains("No gait is playing on the leg") && !answer.contains(&out_of_scope("gait_update")), "{answer}");
+        // Raw step stays out of scope: a 400 that keeps the binding.
+        let answer = wire_post(app.clone(), &client, json!({"action":"step","id":1}), Some((&pin, 1)));
+        assert!(answer.starts_with("HTTP/1.1 400") && !answer.contains(BINDING_REFUSED) && answer.contains(&out_of_scope("step")), "{answer}");
+        assert_eq!(app.generations.lock().unwrap().get(&client), Some(&1), "the binding is unchanged");
+        // A wrong identity or generation is still a binding refusal for a gait.
+        let mut replaced = pin.clone(); replaced.server_instance = sim_runtime::hardware_client::new_client_id();
+        assert!(app.check_execution("gait_start", &client, Some(&(replaced.clone(), 1))).is_err_and(|e| e.starts_with(BINDING_REFUSED)));
+        assert!(app.check_execution("gait_start", &client, Some(&(pin.clone(), 2))).is_err_and(|e| e.starts_with(BINDING_REFUSED)));
+        let answer = wire_post(app.clone(), &client, json!({"action":"gait_start","id":1}), Some((&replaced, 1)));
+        assert!(answer.starts_with("HTTP/1.1 409") && answer.contains(BINDING_REFUSED), "{answer}");
+        // Unpinned on a virtual server: a binding refusal; STOP passes unpinned.
+        assert!(app.check_execution("gait_start", &client, None).is_err_and(|e| e.starts_with(BINDING_REFUSED)));
+        assert_eq!(app.check_execution("stop", &client, None), Ok(()));
+        assert!(rx.try_recv().is_err(), "nothing reached acquisition");
+        // Physical: no remote pin is accepted for a gait either.
+        let (physical_app, _rx) = app_fixture(physical());
+        assert!(physical_app.check_execution("gait_start", &client, Some(&(pin, 1))).is_err_and(|e| e.starts_with(BINDING_REFUSED)));
+    }
+    #[test]
+    fn gait_records_events_and_status_are_labelled_and_old_records_are_not_simulated() {
+        let (app, _rx) = app_fixture(identity());
+        let event = labelled(&app, json!({"event":"gait_start","gait":"g"}));
+        assert_eq!(event["execution"], serde_json::to_value(&app.execution).unwrap());
+        assert_eq!(event["simulated"], json!(true));
+        assert_eq!(event["gait"], json!("g"), "the event itself is kept");
+        let (physical_app, _rx) = app_fixture(physical());
+        let event = labelled(&physical_app, json!({"event":"gait_end"}));
+        assert_eq!(event["simulated"], json!(false));
+        assert_eq!(event["execution"]["kind"], json!("physical"));
+        assert!(virtual_gait_limits(None, 12.).contains("assumed 12.0 V"));
+        assert!(virtual_gait_limits(Some(11.75), 11.75).contains("reported supply, 11.75 V"));
+
+        let output = std::env::temp_dir().join(format!("gait-history-{}-{}", std::process::id(), stamp()));
+        let runs = output.join("gait-runs");
+        fs::create_dir_all(&runs).unwrap();
+        let labelled_run = labelled(&app, json!({"gait":"virtual","outcome":"stopped"}));
+        fs::write(runs.join("run-1.json"), labelled_run.to_string()).unwrap();
+        fs::write(runs.join("run-2.json"), json!({"gait":"older","outcome":"stopped"}).to_string()).unwrap();
+        let rows = gait_run_history(&config_fixture(output.clone()));
+        fs::remove_dir_all(&output).ok();
+        let rows = rows.as_array().unwrap();
+        assert_eq!(rows.len(), 2);
+        assert_eq!((&rows[0]["gait"], &rows[0]["simulated"], &rows[0]["execution"]), (&json!("older"), &json!(false), &Value::Null), "newest first; unlabelled is not simulated");
+        assert_eq!((&rows[1]["gait"], &rows[1]["simulated"]), (&json!("virtual"), &json!(true)));
+        assert_eq!(rows[1]["execution"], serde_json::to_value(&app.execution).unwrap());
+    }
+    /// A hold session (`teaching`, holding) owned by `client` on motor 1, run 7.
+    fn holding_session(app: &App, client: &str) {
+        *app.sweep.lock().unwrap() = Some(BrowserSweep { owner: client.into(), id: 1, run_id: 7, sequence: 1,
+            input: SweepInput { speed_counts_s: 10., pwm_limit: 200 }, last_seen: Instant::now(),
+            motion: MotionCommand::Hold, teaching: true, capture: None });
+    }
+    fn capture_hold_body(sequence: u64) -> Value {
+        json!({"action":"capture_hold","id":1,"sequence":sequence,"boundary":"upper","run_id":7,"speed_counts_s":10.,"drive_pwm":200,"motion":"hold"})
+    }
+    /// Plays the hold session's side once: waits for the pending capture,
+    /// takes it and answers with `outcome` (None: the session ends instead).
+    fn take_capture(app: Arc<App>, outcome: Option<R<()>>) -> std::thread::JoinHandle<()> {
+        std::thread::spawn(move || {
+            let deadline = Instant::now() + Duration::from_secs(2);
+            while Instant::now() < deadline {
+                let taken = app.sweep.lock().unwrap().as_mut().and_then(|c| c.capture.take());
+                if let Some(capture) = taken {
+                    match outcome {
+                        Some(outcome) => {
+                            if outcome.is_ok() {
+                                app.state.lock().unwrap()["capture_message"] = json!("Saved upper pose");
+                            }
+                            capture.done.try_send(outcome).unwrap();
+                        }
+                        None => {
+                            app.state.lock().unwrap()["message"] = json!("Browser heartbeat lost; sweep stopped");
+                            *app.sweep.lock().unwrap() = None;
+                            drop(capture);
+                        }
+                    }
+                    return;
+                }
+                std::thread::sleep(Duration::from_millis(5));
+            }
+            panic!("no capture was pending");
+        })
+    }
+    #[test]
+    fn capture_hold_answers_only_after_the_hold_session_saves_or_refuses() {
+        let pin = identity();
+        let client = sim_runtime::hardware_client::new_client_id();
+        let (app, rx) = app_fixture(pin.clone());
+        holding_session(&app, &client);
+        // Never taken: the 1 s timeout, and the capture is withdrawn.
+        let started = Instant::now();
+        let answer = wire_post(app.clone(), &client, capture_hold_body(2), Some((&pin, 1)));
+        assert!(answer.starts_with("HTTP/1.1 400") && answer.contains("Pose not saved: the hold session did not take the capture within 1 s"), "{answer}");
+        assert!(started.elapsed() >= CAPTURE_WAIT);
+        assert!(app.sweep.lock().unwrap().as_ref().unwrap().capture.is_none(), "a withdrawn capture can never be saved later");
+        // Saved: 200 with the whole state, read after the save.
+        let session = take_capture(app.clone(), Some(Ok(())));
+        let answer = wire_post(app.clone(), &client, capture_hold_body(3), Some((&pin, 1)));
+        session.join().unwrap();
+        assert!(answer.starts_with("HTTP/1.1 200"), "{answer}");
+        let body: Value = serde_json::from_str(answer.split_once("\r\n\r\n").unwrap().1).unwrap();
+        assert_eq!(body["capture_message"], json!("Saved upper pose"));
+        assert_eq!(body["execution"], serde_json::to_value(&pin).unwrap(), "the full state, as capture answers");
+        // Refused by the session: an ordinary 400 with its reason.
+        let session = take_capture(app.clone(), Some(Err("Still settling. Release Q/A, wait for Holding, then save the pose.".into())));
+        let answer = wire_post(app.clone(), &client, capture_hold_body(4), Some((&pin, 1)));
+        session.join().unwrap();
+        assert!(answer.starts_with("HTTP/1.1 400") && answer.contains("Still settling") && !answer.contains(BINDING_REFUSED), "{answer}");
+        // The session ended before saving: the sender is dropped.
+        let session = take_capture(app.clone(), None);
+        let answer = wire_post(app.clone(), &client, capture_hold_body(5), Some((&pin, 1)));
+        session.join().unwrap();
+        assert!(answer.starts_with("HTTP/1.1 400") && answer.contains("Pose not saved: the hold session ended before the capture")
+            && answer.contains("Browser heartbeat lost"), "{answer}");
+        assert!(rx.try_recv().is_err(), "capture_hold never queues a job");
     }
     #[test]
     fn session_binding_follows_the_live_coordinate_session() {

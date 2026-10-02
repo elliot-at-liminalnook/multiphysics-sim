@@ -67,11 +67,12 @@ impl ExperimentsPanel {
             match command {
                 Command::State => return Ok(self.api_state()),
                 Command::Study => {
-                    return self
-                        .studies
-                        .get(self.current)
-                        .map(|s| json!(s))
-                        .ok_or("no study loaded".into());
+                    let s=self.studies.get_mut(self.current).ok_or("no study loaded")?;
+                    let seen=s.validation_seen;
+                    let ids=s.archive.trials.iter().map(|t|t.id.clone()).collect::<Vec<_>>();
+                    study::commands::expose(s,&ids);
+                    if !seen && s.validation_seen {self.revisions[self.current]+=1;}
+                    return Ok(json!(s));
                 }
                 Command::Cancel => {
                     if let Some(job) = &self.job {
@@ -128,9 +129,10 @@ impl ExperimentsPanel {
                             let mut next: Study =
                                 serde_json::from_value(value).map_err(|e| e.to_string())?;
                             next.validate()?;
-                            if next.draft.fingerprint() != original.draft.fingerprint() {
-                                next.candidate_edited();
-                            }
+                            let mut shared=original.clone();
+                            for command in [study::commands::Command::SetCandidate(next.draft.clone()), study::commands::Command::SetLimits(next.limits), study::commands::Command::SetView(next.view.clone()), study::commands::Command::SetNotes(next.notes.clone())] { study::commands::apply(&mut shared,command)?; }
+                            shared.refinement=next.refinement;
+                            next=shared;
                             self.studies[self.current] = next;
                             self.revisions[self.current] += 1;
                         }
@@ -139,23 +141,8 @@ impl ExperimentsPanel {
                             decision,
                             notes,
                         } => {
-                            if ![
-                                "Investigating",
-                                "Retain baseline",
-                                "Rejected candidate",
-                                "Preferred for tested conditions",
-                            ]
-                            .contains(&decision.as_str())
-                            {
-                                return Err("unknown review decision".into());
-                            }
-                            let s = self
-                                .studies
-                                .get_mut(self.current)
-                                .ok_or("no study loaded")?;
-                            let e = s.evaluations.get_mut(index).ok_or("unknown evaluation")?;
-                            e.decision = decision;
-                            e.notes = notes;
+                            let s = self.studies.get_mut(self.current).ok_or("no study loaded")?;
+                            study::commands::apply(s, study::commands::Command::SetDecision{evaluation:index,decision,notes})?;
                             self.revisions[self.current] += 1;
                         }
                         Command::Evaluate { ids } => {

@@ -8,6 +8,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Workspace {
+    /// Unknown deferred payloads remain opaque and survive offline review publication.
+    #[serde(flatten)]
+    pub retained_fields: std::collections::BTreeMap<String, serde_json::Value>,
     pub experiment: Experiment,
     pub controller_runs: Vec<Run>,
     pub sensitivities: Vec<Sensitivity>,

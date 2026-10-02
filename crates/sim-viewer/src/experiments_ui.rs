@@ -302,13 +302,8 @@ impl ExperimentsPanel {
         }
         let index = self.current;
         let s = &mut self.studies[index];
-        if ids.iter().any(|id| {
-            s.archive
-                .trials
-                .iter()
-                .any(|t| &t.id == id && t.split != "train")
-        }) {
-            s.validation_seen = true;
+        if let Err(error)=study::commands::apply(s, study::commands::Command::Expose(study::commands::EvaluationSelection::Ids(ids.clone()))) {
+            self.message=Some(error); return;
         }
         let s = s.clone();
         let count = ids.len();
@@ -386,6 +381,12 @@ impl ExperimentsPanel {
                 return;
             }
             let busy=self.loading();
+            let exposed= !self.studies[self.current].validation_seen;
+            let ids=self.studies[self.current].archive.trials.iter().map(|t|t.id.clone()).collect::<Vec<_>>();
+            study::commands::expose(&mut self.studies[self.current],&ids);
+            if exposed && self.studies[self.current].validation_seen {self.revisions[self.current]+=1;}
+            let original_revision=self.revisions[self.current];
+            let original=self.studies[self.current].clone();
             let s=&mut self.studies[self.current];
             let previous_view=serde_json::to_string(&s.view).unwrap();
             if !s.validation_seen && s.view.trial_id.as_ref().is_some_and(|id| s.archive.trials.iter().any(|t| &t.id==id && t.split!="train")) {
@@ -409,7 +410,7 @@ impl ExperimentsPanel {
                     egui::ScrollArea::vertical().id_salt("trial-list").max_height(380.).show(ui,|ui|{
                         for id in &ids {let t=s.archive.trials.iter().find(|t|&t.id==id).unwrap();
                             let result=active_evaluation(s).and_then(|e|e.results.iter().find(|r|r.trial_id==*id));
-                            let outcome=result.and_then(|r|r.candidate.as_ref()).map(|p|if p.metrics.passes{"PASS"}else{"FAIL"}).unwrap_or("—");
+                            let outcome=result.filter(|r|r.errors.is_empty() && r.baseline.is_some()).and_then(|r|r.candidate.as_ref()).map(|p|if p.metrics.passes{"PASS"}else{"FAIL"}).unwrap_or("—");
                             if ui.selectable_label(s.view.trial_id.as_ref()==Some(id),format!("{outcome} ID {} · {:+.1}% · {}",t.device,t.drive*100.,if t.split=="train"{"tune"}else{"held"})).on_hover_text(format!("{} · stage {}\n{} · {:.0} ms · encoder displacement",t.run,t.stage,t.kind,t.duration_s*1000.)).clicked(){s.view.trial_id=Some(id.clone());self.plot.reset_time();}
                         }
                     });
@@ -505,6 +506,20 @@ impl ExperimentsPanel {
                 });
             });
             if serde_json::to_string(&s.view).unwrap()!=previous_view {self.revisions[self.current]+=1;}
+            let staged=s.clone();
+            *s=original;
+            let result=(||->Result<(),String>{
+                let mut next=s.clone();
+                for command in [study::commands::Command::SetCandidate(staged.draft.clone()),study::commands::Command::SetLimits(staged.limits),study::commands::Command::SetView(staged.view.clone()),study::commands::Command::SetNotes(staged.notes.clone())] {study::commands::apply(&mut next,command)?;}
+                for (i,e) in staged.evaluations.iter().enumerate() {study::commands::apply(&mut next,study::commands::Command::SetDecision{evaluation:i,decision:e.decision.clone(),notes:e.notes.clone()})?;}
+                study::commands::apply(&mut next,study::commands::Command::Expose(study::commands::EvaluationSelection::Filtered)).or_else(|error|if study::commands::filtered_ids(&next).is_empty(){Ok(())}else{Err(error)})?;
+                *s=next;Ok(())
+            })();
+            if let Err(error)=result {
+                self.revisions[self.current]=original_revision;
+                if retain_rejected_draft(s,&staged,&error) {self.revisions[self.current]+=1;}
+                self.message=Some(error);run_ids=None;
+            }
             if let Some(ids)=run_ids{self.run(ids,ctx);}
         });
         self.open = open;
@@ -516,6 +531,27 @@ impl ExperimentsPanel {
             });
         }
     }
+}
+/// Rejected attempts remain evidence, without nesting earlier evidence snapshots.
+/// Existing opaque values are preserved under their original key.
+fn retain_rejected_draft(study:&mut Study, attempted:&Study, error:&str)->bool {
+    let value=serde_json::json!({"draft":attempted.draft,"limits":attempted.limits,"view":attempted.view,"notes":attempted.notes,
+        "review_decisions":attempted.evaluations.iter().map(|e|serde_json::json!({"id":e.id,"decision":e.decision,"notes":e.notes})).collect::<Vec<_>>(),"error":error});
+    let current=serde_json::json!({"draft":study.draft,"limits":study.limits,"view":study.view,"notes":study.notes,
+        "review_decisions":study.evaluations.iter().map(|e|serde_json::json!({"id":e.id,"decision":e.decision,"notes":e.notes})).collect::<Vec<_>>(),"error":error});
+    if value==current {return false;}
+    let base="offline_rejected_drafts";
+    let mut key=base.to_string();let mut suffix=0;
+    loop {
+        match study.retained_fields.get(&key) {
+            None=>break,
+            Some(v) if v.is_array()=>break,
+            _=>{suffix+=1;key=format!("{base}_{suffix}");}
+        }
+    }
+    let array=study.retained_fields.entry(key).or_insert_with(||serde_json::json!([])).as_array_mut().expect("selected absent/array key");
+    if array.last()==Some(&value) {return false;}
+    array.push(value);true
 }
 fn active_evaluation(s: &Study) -> Option<&Evaluation> {
     s.view.evaluation.and_then(|i| s.evaluations.get(i))
@@ -611,36 +647,7 @@ fn filters(ui: &mut egui::Ui, s: &mut Study) {
             });
     }
 }
-fn filtered(s: &Study) -> Vec<String> {
-    s.archive
-        .trials
-        .iter()
-        .filter(|t| {
-            let r =
-                active_evaluation(s).and_then(|e| e.results.iter().find(|r| r.trial_id == t.id));
-            let c = r.and_then(|r| r.candidate.as_ref());
-            (s.view.device == 0 || s.view.device == t.device)
-                && (s.view.direction == 0 || (t.drive.signum() as i8) == s.view.direction)
-                && t.drive.abs() >= s.view.min_drive
-                && t.drive.abs() <= s.view.max_drive
-                && (s.view.role == "All" || (s.view.role == "Tuning") == (t.split == "train"))
-                && match s.view.outcome.as_str() {
-                    "Pass" => c.is_some_and(|p| p.metrics.passes),
-                    "Fail" => c.is_some_and(|p| !p.metrics.passes),
-                    "Unscored" => c.is_none(),
-                    "Regression" => r.is_some_and(|r| {
-                        r.baseline
-                            .as_ref()
-                            .zip(r.candidate.as_ref())
-                            .is_some_and(|(b, c)| c.metrics.rmse > b.metrics.rmse)
-                    }),
-                    "Empirical failure" => !t.comparison.passes,
-                    _ => true,
-                }
-        })
-        .map(|t| t.id.clone())
-        .collect()
-}
+fn filtered(s: &Study) -> Vec<String> { study::commands::filtered_ids(s) }
 fn summary(ui: &mut egui::Ui, s: &mut Study) {
     let Some(e) = active_evaluation(s) else {
         return;
@@ -768,85 +775,43 @@ fn summary(ui: &mut egui::Ui, s: &mut Study) {
     }
 }
 fn parameter_info() -> Vec<(String, String, String, String, Option<f64>)> {
-    let registry = sim_runtime::registry();
-    let mut out = vec![];
-    for (group, kind, names) in [
-        (
-            "motor",
-            "robot.motor_unit",
-            vec![
-                "resistance",
-                "inductance",
-                "torque_constant",
-                "back_emf_constant",
-                "no_load_current",
-                "loss_speed_scale",
-                "rotor_inertia",
-                "ratio",
-                "efficiency",
-                "gear_friction",
-                "gear_inertia",
-                "gear_stiffness",
-                "gear_damping",
-                "backlash",
-            ],
-        ),
-        (
-            "bridge",
-            "robot.h_bridge",
-            vec!["on_resistance", "current_limit"],
-        ),
-    ] {
-        if let Ok(d) = registry.get(&kind.into()) {
-            for p in d.parameters.as_ref().unwrap() {
-                if names.contains(&p.name.as_str()) {
-                    let description = match p.name.as_str() {
-                        "loss_speed_scale" => {
-                            "Rotor-speed width of smooth Coulomb loss. Smaller values reduce low-speed creep; this is a regularization hypothesis, not true static friction."
-                        }
-                        "resistance" => {
-                            "Winding resistance controls current and electrical losses."
-                        }
-                        "inductance" => "Winding inductance controls current transients.",
-                        "torque_constant" => {
-                            "Torque per winding current. For reciprocal SI models, change back EMF constant consistently."
-                        }
-                        "back_emf_constant" => {
-                            "Voltage generated per rotor speed. Reciprocal SI motor constants should match."
-                        }
-                        "rotor_inertia" | "gear_inertia" => {
-                            "Stored rotational inertia affects acceleration and release."
-                        }
-                        "ratio" => {
-                            "Assumed internal transmission ratio; not identified by these pulses."
-                        }
-                        "efficiency" => "Transmission loss scales output torque.",
-                        "gear_friction" | "no_load_current" => {
-                            "Provisional mechanical loss model; unloaded pulses cannot uniquely identify its physical cause."
-                        }
-                        "gear_stiffness" | "gear_damping" | "backlash" => {
-                            "Compliance, damping and clearance govern output coupling."
-                        }
-                        "current_limit" => "Averaged driver current foldback limit.",
-                        _ => "Driver conduction resistance affects delivered motor voltage.",
-                    };
-                    out.push((
-                        group.into(),
-                        p.name.clone(),
-                        p.unit.clone(),
-                        description.into(),
-                        p.default,
-                    ));
-                }
-            }
-        }
-    }
-    out
+    study::commands::metadata().into_iter().map(|p| (
+        match p.group {study::commands::ParameterGroup::Motor=>"motor",study::commands::ParameterGroup::Bridge=>"bridge"}.into(),
+        p.name,p.unit,"Registry-declared provisional hypothesis; not promoted to CAD.".into(),p.default,
+    )).collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn full_rest_study_read_exposes_held_out_before_candidate_edit() {
+        let mut p=panel();let ctx=egui::Context::default();let mut continuation=serde_json::json!({});
+        assert!(!p.studies[0].validation_seen);
+        let before=p.revisions[0];
+        assert!(matches!(p.api_command(rest::Command::Study,&mut continuation,&ctx),sim_api::Outcome::Done(Ok(_))));
+        assert!(p.studies[0].validation_seen);assert_eq!(p.revisions[0],before+1);
+        assert!(matches!(p.api_command(rest::Command::Study,&mut continuation,&ctx),sim_api::Outcome::Done(Ok(_))));
+        assert_eq!(p.revisions[0],before+1);
+        let step=p.studies[0].draft.step_s*0.5;
+        study::commands::apply(&mut p.studies[0],study::commands::Command::SetStep(step)).unwrap();
+        assert!(p.studies[0].validation_influenced);
+        let reopened:Study=serde_json::from_value(serde_json::to_value(&p.studies[0]).unwrap()).unwrap();
+        assert!(reopened.validation_seen && reopened.validation_influenced);
+    }
+    #[test]
+    fn refused_rendered_draft_is_retained_once_without_overwriting_opaque_data() {
+        let mut p=panel();let s=&mut p.studies[0];
+        s.retained_fields.insert("offline_rejected_drafts".into(),serde_json::json!({"opaque":"keep"}));
+        let mut attempted=s.clone();attempted.draft.step_s=-1.;attempted.notes="attempted notes".into();
+        assert!(retain_rejected_draft(s,&attempted,"step_s: invalid"));
+        assert!(!retain_rejected_draft(s,&attempted,"step_s: invalid"));
+        assert_eq!(s.retained_fields["offline_rejected_drafts"],serde_json::json!({"opaque":"keep"}));
+        assert_eq!(s.retained_fields["offline_rejected_drafts_1"][0]["draft"]["step_s"],serde_json::json!(-1.));
+        let reopened:Study=serde_json::from_value(serde_json::to_value(&*s).unwrap()).unwrap();
+        assert_eq!(reopened.retained_fields,s.retained_fields);
+        assert!(s.draft.step_s>0.);
+    }
     fn panel() -> ExperimentsPanel {
         let mut p = ExperimentsPanel::default();
         let archive = hx_archive::load(

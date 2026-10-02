@@ -47,7 +47,7 @@ pub(crate) fn capabilities() -> Value {
         "refine_actions":["simulate","sensitivity","fit","fit_recordings","fit_combined","robustness","import","review_fpga","fit_fpga","design_fpga","export_fpga_plan","review_fpga_fit","predict","compare_electrical","propose","accept"],
         "refine_encoding":"serde externally tagged snake_case Action; unit: simulate; tuple: {review_fpga:[0,mode]}; struct: {fit_combined:{selected:[],additional_study:path}}",
         "completion":"Open, evaluate, refine and save start an existing background task. Poll experiments state until busy=false, then inspect error and retained study. Cancel interrupts that task. These commands do not claim the task succeeded at acceptance.",
-        "configure":"Each provided field replaces that editable field; all others and all retained evidence are preserved. Shared Study validation runs before commit.",
+        "configure":"Editable draft fields replace their values; capture_contexts and recording_assignments accept append-only immutable additions. All retained evidence is preserved. Shared Study commands validate before commit.",
         "plot":{"cursor":null,"zoom":1.0,"center":0.5,"measured":true,"empirical":true,"baseline":true,"candidate":true}})
 }
 impl ExperimentsPanel {
@@ -74,11 +74,11 @@ impl ExperimentsPanel {
                 Command::State => return Ok(self.api_state()),
                 Command::Study => {
                     let s=self.studies.get_mut(self.current).ok_or("no study loaded")?;
-                    let seen=s.validation_seen;
+                    let exposure=study::refinement::ReviewExposure::capture(s);
                     let ids=s.archive.trials.iter().map(|t|t.id.clone()).collect::<Vec<_>>();
                     study::commands::expose(s,&ids);
                     study::refinement::expose_review(s);
-                    if !seen && s.validation_seen {self.revisions[self.current]+=1;}
+                    if exposure!=study::refinement::ReviewExposure::capture(s) {self.revisions[self.current]+=1;}
                     return Ok(json!(s));
                 }
                 Command::Cancel => {
@@ -150,11 +150,20 @@ impl ExperimentsPanel {
                             refinement_shared::apply(&mut shared,RefinementCommand::SetExperiment(next.refinement.experiment.clone()))?;
                             refinement_shared::apply(&mut shared,RefinementCommand::SetCoordinates(next.refinement.coordinates.clone()))?;
                             refinement_shared::apply(&mut shared,RefinementCommand::SetScenarios(next.refinement.scenarios.clone()))?;
-                            // Deferred compatibility payloads retain their existing validation path.
-                            next.refinement.experiment=shared.refinement.experiment.clone();
-                            next.refinement.coordinates=shared.refinement.coordinates.clone();
-                            next.refinement.scenarios=shared.refinement.scenarios.clone();
-                            shared.refinement=next.refinement;
+                            if !next.refinement.capture_contexts.starts_with(&original.refinement.capture_contexts) {
+                                return Err("configure.capture_contexts: immutable revisions cannot be replaced or removed".into());
+                            }
+                            for context in next.refinement.capture_contexts.iter().skip(original.refinement.capture_contexts.len()) {
+                                refinement_shared::apply(&mut shared,RefinementCommand::AppendContext{context:context.clone()})?;
+                            }
+                            if !next.refinement.recording_assignments.starts_with(&original.refinement.recording_assignments) {
+                                return Err("configure.recording_assignments: frozen roles, limits and rationale cannot be replaced".into());
+                            }
+                            for assignment in next.refinement.recording_assignments.iter().skip(original.refinement.recording_assignments.len()) {
+                                refinement_shared::apply(&mut shared,RefinementCommand::AssignRecording{assignment:assignment.clone()})?;
+                            }
+                            // FPGA draft authoring remains a deferred compatibility surface.
+                            shared.refinement.fpga_design_drafts=next.refinement.fpga_design_drafts;
                             next=shared;
                             next.validate()?;
                             self.studies[self.current] = next;
@@ -219,7 +228,7 @@ impl ExperimentsPanel {
                                 }
                                 self.revisions[index]+=1;
                             }
-                            // Deferred fitting retains its existing exposure accounting.
+                            // Recording jobs retain conservative review exposure before capture.
                             if matches!(
                                 &action,
                                 refinement::Action::FitRecordings

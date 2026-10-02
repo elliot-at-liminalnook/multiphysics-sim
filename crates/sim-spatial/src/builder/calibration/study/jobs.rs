@@ -8,14 +8,14 @@ use serde_json::json;
 use sim_runtime::experiment_study::refinement;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum JobKind { Archive, Review, Evaluate, Refinement, Save, Export }
+pub enum JobKind { Archive, Review, Evaluate, Refinement, RecordingImport, RecordingAuthoring, Save, Export }
 impl JobKind { pub fn is_load(self)->bool { matches!(self,Self::Archive|Self::Review) } }
 
 /// The tiny gate linearizes cancel acceptance and the start of irreversible
 /// create-new publication. No disk work occurs while this mutex is held.
 #[derive(Default)]
 pub struct PublicationGate { pub started:bool, pub cancelled:bool }
-pub enum JobOutput { Loaded(Study), Evaluated(Evaluation), Refined(refinement::Outcome), Published }
+pub enum JobOutput { Loaded(Study), Evaluated(Evaluation), Refined { outcome:refinement::Outcome, inputs:serde_json::Value }, RecordingImport { prepared:Option<Box<Study>>, input:serde_json::Value, error:Option<String> }, Published }
 pub struct PendingJob {
     pub id:u64,
     pub kind:JobKind,
@@ -77,11 +77,11 @@ impl JobReceipt {
         json!({"id":self.id,"kind":format!("{:?}",self.kind),"stamp":self.stamp,"source":self.source,"trial_ids":self.trial_ids,"launch":self.launch,"cancelled":self.cancelled,"cancellation_requested":self.cancelled,"displaced":self.displaced,"stale":self.stale,"message":self.message,"error":self.error,"evaluation":self.evaluation,"refinement":self.refinement,"captured":self.captured,"document":self.document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source}))})
     }
 }
-fn path(value:&str)->Result<PathBuf,String> {
+pub(crate) fn path(value:&str)->Result<PathBuf,String> {
     if value.trim().is_empty() { return Err("study.path: a destination/source path is required".into()); }
     Ok(PathBuf::from(value))
 }
-fn next(owner:&mut StudyOwner)->u64 { owner.next_job+=1; owner.next_job }
+pub(crate) fn next(owner:&mut StudyOwner)->u64 { owner.next_job+=1; owner.next_job }
 pub fn start_load(owner:&mut StudyOwner,value:&str,review:bool,document:Option<DocumentCapture>)->Result<u64,String> {
     let source=path(value)?;
     let id=next(owner);
@@ -89,13 +89,14 @@ pub fn start_load(owner:&mut StudyOwner,value:&str,review:bool,document:Option<D
     let repository=crate::workspace::root()?.to_path_buf();
     let job=Job::spawn(Pool::Io,id,"measured study open",move |ctx| {
         ctx.message("Reading retained offline evidence");
-        let study=if review {
+        let mut study=if review {
             Study::load(&directory).map_err(|e|format!("study.load {}: {e}",directory.display()))?
         } else {
             let archive=hx_archive::load(&directory,&repository).map_err(|e|format!("study.archive {}: {e}",directory.display()))?;
             Study::new(archive).map_err(|e|format!("study.archive {}: {e}",directory.display()))?
         };
         study.validate().map_err(|e|format!("study.load {}: {e}",directory.display()))?;
+        refinement::recordings::cache_identities(&mut study);
         if ctx.cancelled() { return Err("Cancelled after read; source and retained studies are unchanged".into()); }
         Ok(JobOutput::Loaded(study))
     });
@@ -137,35 +138,7 @@ pub fn start_evaluation(owner:&mut StudyOwner,stamp:StudyStamp,set:EvaluationSel
     Ok(id)
 }
 pub fn start_refinement(owner:&mut StudyOwner,stamp:StudyStamp,operation:refinement::Operation)->Result<u64,String> {
-    if owner.pending.iter().any(|p|p.kind==JobKind::Refinement && p.stamp.is_some_and(|s|s.id==stamp.id)) {
-        return Err("study.refinement: this retained study already has refinement work pending".into());
-    }
-    let retained=owner.get_mut(stamp.id).ok_or("study.id: missing retained study")?;
-    let before=retained.study.validation_seen;
-    let capture=refinement::prepare(&mut retained.study,operation)?;
-    if before!=retained.study.validation_seen {retained.revision+=1;}
-    let stamp=retained.stamp();
-    let captured=capture.study.clone();
-    let document=retained.document.clone();
-    let source=retained.source.clone();
-    let trial_ids=match &capture.operation {
-        refinement::Operation::Fit{train,validation}=>train.iter().chain(validation).cloned().collect(),
-        refinement::Operation::Sensitivity{selected}=>selected.clone(),
-        _=>vec![],
-    };
-    let launch=json!({"study":stamp,"document":document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),"source":source,"inputs":capture.inputs(),"execution":capture.runtime});
-    let id=next(owner);
-    let label=capture.label().to_string();
-    let job=Job::spawn(Pool::Dedicated,id,label.clone(),move |ctx| {
-        ctx.message(format!("Running {label} with shared runtime and captured timing assumptions"));
-        let outcome=refinement::execute(capture,ctx.cancel_flag(),|done,total| {
-            ctx.steps(done as u64,total as u64);
-            if total>0 {ctx.fraction(done as f64/total as f64);}
-        })?;
-        Ok(JobOutput::Refined(outcome))
-    });
-    owner.pending.push(PendingJob{id,kind:JobKind::Refinement,stamp:Some(stamp),document,source,trial_ids,launch,cancel_requested:false,job,selection_epoch:owner.selection_epoch,gate:None,captured:Some(captured)});
-    Ok(id)
+    super::recording_jobs::start_operation(owner,stamp,operation,None)
 }
 
 /// Additive durable metadata preserves opaque older payloads instead of replacing them.
@@ -251,14 +224,17 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
     let displaced=pending.document.as_ref().is_some_and(|d|!d.matches(registry))
         || pending.stamp.is_some_and(|s|owner.get(s.id).is_none());
     let stale=pending.stamp.is_some_and(|s|owner.get(s.id).is_none_or(|r|r.revision!=s.revision));
-    let mut receipt=JobReceipt{id:pending.id,kind:pending.kind,stamp:pending.stamp,source:pending.source.clone(),trial_ids:pending.trial_ids.clone(),launch:pending.launch.clone(),document:pending.document.clone(),cancelled:pending.cancel_requested,displaced,stale,message:String::new(),error:None,captured:pending.captured,evaluation:None,refinement:None};
+    let mut receipt=JobReceipt{id:pending.id,kind:pending.kind,stamp:pending.stamp,source:pending.source.clone(),trial_ids:pending.trial_ids.clone(),launch:pending.launch.clone(),document:pending.document.clone(),cancelled:pending.cancel_requested,displaced,stale,message:String::new(),error:None,captured:pending.captured.clone(),evaluation:None,refinement:None};
     match result {
         Err(e)=>{
             receipt.message="Job failed or cancelled; inputs and existing evidence remain retained and unscored".into();
-            if pending.kind==JobKind::Refinement {
+            if matches!(pending.kind,JobKind::Refinement|JobKind::RecordingImport|JobKind::RecordingAuthoring) {
                 receipt.launch=json!({"inputs":pending.launch,"terminal":{"execution_cancelled":serde_json::Value::Null,"execution_status":"no runtime outcome returned; cancellation observation unknown","cancellation_requested":pending.cancel_requested,"stale":stale,"displaced":displaced}});
             }
             receipt.error=Some(e);
+        }
+        Ok(JobOutput::RecordingImport{prepared,input,error})=>{
+            super::recording_jobs::attach_import(owner,&pending,&mut receipt,prepared,input,error);
         }
         Ok(JobOutput::Loaded(mut study))=>{
             if pending.cancel_requested {
@@ -266,14 +242,14 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
                 let id=owner.retain(study,pending.source,pending.document,pending.kind==JobKind::Review,false);
                 receipt.message=format!("Read completed after cancellation; study {id} is retained without changing selection");
             } else {
-                let seen=study.validation_seen;
+                let exposure=super::state::ReviewExposure::capture(&study);
                 let expose=commands::validate_view(&study);
                 if let Err(e)=expose {receipt.error=Some(e);receipt.captured=Some(study);receipt.message="Loaded study refused exposure validation and remains captured".into();}
                 else {
                     let ids=commands::filtered_ids(&study);
                     commands::expose(&mut study,&ids);
                     refinement::expose_review(&mut study);
-                    let changed=seen!=study.validation_seen;
+                    let changed=exposure!=super::state::ReviewExposure::capture(&study);
                     let activate=owner.selection_epoch==pending.selection_epoch && !displaced;
                     let id=owner.retain(study,pending.source,pending.document,pending.kind==JobKind::Review && !changed,activate);
                     receipt.displaced|=!activate;
@@ -305,12 +281,14 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
             } else {receipt.message="Original study identity is missing; evaluation retained only in the displaced receipt".into();}
             receipt.evaluation=Some(evaluation);
         }
-        Ok(JobOutput::Refined(outcome))=>{
+        Ok(JobOutput::Refined{outcome,inputs})=>{
             let execution_cancelled=outcome.cancelled;
             receipt.error=match &outcome.result {
                 Err(error)=>Some(error.clone()),
                 Ok(refinement::ResultData::Controller(run))=>run.failure.clone(),
                 Ok(refinement::ResultData::FitAttempt(attempt))=>attempt.failure.clone(),
+                Ok(refinement::ResultData::RecordingFit(fit))=>fit.attempt.failure.clone(),
+                Ok(refinement::ResultData::CombinedFit(fit))=>fit.attempt.failure.clone(),
                 Ok(refinement::ResultData::Robustness(result))=>{
                     let failures=result.failures.iter().cloned().chain(result.runs.iter().filter_map(|(label,_,run)|run.failure.as_ref().map(|e|format!("{label}: {e}")))).collect::<Vec<_>>();
                     (!failures.is_empty()).then(||failures.join("; "))
@@ -318,8 +296,16 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
                 _=>None,
             };
             receipt.launch=json!({"inputs":pending.launch,"terminal":{"execution_cancelled":execution_cancelled,"cancellation_requested":pending.cancel_requested,"stale":stale,"displaced":displaced}});
+            receipt.launch["recording_applied"]=json!(false);
             if let Some(study)=pending.stamp.and_then(|stamp|owner.get_mut(stamp.id)) {
-                refinement::apply_outcome(&mut study.study,outcome.clone());
+                receipt.launch["recording_applied"]=json!(!stale && !displaced && !execution_cancelled && receipt.error.is_none());
+                // Prepared prediction choice is already shared-validated in the job.
+                // A later edit/selection must never be overwritten by terminal delivery.
+                if !stale && !displaced && matches!(&outcome.result,Ok(refinement::ResultData::Prediction(_))) {
+                    study.study.refinement_evidence.selected_recording=outcome.capture.study.refinement_evidence.selected_recording.clone();
+                    study.study.refinement_evidence.prediction_purpose=outcome.capture.study.refinement_evidence.prediction_purpose;
+                }
+                refinement::apply_outcome_with_inputs(&mut study.study,outcome.clone(),inputs);
                 study.revision+=1;
                 if displaced {study.displaced=Some("Refinement completed for a displaced document; captured settings remain linked to the original study".into());}
                 receipt.message=if execution_cancelled || receipt.error.is_some() {"Refinement failed or cancelled; captured attempt retained and unscored"} else if stale||displaced {"Refinement retained on its original study as stale/displaced evidence"} else {"Refinement retained for review; candidate adoption requires an explicit action"}.into();
@@ -335,7 +321,7 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
             receipt.message=if stale {"Published the captured revision; later edits remain unsaved"} else if pending.kind==JobKind::Export {"Published new HTML evidence; export does not mark the draft saved"} else {"Published a new immutable review of the captured revision"}.into();
         }
     }
-    if receipt.error.is_some() || receipt.kind==JobKind::Refinement {
+    if receipt.error.is_some() || matches!(receipt.kind,JobKind::Refinement|JobKind::RecordingImport|JobKind::RecordingAuthoring) {
         // Failed evaluation/publication evidence is part of the saved round trip,
         // while successful save acknowledgements must not create a new dirty edit.
         if let Some(stamp)=receipt.stamp {

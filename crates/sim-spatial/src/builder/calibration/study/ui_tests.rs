@@ -352,3 +352,127 @@ fn actual_study_field_anchor_identity_ignores_revision_and_displayed_text() {
     assert_eq!(both.len(),2);
     assert!(both.iter().all(|value|value==&old[0]),"focus anchor survives semantic revision/text publication");
 }
+
+fn recording_owner()->StudyOwner {
+    let mut o=owner();let s=&mut o.studies[0].study;
+    let r=sim_runtime::controller_refinement::recording::Recording{version:1,experiment:s.refinement.experiment.clone(),runtime:sim_runtime::physics_context::RuntimeIdentity::current(),frames:vec![],stop_request_s:0.,stop_receipt_s:0.,completed:false,failure:Some("unexecuted incomplete capture fixture".into()),stop_verified:false,initial_registers:Value::Null,transactions_origin_host_s:0.,timing_evidence:"host-clock seconds; no samples captured".into(),source_hashes:BTreeMap::from([("fixture".into(),"a".repeat(64))])};
+    let hash=r.fingerprint();s.refinement_evidence.selected_recording=Some(hash.clone());s.refinement_evidence.recording_identities.push(hash);s.refinement.recordings.push(r);o
+}
+#[test]
+fn actual_recording_controls_keep_incomplete_capture_inspectable_and_unscored(){
+    let mut world=world(recording_owner());world.run_system_once(render).unwrap();world.run_system_once(collect).unwrap();
+    let ui=world.resource::<StudyUi>();assert!(!ui.rendered["study:recording:predict"].enabled);
+    assert!(ui.rendered.keys().any(|id|id.starts_with("study:recording:select:")));
+    assert!(ui.rendered.values().any(|c|matches!(&c.hit,Hit::Focus{field:Field::Recording(p),..} if p.ends_with("/coordinate_frame"))));
+    assert!(ui.rendered.values().any(|c|matches!(&c.hit,Hit::Focus{field:Field::Recording(p),..} if p.ends_with("/uncertainty_bounds"))));
+    assert!(ui.rendered.values().filter(|c|matches!(c.hit,Hit::FreezeRecording{..})).all(|c|!c.enabled));
+}
+#[test]
+fn actual_purpose_activation_uses_one_stamped_owner_and_original_identity(){
+    use sim_runtime::controller_refinement::recording::Purpose;
+    let mut world=world(recording_owner());world.init_resource::<bevy::input_focus::InputFocus>();world.init_resource::<Messages<crate::ui_kit::text::FieldMsg>>();world.init_resource::<Messages<crate::app::actions::Act<StudyAction>>>();
+    world.run_system_once(render).unwrap();
+    let e=world.query::<(Entity,&ControlId)>().iter(&world).find_map(|(e,id)|(id.0=="study:recording:purpose:ClosedLoopPrediction").then_some(e)).unwrap();
+    assert!(world.get::<crate::ui_kit::activation::Ordinary>(e).is_some());world.entity_mut(e).insert(crate::ui_kit::activation::Activated);
+    world.run_system_once(super::super::forms::input).unwrap();
+    let messages:Vec<_>=world.resource_mut::<Messages<crate::app::actions::Act<StudyAction>>>().drain().collect();
+    assert!(matches!(&messages[0].action,StudyAction::RefineApply{stamp:StudyStamp{id:11,revision:4},command:sim_runtime::experiment_study::refinement::Command::SetPredictionPurpose(Purpose::ClosedLoopPrediction)}));
+}
+#[test]
+fn actual_setup_drafts_survive_modal_suspension_and_reject_stale_submit(){
+    let mut world=world(recording_owner());world.init_resource::<bevy::input_focus::InputFocus>();world.init_resource::<Messages<crate::ui_kit::text::FieldMsg>>();world.init_resource::<Messages<crate::app::actions::Act<StudyAction>>>();
+    world.run_system_once(render).unwrap();world.run_system_once(collect).unwrap();
+    let hit=world.resource::<StudyUi>().rendered.values().find_map(|c|matches!(&c.hit,Hit::Focus{field:Field::Recording(p),..} if p.ends_with("/fixture")).then_some(c.hit.clone())).unwrap();
+    let Hit::Focus{stamp,field,..}=hit.clone()else{panic!("field")};
+    world.resource_mut::<StudyUi>().focus=Some((stamp,field.clone()));world.resource_mut::<StudyUi>().buffer="retained fixture draft".into();
+    world.resource_mut::<StudyUi>().drafts.insert((stamp.map(|s|(s.id,s.revision)),field.clone()),"retained fixture draft".into());
+    let mut editor=crate::ui_kit::text::TextField::new("fixture");editor.suspended=true;
+    let e=world.spawn((super::super::forms::FIELD,editor)).id();
+    world.resource_mut::<Messages<crate::ui_kit::text::FieldMsg>>().write(crate::ui_kit::text::FieldMsg{field:super::super::forms::FIELD,event:crate::ui_kit::text::FieldEvent::Submit("must not apply under modal".into())});
+    world.run_system_once(super::super::forms::input).unwrap();assert_eq!(world.resource::<StudyUi>().buffer,"retained fixture draft");
+    world.get_mut::<crate::ui_kit::text::TextField>(e).unwrap().suspended=false;world.resource_mut::<StudyOwner>().studies[0].revision+=1;
+    world.resource_mut::<Messages<crate::ui_kit::text::FieldMsg>>().write(crate::ui_kit::text::FieldMsg{field:super::super::forms::FIELD,event:crate::ui_kit::text::FieldEvent::Submit("retained fixture draft".into())});
+    world.run_system_once(super::super::forms::input).unwrap();assert!(world.resource::<StudyUi>().error.as_ref().unwrap().contains("replaced or edited"));
+    assert!(world.resource::<StudyUi>().publication_inputs(11)["drafts"].as_array().unwrap().iter().any(|d|d["text"]=="retained fixture draft"));
+    assert_eq!(world.resource_mut::<Messages<crate::app::actions::Act<StudyAction>>>().drain().count(),0);
+}
+#[test]
+fn actual_recording_import_and_additional_fields_capture_paths_without_frame_io(){
+    let mut world=world(recording_owner());world.run_system_once(render).unwrap();world.run_system_once(collect).unwrap();
+    for (name,text) in [("import","/missing/controller-capture.json"),("additional","/missing/saved-study.json")]{
+        let hit=world.resource::<StudyUi>().rendered.values().find_map(|c|matches!(&c.hit,Hit::Focus{field:Field::Recording(p),..} if p==name).then_some(c.hit.clone())).unwrap();
+        let owner=world.resource::<StudyOwner>();
+        let action=super::super::forms::submission(owner,Some(StudyStamp{id:11,revision:4}),&Field::Recording(name.into()),text).unwrap();
+        match action{StudyAction::ImportRecording{stamp,path}=>{assert_eq!(stamp.revision,4);assert_eq!(path,text)},StudyAction::FitCombined{stamp,additional_path}=>{assert_eq!(stamp.id,11);assert_eq!(additional_path.as_deref(),Some(text))},_=>panic!("wrong path action")}
+        assert!(matches!(hit,Hit::Focus{..}));
+    }
+    assert!(world.resource::<StudyOwner>().pending.is_empty(),"rendering/parsing paths does not read files or execute runtime");
+}
+#[test]
+fn structured_unknown_value_entry_appends_estimate_without_rewriting_capture(){
+    let o=recording_owner();let retained=o.active().unwrap();let hash=retained.study.refinement.recordings[0].fingerprint();
+    let before=serde_json::to_value(&retained.study.refinement.recordings[0]).unwrap();
+    let action=super::super::forms::recording_forms::submission(&retained.study,retained.stamp(),&format!("{hash}:/properties/0/value"),"0.25").unwrap();
+    let StudyAction::RefineApply{command:sim_runtime::experiment_study::refinement::Command::AppendContext{context},..}=action else{panic!("revision command")};
+    assert_eq!(context.properties[0].value,Some(0.25));assert_eq!(context.properties[0].origin,sim_runtime::controller_refinement::context::Origin::Estimated);
+    context.validate().unwrap();assert_eq!(serde_json::to_value(&retained.study.refinement.recordings[0]).unwrap(),before);
+}
+#[test]
+fn rendered_recording_editor_real_modal_containment_restores_owner_before_stale_refusal(){
+    use crate::ui_kit::{activation::{self,Activated,ModalFocus,ModalPriority},text::{TextFieldApp,TextField,FieldMsg,FieldEvent}};
+    use bevy::input_focus::{InputFocus,FocusCause};
+    let mut app=App::new();app.insert_resource(recording_owner()).insert_resource(StudyUi::default()).insert_resource(fonts());
+    app.add_plugins(crate::ui_kit::text::TextEntryPlugin).add_text_field(super::super::forms::FIELD,TextField::new("Recording editor"));
+    app.add_message::<crate::app::actions::Act<StudyAction>>().add_systems(Startup,render).add_systems(Update,super::super::forms::input.in_set(crate::app::InputSet::Window));
+    crate::app::configure_sets(&mut app);activation::install(&mut app);app.update();
+    let anchor=app.world_mut().query::<(Entity,&Hit)>().iter(app.world()).find_map(|(e,h)|matches!(h,Hit::Focus{field:Field::Recording(p),..} if p.ends_with("/fixture")).then_some(e)).unwrap();
+    app.world_mut().resource_mut::<InputFocus>().set(anchor,FocusCause::Navigated);app.world_mut().entity_mut(anchor).insert(Activated);app.update();
+    let editor=app.world_mut().query::<(Entity,&crate::ui_kit::text::FieldId)>().iter(app.world()).find_map(|(e,id)|(*id==super::super::forms::FIELD).then_some(e)).unwrap();
+    let mapping=app.world().resource::<StudyUi>().focus.clone();assert!(mapping.is_some());
+    let fixture_fonts=fonts();let k=Kit::new(&fixture_fonts);
+    let modal=app.world_mut().spawn((Node::default(),ModalFocus,ModalPriority(100),bevy::ui::prelude::AccessibleLabel("Pending close fixture".into()))).id();
+    app.world_mut().spawn((k.button("Cancel close",Hit::Action(StudyAction::Status),Look::Secondary,true),ChildOf(modal)));app.update();
+    assert!(app.world().get::<TextField>(editor).unwrap().suspended);assert_eq!(app.world().resource::<StudyUi>().focus,mapping);
+    app.world_mut().despawn(modal);app.update();assert!(!app.world().get::<TextField>(editor).unwrap().suspended);assert_eq!(app.world().resource::<InputFocus>().get(),Some(editor));assert_eq!(app.world().resource::<StudyUi>().focus,mapping);
+    app.world_mut().resource_mut::<StudyOwner>().studies[0].revision+=1;
+    app.world_mut().write_message(FieldMsg{field:super::super::forms::FIELD,event:FieldEvent::Submit("restored but now stale setup draft".into())});app.update();
+    assert!(app.world().resource::<StudyUi>().error.as_ref().unwrap().contains("replaced or edited"));assert!(app.world().resource::<StudyUi>().publication_inputs(11)["drafts"].as_array().unwrap().iter().any(|d|d["text"]=="restored but now stale setup draft"));
+}
+#[test]
+fn queued_recording_authoring_does_not_acknowledge_input_before_terminal_validation(){
+    let o=recording_owner();let stamp=o.active().unwrap().stamp();let mut ui=StudyUi::default();
+    let hit=Hit::Focus{stamp:Some(stamp),field:Field::Recording("import".into()),text:String::new()};
+    let action=super::super::forms::text_submission(&mut ui,&o,hit,"/missing/rejected-capture.json").unwrap();
+    super::super::forms::acknowledge(&mut ui,&action,&sim_api::Outcome::Done(Ok(json!({"job":42}))));
+    assert_eq!(ui.drafts.len(),1);assert_eq!(ui.awaiting.len(),1);assert!(ui.pending_submission_jobs.contains_key(&42));assert!(ui.publication_inputs(stamp.id)["pending_submission_jobs"].as_array().unwrap().contains(&json!(42)));
+}
+#[test]
+fn terminal_recording_validation_keeps_rejected_or_newer_text_and_only_clears_applied_input(){
+    for (applied,newer) in [(false,false),(true,true),(true,false)]{
+        let mut o=recording_owner();let stamp=o.active().unwrap().stamp();let mut ui=StudyUi::default();
+        let hit=Hit::Focus{stamp:Some(stamp),field:Field::Recording("import".into()),text:String::new()};
+        let action=super::super::forms::text_submission(&mut ui,&o,hit,"/missing/capture.json").unwrap();
+        super::super::forms::acknowledge(&mut ui,&action,&sim_api::Outcome::Done(Ok(json!({"job":42}))));
+        if newer{ui.drafts.insert((Some((stamp.id,stamp.revision)),Field::Recording("import".into())),"/newer/draft.json".into());}
+        o.receipts.push(super::super::jobs::JobReceipt{id:42,kind:JobKind::RecordingImport,stamp:Some(stamp),source:"fixture".into(),trial_ids:vec![],launch:json!({"recording_applied":applied}),document:None,cancelled:false,displaced:false,stale:false,message:"unexecuted terminal fixture".into(),error:(!applied).then(||"recording.classification: rejected".into()),captured:None,evaluation:None,refinement:None});
+        let mut world=world(o);world.insert_resource(ui);world.run_system_once(super::super::forms::terminal_submissions).unwrap();
+        let ui=world.resource::<StudyUi>();assert_eq!(ui.drafts.is_empty(),applied&&!newer);assert!(ui.awaiting.is_empty());assert!(ui.pending_submission_jobs.is_empty());
+        if !applied{assert!(ui.error.as_ref().unwrap().contains("classification"));}
+        if newer{assert!(ui.drafts.values().any(|v|v=="/newer/draft.json"));}
+    }
+}
+#[test]
+fn immediate_recording_group_refusal_retains_raw_fields_and_unlocks_retry(){
+    let mut world=world(recording_owner());world.run_system_once(render).unwrap();world.run_system_once(collect).unwrap();
+    let hit=world.resource::<StudyUi>().rendered.values().find_map(|c|matches!(&c.hit,Hit::AddRecordingRow{kind,..}if kind=="artifact").then_some(c.hit.clone())).unwrap();
+    let Hit::AddRecordingRow{stamp,hash,kind}=hit else{panic!("actual add artifact control")};
+    let prefix=format!("{hash}:new/{kind}/");let fields=[("role","capture setup"),("location","fixture/artifact.step"),("blake3","aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")];
+    for(name,text)in fields{world.resource_mut::<StudyUi>().drafts.insert((Some((stamp.id,stamp.revision)),Field::Recording(format!("{prefix}{name}"))),text.into());}
+    let action=super::super::forms::recording_forms::add_row(&world.resource::<StudyOwner>().active().unwrap().study,world.resource::<StudyUi>(),stamp,&hash,&kind).unwrap();
+    super::super::forms::stage_group(&mut world.resource_mut::<StudyUi>(),stamp,&prefix,action.clone()).unwrap();
+    for(name,_)in fields{assert!(world.resource::<StudyUi>().awaiting_key(&(Some((stamp.id,stamp.revision)),Field::Recording(format!("{prefix}{name}")))));}
+    super::super::forms::acknowledge(&mut world.resource_mut::<StudyUi>(),&action,&sim_api::Outcome::Done(Err("study.recording: busy or stale original identity".into())));
+    assert!(world.resource::<StudyUi>().awaiting.is_empty());assert!(world.resource::<StudyUi>().pending_submission_jobs.is_empty());assert_eq!(world.resource::<StudyUi>().drafts.len(),3);
+    for(name,_)in fields{assert!(!world.resource::<StudyUi>().awaiting_key(&(Some((stamp.id,stamp.revision)),Field::Recording(format!("{prefix}{name}")))));}
+    assert!(super::super::forms::stage_group(&mut world.resource_mut::<StudyUi>(),stamp,&prefix,action).is_ok());
+}

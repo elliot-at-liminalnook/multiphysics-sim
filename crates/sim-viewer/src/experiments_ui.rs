@@ -247,19 +247,6 @@ impl ExperimentsPanel {
                     let w = &mut self.studies[index].refinement;
                     match result {
                         Ok(refinement::Outcome::Shared(_))=>unreachable!("shared result applied above"),
-                        Ok(refinement::Outcome::CombinedFit(attempt)) => {
-                            if let Some(error) = &attempt.attempt.failure {
-                                w.failures.push(format!("Combined fitting: {error}"));
-                            }
-                            w.combined_fits.push(attempt);
-                        }
-                        Ok(refinement::Outcome::RecordingFit(attempt)) => {
-                            if let Some(error) = &attempt.attempt.failure {
-                                w.failures
-                                    .push(format!("Captured-command fitting: {error}"));
-                            }
-                            w.recording_fits.push(attempt);
-                        }
                         Ok(refinement::Outcome::FpgaRecording(report)) => {
                             w.fpga_recordings.push(report)
                         }
@@ -275,8 +262,11 @@ impl ExperimentsPanel {
                             return;
                         }
                         Ok(refinement::Outcome::FpgaFit(report)) => w.fpga_fits.push(report),
-                        Ok(refinement::Outcome::Recording(report)) => w.recordings.push(report),
-                        Ok(refinement::Outcome::Prediction(report)) => w.predictions.push(report),
+                        Ok(refinement::Outcome::Recording(report)) => {
+                            if let Err(error)=sim_runtime::experiment_study::refinement::apply(&mut self.studies[index],sim_runtime::experiment_study::refinement::Command::ImportRecording{recording:report}) {
+                                self.studies[index].refinement.failures.push(error);
+                            }
+                        },
                         Ok(refinement::Outcome::Electrical(report)) => {
                             w.electrical_comparisons.push(report)
                         }

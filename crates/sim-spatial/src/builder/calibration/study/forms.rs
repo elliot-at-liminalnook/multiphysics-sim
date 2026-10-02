@@ -11,11 +11,13 @@ pub(crate) const FIELD: FieldId = FieldId("build.measured-study");
 pub(crate) enum Field {
     Archive, Review, Save, Export, Parameter(bool, String), Condition(&'static str), Step,
     Limit(&'static str), Filter(&'static str), Notes, DecisionNotes(usize),
-    Refinement(String), RefineDecision(String,usize),
+    Refinement(String), RefineDecision(String,usize), Recording(String),
 }
 #[derive(Component, Clone, Debug)]
 pub(crate) enum Hit {
     Action(StudyAction),
+    FreezeRecording {stamp:StudyStamp,hash:String},
+    AddRecordingRow {stamp:StudyStamp,hash:String,kind:String},
     Focus { stamp: Option<StudyStamp>, field: Field, text: String },
     Path { stamp: Option<StudyStamp>, field: Field, text: String },
     Discard { key: DraftKey },
@@ -31,17 +33,20 @@ pub(crate) struct StudyUi {
     pub(crate) error: Option<String>,
     pub(crate) chart: super::chart::Chart,
     pub(crate) refinement_charts:super::ui::refinement_chart::Charts,
+    pub(crate) recording_charts:super::ui::recording_chart::Charts,
     pub(crate) epoch: u64,
     pub(crate) rendered: BTreeMap<String, super::ui::RenderedControl>,
     pub(crate) pending: Vec<Hit>,
     pub(crate) drafts: BTreeMap<DraftKey,String>,
     pub(crate) awaiting: BTreeMap<String,(DraftKey,String)>,
+    pub(crate) pending_submission_jobs:BTreeMap<u64,String>,
+    grouped_submissions:BTreeMap<String,Vec<(DraftKey,String)>>,
     pub(crate) blur_requested: bool,
 }
 impl Default for StudyUi {
     fn default()->Self {
         let archive=crate::workspace::path(super::super::DEFAULT_ARCHIVE).map(|p|p.display().to_string()).unwrap_or_else(|_|super::super::DEFAULT_ARCHIVE.into());
-        Self {paths:BTreeMap::from([(Field::Archive,archive)]),focus:None,buffer:String::new(),error:None,chart:Default::default(),refinement_charts:Default::default(),epoch:0,rendered:BTreeMap::new(),pending:Vec::new(),drafts:BTreeMap::new(),awaiting:BTreeMap::new(),blur_requested:false}
+        Self {paths:BTreeMap::from([(Field::Archive,archive)]),focus:None,buffer:String::new(),error:None,chart:Default::default(),refinement_charts:Default::default(),recording_charts:Default::default(),epoch:0,rendered:BTreeMap::new(),pending:Vec::new(),drafts:BTreeMap::new(),awaiting:BTreeMap::new(),pending_submission_jobs:BTreeMap::new(),grouped_submissions:BTreeMap::new(),blur_requested:false}
     }
 }
 pub(crate) fn activate(ui: &StudyUi, id: &str) -> Result<Hit, String> {
@@ -55,9 +60,12 @@ impl StudyUi {
     pub(crate) fn publication_inputs(&self,id:u64)->serde_json::Value {
         let belongs=|key:&DraftKey|key.0.is_none_or(|(study,_)|study==id);
         serde_json::json!({"status":"raw retained form intent; not applied study settings",
-            "current_global_diagnostic":self.error,
+            "current_global_diagnostic":self.error, "pending_submission_jobs":self.pending_submission_jobs.iter().filter(|(_,fingerprint)|self.awaiting.get(*fingerprint).is_some_and(|(key,_)|belongs(key))).map(|(job,_)|*job).collect::<Vec<_>>(),
             "drafts":self.drafts.iter().filter(|(key,_)|belongs(key)).map(|(key,text)|serde_json::json!({"stamp":key.0,"field":format!("{:?}",key.1),"text":text})).collect::<Vec<_>>(),
             "awaiting":self.awaiting.values().filter(|(key,_)|belongs(key)).map(|(key,text)|serde_json::json!({"stamp":key.0,"field":format!("{:?}",key.1),"text":text})).collect::<Vec<_>>()})
+    }
+    pub(crate) fn awaiting_key(&self,key:&DraftKey)->bool {
+        self.awaiting.values().any(|(k,_)|k==key)||self.grouped_submissions.values().any(|rows|rows.iter().any(|(k,_)|k==key))
     }
     pub(crate) fn blocking_reason(&self)->Option<String> {
         (!self.drafts.is_empty() || !self.awaiting.is_empty() || !self.pending.is_empty() || self.focus.is_some()).then(||"Measured study fields have unresolved input. Submit the retained field drafts or explicitly discard them before leaving.".into())
@@ -73,7 +81,7 @@ impl StudyUi {
 fn draft_key(stamp:Option<StudyStamp>,field:Field)->DraftKey { (stamp.map(|s|(s.id,s.revision)),field) }
 fn stage(ui:&mut StudyUi,owner:&StudyOwner,stamp:Option<StudyStamp>,field:Field,text:&str)->Result<StudyAction,String> {
     let key=draft_key(stamp,field.clone());
-    if ui.awaiting.values().any(|(k,_)|k==&key) {return Err("Measured field submission is awaiting its action acknowledgment".into());}
+    if ui.awaiting_key(&key) {return Err("Measured field submission is awaiting its action acknowledgment".into());}
     ui.drafts.insert(key.clone(),text.into());
     if matches!(field,Field::Archive|Field::Review|Field::Save|Field::Export){ui.paths.insert(field.clone(),text.into());}
     let action=submission(owner,stamp,&field,text)?;
@@ -93,9 +101,13 @@ pub(crate) fn text_submission(ui:&mut StudyUi,owner:&StudyOwner,hit:Hit,text:&st
 pub(crate) fn acknowledge(ui:&mut StudyUi,action:&StudyAction,outcome:&sim_api::Outcome) {
     let Ok(fingerprint)=serde_json::to_string(action) else{return};
     let sim_api::Outcome::Done(result)=outcome else{return};
+    if !ui.awaiting.contains_key(&fingerprint){return}
+    if matches!(action,StudyAction::ImportRecording{..}|StudyAction::FitCombined{..}|StudyAction::RefineApply{..}) {if let Ok(value)=result {if let Some(job)=value.get("job").and_then(serde_json::Value::as_u64){ui.pending_submission_jobs.insert(job,fingerprint);ui.epoch+=1;return}}}
     let Some((key,text))=ui.awaiting.remove(&fingerprint) else{return};
+    let group=ui.grouped_submissions.remove(&fingerprint).unwrap_or_default();
     match result {
         Ok(_)=> {
+            for(group_key,group_text)in group{if ui.drafts.get(&group_key)==Some(&group_text){ui.drafts.remove(&group_key);if ui.focus.clone().map(|(stamp,field)|draft_key(stamp,field))==Some(group_key){ui.focus=None;ui.blur_requested=true;}}}
             if ui.drafts.get(&key)==Some(&text) {
                 ui.drafts.remove(&key);
                 if ui.focus.clone().map(|(stamp,field)|draft_key(stamp,field))==Some(key) {ui.focus=None;ui.blur_requested=true;}
@@ -130,6 +142,7 @@ pub(crate) fn submission(owner: &StudyOwner, stamp: Option<StudyStamp>, field: &
         _ => {}
     }
     let study = &retained.study;
+    if let Field::Recording(path)=field { return recording_forms::submission(study,stamp,path,text); }
     if let Field::Refinement(path)=field { return refinement_forms::submission(study,stamp,path,text); }
     if let Field::RefineDecision(kind,index)=field {
         return Ok(StudyAction::RefineApply{stamp,command:sim_runtime::experiment_study::refinement::Command::SetDecision{kind:kind.clone(),index:*index,decision:study.refinement_evidence.decisions.iter().rev().find(|d|d.kind==*kind&&d.index==*index).map(|d|d.decision.clone()).unwrap_or("reviewed".into()),notes:text.into()}});
@@ -217,6 +230,16 @@ pub(crate) fn input(
     for hit in hits {
         match &hit {
             Hit::Action(action)=>{actions.write(Act::ui(action.clone()));}
+            Hit::AddRecordingRow{stamp,hash,kind}=> {
+                let result=owner.validate_stamp(*stamp).and_then(|r|recording_forms::add_row(&r.study,&ui,*stamp,hash,kind)).and_then(|action|stage_group(&mut ui,*stamp,&format!("{hash}:new/{kind}/"),action));
+                match result {Ok(action)=>{actions.write(Act::ui(action));ui.error=None},Err(error)=>ui.error=Some(error)}
+                ui.epoch+=1;if let Some(builder)=builder.as_mut(){builder.panel_dirty=true;}
+            }
+            Hit::FreezeRecording{stamp,hash}=> {
+                let result=owner.validate_stamp(*stamp).and_then(|r|recording_forms::freeze(&r.study,&ui,*stamp,hash)).and_then(|action|stage_group(&mut ui,*stamp,&format!("{hash}:assignment/"),action));
+                match result {Ok(action)=>{actions.write(Act::ui(action));ui.error=None},Err(error)=>ui.error=Some(error)}
+                ui.epoch+=1;if let Some(builder)=builder.as_mut(){builder.panel_dirty=true;}
+            }
             Hit::Focus{stamp,field,text}=> {
                 if stamp.is_some_and(|s| owner.validate_stamp(s).is_err()) {
                     ui.error=Some("Study field: displayed revision changed".into());
@@ -231,7 +254,7 @@ pub(crate) fn input(
                 ui.epoch+=1; if let Some(builder)=builder.as_mut(){builder.panel_dirty=true;}
             }
             Hit::Discard{key}=> {
-                if ui.awaiting.values().any(|(k,_)|k==key){ui.error=Some("Await action acknowledgment before discarding this field".into());continue}
+                if ui.awaiting_key(key){ui.error=Some("Await action acknowledgment before discarding this field".into());continue}
                 ui.drafts.remove(key);
                 if ui.focus.clone().map(|(stamp,field)|draft_key(stamp,field))==Some(key.clone()){ui.focus=None;focus.blur(FIELD);}
                 ui.error=None;ui.epoch+=1;if let Some(builder)=builder.as_mut(){builder.panel_dirty=true;}
@@ -262,3 +285,32 @@ pub(crate) fn input(
 
 #[path="refinement_forms.rs"]
 pub(crate) mod refinement_forms;
+
+#[path="recording_forms.rs"]
+pub(crate) mod recording_forms;
+
+/// Terminal job acknowledgment is a presentation reconciliation, never a durable
+/// action writer. Queuing/validation cannot erase input; only applied evidence can.
+pub(crate) fn terminal_submissions(owner:Res<StudyOwner>,mut ui:ResMut<StudyUi>){
+    let ready=ui.pending_submission_jobs.iter().filter_map(|(id,key)|owner.receipts.iter().find(|r|r.id==*id).map(|r|(*id,key.clone(),r.launch.get("recording_applied").and_then(serde_json::Value::as_bool)==Some(true),r.error.clone()))).collect::<Vec<_>>();
+    if ready.is_empty(){return}
+    for(id,fingerprint,applied,error)in ready{
+        ui.pending_submission_jobs.remove(&id);
+        let Some((key,text))=ui.awaiting.remove(&fingerprint)else{continue};
+        let group=ui.grouped_submissions.remove(&fingerprint).unwrap_or_default();
+        if applied{
+            for(group_key,group_text)in group{if ui.drafts.get(&group_key)==Some(&group_text){ui.drafts.remove(&group_key);if ui.focus.clone().map(|(stamp,field)|draft_key(stamp,field))==Some(group_key){ui.focus=None;ui.blur_requested=true;}}}
+            if ui.drafts.get(&key)==Some(&text){ui.drafts.remove(&key);if ui.focus.clone().map(|(stamp,field)|draft_key(stamp,field))==Some(key){ui.focus=None;ui.blur_requested=true;}}
+            ui.error=None;
+        }else{ui.error=Some(error.unwrap_or("Recording submission was not applied; exact raw draft remains retained".into()));}
+    }
+    ui.epoch+=1;
+}
+
+pub(super) fn stage_group(ui:&mut StudyUi,stamp:StudyStamp,prefix:&str,action:StudyAction)->Result<StudyAction,String>{
+    let fingerprint=serde_json::to_string(&action).map_err(|e|e.to_string())?;
+    if ui.awaiting.contains_key(&fingerprint){return Err("Recording row submission already awaits terminal validation; raw fields remain retained".into())}
+    let group=ui.drafts.iter().filter(|(key,_)|key.0==Some((stamp.id,stamp.revision))&&matches!(&key.1,Field::Recording(path)if path.starts_with(prefix))).map(|(key,text)|(key.clone(),text.clone())).collect::<Vec<_>>();
+    if let Some(primary)=group.first(){ui.awaiting.insert(fingerprint.clone(),primary.clone());ui.grouped_submissions.insert(fingerprint,group);}
+    Ok(action)
+}

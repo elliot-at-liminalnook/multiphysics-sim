@@ -80,3 +80,6 @@ impl StudyOwner {
         serde_json::json!({"active":self.active,"status":self.status,"studies":self.studies.iter().map(|s|serde_json::json!({"id":s.id,"revision":s.revision,"saved_revision":s.saved_revision,"dirty":s.dirty(),"source":s.source,"displaced":s.displaced,"study":s.study})).collect::<Vec<_>>(),"jobs":self.pending.iter().map(|p|p.snapshot()).collect::<Vec<_>>(),"receipts":self.receipts.iter().map(|r|r.snapshot()).collect::<Vec<_>>()})
     }
 }
+
+/// Shared compact durable review identity; cached recording frames are excluded.
+pub(crate) type ReviewExposure = sim_runtime::experiment_study::refinement::ReviewExposure;

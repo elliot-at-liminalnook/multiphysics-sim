@@ -64,3 +64,36 @@ fit identity and monotonic exposure/influence. Revisit only with a separate
 physical-source acceptance workflow; review decisions never perform adoption.
 
 Saved archive selections and captured controller-run chart selection use additive shared evidence fields and typed commands, so save/reopen and dirty-study preservation cover them. Rhai parameter rows accept JSON values including nested objects and arrays per row; other experiment and scenario fields remain individual controls.
+
+## T50 bounded controller-recording inventory
+
+This supersedes only the T48 recording/combined exclusions above. The historical
+whole-project inventory is not repeated. See [T50 evidence](native-recording-fit-authoring.md).
+
+| Legacy field/control/route | Shared reusable owner and native consumer | Dependency and source acceptance trace |
+|---|---|---|
+| Section 4 recording_path, Import; REST Refine Import(path) | refinement::recordings::classify + Command::ImportRecording; native StudyAction::ImportRecording → recording_jobs | Recording validation reproduces captured controller calculations and PWM quantization; explicit controller experiment versus FPGA plan classification; malformed/deferred input retained |
+| Recording.version, experiment, runtime, frames; frame control, command_request_s/receipt_s, drive_counts, voltage_v, temperature_c, current_raw_uncalibrated | Existing controller_refinement::Recording and validate; shared fingerprint; retained recording review | All source fields preserved. Current raw is uncalibrated, not converted to measured current. Host request/receipt windows and sample time remain captured assumptions |
+| stop_request_s/receipt_s, completed, failure, stop_verified, initial_registers, transactions_origin_host_s, timing_evidence, source_hashes | Existing Recording type; shared import and bounded Capture inputs; native inspection | Incomplete controller captures retained without score. Fingerprint is content identity; code/cadence hashes alone are not acquisition identity |
+| selected_recording combo; prediction purpose buttons; REST Predict(index,purpose) | Command::SelectRecording and Operation::PredictRecording{recording_hash,purpose}; native rendered selectors/typed actions | Hash identity replaces bare UI index as portable selection; recorded PWM replay versus own-feedback controller remain separate purpose labels and captures |
+| Context Prepare setup snapshot / Capture setup revision; configure capture_contexts | CaptureContext::unknown/validate + Command::AppendContext; native structured property/artifact/binding fields | Append-only revision; recording_hash and captured fixture/CAD association validated; old declarations remain inspectable |
+| Context fixture, attached_output_hardware, transmission, limitations | CaptureContext; native scalar controls and immutable append | Captured fixture facts cannot be rewritten; authored output/transmission descriptions remain evidence, not CAD edits |
+| Property name/value/unit/coordinate_frame/origin/source/uncertainty_bounds | Existing Property and Origin validation; native row scalar fields | measured/derived/estimated/unknown labels, units, coordinate frames, sources and optional uncertainty bounds validated together |
+| Artifact role/location/blake3; Binding hardware_id/cad_component_id/joint_id/source | Existing Artifact/Binding validators; native row controls | Durable artifact identity and stable CAD association; no artifact file read or CAD promotion in a frame |
+| Section 2 assignment_rationale, role buttons, limits; configure recording_assignments | Command::AssignRecording + RecordingDataset::capture; native structured role/RMS/final-error/rationale drafts and explicit freeze | Entire run frozen by fingerprint; immutable role/limits/rationale, no held-out→tuning reassignment; incomplete captures not tuning data |
+| FitRecordings / REST Refine FitRecordings | Operation::FitRecordings → existing CalibrationData/calibration::attempt → shared apply_outcome; native RefineRun | Existing coordinates, family model, 40-evaluation budget and frozen dataset; cancelled/failed/partial attempts remain evidence |
+| FitCombined{selected,additional_study}; optional saved file control / REST route | Operation::FitCombined + shared dataset preparation; native StudyAction::FitCombined → adopted job load | Current archive stays unchanged; additional saved identity, original roles/limits, recording reservation/exposure captured. Ambiguous bare archive IDs rejected |
+| Fit candidate button in recording/combined review | Command::UseRecordingFit; native explicit exploratory control | Completeness/cancellation/verified trace/device/source guards; source link retained. Decisions never registry/CAD acceptance |
+| Prediction measured/predicted charts, assumptions, model_error, tracking; fit score/history/request/dataset panels | Existing Prediction, FitAttempt and dataset vectors; native captured-time review/chart jobs | Measured and predicted sample times preserved, model staleness and timing assumptions labelled; objective history/failures/partial results visible |
+| Save / HTML / Open; rejected text and deferred fields | Existing Study save_new/export_html_new/load plus retained native publication jobs | Immutable destinations; captured revision acknowledged only; opaque Workspace/Study fields retained; older files keep their schema |
+
+Legacy `experiments_ui/refinement.rs::Action::run` delegates recording prediction,
+recording fit and combined fit to shared prepare/execute. Import classification and
+result insertion use shared validators. Legacy widget/configure context/assignment
+projections are append-only transactions; candidate adoption uses shared guards.
+The retained legacy FPGA/electrical/power/CAD handlers remain compatibility paths.
+
+Decision: prediction requires explicitly authored Study or frozen assignment limits,
+instead of a hidden three/five encoder-quantum fallback. Why: scoring assumptions
+must be inspectable and captured. Alternative: preserve silent legacy defaults.
+Revisit if a shared labelled default-limit authoring command is introduced.

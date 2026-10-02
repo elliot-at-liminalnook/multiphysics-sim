@@ -47,7 +47,11 @@ pub struct CaptureContext {
 }
 impl CaptureContext {
     pub fn unknown(recording: &super::recording::Recording) -> Self {
-        Self { recording_hash:recording.fingerprint(), fixture:recording.experiment.fixture.clone(),
+        Self::unknown_with_identity(recording,&recording.fingerprint())
+    }
+    /// Host presentation uses a job-prepared immutable identity, without hashing samples.
+    pub fn unknown_with_identity(recording: &super::recording::Recording, hash:&str) -> Self {
+        Self { recording_hash:hash.into(), fixture:recording.experiment.fixture.clone(),
             attached_output_hardware:"Not documented".into(), transmission:"Internal servo transmission; detailed properties unmeasured".into(),
             properties:[("attached_mass","kg"),("attached_inertia","kg*m^2"),("external_torque","N*m"),("initial_joint_angle","rad"),("encoder_accuracy","rad")].into_iter().map(|(name,unit)|Property {
                 name:name.into(),value:None,unit:unit.into(),coordinate_frame:"Not established".into(),origin:Origin::Unknown,source:"No independent measurement supplied".into(),uncertainty_bounds:None,
@@ -63,11 +67,11 @@ impl CaptureContext {
             || self.transmission.trim().is_empty()
         {
             return Err(
-                "Context requires recording identity and explicit fixture descriptions".into(),
+                "context.recording_hash/fixture/attached_output_hardware/transmission: requires recording identity and explicit fixture descriptions".into(),
             );
         }
         let mut names = std::collections::BTreeSet::new();
-        for p in &self.properties {
+        for (i,p) in self.properties.iter().enumerate() {
             if p.name.trim().is_empty()
                 || !names.insert(&p.name)
                 || p.unit.trim().is_empty()
@@ -76,7 +80,7 @@ impl CaptureContext {
                 || (p.origin == Origin::Unknown) != p.value.is_none()
                 || p.value.is_some_and(|v| !v.is_finite())
             {
-                return Err("Setup properties require unique names, units, frames, sources and honest known/unknown values".into());
+                return Err(format!("context.properties.{i}: setup properties require unique names, units, frames, sources and honest known/unknown values"));
             }
             if let Some([lo, hi]) = p.uncertainty_bounds {
                 if !lo.is_finite()
@@ -84,27 +88,26 @@ impl CaptureContext {
                     || lo > hi
                     || !p.value.is_some_and(|v| lo <= v && v <= hi)
                 {
-                    return Err("Uncertainty bounds must contain the declared value".into());
+                    return Err(format!("context.properties.{i}.uncertainty_bounds: must contain the declared value"));
                 }
             }
         }
         let mut ids = std::collections::BTreeSet::new();
-        for b in &self.bindings {
+        for (i,b) in self.bindings.iter().enumerate() {
             if !(1..=253).contains(&b.hardware_id)
                 || !ids.insert(b.hardware_id)
                 || b.cad_component_id.trim().is_empty()
                 || b.source.trim().is_empty()
             {
                 return Err(
-                    "Hardware bindings require unique IDs and explicit stable CAD identity/source"
-                        .into(),
+                    format!("context.bindings.{i}: hardware bindings require unique IDs and explicit stable CAD identity/source"),
                 );
             }
         }
-        for a in &self.artifacts {
+        for (i,a) in self.artifacts.iter().enumerate() {
             if a.role.trim().is_empty() || a.location.trim().is_empty() || !hash(&a.blake3) {
                 return Err(
-                    "Setup artifact requires a role, durable location and content hash".into(),
+                    format!("context.artifacts.{i}: setup artifact requires a role, durable location and content hash"),
                 );
             }
         }

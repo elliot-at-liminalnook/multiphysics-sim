@@ -85,9 +85,11 @@ impl Workspace {
             fit.attempt.validate(&fit.dataset)?;
             if let Some(data) = &fit.dataset.recordings {
                 for a in &data.assignments {
-                    if !self.recording_assignments.contains(a) {
+                    if self.recording_assignments.iter().any(|local|local.recording_hash==a.recording_hash && local!=a) {
                         return Err("Combined fit changed a frozen recording assignment".into());
                     }
+                    // Additional saved-study recordings remain immutable dataset sources,
+                    // rather than being imported into the current acquisition archive.
                 }
             }
         }

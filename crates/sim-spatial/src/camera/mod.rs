@@ -472,11 +472,17 @@ pub enum CameraSet {
 /// SimSync work against [`CameraSet`] (for example CAD's view snapshot runs
 /// after `CameraSet::Place`).
 pub struct CameraPlugin;
+
+/// Shared camera ordering for the plugin and windowless graph test.
+pub(crate) fn configure_sets(app: &mut App) {
+    app.configure_sets(Update, (CameraSet::Viewport, CameraSet::Navigate, CameraSet::Place).chain().in_set(ViewerSet::SimSync));
+}
+
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         actions::register::<CameraAction>(app);
-        app.configure_sets(Update, (CameraSet::Viewport, CameraSet::Navigate, CameraSet::Place).chain().in_set(ViewerSet::SimSync))
-            .add_systems(Update, input::keys.after(actions::serve).in_set(ViewerSet::Input).run_if(not(crate::ui_kit::text::typing)))
+        configure_sets(app);
+        app.add_systems(Update, input::keys.in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input).run_if(not(crate::ui_kit::text::typing)))
             .add_systems(Update, apply::apply.in_set(ViewerSet::Actions))
             .add_systems(Update, viewport::viewport.in_set(CameraSet::Viewport))
             .add_systems(Update, input::navigate.in_set(CameraSet::Navigate))

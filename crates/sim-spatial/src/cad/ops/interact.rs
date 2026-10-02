@@ -108,7 +108,7 @@ pub(in crate::cad) fn build(app: &mut App) {
     app.add_systems(
         Update,
         // After the camera snapshot (this frame's view) and the mesh sync (the drawn bodies the snap reads).
-        pointer.after(crate::cad::view::update).after(crate::cad::mesh::sync).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
+        pointer.after(crate::cad::CadSet::View).after(crate::cad::CadSet::Mesh).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
     )
     .add_systems(Update, draw.in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }

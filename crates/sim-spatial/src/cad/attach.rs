@@ -63,7 +63,7 @@ pub(super) fn build(app: &mut App) {
         Update,
         (
             // Before CAD's keys: a press that gives the field the keyboard holds the frame's keys.
-            input.after(crate::app::actions::serve).before(super::keys::keys).in_set(ViewerSet::Input),
+            input.in_set(crate::app::InputSet::Window).in_set(crate::cad::CadKeySet::Focus).in_set(ViewerSet::Input),
             draw.in_set(ViewerSet::Present),
         )
             .run_if(in_state(ViewerMode::Cad)),

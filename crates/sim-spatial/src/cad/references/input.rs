@@ -303,5 +303,5 @@ pub(super) fn build(app: &mut App) {
     app.add_text_field(FORM, TextField::new("Reference placement").select_on_focus())
         .add_text_field(PATH, TextField::new("Reference or system file path").placeholder("~/…"))
         .add_text_field(DISTANCE, TextField::new("Real distance").select_on_focus().sticky())
-        .add_systems(Update, input.after(crate::app::actions::serve).before(crate::cad::keys::gate).before(crate::cad::keys::keys).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)));
+        .add_systems(Update, input.in_set(crate::app::InputSet::Window).before(crate::cad::CadKeySet::Gate).in_set(crate::cad::CadKeySet::Focus).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)));
 }

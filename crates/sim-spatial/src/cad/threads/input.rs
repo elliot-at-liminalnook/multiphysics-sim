@@ -233,15 +233,15 @@ pub(super) fn build(app: &mut App) {
             Update,
             (
                 // Before CAD's keys: a field given the keyboard this frame holds the frame's keys.
-                input.after(crate::app::actions::serve).before(crate::cad::keys::keys).in_set(ViewerSet::Input),
+                input.in_set(crate::app::InputSet::Window).in_set(crate::cad::CadKeySet::Focus).in_set(ViewerSet::Input),
                 // After the reference calibrate tool's Escape (which ends that tool first) and
                 // before the Select tool's (`transform::keys`); it consumes the key when it acts.
                 escape
                     .run_if(crate::cad::keys::free)
-                    .after(crate::app::actions::serve)
-                    .after(crate::cad::keys::gate)
+                    .in_set(crate::app::InputSet::Window)
+                    .after(crate::cad::CadKeySet::Gate)
                     .after(crate::cad::references::calibrate::escape)
-                    .before(crate::cad::transform::keys)
+                    .before(crate::cad::CadKeySet::ToolKeys)
                     .in_set(ViewerSet::Input),
             )
                 .run_if(in_state(ViewerMode::Cad)),

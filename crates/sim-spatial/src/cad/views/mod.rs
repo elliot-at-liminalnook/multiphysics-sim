@@ -461,10 +461,10 @@ pub(in crate::cad) fn build(app: &mut App) {
             Update,
             (
                 panel::input
-                    .after(crate::app::actions::serve)
-                    .before(crate::cad::keys::keys)
+                    .in_set(crate::app::InputSet::Window)
+                    .in_set(crate::cad::CadKeySet::Focus)
                     .in_set(ViewerSet::Input),
-                sync.after(crate::cad::sync::receive).in_set(ViewerSet::JobResults),
+                sync.after(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults),
                 snapshot.after(crate::camera::CameraSet::Place).in_set(ViewerSet::SimSync),
                 panel::draw.in_set(ViewerSet::Present),
             )

@@ -372,22 +372,13 @@ impl Selection {
 /// The one apply system (`ViewerSet::Actions`): picks, list rows and keys.
 /// A refusal from a click is logged (the mode's status line shows its own
 /// refusals for its REST adapters); a REST origin is answered with it.
-pub(crate) fn apply_actions(world: &mut World) {
-    world.resource_scope(|world, mut messages: Mut<Messages<Act<SelectionAction>>>| {
-        world.resource_scope(|world, mut in_flight: Mut<InFlight<SelectionAction>>| {
-            world.resource_scope(|world, mut replies: Mut<Replies>| {
-                world.resource_scope(|world, mut selection: Mut<Selection>| {
-                    let registry = world.resource::<DocumentRegistry>();
-                    actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
-                        let result = selection.apply(registry, action);
-                        if let (Err(e), false) = (&result, call.rest()) {
-                            warn!("selection: {e}");
-                        }
-                        Outcome::Done(result.map(|changed| json!({"changed": changed})))
-                    });
-                });
-            });
-        });
+pub(crate) fn apply_actions(mut messages: ResMut<Messages<Act<SelectionAction>>>, mut in_flight: ResMut<InFlight<SelectionAction>>, mut replies: ResMut<Replies>, mut selection: ResMut<Selection>, registry: Res<DocumentRegistry>) {
+    actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
+        let result = selection.apply(&registry, action);
+        if let (Err(e), false) = (&result, call.rest()) {
+            warn!("selection: {e}");
+        }
+        Outcome::Done(result.map(|changed| json!({"changed": changed})))
     });
 }
 

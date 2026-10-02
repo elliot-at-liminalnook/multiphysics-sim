@@ -408,7 +408,7 @@ pub(super) fn build(app: &mut App) {
     app.add_systems(
         Update,
         (
-            input.after(crate::app::actions::serve).before(crate::cad::keys::gate).before(crate::cad::keys::keys).in_set(ViewerSet::Input),
+            input.in_set(crate::app::InputSet::Window).before(crate::cad::CadKeySet::Gate).in_set(crate::cad::CadKeySet::Focus).in_set(ViewerSet::Input),
             draw.in_set(ViewerSet::Present),
         )
             .run_if(in_state(ViewerMode::Cad)),

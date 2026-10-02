@@ -239,5 +239,5 @@ pub(super) fn receive(doc: Option<ResMut<CadDocument>>, cad: Option<ResMut<Messa
 
 /// CadCorePlugin: [`receive`] (JobResults, after `sync::receive`).
 pub(super) fn build_core(app: &mut App) {
-    app.add_systems(Update, receive.after(crate::cad::sync::receive).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
+    app.add_systems(Update, receive.after(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
 }

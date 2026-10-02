@@ -408,5 +408,5 @@ fn sync(doc: Option<ResMut<CadDocument>>) {
 
 /// CadCorePlugin: the registry and study reads (JobResults, after `sync::receive`).
 pub(super) fn build_core(app: &mut App) {
-    app.add_systems(Update, sync.after(crate::cad::sync::receive).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
+    app.add_systems(Update, sync.after(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
 }

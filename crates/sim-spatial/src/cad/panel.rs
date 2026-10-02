@@ -268,7 +268,7 @@ pub(super) fn build(app: &mut App) {
         .add_text_field(super::numeric::NUMERIC, super::numeric::field())
         .add_systems(OnEnter(ModeScope::Cad), spawn)
         // Before CAD's keys: a press that gives the name field the keyboard holds the frame's keys.
-        .add_systems(Update, (name::buttons, name_entry).chain().after(crate::app::actions::serve).before(super::keys::keys).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)))
+        .add_systems(Update, (name::buttons, name_entry).chain().in_set(crate::app::InputSet::Window).in_set(crate::cad::CadKeySet::Focus).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)))
         .add_systems(Update, (scroll, refresh).chain().in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }
 

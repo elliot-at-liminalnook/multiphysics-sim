@@ -57,7 +57,7 @@ pub(in crate::cad) fn build(app: &mut App) {
     app.init_resource::<PlaneQuads>().add_systems(
         Update,
         (
-            quads.after(super::plane::sync).in_set(ViewerSet::SimSync),
+            quads.after(crate::cad::CadSet::Plane).in_set(ViewerSet::SimSync),
             outlines.in_set(ViewerSet::Present),
         )
             .run_if(in_state(ViewerMode::Cad)),

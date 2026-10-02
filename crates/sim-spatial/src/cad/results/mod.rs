@@ -493,7 +493,7 @@ pub(in crate::cad) fn specs() -> Vec<Spec> {
 pub(crate) struct CoreParts;
 impl Plugin for CoreParts {
     fn build(&self, app: &mut App) {
-        app.init_resource::<LiveLink>().add_systems(Update, link::receive.after(super::sync::receive).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
+        app.init_resource::<LiveLink>().add_systems(Update, link::receive.after(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
     }
 }
 

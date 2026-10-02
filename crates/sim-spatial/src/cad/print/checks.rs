@@ -428,7 +428,7 @@ pub(super) fn controls(doc: &CadDocument) -> Vec<(String, String, CadAction, Res
 
 /// CadCorePlugin: the checks' landing (windowless).
 pub(super) fn build_core(app: &mut App) {
-    app.add_systems(Update, receive.after(crate::cad::sync::receive).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
+    app.add_systems(Update, receive.after(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
 }
 
 /// JobResults: a check that came back. A result of an older document

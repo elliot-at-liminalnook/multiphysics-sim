@@ -142,12 +142,11 @@ pub(crate) enum FieldEvent {
 }
 
 /// One field's event, read by its owner.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Message, Clone, Debug, PartialEq)]
 pub(crate) struct FieldMsg {
     pub field: FieldId,
     pub event: FieldEvent,
 }
-impl Message for FieldMsg {}
 
 /// The one typing check: a kit text field has the keyboard (read-only).
 #[derive(SystemParam)]
@@ -302,19 +301,31 @@ fn follow_accessibility(mut fields: Query<(&TextField, &mut AccessibilityNode), 
     }
 }
 
+/// The kit's text input (`input::keys`, PreUpdate, after Bevy's input and
+/// UI focus): a feature that edits a field's draft or reads the keys after
+/// the kit typed them orders itself against this set (the document picker).
+#[derive(SystemSet, Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub(crate) struct TextInputSet;
+
+/// Shared with the windowless ordering-cycle test.
+pub(crate) fn configure_sets(app: &mut App) {
+    app.configure_sets(PreUpdate, TextInputSet.after(bevy::input::InputSystems).after(bevy::ui::UiSystems::Focus));
+}
+
 /// The text entry's resources, messages and input system (windowless:
 /// tests add it alone; `UiKitPlugin` adds it for the window).
 pub struct TextEntryPlugin;
 impl Plugin for TextEntryPlugin {
     fn build(&self, app: &mut App) {
         use bevy::input::keyboard::{Key, KeyboardFocusLost, KeyboardInput};
+        configure_sets(app);
         app.add_message::<FieldMsg>()
             .add_message::<KeyboardInput>()
             .add_message::<KeyboardFocusLost>()
             .init_resource::<InputFocus>()
             .init_resource::<ButtonInput<KeyCode>>()
             .init_resource::<ButtonInput<Key>>()
-            .add_systems(PreUpdate, input::keys.after(bevy::input::InputSystems).after(bevy::ui::UiSystems::Focus))
+            .add_systems(PreUpdate, input::keys.in_set(TextInputSet))
             .add_systems(PostUpdate, follow_accessibility.before(bevy::a11y::AccessibilitySystems::Update));
     }
 }

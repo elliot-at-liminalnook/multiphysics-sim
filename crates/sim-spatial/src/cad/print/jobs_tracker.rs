@@ -478,5 +478,5 @@ fn poll(doc: Option<ResMut<CadDocument>>) {
 /// CadCorePlugin: the poller (JobResults, after `sync::receive`, which
 /// adopts a started job through [`edit_answered`]).
 pub(super) fn build_core(app: &mut App) {
-    app.add_systems(Update, poll.after(crate::cad::sync::receive).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
+    app.add_systems(Update, poll.after(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
 }

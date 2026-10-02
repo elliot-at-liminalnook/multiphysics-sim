@@ -55,7 +55,7 @@ const MEASURED_RGB: [u8; 3] = [0x71, 0xe3, 0xba];
 pub(crate) fn build(app: &mut App) {
     app.add_systems(
         Update,
-        (sync_frames.in_set(ViewerSet::SimSync).after(crate::robot::apply_frames), (sync_panel, sync_overlay, sync_texts).chain().in_set(ViewerSet::Present)).run_if(in_state(ViewerMode::Robot)),
+        (sync_frames.in_set(ViewerSet::SimSync).after(crate::robot::RobotSet::Frames), (sync_panel, sync_overlay, sync_texts).chain().in_set(ViewerSet::Present)).run_if(in_state(ViewerMode::Robot)),
     );
 }
 

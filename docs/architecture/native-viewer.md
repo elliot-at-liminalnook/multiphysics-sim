@@ -10,7 +10,7 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01); one-text-entry done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [One text entry](#one-text-entry-2026-10-01); cad-organize done pending verification (2026-10-01; written and reviewed by reading; nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), see [CAD organize](#cad-organize-2026-10-01))
+## Where it is today (public-system-sets done pending verification, uncompiled: written and reviewed by reading only; see [Public system sets](#public-system-sets-2026-10-01); re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01); one-text-entry done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [One text entry](#one-text-entry-2026-10-01); cad-organize done pending verification (2026-10-01; written and reviewed by reading; nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), see [CAD organize](#cad-organize-2026-10-01))
 
 **Nothing has been compiled, tested or run since aa34ef48** (the last
 verified commit). Five epics since were written by reading only, stacked
@@ -328,24 +328,13 @@ reading, not by a build.
   `Trigger<`, `despawn_recursive` or `StateScoped`, and the simulation
   boundary holds, because `Res<Time>` drives only animation and playback.
   Open gaps, each with an epic ID in [Default epic order](#default-epic-order):
-  - **Private ordering edges** (`public-system-sets`): 94 `.after(..)` /
-    `.before(..)` calls named a function in another module (`grep -rnE
-    "\.(after|before)\([a-z_]+::[a-z_:]+\)"`), 66 after one-text-entry. Of these, 24 are
-    `.after(actions::serve)` (the REST poll) on input systems. Others cross
-    feature folders: `builder.rs:539` before `inspect_view::sync_camera`,
-    `robot/hardware/mirror_panel.rs:35` and `sync_panel.rs:58` against
-    `robot::apply_frames`, `robot/hardware/actions.rs:411` after the robot's
-    `actions::apply`, and `cad/mod.rs:127`, `cad/inspector/physical_edit.rs:339`
-    and `cad/print/studies.rs:411` after `cad::sync::receive`. CAD's
-    keyboard arbitration chain (`cad/attach.rs:67`, `cad/pick.rs:159`,
-    `cad/inspector/mod.rs:67`, `cad/materials/mod.rs:390`, against
-    `name_entry`, `editor_entry`, `numeric::entry` and `keys::gate`) was
-    reduced by one-text-entry to CAD-internal rules (every system that
-    gives a field the keyboard on a press or Tab runs before `keys::keys`; `keys::gate`
-    runs before the readers it gates; the surfaces chain before
-    `numeric::entry`); the picker orders itself against the kit's
-    `ui_kit::text::input::keys` in PreUpdate. §2 forbids ordering against another
-    feature's private systems.
+  - **Private ordering edges closed by reading** (`public-system-sets`,
+    uncompiled): public Input, robot, CAD, inspect and text sets replace
+    cross-feature private ordering. The baseline had 82 matching grep lines,
+    107 qualified function-path occurrences and five bare occurrences,
+    including 34 serve edges; previous 94/66/24 counts are stale. See
+    [Public system sets](#public-system-sets-2026-10-01) for every relation,
+    remaining local edges, source guard and windowless schedule tests.
   - **Hand-computed 3D viewports** (`viewport-nodes`): `camera/viewport.rs`,
     `view.rs:158` and `:296` (the split schematic) and `place_view.rs:294`
     set `Camera.viewport` from dock sizes every frame. 0.19.1's
@@ -357,12 +346,11 @@ reading, not by a build.
     fastener, clearance) last for one window only. Bevy 0.19 has app
     settings (`#[derive(SettingsGroup)]`, in `bevy_ecs_macros-0.19.1`); the
     crate providing the plugin isn't in the lockfile yet.
-  - **Small, for whichever epic touches the file:**
-    `physics_view::labels` (`physics_view.rs:517`) despawns and respawns
-    every `PhysicsLabel` each frame; keep the entities and update them with
-    `set_if_neq`. `selection::apply_actions` (`selection/mod.rs:375`) is an
-    exclusive `&mut World` system in Actions; narrow it to system params
-    unless it needs the world.
+  - **Small gaps closed by reading** (public-system-sets, uncompiled):
+    `physics_view::labels` retains keyed entities and changes Node/Text with
+    `set_if_neq`; rounded values, refresh pacing and anchor rules stay intact.
+    `selection::apply_actions` uses five resource system parameters instead
+    of exclusive World access. `FieldMsg` derives Message.
   - **Deliberate, not gaps:** buttons on `Interaction` (see the UI kit
     decisions; one-text-entry is done, so revisit: Enter/Space on a
     tab-focused button needs `bevy_ui_widgets::Button` and `Activate`), CAD
@@ -5662,9 +5650,9 @@ To do in the verification pass:
   feature's private systems. *Status:* `ViewerSet` is declared and ordered
   once (`app::ModesPlugin`); since the action layer each mode's input
   mappings sit in Input (after the one REST poll) and its apply system in
-  Actions. The builder and lesson SimSync chains still order themselves
-  against the spatial view's `update_parts` and `sync_camera` (display
-  ordering, left for the UI kit epic). Since cad-views-export the cameras
+  Actions. The builder and lesson SimSync chains now order against public
+  `InspectViewSet::{Camera, Parts, Notes}`; their former private camera
+  and part edges are closed by public-system-sets (uncompiled). Since cad-views-export the cameras
   are one feature with a public set: `camera::CameraSet` (Viewport →
   Navigate → Place, in SimSync), which the spatial view, Robot and CAD
   order their camera data before and their camera readers after
@@ -6060,8 +6048,8 @@ image planes and the calibrate tool, and the linked system file with Open
 in builder as an in-window switch to Build mode, with one api.py gap
 route (`GET /nodes/{id}/image`); it is written and reviewed by reading
 and pending verification: nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified). Its components and system-graph rows
-moved to cad-components. Next: the structural public-system-sets, then
-cad-components, then cad-experiments-motion.
+moved to cad-components. Next: cad-components, then cad-experiments-motion; public-system-sets
+is done by reading and remains uncompiled pending verification.
 
 #### Later CAD epics (planned 2026-09-30)
 
@@ -6343,8 +6331,8 @@ The Director re-ranks with evidence, but this is the default:
    is done pending verification (written and reviewed by reading;
    nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)); its components and system-graph rows became the new epic
    cad-components.
-   Next: the structural **public-system-sets** (the structural slot), then
-   **cad-components**.
+   Next: **cad-components**; public-system-sets is done by reading,
+   pending verification and uncompiled.
    Remaining, in order (§9 "Later CAD epics"):
    cad-components, cad-experiments-motion.
 8. **Parity harness** (§9 phase 2).
@@ -6358,16 +6346,16 @@ The Director re-ranks with evidence, but this is the default:
 
 **Bevy-practice epics** (added 2026-10-01; structural; the gaps are listed under
 "Bevy-practice gaps" in "Where it is today"). one-text-entry and
-cad-organize are done (pending verification); **public-system-sets** is
-next (the structural slot; Director, 2026-10-01), which finishes the same
-ordering cleanup, then cad-components, then cad-experiments-motion.
+cad-organize and **public-system-sets** are done (pending verification,
+uncompiled). Next is **cad-components**, then cad-experiments-motion.
 Interleave the other two with the remaining CAD epics, keeping at least
 one epic in three structural:
 
-- **public-system-sets.** No system orders itself against a function in
+- **public-system-sets.** Done by reading, pending verification and uncompiled;
+  see [Public system sets](#public-system-sets-2026-10-01). No system orders itself against a function in
   another feature's folder.
   - Input gets public sub-steps: the REST poll first, then buttons, keys and
-    picks. This replaces the 25 `.after(actions::serve)` edges.
+    picks remain unordered in Window. This replaces 34 serve ordering occurrences.
   - A feature that others order against exposes a public set, as
     `camera::CameraSet` does: Robot frames (`robot::apply_frames`), the
     robot's action apply, CAD sync results (`cad::sync::receive`), and the
@@ -6407,3 +6395,213 @@ paid, so split a file along a seam when a change would take it past the cap.
   (§9).
 - Which Rust OCCT bindings to use or extend (for example `opencascade-sys`
   through `cxx`), and how to keep the C++ build out of the fast path.
+
+## Public system sets (2026-10-01)
+
+T41.1, T41.2 and T41.3 implement the public ordering contract by reading;
+**uncompiled and pending verification**. No viewer, test or build was run.
+REST names/shapes, key predicates and mode conditions are unchanged.
+No effective ordering relation or ViewerSet phase was intentionally changed.
+
+| Public set | Owner/configuration home | Members and relation |
+|---|---|---|
+| `InputSet::{Rest, Window}` | `app::ModesPlugin` | Chained inside Input; only serve is Rest. Former serve-dependent inputs are Window. |
+| `RobotSet::{Actions, Frames}` | `robot::configure_sets`, RobotPlugin | One robot action handler in Actions; only apply_frames in SimSync Frames. |
+| `CadSet::{Results, Mesh, Highlight, Plane, View}` | `cad::configure_sets`, CadCorePlugin | Singleton service receive, mesh sync, highlight, plane sync and view snapshot; existing producer chains preserved. |
+| `CadKeySet::{Gate, Focus, Keys, ToolKeys}` | same CAD configuration | Gate precedes Keys and ToolKeys; Focus precedes Keys. Other relations remain explicit at readers. |
+| `InspectViewSet::{Notes, Link, Camera, Parts}` | `inspect_view::configure_sets`, SpatialViewerPlugin | Singleton notes navigation, linked exchange, camera synchronization and part update in SimSync. |
+| `TextInputSet` | `ui_kit::text::configure_sets`, TextEntryPlugin | PreUpdate input after Bevy input and UI focus; picker sync before and picker modal keys after. |
+| `CameraSet` | CameraPlugin (existing) | Viewport → Navigate → Place in SimSync, unchanged. |
+
+Decisions: Rest → Window deliberately retains the previous partial order
+between buttons, keys and picks; splitting those into a total chain would add
+relations. Inputs previously unordered against serve stay directly in Input
+(e.g. picker clicks and display cube presses). `lesson_screen_requests` stays
+after serve and unordered against Window. CAD Focus is not chained against
+Gate, and Keys is not chained against ToolKeys: only existing relations are
+expressed. Tree search's new Window ancestry was already implied by
+serve → tree readers → gate → search. Top-level files and same-named folders
+are one feature (`builder.rs` and `builder/**`); notes, linked, animation and
+physics_view are separate features. Local function edges remain when they
+express unique intra-feature relations. No allowlist exceptions are needed.
+
+The baseline at `525d5276` has **82 grep matching lines**, **107 qualified
+lowercase function-path occurrences** (including multiline calls), and five
+bare-function occurrences. Thus the old 94/66/24 and later 25 figures are
+historical/stale; the actual serve occurrence count is **34**. The table below
+records all 112 baseline occurrences, including retained edges, using baseline
+file:line under `crates/sim-spatial/src`. No tuple-target function edges were
+found in this baseline; the guard also handles multiline and tuple arguments.
+All rows use Update unless explicitly marked PreUpdate. “Cross” resolves the
+target to its top-level feature, including imported bare aliases.
+
+| Baseline file:line / source system or chain | Old edge | Schedule / phase | Cross | Replacement / reason |
+|---|---|---|---|---|
+| `app/switch/mod.rs:339` / `picker::sync` | `before(crate::ui_kit::text::input::keys)` | PreUpdate | yes | same before TextInputSet; Draft sync precedes typing; modal picker keys read after typing. |
+| `app/switch/mod.rs:340` / `picker::keys` | `after(crate::ui_kit::text::input::keys)` | PreUpdate | yes | same after TextInputSet; Draft sync precedes typing; modal picker keys read after typing. |
+| `builder.rs:532` / `buttons → keys` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `builder.rs:539` / `frame_timing … clear_for_learn chain` | `before(crate::inspect_view::sync_camera)` | Update / SimSync | yes | same before InspectViewSet::Camera; Builder docks and lesson viewport/cues reach camera before synchronization. |
+| `builder.rs:540` / `frame_timing … clear_for_learn chain` | `before(update_parts)` | Update / SimSync | yes | same before InspectViewSet::Parts; Scene rebuild/selection precedes parts; placement reads posed parts after. |
+| `builder.rs:545` / `placement::update` | `after(update_parts)` | Update / SimSync | yes | same after InspectViewSet::Parts; Scene rebuild/selection precedes parts; placement reads posed parts after. |
+| `builder.rs:546` / `apply_preview → draw_handles` | `after(placement::update)` | Update / SimSync | no | retained intra-feature function edge; Local producer data reaches its consumer before reading/drawing. |
+| `builder.rs:547` / `discussion::hover` | `after(notes::update)` | Update / SimSync | yes | same after InspectViewSet::Notes; Notes navigation updates selection before projection and hover. |
+| `builder.rs:548` / `markers::sync` | `after(placement::apply_preview)` | Update / SimSync | no | retained intra-feature function edge; Local producer data reaches its consumer before reading/drawing. |
+| `builder.rs:548` / `markers::sync` | `after(discussion::hover)` | Update / SimSync | no | retained intra-feature function edge; Local producer data reaches its consumer before reading/drawing. |
+| `builder.rs:549` / `ui_api::collect` | `after(markers::sync)` | Update / SimSync | no | retained intra-feature function edge; Local producer data reaches its consumer before reading/drawing. |
+| `builder.rs:549` / `ui_api::collect` | `after(ui::rebuild_panel)` | Update / SimSync | no | retained intra-feature function edge; Local producer data reaches its consumer before reading/drawing. |
+| `cad/attach.rs:66` / `input` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/attach.rs:66` / `input` | `before(super::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/display/mod.rs:549` / `entry::input` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/display/mod.rs:550` / `entry::input` | `before(crate::cad::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/display/mod.rs:554` / `preview → materials → edges_sync` | `after(crate::cad::mesh::highlight)` | Update / SimSync | no | same after CadSet::Highlight; Material overrides land before highlight; display reads after highlight. |
+| `cad/files/mod.rs:587` / `form::input` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/files/mod.rs:587` / `form::input` | `before(crate::cad::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/files/mod.rs:590` / `jobs::receive` | `before(crate::cad::sync::receive)` | Update / JobResults | no | same before CadSet::Results; Service answers land before revision-dependent readers; file jobs land first. |
+| `cad/inspector/mod.rs:65` / `editor_entry` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/inspector/mod.rs:66` / `editor_entry` | `before(super::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/inspector/physical_edit.rs:324` / `entry::entry` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/inspector/physical_edit.rs:325` / `entry::entry` | `before(crate::cad::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/inspector/physical_edit.rs:339` / `exact::sync, refresh::sync` | `after(crate::cad::sync::receive)` | Update / JobResults | no | same after CadSet::Results; Service answers land before revision-dependent readers; file jobs land first. |
+| `cad/materials/mod.rs:387` / `panel::input` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/materials/mod.rs:388` / `panel::input` | `before(crate::cad::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/mod.rs:138` / `analysis_overlay::receive` | `after(sync::receive)` | Update / JobResults | no | same after CadSet::Results; Service answers land before revision-dependent readers; file jobs land first. |
+| `cad/mod.rs:173` / `keys::keys` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/mod.rs:173` / `keys::keys` | `after(keys::gate)` | Update / Input | no | CadKeySet::Gate → Keys; Pending chord/key ownership arbitrates readers. |
+| `cad/ops/interact.rs:111` / `pointer` | `after(crate::cad::view::update)` | Update / SimSync | no | same after CadSet::View; Current camera snapshot before interaction. |
+| `cad/ops/interact.rs:111` / `pointer` | `after(crate::cad::mesh::sync)` | Update / SimSync | no | same after CadSet::Mesh; Current geometry before ray casts, previews and material overrides. |
+| `cad/panel.rs:271` / `name::buttons → name_entry` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/panel.rs:271` / `name::buttons → name_entry` | `before(super::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/pick.rs:167` / `pointer` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/pick.rs:168` / `pointer` | `after(super::keys::gate)` | Update / Input | no | same after CadKeySet::Gate; Pending chord/key ownership arbitrates readers. |
+| `cad/pick.rs:169` / `pointer` | `after(super::numeric::entry)` | Update / Input | no | retained intra-CAD function edge; Numeric focus, Escape priority or local dataflow remains exactly ordered. |
+| `cad/print/checks.rs:431` / `receive` | `after(crate::cad::sync::receive)` | Update / JobResults | no | same after CadSet::Results; Service answers land before revision-dependent readers; file jobs land first. |
+| `cad/print/fastener_tool.rs:197` / `click` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/print/jobs_tracker.rs:481` / `poll` | `after(crate::cad::sync::receive)` | Update / JobResults | no | same after CadSet::Results; Service answers land before revision-dependent readers; file jobs land first. |
+| `cad/print/studies.rs:411` / `sync` | `after(crate::cad::sync::receive)` | Update / JobResults | no | same after CadSet::Results; Service answers land before revision-dependent readers; file jobs land first. |
+| `cad/references/calibrate.rs:309` / `click` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/references/calibrate.rs:310` / `escape` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/references/calibrate.rs:310` / `escape` | `after(crate::cad::keys::gate)` | Update / Input | no | same after CadKeySet::Gate; Pending chord/key ownership arbitrates readers. |
+| `cad/references/calibrate.rs:310` / `escape` | `before(crate::cad::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/references/calibrate.rs:310` / `escape` | `before(crate::cad::transform::keys)` | Update / Input | no | same before CadKeySet::ToolKeys; Calibration/annotation Escape precedes Select cancellation. |
+| `cad/references/drop.rs:60` / `drops` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/references/input.rs:306` / `input` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/references/input.rs:306` / `input` | `before(crate::cad::keys::gate)` | Update / Input | no | same before CadKeySet::Gate; Pending chord/key ownership arbitrates readers. |
+| `cad/references/input.rs:306` / `input` | `before(crate::cad::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/references/reads.rs:242` / `receive` | `after(crate::cad::sync::receive)` | Update / JobResults | no | same after CadSet::Results; Service answers land before revision-dependent readers; file jobs land first. |
+| `cad/results/forms.rs:411` / `input` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/results/forms.rs:411` / `input` | `before(crate::cad::keys::gate)` | Update / Input | no | same before CadKeySet::Gate; Pending chord/key ownership arbitrates readers. |
+| `cad/results/forms.rs:411` / `input` | `before(crate::cad::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/results/mod.rs:496` / `link::receive` | `after(super::sync::receive)` | Update / JobResults | no | same after CadSet::Results; Service answers land before revision-dependent readers; file jobs land first. |
+| `cad/results/overlay.rs:364` / `paint` | `after(crate::cad::mesh::sync)` | Update / SimSync | no | same after CadSet::Mesh; Current geometry before ray casts, previews and material overrides. |
+| `cad/results/overlay.rs:364` / `paint` | `before(crate::cad::mesh::highlight)` | Update / SimSync | no | same before CadSet::Highlight; Material overrides land before highlight; display reads after highlight. |
+| `cad/robot/mod.rs:160` / `data::sync` | `after(super::sync::receive)` | Update / JobResults | no | same after CadSet::Results; Service answers land before revision-dependent readers; file jobs land first. |
+| `cad/robot/panel.rs:516` / `double_click` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/robot/tools.rs:463` / `click::click` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/robot/tools.rs:464` / `settle` | `after(super::data::sync)` | Update / JobResults | no | retained intra-CAD function edge; Numeric focus, Escape priority or local dataflow remains exactly ordered. |
+| `cad/sketch/extrude.rs:136` / `pointer` | `after(crate::cad::view::update)` | Update / SimSync | no | same after CadSet::View; Current camera snapshot before interaction. |
+| `cad/sketch/extrude.rs:136` / `pointer` | `after(crate::cad::mesh::sync)` | Update / SimSync | no | same after CadSet::Mesh; Current geometry before ray casts, previews and material overrides. |
+| `cad/sketch/extrude.rs:136` / `pointer` | `after(crate::cad::sketch::plane::sync)` | Update / SimSync | no | same after CadSet::Plane; Current plane frames before plane drawing/extrusion. |
+| `cad/sketch/interact.rs:105` / `pointer` | `after(crate::cad::view::update)` | Update / SimSync | no | same after CadSet::View; Current camera snapshot before interaction. |
+| `cad/sketch/interact.rs:105` / `pointer` | `after(crate::cad::mesh::sync)` | Update / SimSync | no | same after CadSet::Mesh; Current geometry before ray casts, previews and material overrides. |
+| `cad/sketch/plane.rs:72` / `picks` | `after(crate::cad::view::update)` | Update / SimSync | no | same after CadSet::View; Current camera snapshot before interaction. |
+| `cad/sketch/plane.rs:72` / `picks` | `after(crate::cad::mesh::sync)` | Update / SimSync | no | same after CadSet::Mesh; Current geometry before ray casts, previews and material overrides. |
+| `cad/sketch/plane.rs:72` / `picks` | `after(sync)` | Update / SimSync | no | retained intra-CAD function edge; Numeric focus, Escape priority or local dataflow remains exactly ordered. |
+| `cad/sketch/plane_draw.rs:60` / `quads` | `after(super::plane::sync)` | Update / SimSync | no | same after CadSet::Plane; Current plane frames before plane drawing/extrusion. |
+| `cad/surfaces/mod.rs:323` / `form::input … keys::gate chain` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/surfaces/mod.rs:326` / `form::input … keys::gate chain` | `before(super::numeric::entry)` | Update / Input | no | retained intra-CAD function edge; Numeric focus, Escape priority or local dataflow remains exactly ordered. |
+| `cad/threads/annotate.rs:206` / `click` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/threads/input.rs:236` / `input` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/threads/input.rs:236` / `input` | `before(crate::cad::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/threads/input.rs:241` / `escape` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/threads/input.rs:242` / `escape` | `after(crate::cad::keys::gate)` | Update / Input | no | same after CadKeySet::Gate; Pending chord/key ownership arbitrates readers. |
+| `cad/threads/input.rs:243` / `escape` | `after(crate::cad::references::calibrate::escape)` | Update / Input | no | retained intra-CAD function edge; Numeric focus, Escape priority or local dataflow remains exactly ordered. |
+| `cad/threads/input.rs:244` / `escape` | `before(crate::cad::transform::keys)` | Update / Input | no | same before CadKeySet::ToolKeys; Calibration/annotation Escape precedes Select cancellation. |
+| `cad/threads/pins.rs:211` / `press` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/threads/read.rs:222` / `sync` | `after(crate::cad::sync::receive)` | Update / JobResults | no | same after CadSet::Results; Service answers land before revision-dependent readers; file jobs land first. |
+| `cad/transform/mod.rs:269` / `numeric::entry` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/transform/mod.rs:269` / `numeric::entry` | `before(super::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/transform/mod.rs:271` / `transform::keys` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/transform/mod.rs:271` / `transform::keys` | `after(super::keys::gate)` | Update / Input | no | same after CadKeySet::Gate; Pending chord/key ownership arbitrates readers. |
+| `cad/transform/mod.rs:271` / `transform::keys` | `after(super::numeric::entry)` | Update / Input | no | retained intra-CAD function edge; Numeric focus, Escape priority or local dataflow remains exactly ordered. |
+| `cad/transform/mod.rs:281` / `track_selection … previews chain` | `after(super::view::update)` | Update / SimSync | no | same after CadSet::View; Current camera snapshot before interaction. |
+| `cad/transform/mod.rs:282` / `track_selection … previews chain` | `after(super::mesh::sync)` | Update / SimSync | no | same after CadSet::Mesh; Current geometry before ray casts, previews and material overrides. |
+| `cad/tree.rs:170` / `popup::input → rows → fields` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/tree.rs:171` / `popup::input → rows → fields` | `before(super::keys::gate)` | Update / Input | no | same before CadKeySet::Gate; Pending chord/key ownership arbitrates readers. |
+| `cad/tree.rs:177` / `search` | `after(super::keys::gate)` | Update / Input | no | same after CadKeySet::Gate; Pending chord/key ownership arbitrates readers. |
+| `cad/tree.rs:177` / `search` | `before(super::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/views/mod.rs:464` / `panel::input` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `cad/views/mod.rs:465` / `panel::input` | `before(crate::cad::keys::keys)` | Update / Input | no | CadKeySet::Focus → Keys (source membership); Field focus/consumption precedes global shortcuts. |
+| `cad/views/mod.rs:467` / `sync` | `after(crate::cad::sync::receive)` | Update / JobResults | no | same after CadSet::Results; Service answers land before revision-dependent readers; file jobs land first. |
+| `camera/mod.rs:479` / `input::keys` | `after(actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `inspect_view/mod.rs:319` / `inspect::input → notes::clicks → overlay_clicks` | `after(app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `inspect_view/mod.rs:327` / `projection::project_selection` | `after(notes::update)` | Update / SimSync | yes | same after InspectViewSet::Notes; Notes navigation updates selection before projection and hover. |
+| `inspect_view/mod.rs:327` / `projection::project_selection` | `before(linked::sync_link)` | Update / SimSync | yes | same before InspectViewSet::Link; Projection updates shared selection before exchange with peer. |
+| `inspect_view/mod.rs:327` / `projection::project_selection` | `before(update_parts)` | Update / SimSync | no | same before InspectViewSet::Parts; Scene rebuild/selection precedes parts; placement reads posed parts after. |
+| `inspect_view/mod.rs:351` / `view::animate … inspect::publish chain` | `after(animation::draw_markers)` | Update / Present | yes | ViewerSet::SimSync → Present (redundant edge removed); Markers are SimSync; presentation already follows via pipeline. |
+| `lesson/mod.rs:644` / `keys → buttons → seek → narrate::seek → sliders` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `lesson/mod.rs:652` / `poll … sketch_dots chain` | `before(crate::inspect_view::sync_camera)` | Update / SimSync | yes | same before InspectViewSet::Camera; Builder docks and lesson viewport/cues reach camera before synchronization. |
+| `lesson/mod.rs:656` / `live_equations, track_blocks, apply_settings, frames::step` | `after(ui::rebuild)` | Update / SimSync | no | retained intra-feature function edge; Local producer data reaches its consumer before reading/drawing. |
+| `lesson/mod.rs:661` / `selection::follow` | `before(playback)` | Update / SimSync | no | retained intra-feature function edge; Local producer data reaches its consumer before reading/drawing. |
+| `phenomena/mod.rs:114` / `keys → buttons → slider` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `place_view.rs:138` / `keys` | `after(actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `robot/hardware/actions.rs:410` / `buttons → jog_buttons → keys → window_loss → sliders` | `after(actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+| `robot/hardware/actions.rs:411` / `hardware::actions::apply` | `after(super::super::actions::apply)` | Update / Actions | no | same after RobotSet::Actions; Robot system_ui passes hardware action before hardware drains it. |
+| `robot/hardware/mirror_panel.rs:35` / `mirror_sync` | `before(crate::robot::apply_frames)` | Update / SimSync | no | same before RobotSet::Frames; Mirror changes before poses; synchronization reads posed links after. |
+| `robot/hardware/sync_panel.rs:58` / `sync_frames` | `after(crate::robot::apply_frames)` | Update / SimSync | no | same after RobotSet::Frames; Mirror changes before poses; synchronization reads posed links after. |
+| `robot/mod.rs:202` / `gait_path_input … actions::buttons chain` | `after(crate::app::actions::serve)` | Update / Input | yes | InputSet::Rest → Window (membership); REST writes actions before window input; original chain retained. |
+
+
+**Remaining edges (by reading):** 13 function targets, 11 qualified and two
+bare, on 11 source lines (the original qualified-path grep matches nine
+lines). All are intra-feature: builder placement::update,
+placement::apply_preview, discussion::hover, markers::sync, ui::rebuild_panel
+(five); CAD numeric::entry at pick and transform, calibrate::escape at
+threads, data::sync at robot/tools, numeric::entry at surfaces and local
+sketch-plane sync (six); lesson ui::rebuild and playback (two). Thus 99 of
+the 112 original occurrences are replaced or redundant, and zero serve
+function ordering edges remain. Public set ordering calls are excluded
+from these function counts.
+
+**Small gaps:** PhysicsLabel stores a stable key and occurrence number.
+The existing visible-label pass reconciles Node/Text in place, using
+set_if_neq; only absent/new visible labels despawn/spawn. The existing
+rounded text, 0.25-second live refresh, easing, collision slots, fixed-width
+value allowance and viewport refusal rules remain. Selection's shared
+actions::apply receives the same messages, in-flight state, replies,
+selection and registry as five system parameters; outcomes/refusals are
+unchanged. FieldMsg derives Message using the pinned macro.
+
+**Review and verification:** Five reviewer areas cover app/Input,
+robot/hardware, CAD, inspect/builder/lesson/kit/small gaps, and guard/docs.
+All checks are by reading, not executed workflow parity or compile evidence.
+Review findings fixed: the guard resolves glob reexports and lexical import
+scopes, a stale next-epic paragraph now names cad-components, and label
+children use explicit `for &child in children` (IntoIterator for &Children)
+to avoid confusing its borrowed iterator with RelationshipTarget::iter.
+All five reviewer areas reported no remaining findings after these fixes.
+The windowless app/ordering_tests graph calls the production configure
+helpers and materializes the public sets with no-op producers/consumers,
+including the spatial/camera, CAD mesh, robot frame and PreUpdate picker
+chains. It checks schedule initialization when run; it has not run here.
+The source guard ignores comments/literals/test items, resolves use trees,
+aliases and glob reexports, and scans tuple/multiline targets; its allowlist
+is empty. Its own fixture includes the old bare update_parts glob-import
+regression. Existing camera and app tests were split without changing
+test bodies so every Rust source file is at most 750 physical lines.
+
+Required verification, deliberately pending under this run's reading-only
+rule (these are future checks, not receipts):
+
+- [ ] `cargo build -p sim-spatial --lib --tests --bins` with no warnings.
+- [ ] `cargo test -p sim-spatial --lib --bins` including the source guard
+      and windowless schedule tests.
+- [x] Read each removed edge against its singleton set or Input chain;
+      no effective relation changes identified.
+- [x] Read hardware STOP and jog-release predicates: unchanged and
+      ungated by text focus; existing chain and REST/action order retained.
+- [x] Read pinned Bevy 0.19.1 derives, configure_sets, in_set, chain,
+      schedule initialization, Message, Children and set_if_neq signatures.
+- [x] Source size and whitespace inspection; no build, test, screenshot
+      or hardware operation performed.
+
+Next in the default order: **cad-components**.

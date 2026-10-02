@@ -164,8 +164,8 @@ pub(super) fn build(app: &mut App) {
         .add_systems(
             Update,
             pointer
-                .after(crate::app::actions::serve)
-                .after(super::keys::gate)
+                .in_set(crate::app::InputSet::Window)
+                .after(crate::cad::CadKeySet::Gate)
                 .after(super::numeric::entry)
                 .in_set(ViewerSet::Input)
                 .run_if(in_state(ViewerMode::Cad)),

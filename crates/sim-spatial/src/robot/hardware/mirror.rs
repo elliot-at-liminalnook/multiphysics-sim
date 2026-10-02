@@ -562,10 +562,16 @@ impl Mirror {
             values[i] = Self::saved_angle(axis, c) + delta;
             lines.push(format!("{role}: {}° from its alignment pose", degrees_text(delta)));
         }
-        if !force && self.pending.as_ref() == Some(&values) {
+        // Unchanged values with a changed line still re-solve (the line is set
+        // from the solve, with its limit check): a first alignment saved
+        // exactly at the pose the motor was shown at changes no value, only
+        // "not aligned" to "0.0° from its alignment pose". (The page skips
+        // on equal values alone and keeps the old line.)
+        let text = lines.join(" · ");
+        if !force && self.pending.as_ref() == Some(&values) && self.text == text {
             return;
         }
-        self.text = lines.join(" · ");
+        self.text = text;
         self.text_is_reading = true;
         self.solve(values);
     }

@@ -416,6 +416,10 @@ impl Study {
         })
     }
     pub fn candidate_edited(&mut self) {
+        // Inspection before reservation still influences a later held-out declaration.
+        for influenced in self.refinement_evidence.recording_exposure.values_mut() {
+            *influenced = true;
+        }
         if self.validation_seen {
             self.validation_influenced = true;
         }

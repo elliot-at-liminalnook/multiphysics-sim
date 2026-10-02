@@ -154,3 +154,12 @@ configure/widget rejection records likewise retain their rejected input projecti
 All new projection/serialization fixtures are unexecuted.
 
 Raw-input snapshots retain the current global form diagnostic explicitly, without falsely assigning it to every historical draft.
+
+## T50 extension
+
+[Controller-recording and combined-fit evidence](native-recording-fit-authoring.md)
+extends these same retained owners. The T48 exclusions above remain historical;
+controller import/setup/assignment/prediction and recording/combined fits now belong
+to the bounded T50 implementation. FPGA, electrical/power, raw sweeps, hardware
+acquisition, CAD acceptance and registry promotion remain deferred reference paths.
+T49 ordinary activation/focus was accepted in call-0378 by source review only.

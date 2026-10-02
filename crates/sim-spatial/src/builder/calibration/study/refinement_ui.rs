@@ -76,7 +76,7 @@ pub(crate) fn section(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui
         let selected=s.refinement_evidence.selections.get(role).unwrap_or(defaults);
         for t in &s.archive.trials{
             if role=="train"&&t.split!="train"||role=="validation"&&t.split=="train"{continue}
-            body.spawn(k.button(format!("{} {role}: {} · frozen {}",if selected.contains(&t.id){"✓"}else{"○"},t.id,t.split),Hit::RefineTrial{stamp,role:role.into(),id:t.id.clone(),defaults:defaults.clone()},Look::Secondary,enabled));
+            body.spawn(k.button(&format!("{} {role}: {} · frozen {}",if selected.contains(&t.id){"✓"}else{"○"},t.id,t.split),Hit::RefineTrial{stamp,role:role.into(),id:t.id.clone(),defaults:defaults.clone()},Look::Secondary,enabled));
         }
     }
     let train=s.refinement_evidence.selections.get("train").cloned().unwrap_or(default_train);

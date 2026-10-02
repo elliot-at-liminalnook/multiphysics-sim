@@ -28,3 +28,7 @@ mod tests;
 
 #[cfg(test)]
 mod refinement_lifecycle;
+
+mod recording_jobs;
+#[cfg(test)]
+mod recording_lifecycle;

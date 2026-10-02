@@ -19,7 +19,7 @@ fn finished(owner:&mut StudyOwner,operation:Operation,cancelled:bool,requested:b
     let stamp=r.stamp();let captured=r.study.clone();let document=r.document.clone();
     let outcome=Outcome{capture:Capture{study:captured.clone(),operation,runtime:sim_runtime::experiment_study::execution_identity(),captured_unix_ns:"0".into()},result:Err("fixture.analysis: deliberate incomplete attempt".into()),cancelled};
     owner.next_job+=1;let id=owner.next_job;
-    owner.pending.push(PendingJob{id,kind:JobKind::Refinement,stamp:Some(stamp),document,source:"fixture archive".into(),trial_ids:vec![],launch:json!({"captured_revision":stamp.revision}),cancel_requested:requested,job:Job::finished(id,Ok(JobOutput::Refined(outcome))),selection_epoch:owner.selection_epoch,gate:None,captured:Some(captured)});
+    owner.pending.push(PendingJob{id,kind:JobKind::Refinement,stamp:Some(stamp),document,source:"fixture archive".into(),trial_ids:vec![],launch:json!({"captured_revision":stamp.revision}),cancel_requested:requested,job:Job::finished(id,Ok(JobOutput::Refined{inputs:outcome.capture.inputs(),outcome})),selection_epoch:owner.selection_epoch,gate:None,captured:Some(captured)});
     id
 }
 #[test]

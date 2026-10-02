@@ -18,6 +18,8 @@ pub enum StudyAction {
     Evaluate { stamp:StudyStamp, set:EvaluationSelection },
     RefineApply { stamp:StudyStamp, command:refinement::Command },
     RefineRun { stamp:StudyStamp, operation:refinement::Operation },
+    ImportRecording { stamp:StudyStamp, path:String },
+    FitCombined { stamp:StudyStamp, additional_path:Option<String> },
     Cancel { job:u64 },
     Save { stamp:StudyStamp, path:String },
     Export { stamp:StudyStamp, path:String },
@@ -25,7 +27,7 @@ pub enum StudyAction {
     Status,
 }
 impl Action for StudyAction {
-    fn commands()->Vec<Spec> { vec![actions::spec("system_measured_study",actions::BUILDER,json!({"op":"status"}),"Offline retained measured-PWM authoring. Typed operations open_archive/open_review/choose/apply/evaluate/refine_apply/refine_run/cancel/save/export/status. Apply commands use shared experiment_study validation; all scoped operations require stamp {id,revision}. Publication creates new destinations only; accepted jobs return an id and retain receipts.")] }
+    fn commands()->Vec<Spec> { vec![actions::spec("system_measured_study",actions::BUILDER,json!({"op":"status"}),"Offline retained measured-PWM authoring. Typed operations open_archive/open_review/choose/apply/evaluate/refine_apply/refine_run/import_recording/fit_combined/cancel/save/export/status. Apply commands use shared experiment_study validation; all scoped operations require stamp {id,revision}. Publication creates new destinations only; accepted jobs return an id and retain receipts.")] }
     fn parse(c:&sim_api::Command)->Result<Self,String> {
         if c.command=="system_ui" {
             let a=&c.args["action"];
@@ -82,7 +84,7 @@ pub fn handle_with_inputs(owner:&mut StudyOwner, registry:&DocumentRegistry, act
     if matches!(action,StudyAction::Status) { return Outcome::Done(apply_action(owner,registry,action)); }
     let result=apply_action_with_inputs(owner,registry,action,inputs);
     if let Err(error)=&result {
-        let stamp=match action {StudyAction::RefineApply{stamp,..}|StudyAction::RefineRun{stamp,..}=>Some(*stamp),_=>None};
+        let stamp=match action {StudyAction::RefineApply{stamp,..}|StudyAction::RefineRun{stamp,..}|StudyAction::ImportRecording{stamp,..}|StudyAction::FitCombined{stamp,..}=>Some(*stamp),_=>None};
         if let Some(stamp)=stamp {
             if let Some(retained)=owner.get_mut(stamp.id) {
                 jobs::retain_durable(&mut retained.study,"native_refinement_rejections",json!({"stamp":stamp,"action":action,"error":error}));
@@ -112,11 +114,11 @@ fn apply_action_with_inputs(owner:&mut StudyOwner,registry:&DocumentRegistry,act
             // Full status includes traces from every retained archive, irrespective
             // of its current filter. Record that held-out exposure before returning.
             for retained in &mut owner.studies {
-                let seen=retained.study.validation_seen;
+                let exposure=super::state::ReviewExposure::capture(&retained.study);
                 let ids=retained.study.archive.trials.iter().map(|t|t.id.clone()).collect::<Vec<_>>();
                 commands::expose(&mut retained.study,&ids);
                 refinement::expose_review(&mut retained.study);
-                if retained.study.validation_seen!=seen {retained.revision+=1;owner.changed+=1;}
+                if super::state::ReviewExposure::capture(&retained.study)!=exposure {retained.revision+=1;owner.changed+=1;}
             }
             return Ok(owner.snapshot());
         }
@@ -128,11 +130,11 @@ fn apply_action_with_inputs(owner:&mut StudyOwner,registry:&DocumentRegistry,act
         }
         StudyAction::Choose{id}=>{
             let s=owner.get_mut(*id).ok_or("study.id: unknown retained study")?;
-            let seen=s.study.validation_seen;
+            let exposure=super::state::ReviewExposure::capture(&s.study);
             let ids=commands::filtered_ids(&s.study);
             commands::expose(&mut s.study,&ids);
             refinement::expose_review(&mut s.study);
-            if s.study.validation_seen!=seen { s.revision+=1; }
+            if super::state::ReviewExposure::capture(&s.study)!=exposure { s.revision+=1; }
             owner.active=Some(*id);owner.selection_epoch+=1;
         }
         StudyAction::Apply{stamp,command}=>{
@@ -143,6 +145,12 @@ fn apply_action_with_inputs(owner:&mut StudyOwner,registry:&DocumentRegistry,act
         }
         StudyAction::RefineApply{stamp,command}=>{
             checked(owner,registry,*stamp)?;
+            // Sample/source/dataset validation belongs in jobs for every recording
+            // authoring consumer, including typed REST payloads and rendered controls.
+            if matches!(command,refinement::Command::ImportRecording{..}|refinement::Command::SelectRecording{..}|refinement::Command::SetPredictionPurpose(_)|refinement::Command::AppendContext{..}|refinement::Command::AssignRecording{..}|refinement::Command::UseRecordingFit{..}) {
+                let id=super::recording_jobs::start_command(owner,*stamp,command.clone())?;
+                return Ok(json!({"job":id,"message":"Validating immutable recording authoring inputs in a retained job"}));
+            }
             let retained=owner.get_mut(stamp.id).ok_or("study.id: missing retained study")?;
             refinement::apply(&mut retained.study,command.clone())?;
             retained.revision+=1;
@@ -151,6 +159,16 @@ fn apply_action_with_inputs(owner:&mut StudyOwner,registry:&DocumentRegistry,act
             checked(owner,registry,*stamp)?;
             let id=jobs::start_refinement(owner,*stamp,operation.clone())?;
             return Ok(json!({"job":id,"message":"Running shared refinement from immutable captured inputs; results never adopt candidates automatically"}));
+        }
+        StudyAction::ImportRecording{stamp,path}=>{
+            checked(owner,registry,*stamp)?;
+            let id=super::recording_jobs::start_import(owner,*stamp,path)?;
+            return Ok(json!({"job":id,"message":"Reading and validating captured recording in a retained job; FPGA workflows remain deferred"}));
+        }
+        StudyAction::FitCombined{stamp,additional_path}=>{
+            checked(owner,registry,*stamp)?;
+            let id=super::recording_jobs::start_combined(owner,*stamp,additional_path.clone())?;
+            return Ok(json!({"job":id,"message":"Loading optional saved-study provenance and fitting frozen captured datasets in a retained job"}));
         }
         StudyAction::Evaluate{stamp,set}=>{
             checked(owner,registry,*stamp)?;

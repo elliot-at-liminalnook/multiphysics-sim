@@ -9,15 +9,12 @@ use std::{collections::BTreeMap, sync::atomic::AtomicBool};
 
 pub enum Outcome {
     Shared(sim_runtime::experiment_study::refinement::Outcome),
-    RecordingFit(data::RecordingFitAttempt),
-    CombinedFit(data::CombinedFitAttempt),
     Recording(recording::Recording),
     FpgaRecording(sim_runtime::controller_refinement::fpga::Recording),
     FpgaReview(sim_runtime::controller_refinement::fpga_review::Review),
     FpgaDesign(sim_runtime::controller_refinement::fpga_design::Run),
     FpgaPlanSaved(String),
     FpgaFit(sim_runtime::controller_refinement::fpga_review::FitAttempt),
-    Prediction(recording::Prediction),
     Electrical(sim_runtime::controller_refinement::electrical_measurements::Evaluation),
     Proposal(cad::Proposal),
     Accepted(cad::Acceptance),
@@ -197,89 +194,31 @@ impl Action {
                 measurements.validate_recording(r)?;
                 electrical::evaluate(&measurements, p).map(Outcome::Electrical)
             }
-            Self::FitCombined {
-                mut selected,
-                additional_study,
-            } => {
-                use data::CalibrationData;
-                let mut archives = vec![s.archive.clone()];
-                if !additional_study.trim().is_empty() {
-                    let extra = Study::load(std::path::Path::new(additional_study.trim()))?;
-                    // Additional trials retain all repetitions for the controller device.
-                    selected.extend(
-                        extra
-                            .archive
-                            .trials
-                            .iter()
-                            .filter(|t| t.device == w.experiment.device)
-                            .map(|t| t.id.clone()),
-                    );
-                    archives.push(extra.archive);
-                }
-                let recordings = if w.recording_assignments.is_empty() {
-                    None
-                } else {
-                    Some(data::RecordingDataset::capture(
-                        &w.recordings,
-                        &w.recording_assignments,
-                    )?)
+            Self::FitCombined { selected, additional_study } => {
+                use sim_runtime::experiment_study::refinement::{self as shared, Command, Operation};
+                let additional = if additional_study.trim().is_empty() { None } else {
+                    Some(Box::new(Study::load(std::path::Path::new(additional_study.trim()))?))
                 };
-                if let Some(r) = &recordings {
-                    selected.extend(r.assignments.iter().map(|a| a.recording_hash.clone()));
-                }
-                let dataset = data::CombinedDataset {
-                    archives,
-                    recordings,
+                let mut snapshot=s;
+                shared::validate_archive_selection(&snapshot,&selected,"refinement.fit_combined.selected")?;
+                let train=selected.iter().filter(|id|snapshot.archive.trials.iter().any(|t|&t.id==*id&&t.split=="train")).cloned().collect();
+                let validation=selected.iter().filter(|id|snapshot.archive.trials.iter().any(|t|&t.id==*id&&t.split!="train")).cloned().collect();
+                shared::apply(&mut snapshot,Command::SetSelection{kind:"train".into(),ids:train})?;
+                shared::apply(&mut snapshot,Command::SetSelection{kind:"validation".into(),ids:validation})?;
+                if let Some(extra)=additional.as_deref(){shared::recordings::reserve_additional(&mut snapshot,extra)?;}
+                let operation=Operation::FitCombined{additional};
+                let rejected=operation.clone();
+                let capture=match shared::prepare(&mut snapshot,operation) {
+                    Ok(capture)=>capture,
+                    Err(error)=>return Ok(Outcome::Shared(shared::Outcome{capture:shared::Capture{study:snapshot,operation:rejected,runtime:sim_runtime::experiment_study::execution_identity(),captured_unix_ns:std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|e|e.to_string())?.as_nanos().to_string()},result:Err(error),cancelled:false})),
                 };
-                let cases = dataset.cases()?;
-                let request = cal::FitRequest {
-                    model: family,
-                    coordinates: w.coordinates.clone(),
-                    training_ids: cases
-                        .iter()
-                        .filter(|c| selected.contains(&c.id) && c.split == "train")
-                        .map(|c| c.id.clone())
-                        .collect(),
-                    validation_ids: cases
-                        .iter()
-                        .filter(|c| selected.contains(&c.id) && c.split != "train")
-                        .map(|c| c.id.clone())
-                        .collect(),
-                    maximum_evaluations: 40,
-                    validation_influenced: true,
-                };
-                let attempt = cal::attempt(&dataset, &request, cancel, progress);
-                Ok(Outcome::CombinedFit(data::CombinedFitAttempt {
-                    dataset,
-                    attempt,
-                }))
+                shared::execute(capture,cancel,progress).map(Outcome::Shared)
             }
             Self::FitRecordings => {
-                let dataset =
-                    data::RecordingDataset::capture(&w.recordings, &w.recording_assignments)?;
-                let request = cal::FitRequest {
-                    model: family,
-                    coordinates: w.coordinates.clone(),
-                    training_ids: dataset
-                        .assignments
-                        .iter()
-                        .filter(|a| a.role == data::Role::Train)
-                        .map(|a| a.recording_hash.clone())
-                        .collect(),
-                    validation_ids: dataset
-                        .assignments
-                        .iter()
-                        .filter(|a| a.role == data::Role::HeldOut)
-                        .map(|a| a.recording_hash.clone())
-                        .collect(),
-                    maximum_evaluations: 40,
-                    validation_influenced: true,
-                };
-                let attempt = cal::attempt(&dataset, &request, cancel, progress);
-                Ok(Outcome::RecordingFit(data::RecordingFitAttempt {
-                    dataset,
-                    attempt,
-                }))
+                use sim_runtime::experiment_study::refinement::{self as shared, Operation};
+                let mut snapshot=s;
+                let capture=shared::prepare(&mut snapshot,Operation::FitRecordings)?;
+                shared::execute(capture,cancel,progress).map(Outcome::Shared)
             }
             Self::Propose(path) => {
                 let source: serde_json::Value =
@@ -310,48 +249,32 @@ impl Action {
             )
             .map(Outcome::Accepted),
             Self::Import(path) => {
-                let value: serde_json::Value =
-                    serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?)
-                        .map_err(|e| e.to_string())?;
-                if value.get("plan").is_some() {
-                    let r: sim_runtime::controller_refinement::fpga::Recording =
-                        serde_json::from_value(value).map_err(|e| e.to_string())?;
-                    r.validate_capture()?;
-                    if w.fpga_recordings
-                        .iter()
-                        .any(|source| source.fingerprint() == r.fingerprint())
-                    {
-                        return Err("This FPGA recording is already imported".into());
+                use sim_runtime::experiment_study::refinement::recordings::{classify,ImportClassification};
+                let bytes=std::fs::read(&path).map_err(|e|format!("refinement.import.path: {e}"))?;
+                match classify(&bytes)? {
+                    ImportClassification::Controller(r) => {
+                        // Application uses the shared transactional owner in the result consumer.
+                        let mut validated=s.clone();
+                        sim_runtime::experiment_study::refinement::apply(&mut validated,
+                            sim_runtime::experiment_study::refinement::Command::ImportRecording{recording:r.clone()})?;
+                        Ok(Outcome::Recording(r))
                     }
-                    return Ok(Outcome::FpgaRecording(r));
+                    ImportClassification::FpgaDeferred => {
+                        let r:sim_runtime::controller_refinement::fpga::Recording=serde_json::from_slice(&bytes).map_err(|e|format!("refinement.import.fpga: {e}"))?;
+                        r.validate_capture()?;
+                        if w.fpga_recordings.iter().any(|source|source.fingerprint()==r.fingerprint()) {
+                            return Err("This FPGA recording is already imported".into());
+                        }
+                        Ok(Outcome::FpgaRecording(r))
+                    }
                 }
-                let r: recording::Recording =
-                    serde_json::from_value(value).map_err(|e| e.to_string())?;
-                r.validate()?;
-                Ok(Outcome::Recording(r))
             }
             Self::Predict(i, purpose) => {
-                let limits = w
-                    .recording_assignments
-                    .iter()
-                    .find(|a| a.recording_hash == w.recordings[i].fingerprint())
-                    .map(|a| a.limits.clone())
-                    .or_else(|| s.limits.clone())
-                    .unwrap_or(sim_runtime::experiment_comparison::Limits {
-                        rmse: 3.
-                            * sim_runtime::experiment_comparison::hx_archive::ENCODER_QUANTUM_RAD,
-                        final_abs_error: 5.
-                            * sim_runtime::experiment_comparison::hx_archive::ENCODER_QUANTUM_RAD,
-                    });
-                recording::predict(
-                    &w.recordings[i],
-                    &s.draft,
-                    purpose,
-                    &limits,
-                    cancel,
-                    progress,
-                )
-                .map(Outcome::Prediction)
+                use sim_runtime::experiment_study::refinement::{self as shared,Operation};
+                let hash=w.recordings.get(i).ok_or("refinement.predict.recording: missing recording")?.fingerprint();
+                let mut snapshot=s;
+                let capture=shared::prepare(&mut snapshot,Operation::PredictRecording{recording_hash:hash,purpose})?;
+                shared::execute(capture,cancel,progress).map(Outcome::Shared)
             }
             Self::Simulate | Self::Sensitivity(_) | Self::Fit(_,_) | Self::Robustness => unreachable!("shared operation dispatched above"),
         }
@@ -395,7 +318,10 @@ impl State {
         self.selected_recording = 0;
     }
     pub fn show(&mut self, ui: &mut egui::Ui, s: &mut Study, busy: bool) -> (Option<Action>, bool) {
-        let exposure_before=s.validation_seen;
+        if let Some(hash)=&s.refinement_evidence.selected_recording {
+            if let Some(index)=s.refinement.recordings.iter().position(|r|r.fingerprint()==*hash) {self.selected_recording=index;}
+        }
+        let exposure_before=sim_runtime::experiment_study::refinement::ReviewExposure::capture(s);
         sim_runtime::experiment_study::refinement::expose_review(s);
         let original = s.clone();
         let before = serde_json::to_vec(&(
@@ -403,10 +329,12 @@ impl State {
             &s.refinement.coordinates,
             &s.refinement.scenarios,
             &s.refinement.capture_contexts,
+            &s.refinement.recording_assignments,
             &s.refinement.fpga_design_drafts,
+            &s.refinement_evidence.selected_recording,
         ))
         .unwrap();
-        let mut changed = exposure_before!=s.validation_seen;
+        let mut changed = exposure_before!=sim_runtime::experiment_study::refinement::ReviewExposure::capture(s);
         let mut action = None;
         ui.horizontal(|ui| {
             for (i, label) in [
@@ -541,11 +469,11 @@ impl State {
                     for (kind,i,attempt) in s.refinement.recording_fits.iter().enumerate().map(|(i,r)|("Command-history",i,&r.attempt)).chain(s.refinement.combined_fits.iter().enumerate().map(|(i,r)|("Combined",i,&r.attempt))){ui.push_id((kind,i),|ui|{ui.collapsing(format!("{kind} fit {} · {} evaluations",i+1,attempt.evaluations.len()),|ui|{
                         if let Some(error)=&attempt.failure{ui.colored_label(Color32::DARK_RED,error);}
                         if let Some(fit)=&attempt.outcome{ui.label(&fit.status);ui.label(format!("{} tuning / {} validation trials",fit.training_ids.len(),fit.validation_ids.len()));if fit.validation_influenced{ui.small("Inspected validation data: fresh confirmation still required.");}for score in &fit.scores{ui.label(format!("{} · ID {} · {} · {:.8} → {:.8} rad RMS",score.id,score.device,score.split,score.baseline.as_ref().map(|s|s.rmse).unwrap_or(f64::NAN),score.candidate.as_ref().map(|s|s.rmse).unwrap_or(f64::NAN)));if let Some(score)=&score.candidate{ui.colored_label(if score.passes{Color32::DARK_GREEN}else{Color32::DARK_RED},if score.passes{"PASS captured limits"}else{"FAIL captured limits"});}if let Some(error)=&score.failure{ui.colored_label(Color32::DARK_RED,error);}}
-                            if ui.button("Use this candidate for selected controller device").clicked(){adopted=Some(fit.candidate.clone());}
+                            if ui.button("Use this candidate for selected controller device").clicked(){adopted=Some((if kind=="Combined" {"combined"} else {"recording"},i));}
                         }
                         ui.collapsing("Frozen dataset, request and objective history",|ui|{let json=if kind=="Combined"{serde_json::to_string_pretty(&s.refinement.combined_fits[i])}else{serde_json::to_string_pretty(&s.refinement.recording_fits[i])};ui.monospace(json.unwrap());});
                     });});}
-                    if let Some(family)=adopted{match family.model(s.refinement.experiment.device){Ok(model)=>{s.draft=model;s.candidate_edited();changed=true;},Err(e)=>s.refinement.failures.push(e)}}
+                    if let Some((kind,index))=adopted{let device=s.refinement.experiment.device;match sim_runtime::experiment_study::refinement::apply(s,sim_runtime::experiment_study::refinement::Command::UseRecordingFit{kind:kind.into(),index,device:Some(device)}){Ok(())=>changed=true,Err(e)=>s.refinement.failures.push(e)}}
 
                 }
                 3=>{
@@ -628,14 +556,32 @@ impl State {
             if s.refinement.experiment != original.refinement.experiment { shared::apply(&mut validated,Command::SetExperiment(s.refinement.experiment.clone()))?; }
             if serde_json::to_value(&s.refinement.coordinates).unwrap() != serde_json::to_value(&original.refinement.coordinates).unwrap() { shared::apply(&mut validated,Command::SetCoordinates(s.refinement.coordinates.clone()))?; }
             if serde_json::to_value(&s.refinement.scenarios).unwrap() != serde_json::to_value(&original.refinement.scenarios).unwrap() { shared::apply(&mut validated,Command::SetScenarios(s.refinement.scenarios.clone()))?; }
+            if let Some(recording)=s.refinement.recordings.get(self.selected_recording) {
+                let hash=recording.fingerprint();
+                if validated.refinement_evidence.selected_recording.as_ref()!=Some(&hash) {
+                    shared::apply(&mut validated,Command::SelectRecording{recording_hash:hash})?;
+                }
+            }
+            if !s.refinement.capture_contexts.starts_with(&original.refinement.capture_contexts) { return Err("refinement.capture_contexts: immutable revisions cannot be replaced".into()); }
+            validated.refinement.capture_contexts=original.refinement.capture_contexts.clone();
+            for context in s.refinement.capture_contexts.iter().skip(original.refinement.capture_contexts.len()) {
+                shared::apply(&mut validated,Command::AppendContext{context:context.clone()})?;
+            }
+            if !s.refinement.recording_assignments.starts_with(&original.refinement.recording_assignments) { return Err("refinement.recording_assignments: frozen assignments cannot be replaced".into()); }
+            validated.refinement.recording_assignments=original.refinement.recording_assignments.clone();
+            for assignment in s.refinement.recording_assignments.iter().skip(original.refinement.recording_assignments.len()) {
+                shared::apply(&mut validated,Command::AssignRecording{assignment:assignment.clone()})?;
+            }
             Ok(())
         })();
         if let Err(error) = result {
-            let rejected=serde_json::json!({"experiment":s.refinement.experiment,"coordinates":s.refinement.coordinates,"scenarios":s.refinement.scenarios});
+            let rejected=serde_json::json!({"experiment":s.refinement.experiment,"coordinates":s.refinement.coordinates,"scenarios":s.refinement.scenarios,"capture_contexts":s.refinement.capture_contexts,"recording_assignments":s.refinement.recording_assignments});
             s.refinement.failures.push(format!("Legacy rejected authoring projection {rejected}: {error}"));
             s.refinement.experiment=original.refinement.experiment;
             s.refinement.coordinates=original.refinement.coordinates;
             s.refinement.scenarios=original.refinement.scenarios;
+            s.refinement.capture_contexts=original.refinement.capture_contexts;
+            s.refinement.recording_assignments=original.refinement.recording_assignments;
             s.refinement.failures.push(error);
             changed=true;
         } else {
@@ -649,7 +595,9 @@ impl State {
                     &s.refinement.coordinates,
                     &s.refinement.scenarios,
                     &s.refinement.capture_contexts,
+                    &s.refinement.recording_assignments,
                     &s.refinement.fpga_design_drafts,
+                    &s.refinement_evidence.selected_recording,
                 ))
                 .unwrap()
                     != before,
@@ -779,6 +727,7 @@ mod tests {
         let mut study = Study::new(archive).unwrap();
         let r:recording::Recording=serde_json::from_slice(&std::fs::read(repository.join("examples/actuators/hx30hm/hardware/2026-09-13-controller-refinement/controller-id4/recording.json")).unwrap()).unwrap();
         r.validate().unwrap();
+        study.refinement_evidence.selected_recording=Some(r.fingerprint());
         study.refinement.recordings.push(r);
         let path=repository.join("examples/actuators/hx30hm/hardware/2026-09-13-controller-refinement/fpga-control/nine-faster-7p5pct-validation/fpga-recording.json");
         let imported = Action::Import(path.display().to_string())
@@ -837,3 +786,7 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path="recording_tests.rs"]
+mod recording_tests;

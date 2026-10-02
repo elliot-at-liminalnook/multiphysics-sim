@@ -20,11 +20,13 @@ pub(crate) fn register(app:&mut App) {
     app.init_resource::<StudyUi>()
         .add_text_field(super::forms::FIELD,TextField::new("Measured study field").enter(EnterKey::ShiftNewline))
         .add_systems(Update,super::forms::input.in_set(InputSet::Window).in_set(ViewerSet::Input))
+        .add_systems(Update,recording_chart::receive.in_set(ViewerSet::JobResults))
+        .add_systems(Update,recording_chart::request.in_set(ViewerSet::SimSync))
         .add_systems(Update,refinement_chart::receive.in_set(ViewerSet::JobResults))
         .add_systems(Update,refinement_chart::request.in_set(ViewerSet::SimSync))
         .add_systems(Update,chart::receive.in_set(ViewerSet::JobResults))
         .add_systems(Update,chart::request.in_set(ViewerSet::SimSync))
-        .add_systems(Update,(status,collect).chain().in_set(ViewerSet::Present));
+        .add_systems(Update,(super::forms::terminal_submissions,status,collect).chain().in_set(ViewerSet::Present));
 }
 pub(crate) fn controls(ui:&StudyUi)->Vec<Value> {
     ui.rendered.iter().map(|(id,c)|json!({"id":id,"label":c.label,"enabled":c.enabled,"kind":"button","measured_study":true})).collect()
@@ -42,6 +44,8 @@ pub(crate) fn collect(buttons:Query<(Option<&ControlId>,&Hit,Option<&Enabled>,&b
             Hit::Focus{stamp,field,..}=>format!("study:field:{}:{field:?}",stamp.map(|s|s.id).unwrap_or(0)),
             Hit::Path{stamp,field,..}=>format!("study:path:{}:{field:?}",stamp.map(|s|s.id).unwrap_or(0)),
             Hit::Action(_)=>String::new(),
+            Hit::AddRecordingRow{stamp,hash,kind}=>format!("study:recording:add:{}:{hash}:{kind}",stamp.id),
+            Hit::FreezeRecording{stamp,hash}=>format!("study:recording:freeze:{}:{hash}",stamp.id),
             Hit::Discard{key}=>format!("study:discard:{key:?}"),
             Hit::RefineTrial{stamp,role,id,..}=>format!("study:refine:selection:{}:{role}:{id}",stamp.id),
             Hit::SelectedComponent{stamp}=>format!("study:link:{}",stamp.id),
@@ -84,7 +88,7 @@ pub(crate) fn section(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui
     if let Some(error)=&ui.error {body.spawn(k.text(error,size::SMALL,DANGER,0));}
     for (key,text) in &ui.drafts {
         body.spawn(k.text(format!("Retained unresolved field {:?}: {}",key,text),size::DETAIL,WARN,0));
-        body.spawn(k.button("Discard this unsent field draft",Hit::Discard{key:key.clone()},Look::Secondary,!ui.awaiting.values().any(|(k,_)|k==key)));
+        body.spawn(k.button("Discard this unsent field draft",Hit::Discard{key:key.clone()},Look::Secondary,!ui.awaiting_key(key)));
     }
     body.spawn(k.text(&owner.status,size::SMALL,TEXT,0));
     for receipt in &owner.receipts {
@@ -119,6 +123,7 @@ pub(crate) fn section(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui
     }
     candidate(body,k,ui,stamp,s,usable);
     refinement_ui::section(body,k,owner,ui,stamp,s,usable);
+    recording_ui::section(body,k,owner,ui,stamp,s,usable);
     for (name,label,value) in [("device","Device filter · 0: all",s.view.device.to_string()),("direction","Direction filter · -1 / 0 (all) / 1",s.view.direction.to_string()),("min_drive","Minimum |PWM| fraction [0…1]",s.view.min_drive.to_string()),("max_drive","Maximum |PWM| fraction [0…1]",s.view.max_drive.to_string())] {
         field(body,k,ui,stamp,Field::Filter(name),label,value,usable);
     }
@@ -289,3 +294,9 @@ pub(crate) mod refinement_ui;
 
 #[path="refinement_chart.rs"]
 pub(crate) mod refinement_chart;
+
+#[path="recording_ui.rs"]
+pub(crate) mod recording_ui;
+
+#[path="recording_chart.rs"]
+pub(crate) mod recording_chart;

@@ -20,6 +20,10 @@ execution receipts. T48 controller refinement was accepted by source review in
 call-0368 across `7c4fbd09`/`247ccfa6`; it extends those owners. Its
 [source evidence](../native-refinement-authoring.md) and
 [field inventory](../native-refinement-inventory.md) record that accepted bounded batch.
+T49 ordinary activation and focus was accepted in call-0378 across
+`11e898f7`, `6b61a495`, `090d608d`, and `72478587`. Its public modal-containment
+ordering and actual-consumer focus repairs are accepted by source review only;
+compilation, fixtures, rendering and hit testing remain unexecuted.
 
 Rust changes after the historical `aa34ef48` execution checkpoint remain
 uncompiled and unexecuted. The former opening ten-epic count was a stale dated
@@ -7146,3 +7150,28 @@ for the scheduled picking stage after one OS-request frame renders pending contr
 They inspect suspension before press emission, then use the existing observers,
 close cancellation owner, form input and continued editing/submission. All prior
 T49.1–T49.3 and outcome traces remain; fixtures and compilation are unexecuted.
+
+## Native offline controller recording authoring — T50 (2026-10-02)
+
+[T50 bounded inventory](../native-refinement-inventory.md) and
+[source evidence](../native-recording-fit-authoring.md) extend the existing
+StudyPlugin/StudyOwner/StudyUi, typed actions and adopted jobs in §§1–7. Recording
+classification/import, immutable setup revision authoring, frozen whole-run
+assignments, distinct command-replay/own-feedback prediction, recording fitting and
+optional saved-study combined fitting reuse shared runtime contracts and optimizer.
+The native path retains incomplete/deferred/rejected input and terminal evidence.
+No mode, persistence owner, physics path, feature thread or optimizer is added.
+
+Decision: retain content fingerprints as controller recording identity; shared
+code/cadence source hashes do not identify unique acquisitions. Exact duplicate
+imports preserve assignments/exposure; conflicting declarations for the same
+recording hash and dataset trial collisions refuse retargeting. Roles/limits/rationale freeze by
+recording identity and exposure/influence remain monotonic. Setup revisions append;
+CAD remains physical source of truth. Predictions require explicit comparison
+limits. Candidate use remains explicit exploratory source-linked draft authoring,
+separate from review decisions and physical-source acceptance.
+
+T50 is implementation/source-review work with written unexecuted fixtures; no
+compilation, execution, publication or GUI parity receipt is claimed. §§8–9 remain
+unchanged: Python/OCCT, browser, FPGA/electrical/power, raw sweep and hardware
+acquisition reference requirements remain. No legacy retirement is authorized.

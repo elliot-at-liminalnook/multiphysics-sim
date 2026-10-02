@@ -152,7 +152,9 @@ mod report_fixtures {
             diagnostics,
             gates,
         };
-        let path = std::env::temp_dir().join(format!(
+        // Resolve the trusted OS temporary parent: macOS may expose it through
+        // /var, while publication intentionally refuses symlink traversal.
+        let path = std::env::temp_dir().canonicalize().unwrap().join(format!(
             "cad-parity-publication-fixture-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()

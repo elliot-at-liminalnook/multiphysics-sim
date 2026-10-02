@@ -22,7 +22,7 @@
 //! bmp) is refused by name before anything is sent (`edits::image_path`).
 use super::{ReferencesArgs, ReferencesOp};
 use crate::app::actions::Act;
-use crate::app::{ViewerMode, ViewerSet};
+use crate::app::{ViewerMode};
 use crate::cad::actions::CadAction;
 use bevy::prelude::*;
 use bevy::window::FileDragAndDrop;
@@ -57,5 +57,5 @@ pub(crate) fn drops(mut events: MessageReader<FileDragAndDrop>, mode: Res<State<
 
 /// CadPlugin: [`drops`] in CAD mode only.
 pub(super) fn build(app: &mut App) {
-    app.add_systems(Update, drops.in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)));
+    app.add_systems(Update, drops.in_set(crate::app::InputSet::Window).run_if(in_state(ViewerMode::Cad)));
 }

@@ -111,7 +111,7 @@ impl Plugin for PhenomenaPlugin {
             .add_systems(
                 Update,
                 (
-                    (keys::keys.run_if(not(crate::ui_kit::text::typing)), panel::buttons, panel::slider).chain().in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input),
+                    (keys::keys.run_if(not(crate::ui_kit::text::typing)), panel::buttons, panel::slider).chain().in_set(crate::app::InputSet::Window),
                     panel::scroll.in_set(ViewerSet::SimSync),
                     (scene::render, panel::rebuild, panel::refresh, panel::chart).chain().in_set(ViewerSet::Present),
                 )

@@ -641,7 +641,7 @@ impl Plugin for LearnPlugin {
         // Keys, buttons, the timebars and slider releases write lesson actions;
         // the one handler applies them and REST's (in build and lessons:
         // without a lesson, REST is told so).
-        app.add_systems(Update, (actions::keys, actions::buttons, seek, narrate::seek, sliders).chain().in_set(crate::app::InputSet::Window).in_set(crate::app::ViewerSet::Input).run_if(open()))
+        app.add_systems(Update, (actions::keys, actions::buttons, seek, narrate::seek, sliders).chain().in_set(crate::app::InputSet::Window).run_if(open()))
             .add_systems(Update, actions::apply.in_set(crate::app::ViewerSet::Actions).run_if(in_state(crate::app::ModeScope::Builder)));
         app.add_systems(
             Update,

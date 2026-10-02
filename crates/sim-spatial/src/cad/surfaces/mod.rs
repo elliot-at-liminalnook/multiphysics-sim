@@ -318,13 +318,11 @@ pub(super) fn build(app: &mut App) {
         .add_systems(OnEnter(ModeScope::Cad), toolbar::spawn)
         .add_systems(
             Update,
-            (form::input, palette::input, input, radial::input, context_menu::input, popup_scroll, toolbar::scroll, super::keys::gate.in_set(crate::cad::CadKeySet::Gate))
+            (form::input.in_set(crate::app::InputSet::Window), palette::input.in_set(crate::app::InputSet::Window), input.in_set(crate::app::InputSet::Window), radial::input.in_set(crate::app::InputSet::Window), context_menu::input.in_set(crate::app::InputSet::Window), popup_scroll.in_set(crate::app::InputSet::Window), toolbar::scroll.in_set(crate::app::InputSet::Window), super::keys::gate.in_set(crate::cad::CadKeySet::Gate))
                 .chain()
-                .in_set(crate::app::InputSet::Window)
                 // The form's Tab focuses its first field before the numeric
                 // bar reads Tab (it stands aside while a field types).
                 .before(super::numeric::entry)
-                .in_set(ViewerSet::Input)
                 .run_if(in_state(ViewerMode::Cad)),
         )
         .add_systems(Update, (toolbar::refresh, toolbar::hint, draw, form::draw).chain().in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));

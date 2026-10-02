@@ -1,7 +1,7 @@
 //! Kit text fields and actual window controls share the typed CAD action path.
 use super::*;
 use crate::app::actions::Act;
-use crate::app::{InputSet, ViewerMode, ViewerSet};
+use crate::app::{ViewerMode};
 use crate::cad::{CadKeySet, panel::CadButton};
 use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextField, TextFieldApp, TextFocus};
 use crate::ui_kit::{Kit, Look};
@@ -16,8 +16,6 @@ pub(crate) fn build(app: &mut App) {
         .add_systems(
             Update,
             input
-                .in_set(ViewerSet::Input)
-                .in_set(InputSet::Window)
                 .in_set(CadKeySet::Focus)
                 .run_if(in_state(ViewerMode::Cad)),
         );

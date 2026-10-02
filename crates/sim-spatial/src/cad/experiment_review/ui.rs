@@ -13,8 +13,6 @@ pub(crate) fn build(a: &mut App) {
         .add_systems(
             Update,
             input
-                .in_set(crate::app::ViewerSet::Input)
-                .in_set(crate::app::InputSet::Window)
                 .in_set(crate::cad::CadKeySet::Focus)
                 .run_if(in_state(crate::app::ViewerMode::Cad)),
         );

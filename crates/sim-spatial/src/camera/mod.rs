@@ -482,7 +482,7 @@ impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         actions::register::<CameraAction>(app);
         configure_sets(app);
-        app.add_systems(Update, input::keys.in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input).run_if(not(crate::ui_kit::text::typing)))
+        app.add_systems(Update, input::keys.in_set(crate::app::InputSet::Window).run_if(not(crate::ui_kit::text::typing)))
             .add_systems(Update, apply::apply.in_set(ViewerSet::Actions))
             .add_systems(Update, viewport::viewport.in_set(CameraSet::Viewport))
             .add_systems(Update, input::navigate.in_set(CameraSet::Navigate))

@@ -340,7 +340,7 @@ impl Plugin for SpatialViewerPlugin {
             .add_systems(OnEnter(ModeScope::Inspect), (setup_scene, setup_ui))
             .add_systems(OnEnter(ModeScope::Builder), (setup_scene, setup_ui))
             // Buttons, keys, the notes panel and the overlay bar write the view's actions.
-            .add_systems(Update, (inspect::input, notes::clicks, physics_view::overlay_clicks).chain().in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input).run_if(in_state(SpatialScreen)))
+            .add_systems(Update, (inspect::input, notes::clicks, physics_view::overlay_clicks).chain().in_set(crate::app::InputSet::Window).run_if(in_state(SpatialScreen)))
             .add_systems(Update, inspect::apply.in_set(ViewerSet::Actions).run_if(in_state(SpatialScreen)))
             // Inspect's shared selection, shown (and re-checked after a
             // reload): after the notes' navigation, before the link's
@@ -353,19 +353,17 @@ impl Plugin for SpatialViewerPlugin {
                 Update,
                 // The layout first: the camera's data (bounds, view area)
                 // goes to the shared camera before it sets the viewport.
-                (notes::update.in_set(InspectViewSet::Notes), buttons, linked::sync_link.in_set(InspectViewSet::Link), animation::sync_live, update_layout, sync_camera.in_set(InspectViewSet::Camera))
+                (notes::update.in_set(InspectViewSet::Notes), buttons.in_set(ViewerSet::SimSync), linked::sync_link.in_set(InspectViewSet::Link), animation::sync_live.in_set(ViewerSet::SimSync), update_layout.in_set(ViewerSet::SimSync), sync_camera.in_set(InspectViewSet::Camera))
                     .chain()
                     .before(CameraSet::Viewport)
-                    .in_set(ViewerSet::SimSync)
                     .run_if(in_state(SpatialScreen)),
             )
             .add_systems(
                 Update,
                 // Then what reads the placed camera.
-                (scroll_inspector, update_parts.in_set(InspectViewSet::Parts), linked::update_nets, update_ui, draw_guides, notes::guides, animation::draw_markers)
+                (scroll_inspector.in_set(ViewerSet::SimSync), update_parts.in_set(InspectViewSet::Parts), linked::update_nets.in_set(ViewerSet::SimSync), update_ui.in_set(ViewerSet::SimSync), draw_guides.in_set(ViewerSet::SimSync), notes::guides.in_set(ViewerSet::SimSync), animation::draw_markers.in_set(ViewerSet::SimSync))
                     .chain()
                     .after(CameraSet::Place)
-                    .in_set(ViewerSet::SimSync)
                     .run_if(in_state(SpatialScreen)),
             )
             .add_systems(

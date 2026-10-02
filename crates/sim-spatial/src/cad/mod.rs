@@ -196,7 +196,7 @@ impl Plugin for CadCorePlugin {
                     analysis_overlay::receive.in_set(ViewerSet::JobResults).after(CadSet::Results),
                     topology::sync.in_set(ViewerSet::SimSync),
                     // Sketch geometry and plane frames, then the active plane follows them (cad-sketch).
-                    (sketch::cache::sync, sketch::plane::sync.in_set(CadSet::Plane)).chain().in_set(ViewerSet::SimSync),
+                    (sketch::cache::sync.in_set(ViewerSet::SimSync), sketch::plane::sync.in_set(CadSet::Plane)).chain(),
                     snapshot::publish.in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Cad)),
@@ -237,7 +237,7 @@ impl Plugin for CadPlugin {
                     // The shared camera (`crate::camera`) navigates, sets the viewport and places
                     // the view in its sets: the bounds, a node fit and the gesture gates go in
                     // before the place step (`scene::fit`), and the snapshot is taken after it.
-                    (mesh::sync.in_set(CadSet::Mesh), mesh::highlight.in_set(CadSet::Highlight), scene::fit).chain().before(crate::camera::CameraSet::Place).in_set(ViewerSet::SimSync),
+                    (mesh::sync.in_set(CadSet::Mesh), mesh::highlight.in_set(CadSet::Highlight), scene::fit.in_set(ViewerSet::SimSync)).chain().before(crate::camera::CameraSet::Place),
                     view::update.after(crate::camera::CameraSet::Place).in_set(CadSet::View),
                 )
                     .run_if(in_state(ViewerMode::Cad)),

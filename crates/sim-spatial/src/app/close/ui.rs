@@ -31,7 +31,7 @@ pub(crate) fn controls_in(world: &World) -> Vec<serde_json::Value> {
 pub(super) struct ClosePanel;
 
 pub(super) fn register(app: &mut App) {
-    app.add_systems(Update, clicks.in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input))
+    app.add_systems(Update, clicks.in_set(crate::app::InputSet::Window))
         .add_systems(Update, render.in_set(ViewerSet::Present).after(super::CloseSet::Publish));
 }
 

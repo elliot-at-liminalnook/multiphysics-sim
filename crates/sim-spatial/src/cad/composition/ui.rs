@@ -1,6 +1,6 @@
 use super::*;
 use crate::{
-    app::{InputSet, ViewerMode, ViewerSet, actions::Act},
+    app::{ViewerMode, actions::Act},
     cad::panel::CadButton,
     ui_kit::text::{EnterKey, FieldEvent, FieldId, FieldMsg, TextField, TextFieldApp, TextFocus},
     ui_kit::{Kit, Look, SUBTLE, TEXT, WARN, size},
@@ -16,9 +16,7 @@ pub(crate) fn build(app: &mut App) {
     .add_systems(
         Update,
         input
-            .in_set(InputSet::Window)
             .in_set(crate::cad::CadKeySet::Focus)
-            .in_set(ViewerSet::Input)
             .run_if(in_state(ViewerMode::Cad)),
     );
 }

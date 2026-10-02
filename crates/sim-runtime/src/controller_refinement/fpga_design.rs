@@ -98,10 +98,11 @@ impl Experiment {
     /// Export only a plan; this function never opens hardware or loads firmware.
     pub fn export_new(&self, r: &fpga::Recording, path: &std::path::Path) -> Result<(), String> {
         self.validate(r)?;
-        crate::experiment_study::write_new(
+        crate::publication::publish(
             path,
             &serde_json::to_vec_pretty(&self.plan).map_err(|e| e.to_string())?,
-        )
+            crate::publication::Policy::ImmutableNew,
+        ).into_result()
     }
 }
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]

@@ -1,15 +1,15 @@
 //! Source-reading fixtures only: no fixture was executed for this repair.
 use super::*;
-fn study() -> Study {
+pub(super) fn study() -> Study {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     Study::new(crate::experiment_comparison::hx_archive::load(&root.join("examples/actuators/hx30hm/pwm-identification"), &root).unwrap()).unwrap()
 }
-fn directory() -> std::path::PathBuf {
+pub(super) fn directory() -> std::path::PathBuf {
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
     let path = std::env::temp_dir().join(format!("study-input-fixture-{}-{nonce}", std::process::id()));
     std::fs::create_dir(&path).unwrap(); path
 }
-fn envelope(s: &mut Study, bytes: Vec<u8>) -> input_content::ContentRef {
+pub(super) fn envelope(s: &mut Study, bytes: Vec<u8>) -> input_content::ContentRef {
     let reference = s.input_contents.capture(bytes);
     s.retained_fields.entry("native_offline_job_receipts".into()).or_insert_with(|| serde_json::json!([])).as_array_mut().unwrap().push(serde_json::json!({"launch":{"additional_input":{"content_ref":reference,"error":"Retained rejection; never scored"}}}));
     reference

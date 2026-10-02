@@ -220,8 +220,13 @@ pub(super) fn land_load(owner: &mut SettingsOwner, answer: Result<jobs::Loaded, 
 
 pub(super) fn land_save(owner: &mut SettingsOwner, answer: Result<u64, String>) {
     let captured = owner.save_revision.take();
+    // Visibility can advance before its job result lands. An older result must
+    // not clear a newer durability failure or authorize the current drain.
+    let visible_floor = owner.gate.try_lock().ok().map(|gate| gate.visible_revision);
     match answer {
-        Ok(revision) if captured == Some(revision) && revision <= owner.revision && revision >= owner.saved_revision => {
+        Ok(revision) if captured == Some(revision) && revision <= owner.revision
+            && revision >= owner.saved_revision
+            && visible_floor.is_some_and(|floor| revision >= floor) => {
             // A completion acknowledges only the immutable captured snapshot.
             owner.saved_revision = revision;
             owner.publication_error = None;

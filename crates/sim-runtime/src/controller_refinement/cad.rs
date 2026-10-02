@@ -268,10 +268,11 @@ pub fn save_accepted_new(
         serde_json::from_slice(&std::fs::read(source_path).map_err(|e| e.to_string())?)
             .map_err(|e| e.to_string())?;
     let artifact = proposal.accept(&source, decision)?;
-    crate::experiment_study::write_new(
+    crate::publication::publish(
         destination,
         &serde_json::to_vec_pretty(&artifact).map_err(|e| e.to_string())?,
-    )?;
+        crate::publication::Policy::ImmutableNew,
+    ).into_result()?;
     Ok(Acceptance {
         proposal: proposal.clone(),
         decision: decision.into(),

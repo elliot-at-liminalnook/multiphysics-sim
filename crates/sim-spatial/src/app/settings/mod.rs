@@ -3,6 +3,9 @@
 pub mod actions;
 mod jobs;
 mod plugin;
+mod publication;
+#[cfg(test)]
+mod publication_fixtures;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

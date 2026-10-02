@@ -2,6 +2,7 @@
 
 use sim_core::BehaviorRegistry;
 
+pub mod publication;
 pub mod acquisition;
 pub mod actuator_registry;
 pub mod gait_playback;

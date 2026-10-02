@@ -1,13 +1,54 @@
 # Hardware front end: the operator's checklist
 
-This checklist closes epic 6 of docs/architecture/native-viewer.md (the
-hardware front end, §8 and "Hardware front end (2026-09-30)"). Agents built
-the native Leg calibration panel and checked it only by reading. **No agent
-has driven the leg.** Each step below is run by you, with the operator
-present, once in the native panel and once in the browser page, so the two
-can be compared. The feature-by-feature ledger is
-[hardware-parity.md](hardware-parity.md). Its `needs-hardware-checklist` rows
-name the step here that shows them.
+This is the pending operator checklist for the native hardware front end in
+[architecture/native-viewer.md](architecture/native-viewer.md) §8. The active
+LC1–LC3 batch covers **HW-01–HW-09 only**; HW-10–HW-16 remain reference and
+separate operator checks. The accepted verification repairs `ee17ef00` through
+`f971bedb` built the bounded touched paths and exercised virtual connection and
+idle STOP. [verification-20261002.md](verification-20261002.md) and retained
+`runs/verification-20261002-f541b05f/` do **not** establish calibration completion,
+independent CAD parity, physical behavior or acceptance of portable-study-artifacts.
+Portable work at `f541b05f` remains set aside/unaccepted. No physical step below
+was executed in the LC writing turn. The feature ledger is
+[hardware-parity.md](hardware-parity.md).
+
+The written future acceptance driver is
+[tools/native-calibration/acceptance.py](../tools/native-calibration/acceptance.py),
+with [launch/evidence instructions](../tools/native-calibration/README.md).
+**Launch path.** Three freshly built binaries:
+
+1. `hx_virtual_bench --capability-socket`.
+2. `serve_actuator_calibration CONFIG PORT --virtual-bench SOCKET`. This is the
+   calibration server, still a separate Rust process. It owns the bus and the
+   records, and it still serves the browser calibration page, which stays the
+   reference.
+3. `sim-spatial --robot-preset … --hardware <server URL>`. The native panel is a
+   client of the server; it never opens serial.
+
+The positive HW-01–HW-09 path connects the viewer directly to the server. A
+loopback identity proxy is used only in a separately labelled fixture phase with
+a second viewer. Each viewer gets an isolated config directory, so the operator's
+preferences and recent documents are never read. The driver uses an isolated
+copied virtual-only configuration and a new output directory. Evidence classes
+are kept apart: written fixtures and source review exist now; executed evidence
+needs a future authorized run. Its virtual
+results are labelled **SIMULATED**, never measured/calibrated hardware results.
+Motion authorization requires current server/bench identity and connection
+generation; physical/unknown endpoints still refuse automation. No gait, raw-step,
+live-sync or general remote-motion override is included. STOP remains available
+regardless of identity. Browser compatibility and CAD physical definitions remain.
+
+All seven batch checklist IDs remain pending future executed acceptance:
+
+| ID | Status |
+|---|---|
+| `native-leg-calibration-completion:outcome-1` | Pending HW-01–HW-09 fresh native/virtual evidence |
+| `native-leg-calibration-completion:outcome-2` | Pending physical/unknown/replacement refusal and unconditional STOP evidence |
+| `native-leg-calibration-completion:outcome-3` | Pending teaching/learning/tune/campaign limits and preserved-record evidence |
+| `native-leg-calibration-completion:outcome-4` | Written driver/run sheets; pending verified receipt |
+| `native-leg-calibration-completion:task-LC1` | Source implementation and written fixtures; execution pending |
+| `native-leg-calibration-completion:task-LC2` | Source implementation and written fixtures; execution pending |
+| `native-leg-calibration-completion:task-LC3` | Written driver/docs; fresh-binary verification pending |
 
 **The browser pages stay** (`http://127.0.0.1:4194` for calibration,
 `http://127.0.0.1:4180/walking/` for live sync) until you sign this off at the
@@ -30,7 +71,10 @@ end.
 - **Record every limit you raise** (with the reason and the previous value),
   as AGENTS.md requires. No step here needs a limit raised.
 
-Start the calibration server, as today:
+The following is a **physical operator launch reference**, not an instruction to
+execute during source work. The native viewer still requires the separate Rust
+calibration server; it does not own serial I/O. Use the already reviewed fixture
+configuration only when the operator has authorized a physical session:
 
 ```sh
 cargo build --locked -p sim-runtime --example serve_actuator_calibration
@@ -60,13 +104,16 @@ In each step, tick the result box and write down anything that differs:
 
 - **Native:** launch as above, or press Leg calibration, then Connect.
 - **Expect:** the panel opens with "Choose the motor you want to calibrate."
-  Nothing moves and no motor is energized. Server status is read every
+  Nothing moves and no motor is energized. A verified virtual connection is labelled
+  SIMULATED; physical/unknown remains labelled honestly and motion automation is
+  refused. Server status is read every
   600 ms: the position readout shows "—" until a motor is chosen (the dial
   keeps its neutral needles), and the status is never shown as stale while
   the server runs. The top bar's connection line reads
-  "http://127.0.0.1:4194 · link 1". Stop the server for
+  "http://127.0.0.1:4194 · link n" (current connection generation). Stop the server for
   3 s: the panel marks its status stale (a native addition) and still
-  nothing moves. Restart the server and press Connect.
+  nothing moves. Restart the server and press Connect. The generation changes, no earlier
+  ready/motion permission is reused, and selection is required again.
 - **Browser:** open `http://127.0.0.1:4194`, press Leg calibration.
 - **Result:** [ ] same  [ ] differs: ______
 
@@ -373,54 +420,109 @@ kill over ssh from another machine.
 
 ### HW-16 REST and system_ui refusal
 
-With the panel connected and no motor chosen:
+This reference check targets a **physical or unknown** endpoint with the panel
+connected and no motor chosen. The LC1–LC3 virtual allowlist is a deliberate
+exception for verified virtual HW-01–HW-09 only; the future driver exercises that
+exception and harmless identity fixtures without opening physical serial.
+
+Use the shared viewer batch API and poll the returned `/v1/jobs/<id>` URL:
 
 ```sh
 curl -s -H 'Content-Type: application/json' \
-  -d '{"command":"hardware","args":{"action":{"select":{"id":1}}}}' \
-  http://127.0.0.1:8421/v1/commands        # then GET /v1/jobs/<id>
-curl -s -H 'Content-Type: application/json' \
-  -d '{"command":"hardware","args":{"action":{"tune_confirm":{"on":true}}}}' \
-  http://127.0.0.1:8421/v1/commands
-curl -s -H 'Content-Type: application/json' \
-  -d '{"command":"hardware","args":{"action":{"mirror_enabled":{"on":true}}}}' \
-  http://127.0.0.1:8421/v1/commands
-curl -s -H 'Content-Type: application/json' \
-  -d '{"command":"hardware","args":{"action":{"mirror_polarity":{"id":2,"polarity":-1}}}}' \
-  http://127.0.0.1:8421/v1/commands
-curl -s -H 'Content-Type: application/json' \
-  -d '{"command":"hardware","args":{"action":{"loss":{"reason":"leaving"}}}}' \
-  http://127.0.0.1:8421/v1/commands
-curl -s -H 'Content-Type: application/json' \
-  -d '{"command":"hardware_status"}' http://127.0.0.1:8421/v1/commands
+  -d '{"commands":[{"command":"hardware","args":{"action":{"select":{"id":1}}}}],"stop_on_error":true}' \
+  http://127.0.0.1:8421/v1/batch
 ```
 
-Then the STOP check. Like HW-14, keep the viewer focused (a focus loss stops
-drive by itself): in a terminal start
-`sleep 5; curl -s -H 'Content-Type: application/json' -d '{"command":"hardware_stop"}' http://127.0.0.1:8421/v1/commands`,
-then click into the viewer, choose Worm and hold Q until it stops.
-
-- **Expect:** `select` and `tune_confirm` are refused, each naming itself:
-  "hardware `select` starts, changes or arms motion and needs an operator at
-  the window: REST and system_ui may read status, list gaits, export,
-  connect, turn the mirror on or off and STOP only". Nothing is energized
-  and the tune box stays unticked. `mirror_polarity` is refused the same
-  way (the mirror's leg, joint, polarity and alignment become the Leg/Both
-  gait bindings), and its sign in the panel is unchanged. `loss` `leaving`
-  is refused, pointing at `hardware_stop`. `mirror_enabled` is accepted
-  (display only). `hardware_status` reports the link, its age and the server status.
-  `hardware_stop` stops the held jog within a heartbeat; if the motor stopped
-  before the curl ran, focus was lost first: repeat. `system_ui` with
-  `{"action":{"operation":"controls"}}` lists the `hardware:<name>` controls
-  after robot mode's own, with the ones that start, change or arm motion
-  disabled and carrying the same refusal. Activating one
-  (`{"action":{"operation":"activate","id":"hardware:select_1","ui_revision":N}}`)
-  is refused with that text; activating an allowed control that is disabled
-  now (for example `hardware:gait_stop` with no gait playing) is refused
-  with "hardware:gait_stop is disabled: no gait is playing".
-- **Browser:** none (the page has no automation surface). Check instead that
-  the browser page still works while the viewer is refusing.
+- **Expect on physical/unknown:** `select`, tune/campaign confirmations, motion
+  values and all other motion arming requests fail with a named refusal. No motor
+  is energized and no confirmation changes. `mirror_enabled` is display-only;
+  mirror binding changes, raw step, gait play and live sync remain outside the
+  remote allowlist. `loss:leaving` is refused; use `hardware_stop` instead.
+- **STOP:** request `hardware_stop` through the same batch API. Poll its terminal
+  outcome and observe authoritative server torque-off/session termination. STOP
+  must succeed independently of the identity mismatch/refusal. A queued HTTP
+  response alone does not prove interruption.
+- **system_ui:** list with `{"action":{"operation":"controls"}}`; motion controls
+  are disabled with the same authorization reason. Activation with the current
+  `ui_revision` must fail truthfully, including eventual authoritative consumer
+  rejection; it must not acknowledge success merely because an action was queued.
+- **Verified virtual:** only in-scope calibration actions become available for the
+  current strict identity and connection generation. Disconnect, stale status,
+  identity mismatch or replacement revoke permission; reconnect does not reuse it.
+- **Browser:** the browser has no viewer automation surface. Keep its existing
+  supervised physical workflow available; the virtual exception does not change
+  the physical-browser execution policy.
 - **Result:** [ ] as expected  [ ] differs: ______
+
+## Virtual acceptance map — HW-01–HW-09 (written, not executed)
+
+This table is the contract the future driver checks against
+[tools/native-calibration/acceptance.py](../tools/native-calibration/acceptance.py).
+Everything in it is written: the driver and `fixtures.py` exist, but none of it
+has run. Control ids are `system_ui` ids (`hardware:<name>`, or `mode:<mode>`).
+REST actions are `hardware {"action": …}` batch commands polled through
+`/v1/jobs/<id>`. Every step passes only on the listed observation, never on a
+202 or a job that succeeded. Every step also retains its `http.jsonl` entries and
+its final `hardware_status` in `results.json`. A failed deadline writes
+`timeout-state-<ms>.json`.
+
+| Step | Native control ids | REST actions | Observable assertion | Extra evidence retained | Future screenshot checkpoint |
+|---|---|---|---|---|---|
+| HW-01 | `hardware:connect` | `hardware_status`, `select` (must be refused) | `url` is the owned server URL (direct, no proxy), `fidelity: virtual_simulated`, fresh age, `enabled_id: null`. The server is paused (SIGSTOP) until status is stale **and** `authorization_revoked` is true (25 s), then resumed. Revocation persists for the same generation, `select` fails with "authorization expired", and the server still has no enabled motor. Reconnect gives a new generation, no revocation, no ready session, and `hardware:select_2` is enabled again. | `execution.json`, `hw01-revoked.json`, server/viewer logs | Connection line VIRTUAL, then stale/revoked, then reconnected |
+| HW-02 | `hardware:select_1/2/3`, `hardware:set_disabled` | `hold_others {on:true}`, `drive_mode {mode:"pwm"}` | `form.hold_others == true` and `form.drive_mode == "pwm"` (preferences isolated per viewer). Each motor becomes ready. A disabled motor stays not ready when selected. After re-enabling, it is ready again. | `viewer-main-launch.json` (isolated config environment) | Disabled-motor chip |
+| HW-03 | `hardware:jog_upper`, `hardware:jog_lower` | `speed {percent:25}`, `jog_release` | Encoder moves at least 60 counts each way. Hold after release. Opposing inputs hold within 32 counts for 1 s. | per-step state | Encoder vs target trace; held/opposing |
+| HW-04 | `hardware:section_tune/campaign/mirror/advanced`, `hardware:stop` | — | `hardware:stop` listed and enabled after each section toggle. STOP ends the jog: no ready session, `enabled_id: null`, not busy. | per-step state | Top STOP visible with Tune/Campaign/Advanced open (placement is source review only today) |
+| HW-05 | `hardware:close`, `hardware:toggle_panel`, `mode:phenomena`, `mode:robot` | `loss {reason:"focus_lost"}` | Each interrupt stops drive. After close, `open: false`. After mode exit, direct server status has `enabled_id: null` and is not busy, and `hardware_status` is refused with "the active mode is phenomena". Robot re-entry reconnects idle and the form is set again. (Build needs a document, so it is not used.) | direct status polls in `http.jsonl` | Panel closed/reopened; mode switch |
+| HW-06 | `hardware:capture_lower/upper/reference`, `hardware:reset_poses`, `hardware:select_3` | `speed`, `target`, `target_commit` | After teaching, `speed`/`target` of −1 and 101 fail with "must be a number from". Targets of 25 % and 75 % are reached within 32 counts, and the commanded target lies inside the taught range minus 4 counts. Reference is non-null. Reset clears lower/upper. Motor 3 is taught. | per-step state | Three taught poses; target; reset |
+| HW-08 | `hardware:tune_confirm`, `hardware:tune`, `hardware:stop` | `target`, `target_commit` | STOP interrupts a tune. A fresh tune shows at least 2 observed stages, finite kp/ki/kd/friction, and a record file inside the output, and the confirmation clears. Repeated on motor 3. | `tune-stages.json`, tune records | Stages, then terminal gains |
+| HW-07 | `hardware:sweep`, `hardware:learn`, `hardware:sweep_all`, `hardware:stop` | `speed`, `loss` | Saved-range travel stays inside the poses. Pause holds. Focus loss keeps the poses. `session.learning_terminal` shows completion with at least 3 stops each way, ending in hold. Sweep-all shows 2 half cycles on motors 2 and 3, then ends. A second sweep-all is stopped. | `learning-terminal.json`, `sweep-all-ends.json` | Learned stops; sweep-all terminal |
+| HW-09 | `hardware:campaign_confirm`, `hardware:campaign`, `hardware:campaign_resume`, `hardware:stop` | — | A receipt is saved for each completed stage (`*.execution.json` provenance not counted). The count survives STOP. Receipt hashes are unchanged after resume. Terminal `report.json` is inside the output. Confirmation clears. | `records/` and `record_sha256` | Saved stage; STOP/resume; report |
+| LC1 | `hardware:connect`, second viewer `hardware:select_2` | `raw_step`, `gait_play`, `sync_start`, `select` | Out-of-scope actions get the remote-refusal text. Direct requests with no identity or a foreign identity get HTTP 409 "Calibration execution binding refused". STOP with the same headers returns `stop_latched: true`, `enabled_id: null`, `busy: false`. After a real server restart, the new UUID is seen, old headers get 409, and native refuses ("authorization expired") until reconnect. FIXTURE phase only: a second viewer behind the proxy presented as physical, then unknown, gets "Remote calibration requires a verified virtual" with zero crossings. | `replacement-execution.json`, `identity-fixture.jsonl`, `viewer-fixture-*.json` | — |
+
+Cleanup runs even after a failure:
+
+- The direct server STOP is decided by ownership of the server process and
+  port, sends no identity headers, and is asserted latched.
+- Native `hardware_stop` goes to each owned viewer.
+- Only the driver's own children are terminated.
+
+A timed-out job is cancelled with `DELETE /v1/jobs/<id>` before the direct STOP.
+
+## Physical operator run sheets — HW-01–HW-09
+
+These sheets are **unexecuted physical checks**, not an automated verification
+recipe. Use the fixture/FPGA/power prerequisites above, with one client at a
+time. Record the actual firmware, configuration, limits and output directory.
+These checks load no image, raise no limit and promote no CAD or registry value.
+The operator stays at the supported fixture throughout. Launch the separate Rust
+calibration server first, then the native viewer with `--hardware`. The browser
+page at the same URL is the reference comparison.
+
+**How to stop, in every step:**
+
+1. Press **Z**, **Escape** or the panel's top **Stop** button.
+2. Confirm torque-off at the fixture and in the server status (no enabled motor).
+3. If host STOP does not answer or the motor keeps moving, switch **motor power
+   off** at the supply/power switch. The FPGA supervisor STOP and watchdog stay
+   independent of the host.
+
+Never rely on a GUI acknowledgement alone. Keep all partial records.
+
+| Step | What to do | What to expect | How to stop / when to stop |
+|---|---|---|---|
+| HW-01 | Connect with motors supported. Stop the server for 3 s while idle, restart it, press Connect. | Nothing is energized. Status goes stale, then fresh with a new link generation. No motor is ready after reconnect. | Z/Escape/Stop if anything energizes; power switch if it does not stop. |
+| HW-02 | Choose Knee, Worm, Belt at zero drive. Disable Worm, choose it, then enable it. | The correct motor and readout. A disabled motor cannot move. Enabling restores it. | Stop after any wrong motor or readout. |
+| HW-03 | At slow speed, hold/release Q and A and each jog button. Hold both directions. Release the pointer outside the button. | Correct direction. Encoder follows target. Holds after release and with opposing inputs. | Stop if direction or hold differs; power switch if drive continues. |
+| HW-04 | While jogging, and during a bounded sweep/tune/campaign, use Stop, Z and Escape. Scroll every section. | Stop never scrolls away. Torque off. Session ends and needs a reselect. Partial records stay. | This step *is* the stop check; power switch if any stop fails. |
+| HW-05 | During a jog and a saved-range sweep: switch focus to another app, close the panel, toggle the header button, leave Robot mode. Once, close the viewer. | Each one stops drive. Records stay. Reopening is idle. | Z/Escape/Stop, or the power switch, if drive continues after any interrupt. |
+| HW-06 | Teach safe lower, upper and alignment while holding. Request targets inside the range. Reset and teach again. | Poses saved in this encoder session. Targets stay 4 counts inside the range. Capture is refused while moving. Reset clears the poses. | Stop on any travel toward a hard end. |
+| HW-07 | Run saved range, then Pause. Learn to completion or pause. Teach two motors, Sweep all, then STOP a second run. | Travel stays inside the poses. Learned stop counts. Both ends reached per motor. STOP interrupts with records kept. | Stop on limits or feedback disagreement; power switch if a sweep keeps running. |
+| HW-08 | Mid-travel with clearance, confirm and Tune. STOP one attempt, then confirm and Tune again. | The interrupted record is kept. Terminal gains link to a record. Confirmation clears. Limits are unchanged. | Stop on unexpected travel. Tune holds no lease, so use STOP or the power switch. |
+| HW-09 | Leg suspended. Confirm Campaign. STOP after a saved stage, confirm again, Resume. | Saved receipts are unchanged. Resume continues from them. A terminal report or an honest failure. No promotion. | STOP ends drive and keeps progress. A campaign holds no lease, so use the power switch if STOP fails. |
+
+The fuller steps above provide the browser comparison. Sign physical results
+only after observing the fixture; virtual receipts cannot satisfy physical
+expectations.
 
 ## Sign-off
 

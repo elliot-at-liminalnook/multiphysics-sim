@@ -22,7 +22,8 @@ placed in the table they belong to.
 **Status legend.**
 
 - `done`: built, tested and traced in code.
-- `done-by-reading`: written and traced by reading; not compiled or run yet.
+- `done-by-reading`: source-traced coverage; row behavior is not independently
+  accepted unless linked executed evidence explicitly covers it.
 - `needs-hardware-checklist (HW-nn)`: only the leg can show it; the step in
   [hardware-checklist.md](hardware-checklist.md) that does.
 - `deliberately-different (reason)`: the native panel differs on purpose; the
@@ -412,7 +413,62 @@ cell, up to its reason, counted with a short script; 275 unique IDs):
 | deliberately-different | 24 |
 | **total** | **275** |
 
-No row is `todo`. Nothing is `done` because nothing in the batch has been
-compiled or run yet; the verification pass moves rows to `done` as it builds
-and tests them, and the operator's checklist settles the
-`needs-hardware-checklist` rows.
+These are the historical 2026-09-30 counts, not current execution acceptance.
+The blanket claim that this code has never compiled is superseded narrowly by
+[verification-20261002.md](verification-20261002.md): accepted repairs `ee17ef00`
+through `f971bedb`, retained builds/fixtures, virtual HW-01 connection and idle
+STOP only. Compilation does not establish feature parity. HW-02–HW-09 motion,
+interruption, terminal records and physical operator checks remain unaccepted.
+Portable work at `f541b05f` remains set aside/unaccepted; bounded CAD receipts
+retain independent-parity qualification limits. No historical row is promoted
+solely by those partial receipts.
+
+
+## LC1–LC3 calibration completion source map — 2026-10-02
+
+The native Leg panel is a client of the separate Rust calibration server. No new
+mode, physics engine, persistence owner or physical property authority is added.
+HardwarePlugin owns frame input and its typed actions in public ViewerSet ordering;
+Hardware/LinkSnapshot own connection/session presentation, existing jobs own link,
+heartbeat and independent STOP work, and shared runtime acquisition owns execution
+and calibration records. CAD/registry promotion remains explicitly separate.
+
+| Responsibility | Current owner and dependency |
+|---|---|
+| Strict virtual identity / current-generation authorization | `hc/calibration.rs` execution identity/authorization; `hw/actions.rs`, `hw/handlers.rs`, `robot/actions/mod.rs` use common policy for REST and actual system_ui dispatch. |
+| Capability transport, no serial fallback | `acquisition/calibration_serial.rs::CalibrationBus::open_virtual`; `hx_virtual_bench` owns Unix socket and descriptor; `serve_actuator_calibration --virtual-bench` accepts only `serial: virtual-capability-only` and enforces matching identity at execution. Physical constructor remains separate and refused for remote motion. |
+| Rendered/input controls and interruption | `hw/panel.rs`, `panel_sections.rs`, `actions/input.rs`, `handlers.rs`, `session.rs` and `session/{buttons,beat,sequences,periodic}.rs`; `view/status.rs` exposes actual state/terminal records. Top STOP stays outside scrolling content: **source review only** (`panel.rs` `spawn` builds `top_bar` before and outside the `scroll_area`); the visual check is pending a future fresh-window screenshot/operator checkpoint (HW-04). |
+| Durable calibration/tune/campaign records and bounded motion | Shared `acquisition/calibration.rs`, `calibration_sweep.rs`, `motor_identification.rs`, `characterization.rs`; existing server worker, safety epochs, leases, PWM/travel limits and independent STOP stay authoritative. |
+| Future acceptance and harmless refusal fixtures | [driver](../tools/native-calibration/acceptance.py), [virtual config](../tools/native-calibration/server.virtual.json), [launch/evidence contract](../tools/native-calibration/README.md); actual control identities plus shared REST values, state/record assertions and retained failures. The positive HW-01–HW-09 path connects the viewer directly to the owned server; the physical/unknown identity proxy is used only by a separately labelled fixture phase with a second owned viewer. Written, unexecuted. |
+
+The scoped allowlist permits only verified virtual HW-01–HW-09 calibration.
+Loopback, a PTY pathname, a fixture label or a client boolean do not prove virtual
+execution. Stale/disconnected/replaced identities invalidate permission; reconnect
+uses a new connection generation and never restores ready motion. Matching server
+execution identity closes the authorization-to-execution replacement race; the
+server answers identity, generation, scope and lost-bench refusals with HTTP 409
+(`Calibration execution binding refused…`) and ordinary refusals with 400, and
+native revokes its pin only on transport, decode or 409 failures. STOP
+ignores motion authorization; raw step, gait and live sync stay refused remotely.
+Browser physical workflows remain available under the existing supervised policy.
+
+Native labels distinguish `virtual_simulated` from physical/unknown. Virtual
+encoders and tuned virtual responses are simulated model outputs, not newly
+measured actuator properties. The driver chooses a bounded copied campaign plan
+and records that assumption. All seven `native-leg-calibration-completion` IDs in
+[the checklist](hardware-checklist.md) remain pending fresh executed acceptance;
+source traces and written fixtures are not a completed calibration receipt.
+
+Evidence classes in this section are kept apart:
+
+- **Source review:** traced by reading the code at the cited paths. This
+  includes the STOP placement above and the 409/400 split.
+- **Written fixtures:** Rust unit/fixture tests and
+  `tools/native-calibration/fixtures.py`. They are written but not executed in
+  the LC writing turn.
+- **Future executed evidence:** a retained output directory from an authorized
+  fresh-binary run of the acceptance driver. For physical rows, the operator run
+  sheets in [hardware-checklist.md](hardware-checklist.md) are also needed.
+
+Only the third class can move a row to `done`. Physical rows also need an
+operator at the fixture.

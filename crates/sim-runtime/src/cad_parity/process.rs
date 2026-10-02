@@ -139,12 +139,65 @@ impl<B: Backend> Lifecycle<B> {
     }
 }
 struct ChildBackend {
+    // Monotonic capability loss also covers observations inside platform
+    // signal verification, which do not pass through Lifecycle::observe.
+    signal_owned: bool,
     child: Child,
     group: u32,
     epoch: Instant,
 }
+#[cfg(target_os = "macos")]
+impl ChildBackend {
+    /// XNU killpg skips zombies and returns EPERM if no live target exists.
+    /// A retained leader alone is insufficient: inaccessible live descendants
+    /// must still fail cleanup. libproc enumerates allproc AND zombproc.
+    fn zombie_only_group(&mut self) -> Result<bool, String> {
+        if !self.observe()? { return Ok(false); }
+        let first = self.group_members()?;
+        if !first.contains(&(self.group as libc::pid_t)) {
+            return Err("owned group enumeration omitted retained leader".into());
+        }
+        for &pid in &first {
+            let mut info: libc::proc_bsdinfo = unsafe { std::mem::zeroed() };
+            let size = std::mem::size_of::<libc::proc_bsdinfo>() as libc::c_int;
+            // arg=1 is required to look up zombies (XNU proc_pidinfo).
+            let got = unsafe { libc::proc_pidinfo(pid, libc::PROC_PIDTBSDINFO, 1,
+                (&mut info as *mut libc::proc_bsdinfo).cast(), size) };
+            if got != size || info.pbi_pid != pid as u32 || info.pbi_pgid != self.group {
+                return Err(format!("owned group member {pid} could not be verified: {}", std::io::Error::last_os_error()));
+            }
+            if info.pbi_status != libc::SZOMB { return Ok(false); }
+        }
+        // An original member could fork between the first enumeration and its
+        // transition to zombie. Require the complete membership to stay equal
+        // after every original member has been verified unable to fork.
+        if self.group_members()? != first {
+            return Err("owned group membership changed during zombie verification".into());
+        }
+        if !self.observe()? { return Err("retained leader exit could not be reconfirmed".into()); }
+        Ok(true)
+    }
+    fn group_members(&self) -> Result<Vec<libc::pid_t>, String> {
+        const MAX_MEMBERS: usize = 4096;
+        // One sentinel entry distinguishes a full/truncated list from a
+        // verified bounded list. Never allocate from an OS-reported count.
+        let mut pids = vec![0 as libc::pid_t; MAX_MEMBERS + 1];
+        let capacity = (pids.len() * std::mem::size_of::<libc::pid_t>()) as libc::c_int;
+        // PROC_PGRP_ONLY=2: pinned native SDK sys/proc_info.h.
+        let got = unsafe { libc::proc_listpids(2, self.group, pids.as_mut_ptr().cast(), capacity) };
+        if got <= 0 || got >= capacity || got as usize % std::mem::size_of::<libc::pid_t>() != 0 {
+            return Err(format!("owned group enumeration failed or exceeded bound: {}", std::io::Error::last_os_error()));
+        }
+        pids.truncate(got as usize / std::mem::size_of::<libc::pid_t>());
+        if pids.iter().any(|pid| *pid <= 0) { return Err("owned group enumeration contained invalid PID".into()); }
+        pids.sort_unstable();
+        if pids.windows(2).any(|pair| pair[0] == pair[1]) { return Err("owned group enumeration contained duplicate PID".into()); }
+        Ok(pids)
+    }
+}
 impl Backend for ChildBackend {
     fn observe(&mut self) -> Result<bool, String> {
+        if !self.signal_owned { return Err("child wait ownership permanently lost".into()); }
         #[cfg(unix)]
         {
             let mut info: libc::siginfo_t = unsafe { std::mem::zeroed() };
@@ -164,6 +217,7 @@ impl Backend for ChildBackend {
             if error.raw_os_error() == Some(libc::EINTR) {
                 return Ok(false);
             }
+            self.signal_owned = false;
             Err(format!(
                 "non-reaping child observation failed; ownership abandoned: {error}"
             ))
@@ -174,6 +228,7 @@ impl Backend for ChildBackend {
         }
     }
     fn signal(&mut self, signal: i32) -> Result<(), String> {
+        if !self.signal_owned { return Err("child signal ownership permanently lost".into()); }
         #[cfg(unix)]
         {
             let result = unsafe { libc::kill(-(self.group as libc::pid_t), signal) };
@@ -183,10 +238,17 @@ impl Backend for ChildBackend {
             let error = std::io::Error::last_os_error();
             // ESRCH is an empty group while the waitable leader still reserves PID.
             if error.raw_os_error() == Some(libc::ESRCH) {
-                Ok(())
-            } else {
-                Err(format!("owned group signal failed: {error}"))
+                return Ok(());
             }
+            #[cfg(target_os = "macos")]
+            if error.raw_os_error() == Some(libc::EPERM) {
+                match self.zombie_only_group() {
+                    Ok(true) => return Ok(()),
+                    Ok(false) => {},
+                    Err(reason) => return Err(format!("owned group signal failed: {error}; zombie verification: {reason}")),
+                }
+            }
+            Err(format!("owned group signal failed: {error}"))
         }
         #[cfg(not(unix))]
         {
@@ -221,6 +283,7 @@ impl OwnedProcess {
                 completion: None,
                 lifecycle: Lifecycle {
                     backend: ChildBackend {
+                        signal_owned: true,
                         group: child.id(),
                         child,
                         epoch: Instant::now(),

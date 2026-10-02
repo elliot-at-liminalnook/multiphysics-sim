@@ -108,8 +108,8 @@ pub(crate) struct CadCompositionState {
     pub drafts: Vec<Draft>,
     pub current: Option<usize>,
     pub selected: Option<String>,
-    pub pending_port: Option<ports::PendingPort>,
-    pub(super) submitted_port: Option<ports::SubmittedPort>,
+    pending_port: Option<ports::PendingPort>,
+    submitted_port: Option<ports::SubmittedPort>,
     pub imports: Option<ImportedSnapshot>,
     pub check_id: String,
     pub check_draft: String,
@@ -434,6 +434,7 @@ pub(crate) fn handle(a: &CadCompositionArgs, call: &mut Call, cx: &mut Cx) -> Ou
         Outcome::Done(result)
     }
 }
+#[cfg(test)]
 fn draft_command(
     doc: &CadDocument,
     st: &CadCompositionState,

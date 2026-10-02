@@ -17,9 +17,8 @@
 //! argument). The selected trial's archived measured and predicted traces are
 //! drawn with the shared `crate::chart` raster by [`update_chart`] when the
 //! selection or the load changes, not every frame.
-use super::ui::num;
 use super::*;
-use crate::ui_kit::{ACCENT, ACCENT_BG, Corner, DANGER, FAINT, Kit, Look, OK, SUBTLE, TEXT, Tint, WARN, size, wrap};
+use crate::ui_kit::Kit;
 use sim_runtime::experiment_comparison::Trace;
 use sim_runtime::experiment_comparison::hx_archive::{self, Archive, Trial};
 use std::path::Path;
@@ -327,6 +326,7 @@ impl Builder {
 
     /// The first visit to the Measured evidence section loads the tracked
     /// default (once: not after a load, a failure or while one is pending).
+    #[cfg(test)]
     pub(super) fn calibration_first_visit(&mut self) {
         let c = &self.calibration;
         if c.shown.is_none() && c.error.is_none() && c.pending().is_none() && c.last.is_none() {

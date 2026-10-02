@@ -175,9 +175,6 @@ impl ExperimentsState {
             .into_iter()
             .collect()
     }
-    pub(crate) fn edit_refusal(&self) -> Option<String> {
-        self.mode_blockers().into_iter().next()
-    }
 }
 pub(crate) struct CoreParts;
 impl Plugin for CoreParts {

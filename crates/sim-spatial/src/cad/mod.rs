@@ -102,7 +102,8 @@ mod lifecycle_tests;
 #[cfg(test)]
 mod tests;
 
-pub use actions::{CadAction, Dimension, MeasurePick};
+pub(crate) use actions::CadAction;
+pub use actions::{Dimension, MeasurePick};
 pub use document::{CadDocument, CadTarget, CadTool, Candidates, ChildSlot, Connection, Edit, EditDone, PollCommand, PollSnapshot, SelectMode, TreeRow};
 pub use mesh::{BODY_KINDS, CadBody, CadMeshes, MeshCounts};
 pub use ops::{FormState, OpsState};

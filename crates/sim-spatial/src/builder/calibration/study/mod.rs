@@ -8,7 +8,7 @@ pub mod ui;
 pub mod forms;
 pub mod chart;
 pub use actions::StudyAction;
-pub use state::{StudyOwner, StudyStamp, RetainedStudy};
+pub use state::{StudyOwner, StudyStamp};
 use bevy::prelude::*;
 use crate::app::{ViewerSet, actions as action_layer};
 

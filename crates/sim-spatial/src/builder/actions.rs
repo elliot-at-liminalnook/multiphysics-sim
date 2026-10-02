@@ -114,17 +114,6 @@ pub(crate) enum BuildAction {
     GaitReportSelect(String),
     /// Registry or Measured evidence part of the Actuators tab.
     ActuatorView(calibration::ActuatorView),
-    /// Type an identification archive folder (Measured evidence).
-    CalibrationPath,
-    /// Reload the current identification archive.
-    CalibrationReload,
-    CancelCalibration,
-    CalibrationSplit(calibration::SplitFilter),
-    CalibrationOutcome(calibration::OutcomeFilter),
-    /// Page of the filtered trial list (0-based).
-    CalibrationPage(usize),
-    /// Select a trial of the shown archive and chart it.
-    CalibrationTrial(String),
     /// Arrow keys and Page Up/Down: move the selection by a display-only step (metres).
     Nudge([f32; 3]),
     /// A primary click on a rendered part (`pick_part` in `inspect_view/scene.rs`; no button
@@ -321,24 +310,6 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
         }
         BuildAction::ActuatorView(view) => {
             builder.actuator_view = view;
-        }
-        BuildAction::CalibrationPath => {
-            let shown = builder.calibration.path.as_ref().map(|p| p.display().to_string()).unwrap_or_default();
-            builder.start_input(Purpose::CalibrationArchive, shown);
-        }
-        BuildAction::CalibrationReload => {
-            let r = builder.calibration_request(None);
-            builder.report(r);
-        }
-        BuildAction::CancelCalibration => {
-            builder.cancel_calibration();
-        }
-        BuildAction::CalibrationSplit(f) => builder.set_calibration_filter(Some(f), None),
-        BuildAction::CalibrationOutcome(f) => builder.set_calibration_filter(None, Some(f)),
-        BuildAction::CalibrationPage(page) => builder.set_calibration_page(page),
-        BuildAction::CalibrationTrial(id) => {
-            let r = builder.select_calibration_trial(&id);
-            builder.report(r);
         }
         BuildAction::GaitResultsPath => {
             let shown = builder.gait_lab.root.as_ref().map(|p| p.display().to_string()).unwrap_or_default();
@@ -581,7 +552,7 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
 /// Rendered source identity, retained with the panel instead of resolving a row
 /// against the current palette after REST or another action changed it.
 #[derive(Component, Clone, Debug)]
-pub(super) struct RenderStamp {
+pub(crate) struct RenderStamp {
     pub(super) document: Option<crate::document::DocumentId>,
     path: std::path::PathBuf,
     revision: u64,

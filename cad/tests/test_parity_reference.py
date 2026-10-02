@@ -122,7 +122,13 @@ def test_pose_continuation_only_publishes_validated_service_result(monkeypatch):
 
 def test_captured_source_missing_never_falls_back_to_live():
     from robocad.kernel import KernelError
+    class ForbiddenLiveDocument:
+        def __getattribute__(self, name):
+            raise AssertionError('Missing captured source must not read live document: ' + name)
     dispatcher = object.__new__(Dispatcher)
+    # Dispatcher always has a document. A sentinel preserves that constructor
+    # invariant while proving the captured owner never reads it as fallback.
+    dispatcher.doc = ForbiddenLiveDocument()
     dispatcher.captured = {}
     with pytest.raises(KernelError, match='Captured source not found'):
         dispatcher.capture({'capture': 'absent', 'action': 'geometry', 'args': {}})

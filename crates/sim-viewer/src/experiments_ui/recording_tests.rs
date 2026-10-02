@@ -43,7 +43,7 @@ fn legacy_combined_requested_unknown_ids_are_refused_before_subset_changes(){
     let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let archive=sim_runtime::experiment_comparison::hx_archive::load(&root.join("examples/actuators/hx30hm/pwm-identification"),&root).unwrap();
     let s=Study::new(archive).unwrap();
-    let error=match Action::FitCombined{selected:vec![s.archive.trials[0].id.clone(),"unknown whole trial".into()],additional_study:String::new()}.run(s,&AtomicBool::new(true),|_,_|{}) {
+    let error=match (Action::FitCombined{selected:vec![s.archive.trials[0].id.clone(),"unknown whole trial".into()],additional_study:String::new()}).run(s,&AtomicBool::new(true),|_,_|{}) {
         Err(error)=>error,Ok(_)=>panic!("unknown source identity cannot disappear"),
     };
     assert!(error.contains("refinement.fit_combined.selected")&&error.contains("unknown"));

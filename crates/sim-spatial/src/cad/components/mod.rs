@@ -123,9 +123,6 @@ impl ComponentsState {
             "A component rebuild is already in progress; wait or cancel it in Components".into()
         })
     }
-    pub(crate) fn mode_blockers(&self) -> Vec<String> {
-        self.edit_refusal().into_iter().collect()
-    }
     fn touch(&mut self) {
         self.revision += 1;
     }

@@ -39,7 +39,7 @@ fn drawn_unknown_outcome_acknowledgment_requires_fresh_source_and_keeps_refresh(
         let mut d = document();
         d.uncertain_edit = Some("RoboCAD may still apply it; refresh before retrying".into());
         match case {
-            1 => d.dirty_known_at = Some(std::time::Instant::now()),
+            1 => d.dirty_known_at = Some(d.generation),
             2 => d.stale = Some("source changed".into()),
             3 => {
                 d.connection = Connection::Lost {

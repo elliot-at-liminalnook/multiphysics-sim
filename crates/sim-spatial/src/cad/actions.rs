@@ -41,7 +41,7 @@ pub const CAD: &[ViewerMode] = &[ViewerMode::Cad];
 /// (`{"command": name, ...args}`).
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
-pub enum CadAction {
+pub(crate) enum CadAction {
     /// Internal window occurrence; never a public REST command.
     #[serde(skip)]
     Captured { source: super::activation::SourceStamp, action: Box<CadAction> },
@@ -422,7 +422,7 @@ pub(super) fn apply(
 /// What the one handler works on: the document and CAD mode's caches. The
 /// selection arms (`selection::handle`) and the tool arms
 /// (`transform::handle`) take the same context.
-pub(super) struct Cx<'a> {
+pub(crate) struct Cx<'a> {
     pub settings: &'a mut crate::app::settings::SettingsOwner,
     pub doc: &'a mut CadDocument,
     /// The one selection and the document registry (CAD's items are the

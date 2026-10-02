@@ -563,7 +563,7 @@ fn tick(doc: Option<Res<CadDocument>>, mut s: ResMut<MotionState>) {
     }
     export::poll(&mut s, Some(&d));
 }
-pub(crate) use controls::{Control, controls, controls_of};
+pub(crate) use controls::{controls, controls_of};
 pub(crate) fn key(s: &MotionState) -> String {
     format!(
         "{}:{}:{}:{}",
@@ -593,11 +593,4 @@ pub(crate) fn command_action(id: &str) -> Option<CadAction> {
         }
         .action()
     })
-}
-
-impl MotionState {
-    pub(crate) fn source_edit_refusal(&self) -> Option<String> {
-        self.active
-            .then(|| "Return from kinematic preview before editing live CAD".into())
-    }
 }

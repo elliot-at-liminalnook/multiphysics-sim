@@ -87,7 +87,7 @@ fn seeded(doc: &CadDocument, defaults: &crate::app::settings::CadDefaults, id: &
 
 #[test]
 fn the_forms_open_with_the_remembered_values() {
-    let mut doc = document();
+    let doc = document();
     let mut defaults = crate::app::settings::CadDefaults::default();
     // RoboCAD's first values: M3 clearance, 0, through; 0.2.
     assert_eq!(seeded(&doc, &defaults, "tool.fastener"), ["M3", "clearance", "0", "0", ""]);

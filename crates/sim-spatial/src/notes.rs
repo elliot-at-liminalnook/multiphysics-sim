@@ -16,7 +16,7 @@ use sim_annotate::{Comment, Thread, ThreadCommand};
 use sim_inspect::annotations as notes;
 
 mod panel;
-pub(crate) use panel::{NoteAction, NotesPanel, clicks, guides, update};
+pub(crate) use panel::{NotesPanel, clicks, guides, update};
 
 /// A new note's colour (the notes panel's, as before).
 const NOTE_COLOR: [u8; 3] = [30, 155, 160];

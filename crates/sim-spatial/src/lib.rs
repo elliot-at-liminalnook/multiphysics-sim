@@ -43,7 +43,9 @@ use app::{ModeScope, ViewerSet};
 pub use builder::{Builder, BuilderPlugin};
 pub use inspect_view::{LearnView, ModelColor, SceneContent, SpatialScene, SpatialViewerPlugin, UiRoot, default_inspect_paths, inspect_pair, load_inspect};
 pub(crate) use camera::Orbit;
-pub(crate) use inspect_view::{Part, spawn_parts, update_parts};
+pub(crate) use inspect_view::{Part, spawn_parts};
+#[cfg(test)]
+pub(crate) use inspect_view::update_parts;
 pub use linked::SelectionLink;
 use sim_inspect::selection::SelectionTarget;
 use sim_inspect::{

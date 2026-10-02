@@ -236,7 +236,7 @@ fn refinement_actual_inputs_actions_selections_and_busy_bindings() {
         assert_eq!(stamp,StudyStamp{id:11,revision:4});
     }
     assert!(ui.rendered.values().any(|c|matches!(&c.hit,Hit::RefineTrial{role,..}if role=="train")));
-    let mut o=owner();pending(&mut o);let mut world=world(o);world.run_system_once(render).unwrap();world.run_system_once(collect).unwrap();
+    let mut o=owner();pending(&mut o);let mut world=self::world(o);world.run_system_once(render).unwrap();world.run_system_once(collect).unwrap();
     for id in ["simulate","sensitivity","fit","robustness"]{assert!(!world.resource::<StudyUi>().rendered[&format!("study:refine:run:{id}")].enabled);}
 }
 #[test]

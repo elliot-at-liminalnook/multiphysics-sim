@@ -821,7 +821,7 @@ mod tests {
                     ..Default::default()
                 },
                 |ui| {
-                    let (action, changed) = state.show(ui, &mut study, false);
+                    let (action, changed) = state.show(ui, &mut study, false, 0);
                     assert!(action.is_none());
                     assert!(!changed);
                 },

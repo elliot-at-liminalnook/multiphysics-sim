@@ -14,7 +14,7 @@ use std::time::Instant;
 /// One request as the fake server received it.
 #[derive(Debug)]
 pub(super) struct Seen {
-    head: String,
+    pub(super) head: String,
     pub(super) body: String,
 }
 impl Seen {

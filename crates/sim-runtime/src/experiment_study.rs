@@ -25,9 +25,10 @@ use serde::{Deserialize, Serialize};
 use sim_domain_robot::motor::*;
 use std::{
     collections::BTreeMap,
-    path::Path,
     sync::atomic::{AtomicBool, Ordering},
 };
+#[cfg(test)]
+use std::path::Path;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ModelSettings {

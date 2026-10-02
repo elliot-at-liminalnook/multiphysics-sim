@@ -117,6 +117,7 @@ impl PrintJobTracker {
         self.polled_at = None;
     }
     /// A poll is in flight.
+    #[cfg(test)]
     pub(super) fn polling(&self) -> bool {
         self.poll.is_some()
     }

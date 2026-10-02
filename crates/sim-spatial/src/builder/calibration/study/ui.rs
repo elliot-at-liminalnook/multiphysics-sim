@@ -265,7 +265,7 @@ fn comparison(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui:&StudyU
 }
 /// Global cancellation/progress remains visible when the dock closes or mode
 /// changes. This root is transient presentation, never owns evidence or jobs.
-pub(crate) fn status(mut commands:Commands,old:Query<Entity,With<GlobalStatus>>,fonts:Option<Res<UiFonts>>,owner:Res<StudyOwner>,ui:Res<StudyUi>,mut drawn:Local<Option<String>>) {
+fn status(mut commands:Commands,old:Query<Entity,With<GlobalStatus>>,fonts:Option<Res<UiFonts>>,owner:Res<StudyOwner>,ui:Res<StudyUi>,mut drawn:Local<Option<String>>) {
     let Some(fonts)=fonts else {return};
     let key=format!("{}|{}|{:?}|{:?}|{:?}|{:?}",owner.changed,owner.status,ui.blocking_reason(),ui.focus,ui.error,owner.pending.iter().map(|p|(p.id,p.cancel_requested,p.progress())).collect::<Vec<_>>());
     if drawn.as_ref()==Some(&key) {return}

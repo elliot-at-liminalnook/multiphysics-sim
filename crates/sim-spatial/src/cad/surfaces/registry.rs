@@ -221,6 +221,7 @@ pub(crate) enum Native {
     Surface(Opens),
     NumericEntry,
     Camera(CameraCmd),
+    #[cfg(test)]
     Later(&'static str),
     Different(&'static str),
 }
@@ -501,6 +502,7 @@ pub(crate) fn resolve(cmd: &Command) -> Resolved {
         Native::Surface(o) => Resolved::Surface(o),
         Native::NumericEntry => Resolved::NumericEntry,
         Native::Camera(c) => Resolved::Camera(c),
+        #[cfg(test)]
         Native::Later(epic) => Resolved::Later(epic),
         Native::Different(why) => Resolved::Different(why),
     }

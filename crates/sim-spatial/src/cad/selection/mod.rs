@@ -60,7 +60,7 @@
 //!   gesture.
 mod shared;
 
-pub(crate) use shared::{CadItems, CadSelection, Shared, View, cad_id, cad_items, ensure_registered, follow_tree, reopen, source};
+pub(crate) use shared::{CadItems, CadSelection, Shared, View, cad_id, ensure_registered, follow_tree, reopen, source};
 #[cfg(test)]
 pub(crate) use shared::Fixture;
 

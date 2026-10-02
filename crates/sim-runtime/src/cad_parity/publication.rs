@@ -2,7 +2,6 @@
 //! completion marker is the publication boundary for the whole report bundle.
 use super::{contract::Report, isolation::relative};
 use std::{
-    fs,
     io::Write,
     path::{Path, PathBuf},
 };
@@ -123,6 +122,7 @@ mod fixtures {
 #[cfg(test)]
 mod report_fixtures {
     use super::*;
+    use std::fs;
     use crate::cad_parity::{contract::*, runner};
     #[test]
     fn planning_bundle_atomic_and_refuses_overwrite() {

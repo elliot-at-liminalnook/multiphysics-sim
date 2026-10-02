@@ -79,6 +79,7 @@ pub fn apply(mut owner:ResMut<StudyOwner>, registry:Res<DocumentRegistry>, mut u
 fn publication_inputs(ui:&super::forms::StudyUi,action:&StudyAction)->Option<serde_json::Value> {
     match action {StudyAction::Save{stamp,..}|StudyAction::SavePortable{stamp,..}|StudyAction::Export{stamp,..}=>Some(ui.publication_inputs(stamp.id)),_=>None}
 }
+#[cfg(test)]
 pub fn handle(owner:&mut StudyOwner, registry:&DocumentRegistry, action:&StudyAction, call:&mut Call)->Outcome {
     handle_with_inputs(owner,registry,action,call,None)
 }

@@ -9,7 +9,7 @@ use crate::jobs::{Job, Pool};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use sim_runtime::cad_client::{
-    CadClient, ComponentCatalogue, ComponentJobState, ComponentJobStatus, ComponentOperation,
+    CadClient, ComponentJobState, ComponentJobStatus, ComponentOperation,
     ComponentStarted,
 };
 use std::time::{Duration, Instant};

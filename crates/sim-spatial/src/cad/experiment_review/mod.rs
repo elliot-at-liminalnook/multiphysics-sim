@@ -736,8 +736,4 @@ impl ReviewState {
         }
         self.touch();
     }
-    pub(crate) fn source_edit_refusal(&self) -> Option<String> {
-        self.active
-            .then(|| "Return from captured review before editing live CAD".into())
-    }
 }

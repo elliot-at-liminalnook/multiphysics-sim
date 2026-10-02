@@ -491,7 +491,7 @@ fn failed_drop_clears_pending_preview_without_changing_the_document() {
 }
 #[test]
 fn actual_bevy_drag_start_and_end_observers_keep_selected_group_identity() {
-    fixture(|mut b, s| {
+    fixture(|b, s| {
         use bevy::picking::{
             backend::HitData,
             pointer::{Location, PointerId},

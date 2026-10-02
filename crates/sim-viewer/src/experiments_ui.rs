@@ -572,7 +572,7 @@ impl ExperimentsPanel {
             *s=original;
             let result=(||->Result<(),String>{
                 let mut next=s.clone();
-                for command in [study::commands::Command::SetCandidate(staged.draft.clone()),study::commands::Command::SetLimits(staged.limits),study::commands::Command::SetView(staged.view.clone()),study::commands::Command::SetNotes(staged.notes.clone())] {study::commands::apply(&mut next,command)?;}
+                        for command in [study::commands::Command::SetCandidate(staged.draft.clone()),study::commands::Command::SetLimits(staged.limits.clone()),study::commands::Command::SetView(staged.view.clone()),study::commands::Command::SetNotes(staged.notes.clone())] {study::commands::apply(&mut next,command)?;}
                 for (i,e) in staged.evaluations.iter().enumerate() {study::commands::apply(&mut next,study::commands::Command::SetDecision{evaluation:i,decision:e.decision.clone(),notes:e.notes.clone()})?;}
                 study::commands::apply(&mut next,study::commands::Command::Expose(study::commands::EvaluationSelection::Filtered)).or_else(|error|if study::commands::filtered_ids(&next).is_empty(){Ok(())}else{Err(error)})?;
                 *s=next;Ok(())
@@ -981,7 +981,7 @@ mod tests {
         terminal::capture_outcome(&mut outcome).unwrap();
         let inputs=outcome.capture.inputs();
         let(tx,rx)=mpsc::channel();
-        p.job=Some(Job{rx,cancel:Arc::new(AtomicBool::new(true)),progress:Arc::new(AtomicUsize::new(0)),total:0,label:"Late completed electrical simulation".into()});
+        p.job=Some(Job{rx,cancel:Arc::new(AtomicBool::new(true)),progress:Arc::new(AtomicUsize::new(0)),total:0,label:"Late completed electrical simulation".into(),publication:None});
         tx.send(ResultMessage::Refined(0,"Electrical simulation".into(),Ok(refinement::Outcome::SharedInputs(outcome,inputs)))).unwrap();
         p.poll(&ctx);
         assert!(p.studies[0].refinement.controller_runs.is_empty());

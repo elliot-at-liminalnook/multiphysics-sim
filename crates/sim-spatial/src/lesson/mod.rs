@@ -658,7 +658,7 @@ impl Plugin for LearnPlugin {
         app.add_systems(Update, actions::sync_field.in_set(crate::app::ViewerSet::SimSync).run_if(open()));
         // The page's pick follows the shared selection (Lessons only: in Build
         // the builder shows it).
-        app.add_systems(Update, selection::follow.before(playback).in_set(crate::app::ViewerSet::SimSync).run_if(in_state(crate::app::ViewerMode::Lessons).and(resource_exists::<Learn>)));
+        app.add_systems(Update, selection::follow.before(playback).in_set(crate::app::ViewerSet::SimSync).run_if(in_state(crate::app::ViewerMode::Lessons).and_then(resource_exists::<Learn>)));
     }
 }
 

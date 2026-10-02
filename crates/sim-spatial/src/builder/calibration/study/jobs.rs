@@ -177,9 +177,6 @@ pub(super) fn prepare_publication_capture(study:&Study,stamp:StudyStamp,destinat
     captured
 }
 
-pub fn start_publication(owner:&mut StudyOwner,stamp:StudyStamp,value:&str,kind:PublicationKind)->Result<u64,String> {
-    start_publication_with_inputs(owner,stamp,value,kind,None)
-}
 pub fn start_publication_with_inputs(owner:&mut StudyOwner,stamp:StudyStamp,value:&str,kind:PublicationKind,inputs:Option<serde_json::Value>)->Result<u64,String> {
     let destination=path(value)?;
     if owner.pending.iter().any(|p|matches!(p.kind,JobKind::Save|JobKind::SavePortable|JobKind::Export) && p.source==destination.display().to_string()) { return Err("study.path: publication to this destination is already pending".into()); }

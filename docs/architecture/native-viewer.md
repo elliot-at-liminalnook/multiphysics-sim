@@ -6578,13 +6578,31 @@ Review findings fixed: the guard resolves glob reexports and lexical import
 scopes, a stale next-epic paragraph now names cad-components, and label
 children use explicit `for &child in children` (IntoIterator for &Children)
 to avoid confusing its borrowed iterator with RelationshipTarget::iter.
-All five reviewer areas reported no remaining findings after these fixes.
+All five worker reviewer areas reported no remaining findings after these fixes.
+The subsequent orchestrator review found a transitive-resolution bypass:
+chained module aliases and qualified local reexports could conceal a
+foreign function. The focused T41.2/T41.3 repair follows every module prefix
+through symbol tables, including aliases used as glob targets. An active
+binding recursion stack rejects import/reexport cycles (including paths
+that grow on each expansion) with a file:line ownership diagnostic; repeated
+use of a completed alias expansion is allowed. Viewer ordering is unchanged.
+The repair reviewer also caught a use-site overlay that let block aliases
+change module-level imports. Binding selection is now lexical, while
+import targets and qualified self/super paths resolve in module tables.
+Declaration metadata distinguishes a local identity from a self-import cycle.
+Regression fixtures cover both cross-feature bypasses, same-feature chains
+and reexports, lexical shadowing of both functions and module aliases,
+self/ordinary/growing cycles, aliased glob targets and valid alias
+reuse. The independent repair reviewer reported no remaining findings after the
+provenance fix. The repair is checked by reading only; fixtures remain
+unexecuted.
 The windowless app/ordering_tests graph calls the production configure
 helpers and materializes the public sets with no-op producers/consumers,
 including the spatial/camera, CAD mesh, robot frame and PreUpdate picker
 chains. It checks schedule initialization when run; it has not run here.
 The source guard ignores comments/literals/test items, resolves use trees,
-aliases and glob reexports, and scans tuple/multiline targets; its allowlist
+aliases and glob reexports transitively, with explicit cycle diagnostics,
+and scans tuple/multiline targets; its allowlist
 is empty. Its own fixture includes the old bare update_parts glob-import
 regression. Existing camera and app tests were split without changing
 test bodies so every Rust source file is at most 750 physical lines.

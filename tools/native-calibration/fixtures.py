@@ -9,6 +9,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import tempfile
@@ -125,6 +126,149 @@ class IdentityProxyRobustness(unittest.TestCase):
                 proxy.close()
                 upstream.shutdown()
                 upstream.server_close()
+
+
+class ReceiptHelperRefusals(unittest.TestCase):
+    """`acceptance.py receipt` refuses, writing nothing and calling no git."""
+
+    def files(self, root):
+        binaries = {}
+        for label in DRIVER.BINARIES:
+            path = root / label
+            path.write_bytes(b"#!/bin/sh\n")
+            path.chmod(0o755)
+            binaries[label] = path
+        log = root / "build.log"
+        log.write_text("Finished `dev` profile\n")
+        return binaries, log
+
+    def refuse(self, argv, out):
+        with patch.object(DRIVER.subprocess, "check_output") as git, \
+                patch.object(DRIVER.subprocess, "Popen") as launch, \
+                contextlib.redirect_stderr(io.StringIO()) as err:
+            self.assertEqual(DRIVER.receipt_main([str(a) for a in argv]), 2)
+            git.assert_not_called()
+            launch.assert_not_called()
+        self.assertIn("REFUSED", err.getvalue())
+        return err.getvalue()
+
+    def argv(self, binaries, logs, out):
+        argv = []
+        for label, path in binaries.items():
+            argv += [f"--{label}", path]
+        for log in logs:
+            argv += ["--build-log", log]
+        return argv + ["--out", out]
+
+    def test_no_build_log(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            binaries, _ = self.files(root)
+            out = root / "receipt.json"
+            self.assertIn("no --build-log", self.refuse(self.argv(binaries, [], out), out))
+            self.assertFalse(out.exists())
+
+    def test_missing_build_log(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            binaries, log = self.files(root)
+            out = root / "receipt.json"
+            self.assertIn("missing", self.refuse(self.argv(binaries, [log, root / "absent.log"], out), out))
+            self.assertFalse(out.exists())
+
+    def test_empty_build_log(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            binaries, log = self.files(root)
+            log.write_bytes(b"")
+            out = root / "receipt.json"
+            self.assertIn("empty", self.refuse(self.argv(binaries, [log], out), out))
+            self.assertFalse(out.exists())
+
+    def test_missing_or_empty_binary(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            binaries, log = self.files(root)
+            binaries["viewer"].write_bytes(b"")
+            binaries["server"] = root / "absent-server"
+            out = root / "receipt.json"
+            err = self.refuse(self.argv(binaries, [log], out), out)
+            self.assertIn("viewer", err)
+            self.assertIn("server", err)
+            self.assertFalse(out.exists())
+
+    def test_existing_output_is_never_overwritten(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            binaries, log = self.files(root)
+            out = root / "receipt.json"
+            out.write_text("accepted-existing-receipt")
+            self.assertIn("exists", self.refuse(self.argv(binaries, [log], out), out))
+            self.assertEqual(out.read_text(), "accepted-existing-receipt")
+
+    def test_receipt_carries_the_keys_run_validates(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            binaries, log = self.files(root)
+            provenance = {"sha256": "ab" * 32}
+            with patch.object(DRIVER, "source_hash", return_value=provenance), \
+                    patch.object(DRIVER.subprocess, "check_output", side_effect=["c" * 40 + "\n", b""]):
+                receipt = DRIVER.build_receipt({k: v.resolve() for k, v in binaries.items()}, [log.resolve()])
+            self.assertEqual(receipt["source_sha256"], provenance["sha256"])
+            self.assertEqual(receipt["source_commit"], "c" * 40)
+            self.assertFalse(receipt["source_dirty"])
+            for label, path in binaries.items():
+                self.assertEqual(receipt["binaries"][label]["sha256"], DRIVER.sha(path))
+            self.assertEqual(receipt["build_logs"][0]["path"], str(log.resolve()))
+            self.assertEqual(receipt["build_logs"][0]["bytes"], log.stat().st_size)
+
+
+class ScreenshotsNeverDecide(unittest.TestCase):
+    def test_step_verdict_ignores_screenshots(self):
+        failed_shot = [{"checkpoint": "HW-02-disabled", "path": "/x.png", "ok": False, "error": "TimeoutError"}]
+        good_shot = [{"checkpoint": "HW-02-disabled", "path": "/x.png", "ok": True, "error": None}]
+        step = DRIVER.settle_step({"id": "HW-02", "screenshots": failed_shot}, True)
+        self.assertEqual(step["status"], "passed")
+        self.assertEqual(step["screenshots"], failed_shot)
+        step = DRIVER.settle_step({"id": "HW-02", "screenshots": good_shot}, False)
+        self.assertEqual(step["status"], "failed")
+        self.assertEqual(DRIVER.settle_step({"id": "HW-02"}, None)["status"], "failed")
+
+    def test_summary_reports_off_captured_failed_and_not_reached(self):
+        self.assertEqual(DRIVER.screenshot_summary(False, [])["mode"], "off")
+        steps = [{"id": "HW-01", "status": "passed", "screenshots": [
+                     {"checkpoint": "HW-01-identity", "path": "/a.png", "ok": True, "error": None},
+                     {"checkpoint": "HW-01-fresh", "path": "/b.png", "ok": False, "error": "refused"}]}]
+        summary = DRIVER.screenshot_summary(True, steps)
+        self.assertEqual((summary["planned"], summary["attempted"], summary["captured"]),
+                         (len(DRIVER.CHECKPOINTS), 2, 1))
+        self.assertEqual(summary["failed"], [{"checkpoint": "HW-01-fresh", "error": "refused"}])
+        self.assertNotIn("HW-01-identity", summary["not_reached"])
+        self.assertIn("HW-09-terminal", summary["not_reached"])
+
+    def test_png_completeness(self):
+        whole = DRIVER.PNG_SIGNATURE + b"\x00" * 20 + DRIVER.PNG_TRAILER
+        self.assertTrue(DRIVER.png_complete(whole))
+        self.assertFalse(DRIVER.png_complete(b""))
+        self.assertFalse(DRIVER.png_complete(whole[:-1]))
+        self.assertFalse(DRIVER.png_complete(b"GIF89a" + whole[8:]))
+
+    def test_disabled_run_never_requests_a_screenshot(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            args = type("Args", (), {"out": Path(temporary), "total_timeout": 60, "screenshots": False})()
+            run = DRIVER.Run(args)
+            run.results["steps"].append({"id": "HW-02", "status": "running"})
+            with patch.object(DRIVER, "request") as http:
+                self.assertIsNone(run.screenshot("disabled"))
+                http.assert_not_called()
+            self.assertNotIn("screenshots", run.results["steps"][0])
+            self.assertFalse((Path(temporary) / "screenshots").exists())
+
+    def test_readme_lists_exactly_the_driver_checkpoints(self):
+        text = Path(__file__).with_name("README.md").read_text()
+        section = text.split("## Screenshot checkpoints", 1)[1]
+        listed = tuple(re.findall(r"^- `(HW-0\d-[a-z-]+)`", section, re.MULTILINE))
+        self.assertEqual(listed, DRIVER.CHECKPOINTS)
 
 
 if __name__ == "__main__":

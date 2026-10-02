@@ -22,20 +22,44 @@ responses, not measured hardware evidence or independent FPGA safety qualificati
 ## Prerequisites for a future authorized verification pass
 
 Freshly build the three binaries under the separately authorized verification
-workflow, retain full build logs, then write `fresh-build-receipt.json`:
+workflow and retain full build logs. Then write `fresh-build-receipt.json` with
+the helper, which builds nothing:
+
+```sh
+python3 tools/native-calibration/acceptance.py receipt \
+  --bench target/debug/examples/hx_virtual_bench \
+  --server target/debug/examples/serve_actuator_calibration \
+  --viewer target/debug/sim-spatial \
+  --build-log runs/NEW-VERIFICATION/build.log \
+  --out runs/NEW-VERIFICATION/fresh-build-receipt.json
+```
+
+Repeat `--build-log` once per retained log. The helper refuses, writing
+nothing, when no build log is given, when any binary or build log is missing or
+empty (or a binary is not executable), or when `--out` already exists (the file
+is created exclusively). The receipt it writes:
 
 ```json
 {
-  "source_sha256": "<acceptance.source_hash()['sha256'] at the exact tree built>",
-  "source_commit": "<full git commit>",
-  "build_logs": ["<retained build log paths>"],
+  "source_sha256": "<acceptance.source_hash()['sha256'] of the tree now>",
+  "source_commit": "<full git rev-parse HEAD>",
+  "source_dirty": "<true if git status --porcelain lists anything, untracked included>",
+  "source_provenance": "<the whole source_hash() record>",
+  "build_logs": [{"path": "<absolute path>", "bytes": 0, "sha256": "<SHA256>"}],
   "binaries": {
-    "bench": {"sha256": "<SHA256 of fresh hx_virtual_bench>"},
-    "server": {"sha256": "<SHA256 of fresh serve_actuator_calibration>"},
-    "viewer": {"sha256": "<SHA256 of fresh sim-spatial>"}
-  }
+    "bench": {"path": "<absolute>", "bytes": 0, "sha256": "<SHA256 of hx_virtual_bench>"},
+    "server": {"path": "<absolute>", "bytes": 0, "sha256": "<SHA256 of serve_actuator_calibration>"},
+    "viewer": {"path": "<absolute>", "bytes": 0, "sha256": "<SHA256 of sim-spatial>"}
+  },
+  "written_by": "tools/native-calibration/acceptance.py receipt (builds nothing)",
+  "written_at": "<Unix time>"
 }
 ```
+
+The run checks `source_sha256` against `source_hash()` at run time and each
+`binaries.<label>.sha256` against the binary it is given; the other fields are
+retained for the verifier. Write the receipt right after the build, from the
+same tree: the helper hashes the tree as it is when the helper runs.
 
 The hash algorithm is in `source_hash`. It covers:
 
@@ -51,10 +75,11 @@ order. A tracked file deleted from the working tree is recorded in
 also records `untracked_included` and `included_assets_outside_roots`. An
 include built with `concat!`/`env!` is not resolved; it is listed in
 `unresolved_includes`, so the claim stays honest. Everything is retained in
-`source-provenance.json` and `results.json`. Matching hashes bind the reviewer-provided build receipt; a hand-written
-hash is not proof that compilation occurred. The verifier must inspect its build
-logs. The driver never builds and never accepts an arbitrary endpoint or serial
-override.
+`source-provenance.json` and `results.json`. Matching hashes bind the build
+receipt to the source tree and the binaries; they are not proof that
+compilation occurred, whether the receipt was written by the helper or by hand.
+The verifier must inspect the build logs the receipt names. The driver never
+builds and never accepts an arbitrary endpoint or serial override.
 
 Example **future** invocation (do not run during writing):
 
@@ -64,8 +89,12 @@ python3 tools/native-calibration/acceptance.py \
   --bench target/debug/examples/hx_virtual_bench \
   --server target/debug/examples/serve_actuator_calibration \
   --viewer target/debug/sim-spatial \
-  --out runs/NEW-NATIVE-CALIBRATION
+  --out runs/NEW-NATIVE-CALIBRATION \
+  --screenshots
 ```
+
+`run` is the default subcommand (`acceptance.py run …` is the same). Omit
+`--screenshots` to capture nothing; it is off by default.
 
 Use a new, short absolute output path (Unix socket path limits apply); an existing
 output directory is refused. Do not use Python `-O`. The default total deadline is
@@ -161,10 +190,10 @@ of the phase.
 | HW-01 | `hardware_status`, `hardware:connect`; REST `select` | Direct URL, `fidelity: virtual_simulated`, fresh age, no enabled motor. The server stays paused until `authorization_revoked` (not just stale). After resume, revocation persists, `select` is refused with "authorization expired", and the server has no enabled motor. Reconnect has a new generation, no revocation, no ready session, and `select_2` is enabled again. |
 | HW-02 | `hold_others`, `drive_mode`; `hardware:select_1/2/3`, `hardware:set_disabled` | Form shows `hold_others: true`, `drive_mode: "pwm"`. Session ready per motor. A disabled motor leaves no ready session when selected. Re-enabled and selected again. |
 | HW-03 | `hardware:jog_upper/lower`; REST `speed`, `jog_release` | Encoder movement, held feedback, opposing-input hold within 32 counts for 1 s. |
-| HW-04 | `hardware:section_*`, `hardware:stop` | Top STOP listed and enabled while sections toggle; each STOP ends the jog (server `enabled_id: null`, not busy). Visual non-scrolling placement is a future screenshot/operator check. |
+| HW-04 | `hardware:section_*`, `hardware:stop` | Top STOP listed and enabled while sections toggle; each STOP ends the jog (server `enabled_id: null`, not busy). Visual non-scrolling placement is judged from the `HW-04-stop-*` screenshots by the operator, not by the driver. |
 | HW-05 | REST `loss {reason: focus_lost}`; `hardware:close`, `hardware:toggle_panel`; `mode:phenomena` then `mode:robot` | Drive ends with no ready motion. Closed panel reports `open: false`. Mode exit: direct server status shows `enabled_id: null` and not busy, and `hardware_status` is refused with "the active mode is phenomena". Re-entry reconnects idle with a new generation. `mode:build` is not used because Build refuses to open without a document (`switch/prepare.rs` `needs`). REST loss exercises the interruption consumer, not an OS focus event. |
 | HW-06 | `hardware:capture_lower/upper/reference`, `hardware:reset_poses`; REST `speed`, `target`, `target_commit` | After poses are taught, `speed`/`target` of −1 and 101 are refused with "must be a number from". The encoder reaches each target, and the commanded target lies inside the four-count inset of the taught lower/upper. The reference pose is captured (non-null). Reset clears lower/upper. Motor 3 is taught too. |
-| HW-08 | `hardware:tune_confirm`, `hardware:tune`, `hardware:stop` | Interrupted tune stops. Fresh tune shows at least 2 observed stages, finite gains, a retained record file inside the output, and the confirmation cleared. Repeated for motor 3. |
+| HW-08 | `hardware:tune_confirm`, `hardware:tune`, `hardware:stop` | The tune is still running when STOP is pressed, and the interrupted tune stops. Fresh tune shows at least 2 observed stages, finite gains, a retained record file inside the output, and the confirmation cleared. Repeated for motor 3. |
 | HW-07 | `hardware:sweep`, `hardware:learn`, `hardware:sweep_all`, `hardware:stop`; REST `loss` | Saved-range travel stays within poses. Pause holds. Interruption keeps poses. `session.learning_terminal` shows `learning_complete` with at least three stops each way, `learning: false` and intent hold (no second Learn press, which would start a new run). Two taught motors complete two half cycles each. Another sweep-all is interrupted by STOP. |
 | HW-09 | `hardware:campaign_confirm`, `hardware:campaign`, `hardware:campaign_resume`, `hardware:stop` | At least one saved receipt per completed stage (`*.execution.json` provenance files are not counted). Completed count retained across STOP. Receipt hashes unchanged after resume. Terminal report inside the output. Confirmation cleared. |
 | LC1 real server | see "Two phases" | 409 plus binding text, latched STOP replies, expiry refusals and the new server UUID. |
@@ -199,6 +228,7 @@ failure or timeout:
   with their config directories
 - bench/server/viewer logs
 - the learned terminal state, sweep ends, tune stages and every record
+- with `--screenshots`, `screenshots/<checkpoint>.png` for each captured checkpoint
 
 Each failed deadline writes a `timeout-state-<ms>.json`. Failed steps are not
 relabelled passing on HTTP success. The total result is false unless every
@@ -208,7 +238,11 @@ Written `fixtures.py` (unexecuted) covers the following: physical/PTY/unknown
 preflight refusal before any subprocess or git call; failure-receipt retention
 with no STOP sent to an unowned server; refusal of an existing evidence directory;
 the fail-closed config placeholders; the "not yet" wait semantics; the
-latched-STOP reply check; and proxy robustness against an in-process stub.
+latched-STOP reply check; proxy robustness against an in-process stub; receipt
+helper refusals (no, missing or empty build log, empty binary, existing output)
+with nothing written and no git call; step verdicts that screenshots never
+change; the screenshot summary and PNG completeness check; and that this
+README's checkpoint list equals the driver's.
 Runtime and native fixtures exercise their real consumers separately.
 
 ## Cleanup
@@ -234,23 +268,61 @@ used. An OS `kill -9` of the driver cannot run cleanup. The server's leases and
 the independent hardware safety stay authoritative. Failure receipts do not
 promise a successful STOP if the server is unreachable.
 
-## Future screenshot and physical checkpoints
+## Screenshot checkpoints
 
-Do not capture now. A later authorized fresh-window pass should retain these
-checkpoints:
+Off by default: only `--screenshots` captures, so a writing turn never does.
+With it, the driver asks the main viewer for its own REST `screenshot`
+(`{"path": "<out>/screenshots/<checkpoint>.png"}`) at each checkpoint below.
+The command answers once the capture is queued, and Bevy writes the PNG after
+the next frame, so the driver polls the job and then the file, within 20 s per
+checkpoint (and the total deadline). A screenshot counts as captured only when
+the file exists, is non-empty, starts with the PNG signature and ends with the
+IEND chunk. The command is refused, naming the cause, while the window is not
+visible (minimized, covered, locked screen or another Space): keep the window
+visible. An existing file is never overwritten. A stuck screenshot job is
+cancelled with `DELETE /v1/jobs/{id}` only. It holds no hardware ticket, so no
+server STOP is sent for it; a real viewer stall fails the next semantic command
+under its own deadline.
 
-- HW-01: virtual identity, fresh/stale and reconnect
-- HW-02: the disabled motor
-- HW-03: encoder/target and held/opposing inputs
-- HW-04: top STOP visible at the bottom of Tune/Campaign/Advanced
-- HW-06: three taught poses, target and reset
-- HW-07: learned stops and sweep-all terminal
-- HW-08: stages, then terminal gains/record and cleared confirmation
-- HW-09: saved stage, STOP/resume and terminal report
+Each attempt is recorded in its step's `screenshots` list as `{checkpoint,
+path, ok, error}` (plus `bytes` and `sha256` when captured, `cancel` when a job
+was cancelled). `results.json` `screenshots` reports `off`, or `captured` of
+`planned` with the `failed` list and the checkpoints `not_reached` because an
+earlier step failed. A failed or timed-out screenshot never fails a step and
+never stops its remaining assertions. A captured one never passes a step:
+step verdicts come only from semantic assertions. Captures happen before
+cleanup; cleanup is unchanged. Worst case, each capture takes about 25 s (3 s
+request, 20 s job and file polling, a final read), so 19 checkpoints add about
+475 s under the same 1800 s total deadline. Because a capture can delay the
+next action, HW-08 and HW-09 re-check that the tune or campaign is still running
+immediately before STOP; otherwise STOP could land on finished work and test
+nothing.
+
+The checkpoints, in run order (`<step>-<checkpoint>`):
+
+- `HW-01-identity`: first direct connection, virtual identity shown
+- `HW-01-fresh`: the same link fresh, before the simulated disconnection
+- `HW-01-stale`: the server stalled and the link stale
+- `HW-01-reconnect`: after reconnect, the new generation authorized
+- `HW-02-disabled`: motor 2 disabled with no ready session
+- `HW-03-held`: held after opposing inputs, encoder and target shown
+- `HW-04-stop-tune`: top STOP visible in the Tune section
+- `HW-04-stop-campaign`: top STOP visible in the Campaign section
+- `HW-04-stop-advanced`: top STOP visible in the Advanced section
+- `HW-06-taught`: three taught poses
+- `HW-06-target`: the encoder at the 75 % target
+- `HW-06-reset`: poses reset
+- `HW-08-stages`: the tune running, before it is interrupted
+- `HW-08-terminal`: terminal gains, record and cleared confirmation
+- `HW-07-learned`: learned stops, holding
+- `HW-07-sweep-all`: sweep-all terminal
+- `HW-09-saved`: the campaign with a saved stage
+- `HW-09-stopped`: the campaign stopped, completed count kept
+- `HW-09-terminal`: the terminal report
 
 Screenshots supplement semantic receipts; animation alone never passes a step.
 The actual Q/A keyboard, pointer release outside a jog button, OS focus/window
-close and visible STOP placement still need native fixtures and a fresh-window
-checkpoint. Physical operator run sheets are in
+close and visible STOP placement still need native fixtures or an operator
+reading the captures. Physical operator run sheets are in
 [hardware-checklist.md](../../docs/hardware-checklist.md); this driver never runs
 them.

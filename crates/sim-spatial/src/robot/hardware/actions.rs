@@ -361,7 +361,7 @@ impl actions::Action for HardwareAction {
         vec![
             spec("hardware_status", r, json!({}), "Leg calibration panel: the link (connected, stale, age), the page's session state and the calibration server's last status. Read-only."),
             spec("hardware_stop", r, json!({}), "STOP the calibration server's drive (the panel's Stop / Z) on the immediate path, and the live motor sync if it runs. Always allowed."),
-            spec("hardware_export", r, json!({}), "Download calibration: /calibration/export plus the mirror's display-only binding, written to a new file under the calibration output directory; answers its path."),
+            spec("hardware_export", r, json!({}), "Download calibration: /calibration/export plus the mirror's display-only binding, written to a new file under the calibration output directory; answers {path, simulated}. A virtual bench's download is labelled simulated (execution and simulated: true in the file, a -virtual file name)."),
             spec("hardware_gaits", r, json!({}), "The calibration server's gait list (/calibration/gaits), as the Gait playback select lists it."),
             spec(
                 "hardware",
@@ -509,8 +509,7 @@ pub(super) fn operator_stop(hw: &mut Hardware) {
 }
 
 fn stop_with(hw: &mut Hardware, operator: bool) {
-    hw.form.held_upper = false;
-    hw.form.held_lower = false;
+    super::handlers::release_holds(hw);
     hw.form.tune_ok = false;
     hw.form.campaign_ok = false;
     let Some(link) = hw.link.as_ref() else { return };
@@ -718,13 +717,25 @@ fn poll_jobs(hw: Option<ResMut<Hardware>>) {
     }
     if let Some(result) = hw.export.as_ref().and_then(|j| j.poll()) {
         let seq = hw.export.take().map_or(hw.export_seq, |j| j.generation());
-        hw.export_line = Some(match &result {
-            Ok(path) => format!("Saved {}", path.display()),
+        let line = match &result {
+            Ok(exported) => format!("Saved {}", exported.path.display()),
             Err(e) => format!("Download failed: {e}"),
-        });
+        };
+        // Labelled when the link was pinned to a virtual bench, or the
+        // server labelled the document simulated itself.
+        let simulated = hw.export_virtual || result.as_ref().is_ok_and(|e| e.simulated);
+        hw.export_line = Some(if simulated { format!("{} {line}", super::handlers::VIRTUAL_EXPORT) } else { line });
         hw.export_done = Some((seq, result));
     }
     hw.snapshot = hw.link.as_ref().map(|l| l.snapshot()).unwrap_or_default();
+    // Remote jog presses nobody waits on (a one-way activation): a refusal
+    // puts the held flag back and shows the refusal (a REST one is settled
+    // as it resolves). The results are moved out and back, not cloned.
+    if !hw.pending_presses.is_empty() {
+        let results = std::mem::take(&mut hw.snapshot.command_results);
+        super::handlers::settle_presses(hw, &results);
+        hw.snapshot.command_results = results;
+    }
     // Staleness revokes this generation permanently, even if an in-flight
     // request later produces a fresh-looking answer. STOP does not wait for it.
     // A status that aged only because the link thread is waiting for a

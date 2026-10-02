@@ -156,7 +156,7 @@ pub(crate) struct Hardware {
     /// STOP requests posted on the immediate path, until they answer.
     pub stops: Vec<crate::jobs::Job<serde_json::Value>>,
     /// Download calibration: the export job and its last result line.
-    pub export: Option<crate::jobs::Job<PathBuf>>,
+    pub export: Option<crate::jobs::Job<handlers::Exported>>,
     pub export_line: Option<String>,
     pub mirror: mirror::Mirror,
     pub sync: sync::LiveSync,
@@ -177,7 +177,42 @@ pub(crate) struct Hardware {
     /// Download calibration: the number of the last export started, and the
     /// last one finished with its result (REST `hardware_export` waits for its own).
     pub export_seq: u64,
-    pub export_done: Option<(u64, Result<PathBuf, String>)>,
+    pub export_done: Option<(u64, Result<handlers::Exported, String>)>,
+    /// The running export was started on a virtual calibration execution:
+    /// its result line is labelled simulated (`handlers::start_export`); a
+    /// download the server labelled simulated itself is labelled too
+    /// (`handlers::Exported::simulated`, `actions::poll_jobs`).
+    pub export_virtual: bool,
+    /// Per direction (upper, lower), bumped by every jog press the handler
+    /// sends to the link (`handlers`' `JogPress`; not one refused before it
+    /// is queued): a refused remote press puts its held flag back to what it
+    /// was before the press ([`PendingPress::before`]) only if no newer press
+    /// of that direction (the operator's) took the flag since it was queued.
+    pub jog_presses: [u64; 2],
+    /// Remote jog presses queued on the link whose verdict is not yet known
+    /// (`handlers::settle_presses`).
+    pub pending_presses: Vec<PendingPress>,
+}
+
+/// A remote jog press queued on the link as a checked command, until its
+/// verdict is read (`handlers::settle_presses`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct PendingPress {
+    /// Its ticket in [`link::LinkSnapshot::command_results`].
+    pub ticket: u64,
+    /// The link generation it was queued on.
+    pub generation: u64,
+    pub direction: actions::Direction,
+    /// Its direction's [`Hardware::jog_presses`] after this press.
+    pub press: u64,
+    /// The direction's held flag before this press set it: a refusal puts it
+    /// back (an operator already holding that direction keeps the hold, and
+    /// their release still reaches the link), never simply clears it.
+    pub before: bool,
+    /// Nobody waits on its answer (`Origin::SystemUi`): a refusal is shown in
+    /// the panel's notice, as a refusal at dispatch would be. A REST caller
+    /// gets it in its answer.
+    pub one_way: bool,
 }
 
 impl Hardware {
@@ -207,6 +242,9 @@ impl Hardware {
             queued_ticket: false,
             export_seq: 0,
             export_done: None,
+            export_virtual: false,
+            jog_presses: [0; 2],
+            pending_presses: Vec::new(),
         }
     }
 

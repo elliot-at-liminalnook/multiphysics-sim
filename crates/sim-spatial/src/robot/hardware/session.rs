@@ -408,7 +408,14 @@ impl Session {
         if self.snap.execution.is_some() && self.snap.execution != status.execution {
             self.snap.authorization_revoked = true;
             self.snap.connection_valid = false;
-            self.message("virtual execution identity changed; reconnect required".into());
+            // No execution any more: the server lost its virtual bench (its
+            // `lose_bus`); another one: the server or bench was replaced.
+            // Either revokes the same way.
+            self.message(if status.execution.is_none() {
+                "the virtual calibration bench was lost (disconnected); reconnect required".into()
+            } else {
+                "virtual execution identity changed; reconnect required".into()
+            });
             self.bump_epoch();
             self.stopped_locally();
             // Our motor ids mean nothing on another instance: id-less, and

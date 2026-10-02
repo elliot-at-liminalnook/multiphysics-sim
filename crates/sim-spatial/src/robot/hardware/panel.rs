@@ -178,6 +178,9 @@ pub(super) const TUNE_OK: &str = "The motor is mid-travel with room to move both
 pub(super) const CAMPAIGN_OK: &str = "The leg is suspended with clear space around every joint";
 pub(super) const GAIT_OK: &str = "The leg is suspended with clear space around every joint (needed for Leg and Both)";
 pub(super) const HOLD_OTHERS: &str = "Hold the other enabled motors in place while one moves";
+/// Why a command the virtual bench does not simulate (flip, raw step, a gait
+/// on the leg) is disabled on a virtual calibration link.
+pub(crate) const OUT_OF_VIRTUAL_SCOPE: &str = "Outside virtual calibration scope: the virtual bench does not simulate this command";
 pub(super) const NOT_CONNECTED: &str = "the Leg calibration panel is not connected to the calibration server (Connect first)";
 /// The raw step stepper: (id suffix, label, change).
 pub(super) const STEPS: [(&str, &str, i32); 6] = [("minus_100", "−100", -100), ("minus_10", "−10", -10), ("minus_1", "−1", -1), ("plus_1", "+1", 1), ("plus_10", "+10", 10), ("plus_100", "+100", 100)];
@@ -220,6 +223,11 @@ pub(crate) fn panel_view(hw: &Hardware, now: Instant) -> PanelView {
     v
 }
 
+/// The link's execution is a virtual calibration bench (its results are simulated).
+pub(crate) fn is_virtual(hw: &Hardware) -> bool {
+    hw.snapshot.execution.as_ref().is_some_and(|i| i.is_virtual_calibration())
+}
+
 /// Every panel control in the page's order, with its state now.
 pub(crate) fn control_list(hw: &Hardware, v: &PanelView) -> Vec<Control> {
     let f = &hw.form;
@@ -229,6 +237,10 @@ pub(crate) fn control_list(hw: &Hardware, v: &PanelView) -> Vec<Control> {
     let why_m = |enabled: bool, reason: &str| if enabled { Ok(()) } else { Err(v.blocked.clone().unwrap_or_else(|| reason.to_string())) };
     let why = |enabled: bool, reason: &str| if enabled { Ok(()) } else { Err(reason.to_string()) };
     let s = |x: &str| x.to_string();
+    // Commands the virtual bench does not simulate (its server answers them
+    // with an ordinary refusal): disabled, for the operator too.
+    let virtual_bench = is_virtual(hw);
+    let in_scope = |enabled: bool, reason: &str| if virtual_bench { Err(OUT_OF_VIRTUAL_SCOPE.to_string()) } else { why_m(enabled, reason) };
     add(s("toggle_panel"), s("Leg calibration"), HardwareAction::TogglePanel, Ok(()), Some(hw.open));
     add(s("close"), s("Close calibration"), HardwareAction::ClosePanel, Ok(()), None);
     add(s("stop"), s("Stop"), HardwareAction::Stop, Ok(()), None);
@@ -239,8 +251,21 @@ pub(crate) fn control_list(hw: &Hardware, v: &PanelView) -> Vec<Control> {
     add(s("set_disabled"), v.disable.text.clone(), HardwareAction::SetDisabled, why_m(v.disable.enabled, "choose a motor first (not while one is connecting or sweep-all runs)"), None);
     add(s("sweep_all"), v.sweep_all.text.clone(), HardwareAction::SweepAll, why_m(v.sweep_all.enabled, "a motor is being connected and checked"), None);
     add(s("hold_others"), s(HOLD_OTHERS), HardwareAction::HoldOthers { on: !f.inputs.hold_others }, Ok(()), Some(f.inputs.hold_others));
-    add(s("jog_upper"), s("Q  Upper ↑"), HardwareAction::JogPress { direction: Direction::Upper }, why_m(v.jog_enabled, "no motor is ready: select one first"), Some(v.held_upper));
-    add(s("jog_lower"), s("A  Lower ↓"), HardwareAction::JogPress { direction: Direction::Lower }, why_m(v.jog_enabled, "no motor is ready: select one first"), Some(v.held_lower));
+    // Hold-to-move as a toggle for activation: while the form holds a press
+    // (the operator's, or an accepted remote one) the control is its release,
+    // which is never refused (`HardwareAction::authorize`); the window's
+    // button pairs press and release itself (`actions::input::jog_buttons`)
+    // and keeps its own label.
+    for (name, label, release, direction, held, on) in [
+        ("jog_upper", "Q  Upper ↑", "Release ↑ (hold)", Direction::Upper, f.held_upper, v.held_upper),
+        ("jog_lower", "A  Lower ↓", "Release ↓ (hold)", Direction::Lower, f.held_lower, v.held_lower),
+    ] {
+        if held {
+            add(s(name), s(release), HardwareAction::JogRelease { direction }, Ok(()), Some(on));
+        } else {
+            add(s(name), s(label), HardwareAction::JogPress { direction }, why_m(v.jog_enabled, "no motor is ready: select one first"), Some(on));
+        }
+    }
     use super::actions::Boundary;
     for (i, (id, label, boundary)) in [("capture_lower", "Save lower here", Boundary::Lower), ("capture_upper", "Save upper here", Boundary::Upper), ("capture_reference", "Save sim alignment here", Boundary::Reference)].into_iter().enumerate() {
         add(s(id), s(label), HardwareAction::Capture { boundary }, why_m(v.poses[i].1, "save a pose while a ready motor holds still"), None);
@@ -262,22 +287,26 @@ pub(crate) fn control_list(hw: &Hardware, v: &PanelView) -> Vec<Control> {
         add(format!("gait_select_{index}"), label.clone(), HardwareAction::GaitSelect { index }, Ok(()), Some(index == f.gait_index));
     }
     for mode in [GaitMode::Sim, GaitMode::Leg, GaitMode::Both] {
-        add(format!("gait_mode_{}", gait_mode_name(mode)), s(gait_mode_label(mode)), HardwareAction::GaitMode { mode }, why(v.gait.modes_enabled, "not while a gait plays"), Some(f.gait_mode == mode));
+        let ready = if mode != GaitMode::Sim && virtual_bench { Err(OUT_OF_VIRTUAL_SCOPE.to_string()) } else { why(v.gait.modes_enabled, "not while a gait plays") };
+        add(format!("gait_mode_{}", gait_mode_name(mode)), s(gait_mode_label(mode)), HardwareAction::GaitMode { mode }, ready, Some(f.gait_mode == mode));
     }
     add(s("gait_confirm"), s(GAIT_OK), HardwareAction::GaitConfirm { on: !f.gait_ok }, Ok(()), Some(f.gait_ok));
-    add(s("gait_play"), v.gait.play.text.clone(), HardwareAction::GaitPlay, why_m(v.gait.play.enabled, "needs a gait (and for Leg or Both, the confirmation), and no tune or campaign running"), None);
+    let play_reason = "needs a gait (and for Leg or Both, the confirmation), and no tune or campaign running";
+    // A gait already playing on a virtual bench (Sim only) may still pause or resume.
+    let play = if f.gait_mode != GaitMode::Sim && hw.snapshot.gait.is_none() { in_scope(v.gait.play.enabled, play_reason) } else { why_m(v.gait.play.enabled, play_reason) };
+    add(s("gait_play"), v.gait.play.text.clone(), HardwareAction::GaitPlay, play, None);
     add(s("gait_stop"), s("Stop"), HardwareAction::GaitStop, why(v.gait.stop_enabled, "no gait is playing"), None);
     for mode in DriveMode::ALL {
         add(format!("drive_mode_{}", mode.wire()), s(mode.label()), HardwareAction::DriveMode { mode }, Ok(()), Some(f.inputs.drive_mode == mode));
     }
-    add(s("flip"), s("Swap upper / lower direction"), HardwareAction::Flip, why_m(v.flip_enabled, "choose a motor first"), None);
+    add(s("flip"), s("Swap upper / lower direction"), HardwareAction::Flip, in_scope(v.flip_enabled, "choose a motor first"), None);
     add(s("clear_lower"), s("Reset lower only"), HardwareAction::ClearLower, why_m(v.clear_enabled, "choose a motor first"), None);
     add(s("clear_upper"), s("Reset upper only"), HardwareAction::ClearUpper, why_m(v.clear_enabled, "choose a motor first"), None);
     for (name, label, change) in STEPS {
         add(format!("raw_step_{name}"), s(label), HardwareAction::RawStepValue { delta: (f.step + change).clamp(-4095, 4095) }, Ok(()), None);
     }
     add(s("raw_step_negate"), s("±"), HardwareAction::RawStepValue { delta: -f.step }, Ok(()), None);
-    add(s("raw_step"), s("Send raw step"), HardwareAction::RawStep, why_m(v.raw_step_enabled, "choose a motor and a step other than 0"), None);
+    add(s("raw_step"), s("Send raw step"), HardwareAction::RawStep, in_scope(v.raw_step_enabled, "choose a motor and a step other than 0"), None);
     let export = if hw.link.is_none() {
         Err(NOT_CONNECTED.to_string())
     } else if hw.export.is_some() {

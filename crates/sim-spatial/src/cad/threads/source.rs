@@ -40,7 +40,7 @@
 use super::{ADD, DELETE_COMMENT, DELETE_THREAD, EDIT_COMMENT, REPLY, UPDATE};
 use crate::annotations::{Committed, ThreadSource};
 use crate::app::actions::Call;
-use crate::cad::actions::edit_at;
+use crate::cad::actions::edit_auxiliary_at;
 use crate::cad::document::{CadDocument, EditDone};
 use crate::cad::sync::value;
 use serde::{Deserialize, Serialize};
@@ -270,6 +270,7 @@ pub(crate) fn thread_of(t: &CadThread) -> Thread<CadAnchor> {
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum Request {
     Create(NewThread),
+    Evidence(sim_runtime::cad_client::threads::NewEvidenceThread),
     Update { id: String, patch: ThreadPatch },
     DeleteThread { id: String },
     Reply { thread: String, body: String, author: String },
@@ -282,6 +283,7 @@ impl Request {
     pub(crate) fn send(self, c: &CadClient) -> Result<Value, CadError> {
         Ok(match self {
             Request::Create(t) => value(&c.create_thread(&t)?),
+            Request::Evidence(t) => value(&c.create_evidence_thread(&t)?),
             Request::Update { id, patch } => value(&c.update_thread(&id, &patch)?),
             Request::DeleteThread { id } => value(&c.delete_thread(&id)?),
             Request::Reply { thread, body, author } => value(&c.add_comment(&thread, &body, &author)?),
@@ -323,7 +325,7 @@ impl<'a, 'c> CadThreadSource<'a, 'c> {
             other => format!("{other} · Ctrl+Z undoes"),
         };
         self.sent = Some(request.clone());
-        let outcome = edit_at(self.doc, self.call, self.began, label.to_string(), move |c| request.send(c).map(|result| EditDone { message, result }));
+        let outcome = edit_auxiliary_at(self.doc, self.call, self.began, label.to_string(), move |c| request.send(c).map(|result| EditDone { message, result }));
         if let Outcome::Done(Err(e)) = outcome {
             return Err(e);
         }
@@ -427,6 +429,19 @@ impl ThreadSource for CadThreadSource<'_, '_> {
         match command {
             ThreadCommand::PutThread { thread } => match self.threads.get(&thread.id) {
                 None => {
+                    if let Some(CadAnchor::Evidence { evidence }) = thread.targets.first() {
+                        let evidence: sim_runtime::cad_client::threads::ExperimentEvidence =
+                            serde_json::from_value(evidence.clone()).map_err(|e| format!("evidence: {e}"))?;
+                        evidence.validate()?;
+                        let first = thread.comments.first().ok_or("Comment must not be empty")?;
+                        let request = sim_runtime::cad_client::threads::NewEvidenceThread {
+                            body: first.body.clone(), author: first.author.clone(), evidence,
+                            document_id: self.doc.doc.as_ref().and_then(|d| d.document_id.clone())
+                                .ok_or("evidence.document_id: unavailable document identity")?,
+                            expected_revision: self.began.ok_or("evidence.revision: required")?,
+                        };
+                        return self.send(if label.is_empty() { ADD } else { label }, None, Request::Evidence(request));
+                    }
                     let Some(CadAnchor::Surface { node_id, point, face_index, view, .. }) = surface(&thread).cloned() else {
                         return Err("An annotation requires a part: Annotate model, then click a surface".into());
                     };

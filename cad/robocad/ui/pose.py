@@ -8,6 +8,7 @@ from PySide6.QtGui import QColor, QPen
 from PySide6.QtWidgets import (QWidget,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QComboBox,
     QSlider,QDoubleSpinBox,QPlainTextEdit,QCheckBox,QFileDialog)
 from ..pose import PoseModel, joint_range, joint_motion
+from ..motion_service import sample_model, focus_nodes
 from ..motion import validate_program, sample_program, sweep_program
 from .tools import SelectTool
 
@@ -203,8 +204,9 @@ class PosePanel(QWidget):
             self.sync_slider(); self.pause(); self.info.setText(str(error))
 
     def apply(self):
-        matrices = self.model.matrices(self.positions)
-        self.positions = dict(self.model.last_positions)
+        sample = sample_model(self.model, self.positions)
+        matrices = sample['matrices']
+        self.positions = sample['positions']
         self.app.viewport.set_pose(matrices)
         changed = [i for i,v in self.positions.items() if abs(v-self.model.home[i]) > 1e-6]
         lines = []
@@ -236,21 +238,7 @@ class PosePanel(QWidget):
     def focus_mechanism(self):
         if not self.active: self.enter()
         jid = self.joint.currentData()
-        ids = [self.model.joints[jid].child]
-        for driven,(driver,ratio) in self.model.transmissions.items():
-            if driver == jid: ids.append(self.model.joints[driven].child)
-        for lid,loop in self.model.loops.items():
-            path = set(self.model._ancestors(loop.parent)) ^ set(self.model._ancestors(loop.child))
-            if jid in path: ids.extend([loop.parent,loop.child])
-        # Include rigidly attached geometry (e.g. the full sliding foot rod),
-        # not just the small crosshead at the loop-closing pin.
-        expanded = set(ids)
-        while True:
-            children = {child for child,(parent,joint) in self.model.parents.items()
-                        if parent in expanded and (joint is None or self.model.joints[joint].type == 'fixed')}
-            if children <= expanded: break
-            expanded.update(children)
-        self.app.viewport.focus_nodes(list(expanded))
+        self.app.viewport.focus_nodes(focus_nodes(self.model, jid))
 
     def refresh_programs(self, selected=None):
         self.programs.blockSignals(True); self.programs.clear()

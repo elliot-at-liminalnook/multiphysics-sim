@@ -56,6 +56,11 @@
 //! thread (the poll joins) and [`clear`]s the other resources; entities go
 //! by `DespawnOnExit`.
 mod actions;
+mod edit;
+mod ui_api;
+pub(crate) mod experiments;
+pub(crate) mod experiment_review;
+pub(crate) mod motion;
 mod analysis_overlay;
 mod attach;
 pub(crate) mod components;
@@ -201,6 +206,7 @@ impl Plugin for CadCorePlugin {
             // references' reads and the system link's status on jobs, Open in builder's switch.
             .add_plugins((tree::CoreParts, threads::CoreParts, references::CoreParts))
             .add_plugins((components::CoreParts, composition::CoreParts))
+            .add_plugins((experiments::CoreParts, experiment_review::CoreParts, motion::CoreParts))
             // At window close, a self-started service is stopped (or left running with unsaved edits).
             // After ExitSystems, which writes AppExit in Last: before it, the
             // message would be read only on a frame that never comes, and the
@@ -234,6 +240,9 @@ impl Plugin for CadPlugin {
         panel::build(app);
         components::build(app);
         composition::build(app);
+        experiments::build(app);
+        experiment_review::build(app);
+        motion::build(app);
         // Sub-body selection (picking, hover, box select, the Alt menu, mode
         // buttons, overlays) and the tools (gizmo, push/pull, offset, measure,
         // numeric bar, snapping): each registers its own systems, all writing

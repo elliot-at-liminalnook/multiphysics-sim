@@ -136,7 +136,10 @@ impl CadDocument {
     /// against geometry that is gone).
     /// Nothing is sent when refused.
     pub(crate) fn commit_refusal(&self, began: Option<u64>) -> Option<String> {
-        if let Some(why) = self.edit_refusal() {
+        self.commit_refusal_for(began, false)
+    }
+    pub(crate) fn commit_refusal_for(&self, began: Option<u64>, auxiliary: bool) -> Option<String> {
+        if let Some(why) = self.edit_refusal_for(auxiliary) {
             return Some(why);
         }
         if let Some(stale) = &self.stale {
@@ -160,7 +163,7 @@ impl CadDocument {
     /// old; RoboCAD may hold edits made since), an edit in flight, or just
     /// after one until a successful `GET /` sent after it has been read.
     pub(crate) fn unsaved(&self) -> Option<bool> {
-        if self.dirty_known_at.is_some() || self.edit.is_some() || self.component_busy.is_some() || !self.connected() {
+        if self.dirty_known_at.is_some() || self.edit.is_some() || self.component_busy.is_some() || self.uncertain_edit.is_some() || !self.connected() {
             return None;
         }
         self.health.as_ref().map(|h| h.dirty)
@@ -174,6 +177,15 @@ impl CadDocument {
 
     /// Why a mutating request cannot be sent now (refusals name it).
     pub(crate) fn edit_refusal(&self) -> Option<String> {
+        self.edit_refusal_for(false)
+    }
+    pub(crate) fn edit_refusal_for(&self, auxiliary: bool) -> Option<String> {
+        if let Some(error) = &self.uncertain_edit {
+            return Some(format!("Unknown source edit outcome: {error}; inspect fresh source/history and explicitly acknowledge; no automatic retry"));
+        }
+        if self.preview_read_only && !auxiliary {
+            return Some("Return to live CAD before editing the physical source; captured and kinematic previews are read-only".into());
+        }
         if let Some(label) = &self.component_busy {
             return Some(format!("a component rebuild is in progress: {label}; wait or cancel it in Components"));
         }
@@ -193,6 +205,7 @@ impl CadDocument {
     /// dropped with the document, nothing written).
     pub(crate) fn switch_blockers(&self) -> Vec<String> {
         let mut blockers = Vec::new();
+        if self.uncertain_edit.is_some() { blockers.push("An unknown source edit outcome needs inspection and explicit acknowledgment before replacing this document".into()); }
         if let Some(label) = &self.component_busy {
             blockers.push(format!("a component rebuild is in progress: {label}; wait or cancel it in Components"));
         }

@@ -104,6 +104,10 @@ pub struct CadDocument {
     /// Service-owned component preparation held by the persistent components
     /// feature. Blocks source edits and document replacement until acknowledged.
     pub component_busy: Option<String>,
+    /// Display-only captured/kinematic view; source geometry edits are refused.
+    pub preview_read_only: bool,
+    pub uncertain_edit: Option<String>,
+    pub uncertain_history: Vec<Value>,
     /// The latest outcome line (Ok message or the refusal / error).
     pub status: Option<Result<String, String>>,
     /// Bumped whenever anything the panels show changes.
@@ -212,6 +216,9 @@ impl CadDocument {
             references: Default::default(),
             edit: None,
             component_busy: None,
+            preview_read_only: false,
+            uncertain_edit: None,
+            uncertain_history: Vec::new(),
             status: None,
             revision: 0,
             connect: None,

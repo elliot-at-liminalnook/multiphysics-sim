@@ -44,12 +44,15 @@ mod read;
 mod source;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod evidence_tests;
 
 pub use source::CadAnchor;
 pub(in crate::cad) use controls::controls;
 pub(crate) use controls::{attachment, controls_of, shown_threads, submit_action};
 pub(in crate::cad) use ops::handle;
 pub(crate) use ops::open;
+pub(crate) use ops::annotate_evidence;
 
 use crate::annotations::InFlight;
 use crate::app::actions::Spec;

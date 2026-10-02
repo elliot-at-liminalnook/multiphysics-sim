@@ -47,6 +47,7 @@ use std::sync::{Arc, Mutex, MutexGuard, Once};
 use bevy::tasks::{AsyncComputeTaskPool, IoTaskPool, Task, TaskPool};
 
 mod child;
+pub mod video;
 mod run_thread;
 #[cfg(test)]
 mod tests;

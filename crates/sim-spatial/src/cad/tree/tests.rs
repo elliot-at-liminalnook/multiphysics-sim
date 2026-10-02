@@ -80,7 +80,7 @@ fn apply(action: &CadAction, doc: &mut CadDocument, f: &mut Fixture) -> Outcome 
     let mut plane = crate::cad::sketch::CadActivePlane::default();
     let (mut continuation, mut replies) = (Value::Null, Replies::default());
     let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
-    let mut cx = Cx { doc, shared: f.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches: None, display: None, views: None, files: None, components: &mut crate::cad::components::ComponentsState::default(), composition: &mut crate::cad::composition::CadCompositionState::default(), camera: Vec::new() };
+    let mut cx = Cx { doc, shared: f.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches: None, display: None, views: None, files: None, components: &mut crate::cad::components::ComponentsState::default(), composition: &mut crate::cad::composition::CadCompositionState::default(), experiments: &mut crate::cad::experiments::ExperimentsState::default(), review: &mut crate::cad::experiment_review::ReviewState::default(), motion: &mut crate::cad::motion::MotionState::default(), camera: Vec::new() };
     crate::cad::actions::handle(action, &mut call, &mut cx)
 }
 

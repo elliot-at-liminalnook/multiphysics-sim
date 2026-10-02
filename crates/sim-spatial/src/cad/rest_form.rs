@@ -21,6 +21,7 @@ pub(in crate::cad) fn rest_form(action: &CadAction) -> Value {
         CadAction::CadUndo => json!({"command": "cad_undo"}),
         CadAction::CadRedo => json!({"command": "cad_redo"}),
         CadAction::CadSave { path } => json!({"command": "cad_save", "path": path}),
+        CadAction::CadReconcileEdit { acknowledge, revision } => json!({"command":"cad_reconcile_edit","acknowledge":acknowledge,"revision":revision}),
         CadAction::CadRefresh => json!({"command": "cad_refresh"}),
         CadAction::CadFit { id } => json!({"command": "cad_fit", "id": id}),
         CadAction::CadPhysical => json!({"command": "cad_physical"}),
@@ -76,5 +77,8 @@ pub(in crate::cad) fn rest_form(action: &CadAction) -> Value {
         CadAction::CadReferences(a) => tagged("cad_references", a),
         CadAction::CadComponents(a) => tagged("cad_components", a),
         CadAction::CadComposition(a) => tagged("cad_composition", a),
+        CadAction::CadExperiments(a) => tagged("cad_experiments", a),
+        CadAction::CadExperimentReview(a) => tagged("cad_experiment_review", a),
+        CadAction::CadMotion(a) => tagged("cad_motion", a),
     }
 }

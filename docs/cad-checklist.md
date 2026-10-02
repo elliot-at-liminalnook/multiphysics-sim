@@ -601,3 +601,19 @@ exact reference parity remain unexecuted; no historical receipt is replaced.
 | CAD-211 Stale first pick | Pick a port; edit source/reload same-revision document; pick another or Leave open | First generation/document/revision stamp refused; pending intent and diagnostic retained |
 | CAD-212 Open/cancel/remove | Pick unused physical or signal-output port; Leave port open; separately Cancel connection or Remove connection | Leave creates singleton ID and undo; connected port refuses; Cancel performs no source edit; Remove deletes whole net |
 | CAD-213 Build failure | Present invalid shared graph twice; then change source key | Path-named diagnostic retained, unchanged failed key schedules no retry; prior layout labelled stale; changed key retries |
+
+## T43 source-reading handoff (not an executed checklist signoff)
+
+All eight cad-experiments-motion batch IDs and source traces are in
+[cad-experiments-motion-evidence.md](cad-experiments-motion-evidence.md).
+Unexecuted acceptance sequence: rendered editor → Check → ImportComposition →
+Run → Cancel/status receipt → history captured review → baseline compare →
+sample annotation/show evidence → candidate read/geometry/accept or refuse →
+reference pose/program edit/sweep/play/seek/return → native export/cancel.
+Exercise missing/stale/replaced documents, closed docks, switched focused drafts,
+Running cancel acknowledgments, ambiguous POST discovery/inspection, guarded undo
+and export publication failure. Written fixtures inspect actual
+Button/CadButton/Enabled entities rather than catalogue registration alone.
+Python/OCCT, registry/experiment executables and local ffmpeg remain required;
+no assigned step requires a Qt window. Exact parity and physical qualification
+remain open. No fixture, build, launch, screenshot, capture or export ran.

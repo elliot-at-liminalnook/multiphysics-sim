@@ -9,12 +9,16 @@ use serde_json::{Map, Value, json};
 impl actions::Action for CadAction {
     fn commands() -> Vec<Spec> {
         let mut specs = Self::core_commands();
+        specs.push(spec("cad_reconcile_edit", CAD, json!({"acknowledge":false}), "Read fresh source/history after an unknown source edit. acknowledge=true with the shown revision explicitly clears the refusal after inspection; preserves its receipt and never retries a POST."));
         // cad-views-export: the display state and section, saved views, files, export and render.
         specs.extend(super::display::specs());
         specs.extend(super::views::specs());
         specs.extend(super::files::specs());
         specs.extend(super::components::specs());
         specs.extend(super::composition::specs());
+        specs.extend(super::experiments::specs());
+        specs.extend(super::experiment_review::specs());
+        specs.extend(super::motion::specs());
         // cad-physical-inspect: the Robot panel and robot tools, materials, the inspector's physical rows, results.
         specs.extend(super::robot::specs());
         specs.extend(super::materials::specs());

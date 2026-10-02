@@ -27,7 +27,7 @@ use std::path::PathBuf;
 /// Lessons → Build over an open lesson is the lesson screen's own toggle,
 /// never blocked (as before the modes were one app). Build → Lessons keeps a
 /// live run, paused (`show_lessons`).
-pub(super) fn leaving_blockers(world: &World, current: ViewerMode, target: ViewerMode) -> Vec<String> {
+pub(super) fn leaving_blockers(world: &mut World, current: ViewerMode, target: ViewerMode) -> Vec<String> {
     let mut blockers = Vec::new();
     // A new lessons folder brings its own builder in place of this one.
     let replacing = target == ViewerMode::Lessons && !world.contains_resource::<Learn>();
@@ -54,6 +54,17 @@ pub(super) fn leaving_blockers(world: &World, current: ViewerMode, target: Viewe
     // An edit in flight; a self-started service's unsaved edits (it stops
     // when CAD mode closes, and the viewer never saves for you).
     if current == ViewerMode::Cad {
+        if let Some(mut experiments) = world.get_resource_mut::<crate::cad::experiments::ExperimentsState>() {
+            experiments.request_cancel();
+            blockers.extend(experiments.mode_blockers());
+        }
+        if let Some(mut review) = world.get_resource_mut::<crate::cad::experiment_review::ReviewState>() {
+            review.request_cancel();
+        }
+        if let Some(mut motion) = world.get_resource_mut::<crate::cad::motion::MotionState>() {
+            motion.request_cancel();
+            blockers.extend(motion.mode_blockers());
+        }
         if let Some(doc) = world.get_resource::<CadDocument>() {
             blockers.extend(doc.switch_blockers());
             // A sketch shape with clicked points would be lost (cad-sketch).

@@ -175,6 +175,65 @@ pub struct NewThread {
     pub part_refs: Option<Vec<PartRef>>,
 }
 
+/// Captured sample reference accepted by `annotations.evidence_reference`.
+/// Seconds and source coordinates are retained; no live geometry is implied.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ExperimentEvidence {
+    pub run_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub signal: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub time_range: Option<[f64; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<EvidenceSource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub physical_hash: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub node_ids: Option<Vec<String>>,
+}
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EvidenceSource {
+    pub path: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub line: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub column: Option<u64>,
+}
+impl ExperimentEvidence {
+    pub fn validate(&self) -> Result<(), String> {
+        let text = |v: &str, name: &str| {
+            if v.trim().is_empty() || v.chars().count() > 20000 {
+                Err(format!("evidence.{name}: nonempty text of at most 20000 characters required"))
+            } else { Ok(()) }
+        };
+        text(&self.run_id, "run_id")?;
+        for (name, value) in [("signal", &self.signal), ("physical_hash", &self.physical_hash)] {
+            if let Some(value) = value { text(value, name)?; }
+        }
+        if self.time_range.is_some_and(|[a,b]| !a.is_finite() || !b.is_finite() || a < 0. || b < a) {
+            return Err("evidence.time_range: ordered nonnegative finite seconds required".into());
+        }
+        if let Some(source) = &self.source {
+            text(&source.path, "source.path")?;
+            if source.line == Some(0) || source.column == Some(0) {
+                return Err("evidence.source: line and column must be positive integers".into());
+            }
+        }
+        for id in self.node_ids.iter().flatten() { text(id, "node_ids")?; }
+        Ok(())
+    }
+}
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct NewEvidenceThread {
+    pub body: String,
+    pub author: String,
+    pub evidence: ExperimentEvidence,
+    pub document_id: String,
+    pub expected_revision: u64,
+}
+
 /// `PATCH /threads/{id}`' body (`update_thread`): only the given keys.
 /// A reattach sends `node_id` and `point` (and `face`, `view`); RoboCAD
 /// reads `face` only with them.
@@ -280,6 +339,12 @@ impl CadClient {
     /// `POST /threads`: one undo step "Add annotation"; answers the thread
     /// (its id is RoboCAD's).
     pub fn create_thread(&self, thread: &NewThread) -> Result<CadThread, CadError> {
+        self.send("POST", "/threads", Some(thread))
+    }
+    pub fn create_evidence_thread(&self, thread: &NewEvidenceThread) -> Result<CadThread, CadError> {
+        thread.evidence.validate().map_err(|message| CadError {
+            method: "-", route: "/threads".into(), status: None, message,
+        })?;
         self.send("POST", "/threads", Some(thread))
     }
     /// `PATCH /threads/{id}`: one undo step "Update annotation".

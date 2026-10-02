@@ -2356,3 +2356,25 @@ the hardware checklist is signed off.
   quadruped`; the fragment matches exactly one title, "The quadruped's trot"
   (`sim_phenomena::exhibits`, exhibits.rs:2096), by the case-insensitive
   first-contains rule (`ExhibitRef::resolve`). Not launched.
+
+## CAD experiments/motion inventory update — T43 (2026-10-01)
+
+Current native entry: sim-spatial CAD mode, `.rcad` self-started headless service
+or configured service URL. Actual Experiments, Captured review and Motion dock
+controls share typed CadAction handlers with system_ui and REST. Source owners:
+cad/experiments authoring/lifecycle; cad/experiment_review isolated replay,
+signals/sources and annotations; cad/motion kinematic programs/export; shared
+cad_client contracts, Python captured_review/motion_service and existing Rust
+experiment runtime/process service. Completed native preflight supplies
+composition import metadata. Candidate promotion and source restore/script/batch
+remain authoritative guarded undo commands.
+
+[T43 evidence](cad-experiments-motion-evidence.md) maps all eight IDs and the
+63 individual parity rows. The native UI gap for this assigned family is closed
+by source reading, not by execution or visual/parity evidence. Python/OCCT and
+registry/experiment executables remain migration dependencies; ffmpeg supports
+local native export. Qt/browser compatibility remains; no assigned workflow
+requires Qt. This update supersedes historical experiment/pose external-window
+requirements for this family only, not unrelated hardware or derivation phases.
+No simulation, measured values or physics qualification changed. No build,
+fixture, window, screenshot, parity/capture/export execution occurred.

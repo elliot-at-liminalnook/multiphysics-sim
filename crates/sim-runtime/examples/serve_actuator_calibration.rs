@@ -2,6 +2,7 @@
 //! persisted operator measurements, and the existing CAD/WASM viewer.
 use serde::Deserialize;
 use serde_json::{Value, json};
+use sim_runtime::hardware_client::calibration::{BINDING_REFUSED, BINDING_REFUSED_STATUS, ExecutionIdentity, virtual_command_allowed};
 use sim_runtime::acquisition::{
     calibration::{AxisCalibration, Calibration},
     calibration_serial::CalibrationBus,
@@ -20,6 +21,8 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 type R<T> = Result<T, String>;
+const STOP_INTERRUPTED: &str = "STOP interrupted this command; start again explicitly";
+const STOP_LATCHED_MESSAGE: &str = "STOP latched; all configured axes torque off. Records retained.";
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Config {
@@ -36,11 +39,14 @@ struct Config {
 fn default_drive() -> u16 {
     25
 }
+fn nullable_motor_id<'de, D: serde::Deserializer<'de>>(d: D) -> Result<u8, D::Error> {
+    Ok(Option::<u8>::deserialize(d)?.unwrap_or(0))
+}
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 struct Request {
     action: String,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "nullable_motor_id")]
     id: u8,
     #[serde(default)]
     delta: i16,
@@ -117,7 +123,14 @@ struct GaitLease {
     playing: bool,
     last_seen: Instant,
 }
+/// How long the HTTP handler waits for the worker's reply.
+const HTTP_WAIT: Duration = Duration::from_secs(8);
 struct Job {
+    /// When the handler queued it; older than [`HTTP_WAIT`] at pickup means the
+    /// client already gave up, so it is refused unrun.
+    queued: Instant,
+    execution: Option<(ExecutionIdentity, u64)>,
+    stop_epoch: u64,
     request: Request,
     client: String,
     reply: mpsc::Sender<R<Value>>,
@@ -179,6 +192,34 @@ fn readback_lost(e: &str) -> bool {
     let e = e.to_ascii_lowercase();
     e.contains("timeout") || e.contains("readback") || e.contains("receive") || e.contains("serial")
 }
+/// Transport-class failure of a bus call: readback loss, or a socket-only OS
+/// error ("Broken pipe (os error 32)", "Connection reset by peer", EOF).
+/// Deliberately not every "os error": filesystem failures (disk full in the
+/// bus log) are not a lost link. Apply it only to errors a bus call returned
+/// (a stop, readback or probe), never to whole-command results that may hold
+/// save/receipt failures. `stop()`'s bounded-retry wrapper text is stripped
+/// first, since it always says "readback" even when a motor failed to settle.
+fn transport_lost(e: &str) -> bool {
+    let e = e.strip_prefix("Stop readback unverified after bounded retries: ").unwrap_or(e);
+    let lower = e.to_ascii_lowercase();
+    readback_lost(e) || ["broken pipe", "connection reset", "connection aborted", "connection refused", "not connected",
+        "resource temporarily unavailable", "unexpected end of file", "failed to fill whole buffer"].iter().any(|k| lower.contains(k))
+}
+/// Drops a lost bus: no further I/O on it (closing a virtual socket makes the
+/// bench torque off on descriptor loss). Turn counts went with it, so the
+/// coordinate session restarts; a virtual execution is revoked, so every later
+/// command fails `check_execution` with the 409 binding refusal.
+fn lose_bus(app: &App, bus: &mut Option<CalibrationBus>) {
+    *bus = None;
+    let mut s = app.state.lock().unwrap();
+    s["connected"] = json!(false);
+    s["enabled_id"] = Value::Null;
+    s["busy"] = json!(false);
+    s["coordinate_session"] = json!(stamp().to_string());
+    if app.execution.is_virtual_calibration() {
+        s["execution"] = Value::Null;
+    }
+}
 fn motion_request(r: &Request) -> R<MotionCommand> {
     match r.motion.as_str() {
         "upper" => Ok(MotionCommand::Jog(1)),
@@ -191,6 +232,10 @@ fn motion_request(r: &Request) -> R<MotionCommand> {
     }
 }
 struct App {
+    execution: ExecutionIdentity,
+    virtual_socket: Option<PathBuf>,
+    generations: Mutex<std::collections::BTreeMap<String, u64>>,
+    safety: Mutex<u64>,
     state: Mutex<Value>,
     jobs: mpsc::SyncSender<Job>,
     stop: AtomicBool,
@@ -202,6 +247,55 @@ struct App {
     sweep: Mutex<Option<BrowserSweep>>,
     gait: Mutex<Option<GaitLease>>,
     sweep_tuning: SweepTuning,
+}
+impl App {
+    fn check_execution(&self, action: &str, client: &str, pin: Option<&(ExecutionIdentity, u64)>) -> R<()> {
+        if action == "stop" { return Ok(()); }
+        if self.execution.is_virtual_calibration() && self.state.lock().unwrap()["execution"].is_null() {
+            return Err(format!("{BINDING_REFUSED}: Virtual bench disconnected; restart and reconnect explicitly"));
+        }
+        match pin {
+            Some((identity, generation)) => {
+                if !self.execution.is_virtual_calibration() || identity != &self.execution
+                    || *generation == 0 || !virtual_command_allowed(action)
+                    || self.generations.lock().unwrap().get(client) != Some(generation) {
+                    return Err(format!("{BINDING_REFUSED}: identity/generation mismatch or out-of-scope command"));
+                }
+            }
+            None if self.execution.is_virtual_calibration() => return Err(format!("{BINDING_REFUSED}: Virtual execution identity required")),
+            None => (), // Physical operator/browser compatibility; native remote policy refuses automation.
+        }
+        Ok(())
+    }
+    /// Clears stop/cancel for a command captured at `epoch`. A STOP (or a
+    /// select/clear/generation latch) since then refuses it; a stop flag left
+    /// latched by a finished session (gait, sweep, fault) needs a fresh select.
+    fn arm(&self, epoch: u64, explicit_rearm: bool) -> R<()> {
+        let safety = self.safety.lock().unwrap();
+        if *safety != epoch {
+            return Err(STOP_INTERRUPTED.into());
+        }
+        if !explicit_rearm && self.stop.load(Ordering::SeqCst) {
+            return Err("Stop is latched; select a motor again".into());
+        }
+        self.cancel.store(false, Ordering::SeqCst);
+        self.stop.store(false, Ordering::SeqCst);
+        Ok(())
+    }
+    fn latch_stop(&self) -> u64 {
+        let mut safety = self.safety.lock().unwrap();
+        *safety = safety.wrapping_add(1);
+        self.stop.store(true, Ordering::SeqCst);
+        self.cancel.store(true, Ordering::SeqCst);
+        *safety
+    }
+    fn open_bus(&self, cfg: &Config) -> R<CalibrationBus> {
+        match &self.virtual_socket {
+            Some(socket) => CalibrationBus::open_virtual(socket, Some(&self.execution.bench_instance), &cfg.output.join("serial.jsonl")).map(|v| v.0),
+            None if self.execution.is_virtual_calibration() => Err(format!("{BINDING_REFUSED}: virtual execution has no capability socket; serial is never opened")),
+            None => CalibrationBus::open(&cfg.serial, &cfg.output.join("serial.jsonl")),
+        }
+    }
 }
 fn stamp() -> u128 {
     SystemTime::now()
@@ -215,7 +309,52 @@ fn save(path: &PathBuf, c: &Calibration) -> R<()> {
     fs::write(&tmp, serde_json::to_vec_pretty(c).unwrap()).map_err(|e| e.to_string())?;
     fs::rename(tmp, path).map_err(|e| e.to_string())
 }
-fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
+/// Acts on a STOP epoch newer than `handled`: per-axis torque-off with
+/// stationary readback for every configured axis on an open bus (regardless of
+/// selection), then clears ownership. Returns the epoch now handled.
+fn observe_stop(app: &App, cfg: &Config, bus: &mut Option<CalibrationBus>, handled: u64, selected: &mut u8, verified: &mut bool, owner: &mut String) -> u64 {
+    let epoch = *app.safety.lock().unwrap();
+    if epoch == handled {
+        return handled;
+    }
+    let mut failures = Vec::new();
+    let mut link_lost = false;
+    if let Some(b) = bus.as_mut() {
+        for id in cfg.roles.keys() {
+            match b.stop(*id) {
+                Ok(t) => app.state.lock().unwrap()["samples"][id.to_string()] = json!(t),
+                Err(error) => {
+                    failures.push(format!("{}: {error}", cfg.roles[id]));
+                    // A hung or dead virtual link would block each remaining
+                    // axis for its full retry budget (past the HTTP wait):
+                    // stop here. Physical hardware attempts every axis and
+                    // keeps its bus and coordinate session.
+                    if transport_lost(&error) && app.execution.is_virtual_calibration() {
+                        link_lost = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    if link_lost {
+        lose_bus(app, bus);
+    }
+    *selected = 0;
+    *verified = false;
+    owner.clear();
+    let mut s = app.state.lock().unwrap();
+    s["enabled_id"] = Value::Null;
+    s["busy"] = json!(false);
+    if failures.is_empty() {
+        s["message"] = json!(STOP_LATCHED_MESSAGE);
+    } else {
+        s["error"] = json!(failures.join("; "));
+        s["message"] = json!(format!("STOP latched; torque-off readback unverified ({}). Cut motor power. Records retained.", failures.join("; ")));
+    }
+    epoch
+}
+fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config, initial_bus: Option<CalibrationBus>) {
     let path = cfg.output.join("calibration.json");
     let mut cal = if path.exists() {
         match fs::read(&path)
@@ -247,8 +386,11 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
             .collect();
         c
     };
+    if app.execution.is_virtual_calibration() {
+        cal.provenance = format!("SIMULATED virtual calibration; server {}; bench {}. Not measured physical hardware. No CAD/registry promotion.", app.execution.server_instance, app.execution.bench_instance);
+    }
     cal.units="Continuous motor encoder counts in the powered tracking session; 4096 counts/revolution; not joint degrees".into();
-    let mut bus: Option<CalibrationBus> = None;
+    let mut bus: Option<CalibrationBus> = initial_bus;
     let mut idle_polling = false;
     let mut owner = String::new();
     let mut selected = 0;
@@ -261,11 +403,31 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
         s["calibration"] = json!(cal);
         s["message"] = json!("Connect and inspect to read motors. No motion on page load.");
     }
+    // STOP epochs already acted on. Every newer epoch torques off all axes,
+    // including ones held by hold_others or left after inspect/clear.
+    let mut handled_stop_epoch = *app.safety.lock().unwrap();
     loop {
+        handled_stop_epoch = observe_stop(&app, &cfg, &mut bus, handled_stop_epoch, &mut selected, &mut verified, &mut owner);
         let job = match rx.recv_timeout(Duration::from_millis(150)) {
-            Ok(job) => job,
+            Ok(job) => {
+                // A STOP that landed while waiting is acted on before this job.
+                handled_stop_epoch = observe_stop(&app, &cfg, &mut bus, handled_stop_epoch, &mut selected, &mut verified, &mut owner);
+                // Refusals here never ran anything, so they skip the error
+                // path's stop/disown of a live session. Binding first (409; a
+                // generation bump already latched STOP), then expiry, then a
+                // job captured before the latest STOP/latch.
+                let refusal = app.check_execution(&job.request.action, &job.client, job.execution.as_ref()).err()
+                    .or_else(|| (job.queued.elapsed() + Duration::from_secs(1) >= HTTP_WAIT).then(|| "Command expired before execution; nothing ran".to_string()))
+                    .or_else(|| (job.stop_epoch != handled_stop_epoch).then(|| STOP_INTERRUPTED.to_string()));
+                if let Some(refusal) = refusal {
+                    let _ = job.reply.send(Err(refusal));
+                    continue;
+                }
+                job
+            }
             Err(mpsc::RecvTimeoutError::Disconnected) => break,
             Err(mpsc::RecvTimeoutError::Timeout) => {
+                let mut idle_lost = false;
                 if idle_polling {
                     if let Some(b) = bus.as_mut() {
                         for id in cfg.roles.keys() {
@@ -282,6 +444,8 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                                     b.reset_turn_tracking_for(*id);
                                     let mut s = app.state.lock().unwrap();
                                     s["enabled_id"] = Value::Null;
+                                    s["connected"] = json!(false);
+                                    // A virtual execution is revoked only with its bus (lose_bus below).
                                     if multi_turn(&cal.axes[id]) {
                                         s["coordinate_session"] = json!(stamp().to_string());
                                     }
@@ -289,23 +453,30 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                                         "Readback lost from {}: {e}. Select a motor to reconnect.",
                                         cfg.roles[id]
                                     ));
+                                    idle_lost = app.execution.is_virtual_calibration() && transport_lost(&e);
                                     break;
                                 }
                             }
                         }
                     }
                 }
+                if idle_lost {
+                    // The virtual execution is revoked; its link is not reused.
+                    lose_bus(&app, &mut bus);
+                    app.state.lock().unwrap()["message"] = json!("Virtual bench readback lost; bus closed. Restart and reconnect explicitly.");
+                }
                 continue;
             }
         };
+        let virtual_mode = app.execution.is_virtual_calibration();
+        // A session failed inside an Ok reply; a bus probe afterwards decides
+        // whether the virtual link is gone (its text may be a save failure).
+        let mut probe_link = false;
         let result = (|| -> R<Value> {
             let r = &job.request;
             if r.action == "inspect" {
                 if bus.is_none() {
-                    bus = Some(CalibrationBus::open(
-                        &cfg.serial,
-                        &cfg.output.join("serial.jsonl"),
-                    )?)
+                    bus = Some(app.open_bus(&cfg)?)
                 }
                 let b = bus.as_mut().unwrap();
                 idle_polling = true;
@@ -351,10 +522,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
             }
             if r.action == "select" {
                 if bus.is_none() {
-                    bus = Some(CalibrationBus::open(
-                        &cfg.serial,
-                        &cfg.output.join("serial.jsonl"),
-                    )?);
+                    bus = Some(app.open_bus(&cfg)?);
                 }
                 let b = bus.as_mut().unwrap();
                 idle_polling = true;
@@ -381,7 +549,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                 verified = true;
                 last_seq = r.sequence;
                 app.cancel_sequence.store(r.sequence, Ordering::SeqCst);
-                app.stop.store(false, Ordering::SeqCst);
+                app.arm(job.stop_epoch, true)?;
                 let mut s = app.state.lock().unwrap();
                 s["connected"] = json!(true);
                 s["samples"][r.id.to_string()] = json!(t);
@@ -400,16 +568,18 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                 if !r.supported {
                     return Err("Confirm the fixture is supported with torque disabled".into());
                 }
-                if !owner.is_empty() && owner != job.client {
-                    return Err("Another tab owns the fixture; Stop before taking over".into());
+                // Re-proves the axis this tab just selected; never a rearm
+                // after STOP (STOP clears the selection and owner, and leaves
+                // the stop flag set until a fresh select).
+                if selected != r.id || owner != job.client {
+                    return Err("Select this motor in this tab first".into());
                 }
-                owner = job.client.clone();
-                selected = r.id;
                 verified = false;
                 last_seq = 0;
                 app.cancel_sequence.store(0, Ordering::SeqCst);
-                app.stop.store(false, Ordering::SeqCst);
+                app.arm(job.stop_epoch, false)?;
                 let t = b.prove_watchdogs(r.id)?;
+                app.arm(job.stop_epoch, false)?;
                 verified = true;
                 let mut s = app.state.lock().unwrap();
                 s["samples"][r.id.to_string()] = json!(t);
@@ -417,17 +587,6 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                 s["message"] = json!(
                     "Ready for deliberate jogs. Zero-drive watchdogs verified; mechanical stopping distance remains unqualified."
                 );
-                return Ok(s.clone());
-            }
-            if r.action == "stop" {
-                let t = b.stop(r.id)?;
-                verified = false;
-                owner.clear();
-                selected = 0;
-                let mut s = app.state.lock().unwrap();
-                s["samples"][r.id.to_string()] = json!(t);
-                s["enabled_id"] = Value::Null;
-                s["message"] = json!("Torque off and stationary encoder verified.");
                 return Ok(s.clone());
             }
             if r.action == "clear" {
@@ -484,13 +643,14 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                     return Err(format!("Only {room} counts to the nearest saved pose; move toward the middle first (needs 100)"));
                 }
                 let duty = (r.drive_pwm as f64 / 1000.).clamp(0.05, 1.);
+                // Arm before publishing `running`: a refusal must not leave it set.
+                app.arm(job.stop_epoch, false)?;
                 {
                     let mut s = app.state.lock().unwrap();
-                    s["tuning"] = json!({"running":true,"motor_id":r.id,"stage":"Starting","travel_counts":travel});
+                    s["tuning"] = json!({"execution":app.execution,"simulated":app.execution.is_virtual_calibration(),"running":true,"motor_id":r.id,"stage":"Starting","travel_counts":travel});
                     s["message"] = json!(format!("Tuning {} — short moves within ±{travel} counts. Z stops.", cfg.roles[&r.id]));
                     let _ = job.reply.send(Ok(s.clone()));
                 }
-                app.cancel.store(false, Ordering::SeqCst);
                 let result = b.identify(r.id, travel, duty, cfg.sweep_tuning.period_s, &app.cancel, |stage| {
                     app.state.lock().unwrap()["tuning"]["stage"] = json!(stage);
                 });
@@ -506,7 +666,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                         &fits, breakaway, record["loop_period_s"].as_f64().unwrap_or(cfg.sweep_tuning.period_s),
                         cfg.sweep_tuning.velocity_filter_s, &name)?;
                     let artifact = json!({"record":record,"fits":fits,"tuning":tuning,"role":cfg.roles[&r.id],
-                        "provenance":"Open-loop PWM identification under this fixture's load and supply; commissioning estimate, not a validated joint model"});
+                        "execution":app.execution,"simulated":app.execution.is_virtual_calibration(),"provenance":"Open-loop PWM identification under this fixture's load and supply; commissioning estimate, not a validated joint model"});
                     fs::write(cfg.output.join(&name), serde_json::to_vec_pretty(&artifact).unwrap()).map_err(|e| e.to_string())?;
                     Ok(tuning)
                 });
@@ -528,6 +688,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                             tuning.friction_duty * 100., tuning.pid.kp, tuning.pid.ki, tuning.pid.kd));
                     }
                     Err(e) => {
+                        probe_link = virtual_mode;
                         s["tuning"]["error"] = json!(e);
                         s["message"] = json!(format!("Tuning stopped: {e}. Torque off; previous gains kept."));
                     }
@@ -538,7 +699,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                 let reply = |s: &Value| {
                     let _ = job.reply.send(Ok(s.clone()));
                 };
-                let outcome = run_gait(&app, &cfg, b, &cal, &proven, current_session.as_deref(), &job.client, r, reply);
+                let outcome = run_gait(&app, &cfg, b, &cal, &proven, current_session.as_deref(), &job.client, r, job.stop_epoch, reply);
                 *app.gait.lock().unwrap() = None;
                 app.stop.store(true, Ordering::SeqCst);
                 verified = false;
@@ -550,6 +711,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                 match outcome {
                     Ok(message) => s["message"] = json!(format!("{message}. Torque off and stationary encoder verified.")),
                     Err(e) => {
+                        probe_link = virtual_mode;
                         s["gait"]["error"] = json!(e);
                         s["message"] = json!(format!("Gait stopped: {e}. Torque off."));
                     }
@@ -560,7 +722,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                 let reply = |s: &Value| {
                     let _ = job.reply.send(Ok(s.clone()));
                 };
-                let outcome = run_lab_step(&app, &cfg, b, &cal, &proven, current_session.as_deref(), r, reply);
+                let outcome = run_lab_step(&app, &cfg, b, &cal, &proven, current_session.as_deref(), r, job.stop_epoch, reply);
                 verified = false;
                 owner.clear();
                 let mut s = app.state.lock().unwrap();
@@ -573,6 +735,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                         s["message"] = json!(format!("Lab step finished: {}. Torque off.", result["headline"].as_str().unwrap_or("")));
                     }
                     Err(e) => {
+                        probe_link = virtual_mode;
                         s["lab"]["error"] = json!(e);
                         s["message"] = json!(format!("Lab step stopped: {e}. Torque off."));
                     }
@@ -583,7 +746,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                 let reply = |s: &Value| {
                     let _ = job.reply.send(Ok(s.clone()));
                 };
-                let outcome = run_campaign(&app, &cfg, b, &cal, &proven, current_session.as_deref(), r, reply);
+                let outcome = run_campaign(&app, &cfg, b, &cal, &proven, current_session.as_deref(), r, job.stop_epoch, reply);
                 verified = false;
                 owner.clear();
                 let mut s = app.state.lock().unwrap();
@@ -596,6 +759,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                         s["message"] = json!(format!("Campaign finished: {}. Results in {}. Nothing was promoted to CAD.", summary["headline"].as_str().unwrap_or(""), summary["directory"].as_str().unwrap_or("")));
                     }
                     Err(e) => {
+                        probe_link = virtual_mode;
                         s["campaign"]["error"] = json!(e);
                         s["message"] = json!(format!("Campaign stopped: {e}. Torque off; completed stages are kept as receipts (Resume continues)."));
                     }
@@ -641,7 +805,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                     }
                 }
                 let axes: Vec<AxisCalibration> = ids.iter().map(|k| usable(&cal.axes[k], current_session.as_deref())).collect();
-                app.cancel.store(false, Ordering::SeqCst);
+                app.arm(job.stop_epoch, false)?;
                 if r.sequence <= app.cancel_sequence.load(Ordering::SeqCst)
                     || app.stop.load(Ordering::SeqCst)
                 {
@@ -716,7 +880,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                     let mut s=app.state.lock().unwrap();s["samples"][r.id.to_string()]=json!(t);
                     s["sweep"]["samples"]=json!(history);s["sweep"]["latest"]=json!(sample);
                     if let Some(evidence)=&sample.adaptation.evidence {
-                        let artifact=json!({"schema_version":1,"motor_id":r.id,"run_id":run_id,"axis":cal.axes[&r.id],"tuning":cfg.sweep_tuning,"evidence":evidence,"provenance":"Online observations under this session's load, effort ceiling and environment; not a physical safety certification; not auto-loaded next session"});
+                        let artifact=json!({"schema_version":1,"motor_id":r.id,"run_id":run_id,"axis":cal.axes[&r.id],"tuning":cfg.sweep_tuning,"evidence":evidence,"execution":app.execution,"simulated":app.execution.is_virtual_calibration(),"provenance":"Online observations under this session's load, effort ceiling and environment; not a physical safety certification; not auto-loaded next session"});
                         let artifact_path=cfg.output.join(format!("response-{}-{}.json",r.id,run_id));
                         let tmp=artifact_path.with_extension("tmp");fs::write(&tmp,serde_json::to_vec_pretty(&artifact).unwrap()).map_err(|e|e.to_string())?;fs::rename(tmp,artifact_path).map_err(|e|e.to_string())?;
                     }
@@ -734,6 +898,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                     s["enabled_id"] = Value::Null;
                 }
                 let outcome = result?;
+                probe_link = virtual_mode && outcome.motion_error.is_some();
                 // Every axis kept reading through the session, so turn counts stay valid
                 // unless the fault was a lost serial link.
                 if outcome.motion_error.as_deref().is_some_and(readback_lost) {
@@ -801,7 +966,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                 if app.stop.load(Ordering::SeqCst) {
                     return Err("Stop is latched; enable teaching again".into());
                 }
-                app.cancel.store(false, Ordering::SeqCst);
+                app.arm(job.stop_epoch, false)?;
                 if r.sequence <= app.cancel_sequence.load(Ordering::SeqCst)
                     || app.stop.load(Ordering::SeqCst)
                 {
@@ -896,42 +1061,63 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config) {
                 s["calibration"] = json!(cal);
                 s["samples"][r.id.to_string()] = json!(t);
                 s["message"] = json!(format!(
-                    "{} captured from stationary physical encoder and saved to disk.",
-                    r.boundary
+                    "{} captured from stationary {} encoder and saved to disk.",
+                    r.boundary, if app.execution.is_virtual_calibration() { "simulated" } else { "physical" }
                 ));
                 return Ok(s.clone());
             }
             Err("Unknown calibration action".into())
         })();
+        // Link loss is judged only from a bus call's own error (the stop
+        // below, or a readback probe), never from the command's error text,
+        // which can be a filesystem failure. A dead socket fails these at
+        // once (broken pipe) or within one 150 ms reply timeout.
         if let Err(e) = &result {
             idle_polling = false;
             app.stop.store(true, Ordering::SeqCst);
             verified = false;
             owner.clear();
-            let stopped = bus
-                .as_mut()
-                .map(|b| b.stop(if selected == 0 { 3 } else { selected }));
-            let lost = readback_lost(e);
+            let stopped = bus.as_mut().map(|b| b.stop(if selected == 0 { 3 } else { selected }));
+            let link_lost = virtual_mode && matches!(&stopped, Some(Err(stop_error)) if transport_lost(stop_error));
+            let lost = link_lost || readback_lost(e);
             if let Some(b) = bus.as_mut() {
                 if lost && selected != 0 {
                     b.reset_turn_tracking_for(selected);
                 }
+            }
+            if link_lost {
+                lose_bus(&app, &mut bus);
             }
             let mut s = app.state.lock().unwrap();
             if lost && cal.axes.get(&selected).is_some_and(multi_turn) {
                 s["coordinate_session"] = json!(stamp().to_string());
             }
             s["enabled_id"] = Value::Null;
+            if lost {
+                // A virtual execution is revoked only with its bus (lose_bus).
+                s["connected"] = json!(false);
+            }
             s["busy"] = json!(false);
             s["error"] = json!(e);
             s["message"] = json!(format!(
                 "{e}. {}",
-                if stopped.as_ref().is_some_and(|v| v.is_ok()) {
+                if link_lost {
+                    "Virtual bench link lost; bus closed (the bench torques off on disconnect). Restart and reconnect explicitly"
+                } else if stopped.as_ref().is_some_and(|v| v.is_ok()) {
                     "Stopped and readback verified"
                 } else {
                     "Physical stop unverified; keep motor power off until resolved"
                 }
             ));
+        } else if probe_link && bus.as_mut().and_then(|b| cfg.roles.keys().next().map(|id| b.feedback(*id))).is_some_and(|probe| probe.is_err_and(|e| transport_lost(&e))) {
+            idle_polling = false;
+            verified = false;
+            owner.clear();
+            lose_bus(&app, &mut bus);
+            let mut s = app.state.lock().unwrap();
+            s["error"] = json!("Virtual bench link lost; bus closed. Restart and reconnect explicitly.");
+            let message = format!("{} Virtual bench link lost; restart and reconnect explicitly.", s["message"].as_str().unwrap_or(""));
+            s["message"] = json!(message);
         } else {
             app.state.lock().unwrap()["error"] = Value::Null;
         }
@@ -1006,7 +1192,13 @@ fn handle(mut stream: TcpStream, app: Arc<App>) {
             if path == "/calibration-ui.mjs" {
                 return Ok((
                     "text/javascript".into(),
-                    include_bytes!("../../../web/viewer/calibration-ui.mjs").to_vec(),
+                    {
+                        let source = include_str!("../../../web/viewer/calibration-ui.mjs");
+                        if app.execution.is_virtual_calibration() {
+                            let extra = format!("'X-Calibration-Server':{},'X-Calibration-Bench':{},'X-Calibration-Generation':'1',", json!(app.execution.server_instance), json!(app.execution.bench_instance));
+                            source.replace("headers:{'X-Control-Token'", &format!("headers:{{{extra}'X-Control-Token'")).into_bytes()
+                        } else { source.as_bytes().to_vec() }
+                    },
                 ));
             }
             let root = app.viewer.canonicalize().map_err(|e| e.to_string())?;
@@ -1083,6 +1275,27 @@ fn handle(mut stream: TcpStream, app: Arc<App>) {
         }
         let request: Request =
             serde_json::from_slice(&data[end..end + length]).map_err(|e| e.to_string())?;
+        let execution = if request.action == "stop" {
+            None
+        } else if h("x-calibration-server").is_some() || h("x-calibration-bench").is_some() || h("x-calibration-generation").is_some() {
+            let identity = ExecutionIdentity { schema_version: 1, kind: "virtual_calibration".into(),
+                server_instance: h("x-calibration-server").ok_or(format!("{BINDING_REFUSED}: server identity required"))?.into(),
+                bench_instance: h("x-calibration-bench").ok_or(format!("{BINDING_REFUSED}: bench identity required"))?.into() };
+            let generation = h("x-calibration-generation").ok_or(format!("{BINDING_REFUSED}: connection generation required"))?.parse::<u64>().map_err(|_| format!("{BINDING_REFUSED}: invalid connection generation"))?;
+            if identity != app.execution || !identity.is_virtual_calibration() || generation == 0 || !virtual_command_allowed(&request.action) {
+                return Err(format!("{BINDING_REFUSED}: identity mismatch or out-of-scope command"));
+            }
+            let mut generations = app.generations.lock().unwrap();
+            let current = generations.entry(client.into()).or_insert(generation);
+            if generation < *current { return Err(format!("{BINDING_REFUSED}: stale connection generation")); }
+            if generation > *current {
+                *current = generation;
+                app.latch_stop();
+            }
+            Some((identity, generation))
+        } else { None };
+        app.check_execution(&request.action, client, execution.as_ref())?;
+        let mut stop_epoch = *app.safety.lock().unwrap();
         if request.action == "capture_hold" {
             let mut lock = app.sweep.lock().unwrap();
             let ctl = lock
@@ -1128,15 +1341,25 @@ fn handle(mut stream: TcpStream, app: Arc<App>) {
             return Ok(("application/json".into(), b"{\"ok\":true}".to_vec()));
         }
         if request.action == "clear" || request.action == "select" {
-            app.cancel.store(true, Ordering::SeqCst);
-            app.stop.store(true, Ordering::SeqCst);
+            stop_epoch = app.latch_stop();
         }
         if request.action == "stop" {
-            app.stop.store(true, Ordering::SeqCst);
-            app.cancel.store(true, Ordering::SeqCst);
+            app.latch_stop();
+            // Independent of the ordinary queue. Worker/active loops observe
+            // the latch; response means latched, not stationary readback.
+            // The copy shows the latch at once (disabled, idle); the stored
+            // state and its records are left to the worker's torque-off.
+            let mut state = app.state.lock().unwrap().clone();
+            state["enabled_id"] = Value::Null;
+            state["busy"] = json!(false);
+            state["stop_latched"] = json!(true);
+            state["message"] = json!(STOP_LATCHED_MESSAGE);
+            return Ok(("application/json".into(), state.to_string().into_bytes()));
         }
         if request.action == "halt" {
-            // Cancel even if the earlier jog is queued but has not started.
+            // Release, not STOP: cancel the running/queued motion (even a jog
+            // queued but not started) without bumping the STOP epoch, so other
+            // axes keep their state and the queued halt itself still runs.
             app.cancel_sequence
                 .fetch_max(request.sequence, Ordering::SeqCst);
             app.cancel.store(true, Ordering::SeqCst);
@@ -1144,21 +1367,26 @@ fn handle(mut stream: TcpStream, app: Arc<App>) {
         let (tx, rx) = mpsc::channel();
         app.jobs
             .try_send(Job {
+                queued: Instant::now(),
+                execution,
+                stop_epoch,
                 request,
                 client: client.into(),
                 reply: tx,
             })
             .map_err(|_| "Hardware busy; no command queued")?;
         let value = rx
-            .recv_timeout(Duration::from_secs(8))
+            .recv_timeout(HTTP_WAIT)
             .map_err(|_| "Hardware response timed out")??;
         Ok(("application/json".into(), value.to_string().into_bytes()))
     })();
     match result {
         Ok((kind, bytes)) => reply(&mut stream, 200, &kind, &bytes),
+        // Execution-binding refusals (identity, generation, scope, lost virtual
+        // bench) are 409 so clients revoke their pin; business refusals stay 400.
         Err(e) => reply(
             &mut stream,
-            400,
+            if e.starts_with(BINDING_REFUSED) { BINDING_REFUSED_STATUS } else { 400 },
             "application/json",
             json!({"error":e}).to_string().as_bytes(),
         ),
@@ -1347,6 +1575,7 @@ fn run_gait(
     session: Option<&str>,
     client: &str,
     r: &Request,
+    stop_epoch: u64,
     reply: impl FnOnce(&Value),
 ) -> R<String> {
     use sim_runtime::gait_playback::{Gait, GovernedGait, LegBinding};
@@ -1455,6 +1684,8 @@ fn run_gait(
     let ids: Vec<u8> = bindings.iter().map(|b| b.id).collect();
     let speed_scale = if r.speed_scale > 0. { r.speed_scale.min(1.) } else { 1. };
     let pwm_ceiling = r.drive_pwm.clamp(1, 1000) as f64;
+    // Arm before publishing or replying, so a refusal reaches the client.
+    app.arm(stop_epoch, false)?;
     {
         let mut s = app.state.lock().unwrap();
         s["busy"] = json!(true);
@@ -1466,8 +1697,6 @@ fn run_gait(
         reply(&s);
     }
     *app.gait.lock().unwrap() = Some(GaitLease { owner: client.into(), speed_scale, playing: true, last_seen: Instant::now() });
-    app.cancel.store(false, Ordering::SeqCst);
-    app.stop.store(false, Ordering::SeqCst);
     let run_started = Instant::now();
     writeln_log(cfg, json!({"event": "gait_start", "gait": r.gait, "bindings": bindings, "speed_scale": speed_scale, "effort": effort, "limits": limits}))?;
     let started = std::cell::Cell::new(false);
@@ -1609,11 +1838,6 @@ fn writeln_log(cfg: &Config, value: Value) -> R<()> {
     value["unix_ms"] = json!(stamp());
     writeln!(f, "{value}").map_err(|e| e.to_string())
 }
-/// The characterization campaign on the connected leg (PLAN.md). Axes are the
-/// enabled, watchdog-proven motors with both poses taught; each is rehearsed
-/// with its tuned model (untuned axes are refused). Stage results are written
-/// as receipts the moment they finish; a resumed campaign reuses them.
-#[allow(clippy::too_many_arguments)]
 /// A lesson's lab step (`sim-lab`): one taught, proven motor at a bounded
 /// duty for a few seconds, through the campaign's guarded session (travel
 /// window with braking margin, sag, temperature, stop). Needs the operator's
@@ -1627,6 +1851,7 @@ fn run_lab_step(
     proven: &std::collections::BTreeSet<u8>,
     session: Option<&str>,
     r: &Request,
+    stop_epoch: u64,
     reply: impl FnOnce(&Value),
 ) -> R<Value> {
     use sim_runtime::acquisition::{calibration_serial::BusRig, characterization as ch};
@@ -1651,6 +1876,7 @@ fn run_lab_step(
     let gates = plan.as_ref().map(|p| p.gates.clone()).unwrap_or_default();
     let limits: std::collections::BTreeMap<u8, ch::AxisLimits> = plan.as_ref().and_then(|p| p.limits.get(&role).cloned()).map(|l| [(id, l)].into()).unwrap_or_default();
     let axis = ch::Axis { id, role: role.clone(), lower: lo.min(hi) as f64, upper: lo.max(hi) as f64 };
+    app.arm(stop_epoch, false)?;
     {
         let mut s = app.state.lock().unwrap();
         s["busy"] = json!(true);
@@ -1658,7 +1884,6 @@ fn run_lab_step(
         s["message"] = json!(format!("Lab step on {role}: duty {:.2} for {:.1} s. Stop ends it.", r.duty, r.seconds));
         reply(&s);
     }
-    app.cancel.store(false, Ordering::SeqCst);
     let windows = vec![(id, axis.lower as i32, axis.upper as i32)];
     let step = {
         let mut bus = BusRig::new(b, &windows, cfg.sweep_tuning.period_s, &app.cancel)?;
@@ -1682,7 +1907,43 @@ fn run_lab_step(
     Ok(json!({"role": role, "steady_rad_s": steady_rad_s, "stopped": step.stopped, "seconds": step.seconds, "receipt": path, "supply_v": step.samples.first().map(|s| s.voltage_v),
         "headline": match steady_rad_s { Some(v) => format!("{role} ran at {v:.3} rad/s"), None => format!("{role} did not reach a steady speed") }}))
 }
-
+/// Campaign directory and the receipts to reuse. Arms first: a command a STOP
+/// interrupted creates nothing, so it can never shadow the real interrupted
+/// campaign. Resume picks the newest unfinished/resumable directory holding
+/// at least one receipt; empty ones are ignored, and none is ever deleted.
+fn campaign_directory(app: &App, root: &std::path::Path, resume: bool, stop_epoch: u64) -> R<(PathBuf, Vec<sim_runtime::acquisition::characterization::StageResult>)> {
+    use sim_runtime::acquisition::characterization as ch;
+    app.arm(stop_epoch, false)?;
+    fs::create_dir_all(root).map_err(|e| e.to_string())?;
+    let receipt = |p: &std::path::Path| p.extension().is_some_and(|x| x == "json") && !p.to_string_lossy().ends_with(".execution.json");
+    let previous = fs::read_dir(root).ok().into_iter().flatten().flatten().map(|e| e.path())
+        .filter(|p| p.is_dir() && (!p.join("report.json").exists() || fs::read(p.join("resume-pending.json")).ok().and_then(|bytes| serde_json::from_slice::<Value>(&bytes).ok()).is_some_and(|v| v["resumable"] == json!(true))))
+        .filter(|p| fs::read_dir(p.join("receipts")).ok().into_iter().flatten().flatten().any(|e| receipt(&e.path()))).max();
+    match (resume, previous) {
+        (true, Some(dir)) => {
+            let history = dir.join(format!("attempt-before-resume-{}", stamp()));
+            fs::create_dir(&history).map_err(|e| e.to_string())?;
+            for name in ["report.json", "summary.json", "promotion.json", "resume-pending.json"] {
+                let previous = dir.join(name);
+                if previous.exists() { fs::copy(&previous, history.join(name)).map_err(|e| e.to_string())?; }
+            }
+            let mut receipts: Vec<ch::StageResult> = Vec::new();
+            let mut names: Vec<_> = fs::read_dir(dir.join("receipts")).map_err(|e| e.to_string())?.flatten().map(|e| e.path()).filter(|p| !p.to_string_lossy().ends_with(".execution.json")).collect();
+            names.sort();
+            for n in names {
+                receipts.push(serde_json::from_slice(&fs::read(&n).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?);
+            }
+            Ok((dir, receipts))
+        }
+        (true, None) => Err("No interrupted campaign with receipts to resume".into()),
+        (false, _) => Ok((root.join(format!("campaign-{}", stamp())), Vec::new())),
+    }
+}
+/// The characterization campaign on the connected leg (PLAN.md). Axes are the
+/// enabled, watchdog-proven motors with both poses taught; each is rehearsed
+/// with its tuned model (untuned axes are refused). Stage results are written
+/// as receipts the moment they finish; a resumed campaign reuses them.
+#[allow(clippy::too_many_arguments)]
 fn run_campaign(
     app: &App,
     cfg: &Config,
@@ -1691,6 +1952,7 @@ fn run_campaign(
     proven: &std::collections::BTreeSet<u8>,
     session: Option<&str>,
     r: &Request,
+    stop_epoch: u64,
     reply: impl FnOnce(&Value),
 ) -> R<Value> {
     use sim_runtime::acquisition::{calibration_serial::BusRig, characterization as ch, virtual_bench::MotorModel};
@@ -1734,40 +1996,28 @@ fn run_campaign(
         return Err(format!("No motor is ready for the campaign: {}", skipped.join(", ")));
     }
     plan.axes = axes.clone();
-    // Receipts: the newest unfinished campaign directory when resuming.
-    let root = cfg.output.join("campaigns");
-    fs::create_dir_all(&root).map_err(|e| e.to_string())?;
-    let previous = fs::read_dir(&root).ok().into_iter().flatten().flatten().map(|e| e.path())
-        .filter(|p| p.is_dir() && !p.join("report.json").exists()).max();
-    let (dir, resume) = match (r.resume, previous) {
-        (true, Some(dir)) => {
-            let mut receipts: Vec<ch::StageResult> = Vec::new();
-            let mut names: Vec<_> = fs::read_dir(dir.join("receipts")).map_err(|e| e.to_string())?.flatten().map(|e| e.path()).collect();
-            names.sort();
-            for n in names {
-                receipts.push(serde_json::from_slice(&fs::read(&n).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?);
-            }
-            (dir, receipts)
-        }
-        (true, None) => return Err("No interrupted campaign to resume".into()),
-        (false, _) => (root.join(format!("campaign-{}", stamp())), Vec::new()),
-    };
+    let (dir, resume) = campaign_directory(app, &cfg.output.join("campaigns"), r.resume, stop_epoch)?;
     fs::create_dir_all(dir.join("receipts")).map_err(|e| e.to_string())?;
-    fs::write(dir.join("plan.json"), serde_json::to_vec_pretty(&plan).unwrap()).map_err(|e| e.to_string())?;
+    let plan_bytes = serde_json::to_vec_pretty(&plan).map_err(|e| e.to_string())?;
+    if r.resume && fs::read(dir.join("plan.json")).map_err(|e| e.to_string())? != plan_bytes {
+        return Err("Campaign plan or taught axes changed; start a new campaign instead of reusing receipts".into());
+    }
+    if !r.resume { fs::write(dir.join("plan.json"), &plan_bytes).map_err(|e| e.to_string())?; }
+    fs::write(dir.join("resume-pending.json"), serde_json::to_vec_pretty(&json!({"execution":app.execution,"simulated":app.execution.is_virtual_calibration(),"resumable":true})).unwrap()).map_err(|e| e.to_string())?;
     {
         let mut s = app.state.lock().unwrap();
         s["busy"] = json!(true);
-        s["campaign"] = json!({"running": true, "axes": axes, "skipped": skipped, "stage": "Starting", "completed": resume.len(), "directory": dir, "log": []});
+        s["campaign"] = json!({"execution":app.execution,"simulated":app.execution.is_virtual_calibration(),"running": true, "axes": axes, "skipped": skipped, "stage": "Starting", "completed": resume.iter().filter(|stage| stage.completed).count(), "receipt_count":resume.len(), "directory": dir, "log": []});
         s["message"] = json!(format!("Characterization campaign on {}. Stop ends it; completed stages are kept.", axes.iter().map(|a| a.role.as_str()).collect::<Vec<_>>().join(", ")));
         reply(&s);
     }
-    app.cancel.store(false, Ordering::SeqCst);
-    app.stop.store(false, Ordering::SeqCst);
     let windows: Vec<(u8, i32, i32)> = axes.iter().map(|a| (a.id, a.lower as i32, a.upper as i32)).collect();
     let started = Instant::now();
+    let receipt_error = std::cell::RefCell::new(None::<String>);
     let report = {
         let mut rig = BusRig::new(b, &windows, cfg.sweep_tuning.period_s, &app.cancel)?;
         let mut receipt_index = resume.len();
+        let mut completed = resume.iter().filter(|stage| stage.completed).count();
         let result = ch::run_with(
             &plan,
             &mut rig,
@@ -1784,16 +2034,32 @@ fn run_campaign(
             },
             &resume,
             &mut |stage| {
-                receipt_index += 1;
-                let _ = fs::write(dir.join("receipts").join(format!("{receipt_index:03}-{}-{}.json", stage.stage, stage.id)), serde_json::to_vec_pretty(stage).unwrap());
+                let next_index = receipt_index + 1;
+                let path = dir.join("receipts").join(format!("{next_index:03}-{}-{}.json", stage.stage, stage.id));
+                if let Err(error) = fs::write(&path, serde_json::to_vec_pretty(stage).unwrap()) {
+                    *receipt_error.borrow_mut() = Some(format!("{}: {error}", path.display()));
+                    app.latch_stop();
+                    return;
+                }
+                let provenance = path.with_extension("execution.json");
+                if let Err(error) = fs::write(&provenance, serde_json::to_vec_pretty(&app.execution).unwrap()) {
+                    *receipt_error.borrow_mut() = Some(format!("{}: {error}", provenance.display()));
+                    app.latch_stop();
+                    return;
+                }
+                receipt_index = next_index;
                 let mut s = app.state.lock().unwrap();
-                s["campaign"]["completed"] = json!(receipt_index);
+                if stage.completed { completed += 1; }
+                s["campaign"]["completed"] = json!(completed);
+                s["campaign"]["receipt_count"] = json!(receipt_index);
                 s["campaign"]["last"] = json!({"stage": stage.stage, "axis": stage.id, "completed": stage.completed, "abort": stage.abort});
             },
         );
         let _ = ch::Rig::stop(&mut rig);
-        result?
+        result
     };
+    if let Some(error) = receipt_error.into_inner() { return Err(error); }
+    let report = report?;
     let fitted_replay: Vec<Value> = report.fitted.iter().map(|(id, fits)| {
         let prior = &models[id];
         json!({"axis": id, "tuned_model_rms_counts": ch::replay_error(&report.samples, *id, prior, cfg.sweep_tuning.period_s),
@@ -1803,30 +2069,65 @@ fn run_campaign(
         let joint = if role.contains("knee") { "Foot" } else if role.contains("worm") { "Worm" } else { "Hip" };
         (*id, ["-Y", "+X", "+Y", "-X"].iter().map(|leg| format!("joint.{leg} | {joint} servo output")).collect())
     }).collect();
-    let promotion = ch::promotion(&report, &json!({"source": "tuned per-motor models"}), &coordinates, &format!("Hardware campaign on {} ({})", cfg.fixture, dir.display()));
+    let promotion = ch::promotion(&report, &json!({"source": "tuned per-motor models"}), &coordinates, &format!("{} campaign on {} ({})", if app.execution.is_virtual_calibration() { "SIMULATED virtual calibration" } else { "Physical hardware" }, cfg.fixture, dir.display()));
     let ranking = ch::select_tests(&report, &plan.sensitivity);
     let aborted: Vec<Value> = report.stages.iter().filter(|s| !s.completed).map(|s| json!({"stage": s.stage, "axis": s.id, "abort": s.abort})).collect();
     let summary = json!({
+        "execution":app.execution,"simulated":app.execution.is_virtual_calibration(),
+        "resumable": !aborted.is_empty() || app.cancel.load(Ordering::SeqCst),
         "directory": dir, "wall_s": started.elapsed().as_secs_f64(), "axes": axes, "skipped": skipped,
         "aborted": aborted, "replay": fitted_replay, "ranking": ranking.iter().take(8).collect::<Vec<_>>(),
         "headline": format!("{} stages, {} stopped by a gate", report.stages.len(), aborted.len()),
     });
-    for (name, value) in [("report.json", serde_json::to_value(&report).unwrap()), ("promotion.json", promotion), ("summary.json", summary.clone())] {
+    for (name, mut value) in [("report.json", serde_json::to_value(&report).unwrap()), ("promotion.json", promotion), ("summary.json", summary.clone())] {
+        value["execution"] = json!(app.execution);
+        value["simulated"] = json!(app.execution.is_virtual_calibration());
         fs::write(dir.join(name), serde_json::to_vec_pretty(&value).unwrap()).map_err(|e| e.to_string())?;
+    }
+    if summary["resumable"] == json!(false) {
+        fs::write(dir.join("resume-pending.json"), serde_json::to_vec_pretty(&json!({"execution":app.execution,"simulated":app.execution.is_virtual_calibration(),"resumable":false})).unwrap()).map_err(|e| e.to_string())?;
     }
     Ok(summary)
 }
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = std::env::args().collect::<Vec<_>>();
-    if args.len() != 3 {
-        return Err("serve_actuator_calibration CONFIG HTTP_PORT".into());
+    if args.len() != 3 && !(args.len() == 5 && args[3] == "--virtual-bench") {
+        return Err("serve_actuator_calibration CONFIG HTTP_PORT [--virtual-bench SOCKET]".into());
     }
+    let virtual_socket = (args.len() == 5).then(|| PathBuf::from(&args[4]));
     let cfg: Config = serde_json::from_slice(&fs::read(&args[1])?)?;
     if cfg.roles.keys().copied().collect::<Vec<_>>() != vec![1, 2, 3] {
         return Err("This FPGA profile covers IDs 1,2,3".into());
     }
     cfg.sweep_tuning.validate()?;
+    if virtual_socket.is_some() != (cfg.serial == "virtual-capability-only") {
+        return Err("Virtual mode requires serial=virtual-capability-only and --virtual-bench; no fallback".into());
+    }
+    if virtual_socket.as_ref().is_some_and(|p| !p.is_absolute()) { return Err("Virtual capability socket must be absolute".into()); }
+    if virtual_socket.is_some() && cfg.output.exists() && !cfg.output.join("execution.json").exists()
+        && fs::read_dir(&cfg.output)?.next().is_some() {
+        return Err("Virtual output contains unidentified prior artifacts; use a new empty output directory".into());
+    }
     fs::create_dir_all(&cfg.output)?;
+    let (initial_bus, bench_instance) = match &virtual_socket {
+        Some(socket) => {
+            let (bus, identity) = CalibrationBus::open_virtual(socket, None, &cfg.output.join("serial.jsonl"))?;
+            (Some(bus), identity)
+        }
+        None => (None, String::new()),
+    };
+    let execution = ExecutionIdentity { schema_version: 1,
+        kind: if virtual_socket.is_some() { "virtual_calibration" } else { "physical" }.into(),
+        server_instance: sim_runtime::hardware_client::new_client_id(), bench_instance };
+    let provenance_path = cfg.output.join("execution.json");
+    if provenance_path.exists() {
+        let previous: ExecutionIdentity = serde_json::from_slice(&fs::read(&provenance_path)?)?;
+        if previous.kind != execution.kind || previous.bench_instance != execution.bench_instance {
+            return Err("Output belongs to a different physical/virtual bench; use a new output directory".into());
+        }
+    }
+    fs::write(cfg.output.join(format!("execution-{}.json", execution.server_instance)), serde_json::to_vec_pretty(&execution)?)?;
+    fs::write(provenance_path, serde_json::to_vec_pretty(&execution)?)?;
     let listener = TcpListener::bind(format!("127.0.0.1:{}", args[2]))?;
     let origin = format!("http://{}", listener.local_addr()?);
     let mut bytes = [0; 32];
@@ -1834,8 +2135,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = bytes.iter().map(|b| format!("{b:02x}")).collect::<String>();
     let (tx, rx) = mpsc::sync_channel(1);
     let app = Arc::new(App {
+        execution: execution.clone(), virtual_socket,
+        generations: Mutex::new(std::collections::BTreeMap::new()), safety: Mutex::new(0),
         state: Mutex::new(
-            json!({"coordinate_session":stamp().to_string(),"maximum_speed_counts_s":cfg.sweep_tuning.maximum_speed_counts_s,"connected":false,"enabled_id":null,"busy":false,"samples":{},"message":"Starting","error":null,"output":cfg.output}),
+            json!({"execution":execution,"coordinate_session":stamp().to_string(),"maximum_speed_counts_s":cfg.sweep_tuning.maximum_speed_counts_s,"connected":false,"enabled_id":null,"busy":false,"samples":{},"message":"Starting","error":null,"output":cfg.output}),
         ),
         jobs: tx,
         stop: AtomicBool::new(true),
@@ -1850,7 +2153,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
     app.state.lock().unwrap()["gait_runs"] = gait_run_history(&cfg);
     let a = app.clone();
-    std::thread::spawn(move || worker(a, rx, cfg));
+    std::thread::spawn(move || worker(a, rx, cfg, initial_bus));
     println!("Calibration and robot viewer: {origin}");
     for stream in listener.incoming() {
         let s = stream?;
@@ -1922,4 +2225,145 @@ mod tests {
         lease.last_seen = Instant::now() - Duration::from_secs(2);
         assert!(lease.update("owner", &request, &tuning()).is_err());
     }
+    fn identity() -> ExecutionIdentity {
+        ExecutionIdentity { schema_version:1, kind:"virtual_calibration".into(),
+            server_instance:sim_runtime::hardware_client::new_client_id(), bench_instance:sim_runtime::hardware_client::new_client_id() }
+    }
+    fn app_fixture(execution: ExecutionIdentity) -> (Arc<App>, mpsc::Receiver<Job>) {
+        let (tx, rx) = mpsc::sync_channel(1);
+        let app = Arc::new(App { execution:execution.clone(), virtual_socket:None,
+            generations:Mutex::new(std::collections::BTreeMap::new()), safety:Mutex::new(0),
+            state:Mutex::new(json!({"execution":execution,"campaign":{"result":{"completed":3}},"tuning":{"result":{"kp":7}},"calibration":{"axes":{"1":{"lower":100,"upper":200}}}})),
+            jobs:tx, stop:AtomicBool::new(false), cancel:AtomicBool::new(false), cancel_sequence:AtomicU64::new(0),
+            origin:"http://127.0.0.1:4194".into(), token:"fixture-token".into(), viewer:PathBuf::new(),
+            sweep:Mutex::new(None), gait:Mutex::new(None), sweep_tuning:tuning() });
+        (app, rx)
+    }
+    fn wire_post(app: Arc<App>, client: &str, body: Value, pin: Option<(&ExecutionIdentity,u64)>) -> String {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = std::thread::spawn(move || handle(listener.accept().unwrap().0, app));
+        let mut stream = TcpStream::connect(address).unwrap();
+        stream.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+        let body = body.to_string();
+        let headers = pin.map(|(i,g)| format!("X-Calibration-Server: {}\r\nX-Calibration-Bench: {}\r\nX-Calibration-Generation: {g}\r\n", i.server_instance,i.bench_instance)).unwrap_or_default();
+        write!(stream,"POST /calibration/command HTTP/1.1\r\nHost: 127.0.0.1:4194\r\nX-Control-Token: fixture-token\r\nX-Client-Id: {client}\r\n{headers}Content-Length: {}\r\n\r\n{body}",body.len()).unwrap();
+        let mut reply = String::new();
+        stream.read_to_string(&mut reply).unwrap();
+        server.join().unwrap();
+        reply
+    }
+    #[test]
+    fn authoritative_handler_refuses_unbound_replaced_physical_and_out_of_scope() {
+        let pin = identity();
+        let client = sim_runtime::hardware_client::new_client_id();
+        for kind in ["virtual_calibration", "physical"] {
+            let mut active = pin.clone(); active.kind = kind.into();
+            let (app, rx) = app_fixture(active);
+            let mut replaced = pin.clone(); replaced.server_instance = sim_runtime::hardware_client::new_client_id();
+            for proposed in [&pin, &replaced] {
+                let answer = wire_post(app.clone(), &client, json!({"action":"jog","id":1,"delta":1}),Some((proposed,1)));
+                assert!(answer.starts_with("HTTP/1.1 409") && answer.contains(BINDING_REFUSED), "binding refusal, not a business 400");
+            }
+            let answer = wire_post(app.clone(),&client,json!({"action":"select","id":1}),Some((&replaced,1)));
+            assert!(answer.starts_with("HTTP/1.1 409") && answer.contains(BINDING_REFUSED));
+            assert!(rx.try_recv().is_err(), "refused requests never reach acquisition");
+        }
+        let (app, _) = app_fixture(pin);
+        assert!(wire_post(app,&client,json!({"action":"inspect"}),None).starts_with("HTTP/1.1 409"), "virtual identity required is a binding refusal");
+    }
+    #[test]
+    fn newer_generation_revokes_queued_work_and_stop_bypasses_full_queue_preserving_records() {
+        let pin = identity();
+        let client = sim_runtime::hardware_client::new_client_id();
+        let (app, rx) = app_fixture(pin.clone());
+        app.generations.lock().unwrap().insert(client.clone(),1);
+        let (reply, _) = mpsc::channel();
+        app.jobs.try_send(Job { queued:Instant::now(), execution:Some((pin.clone(),1)), stop_epoch:0,
+            request:serde_json::from_value(json!({"action":"select","id":1})).unwrap(), client:client.clone(), reply }).unwrap();
+        // This real inline consumer registers generation 2 before rejecting a
+        // missing hold session, proving queued generation 1 is now invalid.
+        assert!(wire_post(app.clone(),&client,json!({"action":"capture_hold","id":1}),Some((&pin,2))).starts_with("HTTP/1.1 400"));
+        let queued = rx.try_recv().unwrap();
+        assert!(app.check_execution(&queued.request.action,&queued.client,queued.execution.as_ref()).is_err_and(|e| e.starts_with(BINDING_REFUSED)));
+        app.jobs.try_send(queued).unwrap();
+        let records = app.state.lock().unwrap().clone();
+        let epoch = *app.safety.lock().unwrap();
+        let response = wire_post(app.clone(),&client,json!({"action":"stop","id":null}),None);
+        assert!(response.starts_with("HTTP/1.1 200"));
+        let body: Value = serde_json::from_str(response.split_once("\r\n\r\n").unwrap().1).unwrap();
+        assert!(body["enabled_id"].is_null() && body["busy"] == json!(false) && body["stop_latched"] == json!(true), "early reply shows the axis disabled at once");
+        assert_eq!(body["message"], json!(STOP_LATCHED_MESSAGE));
+        assert!(app.stop.load(Ordering::SeqCst) && app.cancel.load(Ordering::SeqCst));
+        assert!(app.arm(epoch,true).is_err(), "STOP after early reply cannot be cleared");
+        assert_eq!(*app.state.lock().unwrap(),records,"STOP latch keeps taught/tune/campaign records");
+    }
+    fn physical() -> ExecutionIdentity {
+        let mut identity = identity(); identity.kind = "physical".into(); identity
+    }
+    fn config_fixture(output: PathBuf) -> Config {
+        let mut cfg: Config = serde_json::from_str(include_str!("../../../examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/server.json")).unwrap();
+        cfg.output = output; cfg.campaign_plan = None; cfg
+    }
+    #[test]
+    fn job_captured_before_a_stop_is_refused_and_never_runs() {
+        // No bus is open (None), so the worker's torque-off touches no device.
+        let output = std::env::temp_dir().join(format!("stale-stop-{}-{}", std::process::id(), stamp()));
+        let (app, rx) = app_fixture(physical());
+        let epoch = *app.safety.lock().unwrap();
+        let worker_app = app.clone();
+        let cfg = config_fixture(output.clone());
+        // The worker thread parks on its queue afterwards (App holds the sender).
+        std::thread::spawn(move || worker(worker_app, rx, cfg, None));
+        let (reply, answer) = mpsc::channel();
+        app.latch_stop();
+        app.jobs.send(Job { queued:Instant::now(), execution:None, stop_epoch:epoch,
+            request:serde_json::from_value(json!({"action":"inspect"})).unwrap(), client:sim_runtime::hardware_client::new_client_id(), reply }).unwrap();
+        let refused = answer.recv_timeout(Duration::from_secs(3)).unwrap();
+        assert_eq!(refused, Err(STOP_INTERRUPTED.to_string()));
+        assert!(app.stop.load(Ordering::SeqCst) && app.state.lock().unwrap()["enabled_id"].is_null());
+        assert!(app.arm(epoch, true).is_err(), "even an explicit rearm captured before STOP is refused");
+        let (reply, answer) = mpsc::channel();
+        app.jobs.send(Job { queued:Instant::now().checked_sub(HTTP_WAIT + Duration::from_secs(1)).unwrap(), execution:None, stop_epoch:*app.safety.lock().unwrap(),
+            request:serde_json::from_value(json!({"action":"inspect"})).unwrap(), client:sim_runtime::hardware_client::new_client_id(), reply }).unwrap();
+        assert_eq!(answer.recv_timeout(Duration::from_secs(3)).unwrap(), Err("Command expired before execution; nothing ran".to_string()));
+        fs::remove_dir_all(&output).ok();
+    }
+    #[test]
+    fn socket_failures_count_as_lost_links_and_virtual_never_opens_serial() {
+        for lost in ["Broken pipe (os error 32)", "Connection reset by peer (os error 54)", "ID 1: serial reply timeout (0 reply bytes received)",
+            "Stop readback unverified after bounded retries: ID 2: serial reply timeout (0 reply bytes received)"] {
+            assert!(transport_lost(lost), "{lost}");
+        }
+        let binding = format!("{BINDING_REFUSED}: Virtual bench disconnected; restart and reconnect explicitly");
+        for kept in ["Unknown motor ID", "Stop readback unverified after bounded retries: Stop not verified: cut motor supply power", binding.as_str(),
+            "No space left on device (os error 28)", "Read-only file system (os error 30)", "Permission denied (os error 13)"] {
+            assert!(!transport_lost(kept), "{kept}");
+        }
+        let (app, _rx) = app_fixture(identity());
+        let cfg = config_fixture(std::env::temp_dir().join("never-opened"));
+        assert!(app.open_bus(&cfg).is_err_and(|e| e.starts_with(BINDING_REFUSED)), "virtual execution without a socket refuses; no serial fallback");
+    }
+    #[test]
+    fn campaign_refused_by_stop_creates_nothing_and_resume_ignores_empty_directories() {
+        let root = std::env::temp_dir().join(format!("campaign-arm-{}-{}", std::process::id(), stamp())).join("campaigns");
+        let (app, _rx) = app_fixture(physical());
+        let epoch = *app.safety.lock().unwrap();
+        app.latch_stop();
+        assert_eq!(campaign_directory(&app, &root, false, epoch).unwrap_err(), STOP_INTERRUPTED);
+        assert!(!root.exists(), "a refused campaign writes no directory");
+        // An interrupted campaign with a receipt, then a newer empty one.
+        let receipt = json!({"stage":"breakaway","id":1,"completed":true,"metrics":null,"samples":0,"simulated_s":0.0});
+        fs::create_dir_all(root.join("campaign-1/receipts")).unwrap();
+        fs::write(root.join("campaign-1/receipts/001-breakaway-1.json"), receipt.to_string()).unwrap();
+        fs::create_dir_all(root.join("campaign-2/receipts")).unwrap();
+        let epoch = *app.safety.lock().unwrap();
+        app.arm(epoch, true).unwrap(); // the operator selects again after STOP
+        let (dir, receipts) = campaign_directory(&app, &root, true, epoch).unwrap();
+        assert_eq!(dir, root.join("campaign-1"));
+        assert_eq!(receipts.len(), 1);
+        assert!(root.join("campaign-2").exists(), "existing campaign directories are never deleted");
+        fs::remove_dir_all(root.parent().unwrap()).ok();
+    }
+
 }

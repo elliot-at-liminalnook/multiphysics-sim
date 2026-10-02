@@ -13,9 +13,69 @@
 //! fields (`id` u8, `sequence` u64, `run_id` u64, `drive_pwm` u16, `delta`
 //! i16) are integers here too.
 use super::{Body, Json, js_number, lenient, lenient_items};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
+
+/// Execution provenance is strict even though ordinary status telemetry is tolerant.
+/// A loopback URL, fixture label or pseudo-terminal name is never provenance.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ExecutionIdentity {
+    pub schema_version: u32,
+    pub kind: String,
+    pub server_instance: String,
+    pub bench_instance: String,
+}
+impl ExecutionIdentity {
+    pub fn is_virtual_calibration(&self) -> bool {
+        self.schema_version == 1 && self.kind == "virtual_calibration"
+            && valid_instance(&self.server_instance) && valid_instance(&self.bench_instance)
+    }
+}
+pub(crate) fn valid_instance(v: &str) -> bool {
+    v.len() == 36 && v.bytes().enumerate().all(|(i, b)| {
+        if matches!(i, 8 | 13 | 18 | 23) { b == b'-' } else { b.is_ascii_hexdigit() }
+    })
+}
+/// The one remote calibration authorization policy. Callers own freshness and
+/// connection generation; reconnect must first discard the pinned identity.
+pub fn authorize_virtual(identity: Option<&ExecutionIdentity>, generation: u64,
+    current_generation: u64, connected: bool, fresh: bool) -> Result<(), String> {
+    // Identity first: a physical or unknown server is refused as such, never
+    // as a merely expired session that a reconnect could seem to fix.
+    if !identity.is_some_and(ExecutionIdentity::is_virtual_calibration) {
+        return Err("Remote calibration requires a verified virtual calibration server".into());
+    }
+    if !connected || !fresh || generation == 0 || generation != current_generation {
+        return Err("Virtual calibration authorization expired; reconnect explicitly".into());
+    }
+    Ok(())
+}
+/// HTTP status the calibration server answers when a command's execution
+/// binding (identity, generation, scope or a lost virtual bench) is refused.
+/// Clients revoke their pinned authorization on it; an ordinary business
+/// refusal (400, e.g. "Unknown motor ID") leaves the binding intact.
+pub const BINDING_REFUSED_STATUS: u16 = 409;
+/// Error text prefix the server uses for [`BINDING_REFUSED_STATUS`] answers.
+pub const BINDING_REFUSED: &str = "Calibration execution binding refused";
+/// Whether a failed command means the connection or its execution binding is
+/// gone (transport, decode or [`BINDING_REFUSED_STATUS`]), not a refusal of
+/// the command itself.
+pub fn binding_lost(error: &super::ClientError) -> bool {
+    use crate::loopback_http::Error as E;
+    match error {
+        E::NotLoopback(_) | E::Transport(_) | E::Decode(_) => true,
+        E::Server { status, .. } => *status == BINDING_REFUSED_STATUS,
+    }
+}
+/// In-scope wire commands. Raw jog, direction/flip, gait and lesson motion are
+/// intentionally excluded; a generic remote-motion override does not exist.
+pub fn virtual_command_allowed(action: &str) -> bool {
+    matches!(action, "inspect" | "select" | "set_disabled" | "enable" | "clear"
+        | "capture" | "capture_hold" | "halt" | "motion_start" | "motion_update"
+        | "sweep_start" | "sweep_update" | "sweep_all" | "tune" | "campaign")
+}
 
 /// `GET /calibration/status`.
 pub const STATUS: &str = "/calibration/status";
@@ -30,6 +90,8 @@ pub const EXPORT: &str = "/calibration/export";
 #[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 #[serde(default)]
 pub struct Status {
+    #[serde(default, deserialize_with = "lenient")]
+    pub execution: Option<ExecutionIdentity>,
     /// The powered encoder tracking session; poses taught in another are ignored.
     #[serde(default, deserialize_with = "lenient")]
     pub coordinate_session: Option<String>,
@@ -493,9 +555,8 @@ impl Input {
 
 /// `send(action, extra)`: `{action, id, sequence, ...extra}`
 /// (calibration-ui.mjs:67). The page never sends a command before a motor is
-/// chosen; `None` omits `id` (the server reads 0 and answers "Unknown motor
-/// ID", after latching its stop flags for `stop`), where the page's `null`
-/// would fail the server's parse (`id: u8`) and latch nothing.
+/// chosen; `None` omits `id`. STOP accepts a missing/null motor identity
+/// and stops every configured axis; other commands still validate motor IDs.
 pub fn command(action: &str, id: Option<u8>, sequence: u64, extra: Vec<(&'static str, Json)>) -> Body {
     let mut members = vec![("action", Json::from(action))];
     if let Some(id) = id {
@@ -504,6 +565,10 @@ pub fn command(action: &str, id: Option<u8>, sequence: u64, extra: Vec<(&'static
     members.push(("sequence", Json::from(sequence)));
     members.extend(extra);
     Body::new(members)
+}
+/// Inspect all configured motors while stopped; no motor selection or energizing.
+pub fn inspect(sequence: u64) -> Body {
+    command("inspect", None, sequence, vec![])
 }
 /// `send('stop')` (:125).
 pub fn stop(id: Option<u8>, sequence: u64) -> Body {

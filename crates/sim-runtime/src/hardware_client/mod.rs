@@ -57,6 +57,14 @@ pub use http::{new_client_id, process_client_id};
 /// ([`crate::loopback_http`], shared with the CAD client).
 pub use crate::loopback_http::{CONNECT_TIMEOUT, Endpoint};
 
+/// A process-wide generation: mode teardown/recreation must not reuse a
+/// previous connection's authorization while retaining the same client id.
+pub fn next_connection_generation() -> u64 {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static GENERATION: AtomicU64 = AtomicU64::new(1);
+    GENERATION.fetch_add(1, Ordering::Relaxed)
+}
+
 /// Why a request failed: the shared transport's error
 /// ([`crate::loopback_http::Error`]: `NotLoopback`, `Transport`,
 /// `Server { status, error }`, `Decode`).
@@ -102,6 +110,8 @@ pub struct Client {
     /// ([`CALIBRATION_MAX_BODY`] or [`MOTOR_BENCH_MAX_BODY`]; see
     /// [`Client::for_kind`]). A larger body is refused before connecting.
     pub max_body: usize,
+    /// Pinned virtual execution identity and native connection generation.
+    pub calibration_execution: Option<(calibration::ExecutionIdentity, u64)>,
 }
 
 /// A JSON value whose object members keep the order they were written in

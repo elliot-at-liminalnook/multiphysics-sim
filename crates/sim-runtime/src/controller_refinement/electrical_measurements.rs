@@ -65,6 +65,7 @@ impl Measurements {
     pub fn validate(&self) -> Result<(), String> {
         if self.version != 1
             || self.recording_hash.len() != 64
+            || !self.recording_hash.bytes().all(|c| c.is_ascii_hexdigit())
             || self.source_hashes.is_empty()
             || self.source_hashes.iter().any(|(k, v)| {
                 k.trim().is_empty() || v.len() != 64 || !v.bytes().all(|c| c.is_ascii_hexdigit())

@@ -98,11 +98,19 @@ impl Study {
                 html += "</section>";
             }
         }
-        for e in &self.refinement.electrical_comparisons {
+        for (index,e) in self.refinement.electrical_comparisons.iter().enumerate() {
             html += &format!(
                 "<section><h3>Measured electrical comparison</h3><p>{}</p>",
                 escape(&e.method)
             );
+            html += &format!("<p>Comparison {}: recording {}; prediction {}; measurement schema {}. Timing: {}. Calibrated measurements and synchronized derived power are separate from hypothetical prediction; sampled peaks are not switching peaks.</p>",index,escape(&e.measurements.recording_hash),escape(&e.prediction_hash),e.measurements.version,escape(&e.measurements.timing_evidence));
+            for channel in &e.measurements.channels {
+                let c=&channel.calibration;
+                html += &format!("<p>{}: sensor {}; circuit {}; raw unit {}; signed gain {}; offset {}; evidence {}; uncertainty {}.</p>",escape(&channel.name),escape(&c.sensor),escape(&c.circuit_location),escape(&c.raw_unit),c.gain,c.offset,escape(&c.evidence),escape(&c.uncertainty));
+            }
+            for decision in self.refinement_evidence.decisions.iter().filter(|d|d.kind=="electrical"&&d.index==index) {
+                html += &format!("<p>Review {}: {}. This does not promote physical properties or registry models.</p>",escape(&decision.decision),escape(&decision.notes));
+            }
             for c in &e.channels {
                 html += &format!(
                     "<h4>{} ({})</h4><p>RMS {:.6}; peak error {:.6}; acceptance {:?}. Blue measured, orange predicted.</p>",

@@ -157,9 +157,29 @@ pub(super) fn rejected_output(study:Study,operation:refinement::Operation,error:
 /// Conservative launch exposure prevents edits during a pending held-out review from
 /// escaping later influence accounting. No scores or passing assessment are implied.
 pub fn start_operation(owner:&mut StudyOwner,stamp:StudyStamp,operation:refinement::Operation,additional_path:Option<String>)->Result<u64,String> {
+    start_inputs(owner,stamp,operation,additional_path,None)
+}
+pub fn start_electrical(owner:&mut StudyOwner,stamp:StudyStamp,path:String,prediction:usize)->Result<u64,String> {
+    jobs::path(&path)?;
+    // The placeholder is never executed; exact sidecar parsing happens in the job.
+    start_inputs(owner,stamp,refinement::Operation::Electrical(refinement::electrical::Operation::RejectedInput{prediction,source:path.clone()}),None,Some((path,prediction)))
+}
+/// Job-only raw capture preserves rejected bytes, including unknown JSON fields.
+pub(super) fn capture_electrical(worker:&mut Study,path:&str,prediction:usize,read:Result<Vec<u8>,String>,cancelled:bool)->Result<(refinement::Operation,Value), (Value,String)> {
+    let mut input=json!({"path":path,"execution_cancelled":cancelled});
+    let bytes=match read {Ok(bytes)=>bytes,Err(error)=>{let error=format!("study.electrical.path {path}: {error}");input["read_error"]=json!(error);return Err((input,error));}};
+    input["content_ref"]=json!(worker.input_contents.capture(bytes.clone()));
+    let parsed=(|| {
+        if cancelled{return Err("study.electrical: cancelled after read; exact bytes retained unapplied".to_string());}
+        let measurements=serde_json::from_slice::<sim_runtime::controller_refinement::electrical_measurements::Measurements>(&bytes).map_err(|e|format!("study.electrical.measurements.json: {e}"))?;
+        Ok(refinement::Operation::Electrical(refinement::electrical::Operation::CompareMeasurements{measurements,prediction}))
+    })();
+    match parsed {Ok(operation)=>Ok((operation,input)),Err(error)=>{input["rejection"]=json!(error);Err((input,error))}}
+}
+fn start_inputs(owner:&mut StudyOwner,stamp:StudyStamp,operation:refinement::Operation,additional_path:Option<String>,electrical_path:Option<(String,usize)>)->Result<u64,String> {
     idle(owner,stamp)?;
     let retained=owner.get_mut(stamp.id).ok_or("study.id: missing retained study")?;
-    let may_expose=matches!(&operation,refinement::Operation::PredictRecording{..}|refinement::Operation::FitRecordings|refinement::Operation::FitCombined{..}|refinement::Operation::Fit{..}|refinement::Operation::Sensitivity{..});
+    let may_expose=matches!(&operation,refinement::Operation::Electrical(_)|refinement::Operation::PredictRecording{..}|refinement::Operation::FitRecordings|refinement::Operation::FitCombined{..}|refinement::Operation::Fit{..}|refinement::Operation::Sensitivity{..});
     if may_expose && !retained.study.validation_seen {
         retained.study.validation_seen=true;
         retained.revision+=1;
@@ -177,11 +197,18 @@ pub fn start_operation(owner:&mut StudyOwner,stamp:StudyStamp,operation:refineme
     };
     // Do not serialize FitCombined's additional Study into launch metadata: it could
     // recursively carry old receipts. Shared Capture::inputs supplies its projection.
-    let launch=json!({"study":stamp,"operation":label,"source":source,"additional_path":additional_path,"model_blake3":captured.draft.fingerprint(),"archive_observation_blake3":captured.archive.observation_blake3,"archive_model_blake3":captured.archive.model_blake3,"execution":sim_runtime::experiment_study::execution_identity(),"validation_seen":captured.validation_seen,"validation_influenced":captured.validation_influenced});
+    let launch=json!({"study":stamp,"operation":label,"source":source,"additional_path":additional_path,"electrical_path":electrical_path,"model_blake3":captured.draft.fingerprint(),"archive_observation_blake3":captured.archive.observation_blake3,"archive_model_blake3":captured.archive.model_blake3,"execution":sim_runtime::experiment_study::execution_identity(),"validation_seen":captured.validation_seen,"validation_influenced":captured.validation_influenced});
     let id=jobs::next(owner);
     let job=Job::spawn(Pool::Dedicated,id,label.clone(),move |ctx| {
         let mut operation=operation;
         let mut additional_input=None;
+        if let Some((path,prediction))=electrical_path {
+            ctx.message("Reading immutable calibrated electrical sidecar");
+            match capture_electrical(&mut worker,&path,prediction,std::fs::read(&path).map_err(|e|e.to_string()),ctx.cancelled()) {
+                Ok((captured,input))=>{operation=captured;additional_input=Some(input);},
+                Err((input,error))=>return Ok(rejected_output(worker,operation,error,ctx.cancelled(),Some(input))),
+            }
+        }
         if let Some(path)=additional_path {
             ctx.message("Capturing additional saved-study bytes before parsing and validation");
             let read=std::fs::read(&path).map_err(|e|e.to_string());
@@ -192,6 +219,12 @@ pub fn start_operation(owner:&mut StudyOwner,stamp:StudyStamp,operation:refineme
             if ctx.cancelled() {
                 if let Some(input)=additional_input.as_mut(){input["execution_cancelled"]=json!(true);}
                 return Ok(rejected_output(worker,operation,"study.combined.additional_input: cancelled after validation; captured source retained unapplied".into(),true,additional_input));
+            }
+        }
+        if additional_input.is_none() {
+            if let refinement::Operation::Electrical(refinement::electrical::Operation::CompareMeasurements{..})=&operation {
+                let bytes=serde_json::to_vec(&operation).map_err(|e|format!("study.electrical.command: {e}"))?;
+                additional_input=Some(json!({"input_kind":"typed_electrical_comparison","content_ref":worker.input_contents.capture(bytes)}));
             }
         }
         // Shared quarantine remembers held-out identities even when an additional

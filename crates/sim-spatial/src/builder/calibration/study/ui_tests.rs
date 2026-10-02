@@ -421,11 +421,12 @@ fn structured_unknown_value_entry_appends_estimate_without_rewriting_capture(){
 fn rendered_recording_editor_real_modal_containment_restores_owner_before_stale_refusal(){
     use crate::ui_kit::{activation::{self,Activated,ModalFocus,ModalPriority},text::{TextFieldApp,TextField,FieldMsg,FieldEvent}};
     use bevy::input_focus::{InputFocus,FocusCause};
-    let mut app=App::new();app.insert_resource(recording_owner()).insert_resource(StudyUi::default()).insert_resource(fonts());
+    for electrical in [false,true] {
+    let mut app=App::new();app.insert_resource(if electrical {electrical_ui_tests::electrical_owner()}else{recording_owner()}).insert_resource(StudyUi::default()).insert_resource(fonts());
     app.add_plugins(crate::ui_kit::text::TextEntryPlugin).add_text_field(super::super::forms::FIELD,TextField::new("Recording editor"));
     app.add_message::<crate::app::actions::Act<StudyAction>>().add_systems(Startup,render).add_systems(Update,super::super::forms::input.in_set(crate::app::InputSet::Window));
     crate::app::configure_sets(&mut app);activation::install(&mut app);app.update();
-    let anchor=app.world_mut().query::<(Entity,&Hit)>().iter(app.world()).find_map(|(e,h)|matches!(h,Hit::Focus{field:Field::Recording(p),..} if p.ends_with("/fixture")).then_some(e)).unwrap();
+    let anchor=app.world_mut().query::<(Entity,&Hit)>().iter(app.world()).find_map(|(e,h)|(if electrical {matches!(h,Hit::Focus{field:Field::Electrical(p),..}if p=="source:/evidence")}else{matches!(h,Hit::Focus{field:Field::Recording(p),..}if p.ends_with("/fixture"))}).then_some(e)).unwrap();
     app.world_mut().resource_mut::<InputFocus>().set(anchor,FocusCause::Navigated);app.world_mut().entity_mut(anchor).insert(Activated);app.update();
     let editor=app.world_mut().query::<(Entity,&crate::ui_kit::text::FieldId)>().iter(app.world()).find_map(|(e,id)|(*id==super::super::forms::FIELD).then_some(e)).unwrap();
     let mapping=app.world().resource::<StudyUi>().focus.clone();assert!(mapping.is_some());
@@ -437,6 +438,7 @@ fn rendered_recording_editor_real_modal_containment_restores_owner_before_stale_
     app.world_mut().resource_mut::<StudyOwner>().studies[0].revision+=1;
     app.world_mut().write_message(FieldMsg{field:super::super::forms::FIELD,event:FieldEvent::Submit("restored but now stale setup draft".into())});app.update();
     assert!(app.world().resource::<StudyUi>().error.as_ref().unwrap().contains("replaced or edited"));assert!(app.world().resource::<StudyUi>().publication_inputs(11)["drafts"].as_array().unwrap().iter().any(|d|d["text"]=="restored but now stale setup draft"));
+    }
 }
 #[test]
 fn queued_recording_authoring_does_not_acknowledge_input_before_terminal_validation(){
@@ -554,3 +556,6 @@ fn actual_fit_case_controls_review_additional_and_partial_sources_without_adopti
     {let s=&mut w.resource_mut::<StudyOwner>().studies[0].study;s.refinement.combined_fits[0].attempt.failure=Some("replaced immutable source".into());recordings::cache_identities(s);}
     assert!(super::recording_chart::inspect_fixture(w.resource::<StudyOwner>()).unwrap_err().contains("stale"));
 }
+
+#[path="electrical_ui_tests.rs"]
+mod electrical_ui_tests;

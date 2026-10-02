@@ -7211,3 +7211,25 @@ their transaction, streaming or isolation contracts are outside this bounded mig
 Revisit those writers only under a separately reviewed migration. Compilation,
 fixtures, filesystem behavior and GUI parity remain unverified; no execution is
 part of T51 source review.
+
+
+## Native offline electrical and power authoring — T52 (2026-10-02)
+
+T51 was accepted by source review in call-0390 at `49f47d9b`; that acceptance
+covers its shared publication batch, with no compilation, fixture execution or
+platform durability receipt. [T52 navigation, ownership and source evidence](../native-power-authoring.md)
+and [bounded field inventory](../native-power-legacy-inventory.md) extend the existing
+Build → Actuators Study owner in §§1–7. Structured electrical source and controller
+feedback authoring, both recording prediction purposes, captured servo voltage and
+calibrated sidecar comparison use shared validated commands and retained jobs.
+Exact comparison inputs use existing immutable companions; publication/reopen keep
+T51's existing revision and durability gates. Numeric trace previews and calibration
+review remain separate from motion tracking, with truthful unscored limitations.
+
+Explicit source installation clears the incompatible fixed-voltage override as one
+transaction. Unknown authoring input is refused and retained; failed/cancelled raw
+sidecars retain exact bytes. Bounded comparison receipt identities never nest prior
+Studies. This is source-only implementation evidence, not executed parity. §§8–9,
+CAD/registry authority and independent hardware safety remain unchanged. Python/OCCT,
+FPGA refinement, raw sweeps and hardware acquisition/driving remain external; reference
+implementations remain available until separately authorized parity proves migration.

@@ -82,7 +82,7 @@ fn path(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:Option<StudyStam
 }
 pub(crate) fn section(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui:&StudyUi) {
     body.spawn(k.section("Offline measured-PWM study"));
-    body.spawn(k.caption("Exploratory hypotheses from archived measurements. No hardware acquisition, registry promotion or CAD changes. Power/electrical, FPGA and hardware acquisition remain external."));
+    body.spawn(k.caption("Exploratory hypotheses from archived measurements. No hardware acquisition, registry promotion or CAD changes. FPGA refinement and hardware acquisition remain external."));
     path(body,k,ui,None,Field::Archive,"Identification archive folder","Open archive",!owner.busy());
     path(body,k,ui,None,Field::Review,"Saved study JSON","Open review",!owner.busy());
     if let Some(error)=&ui.error {body.spawn(k.text(error,size::SMALL,DANGER,0));}
@@ -124,6 +124,7 @@ pub(crate) fn section(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui
     candidate(body,k,ui,stamp,s,usable);
     refinement_ui::section(body,k,owner,ui,stamp,s,usable);
     recording_ui::section(body,k,owner,ui,stamp,s,usable);
+    electrical_ui::section(body,k,owner,ui,stamp,s,usable);
     for (name,label,value) in [("device","Device filter · 0: all",s.view.device.to_string()),("direction","Direction filter · -1 / 0 (all) / 1",s.view.direction.to_string()),("min_drive","Minimum |PWM| fraction [0…1]",s.view.min_drive.to_string()),("max_drive","Maximum |PWM| fraction [0…1]",s.view.max_drive.to_string())] {
         field(body,k,ui,stamp,Field::Filter(name),label,value,usable);
     }
@@ -300,3 +301,6 @@ pub(crate) mod recording_ui;
 
 #[path="recording_chart.rs"]
 pub(crate) mod recording_chart;
+
+#[path="electrical_ui.rs"]
+pub(crate) mod electrical_ui;

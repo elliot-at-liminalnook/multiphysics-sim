@@ -24,8 +24,10 @@ impl Study {
     pub fn load_bytes(path: &Path, bytes: &[u8]) -> Result<Self, String> {
         let mut study: Self = serde_json::from_slice(bytes)
             .map_err(|e| format!("study.source {}: {e}", path.display()))?;
-        study.validate()?;
+        // The content store validates safe hash/reference paths before reading.
+        // Calibrated electrical evidence validates exact companions after hydration.
         study.input_contents.hydrate(path)?;
+        study.validate()?;
         Ok(study)
     }
     /// Exact input bytes require the report's sibling `.study-inputs` directory.

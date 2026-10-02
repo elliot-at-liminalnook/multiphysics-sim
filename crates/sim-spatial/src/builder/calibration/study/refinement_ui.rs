@@ -10,7 +10,7 @@ fn apply(body:&mut ChildSpawnerCommands,k:&Kit,stamp:StudyStamp,id:&str,label:&s
     button(body,k,format!("study:refine:{id}"),label,StudyAction::RefineApply{stamp,command},enabled);
 }
 /// Enumerate typed scalar leaves so every timing, policy, task and row field has
-/// its own actual kit input. Excluded electrical payloads remain opaque.
+/// its own actual kit input. Electrical payloads have their own structured controls below.
 fn leaves(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:StudyStamp,group:&str,pointer:&str,value:&Value,enabled:bool) {
     match value {
         Value::Object(map)=>for (name,v) in map {
@@ -31,7 +31,7 @@ fn leaves(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:StudyStamp,gro
 pub(crate) fn section(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui:&StudyUi,stamp:StudyStamp,s:&Study,usable:bool) {
     let w=&s.refinement;let enabled=usable;
     body.spawn(k.section("Offline controller refinement"));
-    body.spawn(k.caption("Exploratory controller and physical-model drafts. Timing evidence and task limits are provisional until measured and qualified. Electrical and power payloads remain retained externally."));
+    body.spawn(k.caption("Exploratory controller and physical-model drafts. Timing evidence and task limits are provisional until measured and qualified. Electrical authoring and captured review are below; FPGA and hardware acquisition remain external."));
     body.spawn(wrap()).with_children(|row|{
         for (id,policy) in [("pid",Policy::default()),("rhai",Policy::Rhai{source:"fn control(t, sensors, actuators, state) { #{commands: #{duty: 0.0}, state: state} }".into(),parameters:serde_json::json!({"gain":1.0}),duty_limit:0.5})] {
             let mut e=w.experiment.clone();e.controller=policy;

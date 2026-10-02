@@ -11,7 +11,7 @@ pub(crate) const FIELD: FieldId = FieldId("build.measured-study");
 pub(crate) enum Field {
     Archive, Review, Save, Export, Parameter(bool, String), Condition(&'static str), Step,
     Limit(&'static str), Filter(&'static str), Notes, DecisionNotes(usize),
-    Refinement(String), RefineDecision(String,usize), Recording(String),
+    Electrical(String), Refinement(String), RefineDecision(String,usize), Recording(String),
 }
 #[derive(Component, Clone, Debug)]
 pub(crate) enum Hit {
@@ -102,7 +102,7 @@ pub(crate) fn acknowledge(ui:&mut StudyUi,action:&StudyAction,outcome:&sim_api::
     let Ok(fingerprint)=serde_json::to_string(action) else{return};
     let sim_api::Outcome::Done(result)=outcome else{return};
     if !ui.awaiting.contains_key(&fingerprint){return}
-    if matches!(action,StudyAction::ImportRecording{..}|StudyAction::FitCombined{..}|StudyAction::RefineApply{..}) {if let Ok(value)=result {if let Some(job)=value.get("job").and_then(serde_json::Value::as_u64){ui.pending_submission_jobs.insert(job,fingerprint);ui.epoch+=1;return}}}
+    if matches!(action,StudyAction::ImportElectrical{..}|StudyAction::ImportRecording{..}|StudyAction::FitCombined{..}|StudyAction::RefineApply{..}) {if let Ok(value)=result {if let Some(job)=value.get("job").and_then(serde_json::Value::as_u64){ui.pending_submission_jobs.insert(job,fingerprint);ui.epoch+=1;return}}}
     let Some((key,text))=ui.awaiting.remove(&fingerprint) else{return};
     let group=ui.grouped_submissions.remove(&fingerprint).unwrap_or_default();
     match result {
@@ -142,6 +142,7 @@ pub(crate) fn submission(owner: &StudyOwner, stamp: Option<StudyStamp>, field: &
         _ => {}
     }
     let study = &retained.study;
+    if let Field::Electrical(path)=field { return electrical_forms::submission(study,stamp,path,text); }
     if let Field::Recording(path)=field { return recording_forms::submission(study,stamp,path,text); }
     if let Field::Refinement(path)=field { return refinement_forms::submission(study,stamp,path,text); }
     if let Field::RefineDecision(kind,index)=field {
@@ -314,3 +315,6 @@ pub(super) fn stage_group(ui:&mut StudyUi,stamp:StudyStamp,prefix:&str,action:St
     if let Some(primary)=group.first(){ui.awaiting.insert(fingerprint.clone(),primary.clone());ui.grouped_submissions.insert(fingerprint,group);}
     Ok(action)
 }
+
+#[path="electrical_forms.rs"]
+pub(crate) mod electrical_forms;

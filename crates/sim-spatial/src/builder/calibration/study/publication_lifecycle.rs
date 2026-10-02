@@ -22,7 +22,13 @@ impl Hooks for Fail {
 }
 fn study()->Study {
     let root=crate::workspace::root().unwrap();
-    Study::new(sim_runtime::experiment_comparison::hx_archive::load(&root.join(super::super::DEFAULT_ARCHIVE),root).unwrap()).unwrap()
+    let mut study=Study::new(sim_runtime::experiment_comparison::hx_archive::load(&root.join(super::super::DEFAULT_ARCHIVE),root).unwrap()).unwrap();
+    // T52 extends these actual visible-unconfirmed publication fixtures with
+    // source/controller authoring; the accepted T51 writer/gates remain unchanged.
+    let source=super::forms::electrical_forms::source_preset(&study,true);
+    sim_runtime::experiment_study::refinement::apply(&mut study,sim_runtime::experiment_study::refinement::Command::Electrical(sim_runtime::experiment_study::refinement::electrical::Command::SetSource(Some(source)))).unwrap();
+    study.refinement.experiment.electrical=Some(super::forms::electrical_forms::controller_preset());
+    study
 }
 fn terminal(owner:&mut StudyOwner,captured:Study,path:&Path,result:Result<jobs::JobOutput,String>,cancelled:bool,displaced:bool) {
     let stamp=owner.active().unwrap().stamp();

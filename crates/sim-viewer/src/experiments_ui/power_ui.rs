@@ -8,6 +8,7 @@ pub struct State {
     prediction: usize,
     recording: usize,
     selected_run: Option<usize>,
+    rejected: std::collections::BTreeMap<String, (Option<power::Setup>, Option<power::Controller>)>,
 }
 impl State {
     pub fn show(
@@ -15,9 +16,27 @@ impl State {
         ui: &mut egui::Ui,
         s: &mut Study,
         busy: bool,
+        study_id: usize,
     ) -> (bool, Option<super::refinement::Action>) {
-        let previous = s.draft.clone();
-        let previous_control = s.refinement.experiment.electrical.clone();
+        let original = s;
+        let mut projection = original.clone();
+        let source_identity = format!("{study_id}:{}:{}", original.archive.observation_blake3, original.draft.fingerprint());
+        if let Some((source, controller)) = self.rejected.get(&source_identity) {
+            projection.draft.power = source.clone();
+            projection.refinement.experiment.electrical = controller.clone();
+        }
+        let s = &mut projection;
+        let previous = original.draft.clone();
+        let previous_control = original.refinement.experiment.electrical.clone();
+        self.prediction=original.refinement_evidence.electrical.selected_prediction.unwrap_or(self.prediction);
+        if let Some(hash)=&original.refinement_evidence.selected_recording {
+            if let Some(index)=original.refinement.recordings.iter().position(|r|r.fingerprint()==*hash){self.recording=index;}
+        }
+        self.selected_run=original.refinement_evidence.controller_run;
+        let previous_prediction = self.prediction;
+        let previous_recording = self.recording;
+        let previous_run = self.selected_run;
+        let mut editor_apply = false;
         let mut run = None;
         ui.strong("Supply, battery and electrical validation");
         ui.label("Test voltage sag and energy demand using the shared electrical circuit. Declare which electrical channels the controller can observe; physical traces also show what happens between controller ticks. Battery parameters and discharge behavior need measured evidence.");
@@ -108,8 +127,7 @@ impl State {
                     .desired_width(f32::INFINITY),
             );
             if ui.button("Apply validated electrical source").clicked() {
-                match serde_json::from_str::<power::Setup>(&self.editor)
-                    .map_err(|e| e.to_string())
+                match parse_source(&self.editor)
                     .and_then(|p| {
                         p.validate()?;
                         Ok(p)
@@ -117,7 +135,7 @@ impl State {
                     Ok(p) => {
                         s.draft.power = Some(p);
                         s.draft.conditions.voltage_v = None;
-                        self.editor.clear();
+                        editor_apply = true; // Clear only after the shared transaction commits.
                         self.error = None;
                     }
                     Err(e) => self.error = Some(e),
@@ -335,7 +353,7 @@ impl State {
                     ui.selectable_value(
                         &mut self.prediction,
                         i,
-                        format!("{} · {:?} · {}", i + 1, p.purpose, &p.recording_hash[..8]),
+                        format!("{} · {:?} · {}", i + 1, p.purpose, p.recording_hash.get(..8).unwrap_or(&p.recording_hash)),
                     );
                 }
             });
@@ -414,10 +432,44 @@ impl State {
             }
         }
         let changed = previous != s.draft || previous_control != s.refinement.experiment.electrical;
-        if changed {
-            s.candidate_edited();
+        let mut accepted = false;
+        if changed || previous_prediction != self.prediction || previous_recording != self.recording || previous_run != self.selected_run {
+            use sim_runtime::experiment_study::refinement::{self as shared, Command};
+            use shared::electrical::Command as Electrical;
+            let mut transaction = original.clone();
+            let result = if busy { Err("refinement.electrical: worker is busy; editable draft retained".into()) } else { shared::apply(&mut transaction, Command::Electrical(Electrical::SetSource(s.draft.power.clone()))) }
+                .and_then(|_| shared::apply(&mut transaction, Command::Electrical(Electrical::SetVoltage(s.draft.conditions.voltage_v))))
+                .and_then(|_| shared::apply(&mut transaction, Command::Electrical(Electrical::SetController(s.refinement.experiment.electrical.clone()))));
+            let result = result.and_then(|_| {
+                if previous_prediction != self.prediction {
+                    shared::apply(&mut transaction, Command::Electrical(Electrical::SelectPrediction(self.prediction)))?;
+                }
+                if previous_recording != self.recording {
+                    let recording_hash = s.refinement.recordings.get(self.recording)
+                        .ok_or("refinement.electrical.recording: missing recording")?.fingerprint();
+                    shared::apply(&mut transaction, Command::SelectRecording{recording_hash})?;
+                }
+                if previous_run != self.selected_run {
+                    if let Some(index) = self.selected_run.or(latest) {
+                        shared::apply(&mut transaction, Command::SelectControllerRun(index))?;
+                    }
+                }
+                Ok(())
+            });
+            match result {
+                Ok(()) => { *original = transaction; self.rejected.remove(&source_identity); if editor_apply { self.editor.clear(); } self.error = None; accepted = true; }
+                Err(error) => {
+                    // Keep invalid widget values editable; no part of the Study is committed.
+                    self.rejected.insert(source_identity, (s.draft.power.clone(), s.refinement.experiment.electrical.clone()));
+                    self.prediction=previous_prediction;
+                    self.recording=previous_recording;
+                    self.selected_run=previous_run;
+                    self.error = Some(error);
+                    run = None;
+                }
+            }
         }
-        (changed, run)
+        (accepted, run)
     }
 }
 fn show_trace(ui: &mut egui::Ui, trace: &power::Trace) {
@@ -507,4 +559,35 @@ fn show_trace(ui: &mut egui::Ui, trace: &power::Trace) {
         );
     }
     ui.small(&trace.interpretation);
+}
+
+/// Refuse unknown source fields rather than silently normalizing them away.
+pub(super) fn parse_source(raw: &str) -> Result<power::Setup, String> {
+    let value: serde_json::Value = serde_json::from_str(raw)
+        .map_err(|e| format!("draft.power: {e}"))?;
+    sim_runtime::experiment_study::refinement::electrical::parse_source(&value)?
+        .ok_or_else(||"draft.power: expected source definition".into())
+}
+
+#[cfg(test)]
+mod electrical_compatibility_fixtures {
+    use super::*;
+    #[test]
+    fn unknown_source_editor_fields_are_refused_without_losing_raw_text() {
+        let raw = r#"{ "source_component":"electrical.voltage_source", "source_parameters":{"voltage":12.0}, "auxiliary_current_a":0.0, "evidence":"fixture", "limits":{}, "future_source":{"retain":[1,2]} }"#;
+        let error = parse_source(raw).unwrap_err();
+        assert!(error.contains("draft.power.future_source"));
+        assert!(raw.contains("\"retain\":[1,2]"));
+    }
+    #[test]
+    fn unknown_limit_is_not_silently_dropped() {
+        let raw = r#"{"source_component":"electrical.voltage_source","source_parameters":{"voltage":12.0},"auxiliary_current_a":0.0,"evidence":"fixture","limits":{"future_limit":3}}"#;
+        assert!(parse_source(raw).unwrap_err().contains("draft.power.limits.future_limit"));
+    }
+    #[test]
+    fn historical_compare_action_encoding_remains_available() {
+        let action: super::super::refinement::Action = serde_json::from_str(
+            r#"{"compare_electrical":[0,"calibrated-sidecar.json"]}"#).unwrap();
+        assert!(matches!(action, super::super::refinement::Action::CompareElectrical(0,Some(_))));
+    }
 }

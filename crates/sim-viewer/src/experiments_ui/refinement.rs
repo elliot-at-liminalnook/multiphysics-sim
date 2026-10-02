@@ -9,13 +9,13 @@ use std::{collections::BTreeMap, sync::atomic::AtomicBool};
 
 pub enum Outcome {
     Shared(sim_runtime::experiment_study::refinement::Outcome),
+    SharedInputs(sim_runtime::experiment_study::refinement::Outcome, serde_json::Value),
     Recording(recording::Recording),
     FpgaRecording(sim_runtime::controller_refinement::fpga::Recording),
     FpgaReview(sim_runtime::controller_refinement::fpga_review::Review),
     FpgaDesign(sim_runtime::controller_refinement::fpga_design::Run),
     FpgaPlanSaved(String),
     FpgaFit(sim_runtime::controller_refinement::fpga_review::FitAttempt),
-    Electrical(sim_runtime::controller_refinement::electrical_measurements::Evaluation),
     Proposal(cad::Proposal),
     Accepted(cad::Acceptance),
 }
@@ -176,23 +176,40 @@ impl Action {
             )
             .map(Outcome::FpgaFit),
             Self::CompareElectrical(i, path) => {
-                use sim_runtime::controller_refinement::electrical_measurements as electrical;
-                let p = w.predictions.get(i).ok_or("Select a prediction first")?;
-                let r = w
-                    .recordings
-                    .iter()
-                    .find(|r| r.fingerprint() == p.recording_hash)
-                    .ok_or("Missing recording")?;
-                let measurements = if let Some(path) = path {
-                    serde_json::from_slice::<electrical::Measurements>(
-                        &std::fs::read(path).map_err(|e| e.to_string())?,
-                    )
-                    .map_err(|e| e.to_string())?
+                use sim_runtime::experiment_study::refinement::{self as shared, Operation};
+                use shared::electrical::Operation as Electrical;
+                let prediction = w.predictions.get(i).ok_or("refinement.electrical.prediction: missing prediction")?;
+                let hash = prediction.recording_hash.clone();
+                let mut snapshot = s;
+                let mut input = serde_json::json!({"legacy_action":"compare_electrical","prediction":i,"recording_hash":hash,"path":path});
+                let parsed = if let Some(path) = path {
+                    std::fs::read(&path).map_err(|e|format!("refinement.electrical.measurement_path: {e}"))
+                        .and_then(|bytes| {
+                            input["content_ref"] = serde_json::json!(snapshot.input_contents.capture(bytes.clone()));
+                            serde_json::from_slice(&bytes).map_err(|e|format!("refinement.electrical.measurements: {e}"))
+                        }).map(|measurements| Electrical::CompareMeasurements{measurements,prediction:i})
                 } else {
-                    electrical::Measurements::servo_voltage(r)?
+                    Ok(Electrical::CompareServoVoltage{recording_hash:hash.clone(),prediction:i})
                 };
-                measurements.validate_recording(r)?;
-                electrical::evaluate(&measurements, p).map(Outcome::Electrical)
+                let operation = parsed.as_ref().map(|op|Operation::Electrical(op.clone()))
+                    .unwrap_or_else(|_|Operation::Electrical(Electrical::RejectedInput{prediction:i,source:input.to_string()}));
+                let capture = parsed.and_then(|_|shared::prepare(&mut snapshot,operation.clone()));
+                match capture {
+                    Ok(capture)=>{
+                        let outcome=shared::execute(capture,cancel,progress)?;
+                        let mut inputs=outcome.capture.inputs();
+                        inputs["additional_input"]=input;
+                        Ok(Outcome::SharedInputs(outcome,inputs))
+                    },
+                    Err(error)=>{let outcome=shared::Outcome {
+                        capture:shared::Capture{study:snapshot,operation,runtime:sim_runtime::experiment_study::execution_identity(),captured_unix_ns:std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|e|e.to_string())?.as_nanos().to_string()},
+                        result:Err(format!("Rejected electrical comparison input {input}: {error}")),cancelled:false,
+                    };
+                        let mut inputs=outcome.capture.inputs();
+                        inputs["additional_input"]=input;
+                        Ok(Outcome::SharedInputs(outcome,inputs))
+                    },
+                }
             }
             Self::FitCombined { selected, additional_study } => {
                 use sim_runtime::experiment_study::refinement::{self as shared, Command, Operation};
@@ -317,7 +334,7 @@ impl State {
         self.section = 4;
         self.selected_recording = 0;
     }
-    pub fn show(&mut self, ui: &mut egui::Ui, s: &mut Study, busy: bool) -> (Option<Action>, bool) {
+    pub fn show(&mut self, ui: &mut egui::Ui, s: &mut Study, busy: bool, study_id:usize) -> (Option<Action>, bool) {
         if let Some(hash)=&s.refinement_evidence.selected_recording {
             if let Some(index)=s.refinement.recordings.iter().position(|r|r.fingerprint()==*hash) {self.selected_recording=index;}
         }
@@ -524,7 +541,7 @@ impl State {
                     }
                 }
                 7=>{action=self.fpga_ui.show(ui,s,busy);}
-                6=>{let (edited,power_action)=self.power_ui.show(ui,s,busy);changed|=edited;action=power_action;}
+                6=>{let (edited,power_action)=self.power_ui.show(ui,s,busy,study_id);changed|=edited;action=power_action;}
                 _=>{
                     ui.strong("Review refined physical properties before carrying them into CAD");
                     ui.label("The proposal maps the explicitly selected hardware ID to a stable motor ID in a physical CAD export. It records estimated values, unknown uncertainty and unloaded test scope.");

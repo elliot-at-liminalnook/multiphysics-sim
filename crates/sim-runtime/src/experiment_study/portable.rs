@@ -4,7 +4,7 @@
 //! length:u64, raw bytes. Sorted publication; decoding accepts any order but
 //! rejects every duplicate (including identical bytes). No paths or receipts added.
 use super::Study;
-use std::{collections::BTreeMap, io::{Read, Write}, path::Path, sync::Arc};
+use std::{collections::BTreeMap, io::Write, path::Path, sync::Arc};
 pub const MAGIC: &[u8; 8] = b"SIMSTUDY";
 pub const VERSION: u32 = 1;
 pub const MAX_ARTIFACT_BYTES: usize = 256 * 1024 * 1024;
@@ -14,15 +14,6 @@ pub const MAX_OBJECTS: usize = 4096;
 pub const MAX_JSON_DEPTH: usize = 64;
 fn error(name: &str, detail: impl std::fmt::Display) -> String { format!("study.portable.{name}: {detail}") }
 
-/// Bounds apply before reads, including files growing after metadata inspection.
-pub(super) fn read_bounded(path: &Path, limit: usize) -> Result<Vec<u8>, String> {
-    let file = std::fs::File::open(path).map_err(|e| format!("study.source {}: {e}", path.display()))?;
-    if file.metadata().map_err(|e|e.to_string())?.len() > limit as u64 { return Err(error("size", path.display())); }
-    let mut bytes = Vec::new();
-    file.take((limit as u64) + 1).read_to_end(&mut bytes).map_err(|e|format!("study.source {}: {e}",path.display()))?;
-    if bytes.len() > limit { return Err(error("size", path.display())); }
-    Ok(bytes)
-}
 /// Lexical nesting scan runs before serde allocations; escaped quotes/brackets
 /// inside strings are ignored. Serde supplies syntax and Unicode validation.
 pub(super) fn json_bounds(bytes: &[u8], limit: usize) -> Result<(), String> {
@@ -73,6 +64,8 @@ pub(super) fn encode(study:&Study)->Result<Vec<u8>,String>{
     let mut out=Vec::with_capacity(total);out.extend_from_slice(MAGIC);out.extend_from_slice(&VERSION.to_le_bytes());
     out.extend_from_slice(&(manifest.bytes.len() as u64).to_le_bytes());out.extend_from_slice(&(study.input_contents.references.len() as u32).to_le_bytes());out.extend_from_slice(&manifest.bytes);
     for (hash,r) in &study.input_contents.references {out.extend_from_slice(hash.as_bytes());out.extend_from_slice(&r.byte_length.to_le_bytes());out.extend_from_slice(study.input_contents.resolve(hash)?);}
+    // Encoding must meet the same attachment/cache/semantic gates as reopening.
+    Study::load_bytes(Path::new("portable-publication-preflight"), &out)?;
     Ok(out)
 }
 struct Cursor<'a>{bytes:&'a [u8],at:usize}
@@ -107,6 +100,20 @@ pub(super) fn decode(bytes:&[u8])->Result<Study,String>{
     }
     if recovered.len()!=study.input_contents.references.len(){return Err(error("missing_object","reference not supplied"));}
     if c.at!=bytes.len(){return Err(error("trailing",bytes.len()-c.at));}
+    // Known JSON objects are bounded before cache/validation decoding. Opaque
+    // binary content remains uninterpreted; all objects already passed size/hash gates.
+    for r in &study.refinement_evidence.terminals {
+        if let Some(bytes) = recovered.get(r.content_ref.blake3.as_str()) {
+            json_bounds(bytes, MAX_OBJECT_BYTES)?;
+        }
+    }
+    for receipt in &study.refinement_evidence.receipts {
+        if receipt.result_kind.as_deref() != Some("electrical_comparison") { continue; }
+        if let Some(hash) = receipt.inputs.get("electrical")
+            .and_then(|v| v.get("content_ref")).and_then(|v| v.get("blake3")).and_then(|v| v.as_str()) {
+            if let Some(bytes) = recovered.get(hash) { json_bounds(bytes, MAX_OBJECT_BYTES)?; }
+        }
+    }
     // No attachment until the complete container has passed framing and hashes.
     study.input_contents.contents=recovered.into_iter().map(|(hash,bytes)|(hash,Arc::new(bytes.to_vec()))).collect();
     Ok(study)
@@ -160,6 +167,7 @@ pub(super) fn manifest_preflight(bytes:&[u8],reject_duplicates:bool)->Result<(),
 
 /// Only bounded diagnostic projection. Full decoding remains the attachment gate.
 pub(super) fn manifest_slice(bytes:&[u8])->Result<&[u8],String>{
+    if !bytes.starts_with(MAGIC) { return Ok(bytes); }
     if bytes.len()>MAX_ARTIFACT_BYTES{return Err(error("size",bytes.len()));}
     let manifest=if bytes.starts_with(MAGIC){
         let mut c=Cursor{bytes,at:8};let version=c.u32()?;

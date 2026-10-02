@@ -113,6 +113,10 @@ at its new path; referenced exact inputs travel inside it. JSON saves still need
 sibling `.study-inputs` companions, and HTML exports are inspection reports.
 See the [portable Study guide](docs/portable-study-artifacts.md) for bounds,
 compatibility and the source-only verification limits.
+Legacy experiment review retains failed, cancelled and stale publication captures
+for recovery as separate reviews. Publish recovered evidence to a fresh destination.
+Portable limits are format-specific; JSON preserves its historical loading behavior
+and checks reopening before publication.
 
 Offline measured-PWM studies use **Build → Actuators → Measured evidence** in
 this same window. Open an identification archive or saved review, edit exploratory

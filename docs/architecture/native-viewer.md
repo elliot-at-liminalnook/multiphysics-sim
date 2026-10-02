@@ -7267,6 +7267,18 @@ and duplicate refusal precede hydration. The same captured revision/destination,
 publication gate, cancellation, displaced receipt and close-preservation owners apply.
 Reports remain inspection outputs and never acknowledge editable-study saving.
 
+T53 call-0400 repairs retain legacy publication captures in the existing panel
+pending/result owner, including exact content, destination, representation and
+revision. Failed, cancelled or stale captures can become separate retained reviews;
+they never replace later edits or overwrite visible-unconfirmed destinations.
+Recovery remains in-memory, not recursively embedded receipt history. Legacy atomic
+cancellation cannot revoke a write already started; native PublicationGate remains
+unchanged. Ordinary JSON preserves historical loading acceptance and companion
+behavior; portable byte/count/depth limits apply only to SIMSTUDY. JSON publication
+round-trips its representation and exact known content before writing so a newly
+acknowledged file can reopen through the same shared decoder. Historical legacy
+inputs retain their memory-use limitations. Repair fixtures remain unexecuted.
+
 Decision: package the complete existing manifest and Store membership under the
 shared owner, preserving identities and opaque compatibility fields. JSON keeps its
 sibling companion contract; no automatic migration or reference retirement occurs.

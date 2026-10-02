@@ -2469,6 +2469,14 @@ consumers detect format automatically. No sibling directory is required for port
 reopen. JSON still requires referenced `.study-inputs` companions; HTML is an
 inspection report, not a reopenable editable Study.
 
+Legacy experiment publication recovery retains the exact captured revision and
+destination under the existing panel job/result owner. Its recovery control opens
+a separate unsaved review for inspection and fresh-destination publication, keeping
+newer edits and visible-unconfirmed files untouched. JSON preserves historical
+loading acceptance; the portable resource limits are format-specific. Shared JSON
+publication validates reopening before acknowledging evidence. These repairs are
+source-reviewed only; abrupt exit can still lose in-memory unpublished recovery.
+
 T52 was accepted by source review in call-0396 across d9bc1455/929f6833, including
 durable unapplied, unscored cancellation diagnostics. T53 fixtures are written and
 unexecuted; builds, launches, exports, parity and platform durability remain

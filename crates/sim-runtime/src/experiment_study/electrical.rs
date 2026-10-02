@@ -257,7 +257,6 @@ pub fn validate(s:&Study)->Result<(),String>{
         let reference:super::super::input_content::ContentRef=serde_json::from_value(raw.clone()).map_err(|e|format!("{path}.inputs.electrical.content_ref: {e}"))?;
         let bytes=s.input_contents.resolve(&reference.blake3)?;
         if bytes.len() as u64!=reference.byte_length || blake3::hash(bytes).to_hex().to_string()!=reference.blake3 {return Err(format!("{path}.inputs.electrical.content_ref: exact content fingerprint changed"));}
-        crate::experiment_study::portable::json_bounds(bytes,crate::experiment_study::portable::MAX_OBJECT_BYTES)?;
         let exact:serde_json::Value=serde_json::from_slice(bytes).map_err(|e|format!("{path}.inputs.electrical.content_ref: {e}"))?;
         let m:measurements::Measurements=serde_json::from_value(exact["measurements"].clone()).map_err(|e|format!("{path}.inputs.measurements: {e}"))?;
         let r:recording::Recording=serde_json::from_value(exact["recording"].clone()).map_err(|e|format!("{path}.inputs.recording: {e}"))?;

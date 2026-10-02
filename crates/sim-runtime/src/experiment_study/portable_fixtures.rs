@@ -72,7 +72,7 @@ fn malformed_unsupported_truncated_trailing_and_oversized_headers_fail_before_at
     assert!(reopened(&framed(b"{ invalid",0,&[])).unwrap_err().contains("study.portable.manifest"));
     let deep=format!("{}0{}","[".repeat(MAX_JSON_DEPTH+1),"]".repeat(MAX_JSON_DEPTH+1));assert!(reopened(&framed(deep.as_bytes(),0,&[])).unwrap_err().contains("json_depth"));
     // A sparse oversized file exercises the reader without allocating its advertised size.
-    let root=directory();let path=root.join("oversized.simstudy");let f=std::fs::File::create(&path).unwrap();f.set_len((MAX_ARTIFACT_BYTES as u64)+1).unwrap();assert!(Study::read_source_bytes(&path).unwrap_err().contains("study.portable.size"));
+    let root=directory();let path=root.join("oversized.simstudy");let mut f=std::fs::File::create(&path).unwrap();std::io::Write::write_all(&mut f,MAGIC).unwrap();f.set_len((MAX_ARTIFACT_BYTES as u64)+1).unwrap();assert!(Study::read_source_bytes(&path).unwrap_err().contains("study.portable.size"));
 }
 #[test]
 fn missing_duplicate_conflicting_hash_and_unreferenced_objects_are_named_errors(){
@@ -110,4 +110,55 @@ fn portable_encoder_stops_deep_opaque_serialization_and_aggregate_reference_grow
     assert!(s.portable_bytes().unwrap_err().contains("json_depth"));
     let mut s=study();for index in 0..5{let hash=format!("{index:064x}");s.input_contents.references.insert(hash.clone(),super::input_content::ContentRef{version:1,blake3:hash,byte_length:MAX_OBJECT_BYTES as u64});}
     assert!(s.portable_bytes().unwrap_err().contains("aggregate_size"));
+}
+
+// Production publication/load adapters; intentionally unexecuted compatibility fixtures.
+#[test]
+fn ordinary_json_opaque_depth_above_portable_limit_roundtrips_without_migration() {
+    let mut s=study();let mut value=serde_json::json!("opaque");
+    for _ in 0..70 { value=serde_json::json!([value]); }
+    s.retained_fields.insert("future_nested_payload".into(),value);
+    let root=directory();let path=root.join("historical.json");
+    s.save_new(&path).unwrap();let loaded=Study::load(&path).unwrap();
+    assert_eq!(loaded.retained_fields,s.retained_fields);
+    let bytes=Study::read_source_bytes(&path).unwrap();
+    assert_eq!(Study::manifest_value(&bytes).unwrap(),serde_json::to_value(&s).unwrap());
+    assert!(s.portable_bytes().unwrap_err().contains("json_depth"));
+}
+#[test]
+fn ordinary_json_unreopenable_serde_depth_refuses_before_any_publication() {
+    let mut s=study();let mut value=serde_json::json!("opaque");
+    for _ in 0..140 { value=serde_json::json!([value]); }
+    s.retained_fields.insert("future_nested_payload".into(),value);
+    let exact=envelope(&mut s,b"preserved pending bytes".to_vec());
+    let root=directory();let path=root.join("refused.json");
+    assert!(s.save_new(&path).unwrap_err().contains("recursion limit"));
+    assert!(!path.exists());assert!(!root.join(".study-inputs").exists());
+    assert_eq!(s.input_contents.resolve(&exact.blake3).unwrap(),b"preserved pending bytes");
+}
+#[test]
+fn ordinary_json_large_inline_and_companion_evidence_retains_legacy_acceptance() {
+    let mut s=study();s.retained_fields.insert("large_opaque".into(),serde_json::Value::String("x".repeat(MAX_MANIFEST_BYTES+1)));
+    let reference=envelope(&mut s,vec![7;MAX_OBJECT_BYTES+1]);
+    let root=directory();let path=root.join("large.json");s.save_new(&path).unwrap();
+    let loaded=Study::load(&path).unwrap();assert_eq!(loaded.retained_fields,s.retained_fields);
+    assert_eq!(loaded.input_contents.resolve(&reference.blake3).unwrap().len(),MAX_OBJECT_BYTES+1);
+    assert!(s.portable_bytes().unwrap_err().contains("object_size"));
+    let mut inline=study();inline.retained_fields=s.retained_fields.clone();
+    assert!(inline.portable_bytes().unwrap_err().contains("manifest_size"));
+}
+#[test]
+fn ordinary_json_reference_count_above_portable_limit_roundtrips() {
+    let mut s=study();for index in 0..MAX_OBJECTS+1 { s.input_contents.capture(index.to_le_bytes().to_vec()); }
+    let root=directory();let path=root.join("many.json");s.save_new(&path).unwrap();
+    let loaded=Study::load(&path).unwrap();assert_eq!(loaded.input_contents,s.input_contents);
+    assert!(s.portable_bytes().unwrap_err().contains("object_count"));
+}
+#[test]
+fn ordinary_json_missing_or_conflicting_pending_content_refuses_before_publication() {
+    let root=directory();let path=root.join("missing.json");let mut s=study();
+    let reference=envelope(&mut s,b"original".to_vec());s.input_contents.contents.clear();
+    assert!(s.save_new(&path).unwrap_err().contains("missing recoverable content"));assert!(!path.exists());
+    s.input_contents.contents.insert(reference.blake3,std::sync::Arc::new(b"changed!".to_vec()));
+    assert!(s.save_new(&path).unwrap_err().contains("corrupt artifact"));assert!(!path.exists());assert!(!root.join(".study-inputs").exists());
 }

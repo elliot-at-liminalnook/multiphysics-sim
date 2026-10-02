@@ -35,14 +35,23 @@ ASCII hex (64 bytes), length `u64`, exact raw bytes. Writers sort by identity;
 readers accept any object order. Detection uses magic bytes, never filename.
 Unsupported versions fail closed. No artifact field controls a filesystem path.
 
-Limits are 256 MiB for the complete source/container, 64 MiB for the JSON manifest,
+Portable limits are 256 MiB for the complete container, 64 MiB for its JSON manifest,
 4096 objects, 64 MiB per object and JSON nesting depth 64. The manifest allowance
 retains room for existing inline evidence. Bounded source reads use a maximum plus
 one sentinel byte, and lengths/counts/checked aggregate arithmetic precede object
 allocation. The bounded JSON scan precedes deserialization; portable manifests
-also reject duplicate JSON keys. JSON compatibility retains its existing opaque
-field semantics within the documented resource bounds. Diagnostic terminal JSON
-is depth/size checked before reconstructing the review cache.
+also reject duplicate JSON keys. These restrictions do not impose new byte,
+object-count or depth-64 limits on historical JSON manifests or their companions.
+Ordinary JSON retains its established serde recursion and compatibility behavior.
+Portable recognized diagnostic/electrical JSON is checked before reconstructing
+review caches or validating exact comparison inputs; opaque objects remain bytes.
+
+Ordinary JSON publication checks the serialized manifest and recoverable exact
+content through the shared legacy decoding/validation behavior before filesystem
+publication. This refuses a newly authored representation that its loader cannot
+reopen, preserving the input and destination. Historical JSON still requires its
+companions, and loading it retains the historical memory-use characteristics;
+the portable resource guarantees are not a claim about arbitrary legacy inputs.
 
 Membership is exactly the Store reference set, including historical/rejected
 objects. Extra objects and omitted objects fail; identical duplicate objects are
@@ -80,6 +89,13 @@ write; requests racing a started write may leave a published destination, but ne
 acknowledge the review saved and surface that limitation. Pending jobs and
 receipts remain durable owner state, and stale successful captures cannot mark a
 newer revision saved. Reports never participate in editable revision acknowledgment.
+Legacy pending/result publication ownership retains the exact captured Study,
+destination, representation and revision even after later edits. Failed, cancelled
+and stale completion recovery is visible in the existing experiment panel. Recover
+as a separate retained review, then publish to a fresh destination; recovery never
+replaces the newer current Study or overwrites a visible-unconfirmed destination.
+Snapshots stay in memory under that owner and are not recursively embedded in
+durable receipts. Abrupt process termination can still lose unpublished recovery.
 
 ## Focused source inventory
 

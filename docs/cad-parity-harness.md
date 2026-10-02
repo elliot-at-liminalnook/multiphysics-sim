@@ -67,8 +67,13 @@ with an active subprocess workspace and is not an adversarial CAD sandbox.
 The adapter trait is synchronous and takes a durable cancellation callback.
 Long work uses reusable headless process ownership and the existing CAD service
 startup polling, not feature threads. Unix children start in an owned process
-group, with bounded TERM grace then KILL and direct-child reaping. Component
-cancellation is requested once over the network and polled to acknowledgment.
+group. Exit observation uses `waitid(WNOWAIT)` so the leader remains unreaped
+through bounded TERM grace and the final group KILL. Only then may reaping release
+its identity; repeated stop/drop cannot signal the released numeric group.
+This requires exclusive child-wait ownership and normal SIGCHLD disposition;
+unexpected ownership loss refuses further signalling. Descendants that escape
+the owned process group are outside this mechanism's containment guarantee.
+Component cancellation is requested once over the network and polled to acknowledgment.
 Unknown mutating network outcomes stop dispatch and are never retried. Malformed
 observations preserve the uncertainty of an earlier mutation. Non-Unix execution/publication is refused because the owned-directory capability is unavailable. Temporary workspaces/logs remain inspectable after a
 future run; this batch created no execution workspaces or receipts.
@@ -80,6 +85,20 @@ label. Executed observations also record actual Python, OCP, RoboCAD, NumPy, Sci
 failure also has no fictional per-operation execution timestamp. Executed pass,
 failed comparison, unsupported, deliberate difference, incomplete, uncertain and
 cancelled statuses remain distinct.
+
+After bounded reference shutdown, the runner always inspects the owned reference
+report, including cancellation, timeout, nonzero exit and cleanup failure.
+Deserializable receipts retain their original identities, statuses, timestamps,
+revisions, observations and uncertain outcomes. Validation and shutdown issues
+are recorded separately in `AdapterRun.execution_issues`, an optional additive
+version-1 field (omission means no reported issue), and block every migration
+gate. A partial receipt set remains partial; only absent or malformed output
+requires synthetic timestamp-free unavailable-evidence receipts. Cooperative
+SIGTERM publication is attempted, not guaranteed: forced termination or failed
+shutdown may leave no usable report. These recovery and process-ordering fixtures
+are written but unexecuted. A bounded reap failure retains the waitable identity
+without further signals; eventual reaping is not guaranteed after ownership is
+lost or the final owner is dropped.
 
 A newly owned output directory is required. JSON and readable text are written and
 fsynced before hard-link publication; existing names are never replaced. The
@@ -138,12 +157,12 @@ and deliberate export metadata differences remain unresolved even after executio
    → Undo → Redo → stale ConfigureRobot → in-memory Physical operations. Policies
    start at `:50`; raw export source metadata has a declared difference.
 2. `crates/sim-runtime/src/bin/cad_parity.rs:49` calls shared `runner::paired`
-   (`crates/sim-runtime/src/cad_parity/runner.rs:235`). The default path constructs
+   (`crates/sim-runtime/src/cad_parity/runner.rs:272`). The default path constructs
    timestamp-free NotRun receipts (`runner.rs:20`). Opt-in execution creates two
    separate owned copies (`isolation.rs:48`), whose bytes are verified through
    retained no-follow directory handles (`owned_path.rs:105`). No original save
    operation is offered by the harness.
-3. Before loading, `runner.rs:110` invokes the bounded reference validator;
+3. Before loading, `runner.rs:145` invokes the bounded reference validator;
    `cad/robocad/parity_reference.py:29` checks ownership, hashes, ZIP/schema,
    units, frames and dependency closure. The direct reference then loads verified
    bytes (`parity_reference.py:117`) and calls `Dispatcher.execute`
@@ -157,13 +176,23 @@ and deliberate export metadata differences remain unresolved even after executio
    remains independent. The receipt retains source SHA, process document ID,
    revision, actual outcome, numerical owner, raw dependency versions, units,
    frame, provenance, uncertainty and missing/unsupported/invalid states.
-5. `compare.rs:319` compares policies with field-specific errors and metadata;
+5. Reference completion (`runner.rs:349`) is followed unconditionally by the
+   owned report read (`runner.rs:352`). `runner.rs:109` preserves published
+   receipts even after SIGTERM cooperative publication
+   (`cad/robocad/parity_reference.py:251`). Validation refusal annotates the run
+   (`runner.rs:102`), preserving raw identity and operation outcomes.
+   The process owner observes without reaping (`process.rs:147`); its cleanup
+   (`process.rs:95`) performs TERM/grace/KILL before bounded reaping.
+   `process.rs:248` returns interruption and cleanup evidence together.
+   `gates.rs:79` refuses every run-level interruption/cleanup issue; readable
+   publication retains these issues (`publication.rs:58`).
+6. `compare.rs:319` compares policies with field-specific errors and metadata;
    `gates.rs:44` recomputes diagnostics and refuses missing execution/coverage.
    Missing CAD provenance is not filled; declared export metadata differences
-   block migration (`gates.rs:184`). Shared Python/OCCT refuses independent
-   numerical derivation/kernel gates (`gates.rs:261`, `:270`). These line refs
+   block migration (`gates.rs:187`). Shared Python/OCCT refuses independent
+   numerical derivation/kernel gates (`gates.rs:264`, `:273`). These line refs
    are under `crates/sim-runtime/src/cad_parity/`.
-6. `publication.rs:14` creates a fresh owned output root; `publication.rs:37`
+7. `publication.rs:14` creates a fresh owned output root; `publication.rs:37`
    prewrites JSON/text and atomically hard-links them, then the completion marker,
    using retained descriptors (`owned_path.rs:127`). Existing records are refused.
    Default planning is therefore a complete published **NotRun** report with
@@ -219,3 +248,9 @@ for the JSON/text bundle rather than treating a lone JSON file as publication.
 Use descriptor-relative no-follow I/O to prevent symlink/path replacement from redirecting source reads or report writes. Require zero discrepancy for current same-authority service comparisons rather
 than inventing numerical replacement tolerances. Revisit these choices only with
 executed evidence, independent implementations or a changed workflow contract.
+
+The lifecycle repair retains the leader identity until the last group signal
+instead of reaping during polling. It separates shutdown issues from operation
+receipts instead of relabelling recorded mutations. Revisit these choices if an
+OS-specific identity capability or executed lifecycle evidence provides a stronger
+containment guarantee. No phase-2 implementation is qualified by this source review.

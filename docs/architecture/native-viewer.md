@@ -6858,3 +6858,9 @@ T44 contracts, adapters, fixtures and reports are written and reviewed by
 reading only. No scenario, build, test, export, window or capture was executed.
 There is no executed passing migration evidence and no legacy retirement.
 Historical T43 accepted source review is distinct from compilation or parity.
+
+T44 shutdown repairs preserve partial reference receipts and record run-level
+execution issues separately; those issues block gates. Process ownership retains
+the unreaped leader through final descendant signalling before releasing identity.
+The harness guide records the bounded recovery path and exclusive-wait/process-group
+limitations. Repair fixtures remain uncompiled and unexecuted.

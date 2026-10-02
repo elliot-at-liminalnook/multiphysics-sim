@@ -55,6 +55,9 @@ impl Publication {
             report.native.identity,
         );
         for (side, run) in [("reference", &report.reference), ("native", &report.native)] {
+            for issue in &run.execution_issues {
+                readable.push_str(&format!("execution issue {side}: {issue}\n"));
+            }
             for r in &run.receipts {
                 readable.push_str(&format!(
                     "receipt {side}/{} {:?} expected={:?} executed_at={:?} document={:?} revision={:?}: {}\n",

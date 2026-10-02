@@ -155,6 +155,10 @@ pub struct AdapterRun {
     pub identity: AdapterIdentity,
     pub source: SourceFile,
     pub receipts: Vec<Receipt>,
+    /// Run-level interruption/validation evidence never rewrites actual receipts.
+    /// An omitted field in version-1 adapter output means no reported issue.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub execution_issues: Vec<String>,
 }
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]

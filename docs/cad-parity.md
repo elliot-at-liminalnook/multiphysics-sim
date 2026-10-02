@@ -1583,3 +1583,9 @@ Both current adapters depend on Python/OCCT; their agreement cannot qualify
 phases 3–4 numerical replacement or authorize phase 5 retirement. T43 source
 review was accepted at 4d2725f2/e6f6ed10 (call-0342); execution remains unverified.
 The user checklist remains unsigned and RoboCAD remains the reference.
+
+T44 lifecycle repairs retain published partial reference evidence after interrupted
+shutdown; run-level issues refuse gates without rewriting recorded outcomes.
+Unreaped leader ownership protects final group signalling from recycled IDs.
+These repairs and regression fixtures are reviewed by reading only; no acceptance
+row or migration phase changes status.

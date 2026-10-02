@@ -43,6 +43,7 @@ fn sample(value: Value, metric: Metric) -> (Scenario, AdapterRun) {
         value: ObservedValue::Present(value),
     };
     let run = AdapterRun {
+        execution_issues: Vec::new(),
         identity: AdapterIdentity {
             name: "reference".into(),
             version: "1".into(),

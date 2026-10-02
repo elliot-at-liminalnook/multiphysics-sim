@@ -1,5 +1,10 @@
 //! Paired execution is opt-in. Planning constructs honest not-run receipts.
-use super::{contract::*, isolation::Workspace, native::NativeAdapter, process::OwnedProcess};
+use super::{
+    contract::*,
+    isolation::Workspace,
+    native::NativeAdapter,
+    process::{OwnedProcess, ProcessCompletion},
+};
 use std::{
     collections::BTreeMap,
     fs,
@@ -21,6 +26,7 @@ pub fn not_run(identity: AdapterIdentity, m: &Manifest, s: &Scenario, why: &str)
     AdapterRun {
         identity,
         source: m.source.clone(),
+        execution_issues: vec![],
         receipts: s
             .operations
             .iter()
@@ -94,17 +100,46 @@ pub fn validate_run(
 /// Preserve the raw mismatched identities/receipts rather than replacing them
 /// with an expected identity when validation refuses evidence.
 fn retain_invalid_run(mut run: AdapterRun, error: String) -> AdapterRun {
-    if let Some(receipt) = run.receipts.first_mut() {
-        if !matches!(
-            receipt.status,
-            ExecutionStatus::Uncertain | ExecutionStatus::Cancelled
-        ) {
-            receipt.status = ExecutionStatus::Incomplete;
-        }
-        receipt
-            .message
-            .push_str(&format!("; adapter evidence refused: {error}"));
+    run.execution_issues
+        .push(format!("adapter evidence refused: {error}"));
+    run
+}
+/// Shutdown outcome is independent from operation evidence. Even interrupted
+/// children may have cooperatively published complete or partial receipts.
+fn recover_reference(
+    bytes: Result<Vec<u8>, String>,
+    completion: &ProcessCompletion,
+    m: &Manifest,
+    s: &Scenario,
+) -> AdapterRun {
+    let mut issues = Vec::new();
+    if let Some(reason) = &completion.interruption {
+        issues.push(format!("reference interrupted: {reason}"));
     }
+    if let Some(error) = &completion.cleanup_error {
+        issues.push(format!("reference shutdown incomplete: {error}"));
+    }
+    match completion.exit {
+        Some(exit) if !exit.success() => issues.push(format!("reference process {exit}")),
+        None => issues.push("reference process exit unavailable".into()),
+        _ => {}
+    }
+    let decoded = bytes.and_then(|bytes| {
+        serde_json::from_slice::<AdapterRun>(&bytes)
+            .map_err(|error| format!("malformed reference response: {error}"))
+    });
+    let mut run = match decoded {
+        Ok(run) => match validate_run(&run, m, s, &reference_identity()) {
+            Ok(()) => run,
+            Err(error) => retain_invalid_run(run, error),
+        },
+        Err(error) => {
+            issues.push(format!("reference evidence unavailable: {error}"));
+            // No usable receipts exist. These placeholders have no timestamps.
+            incomplete(reference_identity(), m, s, issues.join("; "), false)
+        }
+    };
+    run.execution_issues.extend(issues);
     run
 }
 pub fn validate_model(
@@ -184,6 +219,8 @@ fn source_identity(repository: &Path, code_identity: &str) -> Result<String, Str
         "crates/sim-runtime/src/cad_parity/gates.rs",
         "crates/sim-runtime/src/cad_parity/native.rs",
         "crates/sim-runtime/src/cad_parity/runner.rs",
+        "crates/sim-runtime/src/cad_parity/runner_recovery_fixtures.rs",
+        "crates/sim-runtime/src/cad_parity/process_fixtures.rs",
         "crates/sim-runtime/src/cad_parity/isolation.rs",
         "crates/sim-runtime/src/cad_parity/publication.rs",
         "crates/sim-runtime/src/cad_parity/process.rs",
@@ -308,19 +345,14 @@ pub fn paired(
                         .new_file(Path::new("reference.log"))?,
                 );
             let mut child = OwnedProcess::spawn(&mut cmd)?;
-            let exit = child.wait(Instant::now() + Duration::from_secs(300), cancelled)?;
-            if !exit.success() {
-                return Err(format!("reference process {exit}"));
-            }
+            let completion =
+                child.wait_completion(Instant::now() + Duration::from_secs(300), cancelled);
+            // Always inspect owned output after bounded shutdown, including
+            // cancellation, timeout, nonzero exit and cleanup errors.
             let bytes = reference_space
                 .directory
-                .read(Path::new("reference.json"), super::isolation::MAX_FILE)?;
-            let run: AdapterRun = serde_json::from_slice(&bytes)
-                .map_err(|e| format!("malformed reference response: {e}"))?;
-            Ok(match validate_run(&run, m, s, &reference_identity()) {
-                Ok(()) => run,
-                Err(error) => retain_invalid_run(run, error),
-            })
+                .read(Path::new("reference.json"), super::isolation::MAX_FILE);
+            Ok(recover_reference(bytes, &completion, m, s))
         })();
         reference = reference_result
             .unwrap_or_else(|e| incomplete(reference_identity(), m, s, e, cancelled()));
@@ -338,15 +370,7 @@ pub fn paired(
     }
     if source_identity(repository, &code_identity)? != identity_before {
         for run in [&mut reference, &mut native] {
-            if let Some(receipt) = run.receipts.first_mut() {
-                if !matches!(
-                    receipt.status,
-                    ExecutionStatus::Uncertain | ExecutionStatus::Cancelled
-                ) {
-                    receipt.status = ExecutionStatus::Incomplete;
-                }
-                receipt.message.push_str("; authority source files changed during paired operation; identity cannot be certified");
-            }
+            run.execution_issues.push("authority source files changed during paired operation; identity cannot be certified".into());
         }
     }
     let code_identity = identity_before;
@@ -408,9 +432,14 @@ mod fixtures {
             preserved.receipts[0].process_document_id.as_deref(),
             Some("unexpected-document")
         );
-        assert_eq!(preserved.receipts[0].status, ExecutionStatus::Incomplete);
+        assert_eq!(preserved.receipts[0].status, ExecutionStatus::NotRun);
+        assert!(!preserved.execution_issues.is_empty());
         assert!(preserved.receipts[0].executed_at.is_none());
         r.receipts.clear();
         assert!(validate_run(&r, &m, &s, &reference_identity()).is_err());
     }
 }
+
+#[cfg(test)]
+#[path = "runner_recovery_fixtures.rs"]
+mod recovery_fixtures;

@@ -38,31 +38,35 @@ impl Action for StudyAction {
 }
 
 pub fn apply(mut owner:ResMut<StudyOwner>, registry:Res<DocumentRegistry>, mut ui:ResMut<super::forms::StudyUi>, mut messages:ResMut<Messages<Act<StudyAction>>>, mut inflight:ResMut<InFlight<StudyAction>>, mut replies:ResMut<Replies>) {
+    let before=owner.changed;
+    let ui_before=ui.epoch;
     actions::apply(&mut messages,&mut inflight,&mut replies,|action,call| {
         if let StudyAction::SystemUi{id,text}=action {
             if call.cancelled { return Outcome::Done(Err("Study control activation cancelled".into())); }
             return match super::forms::activate(&ui,id) {
                 Ok(hit) if text.is_some()=>match super::forms::text_submission(&mut ui,&owner,hit,text.as_deref().unwrap_or_default()) {
                     Ok(action)=>{
-                        let outcome=handle(&mut owner,&registry,&action,call);
-                        super::forms::acknowledge(&mut ui,&action,&outcome);
+                        let outcome=handle(owner.bypass_change_detection(),&registry,&action,call);
+                        if !ui.awaiting.is_empty() {super::forms::acknowledge(ui.bypass_change_detection(),&action,&outcome);}
                         outcome
                     }
                     Err(e)=>{ui.error=Some(e.clone());Outcome::Done(Err(e))},
                 },
                 Ok(super::forms::Hit::Action(action))=>{
-                    let outcome=handle(&mut owner,&registry,&action,call);
-                    super::forms::acknowledge(&mut ui,&action,&outcome);
+                    let outcome=handle(owner.bypass_change_detection(),&registry,&action,call);
+                    if !ui.awaiting.is_empty() {super::forms::acknowledge(ui.bypass_change_detection(),&action,&outcome);}
                     outcome
                 },
                 Ok(hit)=>{ui.pending.push(hit);ui.epoch+=1;Outcome::Done(Ok(json!({"message":"Study form control activated"})))},
                 Err(e)=>{owner.status=e.clone();Outcome::Done(Err(e))},
             };
         }
-        let outcome=handle(&mut owner,&registry,action,call);
-        super::forms::acknowledge(&mut ui,action,&outcome);
+        let outcome=handle(owner.bypass_change_detection(),&registry,action,call);
+        if !ui.awaiting.is_empty() {super::forms::acknowledge(ui.bypass_change_detection(),action,&outcome);}
         outcome
     });
+    if owner.changed!=before {owner.set_changed();}
+    if ui.epoch!=ui_before {ui.set_changed();}
 }
 pub fn handle(owner:&mut StudyOwner, registry:&DocumentRegistry, action:&StudyAction, call:&mut Call)->Outcome {
     if call.cancelled { return Outcome::Done(Err("Measured study request cancelled before application; retained work is unchanged".into())); }

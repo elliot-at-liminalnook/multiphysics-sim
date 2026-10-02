@@ -130,3 +130,93 @@ fn accepted_ack_never_erases_newer_text_in_the_same_field() {
     super::super::forms::acknowledge(&mut ui,&action,&sim_api::Outcome::Done(Ok(json!({"accepted":true}))));
     assert_eq!(ui.drafts[&key],"typed later in the same frame");assert!(ui.blocking_reason().is_some());
 }
+
+#[derive(Component)]
+struct ReconstructedPanel;
+#[derive(Resource,Default)]
+struct Reconstructions(usize);
+/// Uses the same invalidation gate as builder::ui::rebuild_panel and renders
+/// the actual study surface, while avoiding unrelated scene/camera setup.
+fn rebuild_on_publication(mut commands:Commands,owner:Res<StudyOwner>,ui:Res<StudyUi>,old:Query<Entity,With<ReconstructedPanel>>,mut count:ResMut<Reconstructions>) {
+    if !presentation_changed(&owner,&ui){return}
+    for entity in &old{commands.entity(entity).despawn();}
+    count.0+=1;let fonts=fonts();
+    commands.spawn((ReconstructedPanel,Node::default())).with_children(|body|section(body,&Kit::new(&fonts),&owner,&ui));
+}
+#[test]
+fn idle_polling_keeps_actual_panel_entities_and_real_text_terminal_publication_rebuilds() {
+    use crate::ui_kit::text::{FieldMsg,FieldEvent,TextDraft};
+    let mut studies=owner();studies.studies[0].study.validation_seen=true;
+    let mut world=world(studies);
+    world.init_resource::<crate::document::DocumentRegistry>();
+    world.init_resource::<Assets<Image>>();world.init_resource::<Reconstructions>();
+    world.init_resource::<bevy::ecs::message::Messages<FieldMsg>>();
+    world.init_resource::<bevy::ecs::message::Messages<crate::app::actions::Act<StudyAction>>>();
+    world.init_resource::<bevy::input_focus::InputFocus>();
+    world.init_resource::<crate::app::actions::InFlight<StudyAction>>();world.init_resource::<crate::app::actions::Replies>();
+    world.spawn((super::super::forms::FIELD,crate::ui_kit::text::TextField::new("Measured study fixture")));
+    let mut schedule=Schedule::default();
+    schedule.add_systems((super::super::forms::input,super::super::actions::apply,super::super::jobs::poll,chart::receive,rebuild_on_publication,collect).chain());
+    schedule.run(&mut world);world.clear_trackers();
+    let mut panels=world.query_filtered::<Entity,With<ReconstructedPanel>>();
+    let original=panels.single(&world).unwrap();
+    assert_eq!(world.resource::<Reconstructions>().0,1);
+    world.write_message(crate::app::actions::Act::quiet(StudyAction::Status));schedule.run(&mut world);world.clear_trackers();
+    let queried=panels.single(&world).unwrap();let count=world.resource::<Reconstructions>().0;
+    for _ in 0..3 {world.write_message(crate::app::actions::Act::quiet(StudyAction::Status));schedule.run(&mut world);world.clear_trackers();}
+    assert_eq!(panels.single(&world).unwrap(),queried,"already exposed full Status reads do not reconstruct controls");assert_eq!(world.resource::<Reconstructions>().0,count);
+    for _ in 0..3{schedule.run(&mut world);world.clear_trackers();}
+    assert_eq!(panels.single(&world).unwrap(),original,"idle queues/cache observation preserve actual controls");
+    assert_eq!(world.resource::<Reconstructions>().0,1);
+    let stamp=world.resource::<StudyOwner>().active().unwrap().stamp();
+    world.resource_mut::<StudyUi>().focus=Some((Some(stamp),Field::Notes));
+    schedule.run(&mut world);world.clear_trackers();
+    let focused=panels.single(&world).unwrap();let count=world.resource::<Reconstructions>().0;
+    world.write_message(FieldMsg{field:super::super::forms::FIELD,event:FieldEvent::Changed(TextDraft::new("real retained text",false))});
+    schedule.run(&mut world);world.clear_trackers();
+    assert_ne!(panels.single(&world).unwrap(),focused);assert_eq!(world.resource::<Reconstructions>().0,count+1);
+    let text_panel=panels.single(&world).unwrap();let count=world.resource::<Reconstructions>().0;
+    schedule.run(&mut world);world.clear_trackers();assert_eq!(panels.single(&world).unwrap(),text_panel);assert_eq!(world.resource::<Reconstructions>().0,count);
+    // The real jobs terminal seam publishes a retained failure and increments
+    // the owner before the same panel gate, rather than manually setting dirty.
+    pending(world.resource_mut::<StudyOwner>().bypass_change_detection());
+    world.clear_trackers();
+    schedule.run(&mut world);world.clear_trackers();
+    assert_ne!(panels.single(&world).unwrap(),text_panel);assert_eq!(world.resource::<Reconstructions>().0,count+1);
+    let terminal_panel=panels.single(&world).unwrap();
+    for _ in 0..3{schedule.run(&mut world);world.clear_trackers();}
+    assert_eq!(panels.single(&world).unwrap(),terminal_panel);assert_eq!(world.resource::<Reconstructions>().0,count+1);
+}
+#[test]
+fn reopened_review_renders_late_cancellation_request_separate_from_completed_execution() {
+    let mut owner=owner();let captured=owner.studies[0].study.clone();let stamp=owner.studies[0].stamp();
+    let trial=captured.archive.trials.iter().find(|t|t.comparison.passes).unwrap().clone();let ids=vec![trial.id.clone()];
+    let mut completed=sim_runtime::experiment_study::evaluate(&captured.archive,&ids,&captured.baseline,&captured.draft,None,false,&AtomicBool::new(true),|_,_|{}).unwrap();
+    completed.cancelled=false;completed.results[0].errors.clear();
+    let prediction=sim_runtime::experiment_study::Prediction{trace:trial.predicted.clone(),metrics:trial.comparison.clone()};
+    completed.results[0].baseline=Some(prediction.clone());completed.results[0].candidate=Some(prediction);
+    owner.pending.push(PendingJob{id:7,kind:JobKind::Evaluate,stamp:Some(stamp),document:None,source:"fixture archive".into(),trial_ids:ids.clone(),cancel_requested:false,job:Job::<JobOutput>::finished(7,Ok(JobOutput::Evaluated(completed))),selection_epoch:0,gate:None,captured:Some(captured),launch:Value::Null});
+    let registry=crate::document::DocumentRegistry::default();
+    super::super::actions::apply_action(&mut owner,&registry,&StudyAction::Cancel{job:7}).unwrap();
+    super::super::jobs::poll_owner(&mut owner,&registry);
+    assert_eq!(owner.studies[0].study.evaluations[0].summary(&ids).passes,1);
+    owner.studies[0].study.view.evaluation=Some(0);owner.studies[0].study.view.trial_id=Some(trial.id);
+    // This is an in-memory saved-schema roundtrip, never a performed export.
+    owner.studies[0].study=serde_json::from_value(serde_json::to_value(&owner.studies[0].study).unwrap()).unwrap();
+    owner.studies[0].study.validate().unwrap();
+    let mut world=world(owner);world.run_system_once(render).unwrap();
+    let mut texts=world.query::<&Text>();let text=texts.iter(&world).map(|t|t.0.as_str()).collect::<Vec<_>>().join("\n");
+    assert!(text.contains("Cancellation requested: yes · execution cancelled: no"));
+    assert!(text.contains("did not cancel the captured execution"));assert!(text.contains("Terminal job 7"));
+}
+#[test]
+fn empty_study_owner_idle_frames_keep_actual_open_controls() {
+    let mut world=world(StudyOwner::default());
+    world.init_resource::<crate::document::DocumentRegistry>();world.init_resource::<Assets<Image>>();world.init_resource::<Reconstructions>();
+    let mut schedule=Schedule::default();schedule.add_systems((super::super::jobs::poll,chart::receive,rebuild_on_publication,collect).chain());
+    schedule.run(&mut world);world.clear_trackers();
+    let mut panels=world.query_filtered::<Entity,With<ReconstructedPanel>>();let original=panels.single(&world).unwrap();
+    assert!(world.resource::<StudyUi>().rendered.values().any(|c|matches!(c.hit,Hit::Path{field:Field::Archive,..})));
+    for _ in 0..3{schedule.run(&mut world);world.clear_trackers();}
+    assert_eq!(panels.single(&world).unwrap(),original);assert_eq!(world.resource::<Reconstructions>().0,1);
+}

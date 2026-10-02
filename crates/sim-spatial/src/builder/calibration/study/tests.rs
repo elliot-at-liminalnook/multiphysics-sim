@@ -171,3 +171,65 @@ fn full_status_exposes_held_out_data_even_with_train_only_filters() {
     apply_action(&mut owner,&registry,&StudyAction::Apply{stamp,command:Command::SetStep(0.0005)}).unwrap();
     assert!(owner.active().unwrap().study.validation_influenced);
 }
+
+#[test]
+fn cancel_after_completed_evaluation_before_poll_roundtrips_terminal_request_honestly() {
+    let (mut owner,registry)=owner();
+    let snapshot=owner.active().unwrap().study.clone();
+    let trial=snapshot.archive.trials.iter().find(|t|t.comparison.passes).unwrap();
+    let ids=vec![trial.id.clone()];
+    // Inject an already-completed runtime result at the adopted Job::finished seam.
+    // The archived trace supplies self-consistent fixture metrics; no physical
+    // prediction or native save/export is performed by this lifecycle fixture.
+    let mut evaluation=sim_runtime::experiment_study::evaluate(&snapshot.archive,&ids,&snapshot.baseline,&snapshot.draft,None,false,&AtomicBool::new(true),|_,_|{}).unwrap();
+    evaluation.cancelled=false;
+    let prediction=sim_runtime::experiment_study::Prediction{trace:trial.predicted.clone(),metrics:trial.comparison.clone()};
+    evaluation.results[0].baseline=Some(prediction.clone());
+    evaluation.results[0].candidate=Some(prediction);
+    evaluation.results[0].errors.clear();
+    let original_stamp=owner.active().unwrap().stamp();
+    let job=finished(&mut owner,JobKind::Evaluate,Ok(JobOutput::Evaluated(evaluation)));
+    owner.pending[0].trial_ids=ids.clone();
+    owner.pending[0].source="fixture archive".into();
+    apply_action(&mut owner,&registry,&StudyAction::Cancel{job}).unwrap();
+    jobs::poll_owner(&mut owner,&registry);
+    let saved=serde_json::to_value(&owner.active().unwrap().study).unwrap();
+    let reopened:Study=serde_json::from_value(saved).unwrap();
+    reopened.validate().unwrap();
+    let retained=&reopened.evaluations[0];
+    assert!(!retained.cancelled,"late cancellation must not falsify execution cancellation");
+    assert_eq!(retained.summary(&ids).passes,1);
+    let terminal=&retained.capture["native_terminal"];
+    assert_eq!(terminal["job_id"],job);
+    assert_eq!(terminal["study"],serde_json::to_value(original_stamp).unwrap());
+    assert_eq!(terminal["cancellation_requested"],true);
+    assert_eq!(terminal["execution_cancelled"],false);
+    assert_eq!(terminal["stale"],false);assert_eq!(terminal["displaced"],false);
+    assert_eq!(terminal["document"]["id"],serde_json::to_value(owner.active().unwrap().document.as_ref().unwrap().id).unwrap());
+    assert_eq!(terminal["source"],"fixture archive");
+    assert!(owner.receipts[0].cancelled);
+}
+
+#[test]
+fn actual_poll_system_preserves_idle_ticks_but_marks_terminal_publication_changed() {
+    use bevy::{prelude::{World,DetectChanges},ecs::system::RunSystemOnce};
+    let (owner,registry)=owner();
+    let mut world=World::new();
+    world.insert_resource(owner);world.insert_resource(registry);
+    world.clear_trackers();
+    for _ in 0..3 {
+        world.run_system_once(jobs::poll).unwrap();
+        assert!(!world.resource_ref::<StudyOwner>().is_changed(),"idle polling must not invalidate stable panel/control identities");
+    }
+    {
+        let mut owner=world.resource_mut::<StudyOwner>();
+        finished(&mut owner,JobKind::Save,Ok(JobOutput::Published));
+    }
+    world.clear_trackers();
+    world.run_system_once(jobs::poll).unwrap();
+    assert!(world.resource_ref::<StudyOwner>().is_changed());
+    assert!(!world.resource_ref::<StudyOwner>().active().unwrap().dirty(),"a matching successful save acknowledgement must stay clean");
+    world.clear_trackers();
+    world.run_system_once(jobs::poll).unwrap();
+    assert!(!world.resource_ref::<StudyOwner>().is_changed());
+}

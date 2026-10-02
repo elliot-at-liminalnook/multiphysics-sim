@@ -47,14 +47,20 @@ pub(crate) fn request(owner:Res<StudyOwner>,mut ui:ResMut<StudyUi>) {
 /// JobResults never labels an old image as the current study/trial/evaluation.
 pub(crate) fn receive(owner:Res<StudyOwner>,mut ui:ResMut<StudyUi>,mut images:ResMut<Assets<Image>>,mut builder:Option<ResMut<crate::builder::Builder>>) {
     if ui.chart.job.pending().is_none(){return}
-    let Some((_,result))=ui.chart.job.poll() else {return};
+    // Pending-job polling consumes transport bookkeeping, not presentation.
+    // Do not reconstruct controls until a current image/error is published.
+    let Some((_,result))=ui.bypass_change_detection().chart.job.poll() else {return};
     match result {
         Ok(raster) if Some(&raster.key)==key(&owner).as_ref()=>{
             let image=ui.chart.image.get_or_insert_with(||images.add(crate::chart::blank_image())).clone();
             if let Some(mut target)=images.get_mut(&image) {target.data=Some(raster.pixels);}
             ui.chart.axes=raster.axes; ui.chart.drawn=Some(raster.key); ui.chart.error=None;
         }
-        Ok(_)=>{}, Err(e)=>ui.chart.error=Some(e),
+        Ok(_)=>return,
+        Err(e)=>{
+            if ui.chart.requested!=key(&owner) {return}
+            ui.chart.error=Some(e);
+        }
     }
     ui.epoch+=1; if let Some(builder)=builder.as_mut() {builder.panel_dirty=true;}
 }

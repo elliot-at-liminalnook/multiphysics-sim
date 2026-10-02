@@ -27,6 +27,11 @@ pub(crate) fn register(app:&mut App) {
 pub(crate) fn controls(ui:&StudyUi)->Vec<Value> {
     ui.rendered.iter().map(|(id,c)|json!({"id":id,"label":c.label,"enabled":c.enabled,"kind":"button","measured_study":true})).collect()
 }
+/// The actual builder panel and its windowless reconstruction fixture share
+/// this invalidation gate. Transport polling must publish a semantic tick first.
+pub(crate) fn presentation_changed(owner:&Res<StudyOwner>,ui:&Res<StudyUi>)->bool {
+    owner.is_changed() || ui.is_changed()
+}
 /// Present follows the builder's SimSync panel and sees deferred child spawns.
 pub(crate) fn collect(buttons:Query<(Option<&ControlId>,&Hit,Option<&Enabled>,&bevy::ui::prelude::AccessibleLabel),With<Button>>,mut ui:ResMut<StudyUi>) {
     let mut rendered=BTreeMap::new();
@@ -44,7 +49,9 @@ pub(crate) fn collect(buttons:Query<(Option<&ControlId>,&Hit,Option<&Enabled>,&b
         if !id.is_empty() {rendered.insert(id,RenderedControl{hit:hit.clone(),enabled:enabled.is_none_or(|e|e.0),label:label.0.clone()});}
     }
     let signature=|map:&BTreeMap<String,RenderedControl>|map.iter().map(|(id,c)|(id.clone(),c.enabled,c.label.clone(),format!("{:?}",c.hit))).collect::<Vec<_>>();
-    if signature(&ui.rendered)!=signature(&rendered) {ui.rendered=rendered;}
+    // This is an adapter cache of entities already drawn. Updating it must
+    // not invalidate and reconstruct those same controls on the next frame.
+    if signature(&ui.rendered)!=signature(&rendered) {ui.bypass_change_detection().rendered=rendered;}
 }
 fn button(body:&mut ChildSpawnerCommands,k:&Kit,id:impl Into<String>,label:&str,action:StudyAction,enabled:bool) {
     body.spawn(k.button(label,Hit::Action(action),Look::Secondary,enabled)).insert(ControlId(id.into()));
@@ -184,6 +191,14 @@ fn comparison(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui:&StudyU
         let stale=e.stale(&s.baseline,&s.draft,&s.limits);
         body.spawn(k.text(format!("{} · {}{} · {}",e.id,if stale{"STALE: draft settings or limits changed"}else{"captured settings match draft"},if e.cancelled{" · cancelled; incomplete trials unscored"}else{""},e.decision),size::SMALL,if stale||e.cancelled{WARN}else{TEXT},1));
         body.spawn(k.caption(&e.assumptions));
+        if let Some(terminal)=e.capture.get("native_terminal") {
+            let requested=terminal.get("cancellation_requested").and_then(Value::as_bool);
+            let executed=terminal.get("execution_cancelled").and_then(Value::as_bool);
+            let label=|value:Option<bool>|match value{Some(true)=>"yes",Some(false)=>"no",None=>"not captured"};
+            body.spawn(k.text(format!("Cancellation requested: {} · execution cancelled: {}",label(requested),label(executed)),size::SMALL,if requested==Some(true)||executed==Some(true){WARN}else{TEXT},1));
+            if requested==Some(true) && executed==Some(false) {body.spawn(k.caption("The request did not cancel the captured execution. Captured results remain retained."));}
+            body.spawn(k.text(format!("Terminal job {} · captured study {} · document {} · source {} · stale {} · displaced {}",terminal.get("job_id").unwrap_or(&Value::Null),terminal.get("study").unwrap_or(&Value::Null),terminal.get("document").unwrap_or(&Value::Null),terminal.get("source").unwrap_or(&Value::Null),terminal.get("stale").unwrap_or(&Value::Null),terminal.get("displaced").unwrap_or(&Value::Null)),size::DETAIL,FAINT,0));
+        } else {body.spawn(k.caption("Historical review: native cancellation-request and terminal identity metadata were not captured."));}
         body.spawn(k.text(format!("Runtime {} · features {:?} · integrator {:?} · seed {} · validation influenced {}",e.runtime.library_source_blake3,e.runtime.features,e.integrator,e.seed,e.validation_influenced),size::DETAIL,FAINT,0));
         if e.runtime!=sim_runtime::physics_context::RuntimeIdentity::current(){body.spawn(k.text("STALE runtime identity: this evaluation was captured with different library source/features.",size::DETAIL,WARN,1));}
         body.spawn(k.text(format!("Captured source/model/document identity and split exposure: {:?}",e.capture),size::DETAIL,FAINT,0));
@@ -213,13 +228,16 @@ fn comparison(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui:&StudyU
         let [r,g,b]=crate::chart::COLORS[i]; body.spawn(k.text(format!("{label} · {}",if samples[i]==0{"unavailable; no line".into()}else{format!("{} samples",samples[i])}),size::DETAIL,Color::srgb_u8(r,g,b),1));
     }
     if let Some(result)=evaluation.and_then(|e|e.results.iter().find(|r|r.trial_id==t.id)) {
-        let scored=result.errors.is_empty() && result.baseline.is_some() && result.candidate.is_some();
+        let outcome=result.outcome();let scored=outcome.is_scored();
+        body.spawn(k.text(format!("Captured pair outcome: {}",outcome.label()),size::DETAIL,if scored{TEXT}else{WARN},1));
         if !scored {body.spawn(k.text("UNSCORED: failed, cancelled or incomplete baseline/candidate pair",size::DETAIL,WARN,1));}
         for error in &result.errors {body.spawn(k.text(error,size::DETAIL,DANGER,0));}
         for (label,prediction) in [("Captured baseline",&result.baseline),("Captured candidate",&result.candidate)] {
-            if let Some(p)=prediction {body.spawn(k.text(format!("{label}: RMSE {} · final {} · max {}{}",p.metrics.rmse,p.metrics.final_error,p.metrics.maximum_abs_error,if scored{if p.metrics.passes{" · pass"}else{" · fail"}}else{" · unscored"}),size::DETAIL,TEXT,0));}
+            if let Some(p)=prediction {body.spawn(k.text(format!("{label}: RMSE {} · final {} · max {}",p.metrics.rmse,p.metrics.final_error,p.metrics.maximum_abs_error),size::DETAIL,TEXT,0));}
             else {body.spawn(k.text(format!("{label}: unavailable · unscored"),size::DETAIL,WARN,0));}
         }
+    } else if evaluation.is_some() {
+        body.spawn(k.text("UNSCORED: this trial has no baseline/candidate result in the captured evaluation",size::DETAIL,WARN,1));
     }
     if ui.chart.current(owner) {
         if let Some(image)=&ui.chart.image {

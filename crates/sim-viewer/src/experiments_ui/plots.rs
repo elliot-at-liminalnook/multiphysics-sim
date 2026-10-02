@@ -229,7 +229,7 @@ pub fn show(
                 "RMSE rad",
                 "Max |error| rad",
                 "Final |error| rad",
-                "Outcome",
+                "Pair outcome / archived outcome",
             ] {
                 ui.strong(label);
             }
@@ -250,19 +250,18 @@ pub fn show(
                     ui.label(format!("{:.5}", m.rmse));
                     ui.label(format!("{:.5}", m.maximum_abs_error));
                     ui.label(format!("{:.5}", m.final_error.abs()));
+                    // These physical metrics are inspectable even when the pair
+                    // is incomplete; its outcome always comes from the runtime.
+                    let outcome=if name=="Reference" {if m.passes {sim_runtime::experiment_study::TrialOutcome::Pass}else{sim_runtime::experiment_study::TrialOutcome::Fail}}else{r.map(|r|r.outcome()).unwrap_or(sim_runtime::experiment_study::TrialOutcome::Unscored)};
                     ui.colored_label(
-                        if m.passes {
-                            Color32::DARK_GREEN
-                        } else {
-                            Color32::DARK_RED
-                        },
-                        if m.passes { "PASS" } else { "FAIL" },
+                        match outcome {sim_runtime::experiment_study::TrialOutcome::Pass=>Color32::DARK_GREEN,sim_runtime::experiment_study::TrialOutcome::Fail=>Color32::DARK_RED,sim_runtime::experiment_study::TrialOutcome::Unscored=>Color32::GRAY},
+                        format!("{} {}",if name=="Reference" {"archived"}else{"pair"},outcome.label()),
                     );
                 } else {
                     ui.label("—");
                     ui.label("—");
                     ui.label("—");
-                    ui.label("Unscored");
+                    ui.label(format!("pair {}",sim_runtime::experiment_study::TrialOutcome::Unscored.label()));
                 }
                 ui.end_row();
             }

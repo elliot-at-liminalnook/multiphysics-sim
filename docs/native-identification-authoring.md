@@ -160,3 +160,49 @@ evaluation identities and full-snapshot split exposure. All review evidence is s
 reading. The backend refused both attempts to allocate a fourth reviewer thread
 (`agent thread limit reached`), so the three disjoint implementers independently
 reviewed one another's areas in reviewer roles; nobody self-approved their own area.
+
+## T46 review repairs
+
+The repair retains all seven checklist IDs above and the full T46.1–T46.3 scope.
+One shared complete-pair outcome requires both predictions and no baseline or
+candidate errors. Summary, outcome filtering, native/legacy trial labels and HTML
+consume it; candidate-only success remains UNSCORED while its traces and metrics
+stay inspectable. Written fixtures exercise the actual HTML and legacy label helpers.
+
+Evaluation capture stores `native_terminal` metadata tied to the original job,
+study revision and document/source capture. `cancellation_requested` remains
+distinct from `execution_cancelled`: cancellation after worker completion does not
+change the runtime outcome. Serialization/reopening preserves the terminal record
+and native inspection displays it. Save acknowledgments remain revision-scoped and
+do not themselves make a successful saved draft dirty.
+
+Decision: store terminal lifecycle metadata on the captured evaluation rather than
+rewrite `Evaluation.cancelled` or add a dirty edit after every save acknowledgment.
+The additive capture envelope preserves historical schemas and keeps request intent
+distinct from runtime execution. Revisit if a versioned shared runtime lifecycle
+record replaces this native capture extension. Decision: individual surviving
+prediction metrics are evidence, but only a complete error-free pair has a scored
+outcome; a candidate-only PASS would overstate validation.
+
+Idle job/chart polling uses pinned change-detection facilities without declaring
+semantic publication. Real terminal results, displacement, actions, text changes and
+chart publication refresh presentation. Global progress/cancellation remains visible.
+Written fixtures distinguish repeated idle frames from real publication and inspect
+late-cancellation metadata after reopening. All fixtures remain unexecuted; these
+source traces establish neither compilation nor executed UI/export parity.
+
+Repair source owners: `experiment_study.rs::TrialResult::{pair,outcome}` and
+`Study::render_html`, `experiment_study/commands.rs::filtered_ids`, legacy
+`experiments_ui.rs::trial_outcome_label` and `experiments_ui/plots.rs`, native
+`study/jobs.rs::{poll,publish}`, `study/actions.rs::apply`,
+`study/ui.rs::{presentation_changed,comparison,collect}`, `study/chart.rs::receive`
+and `study/forms.rs::input`. `builder/ui.rs::rebuild_panel` uses the same semantic
+invalidation gate exercised by actual spawned-entity fixtures. Global status polls
+progress independently; adapter cache updates do not invalidate their source panel.
+
+Independent repair cross-readings cover scoring consumers, late-cancel/save races
+and semantic publication. A dedicated reviewer allocation again failed with the
+backend thread limit. Review repaired a fixture seam that initially inherited a
+change tick from job injection: clearing trackers before terminal polling isolates
+the real publication tick. Candidate-only fixtures explicitly retain a successful
+prediction without errors, isolating the missing-baseline scoring refusal.

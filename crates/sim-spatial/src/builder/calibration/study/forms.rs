@@ -171,8 +171,13 @@ pub(crate) fn input(
     for msg in fields.read().filter(|m|m.field==FIELD) {
         match &msg.event {
             FieldEvent::Changed(draft) => {
+                let Some((stamp,field))=ui.focus.clone() else {continue};
+                let key=(stamp.map(|s|(s.id,s.revision)),field);
+                // Caret/selection occurrences from the kit do not create an
+                // unsent study edit when the working text is unchanged.
+                if ui.buffer==draft.text {continue}
                 ui.buffer=draft.text.clone();
-                if let Some((stamp,field))=ui.focus.clone() {ui.drafts.insert((stamp.map(|s|(s.id,s.revision)),field),draft.text.clone());}
+                ui.drafts.insert(key,draft.text.clone());
                 ui.epoch+=1; if let Some(builder)=builder.as_mut(){builder.panel_dirty=true;}
             }
             FieldEvent::Submit(text) => {
@@ -184,7 +189,7 @@ pub(crate) fn input(
                     ui.epoch+=1; if let Some(builder)=builder.as_mut(){builder.panel_dirty=true;}
                 }
             }
-            FieldEvent::Cancel | FieldEvent::Blur => { ui.focus=None; ui.epoch+=1; if let Some(builder)=builder.as_mut(){builder.panel_dirty=true;} }
+            FieldEvent::Cancel | FieldEvent::Blur if ui.focus.is_some() => { ui.focus=None; ui.epoch+=1; if let Some(builder)=builder.as_mut(){builder.panel_dirty=true;} }
             _=>{}
         }
     }

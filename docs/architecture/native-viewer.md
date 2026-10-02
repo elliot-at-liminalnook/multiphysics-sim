@@ -6783,7 +6783,16 @@ system-set ordering and the existing kit text service remain unchanged.
 Repair source owners: `components/form.rs::open` plus `components/tests.rs`
 prove explicit family occurrence semantics; `composition/ports.rs::{pick,
 validate_pending,leave_open,cancel}` owns stamped intent and the singleton command,
-with `composition/ui.rs::controls` exposing Leave open/Cancel.
+with `composition/ui.rs::{controls,draw}` exposing and rendering Leave open/Cancel.
+The renderer uses the existing shared kit button helper before both the dock-open
+and snapshot branches: pending intent remains cancellable with a missing, stale or
+replaced snapshot, even when the dock is closed. Leave open keeps stamped readiness;
+Cancel remains enabled.
+`composition/tests.rs::drawn_pending_buttons_keep_shared_actions_without_a_usable_snapshot` inspects actual
+spawned Button/CadButton/Enabled entities for these cases, rather than merely the
+control catalogue. Rendering does not change pending or submitted source intent;
+publication and acknowledgment ownership remain unchanged. This focused renderer
+repair and its windowless fixture were reviewed by reading only, not executed.
 `builder/schematic.rs::{lay_out,finish,needs_layout,tick}` owns path-error delivery
 and failed-key suppression. Independent reading reviewers found no remaining
 correctness findings in these repairs. All new fixtures remain unexecuted.

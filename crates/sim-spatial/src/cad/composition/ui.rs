@@ -304,6 +304,12 @@ pub(crate) fn draw(
         }
     };
     button(p, "dock");
+    // Pending intent outlives both the displayed snapshot and the open dock.
+    // Use the same stamped readiness and typed actions as system_ui/REST.
+    if st.pending_port.is_some() {
+        button(p, "leave_open");
+        button(p, "cancel_port");
+    }
     if !st.open {
         return;
     }

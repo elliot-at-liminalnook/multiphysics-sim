@@ -24,7 +24,7 @@ pub(crate) fn build(app: &mut App) {
 }
 fn input(
     mut st: ResMut<ExperimentsState>,
-    fields: Query<(&Interaction, &ExperimentField), Changed<Interaction>>,
+    fields: Query<&ExperimentField, With<crate::ui_kit::activation::Activated>>,
     mut text: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     mut out: MessageWriter<Act<CadAction>>,
 ) {
@@ -62,8 +62,8 @@ fn input(
             _ => {}
         }
     }
-    for (interaction, field) in &fields {
-        if *interaction == Interaction::Pressed && st.current == Some(field.index) {
+    for field in &fields {
+        if st.current == Some(field.index) {
             if let Some(d) = st.draft() {
                 let value = d.get(&field.name).to_string();
                 st.focus = Some(field.name.clone());

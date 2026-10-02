@@ -60,6 +60,7 @@ impl Kit<'_> {
             Node { position_type: PositionType::Absolute, left: Val::Px(0.0), right: Val::Px(0.0), top: Val::Px(0.0), bottom: Val::Px(bottom), justify_content: JustifyContent::Center, align_items: AlignItems::Center, ..default() },
             BackgroundColor(BAR.with_alpha(0.55)),
             FocusPolicy::Block,
+            super::activation::ModalFocus,
             GlobalZIndex(MODAL_Z),
             AccessibleLabel::new(label),
         )
@@ -70,7 +71,7 @@ impl Kit<'_> {
     /// `list` goes on the scroll area: the caller's wheel marker or `()`),
     /// then the path field, then Close. Spawn it inside [`Kit::backdrop`].
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn document_picker<A: Component, L: Bundle>(
+    pub(crate) fn document_picker<A: Component + std::fmt::Debug, L: Bundle>(
         &self,
         parent: &mut ChildSpawnerCommands,
         title: &str,
@@ -123,10 +124,11 @@ impl Kit<'_> {
     }
 
     /// One entry: a clickable two-line row (label, detail), FAINT when disabled.
-    fn picker_row<A: Component>(&self, entry: &PickerEntry, action: A) -> impl Bundle + use<A> {
+    fn picker_row<A: Component + std::fmt::Debug>(&self, entry: &PickerEntry, action: A) -> impl Bundle + use<A> {
         let label = if entry.detail.is_empty() { entry.label.clone() } else { format!("{}, {}", entry.label, entry.detail) };
         (
             Button,
+            crate::ui_kit::activation::Ordinary,
             action,
             Enabled(entry.enabled),
             Tint::CLEAR,

@@ -128,7 +128,7 @@ fn mesh_click_and_list_button_resolve_the_same_source_identity() {
         .world_mut()
         .spawn((
             Button,
-            Interaction::Pressed,
+            crate::ui_kit::activation::Activated,
             inspect::InspectAction::Display { action: SpatialCommand::Select { component: expected.clone() } },
         ))
         .id();
@@ -142,10 +142,11 @@ fn mesh_click_and_list_button_resolve_the_same_source_identity() {
         Some(&expected)
     );
     *app.world_mut().get_mut::<inspect::InspectAction>(button).unwrap() = inspect::InspectAction::Toggle(inspect::Toggle::Exploded);
-    *app.world_mut().get_mut::<Interaction>(button).unwrap() = Interaction::None;
+    app.world_mut().entity_mut(button).remove::<crate::ui_kit::activation::Activated>();
     app.update();
-    *app.world_mut().get_mut::<Interaction>(button).unwrap() = Interaction::Pressed;
+    app.world_mut().entity_mut(button).insert(crate::ui_kit::activation::Activated);
     app.update();
+    app.world_mut().entity_mut(button).remove::<crate::ui_kit::activation::Activated>();
     assert!(app.world().resource::<SpatialScene>().state.exploded);
     app.update();
     assert!(
@@ -214,7 +215,7 @@ fn click_parts_row_and_rest_select_make_the_same_shared_selection() {
     escape(&mut app);
 
     // The parts list's row.
-    app.world_mut().spawn((Button, Interaction::Pressed, inspect::InspectAction::Display { action: SpatialCommand::Select { component: id.clone() } }));
+    app.world_mut().spawn((Button, crate::ui_kit::activation::Activated, inspect::InspectAction::Display { action: SpatialCommand::Select { component: id.clone() } }));
     app.update();
     assert_eq!(selected(&app), clicked);
     assert_eq!(shown(&app), SelectionTarget::component(id));

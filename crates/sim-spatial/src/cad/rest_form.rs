@@ -18,6 +18,7 @@ fn tagged<T: serde::Serialize>(command: &str, args: &T) -> Value {
 /// An action as its REST command (what `system_ui` lists as a control's action).
 pub(in crate::cad) fn rest_form(action: &CadAction) -> Value {
     match action {
+        CadAction::Captured { action, .. } => rest_form(action),
         CadAction::CadUndo => json!({"command": "cad_undo"}),
         CadAction::CadRedo => json!({"command": "cad_redo"}),
         CadAction::CadSave { path } => json!({"command": "cad_save", "path": path}),

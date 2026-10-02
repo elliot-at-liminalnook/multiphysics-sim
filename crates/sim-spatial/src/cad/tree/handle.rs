@@ -294,6 +294,7 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
             if let Some(missing) = ids.iter().find(|id| !doc.has_node(id)) {
                 return done(Err(format!("no node {missing} in the shown tree")));
             }
+            doc.tree.form_sequence = doc.tree.form_sequence.wrapping_add(1);
             doc.tree.dialog = Some(DialogState { ids: ids.clone(), draft: String::new(), error: None, began: doc.shown_revision() });
             doc.tree.claim = Some(Claim::Dialog);
             doc.touch();

@@ -56,7 +56,7 @@ fn close() -> CadAction {
 #[allow(clippy::type_complexity)]
 pub(super) fn input(
     doc: Option<ResMut<CadDocument>>,
-    entries: Query<(&Interaction, &MenuEntry, Option<&crate::builder::ui_api::Enabled>), (Changed<Interaction>, With<Button>)>,
+    entries: Query<(&MenuEntry, Option<&crate::builder::ui_api::Enabled>), (With<crate::ui_kit::activation::Activated>, With<Button>)>,
     roots: Query<(&ComputedNode, &UiGlobalTransform), With<TreeMenuRoot>>,
     buttons: Option<Res<ButtonInput<MouseButton>>>,
     keys: Option<ResMut<ButtonInput<KeyCode>>>,
@@ -71,14 +71,11 @@ pub(super) fn input(
     // poll adopting RoboCAD's, a 3D pick) closes it, as a modal Qt menu
     // allows none.
     if selection.items().nodes() != menu.ids {
-        out.write(Act::ui(close()));
+        out.write(Act::ui(crate::cad::activation::guard(&doc, close())));
         return;
     }
     let mut clicked = false;
-    for (interaction, entry, enabled) in &entries {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
+    for (entry, enabled) in &entries {
         clicked = true;
         if enabled.is_some_and(|e| !e.0) {
             if let Some(why) = &entry.refusal {
@@ -86,21 +83,21 @@ pub(super) fn input(
             }
             continue;
         }
-        out.write(Act::ui(entry.action.clone()));
-        out.write(Act::ui(close()));
+        out.write(Act::ui(crate::cad::activation::guard(&doc, entry.action.clone())));
+        out.write(Act::ui(crate::cad::activation::guard(&doc, close())));
     }
     if !clicked
         && buttons.is_some_and(|b| b.any_just_pressed([MouseButton::Left, MouseButton::Right, MouseButton::Middle]))
         && let Some(cursor) = windows.single().ok().and_then(Window::cursor_position)
         && !roots.iter().any(|(node, t)| crate::cad::surfaces::rect_of(node, t).contains(cursor))
     {
-        out.write(Act::ui(close()));
+        out.write(Act::ui(crate::cad::activation::guard(&doc, close())));
     }
     if let Some(mut keys) = keys
         && keys.just_pressed(KeyCode::Escape)
     {
         keys.clear_just_pressed(KeyCode::Escape);
-        out.write(Act::ui(close()));
+        out.write(Act::ui(crate::cad::activation::guard(&doc, close())));
     }
 }
 
@@ -117,7 +114,7 @@ fn key(doc: &CadDocument, selection: &[sim_runtime::cad_client::SelectionItem], 
             MenuRow::Separator => (String::new(), false, false),
         })
         .collect();
-    Some(format!("{:?}", (doc.generation, &doc.tree.menu, menu, selection, &doc.tree.dialog, edit_blocked(doc), window.round())))
+    Some(format!("{:?}", (doc.generation, doc.tree.form_sequence, &doc.tree.menu, menu, selection, &doc.tree.dialog, edit_blocked(doc), window.round())))
 }
 
 /// Present: the open menu and dialog, rebuilt when what they show changes,

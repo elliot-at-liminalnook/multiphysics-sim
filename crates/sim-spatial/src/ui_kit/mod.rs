@@ -84,10 +84,18 @@
 //!
 //! Rules: widgets take their action as a component and never decide what
 //! a press means; buttons stay `bevy::ui::Button` + the action component +
-//! `Enabled` + label text, which is what `system_ui` discovers
-//! (`builder::ui_api::collect`); interactive widgets carry an
+//! `Enabled` + label text, plus `activation::Ordinary`, which is what `system_ui` discovers
+//! (`builder::ui_api::collect`); `Activate` captures one `Activated` occurrence
+//! on that original entity. Input converters consume it in InputSet::Window;
+//! typed owners remain authoritative. `HeldControl` opts paired gestures out;
+//! `KeyboardOnly` allows compound rows a keyboard-only ordinary selection.
+//! Disabled/hidden ancestors remove navigation eligibility before dispatch.
+//! `ModalFocus` roots use pinned TabGroup and restore the one InputFocus;
+//! durable editors rebind by InputIdentity and captured document identity,
+//! preserving drafts through transient panel rebuilds. Interactive widgets carry an
 //! `AccessibleLabel`. Outside this module, no `Tint` struct literal and no
 //! `Color::srgb` literal equal to a token (`tests::ui_colours_come_from_the_kit`).
+pub(crate) mod activation;
 pub(crate) mod form;
 pub(crate) mod palette;
 pub(crate) mod path_field;
@@ -101,6 +109,8 @@ pub(crate) mod threads;
 mod widgets;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod activation_tests;
 
 pub(crate) use scroll::{WHEEL_LINE, clamp_scroll_positions, wheel_delta};
 pub(crate) use slider::{SliderLook, slider_held, surface_point};
@@ -114,6 +124,7 @@ use bevy::prelude::*;
 pub struct UiKitPlugin;
 impl Plugin for UiKitPlugin {
     fn build(&self, app: &mut App) {
+        activation::install(app);
         app.add_plugins(text::TextEntryPlugin)
             .add_observer(bevy::ui_widgets::slider_self_update)
             .add_systems(PostUpdate, (widgets::repaint_buttons, widgets::repaint_tints, widgets::follow_button_text).before(bevy::ui::UiSystems::Prepare))

@@ -159,6 +159,7 @@ pub fn render<A: Component + Clone>(
                             links
                                 .spawn((
                                     Button,
+                                    crate::ui_kit::activation::Ordinary,
                                     action,
                                     bevy::ui::prelude::AccessibleLabel::new(link.label.as_str()),
                                     Node { border_radius: BorderRadius::all(Val::Px(5.)),

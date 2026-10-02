@@ -446,6 +446,7 @@ fn row(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, r: &Row) {
     }
     p.spawn((
         Button,
+        crate::ui_kit::activation::Ordinary,
         CadButton(select_action(doc, &r.id)),
         RobotRow { id: r.id.clone(), joint: r.kind == "joint" },
         Tint::selectable(r.selected),

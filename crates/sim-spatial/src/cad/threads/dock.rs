@@ -255,6 +255,7 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
             p,
             k,
             Composer {
+                identity: format!("cad-composer:{:?}:{:?}:{:?}",st.current,st.editing,st.pending),
                 label,
                 draft: drafting.then_some(st.compose.as_str()),
                 placeholder,

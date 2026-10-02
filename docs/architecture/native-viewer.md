@@ -16,9 +16,10 @@ T45 settings was accepted by source review at `6f3b701e`/`33d9da46`.
 T46 retained offline identification was accepted in call-0360 across
 `1b0ca533`, `d238d6b6`, `c380210b`; T47 ordinary close preservation was accepted
 in call-0364 at `a0671a6b`. These are source acceptances, not compilation or
-execution receipts. T48 controller refinement extends those owners; its
+execution receipts. T48 controller refinement was accepted by source review in
+call-0368 across `7c4fbd09`/`247ccfa6`; it extends those owners. Its
 [source evidence](../native-refinement-authoring.md) and
-[field inventory](../native-refinement-inventory.md) define this bounded batch.
+[field inventory](../native-refinement-inventory.md) record that accepted bounded batch.
 
 Rust changes after the historical `aa34ef48` execution checkpoint remain
 uncompiled and unexecuted. The former opening ten-epic count was a stale dated
@@ -353,9 +354,8 @@ unexecuted; no Python/browser retirement or physical-source acceptance follows.
     `set_if_neq`; rounded values, refresh pacing and anchor rules stay intact.
     `selection::apply_actions` uses five resource system parameters instead
     of exclusive World access. `FieldMsg` derives Message.
-  - **Deliberate, not gaps:** buttons on `Interaction` (see the UI kit
-    decisions; one-text-entry is done, so revisit: Enter/Space on a
-    tab-focused button needs `bevy_ui_widgets::Button` and `Activate`), CAD
+  - **Deliberate, not gaps:** held/continuous controls retain paired
+    Interaction handling; ordinary activation is migrated in T49 below. CAD
     face picks by `MeshRayCast` (see CAD selection and transform), and the
     shared camera and grid instead of Bevy's controllers and `InfiniteGrid`
     (see Shared camera and CAD views).
@@ -1056,15 +1056,20 @@ switcher), 32e4cea1 and a56b4260 (review fixes).
 
 ### Decisions
 
-- **Buttons: `bevy::ui::Button` + `Interaction`, not `bevy_ui_widgets::Button`.**
-  The headless button activates on release (`Pointer<Click>`), or on a
-  picking press with `ActivateOnPress`, through `Activate` observers. Every
-  mode's input system, `system_ui` activation, the tests and the hover
-  styling read press-time `Interaction`, so adopting it would have changed
-  when clicks count and rewritten the action layer's input side. The kit
-  button keeps the same `Button` + action component + `Enabled` + label text
-  that `builder::ui_api::collect` discovers, so ids and labels are unchanged.
-  Revisit if the action layer moves to observers.
+- **Ordinary buttons: UI Button plus pinned widget Button/ActivateOnPress.**
+  T49 supersedes the pointer-only decision: UI Button/action/Enabled/label remain
+  for system_ui discovery, while pinned Activate preserves primary pointer-down
+  timing and adds focused Enter/Space with repeat suppression. Kit capture records
+  original entity intent; InputSet::Window converters feed existing typed owners.
+  Eligibility synchronizes InteractionDisabled and removes hidden/disabled indexes.
+  InputFocus remains the single owner; pinned TabNavigation, modal groups and kit
+  outlines supply navigation and visible focus. Durable editor anchors retain
+  source identity/drafts through presentation rebuilds. HeldControl explicitly
+  excludes paired motion; KeyboardOnly permits compound tree keyboard selection.
+  Rejected alternative: fabricating Interaction presses or feature keyboard loops.
+  Revisit after authorized execution exposes an input/lifetime defect. See the
+  [T49 inventory and source evidence](../native-keyboard-activation.md); all new
+  fixtures, compilation and GUI interaction remain unexecuted.
 - **Sliders: `bevy_ui_widgets::Slider`** (`TrackClick::Snap`, no thumb, range
   0..=1, `SliderStep(0.01)`), with Bevy's `slider_self_update` observer.
   Modes poll `SliderValue` (the pointer's fraction, as `cursor_fraction`
@@ -5789,7 +5794,9 @@ started before the `App` (tests, `--validate-only`, headless) and
   styling, docks, scroll areas, sliders, pointer surfaces and chart images.
   Its contract is the comment at the top of `ui_kit/mod.rs`.
 - Behaviour comes from Bevy's own facilities: `bevy::ui::Button` and
-  `Interaction` for buttons, `bevy_ui_widgets::Slider` for sliders,
+  pinned widget Button/ActivateOnPress/Activate for ordinary activation
+  alongside UI Button for discovery; Interaction remains styling and held gestures,
+  and `bevy_ui_widgets::Slider` for sliders,
   `AccessibleLabel`/`AccessibilityNode` for accessibility. Toasts and dialogs
   are not built yet (no mode needs one).
 - Theme tokens live in one place (`ui_kit/theme.rs`), from the builder's
@@ -7033,3 +7040,30 @@ evidence from StudyUi, through the existing action owner and publication snapsho
 It does not apply or clear that text, alter acknowledgment revisions or remove
 close blockers. Reopened artifacts show the captured raw intent for inspection;
 physical and exploratory settings are still only shared validated commands.
+
+## One ordinary native activation and focus contract — T49 (2026-10-02)
+
+[Bounded inventory, ownership, pinned signatures and source evidence](../native-keyboard-activation.md)
+cover T49.1–T49.3 and all five native-keyboard-activation outcomes. This is the
+§§1–7 shell/kit/action consolidation; no physics, CAD numerical replacement or
+hardware keyboard hold is introduced. Ordinary per-feature press adapters are
+removed. Pointer primary cause authorization precedes deferred Activate; secondary
+presses are refused. Enter/Space repeat is suppressed by pinned Button; consumed
+presses never also trigger mode shortcuts, and releases/STOP remain independent.
+
+Public ActivationSet orders eligibility before picking/focused dispatch, modal
+containment before TextInputSet, capture before Validate before InputSet::Window,
+and occurrence cleanup before Actions. Rendered source/document/form stamps
+refuse stale controls; CAD Captured and Build RenderedUi revalidate before the
+same existing authoritative action owners. Expiring occurrences never own edits.
+
+Transient ModalFocus roots contain pinned tab navigation and return the one focus.
+Stable typed input identities and captured source anchors rebind durable fields
+without replacing their drafts/caret or initializing the first row on every
+rebuild. Missing/ambiguous/hidden/replaced anchors deliberately release focus.
+Modal owners respect navigation focus instead of stealing it back to a field.
+Held jog, sliders, compound pointer tree gestures, double-click, radials and
+viewport surfaces are named exceptions; tree keyboard selection still uses the
+ordinary contract. Implementation and written fixtures are source-reviewed only;
+compilation, execution and GUI parity remain unverified. External Python/OCCT and
+browser reference workflows stay available; no migration retirement is claimed.

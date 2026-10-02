@@ -296,3 +296,59 @@ fn immutable_publication_projection_retains_raw_rejected_text_without_acknowledg
     assert_eq!(projection["drafts"][0]["text"],"invalid device text");
     assert!(ui.blocking_reason().is_some());assert_eq!(ui.drafts.len(),2);
 }
+
+#[test]
+fn rendered_refinement_activation_converts_original_stamped_hit() {
+    use crate::ui_kit::activation::{Activated,Ordinary};
+    let mut world=world(owner());
+    world.init_resource::<bevy::input_focus::InputFocus>();
+    world.init_resource::<Messages<crate::ui_kit::text::FieldMsg>>();
+    world.init_resource::<Messages<crate::app::actions::Act<StudyAction>>>();
+    world.run_system_once(render).unwrap();
+    let entity=world.query::<(Entity,&ControlId)>().iter(&world)
+        .find_map(|(e,id)|(id.0=="study:refine:run:simulate").then_some(e)).unwrap();
+    assert!(world.get::<Ordinary>(entity).is_some());
+    assert!(world.get::<bevy::ui_widgets::ActivateOnPress>(entity).is_some());
+    world.entity_mut(entity).insert(Activated);
+    world.run_system_once(super::super::forms::input).unwrap();
+    let actions:Vec<_>=world.resource_mut::<Messages<crate::app::actions::Act<StudyAction>>>().drain().collect();
+    assert_eq!(actions.len(),1);
+    let StudyAction::RefineRun{stamp,..}=&actions[0].action else{panic!("wrong action")};
+    assert_eq!(*stamp,StudyStamp{id:11,revision:4});
+}
+
+#[test]
+fn rendered_old_study_field_cannot_take_focus_for_replaced_revision() {
+    use crate::ui_kit::activation::Activated;
+    let mut world=world(owner());
+    world.init_resource::<bevy::input_focus::InputFocus>();
+    world.init_resource::<Messages<crate::ui_kit::text::FieldMsg>>();
+    world.init_resource::<Messages<crate::app::actions::Act<StudyAction>>>();
+    world.run_system_once(render).unwrap();
+    let entity=world.query::<(Entity,&Hit)>().iter(&world).find_map(|(e,h)|
+        matches!(h,Hit::Focus{field:Field::Refinement(path),..} if path=="experiment:/name").then_some(e)).unwrap();
+    world.resource_mut::<StudyOwner>().studies[0].revision+=1;
+    world.entity_mut(entity).insert(Activated);
+    world.run_system_once(super::super::forms::input).unwrap();
+    assert!(world.resource::<StudyUi>().focus.is_none());
+    assert!(world.resource::<StudyUi>().error.as_ref().unwrap().contains("revision changed"));
+}
+
+#[test]
+fn actual_study_field_anchor_identity_ignores_revision_and_displayed_text() {
+    let mut world=world(owner());
+    world.run_system_once(render).unwrap();
+    let identity=|world:&mut World| {
+        world.query::<(&Hit,&crate::ui_kit::activation::InputIdentity)>().iter(world)
+            .filter_map(|(hit,identity)|matches!(hit,Hit::Focus{field:Field::Refinement(path),..}
+                if path=="experiment:/name").then_some(identity.0.clone())).collect::<Vec<_>>()
+    };
+    let old=identity(&mut world);
+    assert_eq!(old.len(),1);
+    world.resource_mut::<StudyOwner>().studies[0].revision+=1;
+    world.resource_mut::<StudyOwner>().studies[0].study.refinement.experiment.name="Changed display".into();
+    world.run_system_once(render).unwrap();
+    let both=identity(&mut world);
+    assert_eq!(both.len(),2);
+    assert!(both.iter().all(|value|value==&old[0]),"focus anchor survives semantic revision/text publication");
+}

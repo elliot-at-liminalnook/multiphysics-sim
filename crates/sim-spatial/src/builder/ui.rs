@@ -151,7 +151,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder, selected: &BTreeSet<St
     let running = b.running();
     let (time, speed) = b.run.as_ref().and_then(|r| r.worker.shared().lock().ok().map(|s| (s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.), s.speed))).unwrap_or((0., 0.));
     commands
-        .spawn((k.dock(Dock::Top { height: TOPBAR }, Node { padding: UiRect::axes(Val::Px(14.), Val::Px(0.)), align_items: AlignItems::Center, justify_content: JustifyContent::SpaceBetween, ..default() }), BuilderPanel))
+        .spawn((k.dock(Dock::Top { height: TOPBAR }, Node { padding: UiRect::axes(Val::Px(14.), Val::Px(0.)), align_items: AlignItems::Center, justify_content: JustifyContent::SpaceBetween, ..default() }), BuilderPanel, actions::RenderStamp::capture(b)))
         .with_children(|bar| {
             // Left: product and where you are.
             bar.spawn(Node { align_items: AlignItems::Center, column_gap: Val::Px(4.), ..default() }).with_children(|left| {
@@ -210,7 +210,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder, selected: &BTreeSet<St
 
 fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_scroll: f32, selected: &BTreeSet<String>, studies: &calibration::study::StudyOwner, study_ui: &calibration::study::forms::StudyUi) {
     commands
-        .spawn((k.dock(Dock::Left { top: TOPBAR, bottom: STATUSBAR, width: LEFT_WIDTH }, Node { flex_direction: FlexDirection::Column, ..default() }), BuilderPanel))
+        .spawn((k.dock(Dock::Left { top: TOPBAR, bottom: STATUSBAR, width: LEFT_WIDTH }, Node { flex_direction: FlexDirection::Column, ..default() }), BuilderPanel, actions::RenderStamp::capture(b)))
         .with_children(|side| {
             side.spawn(k.tab_strip()).with_children(|tabs| {
                 for (label, tab) in [("Library", Tab::Library), ("Outline", Tab::Outline), ("Studies", Tab::Studies), ("References", Tab::References), ("Notes", Tab::Discussions), ("Systems", Tab::Systems), ("Actuators", Tab::Actuators), ("Gait lab", Tab::GaitLab)] {
@@ -279,7 +279,7 @@ fn graph_dock(commands: &mut Commands, k: &Kit, b: &Builder) {
     // One `Dock::Under` above the status bar (the kit adds the switcher
     // strip, `SWITCHER_STRIP`), between the side columns.
     commands
-        .spawn((k.dock(Dock::Under { left: LEFT_WIDTH, right: RIGHT_WIDTH, bottom: STATUSBAR, height: graphs::DOCK }, Node { padding: UiRect::all(Val::Px(10.)), column_gap: Val::Px(10.), ..default() }), BuilderPanel))
+        .spawn((k.dock(Dock::Under { left: LEFT_WIDTH, right: RIGHT_WIDTH, bottom: STATUSBAR, height: graphs::DOCK }, Node { padding: UiRect::all(Val::Px(10.)), column_gap: Val::Px(10.), ..default() }), BuilderPanel, actions::RenderStamp::capture(b)))
         .with_children(|dock| {
             if let Some(r) = &b.study.result {
                 dock.spawn((Node { border_radius: BorderRadius::top(Val::Px(5.)), position_type: PositionType::Absolute, right: Val::Px(10.), top: Val::Px(-24.), column_gap: Val::Px(10.), padding: UiRect::axes(Val::Px(8.), Val::Px(3.)), align_items: AlignItems::Center, ..default() }, BackgroundColor(BAR)))
@@ -338,7 +338,7 @@ fn status_bar(commands: &mut Commands, k: &Kit, b: &Builder, scene: &SpatialScen
         ("Ready", OK)
     };
     commands
-        .spawn((k.dock(Dock::Bottom { height: STATUSBAR }, Node { padding: UiRect::horizontal(Val::Px(14.)), align_items: AlignItems::Center, justify_content: JustifyContent::SpaceBetween, column_gap: Val::Px(16.), ..default() }), BuilderPanel))
+        .spawn((k.dock(Dock::Bottom { height: STATUSBAR }, Node { padding: UiRect::horizontal(Val::Px(14.)), align_items: AlignItems::Center, justify_content: JustifyContent::SpaceBetween, column_gap: Val::Px(16.), ..default() }), BuilderPanel, actions::RenderStamp::capture(b)))
         .with_children(|bar| {
             bar.spawn((Node { flex_shrink: 1., overflow: Overflow::clip(), ..default() }, children![k.caption(&b.status)]));
             bar.spawn(Node { column_gap: Val::Px(14.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }).with_children(|right| {

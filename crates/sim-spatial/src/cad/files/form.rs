@@ -427,7 +427,7 @@ pub(super) enum Hit {
 
 /// The form's root (the backdrop).
 #[derive(Component)]
-pub(super) struct FileFormRoot;
+pub(in crate::cad) struct FileFormRoot;
 
 /// The next text field after `name` among `rows` (cycling).
 fn next_text(rows: &[Row], name: Option<&str>) -> Option<String> {
@@ -444,13 +444,15 @@ fn next_text(rows: &[Row], name: Option<&str>) -> Option<String> {
 /// reads with no field typing (see the module doc).
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub(super) fn input(
+    doc: Option<Res<CadDocument>>,
     files: Option<ResMut<CadFiles>>,
-    parts: Query<(&Interaction, &FilePart, Option<&Enabled>), Changed<Interaction>>,
+    parts: Query<(&FilePart, Option<&Enabled>), With<crate::ui_kit::activation::Activated>>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
     // The field's messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
     mut field: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     mut out: MessageWriter<Act<CadAction>>,
 ) {
+    let Some(doc) = doc else { return };
     let events: Vec<FieldEvent> = field.p0().read().filter(|m| m.field == FILES).map(|m| m.event.clone()).collect();
     let mut text = field.p1();
     let Some(mut files) = files else {
@@ -487,8 +489,8 @@ pub(super) fn input(
             FieldEvent::Arrow { .. } => {}
         }
     }
-    for (interaction, part, enabled) in &parts {
-        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) {
+    for (part, enabled) in &parts {
+        if enabled.is_some_and(|e| !e.0) {
             continue;
         }
         match part.0 {
@@ -531,7 +533,7 @@ pub(super) fn input(
     }
     // No row typing (the kit consumes a typing field's keys): the form's
     // own Enter, Escape and Tab, as before.
-    if !text.typing() && !submit && !close
+    if !text.typing() && !text.ordinary_focused() && !submit && !close
         && let Some(keys) = keys.as_ref()
     {
         if keys.just_pressed(KeyCode::Enter) {
@@ -544,13 +546,13 @@ pub(super) fn input(
         }
     }
     if close {
-        out.write(Act::ui(CadAction::CadFile(FileArgs { op: FileOp::Close, ..Default::default() })));
+        out.write(Act::ui(crate::cad::activation::guard_files(&doc, &files, CadAction::CadFile(FileArgs { op: FileOp::Close, ..Default::default() }))));
     } else if guess {
-        out.write(Act::ui(CadAction::CadFile(FileArgs { op: FileOp::GuessUnit, path: Some(form.text("path").trim().to_string()), ..Default::default() })));
+        out.write(Act::ui(crate::cad::activation::guard_files(&doc, &files, CadAction::CadFile(FileArgs { op: FileOp::GuessUnit, path: Some(form.text("path").trim().to_string()), ..Default::default() }))));
     } else if submit {
         match form.action() {
             Ok(action) => {
-                out.write(Act::ui(action));
+                out.write(Act::ui(crate::cad::activation::guard_files(&doc, &files, action)));
             }
             Err(e) => form.error = Some(e),
         }
@@ -561,7 +563,7 @@ pub(super) fn input(
     // Modal: with no other field typing the first text row takes the
     // keyboard back, so CAD keys stay off under the form (as when it held
     // the keyboard every frame it was open).
-    if form.focus.is_none() && !close && !text.typing()
+    if form.focus.is_none() && !close && !text.typing() && !text.ordinary_focused()
         && let Some(name) = next_text(&rows, None)
     {
         form.focus = Some(name);
@@ -582,7 +584,7 @@ pub(super) fn input(
     if !close
         && let Some(mesh) = form.ask_guess()
     {
-        out.write(Act::ui(CadAction::CadFile(FileArgs { op: FileOp::GuessUnit, path: Some(mesh), ..Default::default() })));
+        out.write(Act::ui(crate::cad::activation::guard_files(&doc, &files, CadAction::CadFile(FileArgs { op: FileOp::GuessUnit, path: Some(mesh), ..Default::default() }))));
     }
     // The directory listing follows the path (read on Pool::Io).
     if let Some((key, dir)) = form.listing_key()
@@ -606,7 +608,7 @@ pub(super) fn draw(mut commands: Commands, files: Option<Res<CadFiles>>, doc: Op
     let form = files.as_deref().and_then(|f| f.form.as_ref());
     let rule = form.zip(doc.as_deref()).and_then(|(f, d)| open_rule(f, d));
     let guessing = files.as_deref().is_some_and(|f| f.jobs.iter().any(|j| j.kind == "guess_unit"));
-    let key = form.map(|form| format!("{form:?}{:?}{:?}{rule:?}{guessing}", files.as_deref().map(|f| &f.listed), files.as_deref().map(|f| &f.guess)));
+    let key = form.map(|form| format!("{form:?}{:?}{:?}{rule:?}{guessing}{:?}", files.as_deref().map(|f| &f.listed), files.as_deref().map(|f| &f.guess), files.as_deref().map(|f| f.form_sequence)));
     let shown = roots.iter().next().is_some();
     if key == *last && shown == key.is_some() {
         return;

@@ -58,7 +58,7 @@ pub(in crate::lesson) fn quiz_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &
                 let judged = verdict.is_some() && picked;
                 let border = if show_answer && o.correct { OK } else if judged { if o.correct { OK } else { WARN } } else if picked { ACCENT } else { BORDER };
                 let tint = if picked { Tint::new(HOVER_BG, HOVER_BG) } else { Tint::SURFACE };
-                c.spawn((Button, LessonAction::QuizPick(q.id.clone(), i), tint, AccessibleLabel::new(format!("{}: {}", (b'A' + i as u8) as char, o.text)), Node { border_radius: BorderRadius::all(Val::Px(6.)), padding: UiRect::axes(Val::Px(12.), Val::Px(9.)), border: UiRect::all(Val::Px(1.5)), column_gap: Val::Px(10.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, BackgroundColor(tint.idle), BorderColor::all(border))).with_children(|row| {
+                c.spawn((Button, crate::ui_kit::activation::Ordinary, LessonAction::QuizPick(q.id.clone(), i), tint, AccessibleLabel::new(format!("{}: {}", (b'A' + i as u8) as char, o.text)), Node { border_radius: BorderRadius::all(Val::Px(6.)), padding: UiRect::axes(Val::Px(12.), Val::Px(9.)), border: UiRect::all(Val::Px(1.5)), column_gap: Val::Px(10.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, BackgroundColor(tint.idle), BorderColor::all(border))).with_children(|row| {
                     row.spawn(k.text(format!("{}", (b'A' + i as u8) as char), 12., if picked { ACCENT } else { FAINT }, 2));
                     row.spawn((k.text(&o.text, 13.5, TEXT, 0), Node { flex_shrink: 1., min_width: Val::Px(0.), ..default() }));
                 });
@@ -235,7 +235,7 @@ pub(in crate::lesson) fn reflect_card(col: &mut ChildSpawnerCommands, k: &Kit, l
         c.spawn(badge(k, if recall { "Recall first" } else { "Explain it in your own words" }, Color::srgb(0.93, 0.76, 0.40)));
         crate::markdown::render(c, &sim_markdown::parse(&r.prompt), theme, |_| None::<LessonAction>);
         let text = if focused { l.input.as_ref().map(|i| i.buffer.clone()).unwrap_or_default() } else { saved.map(|s| s.text.clone()).unwrap_or_default() };
-        c.spawn((Button, LessonAction::ReflectInput(r.id.clone()), Tint::SURFACE, AccessibleLabel::new(if text.is_empty() { "Write your explanation" } else { text.as_str() }), Node { border_radius: BorderRadius::all(Val::Px(6.)), min_height: Val::Px(70.), padding: UiRect::all(Val::Px(10.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() }, BackgroundColor(SURFACE), BorderColor::all(if focused { ACCENT } else { BORDER }))).with_children(|f| {
+        c.spawn((Button, crate::ui_kit::activation::Ordinary, LessonAction::ReflectInput(r.id.clone()), Tint::SURFACE, AccessibleLabel::new(if text.is_empty() { "Write your explanation" } else { text.as_str() }), Node { border_radius: BorderRadius::all(Val::Px(6.)), min_height: Val::Px(70.), padding: UiRect::all(Val::Px(10.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() }, BackgroundColor(SURFACE), BorderColor::all(if focused { ACCENT } else { BORDER }))).with_children(|f| {
             f.spawn(k.text(if focused { format!("{text}|") } else if text.is_empty() { "Click and write two or three sentences…".into() } else { text.clone() }, 13.5, if text.is_empty() && !focused { FAINT } else { TEXT }, 0));
         });
         c.spawn(wrap()).with_children(|row| {

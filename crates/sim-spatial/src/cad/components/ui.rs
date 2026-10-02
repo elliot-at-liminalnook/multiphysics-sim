@@ -29,7 +29,7 @@ pub(crate) fn build(app: &mut App) {
 }
 fn input(
     mut state: ResMut<ComponentsState>,
-    fields: Query<(&Interaction, &ComponentField), Changed<Interaction>>,
+    fields: Query<&ComponentField, With<crate::ui_kit::activation::Activated>>,
     mut text: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     mut out: MessageWriter<Act<CadAction>>,
 ) {
@@ -117,8 +117,8 @@ fn input(
             _ => {}
         }
     }
-    for (interaction, field) in &fields {
-        if *interaction == Interaction::Pressed {
+    for field in &fields {
+        {
             let value = match field.0.as_str() {
                 "find" => state.find.clone(),
                 "folder" => state.folder.clone(),

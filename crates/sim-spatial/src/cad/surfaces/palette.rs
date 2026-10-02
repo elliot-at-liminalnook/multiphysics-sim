@@ -115,6 +115,7 @@ pub(super) fn spawn(commands: &mut Commands, k: &Kit, doc: &CadDocument, selecti
             GlobalZIndex(POPUP_Z),
             AccessibleLabel::new("Command palette"),
             SurfaceRoot,
+            crate::ui_kit::activation::ModalFocus,
             DespawnOnExit(ModeScope::Cad),
         ))
         .with_children(|p| {
@@ -181,12 +182,17 @@ pub(super) fn input(
             }
             // Escape closes it (the kit has taken the keyboard away); so
             // does losing the keyboard to another field or a mode switch.
-            FieldEvent::Cancel | FieldEvent::Blur => {
+            FieldEvent::Cancel => {
+                out.write(Act::ui(CadAction::CadSurface { surface: Surface::Closed }));
+                break;
+            }
+            FieldEvent::Blur if !text.ordinary_focused() => {
                 out.write(Act::ui(CadAction::CadSurface { surface: Surface::Closed }));
                 break;
             }
             FieldEvent::Tab { .. } => {}
             // ↑/↓ move the highlight (RoboCAD's list keys).
+            FieldEvent::Blur => {}
             FieldEvent::Arrow { up: true } => at = at.saturating_sub(1),
             FieldEvent::Arrow { up: false } => at = (at + 1).min(ranked(&doc, &selection, &own, &query_now).len().saturating_sub(1)),
         }

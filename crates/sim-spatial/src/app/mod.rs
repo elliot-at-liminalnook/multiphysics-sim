@@ -384,7 +384,7 @@ impl Plugin for CorePlugin {
         .add_plugins(crate::ui_kit::UiKitPlugin)
         .add_plugins(settings::SettingsPlugin)
         .add_systems(Startup, (crate::rest::wake_on_request, switcher::spawn_switcher))
-        .add_systems(Update, switcher::switcher_clicks.in_set(ViewerSet::Input))
+        .add_systems(Update, switcher::switcher_clicks.in_set(InputSet::Window).in_set(ViewerSet::Input))
         .add_systems(Update, (switcher::update_switcher, switcher::publish).in_set(ViewerSet::Present))
         // The document picker's panel (its state and input are `switch::build`'s).
         .add_systems(Update, picker::draw.in_set(ViewerSet::Present))

@@ -578,27 +578,61 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
     }
 }
 
+/// Rendered source identity, retained with the panel instead of resolving a row
+/// against the current palette after REST or another action changed it.
+#[derive(Component, Clone, Debug)]
+pub(super) struct RenderStamp {
+    pub(super) document: Option<crate::document::DocumentId>,
+    path: std::path::PathBuf,
+    revision: u64,
+    level: String,
+    palette: String,
+}
+impl RenderStamp {
+    pub(super) fn capture(builder: &Builder) -> Self {
+        Self { document: None, path: builder.path().to_path_buf(), revision: builder.document.revision,
+            level: builder.level.clone(), palette: format!("{:?}",builder.palette) }
+    }
+    pub(super) fn matches(&self,builder:&Builder)->bool {
+        self.path==builder.path() && self.revision==builder.document.revision
+            && self.level==builder.level && self.palette==format!("{:?}",builder.palette)
+    }
+}
+
 /// Input: a pressed, enabled builder button's action. The Lessons button
 /// ("‹ lesson") asks the mode switch for Lessons: refused, naming the
 /// blocker, while a draft, drag, study, replay, Codex answer or open is in
 /// progress (`Builder::switch_blockers`); a live run is paused and kept.
 pub(super) fn buttons(
-    actions: Query<(&Interaction, &BuildAction, Option<&ui_api::Enabled>), (Changed<Interaction>, With<Button>)>,
+    actions: Query<(Entity, &BuildAction, Option<&ui_api::Enabled>), (With<crate::ui_kit::activation::Activated>, With<Button>)>,
+    parents: Query<&ChildOf>,
+    stamps: Query<&RenderStamp>,
+    builder: Res<Builder>,
+    registry: Res<DocumentRegistry>,
     learn: Option<Res<crate::lesson::Learn>>,
     mut out: MessageWriter<Act<SystemAction>>,
     mut switch: MessageWriter<Act<WindowAction>>,
 ) {
-    for (interaction, action, enabled) in &actions {
-        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) {
+    for (entity, action, enabled) in &actions {
+        if enabled.is_some_and(|e| !e.0) {
             continue;
         }
+        let mut cursor=Some(entity);
+        let mut source=None;
+        while let Some(entity)=cursor {
+            if let Ok(stamp)=stamps.get(entity) {source=Some(stamp.clone());break;}
+            cursor=parents.get(entity).ok().map(|parent|parent.parent());
+        }
+        let mut source=source.unwrap_or_else(||RenderStamp::capture(&builder));
+        source.document=picked::document(&registry);
+        if !source.matches(&builder) {continue;}
         if matches!(action, BuildAction::Lessons) {
             if learn.is_some() {
                 switch.write(Act::ui(WindowAction::Switch(ModeSwitch { mode: ViewerMode::Lessons, document: None })));
             }
             continue;
         }
-        out.write(Act::ui(SystemAction::Ui(action.clone())));
+        out.write(Act::ui(SystemAction::RenderedUi(source,action.clone())));
     }
 }
 

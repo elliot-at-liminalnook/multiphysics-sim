@@ -320,7 +320,7 @@ pub(super) fn tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
             Err(_) => (DANGER, "unreadable".to_string()),
         };
         body.spawn((
-            Button,
+            Button, crate::ui_kit::activation::Ordinary,
             BuildAction::GaitReportSelect(e.name.clone()),
             bevy::ui::prelude::AccessibleLabel::new(format!("Report {}", e.name)),
             Tint::selectable(selected),

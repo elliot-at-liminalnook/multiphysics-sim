@@ -55,7 +55,7 @@ pub(crate) fn submit(doc: &CadDocument, d: &RowDraft) -> Result<Option<CadAction
 /// Input: the physical rows' drafts (see the module doc).
 pub(in crate::cad) fn entry(
     doc: Option<ResMut<CadDocument>>,
-    presses: Query<(&Interaction, &PhysicalField), Changed<Interaction>>,
+    presses: Query<&PhysicalField, With<crate::ui_kit::activation::Activated>>,
     mut msgs: MessageReader<FieldMsg>,
     mut text: TextFocus,
     mut out: MessageWriter<Act<CadAction>>,
@@ -100,8 +100,8 @@ pub(in crate::cad) fn entry(
         }
     }
     let mut started = false;
-    for (interaction, f) in &presses {
-        if *interaction != Interaction::Pressed || draft.as_ref().is_some_and(|d| d.node == f.node && d.field == f.field) {
+    for f in &presses {
+        if draft.as_ref().is_some_and(|d| d.node == f.node && d.field == f.field) {
             continue;
         }
         let opened = TextDraft::new(current_text(&doc, &f.node, f.field), true);

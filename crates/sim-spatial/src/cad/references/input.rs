@@ -111,8 +111,8 @@ fn usable(doc: &CadDocument, f: Focus) -> bool {
 #[allow(clippy::type_complexity)]
 fn input(
     doc: Option<ResMut<CadDocument>>,
-    fields: Query<(&Interaction, &RefField), Changed<Interaction>>,
-    paths: Query<(&Interaction, &RefPath), Changed<Interaction>>,
+    fields: Query<&RefField, With<crate::ui_kit::activation::Activated>>,
+    paths: Query<&RefPath, With<crate::ui_kit::activation::Activated>>,
     // The fields' messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
     mut msgs: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     mut out: MessageWriter<Act<CadAction>>,
@@ -202,16 +202,13 @@ fn input(
             _ => {}
         }
     }
-    for (interaction, f) in &fields {
-        if *interaction == Interaction::Pressed && usable(d, f.0) && at != Some(f.0) {
+    for f in &fields {
+        if usable(d, f.0) && at != Some(f.0) {
             at = Some(f.0);
             select_all = focus(&mut text, d, f.0);
         }
     }
-    for (interaction, hit) in &paths {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
+    for hit in &paths {
         let Some(b) = d.references.browse.clone() else { continue };
         let key = path_field::listing_key(b.draft.text.trim(), suffixes(b.kind)).map(|(k, _)| k);
         match hit.0 {

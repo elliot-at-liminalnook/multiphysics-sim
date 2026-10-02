@@ -186,7 +186,7 @@ fn reevaluate(s: &mut Numeric, i: usize) {
 /// that opens it (see the module doc).
 pub(super) fn entry(
     doc: Option<ResMut<CadDocument>>,
-    presses: Query<(&Interaction, &FieldButton), Changed<Interaction>>,
+    presses: Query<&FieldButton, With<crate::ui_kit::activation::Activated>>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
     mut msgs: MessageReader<FieldMsg>,
     mut text: TextFocus,
@@ -253,8 +253,8 @@ pub(super) fn entry(
         }
     }
     let mut started = false;
-    for (interaction, button) in &presses {
-        if *interaction == Interaction::Pressed && button.0 < n {
+    for button in &presses {
+        if button.0 < n {
             let s = &mut doc.tool_state.numeric;
             if s.focus.is_none() {
                 s.began = Some(shown);

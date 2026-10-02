@@ -96,9 +96,9 @@ pub fn cube_action(view: ViewPreset, heading: Option<(f32, f32)>, pitch_limit: f
 
 /// Input: a pressed, enabled cube button writes its camera action.
 #[allow(clippy::type_complexity)]
-pub(super) fn cube_press(clicks: Query<(&Interaction, &CubeButton, Option<&Enabled>), (Changed<Interaction>, With<Button>)>, cameras: Query<(&Orbit, &OrbitRules), With<Camera3d>>, mut out: MessageWriter<Act<CameraAction>>) {
-    for (interaction, button, enabled) in &clicks {
-        if *interaction != Interaction::Pressed || enabled.is_some_and(|e| !e.0) {
+pub(super) fn cube_press(clicks: Query<(&CubeButton, Option<&Enabled>), (With<crate::ui_kit::activation::Activated>, With<Button>)>, cameras: Query<(&Orbit, &OrbitRules), With<Camera3d>>, mut out: MessageWriter<Act<CameraAction>>) {
+    for (button, enabled) in &clicks {
+        if enabled.is_some_and(|e| !e.0) {
             continue;
         }
         let camera = cameras.iter().next();

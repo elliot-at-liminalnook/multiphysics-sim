@@ -1,5 +1,5 @@
 //! The open picker is modal ([`keys`]): its path field's events, Enter /
-//! Escape / Tab while the field does not have the keyboard, the wheel, and
+//! Escape while the field does not have the keyboard, the wheel, and
 //! the held-key release; and [`sync`], which gives the kit field the
 //! picker's draft when the picker changed it (a listing pick, "..", a
 //! `system_ui` text, the examples prefill, a close) and gives it the
@@ -7,7 +7,7 @@
 use super::{PATH, Picker, PickerList};
 use crate::app::actions::Act;
 use crate::app::switch::WindowAction;
-use crate::ui_kit::text::{FieldEvent, FieldMsg, TextDraft, TextFocus, release_held};
+use crate::ui_kit::text::{FieldEvent, FieldMsg, TextFocus, release_held};
 use bevy::ecs::message::{MessageCursor, Messages};
 use bevy::ecs::system::ParamSet;
 use bevy::input::keyboard::Key;
@@ -40,10 +40,10 @@ pub(crate) fn sync(picker: Option<Res<Picker>>, mut text: TextFocus, mut was_ope
 /// used): while the picker is open,
 ///
 /// - the path field's events: an edit follows the listing, Enter (Submit)
-///   opens the typed path, Escape (Cancel) closes the picker, Tab gives up
-///   the keyboard;
-/// - while the field does not have the keyboard: Escape closes, Enter
-///   opens the typed path, Tab gives the field the keyboard (selected);
+///   opens the typed path, Escape (Cancel) closes the picker; Tab traverses
+///   through the shared navigation contract without discarding the draft;
+/// - while the field does not have the keyboard: Escape closes; ordinary
+///   Enter/Space and Tab are owned by the kit, never a feature key loop;
 /// - the wheel scrolls its sections;
 ///
 /// then the wheel messages are cleared and every held key released, so no
@@ -100,27 +100,17 @@ pub(crate) fn keys(
             FieldEvent::Submit(_) => submit = true,
             // The kit has already taken the keyboard away.
             FieldEvent::Cancel => close = true,
-            FieldEvent::Tab { .. } => {
-                text.blur(PATH);
-                picker.revision += 1;
-            }
+            FieldEvent::Tab { .. } => {}
             FieldEvent::Blur => picker.revision += 1,
             FieldEvent::Arrow { .. } => {}
         }
     }
-    // Without the keyboard the field's keys are the picker's (read before
-    // the release below; the kit consumed the ones the field used).
+    // Escape remains modal cancellation. Ordinary activation and traversal
+    // already ran through focused dispatch before this release.
     if !submit && !close && !text.focused(PATH) {
         let pressed = |key: Key| logical.as_ref().is_some_and(|l| l.just_pressed(key));
         if pressed(Key::Escape) {
             close = true;
-        } else if pressed(Key::Enter) {
-            submit = true;
-        } else if pressed(Key::Tab) {
-            picker.draft.select_all = true;
-            let draft = TextDraft::new(picker.draft.text.clone(), true);
-            text.focus_draft(PATH, draft);
-            picker.revision += 1;
         }
     }
     if close {

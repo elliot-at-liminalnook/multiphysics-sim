@@ -55,7 +55,7 @@ impl threads::Host<NoteAnchor> for NotesHost<'_> {
 /// Input: the notes panel's buttons, as the view's `annotations` action (the
 /// same request REST sends); ids and targets are read from the document now,
 /// and a new note is on Inspect's shared selection.
-pub(crate) fn clicks(scene: Res<SpatialScene>, selection: Option<Res<Selection>>, registry: Option<Res<DocumentRegistry>>, actions: Query<(&Interaction, &NoteAction), Changed<Interaction>>, mut out: MessageWriter<crate::app::actions::Act<crate::inspect::InspectAction>>) {
+pub(crate) fn clicks(scene: Res<SpatialScene>, selection: Option<Res<Selection>>, registry: Option<Res<DocumentRegistry>>, actions: Query<&NoteAction, With<crate::ui_kit::activation::Activated>>, mut out: MessageWriter<crate::app::actions::Act<crate::inspect::InspectAction>>) {
     if actions.is_empty() {
         return;
     }
@@ -64,10 +64,7 @@ pub(crate) fn clicks(scene: Res<SpatialScene>, selection: Option<Res<Selection>>
         (Some(selection), Some((document, _))) => selection.target(document),
         _ => scene.shown.clone(),
     };
-    for (interaction, action) in &actions {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
+    for action in &actions {
         let request = match action {
             NoteAction::Undo => Some(notes::Request::Edit { change: notes::Command::Undo, expected_revision: Some(doc.revision) }),
             NoteAction::Redo => Some(notes::Request::Edit { change: notes::Command::Redo, expected_revision: Some(doc.revision) }),
@@ -272,7 +269,7 @@ mod tests {
         world.entity_mut(entity).insert(Interaction::Hovered);
         app.update();
         assert_eq!(app.world().resource::<SpatialScene>().note_pointer_hover, SelectionTarget::component(id.clone()));
-        app.world_mut().entity_mut(entity).insert(Interaction::Pressed);
+        app.world_mut().entity_mut(entity).insert(crate::ui_kit::activation::Activated);
         app.update();
         assert_eq!(app.world().resource::<Selection>().target(document), SelectionTarget::component(id.clone()));
         assert_eq!(app.world().resource::<SpatialScene>().shown, SelectionTarget::component(id));

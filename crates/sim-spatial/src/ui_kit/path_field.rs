@@ -197,14 +197,14 @@ pub(crate) struct PathView<'a> {
 impl Kit<'_> {
     /// The path field: label, the input with the submit button beside it,
     /// then the listing ([`Kit::path_listing`]).
-    pub(crate) fn path_field<A: Component>(&self, parent: &mut ChildSpawnerCommands, view: &PathView, hit: impl Fn(PathHit) -> A) {
+    pub(crate) fn path_field<A: Component + std::fmt::Debug>(&self, parent: &mut ChildSpawnerCommands, view: &PathView, hit: impl Fn(PathHit) -> A) {
         parent.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.0), flex_shrink: 0.0, ..default() }).with_children(|cell| {
             cell.spawn(self.text(view.label, size::CAPTION, SUBTLE, 1));
             cell.spawn(Node { column_gap: Val::Px(6.0), align_items: AlignItems::Center, ..default() }).with_children(|line| {
                 // The kit input labels itself with its text; the field's label
                 // names it, followed by the typed text (or the placeholder).
                 let shown = if view.text.is_empty() { view.placeholder } else { view.text };
-                line.spawn(self.input_selectable(view.text, view.placeholder, hit(PathHit::Field), view.focused, view.selected)).insert((AccessibleLabel::new(format!("{}: {shown}", view.label)), Node {
+                line.spawn(self.input_selectable(view.text, view.placeholder, hit(PathHit::Field), view.focused, view.selected)).insert((super::activation::InputIdentity(format!("path:{}",view.label)), AccessibleLabel::new(format!("{}: {shown}", view.label)), Node {
                     flex_grow: 1.0,
                     min_width: Val::Px(0.0),
                     border_radius: BorderRadius::all(Val::Px(5.)),
@@ -224,7 +224,7 @@ impl Kit<'_> {
     /// the typed file name narrows (a case-insensitive prefix, at most
     /// [`SHOWN`]) and how many more. Without a listing: a hint for a path
     /// that is not absolute, else nothing (it is being read).
-    pub(crate) fn path_listing<A: Component>(&self, parent: &mut ChildSpawnerCommands, path: &str, listing: Option<&Listing>, hit: &impl Fn(PathHit) -> A) {
+    pub(crate) fn path_listing<A: Component + std::fmt::Debug>(&self, parent: &mut ChildSpawnerCommands, path: &str, listing: Option<&Listing>, hit: &impl Fn(PathHit) -> A) {
         let Some(listing) = listing else {
             if !std::path::Path::new(&dir_of(path.trim())).is_absolute() {
                 parent.spawn(self.text("Type an absolute path (~/ works) to list its directory.", size::SMALL, FAINT, 0));

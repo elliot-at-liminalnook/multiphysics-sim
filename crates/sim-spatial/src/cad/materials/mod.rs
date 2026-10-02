@@ -23,7 +23,7 @@
 //! is in flight; the properties form with the revision its values were
 //! read at). Typing and the forms' clicks are [`panel`]'s.
 mod form;
-mod panel;
+pub(in crate::cad) mod panel;
 #[cfg(test)]
 mod tests;
 
@@ -58,6 +58,8 @@ pub(crate) enum Focus {
 /// current row, the open dialog and the field typed into.
 #[derive(Default)]
 pub struct MaterialsState {
+    /// Monotonic local modal lifetime; drafts and focus do not change it.
+    pub(crate) form_sequence: u64,
     pub(crate) search: String,
     /// The current material (RoboCAD's list `currentItem`).
     pub(crate) current: Option<String>,
@@ -224,6 +226,7 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
 fn open(doc: &mut CadDocument, form: MaterialForm) -> Value {
     // A numeric entry requested this frame would take the dialog's keyboard.
     doc.tool_state.numeric.focus_request = false;
+    doc.materials.form_sequence = doc.materials.form_sequence.wrapping_add(1);
     doc.materials.form = Some(form);
     doc.materials.focus = Some(Focus::Field(0));
     doc.materials.select_all = true;

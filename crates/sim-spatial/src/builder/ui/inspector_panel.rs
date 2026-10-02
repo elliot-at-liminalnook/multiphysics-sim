@@ -11,7 +11,7 @@ pub(super) fn inspector(commands: &mut Commands, k: &Kit, b: &Builder, scene: &S
             k.dock(Dock::Right { top: TOPBAR, bottom: STATUSBAR, width: RIGHT_WIDTH }, Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.), padding: UiRect::all(Val::Px(16.)), overflow: Overflow::scroll_y(), ..default() }),
             ScrollPosition::default(),
             Scroll::Right,
-            BuilderPanel,
+            BuilderPanel, actions::RenderStamp::capture(b),
         ))
         .with_children(|col| {
             if b.reference.target.is_some(){source_preview(col,k,b);return;}
@@ -170,7 +170,7 @@ fn instance_inspector(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name
             let is_connected = connected.contains(&t) || connected.iter().any(|c| matches!(c, Terminal::Port { instance, port: p } if instance == name && p.starts_with(&format!("{port}."))));
             let armed = b.connect_from.as_ref() == Some(&t);
             col.spawn((
-                Button,
+                Button, crate::ui_kit::activation::Ordinary,
                 BuildAction::Terminal(t.clone()),
                 bevy::ui::prelude::AccessibleLabel::new(format!("Port {port}")),
                 if armed { Tint::new(ACCENT_BG, HOVER_BG) } else { Tint::CLEAR },

@@ -150,7 +150,7 @@ pub(super) fn receive(
             // (found again by name below; until then it indexes the previous model).
             commands
                 .spawn((
-                    Button,
+                    Button, crate::ui_kit::activation::Ordinary,
                     RobotAction::SelectLink { index: i, name: l.name.clone() },
                     LinkRow(i),
                     Tint::selectable(false),
@@ -275,7 +275,7 @@ fn install_planar(
             let name = if b.ground { format!("{}  (ground: fixed root)", b.name) } else { b.name.clone() };
             commands
                 .spawn((
-                    Button,
+                    Button, crate::ui_kit::activation::Ordinary,
                     RobotAction::SelectLink { index: i, name: b.name.clone() },
                     LinkRow(i),
                     Tint::selectable(false),

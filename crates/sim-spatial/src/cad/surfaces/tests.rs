@@ -570,3 +570,35 @@ fn the_organize_rows_run_native_actions() {
         assert!(matches!(registry::resolve(registry::command(id).unwrap()), Resolved::Action(CadAction::CadComponents(_))), "{id}: must reach the typed native component handler");
     }
 }
+
+/// Written T49 renderer fixture; no fixture execution in this batch.
+#[test]
+fn rendered_form_submit_retains_form_lifetime_and_modal_navigation() {
+    use bevy::prelude::*;
+    use bevy::ecs::system::RunSystemOnce;
+    use crate::ui_kit::{UiFonts, activation::{Activated, ModalFocus, Ordinary}};
+    use crate::ui_kit::form::FormHit;
+    let mut doc = document();
+    let entry = crate::cad::ops::entry("robot.joint_dialog").unwrap();
+    doc.ops.form_sequence = 3;
+    doc.ops.form = Some(FormState { op: entry.id, texts: entry.params.iter().map(|p| p.default.to_string()).collect(), focus: None, select_all: false, began: 4, error: None });
+    let mut world = World::new();
+    world.insert_resource(doc);
+    world.insert_resource(UiFonts { regular: default(), italic: default(), mono: default(), icons: default(), medium: default(), semibold: default() });
+    world.run_system_once(super::form::draw).unwrap();
+    let mut parts = world.query::<(Entity, &super::form::FormPart)>();
+    let submit = parts.iter(&world).find(|(_, part)| matches!(part.0, FormHit::Ok)).unwrap().0;
+    assert!(world.get::<Ordinary>(submit).is_some());
+    assert!(world.get::<bevy::ui_widgets::ActivateOnPress>(submit).is_some());
+    let mut modals = world.query_filtered::<Entity, With<ModalFocus>>();
+    assert_eq!(modals.iter(&world).count(), 1);
+    world.run_system_once(crate::cad::activation::stamp).unwrap();
+    world.entity_mut(submit).insert(Activated);
+    let intent = crate::cad::activation::guard(world.resource::<CadDocument>(), CadAction::CadFormSubmit);
+    // Identical values and op, newly opened lifetime: the old OK cannot retarget.
+    world.resource_mut::<CadDocument>().ops.form_sequence += 1;
+    world.run_system_once(crate::cad::activation::refuse).unwrap();
+    assert!(world.get::<Activated>(submit).is_none());
+    let CadAction::Captured { source, .. } = intent else { panic!("missing source stamp") };
+    assert!(!crate::cad::activation::current(&source, world.resource::<CadDocument>()));
+}

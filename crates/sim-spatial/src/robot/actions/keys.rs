@@ -5,11 +5,9 @@ use crate::ui_kit::text::Typing;
 
 /// Input: a pressed button's action (tabs, links, run, speed, reload,
 /// overlays, graphs, jog, motion, recording, replay, recorded and gait).
-pub(in crate::robot) fn buttons(clicks: Query<(&Interaction, &RobotAction), Changed<Interaction>>, mut out: MessageWriter<Act<RobotAction>>) {
-    for (interaction, action) in &clicks {
-        if *interaction == Interaction::Pressed {
-            out.write(Act::ui(action.clone()));
-        }
+pub(in crate::robot) fn buttons(clicks: Query<&RobotAction, With<crate::ui_kit::activation::Activated>>, mut out: MessageWriter<Act<RobotAction>>) {
+    for action in &clicks {
+        out.write(Act::ui(action.clone()));
     }
 }
 

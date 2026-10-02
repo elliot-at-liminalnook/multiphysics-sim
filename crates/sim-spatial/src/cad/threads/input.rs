@@ -84,13 +84,13 @@ fn post(doc: &CadDocument, out: &mut MessageWriter<Act<CadAction>>) {
 
 /// Input: the dock's field messages and presses (see the module doc).
 #[allow(clippy::type_complexity)]
-fn input(doc: Option<ResMut<CadDocument>>, presses: Query<(&Interaction, &ThreadsInput), Changed<Interaction>>, mut msgs: MessageReader<FieldMsg>, mut text: TextFocus, mut out: MessageWriter<Act<CadAction>>) {
+fn input(doc: Option<ResMut<CadDocument>>, presses: Query<&ThreadsInput, With<crate::ui_kit::activation::Activated>>, mut msgs: MessageReader<FieldMsg>, mut text: TextFocus, mut out: MessageWriter<Act<CadAction>>) {
     let Some(mut doc) = doc else {
         msgs.clear();
         return;
     };
     let messages: Vec<FieldMsg> = msgs.read().filter(|m| field_of(m.field).is_some()).cloned().collect();
-    let pressed: Vec<ThreadsInput> = presses.iter().filter(|(i, _)| **i == Interaction::Pressed).map(|(_, a)| *a).collect();
+    let pressed: Vec<ThreadsInput> = presses.iter().map(|a| *a).collect();
     let kit_focus = [Field::Compose, Field::Author, Field::Label].into_iter().find(|f| text.focused(id_of(*f)));
     // Read first: a `ResMut` deref would mark the document changed every frame.
     {

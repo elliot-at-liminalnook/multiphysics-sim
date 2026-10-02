@@ -21,7 +21,7 @@ pub(crate) fn build(a: &mut App) {
 }
 fn input(
     mut s: ResMut<ReviewState>,
-    q: Query<(&Interaction, &ReviewField), Changed<Interaction>>,
+    q: Query<&ReviewField, With<crate::ui_kit::activation::Activated>>,
     mut fields: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     mut out: MessageWriter<Act<CadAction>>,
 ) {
@@ -61,8 +61,8 @@ fn input(
             _ => {}
         }
     }
-    for (i, f) in &q {
-        if *i == Interaction::Pressed && f.1 == s.sequence {
+    for f in &q {
+        if f.1 == s.sequence {
             let value = match f.0.as_str() {
                 "note" => s.note.clone(),
                 "filter" => s.filter.clone(),

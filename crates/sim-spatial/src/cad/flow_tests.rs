@@ -30,7 +30,7 @@ fn render(mut commands: Commands, doc: Res<CadDocument>) {
         semibold: default(),
     };
     commands
-        .spawn(Node::default())
+        .spawn((Node::default(), DespawnOnExit(crate::app::ModeScope::Cad)))
         .with_children(|p| top(p, &Kit::new(&fonts), &doc, &[], None));
 }
 #[test]
@@ -96,4 +96,30 @@ fn common_source_guard_blocks_all_source_callers_but_auxiliary_keeps_revision_gu
             .iter()
             .any(|r| r.contains("unknown source edit outcome"))
     );
+}
+
+// T49 source-only fixture: actual top renderer, captured entity, source refusal.
+#[test]
+fn rendered_refresh_keeps_public_intent_and_refuses_replaced_document() {
+    use crate::ui_kit::activation::{Activated, Ordinary};
+    let mut world = World::new();
+    world.insert_resource(document());
+    world.run_system_once(render).unwrap();
+    let mut buttons = world.query::<(Entity, &CadButton)>();
+    let entity = buttons.iter(&world).find(|(_, button)| button.0 == CadAction::CadRefresh).unwrap().0;
+    assert!(world.get::<Ordinary>(entity).is_some());
+    assert!(world.get::<bevy::ui_widgets::Button>(entity).is_some());
+    assert!(world.get::<bevy::ui_widgets::ActivateOnPress>(entity).is_some());
+    world.run_system_once(crate::cad::activation::stamp).unwrap();
+    world.entity_mut(entity).insert(Activated);
+    world.run_system_once(crate::cad::activation::refuse).unwrap();
+    assert!(world.get::<Activated>(entity).is_some());
+    let intent = crate::cad::activation::guard(world.resource::<CadDocument>(), world.get::<CadButton>(entity).unwrap().0.clone());
+    world.resource_mut::<CadDocument>().generation += 1;
+    world.run_system_once(crate::cad::activation::refuse).unwrap();
+    assert!(world.get::<Activated>(entity).is_none());
+    let CadAction::Captured { source, action } = intent else { panic!("rendered UI intent must retain source") };
+    assert!(!crate::cad::activation::current(&source, world.resource::<CadDocument>()));
+    assert_eq!(*action, CadAction::CadRefresh);
+    assert_eq!(world.get::<CadButton>(entity).unwrap().0, CadAction::CadRefresh);
 }

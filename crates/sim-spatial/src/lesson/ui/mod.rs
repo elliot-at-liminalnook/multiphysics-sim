@@ -300,7 +300,7 @@ fn block_row(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &sim_lesson:
     let annotate = l.mode == PageMode::Annotate;
     let mut row = col.spawn((Node { border_radius: BorderRadius::all(Val::Px(5.)), column_gap: Val::Px(10.), align_items: AlignItems::FlexStart, flex_shrink: 0., padding: UiRect::axes(Val::Px(6.), Val::Px(3.)), margin: UiRect::left(Val::Px(-6.)), ..default() }, BlockNode(b.id.clone())));
     if annotate {
-        row.insert((Button, LessonAction::AnnotateBlock(b.id.clone()), Tint::CLEAR, AccessibleLabel::new("Note on this block"), BackgroundColor(Color::NONE)));
+        row.insert((Button, crate::ui_kit::activation::Ordinary, LessonAction::AnnotateBlock(b.id.clone()), Tint::CLEAR, AccessibleLabel::new("Note on this block"), BackgroundColor(Color::NONE)));
     }
     row.with_children(|r| {
         r.spawn(Node { flex_direction: FlexDirection::Column, flex_grow: 1., flex_shrink: 1., min_width: Val::Px(0.), ..default() }).with_children(content);

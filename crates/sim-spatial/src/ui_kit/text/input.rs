@@ -197,6 +197,7 @@ pub(crate) fn keys(
         if e.state != ButtonState::Pressed || modifier {
             continue;
         }
+        if e.repeat && matches!(e.logical_key, Key::Enter | Key::Tab | Key::Escape) { continue; }
         let command = modifiers.command();
         if ended {
             if !command {
@@ -229,7 +230,8 @@ pub(crate) fn keys(
                 ended = true;
             }
             Outcome::Tab { back } => {
-                out.write(FieldMsg { field: id, event: FieldEvent::Tab { back } });
+                field.navigation_back = back;
+                if field.focus_anchor.is_none() { out.write(FieldMsg { field: id, event: FieldEvent::Tab { back } }); }
                 ended = true;
             }
         }

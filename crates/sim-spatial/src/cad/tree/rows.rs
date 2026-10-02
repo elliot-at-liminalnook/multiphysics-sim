@@ -171,6 +171,9 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
         let mark = marker(doc, &row.id);
         let mut entity = p.spawn((
             Button,
+            crate::ui_kit::activation::HeldControl,
+            crate::ui_kit::activation::Ordinary,
+            crate::ui_kit::activation::KeyboardOnly,
             Tint::selectable(row.selected),
             AccessibleLabel::new(row_label(&label, row.selected)),
             TreeRowId { id: row.id.clone(), label, group: s.group },

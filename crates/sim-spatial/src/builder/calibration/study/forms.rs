@@ -178,7 +178,7 @@ pub(crate) fn submission(owner: &StudyOwner, stamp: Option<StudyStamp>, field: &
 /// new clicks, so a click cannot retarget an already queued submission.
 pub(crate) fn input(
     mut fields: MessageReader<FieldMsg>,
-    buttons: Query<(&Interaction,&Hit,Option<&Enabled>), (Changed<Interaction>,With<Button>)>,
+    buttons: Query<(&Hit,Option<&Enabled>), (With<crate::ui_kit::activation::Activated>,With<Button>)>,
     owner: Res<StudyOwner>, mut ui: ResMut<StudyUi>, mut focus: TextFocus,
     mut actions: MessageWriter<Act<StudyAction>>, mut builder: Option<ResMut<crate::builder::Builder>>,
     selection: Option<Res<crate::selection::Selection>>, registry:Option<Res<crate::document::DocumentRegistry>>,
@@ -210,11 +210,15 @@ pub(crate) fn input(
         }
     }
     let mut hits=if ui.pending.is_empty(){Vec::new()}else{std::mem::take(&mut ui.pending)};
-    hits.extend(buttons.iter().filter(|(interaction,_,enabled)|**interaction==Interaction::Pressed && !enabled.is_some_and(|e|!e.0)).map(|(_,hit,_)|hit.clone()));
+    hits.extend(buttons.iter().filter(|(_,enabled)|!enabled.is_some_and(|e|!e.0)).map(|(hit,_)|hit.clone()));
     for hit in hits {
         match &hit {
             Hit::Action(action)=>{actions.write(Act::ui(action.clone()));}
             Hit::Focus{stamp,field,text}=> {
+                if stamp.is_some_and(|s| owner.validate_stamp(s).is_err()) {
+                    ui.error=Some("Study field: displayed revision changed".into());
+                    continue;
+                }
                 ui.focus=Some((*stamp,field.clone())); ui.buffer=text.clone(); ui.error=None;
                 focus.focus(FIELD,text.clone()); ui.epoch+=1; if let Some(builder)=builder.as_mut(){builder.panel_dirty=true;}
             }

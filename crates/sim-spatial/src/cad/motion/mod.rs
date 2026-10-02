@@ -189,7 +189,7 @@ pub(crate) fn handle(a: &MotionArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
         return Outcome::Done(Err("Motion field belongs to an older joint/program".into()));
     }
     if matches!(a.op, MotionOp::Save | MotionOp::Delete) {
-        let result = (|| {
+        let result = (|| -> Result<_, String> {
             let id = s.identity.as_ref().ok_or("Enter pose mode first")?;
             if !id.matches(d) {
                 return Err(
@@ -249,7 +249,7 @@ pub(crate) fn handle(a: &MotionArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
             },
         );
     }
-    let result = (|| {
+    let result = (|| -> Result<Value, String> {
         match a.op {
             MotionOp::State => return Ok(state_json(d, s)),
             MotionOp::Dock => {

@@ -632,7 +632,7 @@ pub(super) fn buttons(
             }
             continue;
         }
-        out.write(Act::ui(SystemAction::RenderedUi(source,action.clone())));
+        out.write(Act::ui(SystemAction::RenderedUi { stamp: source, action: action.clone() }));
     }
 }
 

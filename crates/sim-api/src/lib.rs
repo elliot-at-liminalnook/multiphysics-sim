@@ -46,6 +46,16 @@ pub enum Outcome {
     Done(Result),
     Image(Artifact),
 }
+impl std::fmt::Debug for Outcome {
+    // Written out so a failing assertion shows an image's size, not its PNG bytes.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Outcome::Pending => f.write_str("Pending"),
+            Outcome::Done(result) => f.debug_tuple("Done").field(result).finish(),
+            Outcome::Image(artifact) => write!(f, "Image({} bytes, {})", artifact.png.len(), artifact.metadata),
+        }
+    }
+}
 pub struct Artifact {
     pub png: Vec<u8>,
     pub metadata: Value,

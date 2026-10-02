@@ -652,6 +652,7 @@ fn mutation(
     ) {
         Outcome::Done(result) => result,
         Outcome::Pending => Ok(json!({"pending":true})),
+        Outcome::Image(_) => Err("system composition edits don't produce images".into()),
     }
 }
 pub(crate) fn state_json(_doc: &CadDocument, st: &CadCompositionState) -> Value {

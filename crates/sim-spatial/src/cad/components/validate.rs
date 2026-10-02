@@ -17,7 +17,7 @@ pub(super) fn validate_operation(
             .find(|n| n.id == id)
             .ok_or_else(|| format!("components.nodes.{id}: missing node"))
     };
-    let name = |s: &str| {
+    let name = |s: &str| -> Result<(), String> {
         if s.trim().is_empty() {
             Err("components.name: enter a component name".into())
         } else {

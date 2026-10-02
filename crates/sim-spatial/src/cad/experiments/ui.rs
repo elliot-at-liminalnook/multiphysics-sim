@@ -6,7 +6,7 @@ use crate::cad::{CadKeySet, panel::CadButton};
 use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextField, TextFieldApp, TextFocus};
 use crate::ui_kit::{Kit, Look};
 const FIELD: FieldId = FieldId("cad.experiments.field");
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Debug)]
 pub(crate) struct ExperimentField {
     pub name: String,
     pub index: usize,

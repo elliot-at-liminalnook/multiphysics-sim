@@ -7,7 +7,7 @@ use crate::builder::ui_api::Enabled;
 
 /// Transient widget identity; never a model index or durable document owner.
 #[derive(Component, Default)]
-#[require(bevy::ui_widgets::Button, bevy::ui_widgets::ActivateOnPress, Outline(Outline::new(Val::Px(2.), Val::Px(2.), Color::NONE)))]
+#[require(bevy::ui_widgets::Button, bevy::ui_widgets::ActivateOnPress, Outline = Outline::new(Val::Px(2.), Val::Px(2.), Color::NONE))]
 pub(crate) struct Ordinary;
 /// Explicit paired/continuous gesture opt-out. No generic keyboard activation.
 #[derive(Component)]
@@ -21,7 +21,7 @@ pub(crate) struct KeyboardOnly;
 pub(crate) struct Activated;
 /// A transient modal group. Return focus is window state, never authored data.
 #[derive(Component)]
-#[require(TabGroup(TabGroup::modal()))]
+#[require(TabGroup = TabGroup::modal())]
 pub(crate) struct ModalFocus;
 /// Higher priorities contain focus above lower modals (pending close uses 100).
 /// Nested groups then sort by ancestry depth; entity bits break sibling ties.

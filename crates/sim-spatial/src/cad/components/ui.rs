@@ -13,7 +13,7 @@ use crate::ui_kit::{DANGER, Kit, Look, size};
 use bevy::prelude::*;
 
 const FIELD: FieldId = FieldId("cad.components.field");
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Debug)]
 pub(crate) struct ComponentField(pub String);
 
 pub(crate) fn build(app: &mut App) {

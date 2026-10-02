@@ -229,7 +229,7 @@ pub(crate) fn handle(a: &ReviewArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
     }
     let d = &mut *cx.doc;
     let s = &mut *cx.review;
-    let result = (|| {
+    let result = (|| -> Result<Value, String> {
         match a.op {
             ReviewOp::State => return Ok(state_json(d, s)),
             ReviewOp::Dock => {

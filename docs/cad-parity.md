@@ -1553,3 +1553,12 @@ the unchanged failed source key. Regression fixtures remain unexecuted.
 Pending port intent also survives accepted dispatch until the shared CAD edit
 owner reports success. A later service refusal retains it. Cancel during a sent
 edit discards only local intent and reports that the source request continues.
+
+Native connection renderer repair: `cad/composition/ui.rs::draw` calls its shared
+button helper for `leave_open` and `cancel_port` before the dock-open and snapshot
+branches. `composition/tests.rs::drawn_pending_buttons_keep_shared_actions_without_a_usable_snapshot`
+inspects actual spawned kit Button entities, typed CadAction payloads and Enabled
+states for current, absent, revised and replaced snapshots and a closed dock.
+Leave open retains the first-pick revision and stamped refusal; Cancel remains
+usable without a graph snapshot. Source dispatch/cancellation/acknowledgment
+semantics are unchanged. Fixture written and reviewed by reading, not executed.

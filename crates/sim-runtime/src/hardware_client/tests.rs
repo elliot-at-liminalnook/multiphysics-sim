@@ -757,3 +757,40 @@ fn a_refusal_before_the_body_surfaces_the_servers_error() {
     let e = refused_before_the_body(true);
     assert!(e.to_string().contains("Session token required"), "{e:?}");
 }
+
+
+#[test]
+fn virtual_pin_is_written_on_commands_and_stop_remains_unbound() {
+    let identity = calibration::ExecutionIdentity { schema_version: 1, kind: "virtual_calibration".into(),
+        server_instance: new_client_id(), bench_instance: new_client_id() };
+    let (endpoint, task) = serve(vec![(200, "{}".into()), (200, "{}".into())]);
+    let client = client(endpoint).with_calibration_execution(identity.clone(), 17);
+    client.post(calibration::COMMAND, &calibration::select(1, 1, false)).unwrap();
+    client.post(calibration::COMMAND, &calibration::stop(None, 2)).unwrap();
+    let seen = task.join().unwrap();
+    assert_eq!(seen[0].header("x-calibration-server"), Some(identity.server_instance.as_str()));
+    assert_eq!(seen[0].header("x-calibration-bench"), Some(identity.bench_instance.as_str()));
+    assert_eq!(seen[0].header("x-calibration-generation"), Some("17"));
+    assert_eq!(seen[1].header("x-calibration-server"), None);
+    assert_eq!(seen[1].header("x-calibration-generation"), None);
+    assert!(!seen[1].body.contains("id"));
+}
+
+#[test]
+fn virtual_policy_and_tolerant_status_fail_closed() {
+    let mut identity = calibration::ExecutionIdentity { schema_version: 1, kind: "virtual_calibration".into(),
+        server_instance: new_client_id(), bench_instance: new_client_id() };
+    assert!(calibration::authorize_virtual(Some(&identity), 2, 2, true, true).is_ok());
+    for (generation, current, connected, fresh) in [(1, 2, true, true), (0,0,true,true), (2,2,false,true), (2,2,true,false)] {
+        assert!(calibration::authorize_virtual(Some(&identity), generation, current, connected, fresh).is_err());
+    }
+    identity.server_instance = "------------------------------------".into();
+    assert!(calibration::authorize_virtual(Some(&identity), 2, 2, true, true).is_err());
+    for value in [json!({"execution":{"kind":"virtual_calibration"}}), json!({"execution":{"schema_version":1,"kind":"physical","server_instance":"x","bench_instance":"y","extra":true}})] {
+        let status: calibration::Status = serde_json::from_value(value).unwrap();
+        assert!(status.execution.is_none());
+    }
+    for action in ["jog", "flip", "direction", "gait_start", "gait_update", "lab_step"] {
+        assert!(!calibration::virtual_command_allowed(action));
+    }
+}

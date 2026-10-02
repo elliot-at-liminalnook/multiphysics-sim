@@ -18,7 +18,7 @@ impl Client {
     /// the calibration server's body limit ([`CALIBRATION_MAX_BODY`]); use
     /// [`Client::for_kind`] for the motor bench.
     pub fn new(endpoint: super::Endpoint, token: String, client_id: String) -> Client {
-        Client { endpoint, token, client_id, timeout: REQUEST_TIMEOUT, max_body: CALIBRATION_MAX_BODY }
+        Client { endpoint, token, client_id, timeout: REQUEST_TIMEOUT, max_body: CALIBRATION_MAX_BODY, calibration_execution: None }
     }
     /// The same client with the request body limit of `kind`'s server
     /// ([`CALIBRATION_MAX_BODY`] or [`MOTOR_BENCH_MAX_BODY`]).
@@ -27,6 +27,14 @@ impl Client {
             ServerKind::Calibration => CALIBRATION_MAX_BODY,
             ServerKind::MotorBench => MOTOR_BENCH_MAX_BODY,
         };
+        self
+    }
+    pub fn calibration_execution(&self) -> Option<(&super::calibration::ExecutionIdentity, u64)> {
+        self.calibration_execution.as_ref().map(|(identity, generation)| (identity, *generation))
+    }
+    /// Pin this connection's verified virtual execution; never reuse on reconnect.
+    pub fn with_calibration_execution(mut self, identity: super::calibration::ExecutionIdentity, generation: u64) -> Self {
+        self.calibration_execution = Some((identity, generation));
         self
     }
     /// The same client with another read/write timeout (e.g.
@@ -73,7 +81,8 @@ impl Client {
     /// was written, not that the server accepted it.
     pub fn send_only(&self, path: &str, body: &Body) -> Result<(), ClientError> {
         let text = self.checked_body(body)?;
-        let headers = self.headers(true)?;
+        let generation = self.calibration_execution.as_ref().map(|(_, g)| g.to_string());
+        let headers = self.headers(true, path, Some(&text), generation.as_deref())?;
         loopback_http::send_only(&self.endpoint, self.timeout, &Request { method: "POST", path, headers: &headers, body: Some(&text), closed_hint: CLOSED_HINT })
     }
 
@@ -90,14 +99,27 @@ impl Client {
     /// The headers after `Host`: for a control request the token, client id
     /// and `Content-Type` (in the pages' order), checked for control
     /// characters before connecting; none for a page load.
-    fn headers(&self, control: bool) -> Result<Vec<(&'static str, &str)>, ClientError> {
+    fn headers<'a>(&'a self, control: bool, path: &str, body: Option<&str>, generation: Option<&'a str>) -> Result<Vec<(&'static str, &str)>, ClientError> {
         if !control {
             return Ok(Vec::new());
         }
         if [&self.token, &self.client_id].iter().any(|v| v.bytes().any(|b| b < b' ' || b == 0x7f)) {
             return Err(ClientError::Transport("control token or client id contains a control character".into()));
         }
-        Ok(vec![("X-Control-Token", self.token.as_str()), ("X-Client-Id", self.client_id.as_str()), ("Content-Type", "application/json")])
+        let mut headers = vec![("X-Control-Token", self.token.as_str()), ("X-Client-Id", self.client_id.as_str()), ("Content-Type", "application/json")];
+        let stop = body.and_then(|b| serde_json::from_str::<Value>(b).ok())
+            .is_some_and(|b| b["action"] == "stop");
+        if path == super::calibration::COMMAND && !stop {
+            if let Some((identity, _)) = &self.calibration_execution {
+                if !identity.is_virtual_calibration() || generation == Some("0") {
+                    return Err(ClientError::Transport("Invalid virtual execution identity or generation".into()));
+                }
+                headers.push(("X-Calibration-Server", &identity.server_instance));
+                headers.push(("X-Calibration-Bench", &identity.bench_instance));
+                headers.push(("X-Calibration-Generation", generation.unwrap_or("0")));
+            }
+        }
+        Ok(headers)
     }
 
     /// One request on its own connection ([`loopback_http::exchange`]); the
@@ -107,7 +129,8 @@ impl Client {
     /// answer so its `error` (e.g. "Session token required") surfaces, else
     /// says the server closed the connection and its token may have changed.
     fn exchange(&self, method: &str, path: &str, body: Option<&str>, control: bool) -> Result<String, ClientError> {
-        let headers = self.headers(control)?;
+        let generation = self.calibration_execution.as_ref().map(|(_, g)| g.to_string());
+        let headers = self.headers(control, path, body, generation.as_deref())?;
         loopback_http::exchange(&self.endpoint, self.timeout, &Request { method, path, headers: &headers, body, closed_hint: CLOSED_HINT })
     }
 }

@@ -88,6 +88,45 @@ pub fn servo_command(mode: DriveMode, s: &SweepSample, (lo, hi): (i32, i32), hol
     }
 }
 impl CalibrationBus {
+    /// Connect only to the virtual bench's Unix socket. The returned descriptor
+    /// is a socket, never a serial file; handshake failure has no fallback.
+    pub fn open_virtual(socket: &Path, expected_bench: Option<&str>, log: &Path) -> R<(Self, String)> {
+        use std::os::{fd::OwnedFd, unix::net::UnixStream};
+        let mut stream = UnixStream::connect(socket).map_err(|e| format!("Virtual bench connect: {e}"))?;
+        stream.set_read_timeout(Some(Duration::from_secs(2))).map_err(|e| e.to_string())?;
+        stream.set_write_timeout(Some(Duration::from_secs(2))).map_err(|e| e.to_string())?;
+        stream.write_all(b"HX-VIRTUAL-CALIBRATION/1\n").map_err(|e| e.to_string())?;
+        let mut response = Vec::new();
+        let deadline = Instant::now() + Duration::from_secs(2);
+        loop {
+            let remaining = deadline.checked_duration_since(Instant::now()).ok_or("Virtual handshake deadline exceeded")?;
+            stream.set_read_timeout(Some(remaining.max(Duration::from_millis(1)))).map_err(|e| e.to_string())?;
+            let mut byte = [0];
+            stream.read_exact(&mut byte).map_err(|e| format!("Virtual bench handshake: {e}"))?;
+            if byte[0] == b'\n' { break; }
+            if response.len() >= 512 { return Err("Virtual bench handshake too large".into()); }
+            response.push(byte[0]);
+        }
+        #[derive(serde::Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct Handshake { schema_version: u32, kind: String, bench_instance: String }
+        let h: Handshake = serde_json::from_slice(&response).map_err(|e| e.to_string())?;
+        if h.schema_version != 1 || h.kind != "virtual_calibration"
+            || !crate::hardware_client::calibration::valid_instance(&h.bench_instance)
+            || expected_bench.is_some_and(|expected| expected != h.bench_instance) {
+            return Err("Virtual bench identity mismatch; no transport opened".into());
+        }
+        stream.set_read_timeout(None).map_err(|e| e.to_string())?;
+        stream.set_write_timeout(None).map_err(|e| e.to_string())?;
+        stream.set_nonblocking(true).map_err(|e| e.to_string())?;
+        let descriptor: OwnedFd = stream.into();
+        let bus = Self {
+            file: File::from(descriptor), pending: PacketBuffer::default(),
+            stop_reply_recoveries: 0, encoders: [EncoderTurns::default(); 3],
+            log: OpenOptions::new().create(true).append(true).open(log).map_err(|e| e.to_string())?,
+        };
+        Ok((bus, h.bench_instance))
+    }
     pub fn open(port: &str, log: &Path) -> R<Self> {
         let file = OpenOptions::new()
             .read(true)
@@ -2046,4 +2085,42 @@ mod tests {
     fn serial_motion_crosses_zero_in_one_continuous_session() {
         exercise_continuous_serial(false, true, true);
     }
+    #[test]
+    fn virtual_socket_handshake_pins_identity_and_cannot_open_serial_paths() {
+        use std::os::unix::{fs::FileTypeExt, net::UnixListener};
+        // Short absolute base: macOS $TMPDIR exceeds the 104-byte sun_path limit.
+        let base = std::path::PathBuf::from(format!("/tmp/vc-{}-{}", std::process::id(), &crate::hardware_client::new_client_id()[..8]));
+        std::fs::create_dir(&base).unwrap();
+        // Removed even when an assertion below fails.
+        struct Cleanup(std::path::PathBuf);
+        impl Drop for Cleanup { fn drop(&mut self) { let _ = std::fs::remove_dir_all(&self.0); } }
+        let _cleanup = Cleanup(base.clone());
+        let socket = base.join("bench.sock");
+        let log = base.join("serial.jsonl");
+        let instance = crate::hardware_client::new_client_id();
+        for expected in [Some(instance.as_str()), Some("ffffffff-ffff-ffff-ffff-ffffffffffff")] {
+            let listener = UnixListener::bind(&socket).unwrap();
+            let peer_instance = instance.clone();
+            let server = std::thread::spawn(move || {
+                let mut peer = listener.accept().unwrap().0;
+                peer.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+                let mut greeting = [0; b"HX-VIRTUAL-CALIBRATION/1\n".len()];
+                peer.read_exact(&mut greeting).unwrap();
+                assert_eq!(&greeting, b"HX-VIRTUAL-CALIBRATION/1\n");
+                writeln!(peer,"{}",serde_json::json!({"schema_version":1,"kind":"virtual_calibration","bench_instance":peer_instance})).unwrap();
+            });
+            let opened = CalibrationBus::open_virtual(&socket, expected, &log);
+            if expected == Some(instance.as_str()) {
+                let (bus, actual) = opened.unwrap();
+                assert_eq!(actual, instance);
+                assert!(bus.file.metadata().unwrap().file_type().is_socket());
+            } else { assert!(opened.is_err()); }
+            server.join().unwrap();
+            std::fs::remove_file(&socket).unwrap();
+        }
+        // UnixStream::connect refuses regular device/file paths; there is no
+        // OpenOptions(serial), stty, or physical fallback in this consumer.
+        assert!(CalibrationBus::open_virtual(Path::new("/dev/null"),None,&log).is_err());
+    }
+
 }

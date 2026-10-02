@@ -7,8 +7,12 @@ from .snapshots import digest
 
 
 RECIPES = {
-    'body_thermal_capacity': {'type': 'thermal.capacitance', 'outputs': {'heat_capacity': 'J/K'}},
-    'circular_fluid_volume': {'type': 'fluid.pipe_ph', 'outputs': {'length': 'm', 'diameter': 'm', 'rise': 'm'}},
+    'body_thermal_capacity': {'type': 'thermal.capacitance', 'outputs': {'heat_capacity': 'J/K'},
+        'inputs': {'specific_heat': {'label': 'Specific heat', 'unit': 'J/(kg·K)',
+            'required': False, 'default': None, 'minimum': 0, 'exclusive_minimum': True}}},
+    'circular_fluid_volume': {'type': 'fluid.pipe_ph', 'outputs': {'length': 'm', 'diameter': 'm', 'rise': 'm'},
+        'inputs': {'flow_direction': {'label': 'Fluid direction', 'unit': '1',
+            'required': False, 'default': 1, 'choices': [1, -1]}}},
 }
 
 

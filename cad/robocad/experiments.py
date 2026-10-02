@@ -334,13 +334,18 @@ class Experiments:
         return compare(self.result(baseline_id), self.result(candidate_id))
 
     def components(self, run_id):
+        from .component_imports import metadata_guard
         job = self.get(run_id)
         folder = self.root/run_id
         imported = folder/'imported_components.json'
         if not imported.exists(): raise KernelError('This check has not produced an imported component list; inspect its diagnostics')
         resolved = folder/'resolved_components.json'
+        current = capture(self.doc) if self.doc else None
+        guard = metadata_guard(self.doc, job, current)
         return {'run_id': run_id, 'revision': job.get('revision'), 'state': job['state'], 'error': job.get('error'),
-            'stale': bool(self.doc and capture(self.doc).physical_hash != job.get('provenance', {}).get('physical_hash')),
+            # Result/value freshness retains the full physical identity.
+            'stale': bool(current and current.physical_hash != job.get('provenance', {}).get('physical_hash')),
+            **guard,
             'imported': json.loads(imported.read_text()),
             'resolved': json.loads(resolved.read_text()) if resolved.exists() else None}
 

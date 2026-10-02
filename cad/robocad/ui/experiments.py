@@ -494,7 +494,7 @@ class ExperimentsPanel(QWidget):
             if check['state'] in TERMINAL:
                 self.loaded_check_id = self.check_run_id
                 try:
-                    self.graph_panel.receive_imports(self.manager.components(self.check_run_id))
+                    self.graph_panel.load_import_check(self.check_run_id)
                     if self.request() != self.check_request: self.graph_panel.mark_imports_stale()
                 except (KernelError, ValueError):
                     self.graph_panel.mark_imports_stale()
@@ -616,7 +616,7 @@ class ExperimentsPanel(QWidget):
         run_id = run_id or self.current_id()
         if not run_id: return None
         if self.manager.get(run_id).get('preflight'):
-            self.graph_panel.receive_imports(self.manager.components(run_id))
+            self.graph_panel.load_import_check(run_id)
             self.tabs.setCurrentWidget(self.graph_panel)
             return None
         dialog = RunReview(self, run_id, self.baseline_id)

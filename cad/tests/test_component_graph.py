@@ -63,7 +63,18 @@ def test_system_graph_rest_and_python_client_share_revision_checks():
     from robocad.client import RoboClient
     doc = Document(); ops = Ops(doc)
     body = ops.box((0, 0, 0), (10, 10, 10))
-    server = ApiServer(doc, port=0); server.start()
+    server = ApiServer(doc, port=0)
+    # Bulk replacement now validates the same registry contract as CRUD. Keep
+    # this windowless serialization fixture independent of a native binary.
+    from types import SimpleNamespace
+    def parameter(name, unit, required):
+        return {'name': name, 'unit': unit, 'required': required}
+    port = {'name': 'node', 'schema': {'Acausal': 'Thermal'}, 'direction': 'acausal'}
+    server.service._experiments = SimpleNamespace(catalogue=lambda: [
+        {'type': 'thermal.capacitance', 'ports': [port], 'parameters': [
+            parameter('heat_capacity', 'J/K', True), parameter('initial.temperature', 'K', False)]},
+        {'type': 'thermal.heat_source', 'ports': [port], 'parameters': [parameter('power', 'W', True)]}])
+    server.start()
     client = RoboClient(server.url)
     try:
         original = client.system_graph()

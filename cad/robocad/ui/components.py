@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (QWidget,QVBoxLayout,QHBoxLayout,QLabel,QPushButto
     QFileDialog,QInputDialog,QDialog,QDialogButtonBox,QFormLayout,QLineEdit,
     QComboBox,QPlainTextEdit,QCheckBox,QProgressBar)
 
-from ..component_jobs import ComponentJob
+from ..component_service import owner
 from ..component_parameters import FEATURES, validate_parameters
 from ..kernel import KernelError
 from ..document import Transform
@@ -92,7 +92,7 @@ class RecipeDialog(QDialog):
 
 class ComponentsPanel(QWidget):
     def __init__(self, window):
-        super().__init__(); self.window=window; self.jobs={}; self.current_instance=None
+        super().__init__(); self.window=window; self.current_instance=None
         self.library_path=Path.home()/'Documents'/'RoboCAD'/'Components'
         layout=QVBoxLayout(self)
         title=QLabel('Components'); title.setStyleSheet('font-size:18px;font-weight:600'); layout.addWidget(title)
@@ -129,6 +129,7 @@ class ComponentsPanel(QWidget):
         self.cancel=button(layout,'Cancel rebuild',self.cancel_jobs); self.cancel.hide()
         self.timer=QTimer(self); self.timer.setInterval(32); self.timer.timeout.connect(self.poll)
         self.refresh()
+        self.timer.start()
 
     def filter_definitions(self):
         text=self.definition_search.text().casefold()
@@ -144,42 +145,55 @@ class ComponentsPanel(QWidget):
         try: return fn()
         except Exception as error: self.status.setText(str(error)); self.window.error(str(error))
 
-    def start(self, operation, args=(), kwargs=None):
-        if any(j.state in ('pending','running','ready') for j in self.jobs.values()): raise KernelError('A component rebuild is already in progress')
-        job=ComponentJob(self.window.doc,operation,args,kwargs)
-        self.jobs[job.id]=job; job.start(); self.timer.start()
+    @property
+    def service(self):
+        if not hasattr(self.window, '_component_job_service'):
+            self.window._component_job_service = owner(self.window.ops, lambda: self.window.ops,
+                lambda: self.window.viewport.items, self.refresh)
+        return self.window._component_job_service
+
+    @property
+    def jobs(self):
+        return self.service.jobs
+
+    def watch(self):
+        self.timer.start()
         self.progress.setRange(0,0); self.progress.show(); self.cancel.show()
         self.status.setText('Preparing component… You can keep viewing the model.')
-        return job.status()
+
+    def start(self, operation, args=(), kwargs=None):
+        status=self.service.start(operation,args,kwargs)
+        self.watch()
+        return status
 
     def poll(self):
         active=False
+        previous={key:job.state for key,job in self.jobs.items()}
+        self.service.poll()
         for job in list(self.jobs.values()):
-            if job.state not in ('running','pending','ready'): continue
-            job.poll()
-            if job.state=='ready':
-                job.commit(self.window.ops, self.window.viewport.items)
-                if job.state=='applied':
-                    self.status.setText('Saved to the component library.' if job.operation=='export_component' else 'Component updated. Undo restores the previous version.')
-                    self.refresh()
-                    result=job.result
-                    if isinstance(result,str) and result in self.window.doc.component_definitions:
-                        for i in range(self.definitions.count()):
-                            if self.definitions.item(i).data(Qt.UserRole)==result: self.definitions.setCurrentRow(i)
-                    target=result.get('instance_id') if isinstance(result,dict) else result
-                    if isinstance(target,str) and target in self.window.doc.nodes:
-                        self.window.viewport.selection.items=[(target,'body',0)]; self.window.selection_changed(None)
+            if previous.get(job.id) not in ('running','pending','ready'): continue
+            if job.state=='applied':
+                self.status.setText('Saved to the component library.' if job.operation=='export_component' else 'Component updated. Undo restores the previous version.')
+                self.refresh()
+                result=job.result
+                if isinstance(result,str) and result in self.window.doc.component_definitions:
+                    for i in range(self.definitions.count()):
+                        if self.definitions.item(i).data(Qt.UserRole)==result: self.definitions.setCurrentRow(i)
+                target=result.get('instance_id') if isinstance(result,dict) else result
+                if isinstance(target,str) and target in self.window.doc.nodes:
+                    self.window.viewport.selection.items=[(target,'body',0)]; self.window.selection_changed(None)
             if job.state=='failed': self.status.setText(job.error or 'Component rebuild failed')
             elif job.state=='cancelled': self.status.setText('Rebuild cancelled. Model unchanged.')
             elif job.state in ('running','pending'):
                 active=True
+                self.progress.show(); self.cancel.show()
                 self.progress.setRange(0,job.total or 0); self.progress.setValue(job.done)
                 self.status.setText(f'{job.stage} · {job.done}/{job.total}' if job.total else job.stage)
         if not active:
-            self.timer.stop(); self.progress.hide(); self.cancel.hide()
+            self.progress.hide(); self.cancel.hide()
 
     def cancel_jobs(self):
-        for job in self.jobs.values(): job.cancel()
+        self.service.cancel_all()
 
     def refresh(self):
         selected=self.definitions.currentItem(); key=selected.data(Qt.UserRole) if selected else next((n.component_instance['definition_id'] for n in self.window.doc.nodes.values() if n.component_instance and not n.component_member),None)

@@ -29,7 +29,7 @@ def test_process_prepares_then_commits_and_undoes():
     assert not doc.nodes
     placed.commit(ops)
     assert len(doc.bodies())==1 and len(doc.mesh_cache)==1
-    assert placed.prepared
+    assert placed.prepared == {}  # headless meshes are prepared without Qt render items
     ops.undo(); assert not doc.nodes
     ops.redo(); assert len(doc.bodies())==1
 

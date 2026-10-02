@@ -168,13 +168,19 @@ class RegistryView:
         component = graph['components'][endpoint['component_id']]
         for port in self.ports(component):
             if port['name'] == endpoint['port']: return port
-        if component.get('binding'):
+        if component.get('binding') and component['binding'] not in self.imported:
             for declared in self.descriptor(component)['ports']:
                 if '*' in declared['name'] and self.parameter_matches(declared['name'], endpoint['port']):
                     return {**declared, 'name': endpoint['port']}
-        raise KernelError(f"{component['name']}.{endpoint['port']} is not a declared port")
+        raise KernelError(f"components.{endpoint['component_id']}.ports.{endpoint['port']}: {component['name']}.{endpoint['port']} is not a declared port")
 
     def validate_component(self, component):
+        binding = component.get('binding')
+        if binding:
+            imported = self.imported.get(binding)
+            path = f"components.{component['id']}.binding"
+            if imported is None: raise KernelError(f'{path}: select a completed current imported check containing {binding}')
+            if imported['type'] != component['type']: raise KernelError(f'{path}: imported type does not match {component["type"]}')
         descriptor = self.descriptor(component)
         declarations = descriptor.get('parameters')
         if declarations is None: return
@@ -212,13 +218,13 @@ class RegistryView:
                 if len(kinds) > 1: raise KernelError('Signal units are incompatible')
 
 
-def edit_graph(doc, ops, operation, expected_revision, catalogue):
+def edit_graph(doc, ops, operation, expected_revision, catalogue, imported=()):
     """Shared component/connection CRUD with atomic publication and revision checks."""
     from .candidates import check_revision
     with doc._lock:
         check_revision(doc, expected_revision)
         graph = deepcopy(doc.component_graph)
-        registry = RegistryView(catalogue)
+        registry = RegistryView(catalogue, imported)
         action = operation['action']
         identity = operation.get('id') or uuid.uuid4().hex
         if action in ('add_component', 'update_component'):
@@ -259,6 +265,8 @@ def edit_graph(doc, ops, operation, expected_revision, catalogue):
             del graph['connections'][identity]
         else: raise KernelError(f'Unknown system edit {action}')
         validate_graph(graph, doc)
+        for component in graph['components'].values():
+            registry.validate_component(component)
         registry.validate_connections(graph)
         ops.set_component_graph(graph)
         return {'revision': doc.revision, 'id': identity, 'graph': deepcopy(graph)}

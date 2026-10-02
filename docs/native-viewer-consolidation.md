@@ -1491,6 +1491,18 @@ independent build: `sim-spatial path/to/model.rcad`, or attach with
     REST and `system_ui`, not pointer clicks.
 
 ### j. Measured actuator models and calibration inspection
+
+**T46 native offline authoring update:** the measured-PWM branch now has a retained
+study surface under Build → Actuators → Measured evidence, alongside the accepted
+registry inspector. [Workflow and acceptance trace](native-identification-authoring.md)
+and [field inventory](native-identification-inventory.md) name the current owners.
+Archive/review opening, candidate/conditions edits, filtering, captured runtime
+evaluation/cancellation, comparison, decisions/notes and new-file save/export use
+shared Rust semantics. This supersedes the historical read-only native gap below
+for measured-PWM only. Source implementation and written fixtures are distinct
+from executed parity: nothing was compiled or run in T46. Refinement, power, FPGA,
+raw sweep review and authoritative promotion remain external; sim-viewer stays.
+
 - **Entry today:** the build-mode **Actuators** sidebar tab in `sim-spatial`
   (read-only registry inspector, commit d4c14f9f, verified natively in T4.3),
   plus the `actuator_registry` example CLI (`hash|limits|apply|check`,

@@ -42,6 +42,12 @@ fn mode_control(command: &sim_api::Command) -> bool {
 /// `fit`).
 pub(crate) fn route(mode: ViewerMode, window: bool, command: &sim_api::Command) -> Result<&'static Feature, String> {
     let name = command.command.as_str();
+    if name == "system_ui" && command.args["action"]["operation"] == "activate"
+        && command.args["action"]["id"].as_str().is_some_and(|id| id.starts_with("study:"))
+    {
+        return if window { Ok(actions::named("measured_study")) }
+            else { Err("measured studies require the native window".into()) };
+    }
     if name == "viewer_mode" || mode_control(command) {
         return if window { Ok(actions::named("window")) } else { Err(format!("{name}: this headless server has no window to switch (inspect mode only)")) };
     }

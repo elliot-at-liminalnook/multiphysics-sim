@@ -525,6 +525,7 @@ pub struct BuilderPlugin;
 impl Plugin for BuilderPlugin {
     fn build(&self, app: &mut App) {
         let building = in_state(ViewerMode::Build);
+        app.add_plugins(calibration::study::StudyPlugin);
         crate::app::actions::register::<system_actions::SystemAction>(app);
         drafts::add_fields(app);
         // Buttons and keys write the builder's actions (after REST's, as the old chain

@@ -111,8 +111,11 @@ fn kind_text(kind: &InstanceKind) -> String {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>, panels: Query<Entity, With<BuilderPanel>>, scene: Res<SpatialScene>, fonts: Option<Res<UiFonts>>, buttons: Res<ButtonInput<MouseButton>>, scrolls:Query<(&ScrollPosition,&Scroll)>, selection: Res<Selection>, registry: Res<DocumentRegistry>) {
+pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>, panels: Query<Entity, With<BuilderPanel>>, scene: Res<SpatialScene>, fonts: Option<Res<UiFonts>>, buttons: Res<ButtonInput<MouseButton>>, scrolls:Query<(&ScrollPosition,&Scroll)>, selection: Res<Selection>, registry: Res<DocumentRegistry>, studies: Res<calibration::study::StudyOwner>, study_ui: Res<calibration::study::forms::StudyUi>) {
     let Some(fonts) = fonts else { return };
+    if studies.is_changed() || study_ui.is_changed() {
+        builder.panel_dirty = true;
+    }
     // Keep the pressed palette entity alive until its drag or click finishes.
     if buttons.pressed(MouseButton::Left) && builder.input.is_none() { return; }
     if !builder.panel_dirty {
@@ -130,7 +133,7 @@ pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>
     // The shared selection's instance names at this level (`picked`).
     let selected = picked::names(&selection, &registry);
     toolbar(&mut commands, &k, b, &selected);
-    sidebar(&mut commands, &k, b, note_scroll, side_scroll, &selected);
+    sidebar(&mut commands, &k, b, note_scroll, side_scroll, &selected, &studies, &study_ui);
     inspector(&mut commands, &k, b, &scene, &selected);
     graph_dock(&mut commands, &k, b);
     let started = std::time::Instant::now();
@@ -205,7 +208,7 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder, selected: &BTreeSet<St
         });
 }
 
-fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_scroll: f32, selected: &BTreeSet<String>) {
+fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_scroll: f32, selected: &BTreeSet<String>, studies: &calibration::study::StudyOwner, study_ui: &calibration::study::forms::StudyUi) {
     commands
         .spawn((k.dock(Dock::Left { top: TOPBAR, bottom: STATUSBAR, width: LEFT_WIDTH }, Node { flex_direction: FlexDirection::Column, ..default() }), BuilderPanel))
         .with_children(|side| {
@@ -236,7 +239,7 @@ fn sidebar(commands: &mut Commands, k: &Kit, b: &Builder, note_scroll:f32, side_
                 Tab::References => references_tab(body, k, b),
                 Tab::Studies => studies_tab(body, k, b),
                 Tab::Systems => systems_tab(body, k, b),
-                Tab::Actuators => actuators_tab(body, k, b),
+                Tab::Actuators => actuators_tab(body, k, b, studies, study_ui),
                 Tab::GaitLab => gait_lab::tab(body, k, b),
                 Tab::Discussions => {},
             });

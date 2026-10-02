@@ -31,6 +31,17 @@ pub(super) fn leaving_blockers(world: &mut World, current: ViewerMode, target: V
     let mut blockers = Vec::new();
     // A new lessons folder brings its own builder in place of this one.
     let replacing = target == ViewerMode::Lessons && !world.contains_resource::<Learn>();
+    if current.builder_family() && (current != target || replacing) {
+        if let Some(reason) = world.get_resource::<crate::builder::calibration::study::forms::StudyUi>()
+            .and_then(|ui| ui.blocking_reason()) {
+            blockers.push(reason);
+        }
+        if let Some(studies) = world.get_resource::<crate::builder::calibration::study::StudyOwner>() {
+            if let Some(reason) = studies.blocking_reason() {
+                blockers.push(reason);
+            }
+        }
+    }
     let overlay = current.builder_family() && target.builder_family() && !replacing;
     // The lesson screen would be drawn over a draft, a drag or work in progress.
     let entering_lessons = current == ViewerMode::Build && target == ViewerMode::Lessons;

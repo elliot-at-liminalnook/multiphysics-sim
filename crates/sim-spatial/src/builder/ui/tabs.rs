@@ -162,14 +162,14 @@ fn short_hash(h: &str) -> String {
 /// The accepted actuator registry, read-only: families with their hashes,
 /// acceptance notes, limitations and every parameter's provenance and
 /// uncertainty, the joint roles, and consumer-file staleness checks.
-pub(super) fn actuators_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
+pub(super) fn actuators_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, studies: &calibration::study::StudyOwner, study_ui: &calibration::study::forms::StudyUi) {
     body.spawn(Node { margin: UiRect::bottom(Val::Px(6.)), ..wrap() }).with_children(|chips| {
         chips.spawn(k.chip("Registry", BuildAction::ActuatorView(calibration::ActuatorView::Registry), b.actuator_view == calibration::ActuatorView::Registry, true));
         chips.spawn(k.chip("Measured evidence", BuildAction::ActuatorView(calibration::ActuatorView::Evidence), b.actuator_view == calibration::ActuatorView::Evidence, true));
     });
     match b.actuator_view {
         calibration::ActuatorView::Registry => registry_view(body, k, b),
-        calibration::ActuatorView::Evidence => calibration::section(body, k, b),
+        calibration::ActuatorView::Evidence => calibration::section(body, k, b, studies, study_ui),
     }
 }
 

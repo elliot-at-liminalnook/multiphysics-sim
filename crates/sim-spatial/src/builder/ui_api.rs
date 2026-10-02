@@ -40,6 +40,17 @@ fn hash(value: &impl Serialize) -> u64 {
     h.finish()
 }
 impl Builder {
+    /// All system_ui adapters that can dispatch the system-open path.
+    pub(super) fn opens_system_ui(&self, request: &UiAction) -> bool {
+        let submitting = self.input.as_ref().is_some_and(|i| i.purpose == Purpose::OpenSystem);
+        match request {
+            UiAction::Activate { id, .. } => self.ui_api.items.get(id).is_some_and(|c|
+                matches!(c.action, BuildAction::OpenSystem(_))
+                || (submitting && matches!(c.action, BuildAction::SubmitDraft))),
+            UiAction::Input { submit: true, .. } => submitting,
+            _ => false,
+        }
+    }
     pub(super) fn ui_state(&self) -> serde_json::Value {
         serde_json::json!({"tab":self.tab,"mode":self.mode,"controls_revision":self.ui_api.revision,"controls_ready":!self.panel_dirty&&!self.ui_api.items.is_empty(),"draft":self.input.as_ref().map(|i|serde_json::json!({"purpose":i.purpose,"text":i.buffer})),"last_error":self.action_error})
     }

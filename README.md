@@ -99,6 +99,15 @@ unverified
 
 ### Leg calibration in the native viewer
 
+Offline measured-PWM studies use **Build → Actuators → Measured evidence** in
+this same window. Open an identification archive or saved review, edit exploratory
+candidate parameters and conditions, evaluate captured trial sets, inspect comparison
+traces, record decisions/notes, then save or export to a new filename. The
+[source workflow guide](docs/native-identification-authoring.md) records the native
+controls and REST path. T46 is implemented for reading-only review; compilation,
+fixture execution and parity remain unverified. Controller/FPGA/power refinement
+and accepted-model promotion still require their existing external workflows.
+
 Start the calibration server as today
 ([fixture README](examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/README.md)),
 then open Robot mode connected to it:

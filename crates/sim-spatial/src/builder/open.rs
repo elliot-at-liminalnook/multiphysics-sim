@@ -204,6 +204,17 @@ impl Builder {
         true
     }
 
+    /// Late evidence work may begin after an open was accepted. Keep the old
+    /// document and return the same refusal to the retained REST continuation.
+    pub(super) fn refuse_pending_open(&mut self, reason: &str) {
+        if self.cancel_open() {
+            self.status = format!("{} Not replaced: {reason}", self.status);
+            if let Some((_, result)) = self.open.last.as_mut() {
+                *result = Err(self.status.clone());
+            }
+        }
+    }
+
     /// Install a finished load: the only place the open system is replaced.
     /// Returns true when a load finished (installed or refused).
     pub(crate) fn finish_open(&mut self, scene: &mut SpatialScene, models: Option<&mut crate::models::ModelLibrary>) -> bool {

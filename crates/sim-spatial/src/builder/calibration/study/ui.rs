@@ -85,6 +85,7 @@ pub(crate) fn section(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui
     body.spawn(k.caption("Exploratory hypotheses from archived measurements. No hardware acquisition, registry promotion or CAD changes. FPGA refinement and hardware acquisition remain external."));
     path(body,k,ui,None,Field::Archive,"Identification archive folder","Open archive",!owner.busy());
     path(body,k,ui,None,Field::Review,"Saved study JSON","Open review",!owner.busy());
+    path(body,k,ui,None,Field::OpenPortable,"Portable study artifact","Open portable",!owner.busy());
     if let Some(error)=&ui.error {body.spawn(k.text(error,size::SMALL,DANGER,0));}
     for (key,text) in &ui.drafts {
         body.spawn(k.text(format!("Retained unresolved field {:?}: {}",key,text),size::DETAIL,WARN,0));
@@ -139,8 +140,9 @@ pub(crate) fn section(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui
     comparison(body,k,owner,ui,stamp,s,usable);
     field(body,k,ui,stamp,Field::Notes,"Study notes",s.notes.clone(),usable);
     path(body,k,ui,Some(stamp),Field::Save,"New review JSON destination","Save new",!owner.busy());
+    path(body,k,ui,Some(stamp),Field::SavePortable,"New portable study destination","Save portable",!owner.busy());
     path(body,k,ui,Some(stamp),Field::Export,"New HTML destination","Export HTML new",!owner.busy());
-    body.spawn(k.caption("Save/export publish a captured revision and refuse existing destinations. Later edits remain unsaved. Reopen a saved review using Open review above."));
+    body.spawn(k.caption("JSON and portable save publish a captured revision and refuse existing destinations. JSON needs sibling companions; portable includes exact retained content. HTML is a report and never marks edits saved. Later edits remain unsaved."));
 }
 fn candidate(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:StudyStamp,s:&sim_runtime::experiment_study::Study,usable:bool) {
     body.spawn(k.section("Candidate parameters · registry metadata"));

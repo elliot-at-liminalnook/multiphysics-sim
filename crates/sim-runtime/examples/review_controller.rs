@@ -11,6 +11,9 @@ use std::{io::Write, path::Path, sync::atomic::AtomicBool};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = std::env::args().collect::<Vec<_>>();
     match args.get(1).map(String::as_str) {
+        Some("publish-portable") if args.len()==4 => {
+            Study::load(Path::new(&args[2]))?.save_portable_new(Path::new(&args[3]))?;
+        },
         Some("measure-fpga-motion") if args.len()==5 => {
             use sim_runtime::controller_refinement::{fpga,motor_response};
             let r:fpga::Recording=serde_json::from_slice(&std::fs::read(&args[2])?)?;
@@ -257,7 +260,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             study.save_new(Path::new(&args[3]))?;
             study.export_html_new(&Path::new(&args[3]).with_extension("html"))?;
         },
-        _=>return Err("usage: review_controller review-device-capture CAPTURE_JSON NEW_REPORT | prepare-fpga-design REVIEW INDEX PROFILE_JSON NEW_EXPERIMENT | design-fpga REVIEW EXPERIMENT_JSON NEW_REVIEW | import-fpga REVIEW RECORDING NEW_REVIEW | import-fpga-results REVIEW PREDICTIONS NEW_REVIEW | predict-fpga REVIEW INDEX replay|closed-loop NEW_REVIEW | simulate-controller REVIEW REQUEST_JSON NEW_REVIEW | predict-recording REVIEW INDEX replay|closed-loop NEW_REVIEW | compare-electrical REVIEW PREDICTION_INDEX MEASUREMENTS_JSON_OR_servo-voltage NEW_REVIEW | bench-plan CADENCE_FILE NEW_PLAN [ID] [zero] | compare ARCHIVE_OR_STUDY NEW_REVIEW RECORDING... | sweep-review DIRECTORY SPLIT_FILE NEW_REVIEW | fit INPUT_REVIEW REQUEST_JSON NEW_REVIEW | evaluate-fit INPUT_REVIEW FIT_INDEX NEW_REVIEW | export REVIEW NEW_HTML | fit-recordings REVIEW REQUEST_JSON NEW_REVIEW | evaluate-recording-fit REVIEW FIT_INDEX NEW_REVIEW | release-review DIRECTORY SPLIT_FILE COAST_HYPOTHESIS NEW_REVIEW | fit-combined REVIEW REQUEST_JSON NEW_REVIEW | evaluate-combined-fit REVIEW FIT_INDEX NEW_REVIEW".into()),
+        _=>return Err("usage: review_controller publish-portable INPUT_STUDY NEW_ARTIFACT | review-device-capture CAPTURE_JSON NEW_REPORT | prepare-fpga-design REVIEW INDEX PROFILE_JSON NEW_EXPERIMENT | design-fpga REVIEW EXPERIMENT_JSON NEW_REVIEW | import-fpga REVIEW RECORDING NEW_REVIEW | import-fpga-results REVIEW PREDICTIONS NEW_REVIEW | predict-fpga REVIEW INDEX replay|closed-loop NEW_REVIEW | simulate-controller REVIEW REQUEST_JSON NEW_REVIEW | predict-recording REVIEW INDEX replay|closed-loop NEW_REVIEW | compare-electrical REVIEW PREDICTION_INDEX MEASUREMENTS_JSON_OR_servo-voltage NEW_REVIEW | bench-plan CADENCE_FILE NEW_PLAN [ID] [zero] | compare ARCHIVE_OR_STUDY NEW_REVIEW RECORDING... | sweep-review DIRECTORY SPLIT_FILE NEW_REVIEW | fit INPUT_REVIEW REQUEST_JSON NEW_REVIEW | evaluate-fit INPUT_REVIEW FIT_INDEX NEW_REVIEW | export REVIEW NEW_HTML | fit-recordings REVIEW REQUEST_JSON NEW_REVIEW | evaluate-recording-fit REVIEW FIT_INDEX NEW_REVIEW | release-review DIRECTORY SPLIT_FILE COAST_HYPOTHESIS NEW_REVIEW | fit-combined REVIEW REQUEST_JSON NEW_REVIEW | evaluate-combined-fit REVIEW FIT_INDEX NEW_REVIEW".into()),
     }
     Ok(())
 }

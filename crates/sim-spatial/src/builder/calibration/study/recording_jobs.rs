@@ -109,7 +109,9 @@ pub(super) fn capture_additional(worker:&mut Study,path:&str,read:Result<Vec<u8>
         input["rejection"]=json!(error);return (None,input,Some(error));
     }
     let result=(|| {
-        let parsed:Value=serde_json::from_slice(&bytes).map_err(|e|format!("study.combined.additional_input.json {path}: {e}"))?;
+        // Diagnostic projection recognizes both bounded legacy JSON and portable manifests.
+        // It does not authorize attachment: load_bytes below validates all objects first.
+        let parsed=Study::manifest_value(&bytes).map_err(|e|format!("study.combined.additional_input.manifest {path}: {e}"))?;
         // Normalize known types before projecting: rejected JSON must never smuggle
         // opaque receipt trees into otherwise whitelisted provenance field names.
         // Full rejected payloads remain recoverable only via the content reference.
@@ -211,7 +213,7 @@ fn start_inputs(owner:&mut StudyOwner,stamp:StudyStamp,operation:refinement::Ope
         }
         if let Some(path)=additional_path {
             ctx.message("Capturing additional saved-study bytes before parsing and validation");
-            let read=std::fs::read(&path).map_err(|e|e.to_string());
+            let read=Study::read_source_bytes(std::path::Path::new(&path)).map_err(|e|e.to_string());
             let (additional,input,error)=capture_additional(&mut worker,&path,read,ctx.cancelled());
             additional_input=Some(input);
             if let Some(error)=error {return Ok(rejected_output(worker,operation,error,ctx.cancelled(),additional_input));}

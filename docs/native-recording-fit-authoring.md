@@ -280,3 +280,14 @@ cancellation and displacement still produce existing retained terminal receipts.
 Legacy inline evidence, schemas, CAD authority and accepted actuator models remain
 unchanged. The T51 fixtures are written but unexecuted; this extends accepted T50
 source behavior without claiming publication execution or GUI parity.
+
+
+## Portable publication — T53
+
+The existing Study surface adds explicit portable open/save alongside JSON and HTML.
+[Portable format, retained-evidence inventory and lifecycle](portable-study-artifacts.md)
+records the shared owner and limits. Portable reopen needs only the artifact;
+JSON reopen continues to require its referenced sibling `.study-inputs` objects.
+HTML remains an inspection report and cannot reopen an editable Study. Existing
+inputs, opaque fields, raw rejected forms and unscored terminal diagnostics remain
+preserved. This update is source-reviewed only; fixtures and compilation are unexecuted.

@@ -2456,3 +2456,21 @@ source-reviewed only: no compilation, test, window launch, screenshot, publicati
 or parity execution occurred. External power, FPGA, recording/combined fitting,
 hardware acquisition, raw sweeps and physical-source/registry promotion remain
 available through their legacy surfaces; no legacy retirement is claimed.
+
+
+## Portable Study inventory update — T53 (2026-10-02)
+
+The [focused inventory and source traces](portable-study-artifacts.md) cover only
+retained Study consumers and evidence. Build → Actuators → Offline measured-PWM
+study adds explicit portable open/save beside JSON and HTML through the existing
+owners and jobs. Legacy experiment review and the review_controller batch example
+publish portable files through the same shared Study API; applicable existing load
+consumers detect format automatically. No sibling directory is required for portable
+reopen. JSON still requires referenced `.study-inputs` companions; HTML is an
+inspection report, not a reopenable editable Study.
+
+T52 was accepted by source review in call-0396 across d9bc1455/929f6833, including
+durable unapplied, unscored cancellation diagnostics. T53 fixtures are written and
+unexecuted; builds, launches, exports, parity and platform durability remain
+unverified. Physical-source authority, §§8–9 and Python/OCCT/browser/hardware
+reference requirements remain unchanged. No legacy retirement is claimed.

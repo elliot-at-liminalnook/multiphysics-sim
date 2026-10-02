@@ -20,10 +20,19 @@ use std::{
     },
 };
 
+#[derive(Clone, Copy)]
+enum PublicationKind { Json, Portable, Html }
+impl PublicationKind {
+    fn publish(self, study: &Study, path: &std::path::Path) -> Result<(), String> {
+        match self { Self::Json => study.save_new(path), Self::Portable => study.save_portable_new(path), Self::Html => study.export_html_new(path) }
+    }
+    fn is_report(self) -> bool { matches!(self, Self::Html) }
+}
+
 enum ResultMessage {
     Loaded(Result<Study, String>),
     Evaluated(usize, Result<Evaluation, String>),
-    Saved(usize, u64, bool, Result<String, String>),
+    Saved(usize, u64, PublicationKind, Result<String, String>),
     Refined(usize, String, Result<refinement::Outcome, String>),
 }
 struct Job {
@@ -229,11 +238,11 @@ impl ExperimentsPanel {
                     }
                     Err(e) => self.message = Some(e),
                 },
-                ResultMessage::Saved(index, revision, html, result) => {
-                    if result.is_ok() && !html {
+                ResultMessage::Saved(index, revision, kind, result) => {
+                    if result.is_ok() && !cancellation_requested && !kind.is_report() && self.revisions.get(index) == Some(&revision) {
                         self.saved_revisions[index] = revision;
                     }
-                    self.message = Some(result.unwrap_or_else(|e| e));
+                    self.message = Some(if result.is_ok() && cancellation_requested { "Publication completed after cancellation was requested; destination may exist and the review remains unsaved. Inspect it before using a fresh destination.".into() } else { result.unwrap_or_else(|e| e) });
                 }
                 ResultMessage::Refined(index, label, result) => {
                     let result = match result {
@@ -322,6 +331,15 @@ impl ExperimentsPanel {
             },
         );
     }
+    fn publish_captured(&mut self, path: PathBuf, kind: PublicationKind, ctx: &egui::Context) {
+        let index=self.current;
+        let revision=self.revisions[index];
+        let captured=self.studies[index].clone();
+        self.start_job("Saving captured evidence",0,Some(ctx),move|cancel,_|{
+            let result=if cancel.load(Ordering::Relaxed) { Err("study.publication: cancelled before publication; captured study remains in the review".into()) } else { kind.publish(&captured,&path) };
+            ResultMessage::Saved(index,revision,kind,result.map(|_|format!("Saved {}. Use a new filename for another revision.",path.display())))
+        });
+    }
     pub fn show(&mut self, ctx: &egui::Context) {
         self.poll(ctx);
         let mut open = self.open;
@@ -339,16 +357,16 @@ impl ExperimentsPanel {
                 for (i,s) in self.studies.iter().enumerate(){if ui.selectable_label(i==self.current,format!("Review {} · {}",i+1,s.archive.label)).clicked(){self.current=i;self.plot=Default::default();}}
             });
             ui.collapsing("Open / save / export",|ui|{
-                ui.horizontal(|ui|{ui.label("Archive directory or saved review");ui.text_edit_singleline(&mut self.path);if ui.add_enabled(!self.loading(),egui::Button::new("Open")).clicked(){self.launch(Some(self.path.clone()),Some(ctx));}});
+                ui.horizontal(|ui|{ui.label("Archive directory, JSON review or portable study");ui.text_edit_singleline(&mut self.path);if ui.add_enabled(!self.loading(),egui::Button::new("Open")).clicked(){self.launch(Some(self.path.clone()),Some(ctx));}});
                 ui.horizontal(|ui|{ui.label("New output filename");ui.text_edit_singleline(&mut self.save_path);
-                    for (label,html) in [("Save review",false),("Export HTML",true)] {
+                    for (label,kind) in [("Save JSON review",PublicationKind::Json),("Save portable study",PublicationKind::Portable),("Export HTML",PublicationKind::Html)] {
                         if ui.add_enabled(!self.loading()&&!self.studies.is_empty(),egui::Button::new(label)).clicked(){
-                            let index=self.current;let revision=self.revisions[index];let s=self.studies[index].clone();let mut path=PathBuf::from(&self.save_path);if html{path.set_extension("html");}
-                            self.start_job("Saving captured evidence",0,Some(ctx),move|_,_|{let r=if html{s.export_html_new(&path)}else{s.save_new(&path)};ResultMessage::Saved(index,revision,html,r.map(|_|format!("Saved {}. Use a new filename for another revision.",path.display()))) });
+                            let mut path=PathBuf::from(&self.save_path);if kind.is_report(){path.set_extension("html");}
+                            self.publish_captured(path,kind,ctx);
                         }
                     }
                 });
-                ui.small("Files are new immutable snapshots. Saving never overwrites existing evidence. Other open reviews are saved separately.");
+                ui.small("Files are new immutable snapshots. Portable studies contain retained inputs; JSON reviews need sibling companions. HTML is an inspection report. Other open reviews are saved separately.");
             });
             if let Some(job)=&self.job {ui.horizontal(|ui|{ui.spinner();ui.label(&job.label);if job.total>0{ui.add(egui::ProgressBar::new(job.progress.load(Ordering::Relaxed) as f32/job.total as f32).text(format!("{} / {} trials",job.progress.load(Ordering::Relaxed),job.total)));}if ui.button("Cancel task").clicked(){job.cancel.store(true,Ordering::Relaxed);}});}
             if let Some(message)=&self.message {ui.label(message);}
@@ -789,6 +807,37 @@ fn parameter_info() -> Vec<(String, String, String, String, Option<f64>)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // T53 source fixtures are written only; no execution receipt is claimed.
+    #[test]
+    fn portable_legacy_poll_acknowledges_only_matching_editable_revision() {
+        let mut p=panel();let ctx=egui::Context::default();
+        let revision=p.revisions[0];
+        let (tx,rx)=mpsc::channel();
+        tx.send(ResultMessage::Saved(0,revision,PublicationKind::Portable,Ok("captured portable".into()))).unwrap();
+        p.job=Some(Job{rx,cancel:Arc::new(AtomicBool::new(false)),progress:Arc::new(AtomicUsize::new(0)),total:0,label:"fixture".into()});
+        p.revisions[0]+=1;p.poll(&ctx);
+        assert_ne!(p.saved_revisions[0],p.revisions[0]);
+        let current=p.revisions[0];let (tx,rx)=mpsc::channel();
+        tx.send(ResultMessage::Saved(0,current,PublicationKind::Html,Ok("report".into()))).unwrap();
+        p.job=Some(Job{rx,cancel:Arc::new(AtomicBool::new(false)),progress:Arc::new(AtomicUsize::new(0)),total:0,label:"fixture".into()});
+        p.poll(&ctx);assert_ne!(p.saved_revisions[0],current);
+        let (tx,rx)=mpsc::channel();
+        tx.send(ResultMessage::Saved(0,current,PublicationKind::Portable,Ok("portable".into()))).unwrap();
+        p.job=Some(Job{rx,cancel:Arc::new(AtomicBool::new(false)),progress:Arc::new(AtomicUsize::new(0)),total:0,label:"fixture".into()});
+        p.poll(&ctx);assert_eq!(p.saved_revisions[0],current);
+    }
+    #[test]
+    fn portable_legacy_relocation_preserves_opaque_and_exact_inputs() {
+        let mut p=panel();let study=&mut p.studies[0];
+        study.retained_fields.insert("future_payload".into(),serde_json::json!({"version":999,"opaque":["unchanged"]}));
+        let exact=vec![0,255,12,0];let reference=study.input_contents.capture(exact.clone());
+        let bytes=study.portable_bytes().unwrap();
+        let reopened=Study::load_bytes(std::path::Path::new("unrelated/no-companions/relocated.simstudy"),&bytes).unwrap();
+        assert_eq!(reopened.input_contents.resolve(&reference.blake3).unwrap(),exact);
+        assert_eq!(reopened.retained_fields,study.retained_fields);
+        assert_eq!(serde_json::to_value(&reopened.archive).unwrap(),serde_json::to_value(&study.archive).unwrap());
+        assert!(serde_json::from_value::<rest::Command>(serde_json::json!({"operation":"save_portable","path":"new.simstudy"})).is_ok());
+    }
     #[test]
     fn actual_legacy_outcome_helper_retains_metrics_but_refuses_incomplete_pairs() {
         let p=panel();let t=p.studies[0].archive.trials.iter().find(|t|t.comparison.passes).unwrap();

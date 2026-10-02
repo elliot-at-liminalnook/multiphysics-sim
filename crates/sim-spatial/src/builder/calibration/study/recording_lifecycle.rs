@@ -198,7 +198,7 @@ fn rejected_additional_bytes_reach_production_receipts_and_immutable_round_trip(
     // embeds those receipt owners, while exact raw bytes remain reproducible.
     invalid["retained_fields"]=json!({"old_receipts":{"opaque":"preserved only as source bytes"}});
     let invalid=serde_json::to_vec(&invalid).unwrap();
-    for (bytes,cancelled,diagnostic) in [(b"{malformed".to_vec(),false,".json"),(invalid,false,".validation"),(serde_json::to_vec(&original).unwrap(),true,"cancelled after read")] {
+    for (bytes,cancelled,diagnostic) in [(b"{malformed".to_vec(),false,".manifest"),(invalid,false,".validation"),(serde_json::to_vec(&original).unwrap(),true,"cancelled after read")] {
         let expected_bytes=bytes.clone();
         let mut captured=owner.active().unwrap().study.clone();
         let hash=refinement::recordings::input_identity(&bytes);
@@ -285,7 +285,7 @@ fn referenced_rejected_input_survives_displacement_failed_publication_and_reopen
     let destination=directory.join("saved.study.json");
     let stamp=owner.get(1).unwrap().stamp();
     let retained=owner.get(1).unwrap();
-    let prepared=jobs::prepare_publication_capture(&retained.study,stamp,&destination,false,&retained.source,retained.document.as_ref(),Some(json!({"unsubmitted":"retained"})));
+    let prepared=jobs::prepare_publication_capture(&retained.study,stamp,&destination,jobs::PublicationKind::Json,&retained.source,retained.document.as_ref(),Some(json!({"unsubmitted":"retained"})));
     prepared.save_new(&destination).unwrap();
     let reopened=Study::load(&destination).unwrap();
     assert_eq!(reopened.input_contents.resolve(&hash).unwrap(),bytes.as_slice());
@@ -352,7 +352,7 @@ fn repeated_saved_combined_sources_use_production_capture_and_publication_withou
         jobs::poll_owner(&mut owner,&registry);
         let destination=directory.join(format!("generation-{generation}.study.json"));
         let retained=owner.active().unwrap();
-        let prepared=jobs::prepare_publication_capture(&retained.study,retained.stamp(),&destination,false,&retained.source,retained.document.as_ref(),None);
+        let prepared=jobs::prepare_publication_capture(&retained.study,retained.stamp(),&destination,jobs::PublicationKind::Json,&retained.source,retained.document.as_ref(),None);
         prepared.save_new(&destination).unwrap();
         let reopened=Study::load(&destination).unwrap();
         for (hash,bytes) in &captured_sources {assert_eq!(reopened.input_contents.resolve(hash).unwrap(),bytes.as_slice());}
@@ -370,4 +370,25 @@ fn repeated_saved_combined_sources_use_production_capture_and_publication_withou
         source=destination;
     }
     // Generated immutable fixture artifacts are retained; no data is deleted.
+}
+
+/// T53 UNEXECUTED additional-study consumer recognizes portable framing and keeps exact source bytes.
+#[test]
+fn relocated_portable_additional_capture_retains_identity_and_bounded_provenance() {
+    let root=crate::workspace::root().unwrap();
+    let mut additional=Study::new(sim_runtime::experiment_comparison::hx_archive::load(&root.join(super::super::DEFAULT_ARCHIVE),root).unwrap()).unwrap();
+    let content=additional.input_contents.capture(b"exact rejected electrical input".to_vec());
+    additional.retained_fields.insert("future_opaque".into(),json!({"unknown":[1,"untouched"]}));
+    let bytes=additional.portable_bytes().unwrap();
+    let mut worker=additional.clone();
+    let (loaded,input,error)=super::recording_jobs::capture_additional(&mut worker,"directory-with-no-companions/source.simstudy",Ok(bytes.clone()),false);
+    assert!(error.is_none(),"{error:?}");let loaded=loaded.unwrap();
+    assert_eq!(loaded.input_contents.resolve(&content.blake3).unwrap(),b"exact rejected electrical input");
+    assert_eq!(loaded.retained_fields["future_opaque"],additional.retained_fields["future_opaque"]);
+    assert_eq!(worker.input_contents.resolve(input["content_ref"]["blake3"].as_str().unwrap()).unwrap(),bytes);
+    assert!(input["parsed_provenance"].get("native_offline_job_receipts").is_none());
+    assert_eq!(input["parsed_provenance"]["baseline_blake3"],additional.baseline.fingerprint());
+    let (_,cancelled,error)=super::recording_jobs::capture_additional(&mut worker,"cancelled.simstudy",Ok(bytes.clone()),true);
+    assert!(error.unwrap().contains("cancelled"));assert!(cancelled.get("parsed_provenance").is_none());
+    assert_eq!(worker.input_contents.resolve(cancelled["content_ref"]["blake3"].as_str().unwrap()).unwrap(),bytes);
 }

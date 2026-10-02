@@ -39,7 +39,7 @@ fn cancelled_capture_has_recoverable_bytes_and_bounded_metadata_without_parsing(
     let(input,error)=recording_jobs::capture_electrical(&mut study,"invalid-utf8.json",0,Ok(bytes.clone()),true).unwrap_err();
     assert!(error.contains("cancelled"));assert!(input.get("raw").is_none());
     assert_eq!(study.input_contents.resolve(input["content_ref"]["blake3"].as_str().unwrap()).unwrap(),bytes);
-    let captured=jobs::prepare_publication_capture(&study,super::StudyStamp{id:1,revision:3},std::path::Path::new("unexecuted-review.json"),false,"fixture",None,Some(json!({"drafts":[{"text":"exact unsent electrical intent"}]})));
+    let captured=jobs::prepare_publication_capture(&study,super::StudyStamp{id:1,revision:3},std::path::Path::new("unexecuted-review.json"),jobs::PublicationKind::Json,"fixture",None,Some(json!({"drafts":[{"text":"exact unsent electrical intent"}]})));
     assert_eq!(captured.input_contents,study.input_contents);
     assert!(captured.retained_fields["native_form_inputs"][0]["inputs"]["drafts"][0]["text"]=="exact unsent electrical intent");
 }
@@ -79,6 +79,18 @@ fn completed_electrical_run_cancelled_before_attachment_is_retained_without_pass
     assert_eq!(reopened.input_contents.resolve(&retained.content_ref.blake3).unwrap(),expected);
     assert!(matches!(refinement::terminal::cached(&reopened,retained),Some(refinement::ResultData::Controller(_))));
     assert!(retained.cancelled&&retained.unapplied&&retained.unscored);
+    // T53 portable relocation uses the native captured publication adapter; no sibling content exists there.
+    let relocated=directory.join("relocated");std::fs::create_dir(&relocated).unwrap();
+    let portable=relocated.join("terminal.simstudy");
+    let captured=jobs::prepare_publication_capture(study,owner.active().unwrap().stamp(),&portable,jobs::PublicationKind::Portable,"original source",None,Some(json!({"drafts":[{"text":"raw rejected source intent"}]})));
+    jobs::publish_artifact(&captured,&portable,jobs::PublicationKind::Portable,&sim_runtime::publication::NoHooks).unwrap();
+    assert!(!relocated.join(".study-inputs").exists());
+    let reopened=Study::load(&portable).unwrap();
+    let retained=&reopened.refinement_evidence.terminals[0];
+    assert_eq!(reopened.input_contents.resolve(&retained.content_ref.blake3).unwrap(),expected);
+    assert!(retained.cancelled&&retained.unapplied&&retained.unscored);
+    assert!(matches!(refinement::terminal::cached(&reopened,retained),Some(refinement::ResultData::Controller(_))));
+    assert_eq!(reopened.retained_fields["native_form_inputs"][0]["inputs"]["drafts"][0]["text"],"raw rejected source intent");
     // This fixture preserves immutable evidence; no cleanup deletes retained output.
 
 }

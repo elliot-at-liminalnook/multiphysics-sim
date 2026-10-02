@@ -31,7 +31,7 @@ fn actual_path_trial_filter_and_publication_controls_reach_stamped_actions() {
     let mut world=world(owner());
     world.run_system_once(render).unwrap();world.run_system_once(collect).unwrap();
     let ui=world.resource::<StudyUi>();
-    for field in [Field::Archive,Field::Review,Field::Save,Field::Export] {
+    for field in [Field::Archive,Field::Review,Field::OpenPortable,Field::Save,Field::SavePortable,Field::Export] {
         let hits:Vec<_>=ui.rendered.values().filter(|c|matches!(&c.hit,Hit::Path{field:f,..} if *f==field)).collect();
         assert_eq!(hits.len(),1,"actual kit submit button for {field:?}");
         assert!(hits[0].enabled);
@@ -559,3 +559,28 @@ fn actual_fit_case_controls_review_additional_and_partial_sources_without_adopti
 
 #[path="electrical_ui_tests.rs"]
 mod electrical_ui_tests;
+
+/// T53 UNEXECUTED: discover actual kit controls, activate them and compare REST's typed intent.
+#[test]
+fn actual_portable_controls_system_ui_and_rest_preserve_stamp_and_raw_destination() {
+    use crate::app::actions::Action;
+    let mut world=world(owner());
+    world.run_system_once(render).unwrap();world.run_system_once(collect).unwrap();
+    for (field,stamp,op,path) in [
+        (Field::OpenPortable,None,"open_portable","relocated/source.simstudy"),
+        (Field::SavePortable,Some(StudyStamp{id:11,revision:4}),"save_portable","new/retained.simstudy"),
+    ] {
+        let id=world.resource::<StudyUi>().rendered.iter().find_map(|(id,c)|
+            matches!(&c.hit,Hit::Path{field:f,..} if *f==field).then_some(id.clone())).unwrap();
+        let activation=StudyAction::parse(&sim_api::Command{command:"system_ui".into(),args:json!({"action":{"operation":"activate","id":id,"text":path}})}).unwrap();
+        let StudyAction::SystemUi{id,text:Some(text)}=activation else {panic!("system_ui retains actual input")};
+        let hit=super::super::forms::activate(world.resource::<StudyUi>(),&id).unwrap();
+        let action=super::super::forms::text_submission(&mut StudyUi::default(),world.resource::<StudyOwner>(),hit,&text).unwrap();
+        let args=if let Some(stamp)=stamp {json!({"op":op,"stamp":stamp,"path":path})}else{json!({"op":op,"path":path})};
+        let rest=StudyAction::parse(&sim_api::Command{command:"system_measured_study".into(),args}).unwrap();
+        assert_eq!(serde_json::to_value(action).unwrap(),serde_json::to_value(rest).unwrap());
+    }
+    let old=StudyStamp{id:11,revision:4};
+    world.resource_mut::<StudyOwner>().studies[0].revision+=1;
+    assert!(super::super::forms::submission(world.resource::<StudyOwner>(),Some(old),&Field::SavePortable,"exact stale destination").unwrap_err().contains("replaced or edited"));
+}

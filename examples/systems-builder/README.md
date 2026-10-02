@@ -87,3 +87,11 @@ rule leaves the endpoint values of algebraic quantities (such as the battery
 terminal voltage) alternating after every switching edge.
 
 See [display editing and discussions](DISPLAY-EDITING.md) for component icons, grid dragging, part/group comments and REST examples. **Placement is display-only; it does not change CAD geometry or simulated physical placement.**
+
+Offline measured-PWM study authoring lives in **Actuators → Measured evidence**.
+Use the archive/review path controls, retained studies, exploratory candidate and
+conditions fields, evaluation/cancellation, captured comparison, decisions and notes,
+then publish a new immutable review filename and reopen it. See the
+[T46 source trace](../../docs/native-identification-authoring.md). This path is
+implemented for source review only; no compilation, fixture run or executed parity
+is claimed. Refinement and authoritative model promotion remain external workflows.

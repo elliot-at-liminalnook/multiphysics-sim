@@ -171,9 +171,6 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
                 let r = builder.actuators_request(None, None);
                 builder.report(r);
             }
-            if tab == Tab::Actuators && builder.actuator_view == calibration::ActuatorView::Evidence {
-                builder.calibration_first_visit();
-            }
             // First visit: read the default results folder (off the UI thread).
             if tab == Tab::GaitLab && builder.gait_lab.shown.is_none() && builder.gait_lab.error.is_none() && builder.gait_lab.pending().is_none() {
                 let r = builder.gait_reports_request(None);
@@ -324,10 +321,6 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
         }
         BuildAction::ActuatorView(view) => {
             builder.actuator_view = view;
-            // First visit: load the tracked archive (off the UI thread).
-            if view == calibration::ActuatorView::Evidence {
-                builder.calibration_first_visit();
-            }
         }
         BuildAction::CalibrationPath => {
             let shown = builder.calibration.path.as_ref().map(|p| p.display().to_string()).unwrap_or_default();

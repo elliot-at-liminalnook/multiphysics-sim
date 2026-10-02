@@ -197,6 +197,9 @@ impl actions::Action for SystemAction {
     }
     fn commands() -> Vec<Spec> {
         fn c(name: &'static str, example: Value, description: &str) -> Spec {
+            let description = if name == "system_calibration_review" {
+                "Legacy read-only archive review compatibility API. Native Build → Actuators → Measured evidence authoring uses system_measured_study and the rendered study:* system_ui controls. This compatibility command does not author, evaluate or publish studies."
+            } else { description };
             spec(name, actions::BUILDER, example, description)
         }
         vec![
@@ -394,6 +397,8 @@ pub(super) fn apply(
     mut switch: MessageWriter<Act<WindowAction>>,
     mut selection: ResMut<Selection>,
     mut registry: ResMut<DocumentRegistry>,
+    studies: Option<Res<calibration::study::StudyOwner>>,
+    study_ui: Option<Res<calibration::study::forms::StudyUi>>,
 ) {
     let (Some(mut builder), Some(mut scene), Some(mut orbit)) = (builder, scene, orbit) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |action, _| Outcome::Done(Err(no_builder(action))));
@@ -413,10 +418,24 @@ pub(super) fn apply(
     let lessons = learn.is_some();
     let mut pick = Picked::new(&mut selection, &mut registry);
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
+        let opening = match action {
+            SystemAction::SystemOpen(_) => call.continuation.get("open").is_none(),
+            SystemAction::Ui(BuildAction::OpenSystem(_)) => true,
+            SystemAction::Ui(BuildAction::SubmitDraft) => builder.input.as_ref().is_some_and(|i| i.purpose == Purpose::OpenSystem),
+            SystemAction::SystemUi { action, .. } => builder.opens_system_ui(action),
+            _ => false,
+        };
+        if opening {
+            if let Some(reason) = study_ui.as_ref().and_then(|ui| ui.blocking_reason()) {
+                return Outcome::Done(Err(format!("system_open refused: {reason}")));
+            }
+            if let Some(reason) = studies.as_ref().and_then(|s| s.blocking_reason()) {
+                return Outcome::Done(Err(format!("system_open refused: {reason}")));
+            }
+        }
         let outcome = execute(&mut builder, &mut scene, &mut orbit, &mut pick, lessons, &mut switch, action, call);
         // An edit re-checks the selection at once (a later action in this frame sees it).
         pick.sync(&builder);
         outcome
     });
 }
-

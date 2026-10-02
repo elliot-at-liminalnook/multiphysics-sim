@@ -5,7 +5,14 @@ use super::*;
 /// Install a system opened in the background (scene, annotations, models
 /// follow it); the Build document becomes the new file and the old one's
 /// selection items go (`picked::follow_open`).
-pub(super) fn open_system(mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, models: Option<ResMut<crate::models::ModelLibrary>>, mut selection: ResMut<Selection>, mut registry: ResMut<DocumentRegistry>) {
+pub(super) fn open_system(mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, models: Option<ResMut<crate::models::ModelLibrary>>, mut selection: ResMut<Selection>, mut registry: ResMut<DocumentRegistry>, studies: Option<Res<calibration::study::StudyOwner>>, study_ui: Option<Res<calibration::study::forms::StudyUi>>) {
+    if builder.open.job.is_some() {
+        if let Some(reason) = studies.as_ref().and_then(|s| s.blocking_reason())
+            .or_else(|| study_ui.as_ref().and_then(|ui| ui.blocking_reason())) {
+            builder.refuse_pending_open(&reason);
+            return;
+        }
+    }
     if builder.open.job.is_some() && builder.finish_open(&mut scene, models.map(|m| m.into_inner())) {
         picked::follow_open(&mut selection, &mut registry, builder.path());
     }

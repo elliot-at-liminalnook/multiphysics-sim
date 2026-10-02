@@ -353,6 +353,7 @@ pub fn registry() -> &'static [Feature] {
             feature::<WindowAction>("window", <WindowAction as Action>::commands),
             feature::<crate::inspect::InspectAction>("inspect", <crate::inspect::InspectAction as Action>::commands),
             feature::<crate::builder::system_actions::SystemAction>("build", <crate::builder::system_actions::SystemAction as Action>::commands),
+            feature::<crate::builder::calibration::study::StudyAction>("measured_study", <crate::builder::calibration::study::StudyAction as Action>::commands),
             feature::<crate::lesson::actions::LessonCommand>("lessons", <crate::lesson::actions::LessonCommand as Action>::commands),
             feature::<crate::robot::RobotAction>("robot", <crate::robot::RobotAction as Action>::commands),
             feature::<crate::robot::hardware::HardwareAction>("hardware", <crate::robot::hardware::HardwareAction as Action>::commands),
@@ -456,7 +457,7 @@ pub(crate) fn serve(world: &mut World) {
             // Already answered (the handler ran before the mode changed): the
             // answer stands, whatever mode the window is in now.
             if let Some(outcome) = waiting.and_then(|r| world.resource_mut::<Replies>().take(r)) {
-                return super::route::annotate(mode, &super::picker::controls_in(world), command, outcome);
+                return annotate_studies(world, mode, command, outcome);
             }
             let outcome = match super::route::route(mode, true, command) {
                 // A command left waiting by another action type: the mode
@@ -487,7 +488,7 @@ pub(crate) fn serve(world: &mut World) {
             };
             // The document picker's controls as they are now (after a
             // `picker:*` activation changed them, the new list).
-            super::route::annotate(mode, &super::picker::controls_in(world), command, outcome)
+            annotate_studies(world, mode, command, outcome)
         });
         // Keep frames coming while a command waits; an idle background
         // window otherwise steps only on its slow low-power timer.
@@ -495,6 +496,21 @@ pub(crate) fn serve(world: &mut World) {
             let _ = world.write_message(bevy::window::RequestRedraw);
         }
     });
+}
+
+/// Add the actual rendered offline-study controls to the common system_ui list.
+fn annotate_studies(world: &World, mode: ViewerMode, command: &sim_api::Command, outcome: Outcome) -> Outcome {
+    let mut outcome = super::route::annotate(mode, &super::picker::controls_in(world), command, outcome);
+    if command.command == "system_ui" && command.args["action"]["operation"] == "controls" {
+        if let Outcome::Done(Ok(value)) = &mut outcome {
+            if let Some(controls) = value.get_mut("controls").and_then(Value::as_array_mut) {
+                if let Some(ui) = world.get_resource::<crate::builder::calibration::study::forms::StudyUi>() {
+                    controls.extend(crate::builder::calibration::study::ui::controls(ui));
+                }
+            }
+        }
+    }
+    outcome
 }
 
 /// Whether a `system_ui` control id fits one of an action type's control

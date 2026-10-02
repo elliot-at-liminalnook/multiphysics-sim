@@ -10,6 +10,14 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
+Current acceptance clarification (T46): T45 persisted settings was accepted by
+source review at `6f3b701e`/`33d9da46`; its compilation and fixture execution remain
+unverified. Older "written" wording below is historical, not an outstanding T45
+source acceptance request. The offline measured-PWM authoring path is documented
+in [T46 source evidence](../native-identification-authoring.md) and its
+[compatibility inventory](../native-identification-inventory.md). T46 adds no mode,
+hardware intent, physical definitions, solver, or legacy retirement.
+
 ## Where it is today (persisted-settings T45 written, compilation and execution unverified; T44 accepted by source review at 8a7c0cd7/fe2a6eb1, parity unexecuted; cad-experiments-motion accepted by source review at 4d2725f2/e6f6ed10, compilation and execution unverified; cad-components written, source-reviewed, execution unverified; public-system-sets done pending verification, uncompiled: written and reviewed by reading only; see [Public system sets](#public-system-sets-2026-10-01); re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01); one-text-entry done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [One text entry](#one-text-entry-2026-10-01); cad-organize done pending verification (2026-10-01; written and reviewed by reading; nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), see [CAD organize](#cad-organize-2026-10-01))
 
 **Rust changes since aa34ef48 have not been compiled or executed.** Historical
@@ -6868,6 +6876,37 @@ the unreaped leader through final descendant signalling before releasing identit
 The harness guide records the bounded recovery path and exclusive-wait/process-group
 limitations. Repair fixtures remain uncompiled and unexecuted.
 
+
+## Native offline identification authoring — T46 (2026-10-02)
+
+The existing Build → Actuators → Measured evidence dock presents retained studies
+through `builder/calibration/study`. `StudyOwner` is global durable window state;
+transient widgets use the existing dock and UI kit. Typed StudyAction occurrences
+are applied by one owner in Actions. Shared `experiment_study::commands` owns
+transactional configuration/view/exposure/decision semantics, also consumed by
+legacy experiments_ui. Registry descriptions drive motor/bridge parameter fields.
+The existing runtime `evaluate`/`simulate`/`actuator_bench` executes captured inputs
+inside adopted jobs. Results poll globally in JobResults and cannot attach to a
+different retained study at the same revision. Text intent uses the kit service,
+with identity/revision guards against late submissions. A global status/cancellation
+surface remains reachable when the evidence dock closes.
+
+Immutable publication captures a Study revision and uses runtime save_new or
+export_html_new in jobs. A successful save marks only the captured revision saved;
+later drafts remain dirty. Failed/cancelled work retains named receipts. Normal
+window closure refuses dirty/pending study evidence; abrupt process termination
+cannot guarantee in-memory draft durability. Mode/document replacement guards
+preserve authored work. Existing physical document identity and shared Selection
+remain the spatial owners; persisted trial/evaluation fields are review view state.
+
+Decision: guard normal closure instead of silently writing an unspecified recovery
+file. This keeps evidence destinations explicit and immutable. Rejected alternatives
+are discard-on-close and automatic overwrite. Revisit if a separately reviewed
+recovery-store contract supplies user-visible durable destinations. Saved unknown
+supported payloads remain round-trippable without migrating refinement controls.
+Broader controller, power and FPGA refinement, raw sweep UI and accepted registry
+promotion still use existing external paths. Compilation, all new fixtures, export
+execution and exact parity remain unverified; legacy sim-viewer stays available.
 
 ## Persisted viewer settings — T45 (2026-10-02)
 

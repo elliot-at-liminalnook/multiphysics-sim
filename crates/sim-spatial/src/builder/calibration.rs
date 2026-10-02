@@ -1,9 +1,9 @@
-//! Read-only review of a measured actuator identification archive (build
-//! mode, Actuators tab → Measured evidence).
+//! Offline measured evidence in Build → Actuators → Measured evidence.
+//! `study` owns the native authoring surface; the archive-only helpers below
+//! preserve `system_calibration_review` and older automation compatibility.
 //!
 //! `Builder::calibration_request` is the one entry point: the archive path
-//! field, the first visit to the section, Reload/Cancel (also as `system_ui`
-//! controls) and REST `system_calibration_review` all call it. A worker
+//! compatibility actions and REST `system_calibration_review` call it. A worker
 //! thread runs [`review`], which calls the shared
 //! `sim_runtime::experiment_comparison::hx_archive::load` with the workspace
 //! root as the repository (the same loader `sim-viewer --experiments` uses);
@@ -545,6 +545,7 @@ pub(super) fn update_chart(mut builder: ResMut<Builder>, mut images: ResMut<Asse
     builder.panel_dirty = true;
 }
 
+pub(crate) mod study;
 mod panel;
 pub(super) use panel::section;
 

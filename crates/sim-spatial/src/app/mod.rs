@@ -30,6 +30,7 @@
 //!   field and `system_ui` `picker:*`), with [`recent`] (the recent
 //!   documents it offers, recorded by every switch that names one).
 pub mod actions;
+mod close;
 pub mod picker;
 pub mod recent;
 pub mod settings;
@@ -370,6 +371,7 @@ impl Plugin for CorePlugin {
         let first = look(self.initial, self.compact);
         app.add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window { title: first.title.into(), resolution: first.size.into(), resize_constraints: constraints(first.min), ..default() }),
+            close_when_requested: false,
             ..default()
         }))
         .insert_resource(ClearColor(first.clear))
@@ -385,7 +387,8 @@ impl Plugin for CorePlugin {
         .add_systems(Update, switcher::switcher_clicks.in_set(ViewerSet::Input))
         .add_systems(Update, (switcher::update_switcher, switcher::publish).in_set(ViewerSet::Present))
         // The document picker's panel (its state and input are `switch::build`'s).
-        .add_systems(Update, picker::draw.in_set(ViewerSet::Present));
+        .add_systems(Update, picker::draw.in_set(ViewerSet::Present))
+        .add_systems(Last, close::guarded_close.before(bevy::window::ExitSystems));
         for mode in ViewerMode::ALL {
             app.add_systems(OnEnter(mode), apply_look);
         }

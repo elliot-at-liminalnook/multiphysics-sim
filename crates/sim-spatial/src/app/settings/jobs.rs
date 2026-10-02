@@ -137,6 +137,7 @@ pub(super) fn load(paths: &Paths) -> Result<Loaded, String> {
         let h = read(&paths.hardware)?.unwrap_or_else(|| serde_json::json!({}));
         serde_json::json!({"schema":SCHEMA,"hardware_source":paths.hardware.to_string_lossy(), PreferenceGroup::settings_group_name(): {"recents":r,"hardware":h,"cad":{}}})
     };
+    validate_archive(&raw)?;
     let group = raw
         .get(PreferenceGroup::settings_group_name())
         .ok_or("preferences group missing")?;
@@ -203,6 +204,98 @@ fn overlay(old: &mut Value, new: Value) {
         (to, from) => *to = from,
     }
 }
+const ARCHIVE_ROWS: usize = 256;
+const ARCHIVE_BYTES: usize = 1024 * 1024;
+/// Flat, versioned removal evidence. Never interpreted as active preferences.
+fn validate_archive(raw: &Value) -> Result<(), String> {
+    let Some(archive) = raw.get("retained_rows") else {
+        return Ok(());
+    };
+    if archive.get("version").and_then(Value::as_u64) != Some(1) {
+        return Err("retained_rows.version: unsupported or malformed; saves blocked".into());
+    }
+    let entries = archive
+        .get("entries")
+        .and_then(Value::as_array)
+        .ok_or("retained_rows.entries: expected array; saves blocked")?;
+    for entry in entries {
+        if !matches!(
+            entry.get("collection").and_then(Value::as_str),
+            Some("mirror" | "sync")
+        ) || entry.get("identity").and_then(Value::as_str).is_none()
+            || !entry.get("value").is_some_and(Value::is_object)
+        {
+            return Err("retained_rows.entries: malformed removal evidence; saves blocked".into());
+        }
+    }
+    if entries.len() > ARCHIVE_ROWS
+        || serde_json::to_vec(archive)
+            .map_err(|e| e.to_string())?
+            .len()
+            > ARCHIVE_BYTES
+    {
+        return Err("retained_rows: preservation capacity exceeded; saves blocked".into());
+    }
+    Ok(())
+}
+fn retain_row(archive: &mut Value, collection: &str, identity: String, value: &Value) {
+    let entry = serde_json::json!({"collection":collection,"identity":identity,"value":value});
+    let entries = archive["entries"]
+        .as_array_mut()
+        .expect("validated archive");
+    if !entries.contains(&entry) {
+        entries.push(entry);
+    }
+}
+fn sync_identity(row: &Value, index: usize) -> String {
+    match row
+        .get("coordinate")
+        .and_then(Value::as_str)
+        .filter(|c| !c.is_empty())
+    {
+        Some(coordinate) => format!("coordinate:{coordinate}"),
+        None => format!("index:{index}"),
+    }
+}
+/// Rebuild active collections from current identities; retain removal evidence
+/// separately instead of allowing generic object overlay to revive old keys.
+fn binding_projection(old: &Value, next: &mut Value, archive: &mut Value) {
+    if let Some(prior) = old["mirror"]["bindings"].as_object() {
+        let current = next["mirror"]["bindings"]
+            .as_object_mut()
+            .expect("serialized mirror bindings");
+        for (identity, value) in prior {
+            if let Some(row) = current.get_mut(identity) {
+                let mut merged = value.clone();
+                overlay(&mut merged, row.clone());
+                *row = merged;
+            } else {
+                retain_row(archive, "mirror", identity.clone(), value);
+            }
+        }
+    }
+    if let Some(prior) = old["sync"]["bindings"].as_array() {
+        let current = next["sync"]["bindings"]
+            .as_array_mut()
+            .expect("serialized sync bindings");
+        let mut consumed = vec![false; current.len()];
+        for (index, value) in prior.iter().enumerate() {
+            let identity = sync_identity(value, index);
+            if let Some((matched, row)) = current
+                .iter_mut()
+                .enumerate()
+                .find(|(i, row)| !consumed[*i] && sync_identity(row, *i) == identity)
+            {
+                consumed[matched] = true;
+                let mut merged = value.clone();
+                overlay(&mut merged, row.clone());
+                *row = merged;
+            } else {
+                retain_row(archive, "sync", identity, value);
+            }
+        }
+    }
+}
 pub(super) fn snapshot(
     raw: &Value,
     r: &Recents,
@@ -210,6 +303,11 @@ pub(super) fn snapshot(
     c: &CadDefaults,
 ) -> Result<Value, String> {
     c.validate()?;
+    validate_archive(raw)?;
+    let mut archive = raw
+        .get("retained_rows")
+        .cloned()
+        .unwrap_or_else(|| serde_json::json!({"version":1,"entries":[]}));
     let mut result = raw.clone();
     if result.get("preserved_source").is_none() {
         result["preserved_source"] = raw.clone();
@@ -258,14 +356,28 @@ pub(super) fn snapshot(
     }
     let mut hs = h.clone();
     hs.version = crate::robot::hardware::settings::VERSION;
-    overlay(
-        &mut group["hardware"],
-        serde_json::to_value(hs).map_err(|e| e.to_string())?,
-    );
+    let mut next_h = serde_json::to_value(hs).map_err(|e| e.to_string())?;
+    binding_projection(&group["hardware"], &mut next_h, &mut archive);
+    // Replace collections first; overlay preserves metadata outside collections.
+    group["hardware"]["mirror"]["bindings"] = next_h["mirror"]["bindings"].clone();
+    group["hardware"]["sync"]["bindings"] = next_h["sync"]["bindings"].clone();
+    // These collections are already identity-merged. Do not let generic
+    // array overlay match duplicate coordinates again.
+    next_h["mirror"]
+        .as_object_mut()
+        .expect("serialized mirror")
+        .remove("bindings");
+    next_h["sync"]
+        .as_object_mut()
+        .expect("serialized sync")
+        .remove("bindings");
+    overlay(&mut group["hardware"], next_h);
     overlay(
         &mut group["cad"],
         serde_json::to_value(c).map_err(|e| e.to_string())?,
     );
+    result["retained_rows"] = archive;
+    validate_archive(&result)?;
     result["schema"] = SCHEMA.into();
     Ok(result)
 }

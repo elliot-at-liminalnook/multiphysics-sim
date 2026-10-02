@@ -2422,3 +2422,11 @@ accepted by source review at 8a7c0cd7/fe2a6eb1; its harness and parity remain
 unexecuted. T45 fixtures and all builds/tests/launches remain unexecuted. Historical
 receipts above are preserved as dated evidence and do not establish present native
 parity. Python/OCCT and optional registry/experiment executables remain dependencies.
+
+T45 repair source review preserves the same one-owner boundary: late preference
+publication synchronizes connected host Inputs without a physical request or restored
+intent. Removed binding keys no longer survive in active snapshots; retained metadata
+follows identity, while a bounded flat archive preserves newly encountered removed
+row data across later startups. Overflow refuses publication rather than evicting
+records. These fixtures remain unexecuted. This is a repair within T45, so the ten
+uncompiled epic count and T44 accepted source-only status remain unchanged.

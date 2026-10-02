@@ -77,11 +77,30 @@ not re-import changed legacy files. Unknown object data, nested binding metadata
 unknown modes and unknown recent variants remain raw alongside the validated
 projections; unrecognized recent variants are preserved but not offered as
 openable documents. Later saves overlay known fields without intentionally
-resetting unknown metadata. An immutable `preserved_source` raw snapshot also
-retains unknown data belonging to rows removed from active projections; removed
-rows do not become active again. Sync row metadata follows coordinate identity
-when named (index fallback for incomplete rows); recent metadata follows parsed
-document identity. Unknown fields are not executable intent.
+resetting unknown metadata. Active mirror bindings are rebuilt exclusively from
+current motor keys; retained bindings merge unknown metadata by that motor identity.
+Sync row metadata follows coordinate identity when named (index fallback for
+incomplete rows). Duplicate sync identities match in occurrence order, with each
+current row consuming at most one prior row; unmatched prior occurrences are
+archived. Recent metadata follows parsed document identity. Omitted binding
+rows remain absent from active saved and reloaded projections.
+
+`preserved_source` remains the immutable initial raw evidence. Removed rows observed
+in later loaded snapshots are also retained in `retained_rows`, a flat version-1
+archive of `{collection, identity, value}` records. Collections are `mirror` and
+`sync`; values are complete removed raw rows, not enclosing snapshots or archives.
+Identical records are deduplicated; distinct historical row values remain recoverable.
+The archive is never interpreted as active settings or merged back into bindings.
+This preserves newly encountered metadata after a later startup without changing
+the original migration evidence or recursively nesting earlier archives.
+
+The archive is bounded to 256 records and 1 MiB of encoded JSON. Malformed/newer
+archives or an addition exceeding either bound return a named snapshot error;
+publication does not proceed and dirty state remains available for retry. No record
+is evicted or truncated to make a save succeed. Recovery requires preserving and
+reviewing the input/archive and choosing a separate config location or deliberately
+managing the archived data outside this automatic path. Unknown fields are never
+executable intent.
 
 Newer schemas, malformed JSON, malformed known values and unreadable inputs block
 publication. They remain visible diagnostics; dirty state stays retained for retry.
@@ -137,7 +156,13 @@ preservation not supplied by stock loading.
    group. Early active motion conservatively claims the entire hardware group to
    prevent loading from changing its configuration. Untouched saved fields still
    load. Recents merge accepted queued records into the loaded base. Loading
-   never calls hardware command dispatch or restores confirmations/activation.
+   sends only the existing host-only `LinkCommand::Inputs` assignment when a
+   calibration link is already connected, through `handlers::inputs_changed`.
+   Thus a connection completed before loading receives the same displayed
+   drive-mode/hold-others choices before a later explicit Select/jog command.
+   The session Inputs branch performs no hardware request, preserves the speed-reset
+   guard and restores no selected motor, held keys, motion intent or confirmation.
+   Loading does not issue physical hardware requests or restore activation.
 4. CAD `actions::Cx` carries the owner; `ops::Env` seeds forms and closed fastener
    picks from it, and snapshot `Parts` reports those same defaults. Existing drafts
    stay intact if loading finishes after their opening. A validated wall launch or
@@ -202,3 +227,19 @@ disk fixtures call the shared jobs helpers with fresh isolated paths. Path prece
 fixtures use pure resolvers rather than changing process-wide environment variables.
 Shutdown failures can only be logged while the process remains alive; resource teardown
 cannot retain live diagnostics after destruction or guarantee completion on abrupt exit.
+
+## T45 repair lifecycle (source reading only)
+
+The connection-before-load fixture exercises the existing link/session path:
+connection installs host defaults, validated late preferences publish the form,
+publication queues host Inputs, and only a subsequent explicit Select/jog requests
+hardware through the existing link/session command path. Its fake request log distinguishes
+host assignment from physical requests. No fixture was executed.
+
+Persistence fixtures save and reload removed mirror keys, retained metadata by
+identity, and removal after a later startup adds new unknown row metadata to a file
+already containing `preserved_source`. The flat archive preserves that metadata
+while both active collections omit the removed rows. Written bound/schema fixtures
+retain fail-closed publication; all execution remains unverified. These repairs
+retain T45.1–T45.3 and all four outcome IDs above, the one jobs owner, existing CAD
+validation/undo, recents and hardware STOP/release/explicit activation.

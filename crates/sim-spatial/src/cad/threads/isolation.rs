@@ -159,6 +159,7 @@ pub(super) fn show(cx: &mut Cx, call: &mut Call, id: &str) -> Result<Value, Stri
         return match crate::cad::experiment_review::handle(&args, call, cx) {
             Outcome::Done(result) => result,
             Outcome::Pending => Ok(json!({"captured_run": run, "pending": true})),
+            Outcome::Image(_) => Err("experiment review doesn't produce images".into()),
         };
     }
     if t.anchor.node_id.is_none() {

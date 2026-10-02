@@ -9,7 +9,7 @@ use crate::app::ViewerMode;
 use super::document::{CadTool, SelectMode};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
-use sim_runtime::cad_client::SelectionItem;
+use sim_runtime::cad_client::{CadClient, SelectionItem};
 use std::path::PathBuf;
 
 /// One end of a measurement (RoboCAD's `MeasureTool` pick): the picked item

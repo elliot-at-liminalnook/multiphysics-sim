@@ -7874,8 +7874,8 @@ dependencies = [
  "nalgebra 0.34.2",
  "serde",
  "serde_json",
- "sha2",
  "serde_norway",
+ "sha2",
  "sim-agent",
  "sim-annotate",
  "sim-compile",
@@ -7963,8 +7963,8 @@ dependencies = [
 name = "sim-spatial"
 version = "0.1.0"
 dependencies = [
- "bevy-settings",
  "bevy",
+ "bevy-settings",
  "clap",
  "image",
  "objc2 0.6.4",

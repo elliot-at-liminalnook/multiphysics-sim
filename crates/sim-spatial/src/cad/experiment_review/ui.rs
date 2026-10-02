@@ -4,7 +4,7 @@ use crate::cad::panel::CadButton;
 use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextField, TextFieldApp, TextFocus};
 use crate::ui_kit::{Kit, Look};
 const FIELD: FieldId = FieldId("cad.review.note");
-#[derive(Component)]
+#[derive(Component, Debug)]
 struct ReviewField(String, u64);
 pub(crate) fn build(a: &mut App) {
     super::scene::build(a);

@@ -218,6 +218,12 @@ pub fn run(launch: Launch) {
     let Launch { mode, api, documents, registry, models, scene, link, builder, learn, robot, place, cad } = launch;
     let compact = scene.as_ref().is_some_and(|s| s.compact);
     let mut app = App::new();
+    // A panel rebuilt in the same frame its mode tears it down queues commands for
+    // entities that are gone by the time they apply. Bevy's default handler panics
+    // and closes the window; for the running viewer that is a skipped rebuild, so
+    // log it as a warning (it still names the failed command). Tests build their
+    // own App and keep the strict default.
+    app.set_error_handler(bevy::ecs::error::warn);
     app.add_plugins(CorePlugin { initial: mode, compact })
         .insert_resource(crate::rest::Rest(api, None))
         .insert_resource(models)

@@ -324,7 +324,7 @@ fn view(doc: &CadDocument, selection: &[SelectionItem]) -> View {
     let named = |id: &str| name_in(doc, Some(id)).unwrap_or_else(|| "?".to_string());
     let mut extra = Vec::new();
     for n in data.sensors() {
-        let detail = SensorMeta::of(n).map_or_else(|| "?".to_string(), |r| format!("{} on {}", r.kind, named(&r.body)) + &r.joint_name.as_deref().map_or_else(String::new, |j| format!(", reads {j}")));
+        let detail = SensorMeta::of(n).map_or_else(|| "?".to_string(), |r| format!("{} on {}{}", r.kind, named(&r.body), r.joint_name.as_deref().map(|j| format!(", reads {j}")).unwrap_or_default()));
         extra.push(Row { id: n.summary.id.clone(), kind: "sensor", name: n.summary.name.clone(), detail, margin: String::new(), selected: selected(selection, &n.summary.id) });
     }
     for n in data.cables() {

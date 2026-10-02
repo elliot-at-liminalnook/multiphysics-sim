@@ -6,7 +6,7 @@ use crate::ui_kit::text::{
 };
 use crate::ui_kit::{Kit, Look};
 const FIELD: FieldId = FieldId("cad.motion.editor");
-#[derive(Component)]
+#[derive(Component, Debug)]
 struct MotionField(&'static str, u64);
 pub(crate) fn build(a: &mut App) {
     super::export::build(a);
@@ -122,9 +122,9 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, d: &CadDocument, s: &M
                     })
                 ))
         {
-            p.spawn(k.button(label, CadButton(action), Look::Secondary, ready.is_ok()));
+            p.spawn(k.button(&label, CadButton(action), Look::Secondary, ready.is_ok()));
             if let Err(e) = ready {
-                p.spawn(k.note(e));
+                p.spawn(k.note(&e));
             }
         }
     }
@@ -144,7 +144,7 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, d: &CadDocument, s: &M
                     j.lower, j.upper, j.unit, j.display_lower, j.display_upper, j.unit
                 )));
                 p.spawn(k.input(
-                    s.positions.get(&j.id).unwrap_or(&j.home).to_string(),
+                    &s.positions.get(&j.id).unwrap_or(&j.home).to_string(),
                     "Joint value",
                     MotionField("position", s.sequence),
                     s.focus.as_deref() == Some("position"),
@@ -159,7 +159,7 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, d: &CadDocument, s: &M
         s.focus.as_deref() == Some("editor"),
     ));
     p.spawn(k.input(
-        s.cursor.to_string(),
+        &s.cursor.to_string(),
         "Seek seconds",
         MotionField("seek", s.sequence),
         s.focus.as_deref() == Some("seek"),

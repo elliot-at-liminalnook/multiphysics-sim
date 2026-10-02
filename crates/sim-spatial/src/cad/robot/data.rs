@@ -212,6 +212,8 @@ pub(crate) fn sync(doc: Option<ResMut<CadDocument>>) {
 
 /// A bundle whose every read failed with `e`.
 fn failed(e: &str) -> Bundle {
-    let err = || Err(e.to_string());
-    Bundle { summary: err(), results: err(), sensors: err(), cables: err(), battery: err(), control: err(), uncertainty: err(), profiles: err(), motors: None }
+    fn err<T>(e: &str) -> Result<T, String> {
+        Err(e.to_string())
+    }
+    Bundle { summary: err(e), results: err(e), sensors: err(e), cables: err(e), battery: err(e), control: err(e), uncertainty: err(e), profiles: err(e), motors: None }
 }

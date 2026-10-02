@@ -70,8 +70,8 @@ fn the_live_link_requests_the_robot_reload_through_the_switch_and_registry() {
     world.resource_mut::<DocumentRegistry>().close(ViewerMode::Robot);
     let before = world.resource::<DocumentRegistry>().revision(id).unwrap();
     // A save's export lands: no switch, the same entry one revision on.
-    let gen = world.resource::<CadDocument>().generation;
-    world.resource_mut::<CadDocument>().results.exports.running = Some(landed(first.clone(), gen));
+    let generation = world.resource::<CadDocument>().generation;
+    world.resource_mut::<CadDocument>().results.exports.running = Some(landed(first.clone(), generation));
     world.run_system_once(link::receive).unwrap();
     assert!(world.resource_mut::<Messages<Act<WindowAction>>>().drain().next().is_none(), "later saves do not leave CAD mode");
     let registry = world.resource::<DocumentRegistry>();

@@ -6,7 +6,7 @@ use crate::{
     ui_kit::{Kit, Look, SUBTLE, TEXT, WARN, size},
 };
 const FIELD: FieldId = FieldId("cad.composition");
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Debug)]
 struct Input(String);
 pub(crate) fn build(app: &mut App) {
     app.add_text_field(

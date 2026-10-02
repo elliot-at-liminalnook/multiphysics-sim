@@ -199,9 +199,73 @@ pub(crate) fn wait(doc: &mut CadDocument, call: &mut Call) -> Result<bool, Strin
     Ok(true)
 }
 
-/// JobResults (after `sync::receive`): [`tick`]; frames keep coming while a read runs.
-fn sync(doc: Option<ResMut<CadDocument>>, display: Option<Res<CadDisplay>>, redraw: Option<MessageWriter<bevy::window::RequestRedraw>>) {
+/// What a pending [`super::RevealThread`] needs now (found through shared
+/// borrows, so a frame that only waits writes nothing).
+#[derive(Debug, PartialEq)]
+pub(crate) enum RevealStep {
+    /// Another document is open: the request is dropped.
+    Drop,
+    /// The dock is to be opened, so the threads are read.
+    OpenDock,
+    /// Waiting for the threads at the current revision.
+    Wait,
+    /// Read: show it (true) or say it is gone (false).
+    Land(bool),
+}
+pub(crate) fn reveal_step(doc: &CadDocument, reveal: &super::Reveal) -> RevealStep {
+    if doc.target != reveal.target {
+        return RevealStep::Drop;
+    }
+    if !doc.threads.open {
+        return RevealStep::OpenDock;
+    }
+    if !current(doc) {
+        return RevealStep::Wait;
+    }
+    RevealStep::Land(thread(doc, &reveal.thread).is_some())
+}
+
+/// The pending reveal applied once its step is known.
+pub(crate) fn reveal(doc: &mut CadDocument, pending: &mut super::RevealThread, step: RevealStep) {
+    let Some(r) = pending.0.as_ref() else { return };
+    let id = r.thread.clone();
+    match step {
+        RevealStep::Wait => return,
+        RevealStep::OpenDock => {
+            doc.threads.open = true;
+            doc.touch();
+            return;
+        }
+        RevealStep::Drop => {}
+        RevealStep::Land(true) => {
+            let st = &mut doc.threads;
+            st.open = true;
+            st.filter = super::Filter::All;
+            st.selected_only = false;
+            st.current = Some(id);
+            st.part = None;
+            st.menu = None;
+            doc.touch();
+        }
+        RevealStep::Land(false) => {
+            doc.status = Some(Err(format!("The comment thread {id} is no longer in RoboCAD's comments of {}", doc.target.describe())));
+            doc.touch();
+        }
+    }
+    pending.0 = None;
+}
+
+/// JobResults (after `sync::receive`): [`tick`]; frames keep coming while a
+/// read runs; then a pending [`super::RevealThread`] is applied.
+fn sync(doc: Option<ResMut<CadDocument>>, display: Option<Res<CadDisplay>>, redraw: Option<MessageWriter<bevy::window::RequestRedraw>>, pending: Option<ResMut<super::RevealThread>>) {
     let Some(mut doc) = doc else { return };
+    if let Some(mut pending) = pending {
+        // Shared borrows first: a frame that only waits marks nothing changed.
+        let step = pending.0.as_ref().map(|r| reveal_step(&doc, r));
+        if let Some(step) = step.filter(|s| *s != RevealStep::Wait) {
+            reveal(&mut doc, &mut pending, step);
+        }
+    }
     let pins = display.as_deref().is_none_or(|d| d.comment_pins);
     // Polled through a shared borrow: a `ResMut` deref would mark the
     // document changed every frame while a read runs.

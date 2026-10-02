@@ -20,7 +20,7 @@ use std::{
     },
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum PublicationKind { Json, Portable, Html }
 impl PublicationKind {
     fn publish(self, study: &Study, path: &std::path::Path) -> Result<(), String> {
@@ -29,10 +29,15 @@ impl PublicationKind {
     fn is_report(self) -> bool { matches!(self, Self::Html) }
 }
 
+#[derive(Clone)]
+struct PublicationCapture {
+    index: usize, revision: u64, kind: PublicationKind, destination: PathBuf, study: Study,
+}
+struct PublicationRecovery { capture: PublicationCapture, message: String }
 enum ResultMessage {
     Loaded(Result<Study, String>),
     Evaluated(usize, Result<Evaluation, String>),
-    Saved(usize, u64, PublicationKind, Result<String, String>),
+    Saved(PublicationCapture, Result<String, String>),
     Refined(usize, String, Result<refinement::Outcome, String>),
 }
 struct Job {
@@ -41,6 +46,7 @@ struct Job {
     progress: Arc<AtomicUsize>,
     total: usize,
     label: String,
+    publication: Option<PublicationCapture>,
 }
 pub struct ExperimentsPanel {
     api_error: Option<String>,
@@ -52,6 +58,7 @@ pub struct ExperimentsPanel {
     path: String,
     save_path: String,
     message: Option<String>,
+    publication_recoveries: Vec<PublicationRecovery>,
     revisions: Vec<u64>,
     saved_revisions: Vec<u64>,
     plot: plots::PlotState,
@@ -80,6 +87,7 @@ impl Default for ExperimentsPanel {
                 .display()
                 .to_string(),
             message: None,
+            publication_recoveries: vec![],
             revisions: vec![],
             saved_revisions: vec![],
             plot: Default::default(),
@@ -164,6 +172,7 @@ impl ExperimentsPanel {
             progress,
             total,
             label: label.into(),
+            publication: None,
         });
     }
     fn poll(&mut self, ctx: &egui::Context) {
@@ -177,6 +186,9 @@ impl ExperimentsPanel {
                 self.message =
                     Some("Background task stopped unexpectedly; existing results retained".into());
                 self.api_error = self.message.clone();
+                if let Some(capture)=self.job.as_ref().and_then(|job|job.publication.clone()) {
+                    self.publication_recoveries.push(PublicationRecovery { capture, message: "Worker disconnected; destination may exist, not acknowledged".into() });
+                }
                 self.job = None;
                 return;
             }
@@ -185,7 +197,7 @@ impl ExperimentsPanel {
             self.api_error = match &result {
                 ResultMessage::Loaded(r) => r.as_ref().err().cloned(),
                 ResultMessage::Evaluated(_, r) => r.as_ref().err().cloned(),
-                ResultMessage::Saved(_, _, _, r) => r.as_ref().err().cloned(),
+                ResultMessage::Saved(_, r) => r.as_ref().err().cloned(),
                 ResultMessage::Refined(_, _, r) => r.as_ref().err().cloned(),
             };
             let cancellation_requested=self.job.as_ref().is_some_and(|job|job.cancel.load(Ordering::Relaxed));
@@ -238,11 +250,8 @@ impl ExperimentsPanel {
                     }
                     Err(e) => self.message = Some(e),
                 },
-                ResultMessage::Saved(index, revision, kind, result) => {
-                    if result.is_ok() && !cancellation_requested && !kind.is_report() && self.revisions.get(index) == Some(&revision) {
-                        self.saved_revisions[index] = revision;
-                    }
-                    self.message = Some(if result.is_ok() && cancellation_requested { "Publication completed after cancellation was requested; destination may exist and the review remains unsaved. Inspect it before using a fresh destination.".into() } else { result.unwrap_or_else(|e| e) });
+                ResultMessage::Saved(capture, result) => {
+                    self.complete_publication(capture, result, cancellation_requested);
                 }
                 ResultMessage::Refined(index, label, result) => {
                     let result = match result {
@@ -331,14 +340,38 @@ impl ExperimentsPanel {
             },
         );
     }
+    fn complete_publication(&mut self, capture: PublicationCapture, result: Result<String,String>, cancelled: bool) {
+        let matching=self.revisions.get(capture.index)==Some(&capture.revision);
+        if result.is_ok() && !cancelled && !capture.kind.is_report() && matching {
+            self.saved_revisions[capture.index]=capture.revision;
+        }
+        let message=if cancelled {
+            format!("Cancellation requested; publication may have completed and is not acknowledged. Inspect {} before choosing a new destination. {}",capture.destination.display(),result.unwrap_or_else(|e|e))
+        } else if !matching {
+            format!("Captured revision {} retained; newer edits remain unsaved. {}",capture.revision,result.unwrap_or_else(|e|e))
+        } else { result.unwrap_or_else(|e|e) };
+        self.message=Some(message.clone());
+        self.publication_recoveries.push(PublicationRecovery {capture,message});
+    }
+    fn open_publication_recovery(&mut self, index: usize) {
+        let Some(recovery)=self.publication_recoveries.get(index) else { return; };
+        // A separate authored review, never replacement of the newer current review.
+        self.studies.push(recovery.capture.study.clone());
+        self.revisions.push(1); self.saved_revisions.push(0);
+        self.current=self.studies.len()-1; self.plot=Default::default();
+        self.message=Some("Captured evidence opened as a separate unsaved review. Choose a NEW destination to publish it; original destinations are untouched.".into());
+    }
     fn publish_captured(&mut self, path: PathBuf, kind: PublicationKind, ctx: &egui::Context) {
+        if self.loading() { return; }
         let index=self.current;
-        let revision=self.revisions[index];
-        let captured=self.studies[index].clone();
+        let capture=PublicationCapture {index,revision:self.revisions[index],kind,destination:path,study:self.studies[index].clone()};
+        let pending=capture.clone();
         self.start_job("Saving captured evidence",0,Some(ctx),move|cancel,_|{
-            let result=if cancel.load(Ordering::Relaxed) { Err("study.publication: cancelled before publication; captured study remains in the review".into()) } else { kind.publish(&captured,&path) };
-            ResultMessage::Saved(index,revision,kind,result.map(|_|format!("Saved {}. Use a new filename for another revision.",path.display())))
+            let result=if cancel.load(Ordering::Relaxed) { Err("study.publication: cancelled before publication; captured study retained for recovery".into()) } else { capture.kind.publish(&capture.study,&capture.destination) };
+            let message=result.map(|_|format!("Saved {}. Use a new filename for another revision.",capture.destination.display()));
+            ResultMessage::Saved(capture,message)
         });
+        if let Some(job)=&mut self.job { job.publication=Some(pending); }
     }
     pub fn show(&mut self, ctx: &egui::Context) {
         self.poll(ctx);
@@ -367,6 +400,16 @@ impl ExperimentsPanel {
                     }
                 });
                 ui.small("Files are new immutable snapshots. Portable studies contain retained inputs; JSON reviews need sibling companions. HTML is an inspection report. Other open reviews are saved separately.");
+            });
+            ui.collapsing("Retained publication captures / recovery",|ui|{
+                ui.small("Exact captured evidence is retained independently of later edits. Cancellation is cooperative: an in-progress immutable publication may complete. Destinations are never rewritten by recovery.");
+                let mut recover=None;
+                for (i,recovery) in self.publication_recoveries.iter().enumerate() {
+                    ui.label(format!("Review {} · revision {} · {:?} · {}",recovery.capture.index+1,recovery.capture.revision,recovery.capture.kind,recovery.capture.destination.display()));
+                    ui.label(&recovery.message);
+                    if ui.add_enabled(!self.loading(),egui::Button::new("Open captured evidence as separate unsaved review")).clicked() {recover=Some(i);}
+                }
+                if let Some(i)=recover {self.open_publication_recovery(i);}
             });
             if let Some(job)=&self.job {ui.horizontal(|ui|{ui.spinner();ui.label(&job.label);if job.total>0{ui.add(egui::ProgressBar::new(job.progress.load(Ordering::Relaxed) as f32/job.total as f32).text(format!("{} / {} trials",job.progress.load(Ordering::Relaxed),job.total)));}if ui.button("Cancel task").clicked(){job.cancel.store(true,Ordering::Relaxed);}});}
             if let Some(message)=&self.message {ui.label(message);}
@@ -805,6 +848,8 @@ fn parameter_info() -> Vec<(String, String, String, String, Option<f64>)> {
 }
 
 #[cfg(test)]
+mod publication_recovery_tests;
+#[cfg(test)]
 mod tests {
     use super::*;
     // T53 source fixtures are written only; no execution receipt is claimed.
@@ -813,17 +858,17 @@ mod tests {
         let mut p=panel();let ctx=egui::Context::default();
         let revision=p.revisions[0];
         let (tx,rx)=mpsc::channel();
-        tx.send(ResultMessage::Saved(0,revision,PublicationKind::Portable,Ok("captured portable".into()))).unwrap();
-        p.job=Some(Job{rx,cancel:Arc::new(AtomicBool::new(false)),progress:Arc::new(AtomicUsize::new(0)),total:0,label:"fixture".into()});
+        tx.send(ResultMessage::Saved(PublicationCapture{index:0,revision,kind:PublicationKind::Portable,destination:"old.simstudy".into(),study:p.studies[0].clone()},Ok("captured portable".into()))).unwrap();
+        p.job=Some(Job{rx,cancel:Arc::new(AtomicBool::new(false)),progress:Arc::new(AtomicUsize::new(0)),total:0,label:"fixture".into(),publication:None});
         p.revisions[0]+=1;p.poll(&ctx);
         assert_ne!(p.saved_revisions[0],p.revisions[0]);
         let current=p.revisions[0];let (tx,rx)=mpsc::channel();
-        tx.send(ResultMessage::Saved(0,current,PublicationKind::Html,Ok("report".into()))).unwrap();
-        p.job=Some(Job{rx,cancel:Arc::new(AtomicBool::new(false)),progress:Arc::new(AtomicUsize::new(0)),total:0,label:"fixture".into()});
+        tx.send(ResultMessage::Saved(PublicationCapture{index:0,revision:current,kind:PublicationKind::Html,destination:"report.html".into(),study:p.studies[0].clone()},Ok("report".into()))).unwrap();
+        p.job=Some(Job{rx,cancel:Arc::new(AtomicBool::new(false)),progress:Arc::new(AtomicUsize::new(0)),total:0,label:"fixture".into(),publication:None});
         p.poll(&ctx);assert_ne!(p.saved_revisions[0],current);
         let (tx,rx)=mpsc::channel();
-        tx.send(ResultMessage::Saved(0,current,PublicationKind::Portable,Ok("portable".into()))).unwrap();
-        p.job=Some(Job{rx,cancel:Arc::new(AtomicBool::new(false)),progress:Arc::new(AtomicUsize::new(0)),total:0,label:"fixture".into()});
+        tx.send(ResultMessage::Saved(PublicationCapture{index:0,revision:current,kind:PublicationKind::Portable,destination:"new.simstudy".into(),study:p.studies[0].clone()},Ok("portable".into()))).unwrap();
+        p.job=Some(Job{rx,cancel:Arc::new(AtomicBool::new(false)),progress:Arc::new(AtomicUsize::new(0)),total:0,label:"fixture".into(),publication:None});
         p.poll(&ctx);assert_eq!(p.saved_revisions[0],current);
     }
     #[test]
@@ -879,7 +924,7 @@ mod tests {
         assert_eq!(reopened.retained_fields,s.retained_fields);
         assert!(s.draft.step_s>0.);
     }
-    fn panel() -> ExperimentsPanel {
+    pub(super) fn panel() -> ExperimentsPanel {
         let mut p = ExperimentsPanel::default();
         let archive = hx_archive::load(
             &repository().join("examples/actuators/hx30hm/pwm-identification"),

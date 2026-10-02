@@ -45,7 +45,6 @@ pub fn cache(s:&mut Study)->Result<(),String>{
     for r in &s.refinement_evidence.terminals{
         let bytes=s.input_contents.resolve(&r.content_ref.blake3)?;
         if bytes.len() as u64!=r.content_ref.byte_length||blake3::hash(bytes).to_hex().to_string()!=r.content_ref.blake3{return Err("refinement.terminals.content_ref: changed exact content".into());}
-        super::portable::json_bounds(bytes,super::portable::MAX_OBJECT_BYTES)?;
         let value:ResultData=serde_json::from_slice(bytes).map_err(|e|format!("refinement.terminals.content: {e}"))?;
         if kind(&value)!=Some(r.kind.as_str()){return Err("refinement.terminals.kind: content mismatch".into());}
         s.refinement_evidence.terminal_cache.insert(r.content_ref.blake3.clone(),Arc::new(value));

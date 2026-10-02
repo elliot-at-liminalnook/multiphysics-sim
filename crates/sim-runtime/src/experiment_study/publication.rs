@@ -12,6 +12,12 @@ impl Study {
     pub fn save_new_with(&self, path: &Path, hooks: &dyn Hooks) -> Result<(), String> {
         self.validate()?;
         let bytes = serde_json::to_vec_pretty(self).map_err(|e| e.to_string())?;
+        // Refuse before any filesystem publication unless the exact serialized
+        // representation and known diagnostic content pass the shared reopen path.
+        let mut recovered = Self::decode_legacy_manifest(path, &bytes)?;
+        recovered.input_contents = self.input_contents.clone();
+        recovered.input_contents.verify_all(path)?;
+        Self::finish_load(recovered)?;
         self.input_contents.publish_with(path, hooks)?;
         publication::publish_with(path, &bytes, Policy::ImmutableNew, hooks).into_result()
     }
@@ -21,28 +27,50 @@ impl Study {
     }
     /// Auto-detect captured portable bytes; JSON resolves original sibling companions.
     pub fn load_bytes(path: &Path, bytes: &[u8]) -> Result<Self, String> {
-        if bytes.len() > super::portable::MAX_ARTIFACT_BYTES {
-            return Err("study.portable.size: source exceeds 256 MiB".into());
-        }
-        let mut study = if bytes.starts_with(super::portable::MAGIC) {
+        let study = if bytes.starts_with(super::portable::MAGIC) {
             super::portable::decode(bytes)?
         } else {
-            super::portable::json_bounds(bytes, super::portable::MAX_MANIFEST_BYTES)?;
-            super::portable::manifest_preflight(bytes, false)?;
-            let mut study: Self = serde_json::from_slice(bytes)
-                .map_err(|e| format!("study.source {}: {e}", path.display()))?;
-            // Legacy manifests retain their companion-only hydration contract.
+            let mut study = Self::decode_legacy_manifest(path, bytes)?;
             study.input_contents.hydrate(path)?;
             study
         };
-        // Worker-only decoding restores diagnostic terminals for the existing review.
+        Self::finish_load(study)
+    }
+    fn decode_legacy_manifest(path: &Path, bytes: &[u8]) -> Result<Self, String> {
+        // Historical JSON uses serde's established acceptance rules, not the
+        // portable container's resource limits or duplicate-key policy.
+        serde_json::from_slice(bytes).map_err(|e| format!("study.source {}: {e}", path.display()))
+    }
+    fn finish_load(mut study: Self) -> Result<Self, String> {
         super::refinement::terminal::cache(&mut study)?;
         study.validate()?;
         Ok(study)
     }
-    /// Bounded capture reader shared by all Study-source consumers.
+    /// Portable sources are bounded before allocation; historical JSON retains
+    /// its established reader. Detection uses the same open handle as the read.
     pub fn read_source_bytes(path: &Path) -> Result<Vec<u8>, String> {
-        super::portable::read_bounded(path, super::portable::MAX_ARTIFACT_BYTES)
+        use std::io::{Read, Seek, SeekFrom};
+        let mut file = std::fs::File::open(path).map_err(|e| format!("study.source {}: {e}", path.display()))?;
+        let mut prefix = [0u8; 8];
+        let mut used = 0;
+        while used < prefix.len() {
+            let n = file.read(&mut prefix[used..]).map_err(|e| e.to_string())?;
+            if n == 0 { break; }
+            used += n;
+        }
+        file.seek(SeekFrom::Start(0)).map_err(|e| e.to_string())?;
+        let mut bytes = Vec::new();
+        if used == prefix.len() && &prefix == super::portable::MAGIC {
+            let limit = super::portable::MAX_ARTIFACT_BYTES;
+            if file.metadata().map_err(|e| e.to_string())?.len() > limit as u64 {
+                return Err("study.portable.size: source exceeds 256 MiB".into());
+            }
+            file.take(limit as u64 + 1).read_to_end(&mut bytes).map_err(|e| e.to_string())?;
+            if bytes.len() > limit { return Err("study.portable.size: source exceeds 256 MiB".into()); }
+        } else {
+            file.read_to_end(&mut bytes).map_err(|e| e.to_string())?;
+        }
+        Ok(bytes)
     }
     /// Diagnostic projection only: does not authorize object hydration or Study
     /// attachment. Call load_bytes for membership, hash and semantic validation.

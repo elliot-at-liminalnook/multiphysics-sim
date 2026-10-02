@@ -628,7 +628,7 @@ impl Session {
                 let (tune_done, campaign_done) = (self.snap.tune_done, self.snap.campaign_done);
                 // The generation the UI authorized it for must still be this session's.
                 let authorization = calibration::authorize_virtual(self.snap.execution.as_ref(), generation, self.snap.generation,
-                    self.snap.connection_valid && self.snap.state.connected && !self.snap.authorization_revoked, !self.snap.stale(Instant::now()));
+                    self.snap.connection_valid && self.snap.state.connected && !self.snap.authorization_revoked && self.snap.disconnected.is_none(), !self.snap.stale(Instant::now()));
                 let result = if matches!(&*command, LinkCommand::Release) {
                     self.checked_release(epoch, authorization)
                 } else if self.stopped_since(epoch) {

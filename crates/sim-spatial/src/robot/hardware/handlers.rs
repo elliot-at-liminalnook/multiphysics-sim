@@ -2,7 +2,7 @@
 //! (applied by [`super::actions::apply`]): the page's click handlers for
 //! the form, the link commands, STOP and loss, the gait list, Download
 //! calibration, and the remote-control check.
-use super::actions::{Boundary, Direction, GaitMode, HardwareAction, Loss, connect, stop_immediate};
+use super::actions::{Boundary, Direction, GaitMode, HardwareAction, Loss, connect, operator_stop, stop_immediate};
 use super::link::{self, LinkCommand};
 use super::panel::NOT_CONNECTED;
 use super::{Hardware, Section};
@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// A handler's answer before it is shaped for its origin.
-pub(super) enum Answer {
+pub(crate) enum Answer {
     Done(Result<Option<Value>, String>),
     Pending,
 }
@@ -28,17 +28,45 @@ pub(super) fn remote_check(hw: &Hardware, action: &HardwareAction, call: &Call) 
     if !call.remote() || matches!(action, HardwareAction::Status | HardwareAction::Stop | HardwareAction::Loss { .. } | HardwareAction::Export | HardwareAction::LoadGaits) {
         return Ok(());
     }
+    let view = super::panel::panel_view(hw, Instant::now());
+    let enabled = match action {
+        HardwareAction::Target { .. } | HardwareAction::TargetCommit => view.target_enabled,
+        HardwareAction::Speed { .. } | HardwareAction::PwmCeiling { .. } => view.blocked.is_none(),
+        // Releases are always allowed to request hold after an accepted press.
+        HardwareAction::JogRelease { .. } => return Ok(()),
+        _ => true,
+    };
+    if !enabled { return Err(view.blocked.unwrap_or_else(|| "this calibration input is disabled in the current session".into())); }
     match super::panel::controls(hw).into_iter().find(|(_, _, a, _)| a == action) {
         Some((id, _, _, Err(why))) => Err(format!("{id} is disabled: {why}")),
         _ => Ok(()),
     }
 }
 
-/// Queue a page handler on the link (refused without one).
-fn send(hw: &Hardware, command: LinkCommand) -> Answer {
+/// Queue a page handler on the link (refused without one). A remote motion
+/// command ([`dispatch`] gave it a ticket) is queued as
+/// [`LinkCommand::Checked`], carrying the shared epoch now (a later STOP
+/// refuses it) and the generation it was authorized for.
+fn send(hw: &mut Hardware, command: LinkCommand) -> Answer {
+    send_with(hw, None, command)
+}
+
+/// [`send`], with the form values a remote command brings (a speed or PWM
+/// ceiling): the link thread adopts them only once it has authorized and
+/// validated the command, and keeps them only if it succeeds; the form takes
+/// them when the ticket resolves ([`apply_resolved`]). Only a ticketed
+/// (remote motion) command carries them.
+fn send_with(hw: &mut Hardware, inputs: Option<super::link::Inputs>, command: LinkCommand) -> Answer {
     match hw.link.as_ref() {
         Some(link) => {
-            link.send(command);
+            if let Some(ticket) = hw.active_ticket {
+                hw.queued_ticket = true;
+                let epoch = link.epoch.load(std::sync::atomic::Ordering::SeqCst);
+                if let Err(error) = link.try_send(LinkCommand::Checked { ticket, epoch, generation: hw.generation, inputs, command: Box::new(command) }) {
+                    hw.queued_ticket = false;
+                    return Answer::Done(Err(error));
+                }
+            } else { link.send(command); }
             done()
         }
         None => Answer::Done(Err(NOT_CONNECTED.into())),
@@ -54,10 +82,10 @@ pub(super) fn inputs_changed(hw: &Hardware) {
 
 /// A slider value in `lo..=hi`, in steps of `step` (the page's range input).
 fn stepped(value: f64, lo: f64, hi: f64, step: f64, name: &str) -> Result<f64, String> {
-    if !value.is_finite() {
+    if !value.is_finite() || !(lo..=hi).contains(&value) {
         return Err(format!("{name} must be a number from {lo} to {hi}"));
     }
-    Ok(((value.clamp(lo, hi) / step).round() * step * 10.0).round() / 10.0)
+    Ok(((value / step).round() * step * 10.0).round() / 10.0)
 }
 
 /// The page's `loss()` (focus loss, panel close, leaving). Live motor sync
@@ -114,8 +142,101 @@ fn close(hw: &mut Hardware) {
     hw.open = false;
 }
 
+fn unix_ms() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64)
+}
+
+/// Shared authoritative dispatch: both REST and system_ui wait for the session's result.
+pub(crate) fn dispatch(hw: &mut Hardware, action: &HardwareAction, call: &mut Call, now: Instant,
+    view: Option<&crate::robot::RobotView>, run: &mut dyn FnMut(crate::robot::RobotAction)) -> Answer {
+    if let Some(ticket) = call.continuation.get("hardware_ticket").and_then(Value::as_u64) {
+        if call.continuation.get("generation").and_then(Value::as_u64) != Some(hw.generation) {
+            return Answer::Done(Err("hardware connection replaced while the command was pending".into()));
+        }
+        let s = hw.link.as_ref().map(|link| link.snapshot()).unwrap_or_default();
+        // A recorded verdict is the answer, also after a cancel or the
+        // deadline: the command already ran (or was refused) and nothing is
+        // left to stop for it.
+        if let Some(result) = s.command_results.get(&ticket).cloned() {
+            apply_resolved(hw, action, &result, call.continuation);
+            // This frame's link state, not the frame's earlier copy: a
+            // successful select answers ready, with its motor.
+            hw.snapshot = s;
+            return Answer::Done(result.map(|()| Some(super::view::status_json(hw, now))));
+        }
+        if call.cancelled {
+            stop_immediate(hw);
+            return Answer::Done(Err("hardware action cancelled; STOP requested".into()));
+        }
+        let expired = call.continuation.get("deadline_ms").and_then(Value::as_u64).is_some_and(|deadline| unix_ms() > deadline);
+        // Stale while the link thread waits on a request that may still
+        // answer (this command's, or one queued before it) is not lost.
+        if expired || (s.stale(now) && !s.awaiting_answer(now)) {
+            stop_immediate(hw);
+            return Answer::Done(Err("hardware command lost its fresh connection or deadline; STOP requested".into()));
+        }
+        if s.command_results.keys().next().is_some_and(|first| ticket < *first) {
+            return Answer::Done(Err("hardware command acknowledgement expired".into()));
+        }
+        return Answer::Pending;
+    }
+    if call.remote() {
+        if let Err(why) = action.authorize(hw, now).and_then(|()| remote_check(hw, action, call)) {
+            return Answer::Done(Err(why));
+        }
+        hw.command_seq += 1;
+        hw.active_ticket = action.starts_motion().then_some(hw.command_seq);
+    }
+    hw.queued_ticket = false;
+    let answer = handle_inner(hw, action, call, now, view, run);
+    hw.active_ticket = None;
+    if hw.queued_ticket && call.rest() {
+        // The form's values now: a remote speed or PWM ceiling is adopted
+        // only if the operator has not changed it since ([`apply_resolved`]).
+        *call.continuation = json!({"hardware_ticket": hw.command_seq, "generation": hw.generation, "deadline_ms": unix_ms() + 45_000,
+            "speed_reset": hw.form.inputs.speed_reset, "form_speed": hw.form.inputs.speed_percent, "form_pwm": hw.form.inputs.pwm_percent});
+        Answer::Pending
+    } else { answer }
+}
+
+/// A remote speed or PWM ceiling the link thread accepted (or applied
+/// before a STOP, [`super::session::APPLIED_THEN_STOPPED`]) becomes the
+/// form's value, and is sent back as the form's inputs so a later form edit
+/// keeps it, but only while the form still holds the value it had when the
+/// command was queued: a newer operator edit (sent to the link after the
+/// command, so already the link's value) wins, and nothing is sent. A speed
+/// is also not put back over a speed reset (a sweep started) since then.
+fn apply_resolved(hw: &mut Hardware, action: &HardwareAction, result: &Result<(), String>, continuation: &Value) {
+    let applied = match result {
+        Ok(()) => true,
+        Err(e) => e.starts_with(super::session::APPLIED_THEN_STOPPED),
+    };
+    if !applied {
+        return;
+    }
+    match action {
+        HardwareAction::Speed { percent } => {
+            let reset_since = continuation.get("speed_reset").and_then(Value::as_u64).is_none_or(|queued| hw.form.inputs.speed_reset > queued);
+            let unchanged = continuation.get("form_speed").and_then(Value::as_f64) == Some(hw.form.inputs.speed_percent);
+            if let (Ok(v), false, true) = (stepped(*percent, 0.0, 100.0, 1.0, "movement speed"), reset_since, unchanged) {
+                hw.form.inputs.speed_percent = v;
+                inputs_changed(hw);
+            }
+        }
+        HardwareAction::PwmCeiling { percent } => {
+            if continuation.get("form_pwm").and_then(Value::as_f64) == Some(hw.form.inputs.pwm_percent) {
+                hw.form.inputs.pwm_percent = (percent * 10.0).round() / 10.0;
+                inputs_changed(hw);
+            }
+        }
+        _ => {}
+    }
+}
+
+pub(super) use dispatch as handle;
+
 /// The handlers, one per intent.
-pub(super) fn handle(hw: &mut Hardware, action: &HardwareAction, call: &mut Call, now: Instant, view: Option<&crate::robot::RobotView>, run: &mut dyn FnMut(crate::robot::RobotAction)) -> Answer {
+fn handle_inner(hw: &mut Hardware, action: &HardwareAction, call: &mut Call, now: Instant, view: Option<&crate::robot::RobotView>, run: &mut dyn FnMut(crate::robot::RobotAction)) -> Answer {
     use HardwareAction as H;
     match action {
         H::TogglePanel => {
@@ -149,7 +270,8 @@ pub(super) fn handle(hw: &mut Hardware, action: &HardwareAction, call: &mut Call
         }
         H::Status => Answer::Done(Ok(Some(super::view::status_json(hw, now)))),
         H::Stop => {
-            stop_immediate(hw);
+            // A person's STOP: always posted, id-less when no motor is known.
+            operator_stop(hw);
             hw.sync.stop("Operator stop");
             done()
         }
@@ -176,7 +298,7 @@ pub(super) fn handle(hw: &mut Hardware, action: &HardwareAction, call: &mut Call
             let Some(link) = hw.link.as_ref() else { return Answer::Done(Err(NOT_CONNECTED.into())) };
             let s = link.snapshot();
             if !s.ready || s.busy {
-                return done();
+                return Answer::Done(Err("no motor is ready: select one first".into()));
             }
             let (this, other) = match direction {
                 Direction::Upper => (&mut hw.form.held_upper, hw.form.held_lower),
@@ -194,16 +316,29 @@ pub(super) fn handle(hw: &mut Hardware, action: &HardwareAction, call: &mut Call
             if !std::mem::take(held) {
                 return done();
             }
-            send(hw, LinkCommand::Release)
+            // A release that cannot reach the link would leave the motor
+            // moving: STOP on the immediate path instead.
+            let answer = send(hw, LinkCommand::Release);
+            if matches!(answer, Answer::Done(Err(_))) {
+                stop_immediate(hw);
+            }
+            answer
         }
         H::Speed { percent } => match stepped(*percent, 0.0, 100.0, 1.0, "movement speed") {
+            // Remote: the form changes only once the link thread accepts it.
+            Ok(v) if hw.active_ticket.is_some() && call.rest() => {
+                let mut inputs = hw.form.inputs.clone();
+                inputs.speed_percent = v;
+                send_with(hw, Some(inputs), LinkCommand::SpeedChanged)
+            }
             Ok(v) => {
                 hw.form.inputs.speed_percent = v;
                 inputs_changed(hw);
-                if let Some(link) = hw.link.as_ref() {
-                    link.send(LinkCommand::SpeedChanged);
+                // Not connected: the form keeps the value for the next link.
+                if hw.link.is_none() {
+                    return done();
                 }
-                done()
+                send(hw, LinkCommand::SpeedChanged)
             }
             Err(e) => Answer::Done(Err(e)),
         },
@@ -309,12 +444,20 @@ pub(super) fn handle(hw: &mut Hardware, action: &HardwareAction, call: &mut Call
             if !percent.is_finite() || !(0.0..=100.0).contains(percent) {
                 return Answer::Done(Err("PWM ceiling (%) must be from 0 to 100".into()));
             }
-            hw.form.inputs.pwm_percent = (percent * 10.0).round() / 10.0;
-            inputs_changed(hw);
-            if let Some(link) = hw.link.as_ref() {
-                link.send(LinkCommand::PwmChanged);
+            let pwm = (percent * 10.0).round() / 10.0;
+            // Remote: the form changes only once the link thread accepts it.
+            if hw.active_ticket.is_some() && call.rest() {
+                let mut inputs = hw.form.inputs.clone();
+                inputs.pwm_percent = pwm;
+                return send_with(hw, Some(inputs), LinkCommand::PwmChanged);
             }
-            done()
+            hw.form.inputs.pwm_percent = pwm;
+            inputs_changed(hw);
+            // Not connected: the form keeps the value for the next link.
+            if hw.link.is_none() {
+                return done();
+            }
+            send(hw, LinkCommand::PwmChanged)
         }
         H::Flip => send(hw, LinkCommand::Flip),
         H::RawStepValue { delta } => {
@@ -481,7 +624,7 @@ mod tests {
     #[test]
     fn stepped_values_follow_the_page_inputs() {
         assert_eq!(stepped(33.4, 0.0, 100.0, 1.0, "speed"), Ok(33.0));
-        assert_eq!(stepped(140.0, 5.0, 100.0, 1.0, "speed"), Ok(100.0));
+        assert!(stepped(140.0, 5.0, 100.0, 1.0, "speed").is_err());
         assert_eq!(stepped(12.34, 0.0, 100.0, 0.1, "target"), Ok(12.3));
         assert!(stepped(f64::NAN, 0.0, 100.0, 1.0, "speed").is_err());
     }

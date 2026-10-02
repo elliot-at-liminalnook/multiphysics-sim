@@ -73,6 +73,7 @@ pub(super) enum PanelText {
     GaitStatus,
     Position,
     TargetLabel,
+    TargetNote,
     PwmValue,
     RawStep,
     Telemetry,
@@ -204,6 +205,15 @@ pub(crate) fn panel_view(hw: &Hardware, now: Instant) -> PanelView {
     if hw.link.is_none() {
         v.block(if hw.connecting.is_some() { format!("Connecting to {}…", hw.url()) } else { "Not connected to the calibration server.".into() });
     }
+    if hw.snapshot.authorization_revoked || (hw.link.is_some() && !hw.snapshot.connection_valid) {
+        v.block("Connection or execution identity lost; reconnect required before calibration automation.".into());
+    }
+    if hw.snapshot.execution.as_ref().is_some_and(|i| i.is_virtual_calibration()) {
+        v.status = format!("VIRTUAL · simulated bench telemetry and results, not physical measurements. {}", v.status);
+        v.tune_status = format!("VIRTUAL · {}", v.tune_status);
+        if !hw.snapshot.tune_stages.is_empty() { v.tune_status += &format!("\nCaptured stages: {}", hw.snapshot.tune_stages.join(" → ")); }
+        v.campaign_status = format!("VIRTUAL · {}", v.campaign_status);
+    }
     if let Some(notice) = hw.mirror.gait_notice() {
         v.gait.status = notice.to_string();
     }
@@ -316,7 +326,7 @@ fn spawn(mut commands: Commands, fonts: Res<UiFonts>, mut images: ResMut<Assets<
             // and every widget are children, so they are above it in the stack).
             FocusPolicy::Block,
             // The page's `aria-label` (calibration-ui.mjs:10).
-            AccessibleLabel::new("Physical leg calibration"),
+            AccessibleLabel::new("Leg calibration"),
             Shown::Root,
         ))
         .with_children(|root| {
@@ -382,6 +392,9 @@ fn text_of(t: PanelText, v: &PanelView, hw: &Hardware, connection: &str) -> Stri
         PanelText::GaitStatus => v.gait.status.clone(),
         PanelText::Position => v.position.clone(),
         PanelText::TargetLabel => v.target_label.clone(),
+        PanelText::TargetNote => if hw.snapshot.execution.as_ref().is_some_and(|i| i.is_virtual_calibration()) {
+            "VIRTUAL: green = simulated encoder · blue = requested. Results are simulated, not physical measurements. Z disables torque; release holds. Losing focus stops drive.".into()
+        } else { super::panel_sections::TARGET_NOTE.into() },
         PanelText::PwmValue => format!("{}%", view::fixed(f.inputs.pwm_percent, 1)),
         PanelText::RawStep => f.step.to_string(),
         PanelText::Telemetry => v.telemetry.clone(),
@@ -396,7 +409,9 @@ fn text_of(t: PanelText, v: &PanelView, hw: &Hardware, connection: &str) -> Stri
 fn connection_line(hw: &Hardware, v: &PanelView) -> String {
     match (&hw.link, &hw.connecting) {
         (_, Some(_)) => format!("Connecting to {}…", hw.url()),
-        (Some(link), None) => format!("{} · link {}{}", hw.url(), link.generation, if v.blocked.is_some() { " · status stale" } else { "" }),
+        (Some(link), None) => format!("{} · link {} · {}{}", hw.url(), link.generation,
+            if hw.snapshot.execution.as_ref().is_some_and(|i| i.is_virtual_calibration()) { "VIRTUAL simulated bench" } else { "physical or unknown execution" },
+            if v.blocked.is_some() { " · stale/reconnect required" } else { "" }),
         (None, None) => format!("Not connected · {}", hw.url()),
     }
 }

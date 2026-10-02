@@ -27,6 +27,7 @@ impl Session {
         // The page's `.sort()` compares as text (10 before 2).
         ids.sort_by_key(|k| k.to_string());
         let Some(&first) = ids.first() else {
+            self.decline("no enabled motor has both poses taught");
             self.snap.sequence_text = "No enabled motor has both poses taught.".into();
             self.render();
             return;
@@ -79,6 +80,7 @@ impl Session {
     }
     /// `fail(reason)` :176.
     fn sweep_all_fail(&mut self, token: u64, reason: String) {
+        self.decline(format!("sweep-all stopped: {reason}"));
         if self.sweep_all_is(token) {
             self.sweep_all = None;
             self.snap.sequence_text = format!("Sweep-all stopped: {reason}");
@@ -133,15 +135,19 @@ impl Session {
 
     /// "Tune this motor" :203-210 (the UI checked its confirmation box).
     pub(in crate::robot::hardware) fn tune(&mut self) {
-        let Some(target) = self.snap.id else { return };
+        let Some(target) = self.snap.id else { return self.decline("no motor is selected") };
         if self.snap.tuning {
-            return;
+            return self.decline("a tune is already running");
         }
         self.stop();
         self.select_motor(target, false, true);
         if !self.snap.ready || self.snap.id != Some(target) {
+            self.decline(format!("motor {target} could not be enabled for tuning"));
+            self.snap.tune_done += 1;
+            self.render();
             return;
         }
+        self.snap.tune_stages.clear();
         self.snap.tuning = true;
         self.render();
         match self.send_status(calibration::tune(target, self.seq(), self.drive_pwm())) {
@@ -156,6 +162,7 @@ impl Session {
             Err(e) => {
                 self.message(e);
                 self.snap.tuning = false;
+                self.snap.tune_done += 1;
                 self.render();
                 return;
             }
@@ -179,13 +186,16 @@ impl Session {
     }
     /// "Run campaign" / "Resume" :274-281 (the UI checked its confirmation box).
     pub(in crate::robot::hardware) fn campaign(&mut self, resume: bool) {
-        let Some(target) = self.snap.id else { return };
+        let Some(target) = self.snap.id else { return self.decline("no motor is selected") };
         if self.snap.campaigning {
-            return;
+            return self.decline("a campaign is already running");
         }
         self.stop();
         self.select_motor(target, true, false);
         if !self.snap.ready || self.snap.id != Some(target) {
+            self.decline(format!("motor {target} could not be enabled for the campaign"));
+            self.snap.campaign_done += 1;
+            self.render();
             return;
         }
         self.snap.campaigning = true;
@@ -201,6 +211,7 @@ impl Session {
             Err(e) => {
                 self.message(e);
                 self.snap.campaigning = false;
+                self.snap.campaign_done += 1;
                 self.render();
                 return;
             }

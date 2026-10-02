@@ -5,15 +5,11 @@
 //! (`hardware_status`, `hardware_stop`, `hardware_export`, `hardware_gaits`,
 //! `hardware {action}`), and applied by [`apply`] in `ViewerSet::Actions`.
 //!
-//! **Refusal rule.** An action that can start or change motion
-//! ([`HardwareAction::starts_motion`]) is refused when its origin is
-//! `Origin::Rest` or `Origin::SystemUi`, and the refusal names it: motion
-//! needs a pointer or key in the window, with the operator present
-//! (AGENTS.md). Status, gaits, export, connect, STOP and turning the mirror
-//! on or off stay available to automation. The mirror's bindings (leg, joint,
-//! polarity, alignment) count as motion: Leg/Both gait playback builds its
-//! `gait_start` bindings from them, and "Save sim alignment here" saves the
-//! alignment angle as the motor's reference.
+//! **Authorization.** Physical and unknown executions require an operator at
+//! the window. Remote HW-01–HW-09 calibration alone can use a verified virtual
+//! identity pinned to a fresh connection generation. [`HardwareAction::authorize`]
+//! is shared by listings and authoritative dispatch. Gait, raw step, live sync
+//! and binding motion remain refused. STOP bypasses this policy and queues.
 // Implementation below the enum: the panel part (input systems, apply).
 use crate::app::actions::{self, Spec, spec};
 use serde::{Deserialize, Serialize};
@@ -307,10 +303,37 @@ impl HardwareAction {
         }
     }
 
+    /// The only remote-motion policy, reused by listing and authoritative dispatch.
+    pub(crate) fn authorize(&self, hw: &super::Hardware, now: std::time::Instant) -> Result<(), String> {
+        if !self.starts_motion() { return Ok(()); }
+        use HardwareAction as H;
+        // A release is a move to hold: like STOP it is never refused for a
+        // stale status or a replaced generation (refusing it would leave the
+        // motor moving); it needs only a link to send it to. The link thread
+        // holds, or STOPs if the session may no longer be driven.
+        if matches!(self, H::JogRelease { .. }) {
+            return if hw.link.is_some() { Ok(()) } else { Err(format!("hardware `{}`: not connected", self.name())) };
+        }
+        if !matches!(self, H::Select { .. } | H::SetDisabled | H::SweepAll | H::HoldOthers { .. }
+            | H::JogPress { .. } | H::JogRelease { .. } | H::Speed { .. } | H::Target { .. }
+            | H::TargetCommit | H::Capture { .. } | H::ResetPoses | H::ClearLower | H::ClearUpper
+            | H::Sweep | H::Learn | H::TuneConfirm { .. } | H::Tune
+            | H::CampaignConfirm { .. } | H::Campaign { .. } | H::DriveMode { .. } | H::PwmCeiling { .. }) {
+            return Err(self.remote_refusal());
+        }
+        let Some(link) = &hw.link else { return Err(self.remote_refusal()); };
+        let s = link.snapshot();
+        sim_runtime::hardware_client::calibration::authorize_virtual(
+            s.execution.as_ref(), s.generation, hw.generation,
+            s.connection_valid && s.state.connected && !s.authorization_revoked && link.generation == hw.generation,
+            !s.stale(now),
+        ).map_err(|why| format!("hardware `{}`: {why}", self.name()))
+    }
+
     /// The refusal for a motion action from REST or `system_ui`, naming it.
     pub fn remote_refusal(&self) -> String {
         format!(
-            "hardware `{}` starts, changes or arms motion and needs an operator at the window: REST and system_ui may read status, list gaits, export, connect, turn the mirror on or off and STOP only",
+            "hardware `{}` starts, changes or arms motion and needs an operator at the window: remote calibration requires a verified fresh virtual execution; physical, unknown and out-of-scope motion is refused",
             self.name()
         )
     }
@@ -327,7 +350,7 @@ pub(crate) mod wire {
         HardwareStop,
         HardwareExport,
         HardwareGaits,
-        /// Any panel intent by its serde form; motion ones are refused by the handler.
+        /// Any panel intent; remote calibration requires pinned virtual authorization.
         Hardware { action: super::HardwareAction },
     }
 }
@@ -344,7 +367,7 @@ impl actions::Action for HardwareAction {
                 "hardware",
                 r,
                 json!({"action": {"mirror_enabled": {"on": true}}}),
-                "Any Leg calibration panel intent in its serde form (as system_ui lists it). Intents that start, change or arm motion (select, enable, jog, speed, sweep, tune, campaign, gait choice/play, drive settings, the operator's confirmations, raw step, live sync mapping and start, the mirror's leg/joint/polarity/alignment bindings that a Leg/Both gait and the saved alignment use, …) are refused from REST by name; STOP, reads, export, connect, sections, turning the mirror on or off (mirror_enabled) and focus_lost/panel_closed losses are allowed (loss leaving is refused: it is the window closing).",
+                "Any Leg calibration intent. HW-01–HW-09 remote calibration requires a fresh pinned virtual execution identity and connection generation; replies await the authoritative session consumer. Physical, unknown, stale, replaced and out-of-scope motion (gait, raw step, live sync and bindings) is refused. STOP, reads, export, connect, sections and focus_lost/panel_closed losses remain allowed; leaving is the actual window close.",
             ),
         ]
     }
@@ -372,7 +395,7 @@ impl actions::Action for HardwareAction {
 
 mod input;
 
-use super::handlers::{Answer, handle, inputs_changed, remote_check};
+use super::handlers::{Answer, handle, inputs_changed};
 use super::link::{self, LinkCommand};
 use super::Hardware;
 use crate::app::actions::{Act, InFlight, Origin, Replies};
@@ -454,21 +477,45 @@ fn enter(mut commands: Commands, documents: Option<Res<crate::app::switch::Docum
 /// is dropped off the UI thread (the link thread sends STOP again as its
 /// channel closes; the STOP job completes on its own).
 fn leave(world: &mut World) {
+    // REST calls still waiting on this panel (a queued calibration command's
+    // acknowledgement, an export) are answered now: `apply` does not run
+    // outside Robot mode, and on a return they would be answered against the
+    // next connection. The STOP below does not depend on them.
+    let mut carried = world.get_resource_mut::<InFlight<HardwareAction>>().map(|mut f| std::mem::take(&mut *f)).unwrap_or_default();
+    if let Some(mut replies) = world.get_resource_mut::<Replies>() {
+        carried.abandon(&mut replies, "left Robot mode before the hardware command finished; STOP was requested");
+    }
     let Some(mut hw) = world.remove_resource::<Hardware>() else { return };
     stop_immediate(&mut hw);
     hw.sync.stop_ours("Robot mode was left");
     crate::jobs::drop_off_thread(hw, "the hardware panel");
 }
 
-/// Posts STOP on its own connection (`link::stop_now`, with the link's
-/// newest motor) and tells the link it was sent, with the epoch `stop_now`
-/// bumped to (always, also when no motor is known: the link sends nothing
-/// but `stop` until that `Stopped` arrives); forgets held jog presses.
+/// An automatic STOP (loss, leaving, a reconnect, a revoked or cancelled
+/// remote command): posts STOP on its own connection (`link::stop_now`, with
+/// the link's newest motor; id-less only if this link drove,
+/// [`link::LinkSnapshot::drove`]) and tells the link it was sent, with the
+/// epoch `stop_now` bumped to (always, also when nothing was posted: the link
+/// sends nothing but `stop` until that `Stopped` arrives); forgets held jog
+/// presses and the tune/campaign confirmations.
 pub(super) fn stop_immediate(hw: &mut Hardware) {
+    stop_with(hw, false);
+}
+
+/// The operator's STOP (the panel's Stop, Z/Escape, REST `hardware_stop`):
+/// as [`stop_immediate`], but always posted, id-less when no motor is known.
+pub(super) fn operator_stop(hw: &mut Hardware) {
+    stop_with(hw, true);
+}
+
+fn stop_with(hw: &mut Hardware, operator: bool) {
     hw.form.held_upper = false;
     hw.form.held_lower = false;
+    hw.form.tune_ok = false;
+    hw.form.campaign_ok = false;
     let Some(link) = hw.link.as_ref() else { return };
-    let (epoch, job) = link::stop_now(link, link.snapshot().id);
+    let snapshot = link.snapshot();
+    let (epoch, job) = link::stop_now(link, snapshot.id, operator || snapshot.drove);
     if let Some(job) = job {
         hw.stops.push(job);
     }
@@ -496,16 +543,34 @@ pub(super) fn connect(hw: &mut Hardware) {
         }
         hw.snapshot = Default::default();
     }
-    hw.generation += 1;
+    hw.generation = sim_runtime::hardware_client::next_connection_generation();
     hw.notice = None;
     let target = hw.target();
+    let generation = hw.generation;
     hw.connecting = Some(Job::spawn(Pool::Dedicated, hw.generation, "hardware connect", move |_| {
-        sim_runtime::hardware_client::token::connect(&target.url, target.token_file.as_deref(), ServerKind::Calibration).map_err(|e| e.to_string())
+        let client = sim_runtime::hardware_client::token::connect(&target.url, target.token_file.as_deref(), ServerKind::Calibration).map_err(|e| e.to_string())?;
+        let status = client.get_as::<sim_runtime::hardware_client::calibration::Status>("/calibration/status").map_err(|e| e.to_string())?;
+        Ok(match status.execution.filter(|identity| identity.is_virtual_calibration()) {
+            Some(identity) => {
+                let pinned = client.with_calibration_execution(identity.clone(), generation);
+                let body = sim_runtime::hardware_client::calibration::inspect(1);
+                let inspected: sim_runtime::hardware_client::calibration::Status = serde_json::from_value(
+                    pinned.post("/calibration/command", &body).map_err(|e| e.to_string())?
+                ).map_err(|e| format!("virtual inspect status: {e}"))?;
+                // This link has not selected anything yet: no STOP (an id-less
+                // one could end another client's session on that server).
+                if inspected.execution.as_ref() != Some(&identity) || !inspected.connected {
+                    return Err("virtual inspect identity or acquisition connection changed; reconnect required".into());
+                }
+                pinned
+            },
+            None => client,
+        })
     }));
 }
 
-/// Actions: the panel's one apply system. Motion from REST or `system_ui`
-/// is refused by name; a remote action whose control is disabled now is
+/// Actions: the panel's one apply system. Remote calibration uses the shared
+/// fail-closed virtual authorization; a control disabled at submission is
 /// refused with the control's reason. A click's or key's refusal is the
 /// panel's notice (a `system_ui` one too); REST gets the outcome, with
 /// `hardware_status`'s JSON as the answer of an accepted command.
@@ -529,12 +594,9 @@ pub(crate) fn apply(
     let now = Instant::now();
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
         let hw = &mut *hw;
-        let answer = if closing.as_ref().is_some_and(|close| close.pending()) && action.starts_motion() {
+        // A release (move to hold) is never refused, as STOP is not.
+        let answer = if closing.as_ref().is_some_and(|close| close.pending()) && action.starts_motion() && !matches!(action, HardwareAction::JogRelease { .. }) && call.continuation.get("hardware_ticket").is_none() {
             Answer::Done(Err("Window closure is pending; cancel close before starting, changing or arming motion".into()))
-        } else if call.remote() && action.starts_motion() {
-            Answer::Done(Err(action.remote_refusal()))
-        } else if let Err(e) = remote_check(hw, action, call) {
-            Answer::Done(Err(e))
         } else {
             handle(hw, action, call, now, view.as_deref(), &mut |a| {
                 robot_out.write(Act::quiet(a));
@@ -542,7 +604,10 @@ pub(crate) fn apply(
         };
         // Every accepted choice claims its field even when its value equals
         // the startup default. Untouched persisted choices can still load.
-        let accepted = !matches!(&answer, Answer::Done(Err(_)));
+        // Accepted means finally Ok: a remote command waiting on the link
+        // thread (Pending) claims nothing until its ticket resolves Ok, when
+        // this runs again for it.
+        let accepted = matches!(&answer, Answer::Done(Ok(_)));
         let paths = preference_paths(action);
         if accepted && !paths.is_empty() {
             preferences.set_hardware_claimed(hw.settings.clone(), paths);
@@ -660,6 +725,22 @@ fn poll_jobs(hw: Option<ResMut<Hardware>>) {
         hw.export_done = Some((seq, result));
     }
     hw.snapshot = hw.link.as_ref().map(|l| l.snapshot()).unwrap_or_default();
+    // Staleness revokes this generation permanently, even if an in-flight
+    // request later produces a fresh-looking answer. STOP does not wait for it.
+    // A status that aged only because the link thread is waiting for a
+    // request that may still answer (a select proving watchdogs, a tune
+    // start: the server waits up to 8 s for its hardware, the client 10 s) is
+    // not a lost binding; that request's own failure revokes if it is
+    // (`calibration::binding_lost`), and its deadline bounds the wait. The
+    // panel still shows the status as stale, and queued remote commands still
+    // need a fresh status when the link thread takes them.
+    let now = Instant::now();
+    let revoke = hw.snapshot.execution.is_some() && hw.snapshot.read_at.is_some()
+        && ((hw.snapshot.stale(now) && !hw.snapshot.awaiting_answer(now)) || !hw.snapshot.connection_valid || hw.snapshot.authorization_revoked);
+    if revoke && hw.link.as_ref().is_some_and(|link| !link.authorization.swap(true, std::sync::atomic::Ordering::SeqCst)) {
+        stop_immediate(hw);
+        hw.snapshot.authorization_revoked = true;
+    }
     let (tune, campaign, reset) = (hw.snapshot.tune_done, hw.snapshot.campaign_done, hw.snapshot.speed_reset);
     let f = &mut hw.form;
     if tune > f.seen_tune_done {

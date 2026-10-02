@@ -16,13 +16,16 @@
 //!   by the panel's buttons, keys (Q/A hold-to-move, Z/Escape stop), window
 //!   focus loss, `system_ui` and REST, and applied by one system,
 //!   [`actions::apply`], in `ViewerSet::Actions`. Motion-starting actions
-//!   ([`HardwareAction::starts_motion`]: anything that starts, changes or
-//!   arms motion, including the operator's confirmations and drive
-//!   settings, and the mirror's leg, joint, polarity and alignment
-//!   bindings, which become the Leg/Both gait bindings and the saved
-//!   alignment reference) are refused, by name, from REST and `system_ui`
-//!   (`Origin::Rest`, `Origin::SystemUi`); status, gaits, export, connect,
-//!   sections, turning the mirror on or off and STOP stay available there.
+//!   ([`HardwareAction::starts_motion`]) share [`HardwareAction::authorize`].
+//!   Remote HW-01–HW-09 calibration requires verified virtual provenance pinned
+//!   to this connection generation; a stale status (unless the link thread
+//!   still awaits a request's answer), a lost connection or binding (transport,
+//!   or the server's 409) and an identity replacement revoke it until an
+//!   explicit reconnect; an ordinary refusal (400) does not. Gait, raw step,
+//!   live sync and bindings stay refused. STOP is immediate and
+//!   unconditional. Remote replies (REST, and `system_ui` activations, which
+//!   robot mode passes on with their own reply) await the link thread's
+//!   verdict on what the command achieved; queueing is not success.
 //! - **Link** ([`link`], [`session`]): one `jobs::RunThread`
 //!   ("hardware-link") per connection runs the page's session logic
 //!   (select, hold-to-move, sweeps, tune, campaign, gait on the leg): it
@@ -35,7 +38,9 @@
 //!   panel reconnect, mode exit, window close) it sends STOP before it
 //!   returns.
 //! - **STOP never queues** ([`link::stop_now`]): the button, Z, Escape,
-//!   focus loss, panel close and mode exit post STOP on a fresh connection
+//!   REST `hardware_stop` (always posted, id-less without a known motor),
+//!   focus loss, panel close and mode exit (with a known motor, or id-less
+//!   only if this link drove: [`link::LinkSnapshot::drove`]) post STOP on a fresh connection
 //!   from a `jobs::Pool::Dedicated` job (`complete_on_drop`), not through the
 //!   link thread, so it cannot wait behind a slow request (a select proving
 //!   watchdogs, a hardware reply the server waits up to 8 s for). The
@@ -166,6 +171,9 @@ pub(crate) struct Hardware {
     pub snapshot: link::LinkSnapshot,
     /// The last link generation handed out (each connect makes the next).
     pub generation: u64,
+    pub command_seq: u64,
+    pub active_ticket: Option<u64>,
+    pub queued_ticket: bool,
     /// Download calibration: the number of the last export started, and the
     /// last one finished with its result (REST `hardware_export` waits for its own).
     pub export_seq: u64,
@@ -194,6 +202,9 @@ impl Hardware {
             ui_revision: 0,
             snapshot: link::LinkSnapshot::default(),
             generation: 0,
+            command_seq: 0,
+            active_ticket: None,
+            queued_ticket: false,
             export_seq: 0,
             export_done: None,
         }

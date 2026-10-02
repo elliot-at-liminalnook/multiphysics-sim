@@ -100,8 +100,11 @@ fn answer(mut stream: TcpStream, handler: &Handler, log: &Log) {
     let path = head.split_whitespace().nth(1).unwrap_or("").to_string();
     let body: Value = if length > 0 { serde_json::from_slice(&data[end..end + length]).unwrap_or(Value::Null) } else { Value::Null };
     log.lock().unwrap().push((path.clone(), body.clone(), Instant::now()));
+    // As the calibration server answers: a binding refusal (its text starts
+    // with `calibration::BINDING_REFUSED`) is 409, any other refusal 400.
     let (status, reply) = match handler(path.as_str(), &body) {
         Ok(v) => (200, v),
+        Err(e) if e.starts_with(calibration::BINDING_REFUSED) => (calibration::BINDING_REFUSED_STATUS, json!({ "error": e })),
         Err(e) => (400, json!({ "error": e })),
     };
     let text = reply.to_string();
@@ -263,7 +266,7 @@ fn a_closed_channel_sends_stop_for_the_selected_motor() {
     tx.send(LinkCommand::Select { id: 3 }).unwrap();
     drop(tx);
     let shared = Arc::new(Mutex::new(LinkSnapshot::default()));
-    run(fake.client(), 1, Arc::new(AtomicU64::new(0)), Arc::new(AtomicU64::new(0)), rx, shared.clone());
+    run(fake.client(), 1, Arc::new(AtomicU64::new(0)), Arc::new(AtomicU64::new(0)), Arc::default(), rx, shared.clone());
     let commands = fake.commands();
     let last = commands.last().expect("a request");
     assert_eq!((last["action"].as_str(), last["id"].as_u64()), (Some("stop"), Some(3)), "{commands:?}");
@@ -519,4 +522,215 @@ fn the_gait_lease_renews_on_its_period_at_once_on_a_change_and_never_during_a_st
     let ended = fake.commands().len();
     std::thread::sleep(Duration::from_millis(700));
     assert_eq!(fake.commands().len(), ended);
+}
+
+
+// LC1–LC2 fixtures: written and source-inspected; not executed this turn.
+fn virtual_identity(server: &str) -> calibration::ExecutionIdentity {
+    calibration::ExecutionIdentity { schema_version: 1, kind: "virtual_calibration".into(),
+        server_instance: server.into(), bench_instance: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb".into() }
+}
+fn virtual_document(identity: &calibration::ExecutionIdentity) -> Value {
+    json!({"connected":true,"execution":identity,"enabled_id":1,
+        "calibration":{"axes":{"1":{"lower":100,"upper":1000,"reference":500,
+            "tuning":{"pid":{"kp":2.0,"ki":0.1,"kd":0.01},"friction_duty":0.2,"record":"retained-tune.json"}}}},
+        "campaign":{"running":false,"completed":2,"stage":"stopped","directory":"retained-campaign"}})
+}
+fn virtual_status(identity: &calibration::ExecutionIdentity) -> Status {
+    serde_json::from_value(virtual_document(identity)).unwrap()
+}
+fn pinned_session(fake: &Fake, identity: calibration::ExecutionIdentity) -> Session {
+    let shared = Arc::new(Mutex::new(LinkSnapshot::default()));
+    let mut session = Session::new(fake.client().with_calibration_execution(identity.clone(), 1), 1,
+        Arc::default(), Arc::default(), shared);
+    session.adopt(virtual_status(&identity));
+    session.snap.id = Some(1);
+    session.snap.ready = true;
+    session
+}
+
+#[test]
+fn real_session_replacement_revokes_and_preserves_accepted_records() {
+    let first = virtual_identity("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+    let replacement = virtual_identity("cccccccc-cccc-4ccc-8ccc-cccccccccccc");
+    let response = virtual_document(&first);
+    let fake = Fake::start(Arc::new(move |_, _| Ok(response.clone())));
+    let mut session = pinned_session(&fake, first.clone());
+    session.adopt(virtual_status(&replacement));
+    assert!(session.snap.authorization_revoked);
+    assert!(!session.snap.connection_valid && !session.snap.ready);
+    assert_eq!(session.axis().tuning.unwrap().record, "retained-tune.json");
+    assert_eq!(session.snap.state.campaign.as_ref().unwrap().completed, 2);
+    session.adopt(virtual_status(&first));
+    assert!(session.snap.authorization_revoked, "a later matching status cannot renew a revoked generation");
+    session.handle(LinkCommand::Checked { ticket: 1, epoch: session.epoch_now(), generation: 1, inputs: None, command:Box::new(LinkCommand::Select {id:1}) });
+    assert!(session.snap.command_results[&1].is_err());
+    assert!(fake.commands().iter().all(|c| c["action"] == "stop"));
+}
+
+#[test]
+fn checked_real_session_refuses_stale_physical_unknown_and_interrupted_work() {
+    let identity = virtual_identity("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+    let fake = Fake::start(Arc::new(|_, _| panic!("refused command must not reach HTTP")));
+    let mut session = pinned_session(&fake, identity);
+    session.snap.read_at = Some(Instant::now() - crate::robot::hardware::link::STALE_AFTER - Duration::from_millis(1));
+    session.handle(LinkCommand::Checked { ticket: 1, epoch: 0, generation: 1, inputs: None, command:Box::new(LinkCommand::Select {id:1})});
+    assert!(session.snap.command_results[&1].is_err());
+    session.snap.read_at = Some(Instant::now());
+    session.snap.execution = None;
+    session.handle(LinkCommand::Checked { ticket: 2, epoch: 0, generation: 1, inputs: None, command:Box::new(LinkCommand::Select {id:1})});
+    assert!(session.snap.command_results[&2].is_err());
+    session.snap.execution = Some(calibration::ExecutionIdentity {kind:"physical".into(), ..virtual_identity("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")});
+    session.handle(LinkCommand::Checked { ticket: 3, epoch: 0, generation: 1, inputs: None, command:Box::new(LinkCommand::Select {id:1})});
+    assert!(session.snap.command_results[&3].is_err());
+    session.epoch.fetch_add(1, SeqCst);
+    session.handle(LinkCommand::Checked { ticket: 4, epoch: 0, generation: 1, inputs: None, command:Box::new(LinkCommand::Capture {boundary:crate::robot::hardware::actions::Boundary::Lower,reference_joint_rad:None})});
+    assert_eq!(session.snap.command_results[&4], Err(STOP_PENDING.into()));
+    assert_eq!(session.axis().lower, Some(100));
+    assert_eq!(session.snap.state.campaign.as_ref().unwrap().completed, 2);
+    assert!(fake.commands().is_empty());
+}
+
+#[test]
+fn actual_remote_handler_waits_for_real_link_consumer_refusal() {
+    use crate::app::actions::{Call, Origin, Replies};
+    use crate::robot::hardware::{Hardware, HardwareConfig, actions::HardwareAction, handlers::{dispatch, Answer}, settings, link::Link};
+    let identity = virtual_identity("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+    let status = json!({"connected":true,"execution":identity,"calibration":{"axes":{"1":{"role":"Knee"}}}});
+    let fake = Fake::start(Arc::new(move |path, body| {
+        if path == STATUS || body["action"] == "stop" { Ok(status.clone()) }
+        else { Err("authoritative selection refused".into()) }
+    }));
+    let mut hw = Hardware::new(HardwareConfig::default(), settings::Settings::default());
+    hw.generation = 1;
+    hw.link = Some(Link::spawn(fake.client().with_calibration_execution(identity, 1), 1));
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while hw.link.as_ref().unwrap().snapshot().read_at.is_none() {
+        assert!(Instant::now() < deadline, "fresh status deadline");
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    hw.snapshot = hw.link.as_ref().unwrap().snapshot();
+    let mut replies = Replies::default();
+    let origin = Origin::Rest(replies.open());
+    let mut continuation = Value::Null;
+    let action = HardwareAction::Select {id:1};
+    let mut call = Call {origin,continuation:&mut continuation,cancelled:false,replies:&mut replies};
+    assert!(matches!(dispatch(&mut hw,&action,&mut call,Instant::now(),None,&mut |_| {}), Answer::Pending));
+    loop {
+        assert!(Instant::now() < deadline, "authoritative acknowledgement deadline");
+        match dispatch(&mut hw,&action,&mut call,Instant::now(),None,&mut |_| {}) {
+            Answer::Pending => std::thread::sleep(Duration::from_millis(1)),
+            Answer::Done(Err(error)) => { assert!(error.contains("authoritative selection refused")); break; }
+            Answer::Done(Ok(_)) => panic!("queue submission must not acknowledge rejected execution"),
+        }
+    }
+    assert_eq!(fake.commands().iter().filter(|c| c["action"] == "select").count(), 1);
+    // An ordinary refusal (400) is surfaced but leaves the pinned binding intact.
+    let after = hw.link.as_ref().unwrap().snapshot();
+    assert!(!after.authorization_revoked && after.connection_valid, "a 400 refusal must not revoke");
+}
+
+// Written fixtures for binding loss, epochs and postconditions; not executed this turn.
+const SERVER_A: &str = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+
+#[test]
+fn a_binding_refusal_revokes_but_an_ordinary_refusal_does_not() {
+    let identity = virtual_identity(SERVER_A);
+    let status = virtual_document(&identity);
+    let refuse_binding = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let refusing = refuse_binding.clone();
+    let fake = Fake::start(Arc::new(move |_: &str, body: &Value| -> Result<Value, String> { match body["action"].as_str() {
+        Some("select") if refusing.load(SeqCst) => Err(format!("{}: connection generation replaced", calibration::BINDING_REFUSED)),
+        Some("select") => Err("Unknown motor ID".into()),
+        _ => Ok(status.clone()),
+    } }));
+    let mut session = pinned_session(&fake, identity);
+    // 400: the error is the command's result; automation stays authorized.
+    session.handle(LinkCommand::Checked { ticket: 1, epoch: session.epoch_now(), generation: 1, inputs: None, command: Box::new(LinkCommand::Select { id: 1 }) });
+    assert_eq!(session.snap.command_results[&1], Err("Unknown motor ID".to_string()));
+    assert!(!session.snap.authorization_revoked && session.snap.connection_valid);
+    // 409: the binding is gone; revoked until an explicit reconnect.
+    refuse_binding.store(true, SeqCst);
+    session.handle(LinkCommand::Checked { ticket: 2, epoch: session.epoch_now(), generation: 1, inputs: None, command: Box::new(LinkCommand::Select { id: 1 }) });
+    assert!(session.snap.command_results[&2].as_ref().is_err_and(|e| e.starts_with(calibration::BINDING_REFUSED)));
+    assert!(session.snap.authorization_revoked && !session.snap.connection_valid);
+    // Nothing more reaches the server for automation.
+    session.handle(LinkCommand::Checked { ticket: 3, epoch: session.epoch_now(), generation: 1, inputs: None, command: Box::new(LinkCommand::Select { id: 1 }) });
+    assert!(session.snap.command_results[&3].is_err());
+    assert_eq!(fake.commands().iter().filter(|c| c["action"] == "select").count(), 2);
+}
+
+#[test]
+fn own_epoch_bumps_do_not_refuse_a_queued_checked_command_but_a_ui_stop_does() {
+    let identity = virtual_identity(SERVER_A);
+    let status = virtual_document(&identity);
+    let fake = Fake::start(Arc::new(move |_: &str, _: &Value| -> Result<Value, String> { Ok(status.clone()) }));
+    let mut session = pinned_session(&fake, identity);
+    let select = || Box::new(LinkCommand::Select { id: 1 });
+    // Both queued before the link thread took either: the same captured epoch.
+    let queued = session.epoch_now();
+    session.handle(LinkCommand::Checked { ticket: 1, epoch: queued, generation: 1, inputs: None, command: select() });
+    assert_eq!(session.snap.command_results[&1], Ok(()));
+    assert!(session.epoch_now() > queued, "select bumped the shared epoch itself");
+    session.handle(LinkCommand::Checked { ticket: 2, epoch: queued, generation: 1, inputs: None, command: select() });
+    assert_eq!(session.snap.command_results[&2], Ok(()), "the session's own bump is not a STOP");
+    // A UI STOP pressed after a command was queued refuses it, before and after its `Stopped`.
+    let queued = session.epoch_now();
+    let stopped = session.epoch.fetch_add(1, SeqCst) + 1;
+    session.handle(LinkCommand::Checked { ticket: 3, epoch: queued, generation: 1, inputs: None, command: select() });
+    assert_eq!(session.snap.command_results[&3], Err(STOP_PENDING.to_string()));
+    session.handle(LinkCommand::Stopped { epoch: stopped });
+    session.handle(LinkCommand::Checked { ticket: 4, epoch: queued, generation: 1, inputs: None, command: select() });
+    assert_eq!(session.snap.command_results[&4], Err(STOP_PENDING.to_string()));
+    // Queued after the STOP: runs.
+    session.handle(LinkCommand::Checked { ticket: 5, epoch: session.epoch_now(), generation: 1, inputs: None, command: select() });
+    assert_eq!(session.snap.command_results[&5], Ok(()));
+    // Authorized for another generation: refused without a request.
+    let sent = fake.commands().len();
+    session.handle(LinkCommand::Checked { ticket: 6, epoch: session.epoch_now(), generation: 2, inputs: None, command: select() });
+    assert!(session.snap.command_results[&6].is_err());
+    assert_eq!(fake.commands().len(), sent);
+}
+
+#[test]
+fn a_select_the_server_does_not_honour_is_an_error_not_an_acknowledgement() {
+    let identity = virtual_identity(SERVER_A);
+    let mut status = virtual_document(&identity);
+    status["enabled_id"] = Value::Null;
+    let fake = Fake::start(Arc::new(move |_: &str, _: &Value| -> Result<Value, String> { Ok(status.clone()) }));
+    let mut session = pinned_session(&fake, identity);
+    session.handle(LinkCommand::Checked { ticket: 1, epoch: session.epoch_now(), generation: 1, inputs: None, command: Box::new(LinkCommand::Select { id: 1 }) });
+    let result = session.snap.command_results[&1].clone();
+    assert!(result.as_ref().is_err_and(|e| e.contains("did not enable motor 1")), "{result:?}");
+    assert!(!session.snap.ready && !session.snap.authorization_revoked);
+}
+
+#[test]
+fn an_automatic_stop_from_a_link_that_never_drove_sends_nothing_without_a_motor() {
+    let fake = Fake::start(motor_server(1));
+    let (mut s, _) = session(&fake, Arc::default());
+    assert!(s.snap.id.is_none() && !s.snap.drove);
+    s.stop();
+    assert!(fake.commands().is_empty(), "no id-less STOP from a link that never selected");
+    s.handle(LinkCommand::Select { id: 1 });
+    assert!(s.snap.drove);
+}
+
+#[test]
+fn tune_start_failure_and_stop_keep_records_and_clear_terminal_stage_state() {
+    let identity = virtual_identity("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+    let status = virtual_document(&identity);
+    let fake = Fake::start(Arc::new(move |_, body| if body["action"] == "select" {
+        Err("select rejected before tuning".into())
+    } else { Ok(status.clone()) }));
+    let mut session = pinned_session(&fake, identity);
+    session.handle(LinkCommand::Checked { ticket: 1, epoch: 0, generation: 1, inputs: None, command:Box::new(LinkCommand::Tune)});
+    assert!(session.snap.command_results[&1].is_err());
+    assert!(!session.snap.tuning && session.snap.tune_done > 0);
+    // The dedicated STOP/loss receipt preserves the durable campaign metadata.
+    let identity = session.snap.execution.clone().unwrap();
+    session.adopt(virtual_status(&identity));
+    session.handle(LinkCommand::Stopped {epoch:session.epoch_now()});
+    assert_eq!(session.snap.state.campaign.as_ref().unwrap().completed, 2);
+    assert_eq!(session.axis().tuning.unwrap().record, "retained-tune.json");
 }

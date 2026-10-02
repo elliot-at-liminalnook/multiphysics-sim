@@ -21,7 +21,7 @@ pub(super) fn buttons(clicks: Query<(&HardwareAction, Option<&Enabled>), (With<c
 /// Input: "Upper ↑"/"Lower ↓" pressed is `JogPress`; the press ending
 /// (released anywhere: `bevy::ui` keeps `Pressed` until the left button is
 /// released, like the page's pointer capture) is `JogRelease`.
-pub(super) fn jog_buttons(mut jogs: Query<(&Interaction, &mut JogButton, Option<&Enabled>)>, mut out: MessageWriter<Act<HardwareAction>>) {
+pub(super) fn jog_buttons(keys: Res<ButtonInput<KeyCode>>, mut jogs: Query<(&Interaction, &mut JogButton, Option<&Enabled>)>, mut out: MessageWriter<Act<HardwareAction>>) {
     for (interaction, mut jog, enabled) in &mut jogs {
         let pressed = *interaction == Interaction::Pressed;
         if pressed && !jog.held && enabled.is_none_or(|e| e.0) {
@@ -29,7 +29,8 @@ pub(super) fn jog_buttons(mut jogs: Query<(&Interaction, &mut JogButton, Option<
             out.write(Act::ui(HardwareAction::JogPress { direction: jog.direction }));
         } else if !pressed && jog.held {
             jog.held = false;
-            out.write(Act::ui(HardwareAction::JogRelease { direction: jog.direction }));
+            let code = match jog.direction { Direction::Upper => KeyCode::KeyQ, Direction::Lower => KeyCode::KeyA };
+            if !keys.pressed(code) { out.write(Act::ui(HardwareAction::JogRelease { direction: jog.direction })); }
         }
     }
 }
@@ -47,7 +48,7 @@ pub(super) fn jog_buttons(mut jogs: Query<(&Interaction, &mut JogButton, Option<
 /// Escape (as its text and its Cancel), which is why no field may hold the
 /// keyboard while the panel is shown: the gait path field refuses and gives
 /// it up, and the document picker closes, when the panel opens.
-pub(super) fn keys(keys: Res<ButtonInput<KeyCode>>, typing: crate::ui_kit::text::Typing, hw: Option<Res<Hardware>>, mut out: MessageWriter<Act<HardwareAction>>) {
+pub(super) fn keys(jogs: Query<&JogButton>, keys: Res<ButtonInput<KeyCode>>, typing: crate::ui_kit::text::Typing, hw: Option<Res<Hardware>>, mut out: MessageWriter<Act<HardwareAction>>) {
     const JOG: [(KeyCode, Direction); 2] = [(KeyCode::KeyQ, Direction::Upper), (KeyCode::KeyA, Direction::Lower)];
     let Some(hw) = hw else { return };
     let modified = keys.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight, KeyCode::SuperLeft, KeyCode::SuperRight, KeyCode::AltLeft, KeyCode::AltRight]);
@@ -62,7 +63,7 @@ pub(super) fn keys(keys: Res<ButtonInput<KeyCode>>, typing: crate::ui_kit::text:
         }
     }
     for (code, direction) in JOG {
-        if keys.just_released(code) {
+        if keys.just_released(code) && !jogs.iter().any(|jog| jog.direction == direction && jog.held) {
             out.write(Act::ui(HardwareAction::JogRelease { direction }));
         }
     }

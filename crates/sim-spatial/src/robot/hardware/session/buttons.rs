@@ -10,8 +10,12 @@ impl Session {
     /// The target slider :299: a raw target between the taught poses, 4 counts inside them.
     pub(super) fn target(&mut self, fraction: f64) {
         let a = self.axis();
-        let (Some(lower), Some(upper)) = (a.lower, a.upper) else { return };
-        let span = (upper - lower) as f64;
+        let (Some(lower), Some(upper)) = (a.lower, a.upper) else { return self.decline("both poses must be taught first") };
+        let span = upper as f64 - lower as f64;
+        if !fraction.is_finite() || !(0.0..=1.0).contains(&fraction) || span.abs() <= 8.0 {
+            self.message("target needs a finite fraction and taught poses more than eight counts apart".into());
+            return;
+        }
         // Math.sign (0 for equal poses; f64::signum would give 1).
         let sign = if span > 0.0 {
             1.0
@@ -34,7 +38,7 @@ impl Session {
     /// as it is sent); a sequence drawn here could reach the server before a
     /// heartbeat in flight with a lower one, and either would be refused as stale.
     pub(super) fn capture(&mut self, boundary: Boundary, reference_joint_rad: Option<f64>) {
-        let Some(id) = self.snap.id else { return };
+        let Some(id) = self.snap.id else { return self.decline("no motor is selected") };
         let name = boundary.name();
         let joint = if name == "reference" { reference_joint_rad } else { None };
         let result = match self.snap.run {
@@ -45,15 +49,16 @@ impl Session {
             None => self.send_status(calibration::capture(id, self.seq(), name, joint)).map(|s| self.adopt(s)),
         };
         if let Err(e) = result {
+            self.command_error = Some(e.clone());
             self.snap.state.capture_message = Some(e);
         }
         self.render();
     }
     /// `reset(boundary)` :305.
     pub(super) fn reset(&mut self, boundary: &str) {
-        let Some(id) = self.snap.id else { return };
+        let Some(id) = self.snap.id else { return self.decline("no motor is selected") };
         if self.snap.busy {
-            return;
+            return self.decline("a motor request is still in progress");
         }
         self.stop();
         match self.send_status(calibration::clear(id, self.seq(), boundary)) {
@@ -72,9 +77,9 @@ impl Session {
     }
     /// "Flip direction" :307.
     pub(super) fn flip(&mut self) {
-        let Some(id) = self.snap.id else { return };
+        let Some(id) = self.snap.id else { return self.decline("no motor is selected") };
         if self.snap.busy {
-            return;
+            return self.decline("a motor request is still in progress");
         }
         self.stop();
         self.select_motor(id, false, false);
@@ -119,6 +124,7 @@ impl Session {
             self.render();
             return;
         }
+        self.snap.learning_terminal = None;
         if self.snap.run.is_none() {
             self.snap.intent = Intent::Hold;
             self.begin();
@@ -133,9 +139,9 @@ impl Session {
     }
     /// "Send raw step" :320 (the step field's validity: a nonzero whole number within ±4095).
     pub(super) fn raw_step(&mut self, delta: i16) {
-        let Some(id) = self.snap.id else { return };
+        let Some(id) = self.snap.id else { return self.decline("no motor is selected") };
         if !(-4095..=4095).contains(&delta) || delta == 0 || !self.pwm_valid() {
-            return;
+            return self.decline("a raw step needs a nonzero step within ±4095 and a valid PWM ceiling");
         }
         self.stop();
         self.select_motor(id, false, false);

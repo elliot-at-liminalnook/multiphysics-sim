@@ -1,9 +1,13 @@
 # Hardware front end: the operator's checklist
 
 This is the pending operator checklist for the native hardware front end in
-[architecture/native-viewer.md](architecture/native-viewer.md) §8. The active
-LC1–LC3 batch covers **HW-01–HW-09 only**; HW-10–HW-16 remain reference and
-separate operator checks. The accepted verification repairs `ee17ef00` through
+[architecture/native-viewer.md](architecture/native-viewer.md) §8. The
+LC1–LC3 batch covers **HW-01–HW-09**. The native-leg-clock-alignment batch
+(`29aa81ac` server, `313964e3` viewer, `80e4de27` driver) adds a written virtual
+acceptance path and reading traces for **HW-10 and HW-11**
+([Reading traces — HW-10/HW-11](#reading-traces--hw-10hw-11-by-reading-unexecuted)).
+Both are still **unexecuted**: neither the driver nor a physical pass has run
+them. HW-12–HW-16 remain reference and separate operator checks. The accepted verification repairs `ee17ef00` through
 `f971bedb` built the bounded touched paths and exercised virtual connection and
 idle STOP. [verification-20261002.md](verification-20261002.md) and retained
 `runs/verification-20261002-f541b05f/` do **not** establish calibration completion,
@@ -20,6 +24,14 @@ evidence for the current code. Every trace in
 [Reading traces](#reading-traces--hw-01hw-09-by-reading-unexecuted) comes from
 reading the source, and every step below is unexecuted. No test is claimed to
 pass. The browser calibration page stays the reference until a pass runs.
+
+**HW-10/HW-11, 2026-10-02 (after `29aa81ac`, `313964e3`, `80e4de27`).** There
+is no executed evidence for HW-10 or HW-11 in the native viewer either. The
+virtual steps HW-10a-sim, HW-10b-leg, HW-10b-both and HW-11 are written in the
+driver and have never run; the new Rust and Python tests in those commits are
+written and have never run. The physical Leg only and Both runs still need the
+gait-lab requalification first (HW-10). Every HW-10/HW-11 trace was made by
+reading the source at `80e4de27`.
 
 The written future acceptance driver is
 [tools/native-calibration/acceptance.py](../tools/native-calibration/acceptance.py),
@@ -43,8 +55,11 @@ are kept apart: written fixtures and source review exist now; executed evidence
 needs a future authorized run. Its virtual
 results are labelled **SIMULATED**, never measured/calibrated hardware results.
 Motion authorization requires current server/bench identity and connection
-generation; physical/unknown endpoints still refuse automation. No gait, raw-step,
-live-sync or general remote-motion override is included. STOP remains available
+generation; physical/unknown endpoints still refuse automation. Since `313964e3`
+gait playback (select, mode, speed, effort, confirmation, Play) is in the virtual
+scope; on a physical or unknown endpoint it is refused remotely like everything
+else. No raw-step, flip, live-sync, mirror-binding or general remote-motion
+override is included. STOP remains available
 regardless of identity. Browser compatibility and CAD physical definitions remain.
 
 All seven batch checklist IDs remain pending future executed acceptance:
@@ -262,8 +277,11 @@ In each step, tick the result box and write down anything that differs:
 gait-lab runtime fingerprint, and this epic edits crate sources. Before gait
 playback on the leg, requalify the reduced model as the gait-lab README says
 (examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/README.md,
-"After any library source change"). **Do not run Leg only or Both until it is
-requalified.** Sim only is safe at any time.
+"After any library source change"). **Do not run Leg only or Both on the
+physical leg until it is requalified.** The viewer and server do not check the
+requalification; this gate is procedural. Sim only is safe at any time, and so
+is Leg/Both on a verified virtual bench (its results are labelled simulated and
+are not leg results).
 
 - **Native:** open Gait playback (the list loads). Pick a gait, keep **Sim
   only**, press **Play**, **Pause**, **Resume**, move Playback speed, press the
@@ -274,9 +292,20 @@ requalified.** Sim only is safe at any time.
   of P s period · n% speed". Leg only drives the aligned, taught, enabled
   motors ("Not driven: …" lists the rest, with reasons), shows "Limits: …",
   "Leg: {phase} · error … counts", and the statistics table after the run.
-  Recent leg runs gains a row. Both shows the real leg (blue) on the gait's
-  clock. The radios and Leg effort are locked while it plays. Stop stops
-  drive.
+  Recent leg runs gains a row. Both ("Sim + leg · …") shows the real leg
+  (blue) on the encoders while the simulated legs follow the leg's own gait
+  clock: the server's gait time, interpolated at most 150 ms ahead between
+  reads and frozen while the data is not live. The radios and Leg effort are
+  locked while it plays. Stop stops drive.
+- **On a verified virtual bench** (since `313964e3`) Leg only and Both run too.
+  The Leg line reads "VIRTUAL (simulated) · Leg: {phase} · error … counts", and
+  the new Recent leg runs row is headed "VIRTUAL (simulated) · …". A physical
+  run is not labelled.
+- **Stale or disconnected data is never shown as live.** When the status goes
+  stale the gait line reads "… gait time t s (clock frozen) …" with "Leg data
+  stale — last read N s ago; not live" under it, and the mirror says the same
+  before its last reading. A lost link reads "Leg disconnected — {why}; not
+  live", and the status line starts "DISCONNECTED — …".
 - **Browser:** the same gait, mode, effort and speed.
 - **Result:** [ ] same  [ ] differs: ______
 
@@ -290,9 +319,15 @@ requalified.** Sim only is safe at any time.
   each with Q/A. Try **Run** in the robot header.
 - **Expect:** the robot is held 0.25 m up with its body still. The chosen leg
   is tinted blue and follows the encoders: "{role}: x.x° from its alignment
-  pose". An unaligned motor reads "not aligned — shown at {pose}". Moving past
-  a CAD limit adds "· Beyond CAD limit: …". Flipping a sign reverses the
-  simulated joint. Run is refused while mirroring. Unticking ends the display.
+  pose". An unaligned motor reads "not aligned — shown at {pose}". Save sim
+  alignment answers only after the server saved the pose (since `29aa81ac`);
+  right after it the mirror reads "{role}: 0.0° from its alignment pose" (a
+  later poll may differ by the hold's jitter, a few tenths of a degree).
+  Moving past a CAD limit adds "· Beyond CAD limit: …" (only the mirrored
+  leg's joints). Flipping a sign reverses the simulated joint. Run is refused
+  while mirroring. Unticking ends the display. Stale data reads "Leg data
+  stale — last read N s ago; not live · last reading: …"; a lost link reads
+  "Leg disconnected — {why}; not live".
 - **Browser:** the same (its mirror runs in a web worker).
 - **Result:** [ ] same  [ ] differs: ______
 
@@ -430,8 +465,8 @@ kill over ssh from another machine.
 ### HW-16 REST and system_ui refusal
 
 This reference check targets a **physical or unknown** endpoint with the panel
-connected and no motor chosen. The LC1–LC3 virtual allowlist is a deliberate
-exception for verified virtual HW-01–HW-09 only; the future driver exercises that
+connected and no motor chosen. The virtual allowlist is a deliberate
+exception for verified virtual HW-01–HW-09 and HW-10 gait playback only; the future driver exercises that
 exception and harmless identity fixtures without opening physical serial.
 
 Use the shared viewer batch API and poll the returned `/v1/jobs/<id>` URL:
@@ -445,8 +480,9 @@ curl -s -H 'Content-Type: application/json' \
 - **Expect on physical/unknown:** `select`, tune/campaign confirmations, motion
   values and all other motion arming requests fail with a named refusal. No motor
   is energized and no confirmation changes. `mirror_enabled` is display-only;
-  mirror binding changes, raw step, gait play and live sync remain outside the
-  remote allowlist. `loss:leaving` is refused; use `hardware_stop` instead.
+  gait intents and `gait_play` are refused here like any motion; mirror
+  binding changes, flip, raw step and live sync are outside the remote
+  allowlist on every link. `gait_stop` is never refused. `loss:leaving` is refused; use `hardware_stop` instead.
 - **STOP:** request `hardware_stop` through the same batch API. Poll its terminal
   outcome and observe authoritative server torque-off/session termination. STOP
   must succeed independently of the identity mismatch/refusal. A queued HTTP
@@ -463,12 +499,15 @@ curl -s -H 'Content-Type: application/json' \
   the physical-browser execution policy.
 - **Result:** [ ] as expected  [ ] differs: ______
 
-## Virtual acceptance map — HW-01–HW-09 (written, not executed)
+## Virtual acceptance map — HW-01–HW-11 (written, not executed)
 
 This table is the contract the future driver checks against
 [tools/native-calibration/acceptance.py](../tools/native-calibration/acceptance.py).
 Everything in it is written: the driver and `fixtures.py` exist, but none of it
-has run. Control ids are `system_ui` ids (`hardware:<name>`, or `mode:<mode>`).
+has run. The HW-10/HW-11 rows (`80e4de27`) run after HW-09 and before LC1
+(`acceptance.py:1321-1322`). They use the virtual bench only: they are not the
+physical HW-10, which still needs the gait-lab requalification and an operator.
+They take no screenshots. Control ids are `system_ui` ids (`hardware:<name>`, or `mode:<mode>`).
 REST actions are `hardware {"action": …}` batch commands polled through
 `/v1/jobs/<id>`. Every step passes only on the listed observation, never on a
 202 or a job that succeeded. Every step also retains its `http.jsonl` entries and
@@ -504,7 +543,11 @@ assertion does. No screenshot has been taken by this driver yet.
 | HW-08 | `hardware:tune_confirm`, `hardware:tune`, `hardware:stop`, `hardware:select_3` | `target`, `target_commit` | Motor 2 starts untuned. STOP is pressed as soon as the tune is seen running, with no screenshot in between. Right after STOP the interruption is asserted: tuning not running, `tuning.error` set (stopped path), and still no gains on motor 2. A fresh tune then shows at least 2 distinct stages in `session.tune_stages`, finite kp/ki/kd/friction, a record file inside the output, and the confirmation cleared. Repeated on motor 3. | `tune-interrupted.json`, `tune-stages.json`, tune records | `HW-08-stopped` (after the interruption is asserted), `HW-08-terminal` |
 | HW-07 | `hardware:sweep`, `hardware:learn`, `hardware:sweep_all`, `hardware:stop` | `speed`, `loss {reason:"focus_lost"}` | Starting Try saved range resets the speed to 0. Saved-range travel stays inside the poses. Pause holds. Focus loss stops a sweep and keeps the poses. `session.learning_terminal` shows completion with at least 3 stops each way, `learning: false`, intent hold. Sweep-all shows 2 half cycles on motors 2 and 3, then ends. A second sweep-all is stopped. | `learning-terminal.json`, `sweep-all-ends.json` | `HW-07-learned`, `HW-07-sweep-all` |
 | HW-09 | `hardware:campaign_confirm`, `hardware:campaign`, `hardware:campaign_resume`, `hardware:stop` | — | STOP is pressed as soon as a saved stage is seen with the campaign running, with no screenshot or hashing in between. Right after STOP the interruption is asserted: not running, `campaign.error` set, no result. A receipt is saved for each completed stage (`*.execution.json` provenance not counted). The count survives STOP. Receipt hashes are unchanged after resume. Terminal `report.json` is inside the output. Confirmation clears. | `records/` and `record_sha256` | `HW-09-stopped` (after the interruption is asserted), `HW-09-terminal` |
-| LC1 | `hardware:connect`, second viewer `hardware:select_2` | `raw_step`, `gait_play`, `sync_start`, `select` | Out-of-scope actions get the native remote-refusal text (`remote_refusal`). The server's own 400 for out-of-scope commands with a valid pin is covered only by written unit tests, not by this driver. Direct requests with no identity or a foreign identity get HTTP 409 "Calibration execution binding refused". STOP with the same headers returns `stop_latched: true`, `enabled_id: null`, `busy: false`. After a real server restart, the new UUID is seen, old headers get 409, and native refuses ("authorization expired") until reconnect. FIXTURE phase only: a second viewer behind the proxy presented as physical, then unknown, gets "Remote calibration requires a verified virtual" with zero crossings. | `replacement-execution.json`, `identity-fixture.jsonl`, `viewer-fixture-*.json` | — |
+| HW-10a-sim (`acceptance.py:1416-1446`) | `hardware:stop`, `hardware:gait_select_0` (activates `gait_select`), `hardware:gait_mode_sim`, `hardware:gait_play` (label Play, then Pause, then Resume), `hardware:gait_stop` | `hardware_gaits`; `gait_speed {percent:100}`, then `{percent:50}`; `gait_effort {percent:50}` | The gait list is non-empty and the panel lists at least one option. With gait 0 chosen and nothing playing, Play gives `session.gait` mode `sim`, `playing` true and `leg` false (30 s). `t` advances by 0.5 s within 5 s. Pause gives `playing` false, and `t` is exactly unchanged 0.6 s later. Resume gives `playing` and a larger `t`. `gait_speed` 50 gives `session.gait.scale` 0.5. The gait's Stop leaves `session.gait` null. | `hw10-gaits.json`; `sim_times` in `results.json` | — |
+| HW-10b-leg (`acceptance.py:1452-1466`, `leg_gait` `:981-1025`) | `hardware:select_3/2`, `hardware:reset_poses`, `hardware:jog_upper/lower` toggles, `hardware:capture_lower/upper/reference`, `hardware:mirror_on`, `hardware:gait_mode_leg`, `hardware:gait_confirm`, `hardware:gait_play`, `hardware:gait_stop` | `speed {percent:80}`, `target {percent:50}`, `target_commit`, `gait_speed {percent:25}`, `gait_effort {percent:50}` | Preconditions (`wide_teaching` `:925`, `mirror_loaded` `:942`, `align_mid` `:953`). Motors 3 then 2 are reset and re-taught wide: lower after a 1600-count jog down, upper after a 3200-count jog up, at least 2800 counts apart. The mirror is enabled and shown with its model loaded (60 s). Each motor is aligned at its 50 % target with a finite `reference_joint_rad`. Motor 2 is selected with `hold_others` true and no "watchdog check failed". Then Leg only, 25 % speed, 50 % effort, confirmed. Play's own answer must be OK (50 s); a refusal is retained, marked misfit or not, and fails the step. Within 60 s: `server.gait.running` with phase `playing`, `session.gait` mode `leg` with `leg` true, and the panel's Leg line labelled "VIRTUAL (simulated)" with phase `playing` and "error … counts". The driven roles are not in `skipped`. The gait's Stop gives, within 30 s, no server gait running, `session.gait` null, and changed Recent leg runs headings with a "VIRTUAL (simulated) · " row. Then drive is stopped. | `hw10-leg.json` (phases seen, skipped, Leg line, server gait, run headings), `hw10-leg-refused.json` on refusal, `captures.jsonl` | — |
+| HW-10b-both (`acceptance.py:1468-1477`) | `hardware:select_2`, `hardware:gait_mode_both`, `hardware:gait_confirm`, `hardware:gait_play`, `hardware:gait_stop`, `hardware:gait_mode_sim`, `hardware:mirror_off` | `gait_speed`, `gait_effort` (25 % / 50 %, then 100 % / 50 %) | As HW-10b-leg with mode `both`, plus `mirror.gait` true and `link_state` `live` while playing. `session.gait.t` (the one leg clock) increases between two reads while live (10 s). Afterwards the form is left Sim only at 100 %, the confirmation unticked, and the mirror not enabled and not shown (15 s). | `hw10-both.json` (as Leg, plus the two `t` values) | — |
+| HW-11 (`acceptance.py:1479-1504`) | `hardware:mirror_on`, `hardware:select_2`, `hardware:capture_reference`, `hardware:jog_upper` toggle, `hardware:mirror_off`, `hardware:stop` | `target {percent:50}`, `target_commit`; `robot_run {action:"start"}` (must be refused) | The mirror is shown with its model loaded. Motor 2 reaches its 50 % target within 32 counts and holds. Save sim alignment is judged by its own answer (`capture` `:873-909`): OK, with the reference in the answered status and a new `records/calibration-*.json`. Within 10 s `mirror.leg_data` is `live` and the worm's "x.x° from its alignment pose" is within 0.3° of zero. After a 100-count jog up, within 10 s, it is at least 1.0° from zero. `robot_run start` is refused with the `MIRRORING` text. Mirror off hides it. STOP leaves no enabled motor. | `mirror` in `results.json` (role, line after save, line after jog, Run refusal), `captures.jsonl` | — |
+| LC1 | `hardware:connect`, second viewer `hardware:select_2` | `raw_step`, `flip`, `sync_start` (since `80e4de27`; `gait_play` is now in scope, `acceptance.py:1327-1330`), `select` | Out-of-scope actions get the native remote-refusal text (`remote_refusal`). The server's own 400 for out-of-scope commands with a valid pin is covered only by written unit tests, not by this driver. Direct requests with no identity or a foreign identity get HTTP 409 "Calibration execution binding refused". STOP with the same headers returns `stop_latched: true`, `enabled_id: null`, `busy: false`. After a real server restart, the new UUID is seen, old headers get 409, and native refuses ("authorization expired") until reconnect. FIXTURE phase only: a second viewer behind the proxy presented as physical, then unknown, gets "Remote calibration requires a verified virtual" with zero crossings. | `replacement-execution.json`, `identity-fixture.jsonl`, `viewer-fixture-*.json` | — |
 
 Cleanup runs even after a failure:
 
@@ -524,7 +567,17 @@ Neither the virtual driver above nor a physical pass has run since `f734194d`,
 this section, which also makes inspect, the error-path stop and the link
 probe use the first enabled motor. Nothing here was built, run or tested. The
 browser calibration page served by `serve_actuator_calibration` stays the
-reference until a pass runs. Later edits may move the line numbers.
+reference until a pass runs. The line numbers below were written against
+`f5b48842` (`server.rs` against `ef504937`) and were not updated since. Later
+commits moved them: `29aa81ac` and `313964e3` changed `server.rs`,
+`calibration.rs`, `actions.rs`, `handlers.rs`, `link.rs`, `session.rs`,
+`buttons.rs`, `sequences.rs`, `panel.rs`, `view.rs` and `status.rs`;
+`80e4de27` changed `acceptance.py`; `afe4a486` changed `mirror.rs`; and
+`ecebd48c` changed one line of `session.rs` without a shift. The two bullets this batch
+changed (the out-of-scope list in HW-01 and the capture caveat in HW-06) are
+updated with current lines; the
+[HW-10/HW-11 traces](#reading-traces--hw-10hw-11-by-reading-unexecuted) use
+the current lines throughout.
 
 Each trace follows one path: the control (panel button id, key, or `system_ui`
 id `hardware:<name>`), then the `HardwareAction`, the handler, the
@@ -639,17 +692,18 @@ the panel or `hardware_status` shows.
   and "virtual execution identity changed; reconnect required" when it was
   replaced. A virtual status with `connected: false` also revokes
   (`session.rs:430-434`).
-- **Out of virtual scope** (the step's refusal rule). On a virtual link,
-  `in_scope` (`panel.rs:240-243`) disables these with `OUT_OF_VIRTUAL_SCOPE`
-  (`panel.rs:183`), for the operator too:
-  - Flip (`panel.rs:302`);
-  - Send raw step (`:309`);
-  - the Leg and Both gait modes (`:289-292`);
-  - a Leg/Both Play (`:294-297`).
+- **Out of virtual scope** (the step's refusal rule; current lines at
+  `80e4de27`). On a virtual link, `in_scope` (`panel.rs:251`) disables these
+  with `OUT_OF_VIRTUAL_SCOPE` (`panel.rs:185`), for the operator too:
+  - Flip (`panel.rs:310`);
+  - Send raw step (`:317`).
 
-  Remotely, `authorize` refuses Flip, RawStep, gait, live sync and binding
-  changes with `remote_refusal` (`actions.rs:317-323`, `:334-339`). A request
-  that still reached the server gets the 400 above, and the session is kept.
+  Since `313964e3` the Leg and Both gait modes and their Play are in scope
+  (`panel.rs:298-305`; the server's allowlist adds `gait_start` and
+  `gait_update`, `calibration.rs:79-84`). Remotely, `authorize_with` refuses
+  Flip, RawStep, live sync and the mirror's binding changes with
+  `remote_refusal` (`actions.rs:341-349`). A request that still reached the
+  server gets the 400 above, and the session is kept.
 
 ### HW-02 Select, disable, enable
 
@@ -812,8 +866,10 @@ the panel or `hardware_status` shows.
   poses" (`view.rs:280-284`, `:320-321`, `:469`). Range controls are off
   (`view.rs:415`). A virtual link revokes on `connected: false`, or on the
   vanished execution (`session.rs:407-434`). A physical link shows only the
-  message: `hardware_status.connected` turns false (`status.rs:16`), but the
-  panel has no separate disconnected marker (see the defects in the report).
+  message: `hardware_status.connected` turns false (`status.rs:16`). Since
+  `313964e3` the status line also starts "DISCONNECTED — …" and
+  `link_state` is `disconnected`, without blocking selection (current lines
+  in the HW-11 trace, "Disconnected after a physical STOP readback loss").
   JogPress needs the motor chosen again (`handlers.rs:452`).
 
 ### HW-05 Focus loss, panel close, leaving Robot mode
@@ -865,9 +921,15 @@ the panel or `hardware_status` shows.
     the server's capture arm (`server.rs:1130`).
   - **Panel:** the capture line (`view.rs:481`, `panel.rs:415`) and the pose
     captions "x.x° motor" (`view.rs:465`).
-  - **Caveat:** a remote capture's verdict is Ok once `capture_hold` is
-    accepted (`session.rs:792`). It does not prove the save. That is why the
-    driver waits for a new calibration file.
+  - **Superseded caveat (current lines).** Before `29aa81ac` a remote
+    capture's verdict was Ok once `capture_hold` was accepted. Now the server
+    answers `capture_hold` only after the hold session saved the pose (200
+    with the full status) or refused it (400), and withdraws a capture it
+    never took within 1 s (`server.rs:1543-1572`, `await_capture`
+    `:173-220`, the save `:1094-1120`). The viewer adopts that status, and
+    an answer that is not a status is an error (`CAPTURE_UNCONFIRMED`,
+    `buttons.rs:13-26`, `:68-93`). The driver now judges the click's own
+    answer (`acceptance.py:873-909`). The HW-11 trace follows the whole path.
 - **Target.** The target slider (`input.rs:116`, `:128-130`) or REST `target`
   reaches `handlers.rs:512-518` (`stepped`, 0–100). It sends
   `LinkCommand::Target` to `buttons.rs:11-33`, which applies a 4-count inset
@@ -987,6 +1049,374 @@ the panel or `hardware_status` shows.
 
 These traces stop at the call.
 
+## Reading traces — HW-10/HW-11 (by reading, unexecuted)
+
+**Status.** No executed evidence exists for HW-10 or HW-11 in the native
+viewer. Every trace below was made by reading the source at `80e4de27` (the
+server at `29aa81ac`, the viewer at `313964e3`, the driver at `80e4de27`;
+2026-10-02), and every line number was then checked again by reading it at
+`ecebd48c`, after `afe4a486` (`mirror.rs` `Mirror::update`: later `mirror.rs`
+lines moved by 6) and `ecebd48c` (`session.rs:631`, no shift). Nothing here was built, run or tested, and the new tests in those commits
+have never run. The browser calibration page stays the reference until a pass
+runs.
+
+The short names are those of the HW-01–HW-09 traces, plus:
+
+| Short name | File |
+|---|---|
+| `mirror.rs`, `apply.rs`, `thread.rs` | `crates/sim-spatial/src/robot/hardware/mirror.rs`, `…/mirror/apply.rs`, `…/mirror/thread.rs` |
+| `mirror_panel.rs` | `crates/sim-spatial/src/robot/hardware/mirror_panel.rs` |
+| `acceptance.py` | `tools/native-calibration/acceptance.py` |
+
+### HW-10 Sim only (no server motion)
+
+- **Play.** The `hardware:gait_play` control (`panel.rs:305`, label Play,
+  Pause or Resume from `view.rs:685-691`) sends `H::GaitPlay`
+  (`handlers.rs:601`) to `gait_play` (`handlers.rs:673-690`). With no gait
+  playing it needs a gait (`:678-680`); Sim needs no confirmation (`:682`);
+  no tune or campaign may run (`:685`). Sim sends no bindings (`:688`) and
+  queues `LinkCommand::GaitPlay` (`:689`).
+- **Link thread.** `session.rs:722` calls `gait_play` (`sequences.rs:252-268`),
+  then `start_gait` (`:270-305`). It fetches the compiled gait
+  (`GET /calibration/gait?path=…`, `:271`; server `server.rs:1488-1493`), reads it
+  with the shared sampler, and publishes it for the mirror as
+  `compiled_gait` (`:275`). With `leg` false (`:277`) the server is not
+  asked to move anything. The run starts at `t` 0, playing, at the form's
+  scale; `gait_last` and `next_frame` are set (`:258-261`).
+- **Clock.** Sim time is wall time × scale on the link thread:
+  `periodic.rs:98-102` runs `sim_frame` (`sequences.rs:344-350`) every
+  `GAIT_FRAME` (20 ms, `session.rs:68`) and publishes. Nothing else writes
+  a Sim run's `t`.
+- **Mirror.** `mirror_sync` (`mirror_panel.rs:54`) passes the run to
+  `Mirror::follow_gait` (`mirror_panel.rs:100-103`, `mirror.rs:618-669`). A
+  new play loads the gait on the worker (`mirror.rs:633-642`, `thread.rs:45-53`);
+  once it is ready (`mirror.rs:696`), each frame with no sample in flight
+  sends `Sample` at `(run.t, run.scale)` (`mirror.rs:659`, `:668`). The worker
+  steps `GovernedGait::step` when the gait has a governor, else samples it
+  (`thread.rs:54-66`, `:62`). The pose comes back in `poll` (`mirror.rs:705`)
+  and `set_gait` re-poses every leg; the line reads "Simulated gait"
+  (`mirror.rs:527-533`).
+- **Pause/Resume.** Play again sends `GaitToggle` (`handlers.rs:675-677`).
+  `gait_toggle` (`sequences.rs:308-314`) counts the time played so far
+  (`sim_frame`), then flips `playing`.
+- **Speed.** REST `gait_speed` or the slider reaches `handlers.rs:573-583`
+  (5–100 %), updates the inputs and sends `GaitScale`; `gait_scale`
+  (`sequences.rs:325-333`) counts the time so far at the old speed, then sets
+  the new scale.
+- **Stop.** `hardware:gait_stop` (`panel.rs:306`) sends `H::GaitStop`
+  (`handlers.rs:602-613`); for Sim it only queues `LinkCommand::GaitStop`.
+  `gait_stop` (`sequences.rs:316-323`) runs `end_gait` (`:336-339`); with no
+  run, `follow_gait` clears the gait pose (`mirror.rs:619-627`).
+- **Panel.** "Sim only · gait time t s of P s period · n% speed"
+  (`view.rs:595-613`). `hardware_status.session.gait` carries mode, `t`,
+  `playing`, `scale` and `leg` (`status.rs:26-30`).
+
+### HW-10 Leg only on the virtual bench
+
+- **Control.** `hardware:gait_play` (`panel.rs:305`) is ready when there are
+  gaits, the suspended-leg confirmation is ticked for Leg/Both, and no tune or
+  campaign runs (`view.rs:685-691`); it is no longer disabled on a virtual
+  link (`panel.rs:298-305`, compare `in_scope` `:251`). The mode radios are
+  `hardware:gait_mode_*` (`:300-302`), the confirmation `hardware:gait_confirm`
+  (`:303`).
+- **Apply and authorize.** `actions.rs:619` `apply` calls `handle`
+  (`dispatch`, `handlers.rs:165`, re-exported at `:382`). For a remote call,
+  `dispatch` runs `HardwareAction::authorize` (`actions.rs:312-316`), which
+  for a motion start (`starts_motion` lists the gait intents and Play,
+  `actions.rs:275-280`) calls `authorize_with` (`:331-356`). The gait intents
+  and `GaitPlay` are on its list (`:346-347`). It then calls
+  `authorize_virtual` (`calibration.rs:43-54`) with
+  `connection_valid && state.connected && !authorization_revoked &&
+  disconnected.is_none() && link_generation == generation` and freshness
+  (`actions.rs:351-355`). Then `remote_check` (`handlers.rs:28-59`) refuses
+  the control's own disabled reason. A ticket is assigned (`:204-209`).
+- **Handler.** `gait_play` (`handlers.rs:673-690`) needs the confirmation
+  (`:682`) and takes the bindings and skipped motors from
+  `Mirror::gait_bindings` on this frame's status (`:688`, `mirror.rs:732-757`:
+  disabled, poses not taught, not aligned, no CAD joint are skipped; the
+  home angle is the saved alignment angle). `send` queues
+  `LinkCommand::Checked` with the epoch and generation (`handlers.rs:75-90`,
+  `:81`). REST gets a 45 s continuation (`:214-221`).
+- **Link thread.** `session.rs:623-674` re-authorizes against its own
+  snapshot (`:630-631`; it also refuses a disconnected link since `ecebd48c`), refuses after a newer STOP (`:634`), validates
+  (`validate_command`, `:886-907`; a new Play waits for a tune or campaign,
+  `:903`) and runs it (`run_checked`, `:795-883`). The play is judged
+  started when `snap.gait` has that mode and nothing failed (`:863-872`). The
+  verdict goes to `command_results` (`:668`) and REST is answered from it
+  with `hardware_status` (`handlers.rs:175-181`).
+- **Start.** `start_gait` (`sequences.rs:270-305`) with `leg` true: no
+  binding refuses with "No motor is aligned, taught and enabled: …"
+  (`:280-283`). It STOPs, selects the first bound motor holding all the
+  others (`:284-285`, which proves their watchdogs on the server), needs it
+  ready (`:286-288`), and posts `calibration::gait_start` (`:291-292`; body
+  `calibration.rs:636-655`: `supported`, gait path, bindings, speed scale,
+  effort, PWM ceiling, drive mode). A STOP pressed meanwhile drops the answer
+  and stops (`:293-298`). The answered status is adopted (`:299`).
+- **Server handle.** The pinned client adds the identity headers
+  (`http.rs:112-120`). `handle` (`server.rs:1381`) checks identity and
+  generation (`:1521-1540`; a newer generation latches STOP, `:1535-1538`),
+  then `check_execution` (`:392-414`): `virtual_command_allowed` now admits
+  `gait_start` and `gait_update` (`calibration.rs:79-84`, used at
+  `server.rs:406`). The command is queued to the worker (`:1622-1634`).
+- **Worker.** The job is re-checked: binding, scope, expiry, STOP epoch
+  (`server.rs:626-628`). The common motion checks need this client's
+  selected, verified motor (`:836-838`) and a newer sequence (`:839-842`).
+  The `gait_start` arm (`:911-946`) calls `run_gait` (`:1831-2104`) on the
+  bus that `select` opened (`App::open_bus` `:437-443`, `CalibrationBus::open_virtual`
+  `calibration_serial.rs:93`).
+- **`run_gait` preconditions.** Confirmation (`:1845-1847`); every binding's
+  motor enabled, taught (`:1863`), watchdogs proven (`:1866`), aligned
+  (`:1868`), a multi-turn alignment from this encoder session (`:1869-1871`);
+  the saved alignment angle wins over the client's (`:1874`). The gait must
+  fit 95 % inside each taught window less 6 counts, else the misfit refusal
+  names the likely reversed sign (`:1885-1914`). Limits come from the
+  accepted registry at the measured supply; a 0 V or non-finite reading
+  counts as no supply and 12 V is assumed (`:1919-1923`).
+- **Loop.** It arms (`:1954`), publishes the labelled gait state
+  (`labelled` `:341-345`; phase `approach`, `:1956-1962`) and replies, then
+  takes the lease (`:1965`) and logs `gait_start` (`:1967`). The governed loop
+  (`controlled_motion_multi`, `:1978`) ends on STOP or cancel, and on a lease
+  older than 1.5 s ("Browser heartbeat lost; gait stopped", `:1980-1988`). It
+  writes `gait.t`, phase (`approach`, `playing` or `paused`), scale, targets
+  and clamped count each period (`:2048-2053`), and per-motor tracking errors
+  (`:2069`).
+- **Lease.** With a leg gait published, `beat_plan` (`session.rs:229`) gives
+  the beat a gait plan; the beat posts `gait_update` every 300 ms and at once
+  on a scale or pause change (`beat.rs:183-188`, `:215-219`, `:252-258`,
+  body `calibration.rs:659-661`). The server renews the lease
+  (`server.rs:1574-1587`). A revoked pin empties the plan
+  (`session.rs:222-224`).
+- **Status.** The link polls every 150 ms while a leg gait runs
+  (`periodic.rs:50-51`) and adopts each status (`periodic.rs:20`,
+  `session.rs:434-500`); `adopt` ends with `leg_frame` (`:497-499`,
+  `sequences.rs:361-369`), which copies `gait.t` into `GaitRun::t` and marks
+  the run started once the server reports it running.
+- **Panel.** `render_gait` (`view.rs:589-700`) writes "Leg only · gait time …",
+  "Limits: …" (`:622-625`), then "VIRTUAL (simulated) · Leg: {phase}" when the
+  server's gait says `simulated` or the link is pinned to a virtual execution
+  (`:626-630`), " · error {role} n, … counts" (`:631-637`), clamped targets
+  (`:638-640`) and "Not driven: …" (`:641-643`). Effort and the radios are
+  locked while it plays (`:684`, `:694`).
+- **Stop.** The gait's Stop (`handlers.rs:602-613`) first STOPs on the
+  immediate path for a leg gait (`:609-611`, `link::stop_now` `link.rs:565`),
+  then queues `GaitStop`; `gait_stop` (`sequences.rs:316-323`) ends the run and
+  sends its own STOP. On the server, STOP latches (`server.rs:1600-1611`); the
+  loop sees `app.stop` and ends (`:1979-1981`). `run_gait` writes the labelled
+  record `gait-runs/run-<ms>.json` (`:2083-2093`; `virtual_limits` on a
+  virtual bench, `:2090-2092`), logs `gait_end` (`:2094`) and refreshes
+  `gait_runs` (`:2098`). The arm then clears the lease, labels the final gait
+  state and reports "… Torque off and stationary encoder verified." or "Gait
+  stopped: {e}. Torque off." (`:916-943`). A readback loss resets the bound
+  axes' turns and re-stamps a multi-turn session (`:931-939`).
+- **Recent leg runs.** `gait_run_history` (`server.rs:1806-1817`) lists the
+  newest 12 records with `simulated` (false when absent) and `execution`. The
+  panel heads a simulated row "VIRTUAL (simulated) · {gait} · effort …"
+  (`view.rs:669-676`). The link thread ends its run when the server reports
+  the started gait no longer running (`session.rs:585-587`).
+
+### HW-10 refusals (remote `gait_play` and the gait intents)
+
+| Link | Where it is refused | Text or status |
+|---|---|---|
+| Physical (unpinned) | `authorize_virtual` identity check (`calibration.rs:47-49`), via `authorize_with` (`actions.rs:351-355`) before any ticket | "Remote calibration requires a verified virtual calibration server". The operator's own clicks are not remote and are not authorized this way; the unpinned physical server accepts them (`server.rs:411`). |
+| Unknown (no identity) | Same as physical in the viewer. A direct request without identity to a virtual server: `check_execution` (`server.rs:410`) | 409 "… Virtual execution identity required" (`server.rs:1642-1647`) |
+| Stale status | `authorize_with` freshness (`actions.rs:354`); a pending ticket whose status went stale STOPs and fails (`handlers.rs:191-194`); the link thread's own check (`session.rs:630-631`) | "Virtual calibration authorization expired; reconnect explicitly" (`calibration.rs:50-52`) |
+| Replaced generation | `link_generation == generation` (`actions.rs:353`) and `authorize_virtual` (`calibration.rs:50`); a pending ticket from another generation (`handlers.rs:168-170`); the link thread (`session.rs:630`); the server (`server.rs:1530-1534`, `:399-403`) | "authorization expired", "hardware connection replaced while the command was pending", or 409 "stale connection generation" / "identity/generation mismatch" |
+| Revoked | `!authorization_revoked` (`actions.rs:353`); the link thread refuses sends while revoked (`session.rs:401-404`, `REVOKED` `:81`) | "authorization expired"; "virtual calibration authorization revoked; reconnect required" |
+| Disconnected | `disconnected.is_none()` (`actions.rs:353`); the link thread (`session.rs:631`, since `ecebd48c`); a lost virtual bench on the server (`server.rs:394-396`) | "authorization expired"; 409 "Virtual bench disconnected; restart and reconnect explicitly" |
+| Out of scope on a valid pin (not the gait, which is in scope; e.g. `jog`, `flip`) | `check_execution` (`server.rs:406-408`) | 400 `out_of_scope` (`:360-362`); the binding is kept |
+
+**Never gated.** `Stop` and `GaitStop` are not motion starts
+(`actions.rs:300`, `:304`), so `authorize` returns Ok (`:313`) and
+`remote_check` skips them (`handlers.rs:29`). `GaitStop` without a link is a
+no-op answer (`handlers.rs:604-606`). The server takes STOP without identity
+(`server.rs:1521-1522`) and before any check (`:393`).
+
+### HW-10 Both: one leg clock
+
+- **Base.** The server writes `gait.t` (`server.rs:2048`). `adopt` stamps
+  `read_at` (`session.rs:496`) and runs `leg_frame` (`:499`), the only writer
+  of a leg run's `GaitRun::t` (`sequences.rs:361-369`, field `link.rs:208`).
+- **Now.** `LinkSnapshot::leg_clock` (`link.rs:384-394`) takes the server's
+  `speed_scale` (else the run's), the health (`:363-372`), and advances only
+  when live, started, playing here and the server's phase is `playing`
+  (`:390-391`). `leg_gait_time` (`link.rs:341-346`) adds at most one active
+  poll (`POLL_ACTIVE`, 150 ms, `link.rs:55`) × scale since `read_at`; each
+  new read resets the base.
+- **Mirror.** `mirror_sync` computes the clock every frame
+  (`mirror_panel.rs:102`) and passes it to `follow_gait` (`:103`). Leg only
+  is not sampled (`mirror.rs:629`). For Both, `mirror.rs:646-657` uses the
+  clock unless it is frozen; a new time that is behind the last sample by no
+  more than one active poll × scale holds the last time instead of stepping
+  back (`:652-654`). The worker steps the governed gait at that time
+  (`thread.rs:62`). With `sample_both` (`mirror.rs:665`) the pose is applied
+  with the real leg on the encoders (`:705`, `set_gait` `:592-597`; `update`
+  overwrites the bound joints with the encoders, `:540-564`).
+- **Panel and status.** The gait line shows `run.t` (the base, steady
+  between reads) and the clock's scale (`view.rs:600-613`);
+  `hardware_status.session.gait.t` is the interpolated clock, with
+  `clock_frozen` (`status.rs:25-29`).
+- **Stale freeze.** `mirror_sync` judges health every frame before anything
+  can pose (`mirror_panel.rs:57-62`, `set_leg_health` `mirror.rs:362-368`).
+  While not live: `update` poses nothing from the encoders (`mirror.rs:535-537`),
+  `follow_gait` sends no sample and holds the gait pose (`:647-651`), and the
+  clock does not advance (`link.rs:391`). The texts come from
+  `LinkHealth::leg_note` (`link.rs:324-331`): "Leg data stale — last read N
+  s ago; not live" (whole seconds) or "Leg disconnected — {why}; not live".
+  The gait line adds " (clock frozen)" and the note (`view.rs:610`,
+  `:614-616`); the mirror line is "{note} · last reading: {line}"
+  (`mirror.rs:345-355`); `hardware_status` has `link_state` and `link_note`
+  (`status.rs:22-24`, `:40-41`).
+- **Recovery.** When the health becomes live again `set_leg_health` returns
+  true (`mirror.rs:363`) and `mirror_sync` forces `update` with the current
+  status (`mirror_panel.rs:94-99`). The first sample after a hold uses the
+  shortest step (`mirror.rs:649`).
+
+### Simulated labels (HW-10)
+
+- **Server.** `labelled` (`server.rs:341-345`) adds `execution` and
+  `simulated` (true only for a virtual execution) to the live gait state
+  (`:1958`, and again after the run, `:922-924`), the `gait_start` and
+  `gait_end` log lines (`:1967`, `:2094`, in `gait.jsonl`, `writeln_log`
+  `:2105-2111`) and the run record (`:2083`). A virtual record adds
+  `virtual_limits`, what the bench does not emulate and the supply assumed
+  (`virtual_gait_limits` `:348-357`, `:2090-2092`); every record carries
+  `supply_v` and `supply_assumed` (`:2086`). History rows carry `simulated`
+  and `execution` (`:1813-1814`).
+- **Client types.** `GaitState::simulated` and `GaitRun::simulated` default to
+  false for an older server or record (`calibration.rs:411-414`,
+  `:509-516`).
+- **Panel and status.** The Leg line (`view.rs:626-630`), the run headings
+  (`view.rs:669-676`, `VIRTUAL_SIMULATED` `:202`) and
+  `hardware_status.server.gait.simulated` (`status.rs:105`).
+
+### HW-11 Mirror alignment
+
+- **Mirror on.** `hardware:mirror_on` (`panel.rs:327`) or the section's chip
+  (`mirror_panel.rs:164`) sends `MirrorEnabled { on: true }`, which is not a
+  motion start (`actions.rs:305`) and so is allowed remotely. `handlers.rs:662`
+  calls `mirror::apply` (`apply.rs:11-14`): enabled, `begin`. The preference
+  path is claimed (`actions.rs:707`). In `mirror_sync`, roles come from the
+  first status that lists axes (`mirror_panel.rs:71-77`); `want` needs
+  enabled, the panel open, a link and roles (`:78`). `prepare`
+  (`mirror.rs:417-480`) loads the scene on the worker (`thread.rs:25-33`),
+  checks the bindings, and returns the links whose names start with
+  "{leg} |" to tint (`mirror.rs:474-476`). The first show pauses a running
+  run, sets `RobotView::mirror`, and fits the view (`mirror_panel.rs:111-119`).
+- **Save sim alignment.** `hardware:capture_reference` (`panel.rs:278-281`)
+  sends `H::Capture { Reference }`; the handler adds the mirror's alignment
+  angle, mid-travel or CAD home (`handlers.rs:521-533`,
+  `Mirror::alignment_angle` `mirror.rs:328-335`). `LinkCommand::Capture`
+  (`session.rs:708`) reaches `buttons.rs:68-93`. In a held session it posts
+  `capture_hold` through the beat (`send_in_session` `session.rs:264-286`,
+  `beat.rs:198-206`; body `calibration.rs:674-682`). The server's `handle`
+  (`server.rs:1543-1572`) requires a held teaching session and no pending
+  capture, renews the session's lease and sequence (`ctl.update`), stores the
+  `PendingCapture` (`:1568`) and waits in `await_capture` (`:173-220`). The
+  hold session takes it at the next sample and renews the lease
+  (`:1094`). It saves only when holding, under 2 counts/s, within 3 counts of
+  target and stable over 6 samples (`:1096-1097`): it writes
+  `calibration-<ms>.json`, sets `reference`, `reference_session` (multi-turn
+  only) and `reference_joint_rad`, sets "Saved reference pose" and the saved
+  reading in `samples` (`:1099-1110`), renews the lease again and answers
+  (`:1112-1114`). Otherwise it answers "Still settling…" (`:1116-1119`).
+  `await_capture` withdraws a capture not taken within 1 s (`:174-185`) and
+  returns the full state (`:192`), sent as 200 (`:1571-1572`, `:1638`); a
+  refusal is a 400 (`:1642-1647`).
+- **Viewer.** `saved_status` (`buttons.rs:20-26`) accepts only a status with
+  `connected` and `calibration`, else `CAPTURE_UNCONFIRMED` (`:13`). The
+  status is adopted unless a STOP came meanwhile (`:77-80`); an error sets the
+  capture line and the verdict (`:88-91`). `run_checked` returns the recorded
+  error or Ok (`session.rs:873`); the verdict goes to `command_results`
+  (`:668`) and REST is answered with `hardware_status` (`handlers.rs:175-181`).
+- **Mirror after the save.** `publish` bumps the revision (`session.rs:211-217`);
+  `mirror_sync` sees the new revision and calls `update` (`mirror_panel.rs:92-99`).
+  The saved reading equals `reference`, so `delta` is 0
+  (`mirror.rs:561`) and the line reads "{role}: 0.0° from its alignment
+  pose" (`:563`; `degrees_text` `:770-772`; `fixed` prints a negative zero as
+  "0.0", `view.rs:228-231`). The line is replaced even when no joint value
+  changed (since `afe4a486`, `mirror.rs:565-576`: `update` returns early only
+  when both the values and the line are unchanged), so a first alignment
+  saved exactly at the pose the unaligned motor was shown at also turns
+  "not aligned — shown at {pose}" into "0.0° from its alignment pose". The
+  test for that (`a_first_alignment_at_the_shown_pose_changes_the_line`,
+  `mirror/tests.rs:60`) is written and has never run.
+- **Sign flip.** `MirrorPolarity` is a motion start (`actions.rs:288`) that is
+  not on the remote list, so it is refused remotely on every link. Locally
+  `apply.rs:29-35` sets the sign and begins again; `prepare` re-tints and
+  forces `update` (`mirror.rs:477-478`), where `delta` takes the new sign
+  (`:561`). The same sign becomes `gait_start`'s polarity
+  (`mirror.rs:754`).
+- **Beyond CAD limit.** The worker returns the solve's authored limit
+  violations (`thread.rs:35-43`). `poll` keeps only the mirrored leg's joints
+  (prefix "{leg} |", as the tint) and appends " · Beyond CAD limit: …"
+  (`mirror.rs:714-717`).
+- **Run refused while mirroring.** Robot mode's `check` refuses Run start
+  while `RobotView::mirror` is set (`robot_actions.rs:159-162`, planar
+  `:116-118`) with `MIRRORING` (`mirror.rs:57`).
+- **Unticking.** `MirrorEnabled { on: false }` sets enabled false and calls
+  `end` (`apply.rs:11-14`, `mirror.rs:399-404`). `mirror_sync` also ends it
+  when `want` turns false (`mirror_panel.rs:86-91`), then clears
+  `RobotView::mirror` once (`take_ended`, `mirror.rs:406-408`;
+  `mirror_panel.rs:124-127`), so the run's untinted frame shows again.
+- **Multi-turn alignment.** `update` shows a multi-turn alignment saved in an
+  earlier encoder session at its alignment pose with "{role}: alignment is
+  from an earlier session — re-align (shown at {pose})" (`mirror.rs:550-555`).
+  `run_gait` refuses the same case (`server.rs:1869-1871`).
+- **Disconnected after a physical STOP readback loss.** `observe_stop` marks
+  `connected: false` when a STOP lost readback (`server.rs:549-552`). `adopt`
+  on a physical link keeps `connection_valid` (`session.rs:467`) and, because
+  the previous status was connected, sets `disconnected` to "the server
+  reports its bus disconnected: {message}" (`:481-486`). `health` returns
+  `Disconnected` first (`link.rs:363-366`). The status line starts
+  "DISCONNECTED — …" (`mark_disconnected` `view.rs:526-538`, again after a
+  block `panel.rs:216-221`) without blocking selection (only a revoked or
+  invalid connection blocks, `panel.rs:213-215`); `hardware_status.link_state`
+  is `disconnected` (`status.rs:22-23`); the mirror holds its pose and says
+  "Leg disconnected — …; not live". Remote motion is refused
+  (`actions.rs:353`). Selecting a motor reconnects the bus (`reconnect_stopped`, `server.rs:745`; `connected: true` at `:767`),
+  and the next connected status clears the mark (`session.rs:477-480`).
+- **Reconnect after a lost virtual bench.** `lose_bus` nulls `execution`
+  (`server.rs:309-319`); the next adopted status revokes, marks
+  `BENCH_LOST`, STOPs locally and, only if this link drove, posts one id-less
+  STOP (`session.rs:437-465`); later polls only update the reason
+  (`:448-454`). Connect (`actions.rs:569-608`) records that the old link was
+  pinned (`:576`), stops and drops it (`:577-583`), takes a new generation
+  (`:584`) and runs the connect job: a virtual server is pinned with the new
+  generation and verified by `inspect` (`:592-604`); otherwise the link is
+  unpinned (`:605`). `poll_jobs` spawns the link (`:733`), shows `BENCH_GONE`
+  when a pinned link was replaced by an unpinned one (`:739-741`, text
+  `:612`) and unticks the suspended-leg confirmation on every new link
+  (`:746`).
+
+**Gaps found while tracing (both fixed since; the fixes are unexecuted).**
+
+- **Fixed in `afe4a486`: the alignment line could keep its old text.**
+  Before it, `update` returned before it set `text` whenever the new joint
+  values equalled the pending ones and `force` was false. A first alignment
+  saved exactly at the shown alignment pose gives the same value for that
+  joint (the unaligned motor was shown at `alignment_angle`, and the saved
+  angle is that same value plus a zero delta), so the line kept
+  "{role}: not aligned — shown at {pose}" until some joint value changed.
+  Now `update` builds the line first and returns early only when the values
+  and the line are both unchanged (`mirror.rs:570-573`). The test
+  `a_first_alignment_at_the_shown_pose_changes_the_line`
+  (`mirror/tests.rs:60`) is written and has never run. HW-11 in the driver
+  re-aligns a motor that HW-10b already aligned, so a passing run does not
+  exercise this case.
+- **Fixed in `ecebd48c`: the link thread's re-authorization did not check
+  `disconnected`.** It now passes `self.snap.disconnected.is_none()` to
+  `authorize_virtual` (`session.rs:631`), as `authorize_with` does
+  (`actions.rs:353`). By reading, every path that sets `disconnected` on a
+  pinned link also revokes it or invalidates the connection
+  (`session.rs:359-366`, `:437-472`), so this closed a gap for future paths;
+  no command was let through before it.
+
+**Hops not traced to a line.** The inside of `controlled_motion_multi`
+(`calibration_serial.rs:643`) and of `GovernedGait`; what `hx_virtual_bench`
+does with each frame; how the robot view draws the tinted links from
+`RobotView::mirror`; the kinematic solve inside `KinematicMirror::pose`.
+
 ## Physical operator run sheets — HW-01–HW-09
 
 These sheets are **unexecuted physical checks**, not an automated verification
@@ -1030,11 +1460,14 @@ These messages are read from the source and have not been observed.
   poses (0–4095 counts) are kept.
   - Virtual link: the panel blocks with "Connection or execution identity
     lost; reconnect required".
-  - Physical link: the panel shows only the message, and
-    `hardware_status.connected` is false. Choose the motor again to reconnect
-    the bench.
+  - Physical link: the status line starts "DISCONNECTED — the server
+    reports its bus disconnected: …" (since `313964e3`), the mirror says "Leg
+    disconnected — …; not live", and `hardware_status.connected` is false.
+    Choose the motor again to reconnect the bench; the marker clears with the
+    next connected status.
 - **A refused command keeps the session.** On a virtual bench, a command
-  outside its scope (Swap direction, raw step, Leg/Both gait) is disabled in
+  outside its scope (Swap direction, raw step; Leg/Both gait is in scope
+  since `313964e3`) is disabled in
   the panel and refused as an ordinary error. The binding is kept. Only an
   identity, generation or lost-bench refusal (HTTP 409) ends the session, and
   then the panel asks for a reconnect.
@@ -1059,6 +1492,62 @@ The fuller steps above provide the browser comparison. Sign physical results
 only after observing the fixture; virtual receipts cannot satisfy physical
 expectations.
 
+## Physical operator run sheets — HW-10/HW-11
+
+These sheets are **unexecuted physical checks**, in the same terms as the
+HW-01–HW-09 sheets above: one client at a time, the fixture/FPGA/power
+prerequisites of [Before you start](#before-you-start), no image loaded, no limit
+or PWM ceiling raised, nothing promoted to CAD or the registry. The texts below
+were read from the source (see the
+[HW-10/HW-11 traces](#reading-traces--hw-10hw-11-by-reading-unexecuted)) and
+have not been observed. A virtual-bench run of HW-10b or HW-11 by the driver
+cannot stand in for these sheets.
+
+**Preconditions, in this order:**
+
+1. **Gait-lab requalification first (Leg only and Both only).** Requalify the
+   reduced model as the gait-lab README says
+   (examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/README.md,
+   "After any library source change"), and record the run id in the sign-off.
+   The viewer and server do not check this: it is a procedural gate. Do not
+   play Leg only or Both on the leg until it is done. Sim only and HW-11 do not
+   need it.
+2. **The leg is suspended with clear space around every joint**, the fixture
+   supported so that torque-off cannot drop it.
+3. **The operator stays at the window and the fixture** for the whole run,
+   with **STOP within reach** (Z, Escape, the panel's top Stop) and the motor
+   power switch within reach.
+4. Every motor to be driven is enabled, taught (lower and upper) in this
+   encoder session, aligned with Save sim alignment, and its watchdogs are
+   proven by selecting a motor with "Hold the other enabled motors in place
+   while one moves" checked. A motor that is not is listed under "Not driven: …" and stays
+   still.
+
+**How to stop, in every step:**
+
+1. Press **Z**, **Escape** or the panel's top **Stop**, or the gait's own
+   **Stop** (it STOPs drive on the immediate path first for a leg gait).
+2. Confirm torque-off at the fixture and in the server status (no enabled
+   motor; the gait line no longer shows "Leg: …").
+3. If STOP does not answer or a motor keeps moving, switch **motor power off**.
+   The FPGA supervisor and watchdog stay independent of the host; the server
+   also ends a leg gait 1.5 s after the viewer's lease stops (HW-14 item 3).
+
+| Step | What to do | What to expect | How to stop / when to stop |
+|---|---|---|---|
+| HW-10 Sim only | Open Gait playback, pick a gait, keep **Sim only**. Play, Pause, Resume, move Playback speed, Stop. | Nothing on the leg moves; no motor is energized. "Sim only · gait time t s of P s period · n% speed"; the time holds on Pause and continues on Resume. | The gait's Stop. Z/Escape/Stop if anything on the leg moves. |
+| HW-10 Leg only | After requalifying: select a motor with hold others checked, tick "The leg is suspended with clear space around every joint (needed for Leg and Both)", choose **Leg only**, 50 % effort or less, a low playback speed (25 % or less). Play. Watch one or two periods, then the gait's Stop. | Server message "Moving the leg to the gait's first pose through the gait's governor. Z stops drive." The Leg line goes "Leg: approach", then "Leg: playing · error {role} n, … counts", with "Limits: …" and, if any, "Not driven: …". There is **no** "VIRTUAL (simulated)" label on a physical leg. The radios and Leg effort are locked. Stop ends the run and latches STOP, so the status ends on the STOP message ("STOP latched; all configured axes torque off. Records retained.", or "… unverified … Cut motor power" — then cut power); the run's own "Gait stopped after x s of gait time; statistics saved. Torque off and stationary encoder verified." may show briefly first. A new Recent leg runs row appears without the VIRTUAL label. A refusal names why: a misfit ("only n% of the gait fits its taught poses …"), "save its sim alignment first", "watchdogs not proven …", "No motor is aligned, taught and enabled: …". | Stop at once on travel toward a hard end, a joint moving the wrong way, a growing error, a stall or a noise. Do not retry a misfit by widening poses past a safe range; fix the alignment or sign instead. Power switch if STOP fails. |
+| HW-10 Both | As Leg only with **Both**, with the mirror shown. | "Sim + leg · gait time …". The chosen leg (blue) follows the encoders; the simulated legs move with the leg's gait clock and hold while the real leg is in "approach" or paused. Should the status go stale during the run, the gait line reads "(clock frozen)" with "Leg data stale — last read N s ago; not live", and the mirror says the same before its last reading; nothing is shown as live. | As Leg only. **Do not induce staleness on a physical leg:** a stalled server is the FPGA-watchdog case of HW-14, and a failed status poll stops drive. The stale display is covered by reading only (no driver step induces it). |
+| HW-11 Mirror alignment | Tick "Show the real leg on the suspended simulated robot", choose the leg and check each motor's joint, sign and alignment pose. For each motor: move it with Q/A until the real leg matches the simulated alignment pose, wait for Holding, press **Save sim alignment here**. Then jog each a little with Q/A. Flip one sign and flip it back. Try **Run**. Untick. | The robot is held 0.25 m up; the chosen leg is tinted blue. Save sim alignment answers only after the save; the mirror then reads "{role}: 0.0° from its alignment pose" (a later reading may differ by a few tenths). If it still reads "not aligned — shown at {pose}", record it as a difference (fixed by reading in `afe4a486`, see the gap in the HW-11 trace), then jog a count or two. A jog moves the reading; a flipped sign reverses the simulated joint. Past a CAD limit: "· Beyond CAD limit: …" for that leg's joints only. Run is refused while mirroring ("the leg mirror is showing the real leg on the robot; turn the mirror off …"). Unticking restores the untinted robot. | Z/Escape/Stop for any unexpected jog motion. The mirror commands no motor itself. |
+
+**What to record (every step):** the gait-lab requalification run id and date
+(Leg/Both); the gait path, mode, effort and speed; the server message and the
+Leg line at start and end; the new run file under `<output>/gait-runs/` and its
+`supply_v` and `supply_assumed`; any refusal text; for HW-11 each motor's
+saved alignment (`reference`, `reference_joint_rad`) and the mirror line after
+the save and after the jog; anything that differs from the browser page. Keep
+all partial records.
+
 ## Sign-off
 
 Once every step above reads "same" (or its difference is accepted and noted),
@@ -1074,5 +1563,13 @@ batch. Until then they stay.
 | Server commit / FPGA profile | |
 | Steps passed | HW-01 … HW-16: |
 | Differences accepted | |
-| Gait-lab requalification (HW-10) | run id / date: |
+| Gait-lab requalification (HW-10) | run id / date: (required before physical Leg only / Both; not checked in code) |
+| HW-10 Sim only / Leg only / Both (physical) | **unexecuted** · result: |
+| HW-10a-sim, HW-10b-leg, HW-10b-both (virtual driver) | **unexecuted** (written in `80e4de27`) · receipt: |
+| HW-11 Mirror alignment (physical) | **unexecuted** · result: |
+| HW-11 (virtual driver) | **unexecuted** (written in `80e4de27`) · receipt: |
 | Browser pages may be retired | [ ] yes  [ ] no |
+
+Until a pass of HW-10 and HW-11 has actually run and been signed here, the
+browser calibration page (gait playback and `calibration-mirror.mjs`) stays the
+reference for both.

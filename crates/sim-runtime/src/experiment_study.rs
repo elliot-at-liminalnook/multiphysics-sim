@@ -1,5 +1,9 @@
 //! Retained measurements → shared physical runtime → immutable candidate evidence.
 //! No hardware IO and no CAD mutation. Hosts schedule work off the UI thread.
+pub mod commands;
+#[cfg(test)]
+mod compatibility;
+
 use crate::experiment_comparison::{
     Comparison, Limits, Trace, compare,
     hx_archive::{Archive, Trial},
@@ -39,10 +43,10 @@ impl ModelSettings {
     }
     pub fn validate(&self) -> Result<(), String> {
         if let Some(power) = &self.power {
-            power.validate()?;
+            power.validate().map_err(|e|format!("power: {e}"))?;
             if self.conditions.voltage_v.is_some() {
                 return Err(
-                    "An explicit power source cannot also have a fixed voltage override".into(),
+                    "conditions.voltage_v: an explicit power source cannot also have a fixed voltage override".into(),
                 );
             }
         }
@@ -52,22 +56,17 @@ impl ModelSettings {
                 .get(&name.into())
                 .map_err(|e| e.to_string())?
                 .validate_parameters(params)
-                .map_err(|e| e.to_string())?;
+                .map_err(|e| format!("{name}: {e}"))?;
         }
         let c = &self.conditions;
-        if !self.step_s.is_finite()
-            || !(0.00001..=0.002).contains(&self.step_s)
-            || !c.load_inertia.is_finite()
-            || c.load_inertia <= 0.
-            || !c.load_torque.is_finite()
-            || !c.command_delay_s.is_finite()
-            || !(0. ..=0.5).contains(&c.command_delay_s)
-            || c.voltage_v.is_some_and(|v| !v.is_finite() || v <= 0.)
-            || c.temperature_c
-                .is_some_and(|v| !v.is_finite() || v <= -273.15)
-        {
-            return Err("Invalid conditions or step size (supported step 10 µs–2 ms)".into());
-        }
+        for (path, valid) in [
+            ("step_s", self.step_s.is_finite() && (0.00001..=0.002).contains(&self.step_s)),
+            ("conditions.load_inertia", c.load_inertia.is_finite() && c.load_inertia > 0.),
+            ("conditions.load_torque", c.load_torque.is_finite()),
+            ("conditions.command_delay_s", c.command_delay_s.is_finite() && (0. ..=0.5).contains(&c.command_delay_s)),
+            ("conditions.voltage_v", c.voltage_v.is_none_or(|v|v.is_finite() && v>0.)),
+            ("conditions.temperature_c", c.temperature_c.is_none_or(|v|v.is_finite() && v> -273.15)),
+        ] { if !valid { return Err(format!("{path}: invalid value (step 10 µs–2 ms, delay 0–0.5 s, positive inertia/voltage, temperature above absolute zero)")); } }
         Ok(())
     }
 }
@@ -106,12 +105,31 @@ pub fn baseline() -> Result<(ModelSettings, serde_json::Value), String> {
 
 pub const ASSUMPTIONS: &str = "Exploratory physical simulation, not matched controller validation. Reconstructed single PWM pulse at command midpoint; legacy pulses assume zero-duty electrical braking; trials with explicit release hypotheses retain their separate disabled-driver behavior. Starts at rest with zero current and relative angle zero. Servo firmware and sensor sample age are not modeled. Legacy fixtures omit electronics consumption; explicit electrical scenarios retain their source and auxiliary-load hypotheses. Supply uses the declared electrical source when present, otherwise the reported range midpoint; temperature uses the reported range midpoint unless overridden; temperature is clamped, not a thermal prediction. Load inertia is an explicit unmeasured fixture assumption, load torque a signed opposing-positive torque. Baseline parameters are endpoint-derived hypotheses from the retained characterization plan, not identified physical constants. No implicit time alignment. No physical properties are promoted into CAD.";
 
+/// Intended execution identity is captured by hosts before spawning a job,
+/// including jobs cancelled before runtime execution begins.
+pub fn execution_identity() -> serde_json::Value {
+    serde_json::json!({"runtime":RuntimeIdentity::current(),
+        "integrator":sim_dynamics::Integrator::BackwardEuler(crate::newton()),"seed":0u64})
+}
+
+fn validate_trial_inputs(trial: &Trial) -> Result<(),String> {
+    if !trial.drive.is_finite() || trial.drive.abs()>1. {return Err(format!("archive.trials.{}.drive: expected finite duty in [-1,1]",trial.id));}
+    if !trial.duration_s.is_finite() || trial.duration_s<=0. || trial.duration_s>60. {return Err(format!("archive.trials.{}.duration_s: expected positive duration <=60 s",trial.id));}
+    for (name, range, lower) in [("voltage_range_v",trial.voltage_range_v,0.),("temperature_range_c",trial.temperature_range_c,-273.15)] {
+        if range.iter().any(|v|!v.is_finite() || *v<=lower) || range[0]>range[1] {return Err(format!("archive.trials.{}.{name}: invalid range",trial.id));}
+    }
+    for (name,range) in [("on_host_window_s",trial.on_host_window_s),("off_host_window_s",trial.off_host_window_s)] {if range.iter().any(|v|!v.is_finite()) || range[0]>range[1] {return Err(format!("archive.trials.{}.{name}: invalid timing range",trial.id));}}
+    if trial.measured.samples.is_empty() || trial.measured.samples.iter().any(|s| !s.time_s.is_finite() || s.time_s<0. || s.time_s>60. || !s.value.is_finite()) {return Err(format!("archive.trials.{}.measured.samples: finite nonnegative recording <=60 s required",trial.id));}
+    Ok(())
+}
+
 pub fn simulate(
     trial: &Trial,
     settings: &ModelSettings,
     cancel: &AtomicBool,
 ) -> Result<Trace, String> {
     settings.validate()?;
+    validate_trial_inputs(trial)?;
     if !trial.drive.is_finite()
         || trial.drive.abs() > 1.
         || !trial.duration_s.is_finite()
@@ -193,6 +211,9 @@ pub struct TrialResult {
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Evaluation {
+    /// Captured archive/document evidence; absent in historical reviews.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub capture: BTreeMap<String, serde_json::Value>,
     pub id: String,
     pub runtime: RuntimeIdentity,
     pub integrator: sim_dynamics::Integrator,
@@ -230,16 +251,11 @@ pub fn evaluate(
 ) -> Result<Evaluation, String> {
     baseline.validate()?;
     candidate.validate()?;
-    if limits.as_ref().is_some_and(|l| {
-        !l.rmse.is_finite()
-            || l.rmse < 0.
-            || !l.final_abs_error.is_finite()
-            || l.final_abs_error < 0.
-    }) {
-        return Err("Evaluation limits must be finite and nonnegative".into());
-    }
-    if ids.is_empty() {
-        return Err("Select at least one trial".into());
+    commands::validate_limits(&limits)?;
+    if ids.is_empty() { return Err("evaluation.trial_ids: select at least one trial".into()); }
+    let mut seen=std::collections::BTreeSet::new();
+    for id in ids {
+        if !seen.insert(id) || !archive.trials.iter().any(|t|&t.id==id) { return Err(format!("evaluation.trial_ids.{id}: duplicate or unknown trial")); }
     }
     let mut results = Vec::new();
     for (index, id) in ids.iter().enumerate() {
@@ -300,6 +316,13 @@ pub fn evaluate(
         .as_nanos()
         .to_string();
     Ok(Evaluation {
+        capture: BTreeMap::from([
+            ("observation_blake3".into(), serde_json::json!(archive.observation_blake3)),
+            ("model_blake3".into(), serde_json::json!(archive.model_blake3)),
+            ("trial_ids".into(), serde_json::json!(ids)),
+            ("split_policy".into(), serde_json::json!(archive.split_policy)),
+            ("trial_splits".into(), serde_json::json!(archive.trials.iter().filter(|t|ids.contains(&t.id)).map(|t|(&t.id,&t.split)).collect::<BTreeMap<_,_>>())),
+        ]),
         id,
         runtime: RuntimeIdentity::current(),
         integrator: sim_dynamics::Integrator::BackwardEuler(crate::newton()),
@@ -343,6 +366,8 @@ pub struct Study {
     pub notes: String,
     #[serde(default)]
     pub refinement: crate::controller_refinement::workspace::Workspace,
+    #[serde(flatten, default)]
+    pub retained_fields: BTreeMap<String, serde_json::Value>,
 }
 impl Study {
     pub fn new(archive: Archive) -> Result<Self, String> {
@@ -365,6 +390,7 @@ impl Study {
             validation_influenced: false,
             notes: String::new(),
             refinement: Default::default(),
+            retained_fields: Default::default(),
         })
     }
     pub fn candidate_edited(&mut self) {
@@ -380,30 +406,13 @@ impl Study {
         self.draft.validate()?;
         self.refinement.validate()?;
         self.refinement.validate_archive(&self.archive)?;
-        if self.limits.as_ref().is_some_and(|l| {
-            !l.rmse.is_finite()
-                || l.rmse < 0.
-                || !l.final_abs_error.is_finite()
-                || l.final_abs_error < 0.
-        }) {
-            return Err("Invalid draft evaluation limits".into());
-        }
-        if self
-            .view
-            .evaluation
-            .is_some_and(|i| i >= self.evaluations.len())
-            || self
-                .view
-                .trial_id
-                .as_ref()
-                .is_some_and(|id| !self.archive.trials.iter().any(|t| &t.id == id))
-            || !self.view.min_drive.is_finite()
-            || !self.view.max_drive.is_finite()
-        {
-            return Err("Invalid saved review selection or filters".into());
-        }
+        commands::validate_limits(&self.limits)?;
+        commands::validate_view(self)?;
         let mut ids = std::collections::BTreeSet::new();
         for t in &self.archive.trials {
+            // Archival comparison evidence may be valid even when pulse replay
+            // cannot represent its duration or pretrigger initial conditions.
+            // compare below validates retained samples/limits independently.
             if let Some(release) = &t.release {
                 release.validate()?;
             }
@@ -418,6 +427,7 @@ impl Study {
             return Err("Empty measurement archive".into());
         }
         for e in &self.evaluations {
+            commands::validate_limits(&e.limits)?;
             e.runtime.validate()?;
             crate::system_session::SessionConfig {
                 interval: e.baseline.step_s,
@@ -482,17 +492,19 @@ pub(crate) fn write_new(path: &Path, bytes: &[u8]) -> Result<(), String> {
         .map_err(|e| e.to_string())?
         .as_nanos();
     let temp = parent.join(format!(".experiment-{}-{nonce}.tmp", std::process::id()));
+    let mut owns_temp = false;
     let result = (|| {
         let mut file = std::fs::OpenOptions::new()
             .write(true)
             .create_new(true)
             .open(&temp)
             .map_err(|e| e.to_string())?;
+        owns_temp = true;
         file.write_all(bytes).map_err(|e| e.to_string())?;
         file.sync_all().map_err(|e| e.to_string())?;
         std::fs::hard_link(&temp, path).map_err(|e| format!("Save needs a new filename: {e}"))
     })();
-    let _ = std::fs::remove_file(temp);
+    if owns_temp { let _ = std::fs::remove_file(temp); }
     result
 }
 
@@ -517,6 +529,10 @@ impl Evaluation {
                 s.unscored += 1;
                 continue;
             };
+            if !r.errors.is_empty() || r.baseline.is_none() || r.candidate.is_none() {
+                s.unscored += 1;
+                continue;
+            }
             if let Some(c) = &r.candidate {
                 if c.metrics.passes {
                     s.passes += 1;

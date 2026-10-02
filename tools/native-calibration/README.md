@@ -7,6 +7,12 @@ screenshots. The accepted 2026-10-02 verification
 virtual HW-01 connection and idle STOP; HW-02–HW-09 and LC1–LC3 acceptance remain
 pending. Portable work at f541b05f remains set aside/unaccepted.
 
+**No executed evidence exists for this driver.** Neither `acceptance.py` nor
+`fixtures.py` has been run since their current changes, so nothing here shows
+that the native path works. The browser calibration page served by
+`serve_actuator_calibration` remains the reference until an authorized
+verification pass of this driver runs and passes.
+
 ## Launch path
 
 The driver launches exactly three owned executable kinds: `hx_virtual_bench`,
@@ -30,8 +36,8 @@ python3 tools/native-calibration/acceptance.py receipt \
   --bench target/debug/examples/hx_virtual_bench \
   --server target/debug/examples/serve_actuator_calibration \
   --viewer target/debug/sim-spatial \
-  --build-log runs/NEW-VERIFICATION/build.log \
-  --out runs/NEW-VERIFICATION/fresh-build-receipt.json
+  --build-log /tmp/ncal-build/build.log \
+  --out /tmp/ncal-build/fresh-build-receipt.json
 ```
 
 Repeat `--build-log` once per retained log. The helper refuses, writing
@@ -85,19 +91,21 @@ Example **future** invocation (do not run during writing):
 
 ```sh
 python3 tools/native-calibration/acceptance.py \
-  --fresh-build-receipt runs/NEW-VERIFICATION/fresh-build-receipt.json \
+  --fresh-build-receipt /tmp/ncal-build/fresh-build-receipt.json \
   --bench target/debug/examples/hx_virtual_bench \
   --server target/debug/examples/serve_actuator_calibration \
   --viewer target/debug/sim-spatial \
-  --out runs/NEW-NATIVE-CALIBRATION \
+  --out /tmp/ncal-run1 \
   --screenshots
 ```
 
 `run` is the default subcommand (`acceptance.py run …` is the same). Omit
 `--screenshots` to capture nothing; it is off by default.
 
-Use a new, short absolute output path (Unix socket path limits apply); an existing
-output directory is refused. Do not use Python `-O`. The default total deadline is
+Use a new, short absolute output path such as `/tmp/ncal-run1` (the bench's Unix
+socket lives under it and socket path limits apply); an existing output
+directory is refused. Retain the evidence elsewhere afterwards if it must
+outlive `/tmp`. Do not use Python `-O`. The default total deadline is
 1800 seconds, which is also the maximum (`--total-timeout` must be between 60 and
 1800). The per-step budgets (90 s connects, 120 s tunes, 150 s learning and
 sweep-all, 180 s + 300 s campaign) leave little slack under a shorter total. Every command job and
@@ -189,13 +197,13 @@ of the phase.
 |---|---|---|
 | HW-01 | `hardware_status`, `hardware:connect`; REST `select` | Direct URL, `fidelity: virtual_simulated`, fresh age, no enabled motor. The server stays paused until `authorization_revoked` (not just stale). After resume, revocation persists, `select` is refused with "authorization expired", and the server has no enabled motor. Reconnect has a new generation, no revocation, no ready session, and `select_2` is enabled again. |
 | HW-02 | `hold_others`, `drive_mode`; `hardware:select_1/2/3`, `hardware:set_disabled` | Form shows `hold_others: true`, `drive_mode: "pwm"`. Session ready per motor. A disabled motor leaves no ready session when selected. Re-enabled and selected again. |
-| HW-03 | `hardware:jog_upper/lower`; REST `speed`, `jog_release` | Encoder movement, held feedback, opposing-input hold within 32 counts for 1 s. |
+| HW-03 | `hardware:jog_upper/lower` (toggles: activating a held direction's control again releases it); REST `speed` | Each press and release goes through the control, which must list `jog_press` before a press and `jog_release` while held. Encoder movement, held feedback (`hardware_status.form` `held_upper`/`held_lower`, or the controls' listed action if the form does not expose them), and the opposing-input case: upper then lower pressed shows both held and holds; both released by activating each control again; position stays within 32 counts for 1 s. |
 | HW-04 | `hardware:section_*`, `hardware:stop` | Top STOP listed and enabled while sections toggle; each STOP ends the jog (server `enabled_id: null`, not busy). Visual non-scrolling placement is judged from the `HW-04-stop-*` screenshots by the operator, not by the driver. |
 | HW-05 | REST `loss {reason: focus_lost}`; `hardware:close`, `hardware:toggle_panel`; `mode:phenomena` then `mode:robot` | Drive ends with no ready motion. Closed panel reports `open: false`. Mode exit: direct server status shows `enabled_id: null` and not busy, and `hardware_status` is refused with "the active mode is phenomena". Re-entry reconnects idle with a new generation. `mode:build` is not used because Build refuses to open without a document (`switch/prepare.rs` `needs`). REST loss exercises the interruption consumer, not an OS focus event. |
-| HW-06 | `hardware:capture_lower/upper/reference`, `hardware:reset_poses`; REST `speed`, `target`, `target_commit` | After poses are taught, `speed`/`target` of −1 and 101 are refused with "must be a number from". The encoder reaches each target, and the commanded target lies inside the four-count inset of the taught lower/upper. The reference pose is captured (non-null). Reset clears lower/upper. Motor 3 is taught too. |
-| HW-08 | `hardware:tune_confirm`, `hardware:tune`, `hardware:stop` | The tune is still running when STOP is pressed, and the interrupted tune stops. Fresh tune shows at least 2 observed stages, finite gains, a retained record file inside the output, and the confirmation cleared. Repeated for motor 3. |
+| HW-06 | `hardware:capture_lower/upper/reference`, `hardware:reset_poses`; REST `speed`, `target`, `target_commit` | Before each capture the motor holds still within the server's capture bounds (`server.sweep.latest`: holding, velocity under 2 counts/s, target within 3 counts) for 0.5 s (the server needs six stable samples and the viewer polls it every 150 ms); a capture counts only with a new `records/calibration-*.json`, `capture_message` `Saved <pose> pose` and the value set, and is retried up to 5 times while not saved, e.g. while the server reports "Still settling" (attempts in `captures.jsonl`). After poses are taught, `speed`/`target` of −1 and 101 are refused with "must be a number from". The encoder reaches each target, and the commanded target lies inside the four-count inset of the taught lower/upper. The reference pose is captured (non-null). Reset clears lower/upper. Motor 3 is taught too. |
+| HW-08 | `hardware:tune_confirm`, `hardware:tune`, `hardware:stop` | STOP is pressed as soon as the tune is seen running (no screenshot in between), and it interrupted the tune: `tuning.error` set (the server sets it only on the stopped path) and still no gains on motor 2 (`tune-interrupted.json`). The viewer's tuning status carries no `result` field, so the evidence for tuning is that stopped-path error plus motor 2's gains, checked absent before the tune is confirmed, still absent after STOP. The fresh tune's `session.tune_stages` (cleared at each tune start) shows at least 2 stages, plus finite gains, a retained record file inside the output, and the confirmation cleared. Repeated for motor 3. |
 | HW-07 | `hardware:sweep`, `hardware:learn`, `hardware:sweep_all`, `hardware:stop`; REST `loss` | Saved-range travel stays within poses. Pause holds. Interruption keeps poses. `session.learning_terminal` shows `learning_complete` with at least three stops each way, `learning: false` and intent hold (no second Learn press, which would start a new run). Two taught motors complete two half cycles each. Another sweep-all is interrupted by STOP. |
-| HW-09 | `hardware:campaign_confirm`, `hardware:campaign`, `hardware:campaign_resume`, `hardware:stop` | At least one saved receipt per completed stage (`*.execution.json` provenance files are not counted). Completed count retained across STOP. Receipt hashes unchanged after resume. Terminal report inside the output. Confirmation cleared. |
+| HW-09 | `hardware:campaign_confirm`, `hardware:campaign`, `hardware:campaign_resume`, `hardware:stop` | STOP is pressed as soon as a saved stage is seen with the campaign running (no screenshot in between), and it interrupted the campaign: `campaign.error` set and no result. At least one saved receipt per completed stage (`*.execution.json` provenance files are not counted). Completed count retained across STOP. Receipt hashes unchanged after resume. Terminal report inside the output. Confirmation cleared. |
 | LC1 real server | see "Two phases" | 409 plus binding text, latched STOP replies, expiry refusals and the new server UUID. |
 | LC1 FIXTURE | second viewer via proxy | Virtual-requirement refusals with no crossings. |
 
@@ -209,13 +217,21 @@ Wait conditions treat missing fields, wrong types and `None` as "not yet".
 The driver issues one command at a time and waits for each job to finish before
 sending the next. So a STOP never lands on a pending change, and the native
 "applied, but STOP was pressed afterwards" error is not expected on the
-positive path; if it appears, the step fails. A remote `jog_release` is exempt
-from freshness authorization natively. The driver never relies on a refused
-release. On a
-command or poll timeout the driver sends `DELETE /v1/jobs/{id}`. Cancellation in
+positive path; if it appears, the step fails. Jogs are released through the
+same toggle control that pressed them; a release is exempt from freshness
+authorization natively. The driver never relies on a refused release: cleanup's
+direct server STOP and native `hardware_stop` are the fallback. On a
+command or poll timeout, or a transport error while the job is pending (a
+Python 3.9 `socket.timeout`, `URLError`, connection reset) or a non-JSON poll
+reply (retained in `http.jsonl`), the driver sends
+`DELETE /v1/jobs/{id}`; if the command could not even be submitted, it sends
+only the direct server STOP. Cancellation in
 sim-api is cooperative: a pending hardware ticket observes it, requests STOP and
 fails. The driver then sends a direct server STOP so nothing queues behind the
 stuck job. Both are recorded in `cancelled-jobs.jsonl` and `server-stops.jsonl`.
+If a jog's encoder-movement check fails, the driver releases the jog
+best-effort before the original failure propagates; a failed release is
+recorded in `jog-release-failures.jsonl`.
 
 `results.json` records each step's outcome and final observed state.
 `http.jsonl` retains every request and response. Also retained, on success,
@@ -227,7 +243,8 @@ failure or timeout:
   environment and root (`viewer-<label>-launch.json`, `viewer-<label>-root.json`)
   with their config directories
 - bench/server/viewer logs
-- the learned terminal state, sweep ends, tune stages and every record
+- the learned terminal state, sweep ends, capture attempts, the interrupted
+  tune, tune stages and every record
 - with `--screenshots`, `screenshots/<checkpoint>.png` for each captured checkpoint
 
 Each failed deadline writes a `timeout-state-<ms>.json`. Failed steps are not
@@ -238,7 +255,9 @@ Written `fixtures.py` (unexecuted) covers the following: physical/PTY/unknown
 preflight refusal before any subprocess or git call; failure-receipt retention
 with no STOP sent to an unowned server; refusal of an existing evidence directory;
 the fail-closed config placeholders; the "not yet" wait semantics; the
-latched-STOP reply check; proxy robustness against an in-process stub; receipt
+latched-STOP reply check; the capture stillness and STOP-interrupted predicates;
+transport errors and non-JSON poll replies on a pending job reaching job-cancel, and a failed submission sending only the direct STOP; proxy
+robustness against an in-process stub and closing a proxy that never started; receipt
 helper refusals (no, missing or empty build log, empty binary, existing output)
 with nothing written and no git call; step verdicts that screenshots never
 change; the screenshot summary and PNG completeness check; and that this
@@ -292,11 +311,12 @@ earlier step failed. A failed or timed-out screenshot never fails a step and
 never stops its remaining assertions. A captured one never passes a step:
 step verdicts come only from semantic assertions. Captures happen before
 cleanup; cleanup is unchanged. Worst case, each capture takes about 25 s (3 s
-request, 20 s job and file polling, a final read), so 19 checkpoints add about
-475 s under the same 1800 s total deadline. Because a capture can delay the
-next action, HW-08 and HW-09 re-check that the tune or campaign is still running
-immediately before STOP; otherwise STOP could land on finished work and test
-nothing.
+request, 20 s job and file polling, a final read), so 17 checkpoints add about
+425 s under the same 1800 s total deadline. No checkpoint sits between seeing
+running work and the STOP meant to interrupt it: HW-08 and HW-09 capture only
+after STOP, so a slow capture can never let the tune or campaign finish first.
+Work that finishes before STOP fails the step: that is a real result, not a
+screenshot artefact.
 
 The checkpoints, in run order (`<step>-<checkpoint>`):
 
@@ -305,19 +325,18 @@ The checkpoints, in run order (`<step>-<checkpoint>`):
 - `HW-01-stale`: the server stalled and the link stale
 - `HW-01-reconnect`: after reconnect, the new generation authorized
 - `HW-02-disabled`: motor 2 disabled with no ready session
-- `HW-03-held`: held after opposing inputs, encoder and target shown
+- `HW-03-held`: holding after opposing inputs were pressed and released, encoder and target shown
 - `HW-04-stop-tune`: top STOP visible in the Tune section
 - `HW-04-stop-campaign`: top STOP visible in the Campaign section
 - `HW-04-stop-advanced`: top STOP visible in the Advanced section
 - `HW-06-taught`: three taught poses
 - `HW-06-target`: the encoder at the 75 % target
 - `HW-06-reset`: poses reset
-- `HW-08-stages`: the tune running, before it is interrupted
+- `HW-08-stopped`: the tune interrupted by STOP, captured stages shown
 - `HW-08-terminal`: terminal gains, record and cleared confirmation
 - `HW-07-learned`: learned stops, holding
 - `HW-07-sweep-all`: sweep-all terminal
-- `HW-09-saved`: the campaign with a saved stage
-- `HW-09-stopped`: the campaign stopped, completed count kept
+- `HW-09-stopped`: the campaign interrupted by STOP after a saved stage, completed count kept
 - `HW-09-terminal`: the terminal report
 
 Screenshots supplement semantic receipts; animation alone never passes a step.

@@ -10,6 +10,8 @@ import importlib.util
 import io
 import json
 import re
+import socket
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import tempfile
@@ -88,7 +90,78 @@ class WaitConditions(unittest.TestCase):
         self.assertFalse(DRIVER.stop_reply_latched(400, {"stop_latched": True, "enabled_id": None, "busy": False}))
 
 
+class CaptureAndStopPredicates(unittest.TestCase):
+    def state(self, **latest):
+        sample = {"holding": True, "velocity_counts_s": 0.5, "target_raw": 1000.0,
+                  "position_continuous": 1001, "position_raw": 1001}
+        sample.update(latest)
+        return {"server": {"sweep": {"latest": sample}}}
+
+    def test_holding_still_uses_the_server_capture_bounds(self):
+        self.assertTrue(DRIVER.satisfied(DRIVER.holding_still, self.state()))
+        self.assertFalse(DRIVER.satisfied(DRIVER.holding_still, self.state(holding=False)))
+        self.assertFalse(DRIVER.satisfied(DRIVER.holding_still, self.state(velocity_counts_s=-2.0)))
+        self.assertFalse(DRIVER.satisfied(DRIVER.holding_still, self.state(position_continuous=1003)))
+        self.assertTrue(DRIVER.satisfied(DRIVER.holding_still, self.state(position_continuous=None, position_raw=998)))
+        self.assertFalse(DRIVER.satisfied(DRIVER.holding_still, {"server": {"sweep": None}}))
+
+    def test_stop_interrupted_needs_error_and_no_result(self):
+        stopped = {"server": {"tuning": {"running": False, "error": "Operator stop during tuning"}}}
+        self.assertTrue(DRIVER.satisfied(lambda s: DRIVER.stop_interrupted(s, "tuning"), stopped))
+        # The viewer's tuning JSON has no `result`; a missing tuning entry is "not yet".
+        self.assertFalse(DRIVER.satisfied(lambda s: DRIVER.stop_interrupted(s, "tuning"), {"server": {"tuning": None}}))
+        finished = {"server": {"campaign": {"running": False, "error": None, "result": {"headline": "done"}}}}
+        self.assertFalse(DRIVER.satisfied(lambda s: DRIVER.stop_interrupted(s, "campaign"), finished))
+        running = {"server": {"campaign": {"running": True, "error": None, "result": None}}}
+        self.assertFalse(DRIVER.satisfied(lambda s: DRIVER.stop_interrupted(s, "campaign"), running))
+
+
+class PendingJobTransportErrors(unittest.TestCase):
+    def test_read_timeout_reaches_job_cancel(self):
+        # Python 3.9: a urllib read timeout is socket.timeout, not TimeoutError.
+        for error in [socket.timeout("timed out"), DRIVER.urllib.error.URLError("refused"),
+                      ConnectionResetError("reset"), TimeoutError("deadline"),
+                      # A non-JSON reply while polling: the job is still pending.
+                      json.JSONDecodeError("Expecting value", "<html>", 0)]:
+            with self.subTest(error=type(error).__name__), tempfile.TemporaryDirectory() as temporary:
+                args = type("Args", (), {"out": Path(temporary), "total_timeout": 60, "screenshots": False})()
+                run = DRIVER.Run(args)
+                replies = iter([(202, {"url": "/v1/jobs/7"})])
+
+                def http(_base, method, _path, *_rest, **_kw):
+                    if method == "POST":
+                        return next(replies)
+                    raise error
+                with patch.object(run, "http", side_effect=http), \
+                        patch.object(run, "cancel_job") as cancel, patch.object(run, "direct_stop") as stop:
+                    with self.assertRaises(type(error)):
+                        run.command("hardware_status", base="http://127.0.0.1:9")
+                    cancel.assert_called_once_with("http://127.0.0.1:9", "/v1/jobs/7")
+                    stop.assert_not_called()
+
+    def test_submission_failure_sends_direct_stop(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            args = type("Args", (), {"out": Path(temporary), "total_timeout": 60, "screenshots": False})()
+            run = DRIVER.Run(args)
+            with patch.object(run, "http", side_effect=socket.timeout("timed out")), \
+                    patch.object(run, "cancel_job") as cancel, patch.object(run, "direct_stop") as stop:
+                with self.assertRaises(socket.timeout):
+                    run.command("hardware_status", base="http://127.0.0.1:9")
+                stop.assert_called_once()
+                cancel.assert_not_called()
+
+
 class IdentityProxyRobustness(unittest.TestCase):
+    def test_closing_a_proxy_that_never_started_does_not_block(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            proxy = DRIVER.IdentityFixture(9, Path(temporary) / "fixture.jsonl")
+            done = threading.Event()
+            closer = threading.Thread(target=lambda: (proxy.close(), done.set()), daemon=True)
+            started = time.monotonic()
+            closer.start()
+            self.assertTrue(done.wait(5), "close() blocked on a proxy whose serve thread never ran")
+            self.assertLess(time.monotonic() - started, 5)
+
     def test_non_object_and_null_execution_never_become_virtual(self):
         replies = iter([b"[1, 2]", b'{"execution": null, "connected": true}',
                         b'{"execution": {"schema_version": 1, "kind": "virtual_calibration",'

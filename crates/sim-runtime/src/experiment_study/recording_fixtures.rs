@@ -110,7 +110,7 @@ fn recording_device_coordinates_are_authorable_but_archive_subsets_still_validat
     r.experiment.device=device;
     shared::apply(&mut s,shared::Command::ImportRecording{recording:r}).unwrap();
     let resistance=s.draft.motor["resistance"];
-    let coords=vec![crate::controller_refinement::calibration::Coordinate{path:"motor.resistance".into(),device:Some(device),lower:resistance*0.5,upper:resistance*1.5}];
+    let coords=vec![crate::controller_refinement::calibration::Coordinate{path:"motor.resistance".into(),device:Some(device),lower:-resistance*0.5,upper:resistance*0.5}];
     shared::apply(&mut s,shared::Command::SetCoordinates(coords)).unwrap();
     let selected=vec![s.archive.trials[0].id.clone()];
     assert!(shared::prepare(&mut s,shared::Operation::Sensitivity{selected}).unwrap_err().contains("device"));
@@ -163,6 +163,8 @@ fn direct_combined_preparation_rejects_additional_quarantine_without_host_reserv
 fn immutable_failed_fit_case_selection_reopens_and_stale_source_is_transactional(){
     use crate::controller_refinement::{calibration as cal,calibration_data as data};
     let mut s=study();let r=recording(true);
+    shared::apply(&mut s,shared::Command::ImportRecording{recording:r.clone()}).unwrap();
+    shared::apply(&mut s,shared::Command::AssignRecording{assignment:assignment(&r,Role::HeldOut)}).unwrap();
     let dataset=data::RecordingDataset::capture(std::slice::from_ref(&r),&[assignment(&r,Role::HeldOut)]).unwrap();
     let attempt=cal::FitAttempt{request:cal::FitRequest{model:cal::Family{shared:s.draft.clone(),device_deltas:Default::default()},training_ids:vec![],validation_ids:vec![r.fingerprint()],coordinates:vec![],maximum_evaluations:40,validation_influenced:false},archive_hash:data::CalibrationData::fingerprint(&dataset),runtime:crate::physics_context::RuntimeIdentity::current(),evaluations:vec![],outcome:None,partial:None,failure:Some("Scoring cancelled".into()),cancelled:true};
     s.refinement.recording_fits.push(data::RecordingFitAttempt{dataset,attempt});recordings::cache_identities(&mut s);

@@ -14,10 +14,13 @@ use super::*;
         assert_eq!(s.refinement.recordings.len(),1,"duplicate import preserves frozen source identity");
         s.limits=Some(sim_runtime::experiment_comparison::Limits{rmse:0.1,final_abs_error:0.1});
         for purpose in [recording::Purpose::RecordedCommandReplay,recording::Purpose::ClosedLoopPrediction] {
-            let Outcome::Shared(outcome)=Action::Predict(0,purpose).run(s.clone(),&AtomicBool::new(true),|_,_|{}).unwrap() else {panic!("shared execution owner")};
+            let Outcome::SharedInputs(outcome,inputs)=Action::Predict(0,purpose).run(s.clone(),&AtomicBool::new(true),|_,_|{}).unwrap() else {panic!("shared execution owner with job-captured inputs")};
             assert!(matches!(outcome.capture.operation,Operation::PredictRecording{purpose:p,..} if p==purpose));
-            shared::apply_outcome(&mut s,outcome);
-            assert!(s.refinement_evidence.receipts.last().unwrap().cancelled);
+            assert_eq!(inputs["recordings"][0]["recording_hash"],serde_json::json!(r.fingerprint()));
+            shared::apply_outcome_with_inputs(&mut s,outcome,inputs.clone());
+            let receipt=s.refinement_evidence.receipts.last().unwrap();
+            assert!(receipt.cancelled);
+            assert_eq!(receipt.inputs,inputs,"legacy attachment preserves the exact job-captured projection");
         }
     }
     #[test]

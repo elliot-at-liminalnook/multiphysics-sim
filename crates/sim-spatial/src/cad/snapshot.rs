@@ -19,10 +19,19 @@ pub(in crate::cad) struct Parts<'a> {
     files: Option<&'a super::files::CadFiles>,
     components: Option<&'a super::components::ComponentsState>,
     composition: Option<&'a super::composition::CadCompositionState>,
+    experiments: Option<&'a super::experiments::ExperimentsState>,
+    review: Option<&'a super::experiment_review::ReviewState>,
+    motion: Option<&'a super::motion::MotionState>,
 }
 impl<'a> Parts<'a> {
     pub(in crate::cad) fn of(display: Option<&'a super::display::CadDisplay>, views: Option<&'a super::views::CadViews>, files: Option<&'a super::files::CadFiles>) -> Self {
-        Self { display, views, files, components: None, composition: None }
+        Self { display, views, files, components: None, composition: None, experiments: None, review: None, motion: None }
+    }
+    pub(in crate::cad) fn experiments(mut self, experiments: &'a super::experiments::ExperimentsState, review: &'a super::experiment_review::ReviewState, motion: &'a super::motion::MotionState) -> Self {
+        self.experiments = Some(experiments);
+        self.review = Some(review);
+        self.motion = Some(motion);
+        self
     }
     pub(in crate::cad) fn authoring(mut self, components: &'a super::components::ComponentsState, composition: &'a super::composition::CadCompositionState) -> Self {
         self.components = Some(components);
@@ -94,6 +103,9 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem],
         "generation": doc.generation,
     });
     // Outside the macro: one more key there would pass json!'s recursion limit.
+    state["uncertain_edit"] = json!(doc.uncertain_edit);
+    state["uncertain_edit_history"] = json!(doc.uncertain_history);
+    state["preview_read_only"] = json!(doc.preview_read_only);
     state["ops"] = super::ops::state_json(doc);
     state["plane"] = plane.map_or(Value::Null, |p| super::sketch::plane::state_json(doc, p));
     // cad-views-export: display state and section, saved views, file jobs.
@@ -112,6 +124,9 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem],
     state["references"] = super::references::state_json(doc);
     state["components"] = parts.components.map_or(Value::Null, |s| super::components::state_json(doc, s));
     state["composition"] = parts.composition.map_or(Value::Null, |s| super::composition::state_json(doc, s));
+    state["experiments"] = parts.experiments.map_or(Value::Null, |s| super::experiments::state_json(doc, s));
+    state["experiment_review"] = parts.review.map_or(Value::Null, |s| super::experiment_review::state_json(doc, s));
+    state["motion"] = parts.motion.map_or(Value::Null, |s| super::motion::state_json(doc, s));
     state
 }
 
@@ -127,10 +142,11 @@ pub(in crate::cad) fn publish(
     files: Option<Res<super::files::CadFiles>>,
     selection: CadSelection,
     (components, composition): (Res<super::components::ComponentsState>, Res<super::composition::CadCompositionState>),
+    (experiments, review, motion): (Res<super::experiments::ExperimentsState>, Res<super::experiment_review::ReviewState>, Res<super::motion::MotionState>),
 ) {
     let (Some(mut rest), Some(doc)) = (rest, doc) else { return };
     if rest.0.snapshot_due() {
-        let state = state_json(&doc, &selection.items(), meshes.as_deref(), plane.as_deref(), Parts::of(display.as_deref(), views.as_deref(), files.as_deref()).authoring(&components, &composition));
+        let state = state_json(&doc, &selection.items(), meshes.as_deref(), plane.as_deref(), Parts::of(display.as_deref(), views.as_deref(), files.as_deref()).authoring(&components, &composition).experiments(&experiments, &review, &motion));
         let mut shown = state.clone();
         shown["viewer_mode"] = json!(ViewerMode::Cad.name());
         rest.0.publish("cad_state", state);

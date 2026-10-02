@@ -15,7 +15,7 @@ duplicates physics.
 **Rust changes since aa34ef48 have not been compiled or executed.** Historical
 Python executions remain recorded below (including the cad-organize gap route's
 two passing tests at b476b28e); they do not verify native workflow parity.
-Seven implemented epics since are stacked
+Eight implemented epics since are stacked
 uncompiled: unified-selection-document (f5546fbd, 5e9c34d5, af0bb4be),
 cad-physical-inspect (3fb34225..61f1bea5: 3fb34225, f26842fa, review
 fixes 697a15c1, docs 61f1bea5), cad-print (35ea6de0, 17f90d08, review
@@ -24,8 +24,8 @@ fixes 6c6b1a5a, docs 9afd63f5, fixes 0a1147b3), one-text-entry
 and one kit text field; see [One text entry](#one-text-entry-2026-10-01))
 and cad-organize (b476b28e and the commits after it: the outliner's
 organization, RoboCAD's comment threads, reference images and the system
-link; see [CAD organize](#cad-organize-2026-10-01); nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), and public-system-sets (180b3a54, 5c874455; source review only), plus cad-components (T42; source review only).
-All seven remain uncompiled. Their counts and "done" states below describe
+link; see [CAD organize](#cad-organize-2026-10-01); nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), and public-system-sets (180b3a54, 5c874455; source review only), plus cad-components (T42; source review only) and cad-experiments-motion (T43; source review only).
+All eight remain uncompiled. Their counts and "done" states below describe
 source review, not an executed build or native parity result.
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
@@ -5328,7 +5328,7 @@ doc comment listing what it does and its deliberate differences.
   Show only linked parts isolates the linked parts at display time only
   (`cad/mesh.rs`), never calling `set_visible`, and Return restores the
   camera, the selection and the whole `CadDisplay`. A thread of
-  experiment evidence is refused by name (cad-experiments-motion).
+  experiment evidence opens isolated captured review through threads/isolation.rs and the typed review action (T43).
 - **Ctrl+F stays Fillet.** RoboCAD's keymap binds Ctrl+F to Fillet while
   its outliner placeholder reads "Search (Ctrl+F)…". Here Ctrl+F focuses
   the search only with the pointer over the model tree dock
@@ -6049,7 +6049,7 @@ image planes and the calibrate tool, and the linked system file with Open
 in builder as an in-window switch to Build mode, with one api.py gap
 route (`GET /nodes/{id}/image`); it is written and reviewed by reading
 and pending verification: nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified). Its components and system-graph rows
-moved to cad-components. Next: cad-experiments-motion (cad-components implemented by T42); public-system-sets
+moved to cad-components. cad-experiments-motion is implemented by T43 (reading only); next structural batch is selected by the Director; public-system-sets
 is done by reading and remains uncompiled pending verification.
 
 #### Later CAD epics (planned 2026-09-30)
@@ -6808,3 +6808,7 @@ source edit continues. This reuses the existing CAD job/result owner, with an
 optional composition resource parameter checked against pinned Bevy 0.19.1, and
 adds no competing job lifecycle or private ordering edge. Fixtures cover refusal,
 success, mismatched answers and cancellation without resurrecting intent.
+
+## CAD experiments and motion (T43, 2026-10-01)
+
+Implemented and independently cross-reviewed by reading; uncompiled and unexecuted. The 63-row family now has individual owners in cad-parity.md; [T43 evidence](../cad-experiments-motion-evidence.md) records all eight batch IDs, actual rendered controls, source/service traces, ownership, public scheduling and lifecycle contracts. This realizes §§1–7 and §9 phase 1 only. Headless captured geometry and reference PoseModel sampling retain Python/OCCT authority; Qt reuses the shared service. Native experiment preflight feeds composition metadata. Resources retain drafts, rejected requests and durable cancellation/unknown receipts while transient kit widgets may close. Preview blocks source geometry edits centrally, with guarded annotation/program metadata as the only auxiliary exception. Native export uses bounded capture delivery and a serialized cancellation/publication gate. No physics, derivation port, executed parity or legacy retirement is claimed. Next work is selected by the Director; historical “next T43” text above is superseded by this entry.

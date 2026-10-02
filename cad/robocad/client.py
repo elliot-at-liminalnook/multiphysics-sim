@@ -44,8 +44,15 @@ class RoboClient:
     def system_graph(self):
         return self.get('/system')
 
+    def _stamped(self, request: dict):
+        """Supply missing identity only; caller's stale guard stays authoritative.
+        A document replacement between this GET and POST is refused by service.
+        """
+        current = self.get('/doc')
+        return {'document_id': current['document_id'], 'expected_revision': current['revision'], **request}
+
     def check_system(self, request: dict):
-        return self.post('/experiments', {**request, 'preflight': True})
+        return self.post('/experiments', self._stamped({**request, 'preflight': True}))
 
     def experiment_components(self, run_id: str):
         return self.get('/experiments/'+run_id+'/components')
@@ -82,7 +89,7 @@ class RoboClient:
 
     def script(self, path: str, params: Optional[dict] = None, replace: bool = True, **extra) -> dict:
         """Run a repository model script (``build(ops, params)``) as one undo step."""
-        return self.post("/doc/script", {"path": path, "params": params or {}, "replace": replace, **extra})
+        return self.post("/doc/script", self._stamped({"path": path, "params": params or {}, "replace": replace, **extra}))
 
     def create(self, **spec) -> dict:
         return self.post("/nodes", spec)

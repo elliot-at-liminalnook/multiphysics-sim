@@ -17,9 +17,11 @@ def test_experiment_and_candidate_routes_share_revisions_and_captured_inputs(tmp
     server = ApiServer(doc, port=0); server.service._experiments = manager; server.start()
     client = RoboClient(server.url)
     try:
-        revision = client.get('/doc')['revision']
+        current = client.get('/doc')
+        revision = current['revision']
+        document_id = current['document_id']
         req = urllib.request.Request(server.url+'/experiments', method='POST',
-            data=json.dumps({'expected_revision': revision}).encode(), headers={'Content-Type': 'application/json'})
+            data=json.dumps({'document_id': document_id, 'expected_revision': revision}).encode(), headers={'Content-Type': 'application/json'})
         with urllib.request.urlopen(req) as response:
             assert response.status == 202
             job = json.load(response)
@@ -27,17 +29,23 @@ def test_experiment_and_candidate_routes_share_revisions_and_captured_inputs(tmp
         assert client.get('/experiments')[0]['id'] == job['id']
         assert client.post(f"/experiments/{job['id']}/cancel")['state'] == 'cancelled'
         with pytest.raises(RuntimeError, match='409'):
-            client.post('/experiments', {'expected_revision': revision-1})
-        batch = client.post('/doc/batch', {'expected_revision': revision, 'operations': [
+            client.post('/experiments', {'document_id': document_id, 'expected_revision': revision-1})
+        with pytest.raises(RuntimeError, match='409'):
+            client.post('/experiments', {'document_id': 'replaced-document', 'expected_revision': revision})
+        with pytest.raises(RuntimeError, match='409'):
+            client.post('/candidates', {'document_id': 'replaced-document', 'expected_revision': revision,
+                'operations': [{'op': 'box', 'args': [[0,0,0],[10,10,10]]}]})
+        assert client.get('/doc')['revision'] == revision
+        batch = client.post('/doc/batch', {'document_id': document_id, 'expected_revision': revision, 'operations': [
             {'op': 'box', 'args': [[0,0,0],[10,10,10]], 'as': 'part'}]})
         part = batch['results']['part']
-        candidate = client.post('/candidates', {'expected_revision': batch['revision'], 'operations': [
+        candidate = client.post('/candidates', {'document_id': document_id, 'expected_revision': batch['revision'], 'operations': [
             {'op': 'rename', 'args': [part, 'Candidate name']}]})
         assert client.get(f"/nodes/{part}")['name'] != 'Candidate name'
-        run = client.post(f"/candidates/{candidate['id']}/experiments", {'expected_revision': candidate['revision']})
+        run = client.post(f"/candidates/{candidate['id']}/experiments", {'document_id': document_id, 'expected_revision': candidate['revision']})
         inputs = client.get(f"/experiments/{run['id']}/inputs")
         assert inputs['provenance']['candidate_id'] == candidate['id']
-        accepted = client.post(f"/candidates/{candidate['id']}/accept", {'expected_revision': batch['revision']})
+        accepted = client.post(f"/candidates/{candidate['id']}/accept", {'document_id': document_id, 'expected_revision': batch['revision']})
         assert accepted['state'] == 'accepted'
         assert client.get(f"/nodes/{part}")['name'] == 'Candidate name'
         client.undo()

@@ -63,7 +63,7 @@ fn apply(doc: &mut CadDocument, sketches: Option<&CadSketches>, action: &CadActi
     let mut continuation = Value::Null;
     let mut replies = Replies::default();
     let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
-    let mut cx = Cx { doc, shared: shared.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches, display: None, views: None, files: None, components: &mut crate::cad::components::ComponentsState::default(), composition: &mut crate::cad::composition::CadCompositionState::default(), camera: Vec::new() };
+    let mut cx = Cx { doc, shared: shared.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches, display: None, views: None, files: None, components: &mut crate::cad::components::ComponentsState::default(), composition: &mut crate::cad::composition::CadCompositionState::default(), experiments: &mut crate::cad::experiments::ExperimentsState::default(), review: &mut crate::cad::experiment_review::ReviewState::default(), motion: &mut crate::cad::motion::MotionState::default(), camera: Vec::new() };
     crate::cad::actions::handle(action, &mut call, &mut cx)
 }
 

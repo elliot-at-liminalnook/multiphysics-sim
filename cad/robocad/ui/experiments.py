@@ -14,7 +14,8 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QFileDialog, QHBox
     QSlider, QSplitter, QTabWidget, QVBoxLayout, QWidget)
 
 from ..experiments import DEFAULT_CONTROLLER, DEFAULT_SYSTEM, TERMINAL, sources, write_json
-from ..experiment_results import compare, replay_flex, replay_matrices, sample_index, signals, value_at
+from ..experiment_results import compare, sample_index, signals, value_at
+from ..captured_review import sample as captured_sample
 from ..kernel import KernelError
 from ..snapshots import capture
 from .viewport import Viewport
@@ -291,8 +292,10 @@ class RunReview(QDialog):
         if not self.times: return
         t = self.times[index]
         if self.viewport:
-            self.flex_arrows = replay_flex(self.result, index, self.flex_scale.currentData())
-            self.viewport.set_pose(replay_matrices(self.result, index))
+            sample = captured_sample(self.result, self.panel.manager.get(self.run_id), t, self.flex_scale.currentData())
+            self.flex_arrows = sample['flex']
+            import numpy as np
+            self.viewport.set_pose({nid: np.asarray(m) for nid, m in sample['matrices'].items()})
         self.plot.time = t; self.plot.update()
         series = self.catalogue.get(self.signal.currentData())
         value = ''
@@ -526,7 +529,8 @@ class ExperimentsPanel(QWidget):
                 return source
             return editor.toPlainText()
         path = self.linked[key]['path']
-        return {'entry': path.name, 'files': {str(p.relative_to(path.parent)): p.read_text() for p in sorted(path.parent.rglob('*.rhai'))}}
+        from ..experiment_sources import linked_sources
+        return linked_sources(path)
 
     def request(self, document=None):
         parameters = json.loads(self.parameters.toPlainText())
@@ -638,10 +642,11 @@ class ExperimentsPanel(QWidget):
 
     def restore_inputs(self):
         if not self.current_id(): return
-        spec = self.manager.inputs(self.current_id())
+        from ..api import Service
+        answer = Service(self.app.doc, self.app.ops, self.app).restore_experiment_inputs(self.current_id(),
+            {'document_id': self.app.doc.document_id, 'expected_revision': self.app.doc.revision})
+        spec = answer['inputs']
         self.auto.setChecked(False)
-        if 'component_graph' in spec:
-            self.app.ops.set_component_graph(spec['component_graph'])
         self.controller_enabled.setChecked(spec.get('controller') is not None)
         self.controller_language.setCurrentIndex(max(0, self.controller_language.findData((spec.get('controller') or {}).get('language', 'rhai'))))
         self.interface.setCurrentIndex(max(0, self.interface.findData((spec.get('controller') or {}).get('interface', 'position_target'))))

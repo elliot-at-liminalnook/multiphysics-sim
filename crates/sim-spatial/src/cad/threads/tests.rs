@@ -59,7 +59,7 @@ fn apply(action: &CadAction, doc: &mut CadDocument, f: &mut Fixture) -> Outcome 
     let mut plane = crate::cad::sketch::CadActivePlane::default();
     let (mut continuation, mut replies) = (Value::Null, Replies::default());
     let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
-    let mut cx = Cx { doc, shared: f.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches: None, display: None, views: None, files: None, components: &mut crate::cad::components::ComponentsState::default(), composition: &mut crate::cad::composition::CadCompositionState::default(), camera: Vec::new() };
+    let mut cx = Cx { doc, shared: f.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches: None, display: None, views: None, files: None, components: &mut crate::cad::components::ComponentsState::default(), composition: &mut crate::cad::composition::CadCompositionState::default(), experiments: &mut crate::cad::experiments::ExperimentsState::default(), review: &mut crate::cad::experiment_review::ReviewState::default(), motion: &mut crate::cad::motion::MotionState::default(), camera: Vec::new() };
     crate::cad::actions::handle(action, &mut call, &mut cx)
 }
 
@@ -323,4 +323,33 @@ fn a_whole_thread_change_is_one_patch_of_what_changed() {
     let mut retitled = t.clone();
     retitled.title = "Other".into();
     assert!(patch(&t, &retitled).is_err());
+}
+
+#[test]
+fn unknown_mutation_requires_fresh_explicit_ack_and_retains_receipt() {
+    let mut doc = document();
+    let mut f = Fixture::at(4);
+    doc.uncertain_edit = Some("RoboCAD may still apply this request".into());
+    let ack = CadAction::CadReconcileEdit { acknowledge:true, revision:Some(4) };
+    doc.stale = Some("history not inspected".into());
+    assert!(matches!(apply(&ack,&mut doc,&mut f),Outcome::Done(Err(_))));
+    assert!(doc.uncertain_edit.is_some() && doc.uncertain_history.is_empty());
+    doc.stale = None;
+    assert!(matches!(apply(&CadAction::CadReconcileEdit { acknowledge:true,revision:Some(3) },&mut doc,&mut f),Outcome::Done(Err(_))));
+    assert!(doc.uncertain_edit.is_some());
+    assert!(matches!(apply(&ack,&mut doc,&mut f),Outcome::Done(Ok(_))));
+    assert!(doc.uncertain_edit.is_none());
+    assert_eq!(doc.uncertain_history.len(),1);
+    assert_eq!(doc.uncertain_history[0]["acknowledged_revision"],4);
+    assert!(doc.edit.is_none(),"acknowledgment never repeats an ambiguous request");
+}
+#[test]
+fn evidence_navigation_uses_captured_run_instead_of_a_model_pin() {
+    let mut doc=document();listed(&mut doc);
+    doc.threads.current=Some("e1".into());
+    let controls=controls_of(&doc,&[]);
+    assert!(controls.iter().find(|c|c.id=="cad:threads:show").unwrap().ready.is_ok());
+    doc.client=None;
+    let controls=controls_of(&doc,&[]);
+    assert!(controls.iter().find(|c|c.id=="cad:threads:show").unwrap().ready.is_err());
 }

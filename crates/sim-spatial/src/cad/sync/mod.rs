@@ -542,6 +542,9 @@ fn finish_edit(doc: &mut CadDocument, composition: Option<&mut crate::cad::compo
         return None;
     }
     let answer = result.map(|EditDone { message, result }| (message, result));
+    if let Err(error) = &answer {
+        if error.contains("may still apply") || error.contains("applied it, but") { doc.uncertain_edit = Some(error.clone()); }
+    }
     // Resolve pending connection intent from this authoritative answer, without
     // consuming the independent REST caller's result or starting another lifecycle.
     if let Some(state) = composition { crate::cad::composition::port_edit_answered(state, generation, seq, answer.as_ref().map(|_| ()).map_err(Clone::clone)); }
@@ -646,8 +649,8 @@ fn finish_physical(doc: &mut CadDocument) {
 /// `cad_client::EDIT_TIMEOUT` (longer than a desktop RoboCAD's own 120 s
 /// wait, so an edit it then applies is not reported failed); a timeout's
 /// error, which the REST caller gets verbatim, says RoboCAD may still apply it.
-pub(crate) fn start_edit(doc: &mut CadDocument, label: String, waited: bool, work: impl FnOnce(&CadClient) -> Result<EditDone, sim_runtime::cad_client::CadError> + Send + 'static) -> Result<u64, String> {
-    if let Some(why) = doc.edit_refusal() {
+pub(crate) fn start_edit(doc: &mut CadDocument, label: String, waited: bool, auxiliary: bool, work: impl FnOnce(&CadClient) -> Result<EditDone, sim_runtime::cad_client::CadError> + Send + 'static) -> Result<u64, String> {
+    if let Some(why) = doc.edit_refusal_for(auxiliary) {
         return Err(why);
     }
     let client = doc.client.clone().ok_or("not connected to RoboCAD")?.with_timeout(EDIT_TIMEOUT);

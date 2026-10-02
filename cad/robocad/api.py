@@ -344,6 +344,20 @@ class Service:
             return fn()
 
     def motion_request(self, method, parts, body):
+        from . import motion_service as reference
+        from .experiments import RevisionConflict
+        try:
+            if parts == ['motion', 'pose'] and method == 'GET': return reference.metadata(self.doc)
+            if method == 'POST' and parts in (['motion', 'sample'], ['motion', 'validate'], ['motion', 'sweep'], ['motion', 'programs', 'guarded'], ['motion', 'programs', 'delete']):
+                reference.guard(self.doc, body)
+                if parts == ['motion', 'sample']: return reference.sample(self.doc, body)
+                if parts == ['motion', 'validate']: return reference.resolve_program(self.doc, body['program'])
+                if parts == ['motion', 'sweep']: return reference.sweep(self.doc, body)
+                if parts == ['motion', 'programs', 'guarded']: return self.ops.save_motion(body['program'])
+                self.ops.delete_motion(body['name'])
+                return {'deleted': body['name']}
+        except RevisionConflict as error: raise ApiError(409, str(error))
+        except (KernelError, ValueError, TypeError, KeyError) as error: raise ApiError(422, str(error))
         if parts == ['motion', 'programs']:
             if method == 'GET': return self.doc.robot_settings.get('motion_programs', {})
             if method == 'POST': return self.ops.save_motion(body)
@@ -380,6 +394,7 @@ class Service:
         return panel.state()
 
     def annotation_request(self, method, parts, query, body):
+        from .experiments import RevisionConflict
         try:
             if len(parts) == 3 and parts[0] == 'threads' and parts[2] == 'show' and method == 'POST':
                 tid = parts[1]
@@ -401,6 +416,10 @@ class Service:
                 if method == "GET":
                     return self.ops.threads(query.get("node_id"), query.get("status"), query.get('run_id'))
                 if method == "POST":
+                    body = dict(body)
+                    if 'document_id' in body or 'expected_revision' in body:
+                        self.document_guard(body)
+                        body.pop('document_id', None); body.pop('expected_revision', None)
                     tid = self.ops.create_thread(**body)
                     return self.ops.thread(tid)
             if parts[0] == "threads" and len(parts) == 2:
@@ -428,6 +447,8 @@ class Service:
                 if method == "DELETE":
                     self.ops.delete_comment(cid)
                     return {"deleted": cid}
+        except RevisionConflict as e:
+            raise ApiError(409, str(e))
         except KeyError as e:
             raise ApiError(404, f"annotation or comment not found: {e}")
         except (KernelError, TypeError, ValueError) as e:
@@ -528,15 +549,45 @@ class Service:
         except KeyError as error: raise ApiError(404, str(error))
         except (KernelError, ValueError, TypeError) as error: raise ApiError(422, str(error))
 
+    def start_captured_experiment(self, body):
+        """Owner captures source identity; HTTP worker captures runner artifacts.
+        The runner always receives that isolated source, even if live CAD changes.
+        """
+        import io
+        from .snapshots import capture
+        from .experiments import RevisionConflict
+        def owned():
+            with self.doc._lock:
+                self.document_guard(body)
+                return capture(self.doc)
+        try:
+            captured = self.run_on_main(owned)
+            document = Document.load(io.BytesIO(captured.data)); document.path = None
+            return self.experiments.create({k:v for k,v in body.items() if k != 'document_id'}, document=document)
+        except RevisionConflict as error: raise ApiError(409, str(error))
+        except (KernelError, ValueError, TypeError) as error: raise ApiError(422, str(error))
+
     def experiment_request(self,method,parts,body):
         from .experiments import RevisionConflict
         try:
             if len(parts)==1:
                 if method=='GET':return self.experiments.list()
-                if method=='POST':return self.experiments.create(body)
+                if method=='POST':
+                    self.document_guard(body)
+                    return self.experiments.create({k:v for k,v in body.items() if k != 'document_id'})
             elif len(parts)==2 and method=='GET':
                 return self.experiments.catalogue() if parts[1]=='catalogue' else self.experiments.get(parts[1])
             elif len(parts)==3:
+                if parts[2]=='geometry' and method=='GET':
+                    from .captured_review import geometry
+                    return geometry(self.experiments.captured_document(parts[1]), self.experiments.get(parts[1]), 'experiment')
+                if parts[2]=='sample' and method=='POST':
+                    from .captured_review import sample
+                    record = self.experiments.get(parts[1])
+                    result = self.experiments.result(parts[1]) if record['state'] == 'completed' else self.experiments.partial(parts[1])
+                    return sample(result, record, body.get('time',0.), body.get('flex_scale',1.))
+                if parts[2]=='restore' and method=='POST':
+                    return self.restore_experiment_inputs(parts[1], body)
                 if parts[2]=='cancel' and method=='POST':return self.experiments.cancel(parts[1])
                 if parts[2]=='result' and method=='GET':return self.experiments.result(parts[1])
                 if parts[2]=='inputs' and method=='GET':return self.experiments.inputs(parts[1])
@@ -550,15 +601,32 @@ class Service:
         except (KernelError,ValueError,TypeError) as error:raise ApiError(422,str(error))
         raise ApiError(405,'Unsupported experiment operation')
 
+    def document_guard(self, body):
+        from .candidates import check_revision
+        from .experiments import RevisionConflict
+        if body.get('document_id') != self.doc.document_id:
+            raise RevisionConflict('Document changed; retained draft cannot publish here')
+        check_revision(self.doc, body.get('expected_revision'))
+
+    def restore_experiment_inputs(self, run_id, body):
+        """Restore captured graph through the authoritative undoable command.
+        Source bundles are returned to editors without writing their linked files.
+        """
+        spec = self.experiments.inputs(run_id)
+        with self.doc._lock:
+            self.document_guard(body)
+            if 'component_graph' in spec: self.ops.set_component_graph(spec['component_graph'])
+        self._refresh()
+        return {'revision': self.doc.revision, 'inputs': spec}
+
     def history(self):
         return {"undo": [c.label for c in self.ops.stack.undo_stack], "redo": [c.label for c in self.ops.stack.redo_stack]}
 
     @property
     def candidates(self):
         from .candidates import Candidates
-        if self.app is not None and hasattr(self.app, 'candidates'): return self.app.candidates
         if not hasattr(self, '_candidates'):
-            self._candidates = Candidates(self.doc, self.ops, self.experiments.root/'candidates')
+            self._candidates = Candidates(self.doc, self.ops, self.experiments.root/'candidates', lambda fn: self.run_on_main(fn))
         return self._candidates
 
     def model_script(self, body):
@@ -571,11 +639,12 @@ class Service:
 
         def snapshot():
             with self.doc._lock:
-                if 'expected_revision' in body: check_revision(self.doc, body['expected_revision'])
+                self.document_guard(body)
                 return capture(self.doc)
 
         def publish():
             with self.doc._lock:
+                if self.doc.document_id != before.document_id: raise RevisionConflict('Document replaced while model script ran')
                 check_revision(self.doc, before.revision)
                 self.ops.stack.push(PublishState(self.doc, staged, body.get('label') or f"Run {summary['script']}"))
             self._refresh()
@@ -593,18 +662,29 @@ class Service:
     def candidate_request(self, method, parts, body):
         from .experiments import RevisionConflict
         try:
-            if parts == ['doc', 'batch'] and method == 'POST': return self.candidates.batch(body)
+            if parts == ['doc', 'batch'] and method == 'POST':
+                self.document_guard(body)
+                return self.candidates.batch(body)
             if len(parts) == 1:
                 if method == 'GET': return self.candidates.list()
-                if method == 'POST': return self.candidates.create(body)
+                if method == 'POST':
+                    self.document_guard(body)
+                    return self.candidates.create(body)
             elif len(parts) == 2:
                 if method == 'GET': return self.candidates.get(parts[1])
                 if method == 'DELETE': return self.candidates.discard(parts[1])
+            elif len(parts) == 3 and method == 'GET' and parts[2] == 'geometry':
+                from .captured_review import geometry
+                return geometry(self.candidates.document(parts[1]), self.candidates.get(parts[1]), 'candidate')
             elif len(parts) == 3 and method == 'POST':
-                if parts[2] == 'accept': return self.candidates.accept(parts[1], body.get('expected_revision'))
+                if parts[2] == 'accept':
+                    self.document_guard(body)
+                    return self.candidates.accept(parts[1], body.get('expected_revision'))
                 if parts[2] == 'experiments':
                     document = self.candidates.document(parts[1])
-                    return self.experiments.create({**body, 'candidate_id': parts[1]}, document=document)
+                    if body.get('document_id') != self.doc.document_id:
+                        raise RevisionConflict('Document changed; candidate run refused')
+                    return self.experiments.create({**{k:v for k,v in body.items() if k != 'document_id'}, 'candidate_id': parts[1]}, document=document)
         except RevisionConflict as error: raise ApiError(409, str(error))
         except KeyError as error: raise ApiError(404, str(error))
         except (KernelError, ValueError, TypeError) as error: raise ApiError(422, str(error))
@@ -1482,15 +1562,23 @@ def make_handler(service: Service):
                 payload = s.print_request(method, parts, body)
                 return self._send(202 if method == 'POST' and parts[1] != 'split' else 200, payload)
             if head == 'candidates' or parts == ['doc', 'batch']:
-                payload = run(lambda: s.candidate_request(method, parts, body))
+                # Candidates stage isolated geometry on this HTTP worker; their
+                # service dispatches capture and publication to the owner.
+                payload = s.candidate_request(method, parts, body)
                 return self._send(202 if parts[-1] == 'experiments' and method == 'POST' else 200, payload)
+            if parts == ['experiments', 'linked-sources'] and method == 'GET':
+                from .experiment_sources import linked_sources
+                try: return self._send(200, linked_sources(q.get('path', '')))
+                except (KernelError, ValueError, OSError) as error: raise ApiError(422, str(error))
             if head=='experiments':
-                if method == 'GET' and len(parts) == 3 and parts[2] == 'components':
-                    # Snapshot freshness and immutable check files are read on
-                    # this HTTP worker; the owner thread only handles edits.
-                    payload = s.experiment_request(method, parts, body)
+                if method == 'POST' and len(parts) == 1:
+                    return self._send(202, s.start_captured_experiment(body))
+                if len(parts) == 3 and parts[2] == 'restore':
+                    payload = run(lambda: s.experiment_request(method, parts, body))
                 else:
-                    payload=run(lambda:s.experiment_request(method,parts,body))
+                    # Catalogue process discovery, immutable captured reads and
+                    # cancellation belong to this existing HTTP worker.
+                    payload = s.experiment_request(method, parts, body)
                 return self._send(202 if method=='POST' else 200,payload)
             if head in ("threads", "comments"):
                 payload = run(lambda: s.annotation_request(method, parts, q, body))
@@ -1591,6 +1679,22 @@ def make_handler(service: Service):
             if head == 'component-jobs' and len(parts) == 2 and method in ('GET', 'DELETE'):
                 return self._send(200, run(lambda: s.component_job_status(parts[1], method == 'DELETE')))
             if head == 'motion':
+                if parts in (['motion', 'pose'], ['motion', 'sample'], ['motion', 'validate'], ['motion', 'sweep']):
+                    from . import motion_service as reference
+                    from .experiments import RevisionConflict
+                    doc = run(lambda: reference.capture_definition(s.doc))
+                    try:
+                        if method == 'GET' and parts == ['motion', 'pose']: payload = reference.metadata(doc)
+                        elif method == 'POST':
+                            reference.guard(doc, body)
+                            if parts == ['motion', 'sample']: payload = reference.sample(doc, body)
+                            elif parts == ['motion', 'validate']: payload = reference.resolve_program(doc, body['program'])
+                            elif parts == ['motion', 'sweep']: payload = reference.sweep(doc, body)
+                            else: raise ApiError(405, 'Unsupported reference pose operation')
+                        else: raise ApiError(405, 'Unsupported reference pose operation')
+                    except RevisionConflict as error: raise ApiError(409, str(error))
+                    except (KernelError, ValueError, TypeError, KeyError) as error: raise ApiError(422, str(error))
+                    return self._send(200, payload)
                 return self._send(200, run(lambda: s.motion_request(method, parts, body)))
             if head == 'views':
                 return self._send(201 if method == 'POST' and len(parts) == 1 else 200,

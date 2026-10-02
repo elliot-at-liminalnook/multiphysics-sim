@@ -103,7 +103,7 @@ pub(crate) enum Do {
 /// (`tree::command_action`), the threads' (`threads::command_action`) or
 /// the references' (`references::command_action`).
 pub(crate) fn organize_action(id: &str) -> Option<CadAction> {
-    crate::cad::tree::command_action(id).or_else(|| crate::cad::threads::command_action(id)).or_else(|| crate::cad::references::command_action(id)).or_else(|| crate::cad::components::command_action(id))
+    crate::cad::tree::command_action(id).or_else(|| crate::cad::threads::command_action(id)).or_else(|| crate::cad::references::command_action(id)).or_else(|| crate::cad::components::command_action(id)).or_else(|| crate::cad::experiments::command_action(id)).or_else(|| crate::cad::motion::command_action(id))
 }
 impl Do {
     pub(crate) fn action(self) -> CadAction {
@@ -286,10 +286,10 @@ pub(crate) const SELECT_RADIAL: [(&str, &str); 5] = [("Body", "select.body"), ("
 pub(crate) static COMMANDS: &[Command] = &[
     c("view.references", "References", "View", &[], false, Native::Action(Do::Organize("view.references"))),
     c("reference.import", "Add reference images…", "File", &[], false, Native::Action(Do::Organize("reference.import"))),
-    c("view.pose", "Pose", "View", &[], false, Native::Later("cad-experiments-motion")),
-    c("view.experiments", "Experiments", "View", &[], false, Native::Later("cad-experiments-motion")),
-    c("simulation.experiment", "Run captured experiment", "Simulation", &["Ctrl+Return"], false, Native::Later("cad-experiments-motion")),
-    c("robot.pose", "Preview joint motion", "Robot", &[], false, Native::Later("cad-experiments-motion")),
+    c("view.pose", "Pose", "View", &[], false, Native::Action(Do::Organize("view.pose"))),
+    c("view.experiments", "Experiments", "View", &[], false, Native::Action(Do::Organize("view.experiments"))),
+    c("simulation.experiment", "Run captured experiment", "Simulation", &["Ctrl+Return"], false, Native::Action(Do::Organize("simulation.experiment"))),
+    c("robot.pose", "Preview joint motion", "Robot", &[], false, Native::Action(Do::Organize("robot.pose"))),
     c("tool.annotate", "Annotate", "Inspect", &["N"], true, Native::Action(Do::Organize("tool.annotate"))),
     c("view.comments", "Comments panel", "View", &[], false, Native::Action(Do::Organize("view.comments"))),
     c("view.saved_views", "Saved Views", "View", &[], false, Native::Action(Do::SavedViews)),

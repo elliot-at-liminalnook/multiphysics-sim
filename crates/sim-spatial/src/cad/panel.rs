@@ -29,6 +29,9 @@
 //!   cannot be sent, keeps the field open with the reason under it (no
 //!   request).
 mod name;
+#[cfg(test)]
+#[path = "flow_tests.rs"]
+mod flow_tests;
 
 pub(super) use name::{NAME, NameDraft, NameField, name_entry};
 
@@ -73,6 +76,9 @@ pub(super) enum Part {
     References,
     Components,
     Composition,
+    Experiments,
+    ExperimentReview,
+    Motion,
     Inspector,
     Physical,
     Attributes,
@@ -197,6 +203,10 @@ pub(crate) fn own_controls(doc: &CadDocument, selection: &[SelectionItem]) -> Ve
     // Refresh is the retry after a lost connection, so it stays enabled
     // (`apply` answers what it did); Physical needs the service (`sync::fetch_physical`).
     add("cad:refresh".into(), "Refresh".into(), CadAction::CadRefresh, Ok(()));
+    if doc.uncertain_edit.is_some() {
+        let ready = if doc.dirty_known_at.is_none() && doc.stale.is_none() && doc.connected() { Ok(()) } else { Err("Waiting for fresh source and history".into()) };
+        add("cad:reconcile_edit".into(), "Acknowledge inspected unknown edit outcome".into(), CadAction::CadReconcileEdit { acknowledge: true, revision: Some(doc.shown_revision()) }, ready);
+    }
     add("cad:fit".into(), "Fit".into(), CadAction::CadFit { id: None }, Ok(()));
     let physical = if doc.connected() { Ok(()) } else { Err(format!("not connected to RoboCAD: {}", doc.connection_line().0)) };
     add("cad:physical".into(), "Physical".into(), CadAction::CadPhysical, physical);
@@ -316,7 +326,7 @@ fn spawn(mut commands: Commands, fonts: Res<UiFonts>, mut draft: ResMut<NameDraf
         .with_children(|right| {
             right.spawn((k.scroll_area(Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, ..default() }, 0.0), InspectorScroll)).with_children(|area| {
                 area.spawn(Node { padding: UiRect::all(Val::Px(14.0)), ..column(4.0) }).with_children(|body| {
-                    for part in [Part::Components, Part::Composition, Part::Comments, Part::References, Part::Name, Part::Inspector, Part::Physical, Part::Attributes, Part::Robot, Part::Materials, Part::Print, Part::History, Part::Commands] {
+                    for part in [Part::Experiments, Part::ExperimentReview, Part::Motion, Part::Components, Part::Composition, Part::Comments, Part::References, Part::Name, Part::Inspector, Part::Physical, Part::Attributes, Part::Robot, Part::Materials, Part::Print, Part::History, Part::Commands] {
                         body.spawn((column(4.0), CadList::new(part)));
                     }
                 });
@@ -389,6 +399,7 @@ fn refresh(
     plane: Option<Res<super::CadActivePlane>>,
     selection: CadSelection,
     (components, composition): (Res<super::components::ComponentsState>, Res<super::composition::CadCompositionState>),
+    (experiments, review, motion): (Res<super::experiments::ExperimentsState>, Res<super::experiment_review::ReviewState>, Res<super::motion::MotionState>),
 ) {
     let root = roots.iter().next();
     let stamp = doc.as_ref().map(|d| (d.generation, d.revision));
@@ -396,7 +407,7 @@ fn refresh(
     let epoch = topology.as_ref().map(|t| t.epoch);
     // The header's active-plane line follows the plane (cad-sketch).
     let plane_changed = plane.as_ref().is_some_and(|p| p.is_changed());
-    if root == drawn.root && stamp == drawn.stamp && !added && !draft.is_changed() && epoch == *seen_epoch && !plane_changed && !components.is_changed() && !composition.is_changed() {
+    if root == drawn.root && stamp == drawn.stamp && !added && !draft.is_changed() && epoch == *seen_epoch && !plane_changed && !components.is_changed() && !composition.is_changed() && !experiments.is_changed() && !review.is_changed() && !motion.is_changed() {
         return;
     }
     drawn.root = root;
@@ -413,6 +424,9 @@ fn refresh(
     for (entity, mut list) in &mut lists {
         let part = list.part;
         let key = match part {
+            Part::Experiments => format!("{}:{stamp:?}", super::experiments::key(&experiments)),
+            Part::ExperimentReview => format!("{}:{stamp:?}", super::experiment_review::key(&review)),
+            Part::Motion => format!("{}:{stamp:?}", super::motion::key(&motion)),
             Part::Components => format!("{}:{stamp:?}", super::components::key(&components)),
             Part::Composition => format!("{}:{stamp:?}", super::composition::key(&composition)),
             _ => part_key(part, doc, &selection, topology, &draft, plane),
@@ -436,6 +450,9 @@ fn refresh(
                 Part::TreeTools => super::tree::tools(p, &k, doc, &selection),
                 Part::Comments => super::threads::dock::draw(p, &k, doc, &selection),
                 Part::References => super::references::dock::draw(p, &k, doc, &selection),
+                Part::Experiments => super::experiments::draw(p, &k, doc, &experiments),
+                Part::ExperimentReview => super::experiment_review::draw(p, &k, doc, &review),
+                Part::Motion => super::motion::draw(p, &k, doc, &motion),
                 Part::Components => super::components::draw(p, &k, doc, &components),
                 Part::Composition => super::composition::draw(p, &k, doc, &composition),
                 Part::Name => super::inspector::name(p, &k, doc, &selection, &draft),
@@ -463,7 +480,7 @@ fn part_key(part: Part, doc: Option<&CadDocument>, selection: &[SelectionItem], 
         Part::TreeTools => super::tree::tools_key(doc, selection),
         Part::Comments => super::threads::dock::key(doc, selection),
         Part::References => super::references::dock::key(doc, selection),
-        Part::Components | Part::Composition => unreachable!("persistent feature keys are read by refresh"),
+        Part::Experiments | Part::ExperimentReview | Part::Motion | Part::Components | Part::Composition => unreachable!("persistent feature keys are read by refresh"),
         Part::Name => super::inspector::name_key(doc, selection, draft),
         Part::Inspector => super::inspector::inspector_key(doc, selection, topology),
         Part::Physical => super::inspector::physical_key(doc, selection),
@@ -479,7 +496,7 @@ fn part_key(part: Part, doc: Option<&CadDocument>, selection: &[SelectionItem], 
 /// The top bar's buttons: (control, look, divider before it).
 fn top_controls(doc: &CadDocument, selection: &[SelectionItem]) -> Vec<(Control, Look, bool)> {
     let mut all = own_controls(doc, selection);
-    all.retain(|c| matches!(c.id.as_str(), "cad:undo" | "cad:redo" | "cad:save" | "cad:refresh" | "cad:fit" | "cad:physical"));
+    all.retain(|c| matches!(c.id.as_str(), "cad:undo" | "cad:redo" | "cad:save" | "cad:refresh" | "cad:fit" | "cad:physical" | "cad:reconcile_edit"));
     all.into_iter().map(|c| {
         let look = if c.id == "cad:save" && dirty(doc) == Some(true) { Look::Primary } else { Look::Secondary };
         let gap = c.id == "cad:refresh";

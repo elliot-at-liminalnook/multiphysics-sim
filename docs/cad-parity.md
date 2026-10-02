@@ -46,7 +46,7 @@ is written in full; a backticked symbol after a path is in that file.
 - **none: needs a Python route**: nothing in `api.py` reaches the feature
   (or reaches it only through a GUI command, which opens RoboCAD's dialogs
   or uses its clipboard or viewport). These rows are flagged and listed at
-  the end: 8 rows, 8 distinct gaps (10 and 10 until the cad-organize
+  the end: 4 rows, 4 distinct gaps (10 and 10 until the cad-organize
   epic added `GET /nodes/{id}/image`; 15 and 15 until the
   cad-physical-inspect epic added `GET /results/nodes` and
   `GET /physical?planar=1`; 17 and 17 until the
@@ -62,7 +62,7 @@ is written in full; a backticked symbol after a path is in that file.
 - `done-by-reading`: implementation has a source trace. Historical executed
   verification is recorded separately for the earlier epics;
   cad-physical-inspect, cad-print, one-text-entry, cad-organize,
-  public-system-sets and cad-components remain uncompiled. This batch ran no
+  public-system-sets, cad-components and cad-experiments-motion remain uncompiled. This batch ran no
   checks of behavior. Rows move to `done` only when the user's checklist
   ([cad-checklist.md](cad-checklist.md)) passes. No checklist has been signed off.
 - `later-epic: <name>`: owned by a later CAD epic (see "Epics" below).
@@ -348,7 +348,7 @@ inspector shows as returned.
 | Joint physics overrides: "Radial clearance (mm)", "Wobble (°)", "Drive backlash (°; provenance)" ("Unmeasured"), "Coulomb friction (mN·m)", "Viscous (mN·m·s)", "Radial stiffness (N/m)", "Flex patch radius (mm)", the source line, and "*" for overridden values | ui/widgets.py:510-544, ui/widgets.py:635-679 | `GET /physical?flex=0` (joint `physics`, physical.py:552); `POST /ops/set_joint_physics` | `cad/inspector/rows.rs:row` (the joint physics rows) and `cad/inspector/physical_edit.rs:joint_override` → `handle_physical` (`POST /ops/set_joint_physics` through `cad/actions.rs:edit_at`); values and provenance from `GET /physical?flex=0`, read again on each revision by `cad/inspector/refresh.rs:sync` | deliberately different: a value the physical model lacks is left empty instead of RoboCAD's 0.0 |
 | "Results: key value, …" for the selected node | ui/widgets.py:545-549 | `GET /results/nodes` (api.py `Service.results_nodes`, added with cad-physical-inspect: each node's `results` block and its material's yield strength; pytests `cad/tests/test_api_physical_routes.py`) | `cad/inspector/rows.rs:results_line` over the robot reads' `GET /results/nodes` (`cad/robot/data.rs:sync`) | done-by-reading |
 | "Material properties…" ("name: engineering properties" dialog) | ui/widgets.py:550-552, ui/widgets.py:681-713 | `POST /ops/set_material_props` | `cad/inspector/physical_edit.rs:controls_of` ("Material properties…") → `cad/materials/form.rs:properties_form` | done-by-reading |
-| The panel is disabled during pose preview | ui/pose.py:127, ui/pose.py:350 | n/a | cad-experiments-motion epic | later-epic: cad-experiments-motion |
+| The panel is disabled during pose preview | ui/pose.py:127, ui/pose.py:350 | n/a | `cad/document/state.rs:edit_refusal_for; cad/edit.rs:edit_auxiliary_at (only annotations/program metadata bypass preview refusal)` | done-by-reading |
 | `id`, `kind`, `name`, `parent`, `children`, `source` | api.py:98-99 | `GET /nodes/{id}` | `cad::inspector` (as returned) | done-by-reading |
 | `visible` (editable) | api.py:99, api.py:584-585 | `PATCH /nodes/{id} {"visible"}` | `cad::inspector` → `CadPatch` | done-by-reading |
 | `locked` (editable) | api.py:99, api.py:586-587 | `PATCH /nodes/{id} {"locked"}` | `cad::inspector` → `CadPatch` | done-by-reading |
@@ -645,39 +645,39 @@ that difference.
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "Experiments" dock (`view.experiments`); intro "Edit CAD, system or controller, then run a captured experiment." | ui/app.py:275, ui/experiments.py:373-395 | n/a (display) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Editors "System · Rhai", "Controller · Rhai", "Parameters" (JSON: system, controller, settings, seed) | ui/experiments.py:396-406, ui/experiments.py:531-546 | `POST /experiments` (request body) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Run experiment" (and "Run captured experiment", `simulation.experiment`) | ui/app.py:276, ui/experiments.py:418-419, ui/experiments.py:587-594 | `POST /experiments` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Check system" (compile the system and open the controller contract; no samples) | ui/experiments.py:420-422, ui/experiments.py:596-602 | `POST /experiments {"preflight": true}` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Cancel run" | ui/experiments.py:423, ui/experiments.py:609-610 | `POST /experiments/{id}/cancel` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Runs" list ("★" for the baseline; label, state, evaluation, id, revision), status, progress, diagnostics | ui/experiments.py:407-416, ui/experiments.py:483-518 | `GET /experiments`, `GET /experiments/{id}` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Inspect / compare", "Set baseline" | ui/experiments.py:426-428, ui/experiments.py:612-625 | `GET /experiments/{id}/result`, `POST /experiments/{id}/compare` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Link Rhai file…" (watched every 500 ms; imports captured on each run) | ui/experiments.py:429-432, ui/experiments.py:663-684 | `POST /experiments` (sources) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Restore run inputs" | ui/experiments.py:433, ui/experiments.py:639-661 | `GET /experiments/{id}/inputs`; `PUT /system` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Rerun after edits (750 ms debounce)" | ui/experiments.py:434-435, ui/experiments.py:473-474, ui/experiments.py:686-693 | `POST /experiments` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Use sampled controller"; controller language "Rhai controller source" / "Captured process bundle · JSON"; interface "Position targets · rad · servo firmware" / "Driver duty · −1 to 1 · external feedback"; profile "Quick check · rigid · contact/noise off" / "Validation · contact/flex/noise · finer step" | ui/experiments.py:436-455 | `POST /experiments` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Components" tab: "Load registered Rust components"; ports, units and parameters of each | ui/experiments.py:456-463, ui/experiments.py:557-585 | `GET /experiments/catalogue` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Run review: summary, part and signal filters, trace plot (blue run, gold baseline), Play and slider, readout, metrics, flex arrows ×1/10/100/1000 | ui/experiments.py:23-98, ui/experiments.py:100-345 | `GET /experiments/{id}/result`, `/partial`, `/diagnostics` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Run review's captured-CAD replay viewport (`replay_matrices`, `replay_flex`, the captured document) | ui/experiments.py:109, ui/experiments.py:155-163, ui/experiments.py:290-301 | none: needs a Python route (`captured_document`, `replay_matrices` and `signals` run in Python; no route returns the captured geometry or the poses) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Inspect live component", "View captured source", "Frame replay" | ui/experiments.py:144-153, ui/experiments.py:251-277, ui/experiments.py:326-332 | `GET /experiments/{id}/sources` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Annotate sample" (a thread with run evidence) | ui/experiments.py:203-207, ui/experiments.py:346-356 | `POST /threads {"evidence"}` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Review design candidates…": list, change summary, "Run candidate", "Accept into CAD", "Discard candidate" | ui/experiments.py:412-414, ui/experiments.py:704-770 | `GET /candidates`, `GET /candidates/{id}`, `POST /candidates/{id}/experiments`, `POST /candidates/{id}/accept`, `DELETE /candidates/{id}` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Candidate review's viewport of the proposed design | ui/experiments.py:732-738 | none: needs a Python route (`candidates.document(id)` geometry is not served) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
+| "Experiments" dock (`view.experiments`); intro "Edit CAD, system or controller, then run a captured experiment." | ui/app.py:275, ui/experiments.py:373-395 | n/a (display) | `cad/experiments/ui.rs:draw; cad/surfaces/registry.rs:organize_action` | done-by-reading |
+| Editors "System · Rhai", "Controller · Rhai", "Parameters" (JSON: system, controller, settings, seed) | ui/experiments.py:396-406, ui/experiments.py:531-546 | `POST /experiments` (request body) | `cad/experiments/ui.rs:draw; form.rs:request; lifecycle.rs:start` | done-by-reading |
+| "Run experiment" (and "Run captured experiment", `simulation.experiment`) | ui/app.py:276, ui/experiments.py:418-419, ui/experiments.py:587-594 | `POST /experiments` | `cad/experiments/mod.rs:handle Run; lifecycle.rs:start` | done-by-reading |
+| "Check system" (compile the system and open the controller contract; no samples) | ui/experiments.py:420-422, ui/experiments.py:596-602 | `POST /experiments {"preflight": true}` | `cad/experiments/mod.rs:handle Check/ImportComposition → cad/composition::handle; lifecycle.rs:tick` | done-by-reading |
+| "Cancel run" | ui/experiments.py:423, ui/experiments.py:609-610 | `POST /experiments/{id}/cancel` | `cad/experiments/lifecycle.rs:tick/request_cancel; ui.rs:draw persistent cancellation` | done-by-reading |
+| "Runs" list ("★" for the baseline; label, state, evaluation, id, revision), status, progress, diagnostics | ui/experiments.py:407-416, ui/experiments.py:483-518 | `GET /experiments`, `GET /experiments/{id}` | `cad/experiments/reads.rs; lifecycle.rs:tick; ui.rs:draw` | done-by-reading |
+| "Inspect / compare", "Set baseline" | ui/experiments.py:426-428, ui/experiments.py:612-625 | `GET /experiments/{id}/result`, `POST /experiments/{id}/compare` | `cad/experiments/mod.rs:handle; cad/experiment_review/mod.rs:handle Baseline` | done-by-reading |
+| "Link Rhai file…" (watched every 500 ms; imports captured on each run) | ui/experiments.py:429-432, ui/experiments.py:663-684 | `POST /experiments` (sources) | `cad/experiments/lifecycle.rs linked-file jobs (500 ms); cad/robocad/experiment_sources.py` | done-by-reading |
+| "Restore run inputs" | ui/experiments.py:433, ui/experiments.py:639-661 | `GET /experiments/{id}/inputs`; `PUT /system` | `cad/experiments/mod.rs:handle Restore; source.rs:edit; api.py:restore_experiment_inputs` | done-by-reading |
+| "Rerun after edits (750 ms debounce)" | ui/experiments.py:434-435, ui/experiments.py:473-474, ui/experiments.py:686-693 | `POST /experiments` | `cad/experiments/lifecycle.rs:tick (750 ms; one active start; retained rebased drafts)` | done-by-reading |
+| "Use sampled controller"; controller language "Rhai controller source" / "Captured process bundle · JSON"; interface "Position targets · rad · servo firmware" / "Driver duty · −1 to 1 · external feedback"; profile "Quick check · rigid · contact/noise off" / "Validation · contact/flex/noise · finer step" | ui/experiments.py:436-455 | `POST /experiments` | `cad/experiments/ui.rs:draw; form.rs:request/guard_for` | done-by-reading |
+| "Components" tab: "Load registered Rust components"; ports, units and parameters of each | ui/experiments.py:456-463, ui/experiments.py:557-585 | `GET /experiments/catalogue` | `cad/experiments/reads.rs catalogue; ui.rs:draw; mod.rs ImportComposition` | done-by-reading |
+| Run review: summary, part and signal filters, trace plot (blue run, gold baseline), Play and slider, readout, metrics, flex arrows ×1/10/100/1000 | ui/experiments.py:23-98, ui/experiments.py:100-345 | `GET /experiments/{id}/result`, `/partial`, `/diagnostics` | `cad/experiment_review/ui.rs:draw; mod.rs sampling/play/filter/baseline; plots.rs:tick; scene.rs flex` | deliberately different: kit numeric seek/value fields and timestamp buttons replace Qt sliders; shared typed validation and kinematic/replay cursor remain |
+| Run review's captured-CAD replay viewport (`replay_matrices`, `replay_flex`, the captured document) | ui/experiments.py:109, ui/experiments.py:155-163, ui/experiments.py:290-301 | `GET /experiments/{id}/geometry`; `POST /experiments/{id}/sample` | `cad/experiment_review/mod.rs:handle Open/request_sample; scene.rs; captured_review.py; Experiments.captured_document` | done-by-reading |
+| "Inspect live component", "View captured source", "Frame replay" | ui/experiments.py:144-153, ui/experiments.py:251-277, ui/experiments.py:326-332 | `GET /experiments/{id}/sources` | `cad/experiment_review/mod.rs:handle Live/Source; ui.rs:draw; scene.rs framing` | done-by-reading |
+| "Annotate sample" (a thread with run evidence) | ui/experiments.py:203-207, ui/experiments.py:346-356 | `POST /threads {"evidence"}` | `cad/experiment_review/mod.rs:handle Annotate → cad/threads/ops.rs:annotate_evidence → annotations::apply → threads/source.rs; cad_client/threads.rs:ExperimentEvidence` | done-by-reading |
+| "Review design candidates…": list, change summary, "Run candidate", "Accept into CAD", "Discard candidate" | ui/experiments.py:412-414, ui/experiments.py:704-770 | `GET /candidates`, `GET /candidates/{id}`, `POST /candidates/{id}/experiments`, `POST /candidates/{id}/accept`, `DELETE /candidates/{id}` | `cad/experiments/mod.rs:handle Candidate/Accept/Discard/CandidateRun; source.rs guarded edit; candidates.py owner decision lock` | done-by-reading |
+| Candidate review's viewport of the proposed design | ui/experiments.py:732-738 | `GET /candidates/{id}/geometry` | `cad/experiment_review/mod.rs:handle Open(candidate); captured_review.py:geometry; Candidates.document` | done-by-reading |
 
 ## Motion, pose and video
 
 | Feature | RoboCAD source (file:line) | REST route | Native target | Status |
 |---|---|---|---|---|
-| "Pose" dock (`view.pose`); "Preview joint motion" (`robot.pose`) and "Enter pose mode" | ui/app.py:274, ui/app.py:277, ui/pose.py:15-133 | `GET /motion` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Pose kinematics (driver joints, transmissions, loop closure, "Closure residual") | ui/pose.py:111-133, ui/pose.py:205-218 | none: needs a Python route (`PoseModel` runs in the window; `/motion` answers 409 headless, api.py:300) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Joint chooser, limits text ("preview bounds; joint limits unset"), value and slider | ui/pose.py:33-46, ui/pose.py:135-203 | `POST /motion/seek` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Range arc and current-value marker on the model | ui/pose.py:153-180 | n/a (display) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Play pattern" / "Pause"; "s / cycle" | ui/pose.py:47-53, ui/pose.py:317-336 | `POST /motion/play`, `POST /motion/pause` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Focus mechanism"; "Show markers" | ui/pose.py:54-59, ui/pose.py:230-253 | `POST /motion/focus` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Patterns: chooser ("Unsaved pattern"), "Edit pattern JSON", "Make joint sweep", "Save pattern", "Delete pattern" | ui/pose.py:60-78, ui/pose.py:255-292 | `GET/POST/DELETE /motion/programs` (headless too) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Timeline scrub and clock "t / duration s" | ui/pose.py:79-82, ui/pose.py:294-315 | `POST /motion/seek` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| "Return to CAD pose" (and Escape) | ui/pose.py:98-100, ui/pose.py:343-354, ui/app.py:488-490 | `POST /motion/stop` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Video: 720p / 1080p, 24 / 30 / 60 fps, "Export MP4…", "Cancel export", progress | ui/pose.py:86-97, ui/pose.py:220-228, ui/motion_video.py:30-139 | `GET/POST/DELETE /motion/export` (GUI only) | cad-experiments-motion epic (the viewer records its own frames) | later-epic: cad-experiments-motion |
+| "Pose" dock (`view.pose`); "Preview joint motion" (`robot.pose`) and "Enter pose mode" | ui/app.py:274, ui/app.py:277, ui/pose.py:15-133 | `GET /motion` (GUI only) | `cad/motion/ui.rs:draw; mod.rs:handle; surfaces/registry.rs:organize_action` | done-by-reading |
+| Pose kinematics (driver joints, transmissions, loop closure, "Closure residual") | ui/pose.py:111-133, ui/pose.py:205-218 | `GET /motion/pose`; `POST /motion/sample` (headless) | `cad_client/motion.rs; motion_service.py:sample_model/PoseModel; cad/motion/mod.rs metadata/sample jobs; Qt ui/pose.py reuses sample_model` | done-by-reading |
+| Joint chooser, limits text ("preview bounds; joint limits unset"), value and slider | ui/pose.py:33-46, ui/pose.py:135-203 | `POST /motion/seek` (GUI only) | `cad/motion/ui.rs:draw; mod.rs:handle Position; motion_service.py metadata actual bounds/display ranges` | deliberately different: kit numeric seek/value fields and timestamp buttons replace Qt sliders; shared typed validation and kinematic/replay cursor remain |
+| Range arc and current-value marker on the model | ui/pose.py:153-180 | n/a (display) | `cad/experiment_review/scene.rs pose markers/range arc/current value` | done-by-reading |
+| "Play pattern" / "Pause"; "s / cycle" | ui/pose.py:47-53, ui/pose.py:317-336 | `POST /motion/play`, `POST /motion/pause` (GUI only) | `cad/motion/mod.rs:handle Play/Pause and tick; ui.rs:draw cycle seconds` | done-by-reading |
+| "Focus mechanism"; "Show markers" | ui/pose.py:54-59, ui/pose.py:230-253 | `POST /motion/focus` (GUI only) | `cad/motion/mod.rs:handle Focus/Markers; experiment_review/scene.rs reference focus_ids/markers` | done-by-reading |
+| Patterns: chooser ("Unsaved pattern"), "Edit pattern JSON", "Make joint sweep", "Save pattern", "Delete pattern" | ui/pose.py:60-78, ui/pose.py:255-292 | `GET/POST/DELETE /motion/programs` (headless too) | `cad/motion/ui.rs program chooser/kit JSON; mod.rs Validate/Sweep/Save/Delete; motion_service.py; guarded native program routes` | done-by-reading |
+| Timeline scrub and clock "t / duration s" | ui/pose.py:79-82, ui/pose.py:294-315 | `POST /motion/seek` (GUI only) | `cad/motion/mod.rs:handle Seek; ui.rs:draw timestamp controls/clock` | deliberately different: kit numeric seek/value fields and timestamp buttons replace Qt sliders; shared typed validation and kinematic/replay cursor remain |
+| "Return to CAD pose" (and Escape) | ui/pose.py:98-100, ui/pose.py:343-354, ui/app.py:488-490 | `POST /motion/stop` (GUI only) | `cad/motion/mod.rs:handle Return; cad/actions.rs CadCancel; experiment_review/scene.rs saved display/camera restoration` | done-by-reading |
+| Video: 720p / 1080p, 24 / 30 / 60 fps, "Export MP4…", "Cancel export", progress | ui/pose.py:86-97, ui/pose.py:220-228, ui/motion_video.py:30-139 | `GET/POST/DELETE /motion/export` (GUI only) | `cad/motion/ui.rs:draw; export.rs capture/deliver/poll; jobs/video.rs:encode publication gate` | deliberately different: native state/actions and native viewport frames replace GUI-only Qt motion control; headless reference sampling remains authoritative; bounded local export requires ffmpeg |
 
 ## Comments and threads
 
@@ -687,7 +687,7 @@ that difference.
 | Filter "Open" / "All" / "Resolved"; "Selected parts only" | ui/comments.py:145-152, ui/comments.py:249-263 | `GET /threads?node_id&status` | `cad/threads/read.rs:tick` reads every thread (`crates/sim-runtime/src/cad_client/threads.rs:CadClient::threads(None, None, None)`) on a `Pool::Dedicated` job per (generation, revision, epoch); the filter and "Selected parts only" are applied locally (`cad/threads/mod.rs` `Filter::keeps`, `cad/threads/controls.rs:shown_threads`), as RoboCAD's `refresh` filters its own list | done-by-reading |
 | Thread list "n · part" with a preview; "✓" when resolved | ui/comments.py:153-159, ui/comments.py:254-260 | `GET /threads` | `ui_kit::threads` list rows from `cad/threads/source.rs:thread_of` and `cad/threads/controls.rs:shown_threads` ("n · part" numbered by the place in RoboCAD's list, the first message's preview, "✓" when resolved); a stale list labelled with its revision (`read.rs:line`) | done-by-reading |
 | Attachment state ("Attached to surface", "Part deleted — reattach this annotation", "Geometry changed — check and reattach this pin", "Captured experiment") | ui/comments.py:283-287 | `GET /threads/{id}` (`anchor_status`) | `cad/threads/controls.rs:attachment` (`AnchorStatus` from `crates/sim-runtime/src/cad_client/threads.rs`): RoboCAD's four texts in the location line | deliberately different: an `anchor_status` this viewer does not know (or none) reads "Attachment unknown" (`AnchorStatus::Unknown`), where RoboCAD's window has only its four states |
-| "Show on model" (restore the saved view, or open the run evidence) | ui/comments.py:164, ui/comments.py:370-390 | `POST /threads/{id}/show {"mode": "context"}` (GUI only); `GET /threads/{id}` (`view`) | `cad/threads/isolation.rs:show`: any isolation ends, the pin's part is selected (as `cad_select`), the thread's saved RoboCAD camera restored on the shared camera through `views::convert` (`CameraAction::Set`), then its `inspection_view`; the thread from the last list (`cad/threads/read.rs:thread`), not `GET /threads/{id}` | deliberately different: `POST /threads/{id}/show` is GUI-only (409 headless) and moves RoboCAD's camera, so the view is restored natively from the thread list; a thread of experiment evidence is refused by name (RoboCAD opens it in its experiments panel, which CAD mode does not have yet: cad-experiments-motion) |
+| "Show on model" (restore the saved view, or open the run evidence) | ui/comments.py:164, ui/comments.py:370-390 | `POST /threads/{id}/show {"mode": "context"}` (GUI only); `GET /threads/{id}` (`view`) | `cad/threads/isolation.rs:show`: any isolation ends, the pin's part is selected (as `cad_select`), the thread's saved RoboCAD camera restored on the shared camera through `views::convert` (`CameraAction::Set`), then its `inspection_view`; the thread from the last list (`cad/threads/read.rs:thread`), not `GET /threads/{id}` | deliberately different: `POST /threads/{id}/show` is GUI-only (409 headless) and moves RoboCAD's camera, so the view is restored natively from the thread list; experiment evidence now opens its isolated run/time/signal through the typed native captured-review action (T43) |
 | "Fit in view" (the thread's parts, at the current angle) | ui/comments.py:164-171, ui/comments.py:475-486 | `GET /threads/{id}` | `cad/threads/isolation.rs:fit`: the thread's linked parts that still exist (`fit_nodes`) framed at the current angle (`CadMeshes::frame`), selected, the pins shown; RoboCAD's status texts | done-by-reading |
 | "Reattach…" | ui/comments.py:164, ui/comments.py:488-489 | `PATCH /threads/{id} {"node_id", "point", "face"}` | `cad/threads/annotate.rs:start` with the thread's id → `click` → `reattach` → one `crates/sim-runtime/src/cad_client/threads.rs:CadClient::update_thread` (`node_id`, `point`, `face`, `view`) through the source's commit through `cad/actions.rs:edit_at` | deliberately different: the new surface is picked on the press, as Annotate's (RoboCAD picks on the release) |
 | "Resolve" / "Reopen" | ui/comments.py:172, ui/comments.py:491-495 | `PATCH /threads/{id} {"status"}` | `cad/threads/ops.rs:handle` Resolve/Reopen → `annotations::apply` → `CadThreadSource::commit` → `crates/sim-runtime/src/cad_client/threads.rs:CadClient::update_thread` (`status`) through `cad/actions.rs:edit_at` | done-by-reading |
@@ -712,7 +712,7 @@ that difference.
 | "Import…", "Save to library…", saved library list, "Choose folder…", "Import selected" (`~/Documents/RoboCAD/Components`) | ui/components.py:111-115, ui/components.py:278-295 | `POST /ops/import_component`, `POST /ops/export_component` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | deliberately different: service-host folder/path kit fields and file list replace Qt file dialogs; import/export use the same guarded worker |
 | "Occurrence" tab: overrides table (Parameter, Current, Override, Value), "Occurrence origin (mm)", "Apply occurrence", "Reset to inherited", "Detach outer occurrence" | ui/components.py:117-124, ui/components.py:199-276 | `POST /ops/set_component_overrides`, `POST /ops/detach_component` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | deliberately different: native fields retain and label unevaluated expressions; computed Current values remain reference-only (no native geometry/expression evaluator) |
 | Rebuild progress and "Cancel rebuild" | ui/components.py:125-182 | `GET/DELETE /component-jobs/{id}` (headless and Qt) | `cad/components/jobs.rs:tick` (persistent `Job` start/status/cancel) → typed `cad_client::components` → RoboCAD `component_service.ComponentJobService` → `ComponentJob.commit`; Qt observes the same owner; no required Qt panel | done-by-reading |
-| System graph: type chooser and "New"; imports from a check ("Use existing", "Check") | ui/system_graph.py:114-141, ui/system_graph.py:207-258, ui/system_graph.py:352-361 | `GET /experiments/catalogue`, `GET /experiments/{id}/components` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::adapter::adapt` (`composition_adapter.rs`) / `composition::validate_port_schemas` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_guarded` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | deliberately different: native reads an existing completed check ID; creating/checking experiments remains cad-experiments-motion, requiring the external runner/reference workflow |
+| System graph: type chooser and "New"; imports from a check ("Use existing", "Check") | ui/system_graph.py:114-141, ui/system_graph.py:207-258, ui/system_graph.py:352-361 | `GET /experiments/catalogue`, `GET /experiments/{id}/components` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::adapter::adapt` (`composition_adapter.rs`) / `composition::validate_port_schemas` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_guarded` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | deliberately different: native accepts existing completed check IDs and metadata from native Check/ImportComposition; the shared Rust runner executable remains required, without a Qt step |
 | Component form: Name, CAD body, "Bind existing", "Specific heat · J/(kg·K)", "Fluid direction", "Attach to selected CAD body", parameters table, "+ Parameter", "Apply", "Remove" | ui/system_graph.py:143-175, ui/system_graph.py:377-412 | `GET /system`, `POST /system/components`, `PATCH /system/components/{id}`, `DELETE /system/components/{id}` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::adapter::adapt` (`composition_adapter.rs`) / `composition::validate_port_schemas` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_guarded` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
 | "Geometry rule" choices and their derived outputs ("Derived from CAD") | ui/system_graph.py:154-155, ui/system_graph.py:414-429 | `GET /component-recipes` (`component_derivation.RECIPES`, including input constraints) | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::adapter::adapt` (`composition_adapter.rs`) / `composition::validate_port_schemas` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_guarded` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
 | Connection graph: "Overview", "Focus selected", "−"/"+", click ports to connect, "Leave port open", "Cancel connection", "Remove connection" | ui/system_graph.py:12-112, ui/system_graph.py:179-196, ui/system_graph.py:431-459 | `POST /system/connections`, `DELETE /system/connections/{id}` | `cad/composition/mod.rs:handle` → `ports::{pick,leave_open,cancel}` / `ui::{controls,draw}` (stamped Port → LeaveOpen/CancelPort; Open removes whole net) → shared `sim_system::composition::adapter::adapt` (`composition_adapter.rs`) / `composition::validate_port_schemas` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_guarded` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | deliberately different: shared routed graph plus typed port/connection controls replace Qt scene gestures; first picks retain generation/document/revision; LeaveOpen publishes an unused singleton physical/signal-output net with undo; CancelPort changes only pending intent; Remove connection deletes the net; physical nets stay multi-terminal and layout is display-only |
@@ -790,7 +790,7 @@ calls. Who uses each route, by reading:
 | Delete a system component (`?expected_revision=`; client) | api.py:426-430, api.py:436-437 | `DELETE /system/components/{id}` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::adapter::adapt` (`composition_adapter.rs`) / `composition::validate_port_schemas` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_guarded` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
 | Connect ports (client) | api.py:432-433 | `POST /system/connections` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::adapter::adapt` (`composition_adapter.rs`) / `composition::validate_port_schemas` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_guarded` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
 | Remove a connection (client) | api.py:436-437 | `DELETE /system/connections/{id}` | `cad/composition::{handle,ui::draw}` → shared `sim_system::composition::adapter::adapt` (`composition_adapter.rs`) / `composition::validate_port_schemas` and `sim_diagram::composition::present` → `cad_client::composition::CadClient::composition_edit_guarded` → RoboCAD `Service.system_request` / `component_graph.edit_graph` (revision-guarded undo; source envelope retained) | done-by-reading |
-| Run a repository model script as one undo step (client) | api.py:1114-1115, api.py:483-510 | `POST /doc/script` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
+| Run a repository model script as one undo step (client) | api.py:1114-1115, api.py:483-510 | `POST /doc/script` | `cad/experiments/source.rs:edit; mod.rs Script; CadClient::model_script; api.py guarded Ops undo` | done-by-reading |
 | Print registry: printers and materials | api.py:1116-1119, api.py:269-274 | `GET /print/registry` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_registry` (`Ordered` keeps the registry's order); read once per connection generation in `cad/print/studies.rs:tick` | done-by-reading |
 | Print study and split groups (read-only; 405 otherwise) | api.py:312-318 (`Service.print_request`) | `GET /print/study` (added with cad-print: `revision`, `robot_settings["print_study"]` or null, and the split group ids in tree order; pytests `cad/tests/test_api_print_routes.py`) | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_study`; read per (generation, shown revision) in `cad/print/studies.rs:tick` | done-by-reading |
 | Split for printing (synchronous; `background` makes it a job) | api.py:275-276 | `POST /print/split` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_split_job` (`background: true`; `cad/print/studies.rs:send`) and `CadClient::print_split_now` (synchronous; client only) | done-by-reading |
@@ -802,25 +802,25 @@ calls. Who uses each route, by reading:
 | List print jobs | api.py:279-280 | `GET /print/jobs` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_jobs`; polled in `cad/print/jobs_tracker.rs:tick` | done-by-reading |
 | A print job's state (its `wait` is read from the body, which RoboCAD never parses for GET, api.py:1102, so it is never honoured) | api.py:281-283 | `GET /print/jobs/{id}` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::print_job` (sends no `wait`; client only) | deliberately different: `wait` is never honoured (RoboCAD reads it from a GET body it never parses), so the viewer never waits on a job: it polls `GET /print/jobs` for every job at once (`cad/print/jobs_tracker.rs:tick`) |
 | Cancel a print job | api.py:284-285 | `DELETE /print/jobs/{id}` | `crates/sim-runtime/src/cad_client/print.rs:CadClient::cancel_print_job` (a bare DELETE); `cad/print/jobs_tracker.rs:cancel` | done-by-reading |
-| List candidates | api.py:1120-1122, api.py:516-517 | `GET /candidates` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Create a candidate | api.py:518 | `POST /candidates` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Read a candidate | api.py:520 | `GET /candidates/{id}` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Discard a candidate | api.py:521 | `DELETE /candidates/{id}` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Accept a candidate into CAD | api.py:523 | `POST /candidates/{id}/accept` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Run an experiment on a candidate | api.py:524-526 | `POST /candidates/{id}/experiments` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Agent edit batch as a candidate | api.py:515 | `POST /doc/batch` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| List experiments | api.py:1123-1125, api.py:454 | `GET /experiments` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Create an experiment, or a preflight check (client) | api.py:455 | `POST /experiments` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Rust component catalogue | api.py:456-457 | `GET /experiments/catalogue` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| An experiment's status | api.py:456-457 | `GET /experiments/{id}` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Cancel an experiment | api.py:459 | `POST /experiments/{id}/cancel` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Result | api.py:460 | `GET /experiments/{id}/result` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Inputs | api.py:461 | `GET /experiments/{id}/inputs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Diagnostics | api.py:462 | `GET /experiments/{id}/diagnostics` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Imported CAD components (client) | api.py:463 | `GET /experiments/{id}/components` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Captured sources (client) | api.py:464 | `GET /experiments/{id}/sources` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Partial trace | api.py:465 | `GET /experiments/{id}/partial` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Compare with a baseline | api.py:466 | `POST /experiments/{id}/compare` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
+| List candidates | api.py:1120-1122, api.py:516-517 | `GET /candidates` | `cad/experiments/reads.rs; CadClient::candidates` | done-by-reading |
+| Create a candidate | api.py:518 | `POST /candidates` | `cad/experiments/mod.rs CandidateCreate; CadClient::create_candidate; candidates.py:create` | done-by-reading |
+| Read a candidate | api.py:520 | `GET /candidates/{id}` | `cad/experiments/mod.rs Candidate; reads.rs; CadClient::candidate` | done-by-reading |
+| Discard a candidate | api.py:521 | `DELETE /candidates/{id}` | `cad/experiments/mod.rs Discard; lifecycle.rs unknown discovery; candidates.py:discard` | done-by-reading |
+| Accept a candidate into CAD | api.py:523 | `POST /candidates/{id}/accept` | `cad/experiments/source.rs:edit; mod.rs Accept; candidates.py:accept stamped owner lock/undo` | done-by-reading |
+| Run an experiment on a candidate | api.py:524-526 | `POST /candidates/{id}/experiments` | `cad/experiments/lifecycle.rs:start; CadClient::candidate_experiment` | done-by-reading |
+| Agent edit batch as a candidate | api.py:515 | `POST /doc/batch` | `cad/experiments/source.rs:edit; mod.rs Batch; CadClient::batch; api.py guarded candidate creation` | done-by-reading |
+| List experiments | api.py:1123-1125, api.py:454 | `GET /experiments` | `cad/experiments/reads.rs; CadClient::experiments` | done-by-reading |
+| Create an experiment, or a preflight check (client) | api.py:455 | `POST /experiments` | `cad/experiments/form.rs:request; lifecycle.rs:start; CadClient::start_experiment` | done-by-reading |
+| Rust component catalogue | api.py:456-457 | `GET /experiments/catalogue` | `cad/experiments/reads.rs; CadClient::experiment_catalogue` | done-by-reading |
+| An experiment's status | api.py:456-457 | `GET /experiments/{id}` | `cad/experiments/lifecycle.rs:tick; CadClient::experiment` | done-by-reading |
+| Cancel an experiment | api.py:459 | `POST /experiments/{id}/cancel` | `cad/experiments/lifecycle.rs:tick; CadClient::cancel_experiment (Running acknowledgment stays active)` | done-by-reading |
+| Result | api.py:460 | `GET /experiments/{id}/result` | `cad/experiment_review/mod.rs:handle Open; CadClient::experiment_result` | done-by-reading |
+| Inputs | api.py:461 | `GET /experiments/{id}/inputs` | `cad/experiments/reads.rs; mod.rs Restore; CadClient::experiment_inputs` | done-by-reading |
+| Diagnostics | api.py:462 | `GET /experiments/{id}/diagnostics` | `cad/experiments/reads.rs; ui.rs diagnostics; CadClient::experiment_diagnostics` | done-by-reading |
+| Imported CAD components (client) | api.py:463 | `GET /experiments/{id}/components` | `cad/experiments/mod.rs ImportComposition; CadClient::experiment_components; cad/composition/mod.rs shared import` | done-by-reading |
+| Captured sources (client) | api.py:464 | `GET /experiments/{id}/sources` | `cad/experiment_review/mod.rs captured readonly source; CadClient::experiment_sources` | done-by-reading |
+| Partial trace | api.py:465 | `GET /experiments/{id}/partial` | `cad/experiment_review/mod.rs Open partial fallback; CadClient::experiment_partial` | done-by-reading |
+| Compare with a baseline | api.py:466 | `POST /experiments/{id}/compare` | `cad/experiment_review/mod.rs Baseline; CadClient::compare_experiment; plots.rs unit/identity matching` | done-by-reading |
 | List threads (`node_id`, `status`, `run_id`; client) | api.py:1126-1128, api.py:349-351 | `GET /threads` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::threads` (`threads_route`) from `cad/threads/read.rs:tick` (all threads; filtered locally) | done-by-reading |
 | Create a thread (client) | api.py:352-354 | `POST /threads` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::create_thread` (`NewThread`) from `cad/threads/source.rs` `Request::send` (`CadThreadSource::commit`, Post annotation) | done-by-reading |
 | Read a thread | api.py:357 | `GET /threads/{id}` | `crates/sim-runtime/src/cad_client/threads.rs:CadClient::thread` (client only: the viewer reads threads from the list, `cad/threads/read.rs:thread`) | done-by-reading |
@@ -863,18 +863,18 @@ calls. Who uses each route, by reading:
 | Component catalogue | api.py:1193-1194, components.py:648-650 | `GET /components` | `cad/components/{ui,form,validate}` → `components::handle` / `submit` → `cad_client::components::ComponentOperation` → service-owned `ComponentJob` → authoritative `components.ComponentOps`; window, system_ui and REST share `CadAction::CadComponents` | done-by-reading |
 | Component job status | api.py:1195-1196, api.py:713-717 | `GET /component-jobs/{id}` (headless and Qt) | `cad/components/jobs.rs:tick` (persistent `Job` start/status/cancel) → typed `cad_client::components` → RoboCAD `component_service.ComponentJobService` → `ComponentJob.commit`; Qt observes the same owner; no required Qt panel | done-by-reading |
 | Cancel a component job | api.py:1195-1196, api.py:713-717 | `DELETE /component-jobs/{id}` (headless and Qt) | `cad/components/jobs.rs:tick` (persistent `Job` start/status/cancel) → typed `cad_client::components` → RoboCAD `component_service.ComponentJobService` → `ComponentJob.commit`; Qt observes the same owner; no required Qt panel | done-by-reading |
-| Pose panel state | api.py:1197-1198, api.py:315 | `GET /motion` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Motion programs | api.py:296-297 | `GET /motion/programs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Save a motion program | api.py:298 | `POST /motion/programs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Delete a motion program (`{"name"}`) | api.py:299 | `DELETE /motion/programs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Play | api.py:318-326 | `POST /motion/play` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Seek | api.py:318-325 | `POST /motion/seek` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Pause | api.py:328 | `POST /motion/pause` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Stop (return to the CAD pose) | api.py:329 | `POST /motion/stop` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Focus the mechanism | api.py:327 | `POST /motion/focus` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Video export state | api.py:303-304 | `GET /motion/export` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Start a video export | api.py:306-312 | `POST /motion/export` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| Cancel a video export | api.py:305 | `DELETE /motion/export` (GUI only) | cad-experiments-motion epic | later-epic: cad-experiments-motion |
+| Pose panel state | api.py:1197-1198, api.py:315 | `GET /motion` (GUI only) | `cad/motion/mod.rs:state_json/handle State; headless /motion/pose metadata` | deliberately different: native state/actions and native viewport frames replace GUI-only Qt motion control; headless reference sampling remains authoritative; bounded local export requires ffmpeg |
+| Motion programs | api.py:296-297 | `GET /motion/programs` | `cad/motion/mod.rs Load/program picker; CadClient::motion_programs` | done-by-reading |
+| Save a motion program | api.py:298 | `POST /motion/programs` | `cad/motion/mod.rs Save → edit_auxiliary_at → CadClient::save_motion → /motion/programs/guarded → Ops.save_motion` | deliberately different: native guarded program routes enforce document identity/revision and undo; original raw POST/DELETE compatibility routes retained |
+| Delete a motion program (`{"name"}`) | api.py:299 | `DELETE /motion/programs` | `cad/motion/mod.rs Delete → edit_auxiliary_at → CadClient::delete_motion → /motion/programs/delete → Ops.delete_motion` | deliberately different: native guarded program routes enforce document identity/revision and undo; original raw POST/DELETE compatibility routes retained |
+| Play | api.py:318-326 | `POST /motion/play` (GUI only) | `cad/motion/mod.rs:handle Play/tick → authoritative /motion/sample` | deliberately different: native state/actions and native viewport frames replace GUI-only Qt motion control; headless reference sampling remains authoritative; bounded local export requires ffmpeg |
+| Seek | api.py:318-325 | `POST /motion/seek` (GUI only) | `cad/motion/mod.rs:handle Seek → authoritative /motion/sample` | deliberately different: native state/actions and native viewport frames replace GUI-only Qt motion control; headless reference sampling remains authoritative; bounded local export requires ffmpeg |
+| Pause | api.py:328 | `POST /motion/pause` (GUI only) | `cad/motion/mod.rs:handle Pause` | deliberately different: native state/actions and native viewport frames replace GUI-only Qt motion control; headless reference sampling remains authoritative; bounded local export requires ffmpeg |
+| Stop (return to the CAD pose) | api.py:329 | `POST /motion/stop` (GUI only) | `cad/motion/mod.rs:handle Return; experiment_review/scene.rs restoration` | deliberately different: native state/actions and native viewport frames replace GUI-only Qt motion control; headless reference sampling remains authoritative; bounded local export requires ffmpeg |
+| Focus the mechanism | api.py:327 | `POST /motion/focus` (GUI only) | `cad/motion/mod.rs:handle Focus; scene.rs focus_ids` | deliberately different: native state/actions and native viewport frames replace GUI-only Qt motion control; headless reference sampling remains authoritative; bounded local export requires ffmpeg |
+| Video export state | api.py:303-304 | `GET /motion/export` (GUI only) | `cad/motion/mod.rs:state_json; export.rs:Export::state` | deliberately different: native state/actions and native viewport frames replace GUI-only Qt motion control; headless reference sampling remains authoritative; bounded local export requires ffmpeg |
+| Start a video export | api.py:306-312 | `POST /motion/export` (GUI only) | `cad/motion/mod.rs:handle Export; export.rs:start; jobs/video.rs:encode` | deliberately different: native state/actions and native viewport frames replace GUI-only Qt motion control; headless reference sampling remains authoritative; bounded local export requires ffmpeg |
+| Cancel a video export | api.py:305 | `DELETE /motion/export` (GUI only) | `cad/motion/mod.rs:handle Cancel; export.rs:Export::cancel; jobs/video.rs publication gate` | deliberately different: native state/actions and native viewport frames replace GUI-only Qt motion control; headless reference sampling remains authoritative; bounded local export requires ffmpeg |
 | List saved views | api.py:1199-1201, api.py:799 | `GET /views` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::views` (`cad/views/mod.rs:sync`) | done-by-reading |
 | Save a view (headless needs `state`) | api.py:800-806 | `POST /views` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::save_view` (`cad/views/mod.rs:handle`) | done-by-reading |
 | Read a saved view | api.py:817-818 | `GET /views/{id}` | `crates/sim-runtime/src/cad_client/views.rs:CadClient::view` (restore applies the listed state, `cad/views/mod.rs:restore`) | done-by-reading |
@@ -1017,8 +1017,8 @@ reachable now by REST `cad_op` (`CadAction::CadOp`, `POST /ops/{name}`).
 | `motor_library` | commands.py:1041 | `GET /motors` | `cad/robot/tools_library.rs:draw` (`robot.motors`); `crates/sim-runtime/src/cad_client/robot.rs:CadClient::motors` | done-by-reading |
 | `add_sensor` | commands.py:1047 | `POST /sensors`; `POST /ops/add_sensor` | the catalogue's `robot.add_sensor` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot.rs:CadClient::add_sensor` | done-by-reading |
 | `add_cable` | commands.py:1062 | `POST /cables`; `POST /ops/add_cable` | the catalogue's `robot.add_cable` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot.rs:CadClient::add_cable` | done-by-reading |
-| `save_motion` | commands.py:1073 | `POST /motion/programs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
-| `delete_motion` | commands.py:1083 | `DELETE /motion/programs` | cad-experiments-motion epic | later-epic: cad-experiments-motion |
+| `save_motion` | commands.py:1073 | `POST /motion/programs` | `cad/motion/mod.rs Save → edit_auxiliary_at → native guarded route → Ops.save_motion` | deliberately different: native guarded program routes enforce document identity/revision and undo; original raw POST/DELETE compatibility routes retained |
+| `delete_motion` | commands.py:1083 | `DELETE /motion/programs` | `cad/motion/mod.rs Delete → edit_auxiliary_at → native guarded route → Ops.delete_motion` | deliberately different: native guarded program routes enforce document identity/revision and undo; original raw POST/DELETE compatibility routes retained |
 | `set_robot_setting` | commands.py:1090 | `POST /ops/set_robot_setting` | the catalogue's `robot.power` (`cad/ops/catalogue/robot.rs`, `cad/ops/robot_args.rs`); `crates/sim-runtime/src/cad_client/robot_ops.rs:CadClient::set_robot_setting` | done-by-reading |
 | `link_system` | commands.py:1112 | `POST /ops/link_system` | `crates/sim-runtime/src/cad_client/system_link.rs:CadClient::link_system` from `cad/references/edits.rs:handle` | done-by-reading |
 | `unlink_system` | commands.py:1121 | `POST /ops/unlink_system` | `crates/sim-runtime/src/cad_client/system_link.rs:CadClient::unlink_system` from `cad/references/edits.rs:handle` | done-by-reading |
@@ -1165,7 +1165,7 @@ Cmd on macOS, which matches the native Ctrl/Cmd.
 
 ## Counts
 
-Recounted after cad-components: 38 rows become 34 done-by-reading and four
+Historical recount after cad-components: 38 rows became 34 done-by-reading and four
 deliberately different; none remains later-epic: cad-components. Total remains
 775. Source review only; no parity or fixture execution.
 
@@ -1238,21 +1238,21 @@ changes were the four outliner context-menu rows above.
 | Status | Rows |
 |---|---|
 | done | 0 |
-| done-by-reading | 540 |
-| later-epic | 63 |
-| deliberately different | 172 |
+| done-by-reading | 586 |
+| later-epic | 0 |
+| deliberately different | 189 |
 | **total** | **775** |
 
 | Later epic | Rows |
 |---|---|
-| cad-experiments-motion | 63 |
-| **total** | **63** |
+| None | 0 |
+| **total** | **0** |
 
 Some rows repeat a feature from another angle: as a UI feature, as a REST
 route, as an Ops method and as a key. The ledger checks each of those
 surfaces separately. By script, every one of the 183 registry command ids,
 the 77 keymap ids and the 134 public Ops methods appears in a row. Other
-counts: 81 rows are `n/a (display)` and 8 are flagged (a REST route cell
+counts: 81 rows are `n/a (display)` and 4 are flagged (a REST route cell
 holding "none: needs a Python route").
 
 No row is blank or `todo`, and no cad-select-transform, cad-modify,
@@ -1269,25 +1269,25 @@ pending its verification pass. The verification passes and the checklist move ro
 
 ## Rows flagged "none: needs a Python route"
 
-There are 8 flagged rows covering 8 distinct gaps. Each gap needs one of
+There are 4 flagged rows covering 4 distinct gaps. Historical gap list below is retained with closures clarified in T43 evidence. Each gap needs one of
 two things before the native viewer can reach the feature headless:
 
 - a new route in `cad/robocad/api.py`, a RoboCAD change outside this epic;
 - a Rust port, gated by the parity harness.
 
-No route at all (6):
+Historical missing-route list (closed families named individually):
 
 1. Report a failed autosave. `/autosave` does not report one.
    `deliberately different` since cad-views-export: a headless service
    never autosaves.
 2. Set the autosave interval preference. `deliberately different` since
    cad-views-export: it is RoboCAD's desktop timer.
-3. Run review's captured CAD replay (captured document and poses).
-4. Candidate review's proposed geometry.
-5. Pose kinematics without a desktop window.
-6. Geometry-rule recipes for system components
-   (`component_derivation.RECIPES`); `later-epic: cad-components` since
-   the Director's split (2026-10-01).
+3. Closed by T43: captured CAD replay now has isolated geometry/sample routes.
+4. Closed by T43: proposed geometry now has an isolated candidate route.
+5. Closed by T43: reference pose metadata/sample routes work without Qt.
+6. Closed by T42: geometry-rule recipes use the shared component catalogue route.
+7. Remaining external UI: Blender live-link desktop websocket.
+8. Remaining external UI: Qt web-share save dialog.
 
 No longer gaps since cad-organize (2026-10-01; gap route added to
 `api.py` `Service`, pytests `cad/tests/test_api_reference_image.py`: 2
@@ -1562,3 +1562,7 @@ states for current, absent, revised and replaced snapshots and a closed dock.
 Leave open retains the first-pick revision and stamped refusal; Cancel remains
 usable without a graph snapshot. Source dispatch/cancellation/acknowledgment
 semantics are unchanged. Fixture written and reviewed by reading, not executed.
+
+## T43 cad-experiments-motion (2026-10-01)
+
+All 63 assigned rows have individual native source owners above: 46 source-reading paths and 17 deliberate native presentation/guard differences. This changes no row to executed `done`. See [batch evidence](cad-experiments-motion-evidence.md) for control-to-service traces, ownership, race fixes, retained reference requirements and all eight batch IDs. No fixture, build, launch, capture, export or parity harness ran. Captured geometry always comes from Experiments.captured_document or Candidates.document. Native pose sampling shares PoseModel with Qt. No simulation or derivation moved into Bevy.

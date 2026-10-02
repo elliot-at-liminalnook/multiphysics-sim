@@ -259,6 +259,8 @@ pub enum CadAction {
     CadSurface { surface: super::surfaces::Surface },
     /// Refetch the document now.
     CadRefresh,
+    /// Inspect fresh source/history after an ambiguous edit; explicit acknowledgment never retries it.
+    CadReconcileEdit { #[serde(default)] acknowledge: bool, #[serde(default)] revision: Option<u64> },
     /// Frame the native camera on everything, or on node `id` (display only:
     /// RoboCAD's own view is not changed).
     CadFit {
@@ -315,6 +317,9 @@ pub enum CadAction {
     CadReferences(super::references::ReferencesArgs),
     CadComponents(super::components::ComponentsArgs),
     CadComposition(super::composition::CadCompositionArgs),
+    CadExperiments(super::experiments::ExperimentsArgs),
+    CadExperimentReview(super::experiment_review::ReviewArgs),
+    CadMotion(super::motion::MotionArgs),
     /// `system_ui` in CAD mode: `{action: {operation: controls | activate, id?, ui_revision?}}`.
     SystemUi(Map<String, Value>),
 }
@@ -335,7 +340,7 @@ use crate::selection::Selection;
 use bevy::ecs::message::Messages;
 use bevy::prelude::*;
 use sim_api::Outcome;
-use sim_runtime::cad_client::CadClient;
+pub(super) use super::edit::{edit, edit_at, edit_auxiliary_at};
 use std::collections::HashSet;
 
 /// Actions: CAD mode's one apply system. A click's or key's refusal is the
@@ -357,11 +362,14 @@ pub(super) fn apply(
     camera_out: Option<ResMut<Messages<Act<crate::camera::CameraAction>>>>,
     (mut selection, mut registry): (ResMut<Selection>, ResMut<DocumentRegistry>),
     (mut components, mut composition): (ResMut<super::components::ComponentsState>, ResMut<super::composition::CadCompositionState>),
+    (mut experiments, mut review, mut motion): (ResMut<super::experiments::ExperimentsState>, ResMut<super::experiment_review::ReviewState>, ResMut<super::motion::MotionState>),
 ) {
     let Some(mut doc) = doc else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("CAD mode has no document open".into())));
         return;
     };
+    let preview = review.active || motion.active;
+    if doc.preview_read_only != preview { doc.preview_read_only = preview; doc.touch(); }
     // Read first: a `ResMut` deref would mark the registry changed every frame.
     if super::selection::cad_id(&registry).is_none() {
         super::selection::ensure_registered(&mut registry, &mut selection, &doc.target);
@@ -381,9 +389,12 @@ pub(super) fn apply(
             files: files.as_deref_mut(),
             components: &mut *components,
             composition: &mut *composition,
+            experiments: &mut *experiments, review: &mut *review, motion: &mut *motion,
             camera: Vec::new(),
         };
+        cx.doc.preview_read_only = cx.review.active || cx.motion.active;
         let outcome = handle(action, call, &mut cx);
+        cx.doc.preview_read_only = cx.review.active || cx.motion.active;
         camera.append(&mut cx.camera);
         match call.origin {
             Origin::Rest(_) => outcome,
@@ -429,6 +440,9 @@ pub(super) struct Cx<'a> {
     pub files: Option<&'a mut super::files::CadFiles>,
     pub components: &'a mut super::components::ComponentsState,
     pub composition: &'a mut super::composition::CadCompositionState,
+    pub experiments: &'a mut super::experiments::ExperimentsState,
+    pub review: &'a mut super::experiment_review::ReviewState,
+    pub motion: &'a mut super::motion::MotionState,
     /// Camera intents a CAD command stands for (a named view, ortho, a
     /// saved view's restore), written as `Act<CameraAction>` after the
     /// handler (the shared camera applies them).
@@ -441,11 +455,26 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
     if let Some(seq) = call.continuation.get("edit").and_then(Value::as_u64) {
         return wait_edit(cx.doc, call, seq);
     }
+    if matches!(action, CadAction::CadCancel) {
+        if cx.motion.active || cx.motion.export.is_some() {
+            return super::motion::handle(&super::motion::MotionArgs::of(super::motion::MotionOp::Return), call, cx);
+        }
+        if cx.review.active {
+            return super::experiment_review::handle(&super::experiment_review::ReviewArgs::of(super::experiment_review::ReviewOp::Return), call, cx);
+        }
+    }
     let done = |r: Result<Value, String>| Outcome::Done(r);
     let doc = &mut *cx.doc;
     match action {
-        CadAction::State | CadAction::CadState => done(Ok(state_json(doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref()).authoring(cx.components, cx.composition)))),
-        CadAction::CadOpen { path, url } => done(open(doc, &mut cx.shared, path.as_ref(), url.as_deref())),
+        CadAction::State | CadAction::CadState => done(Ok(state_json(doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref()).authoring(cx.components, cx.composition).experiments(cx.experiments, cx.review, cx.motion)))),
+        CadAction::CadOpen { path, url } => {
+            cx.review.request_cancel();
+            cx.experiments.request_cancel();
+            cx.motion.request_cancel();
+            let blockers = cx.experiments.mode_blockers().into_iter().chain(cx.motion.mode_blockers()).collect::<Vec<_>>();
+            if !blockers.is_empty() { return done(Err(blockers.join("; "))); }
+            done(open(doc, &mut cx.shared, path.as_ref(), url.as_deref()))
+        },
         CadAction::CadSelect { .. }
         | CadAction::CadSelectMode { .. }
         | CadAction::CadHover { .. }
@@ -496,7 +525,7 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
             Err(e) => done(Err(e)),
         },
         CadAction::CadCommand { id } => {
-            if let Some(action) = super::components::command_action(id) {
+            if let Some(action) = super::surfaces::registry::organize_action(id) {
                 return handle(&action, call, cx);
             }
             let id = id.clone();
@@ -515,6 +544,20 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         CadAction::CadInvoke { .. } | CadAction::CadRun { .. } | CadAction::CadFormSet { .. } | CadAction::CadFormSubmit | CadAction::CadFormCancel | CadAction::CadSketch { .. } => super::ops::handle(action, call, cx),
         CadAction::CadSurface { .. } => super::surfaces::handle(action, call, cx),
         CadAction::CadRefresh => done(Ok(refresh(doc))),
+        CadAction::CadReconcileEdit { acknowledge, revision } => {
+            if !acknowledge { return done(Ok(refresh(doc))); }
+            if *revision != Some(doc.shown_revision()) || doc.dirty_known_at.is_some() || doc.stale.is_some() || !doc.connected() {
+                return done(Err("Inspect a fresh document and history before acknowledging the unknown edit outcome".into()));
+            }
+            match doc.uncertain_edit.take() {
+                Some(error) => {
+                    doc.uncertain_history.push(json!({"error":error,"acknowledged_revision":revision,"note":"Explicit acknowledgment of an unknown outcome; no request retried"}));
+                    doc.show(Ok("Unknown source outcome acknowledged after inspection; no request retried".into()));
+                    done(Ok(json!({"acknowledged":true,"retried":false})))
+                }
+                None => done(Err("No unknown source edit outcome is pending".into())),
+            }
+        },
         CadAction::CadFit { id } => done(fit(doc, cx.meshes.as_deref_mut(), id.as_deref())),
         CadAction::CadPhysical => done(sync::fetch_physical(doc).map(|()| json!({"message": "Fetching RoboCAD's physical description (GET /physical?flex=0); it shows in cad_state.physical."}))),
         CadAction::CadDisplay(_) | CadAction::CadSection(_) => super::display::handle(action, call, cx),
@@ -530,34 +573,11 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         CadAction::CadReferences(_) => super::references::handle(action, call, cx),
         CadAction::CadComponents(args) => super::components::handle(args, call, cx),
         CadAction::CadComposition(args) => super::composition::handle(args, call, cx),
-        CadAction::SystemUi(args) => system_ui(call, cx, args),
+        CadAction::CadExperiments(args) => super::experiments::handle(args, call, cx),
+        CadAction::CadExperimentReview(args) => super::experiment_review::handle(args, call, cx),
+        CadAction::CadMotion(args) => super::motion::handle(args, call, cx),
+        CadAction::SystemUi(args) => super::ui_api::system_ui(call, cx, args),
     }
-}
-
-/// Start a mutating request; a REST caller waits for its answer. The one
-/// path every document edit takes (the tools' commits too).
-pub(super) fn edit(doc: &mut CadDocument, call: &mut Call, label: String, work: impl FnOnce(&CadClient) -> Result<EditDone, sim_runtime::cad_client::CadError> + Send + 'static) -> Outcome {
-    match sync::start_edit(doc, label, call.rest(), work) {
-        Err(e) => Outcome::Done(Err(e)),
-        Ok(seq) if call.rest() => {
-            *call.continuation = json!({"edit": seq, "generation": doc.generation});
-            Outcome::Pending
-        }
-        Ok(_) => Outcome::Done(Ok(Value::Null)),
-    }
-}
-
-/// One edit through [`edit`], refused by name with nothing sent when
-/// `CadDocument::commit_refusal(began)` names a reason: an edit in flight,
-/// not connected, the shown document behind RoboCAD's, or RoboCAD's
-/// revision changed since `began` (the revision a form opened, a row was
-/// read or a pick was made at; None checks only the first three). The one
-/// helper cad-physical-inspect's panels, forms and inspector rows commit through.
-pub(super) fn edit_at(doc: &mut CadDocument, call: &mut Call, began: Option<u64>, label: String, work: impl FnOnce(&CadClient) -> Result<EditDone, sim_runtime::cad_client::CadError> + Send + 'static) -> Outcome {
-    if let Some(why) = doc.commit_refusal(began) {
-        return Outcome::Done(Err(why));
-    }
-    edit(doc, call, label, work)
 }
 
 /// A REST caller's edit: RoboCAD's answer (or error) verbatim once it lands.
@@ -681,54 +701,4 @@ fn descendants(doc: &CadDocument, id: &str) -> HashSet<String> {
         }
     }
     out
-}
-
-/// CAD mode's `system_ui` controls: the panel's own list (`panel::controls`),
-/// so a control's label, enabled state and action are the button's.
-fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Result<(), String>)> {
-    let mut out: Vec<_> = super::panel::controls(cx.doc, &cx.shared.items()).into_iter().map(|c| (c.id, c.label, c.action, c.ready)).collect();
-    // cad-views-export: cad:display:*, cad:section:*, cad:view:*, cad:file:*.
-    out.extend(super::display::controls(cx));
-    out.extend(super::views::controls(cx));
-    out.extend(super::files::controls(cx));
-    // cad-physical-inspect: cad:robot:*, cad:materials:*, cad:inspect:*, cad:results:*.
-    out.extend(super::robot::controls(cx));
-    out.extend(super::materials::controls(cx));
-    out.extend(super::inspector::physical_controls(cx));
-    out.extend(super::results::controls(cx));
-    // cad-print: cad:print:*.
-    out.extend(super::print::controls(cx));
-    // cad-organize: cad:tree:*, cad:threads:*, cad:references:*.
-    out.extend(super::tree::controls(cx));
-    out.extend(super::threads::controls(cx));
-    out.extend(super::references::controls(cx));
-    out.extend(super::components::controls(cx));
-    out.extend(super::composition::controls_of(cx.doc, cx.composition));
-    out
-}
-
-/// `system_ui`: the controls, or one activated through this handler (the
-/// same action a click writes). Ids are stable names, so `ui_revision` is
-/// reported but not required.
-fn system_ui(call: &mut Call, cx: &mut Cx, args: &Map<String, Value>) -> Outcome {
-    let action = args.get("action").cloned().unwrap_or(Value::Null);
-    match action["operation"].as_str() {
-        Some("controls") => {
-            let items: Vec<Value> = controls(cx)
-                .into_iter()
-                .map(|(id, label, action, ready)| json!({"id": id, "label": label, "enabled": ready.is_ok(), "disabled_reason": ready.err(), "action": super::rest_form::rest_form(&action)}))
-                .collect();
-            Outcome::Done(Ok(json!({"ui_revision": cx.doc.revision, "ready": true, "controls": items, "state": state_json(cx.doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref()).authoring(cx.components, cx.composition))})))
-        }
-        Some("activate") => {
-            let Some(id) = action["id"].as_str() else { return Outcome::Done(Err("system_ui activate needs an id; request controls".into())) };
-            let found = controls(cx).into_iter().find(|(i, ..)| i == id);
-            match found {
-                None => Outcome::Done(Err(format!("unknown control {id}; request controls"))),
-                Some((id, _, _, Err(why))) => Outcome::Done(Err(format!("{id} is disabled: {why}"))),
-                Some((_, _, action, Ok(()))) => handle(&action, call, cx),
-            }
-        }
-        _ => Outcome::Done(Err("system_ui in CAD mode: operation controls, or activate with a control id (cad:* or mode:*)".into())),
-    }
 }

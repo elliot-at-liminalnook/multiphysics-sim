@@ -89,7 +89,11 @@ save, registry commands) goes through RoboCAD's command layer, so its undo
 and `.rcad` file stay its own; the viewer never saves for you: it refuses to
 leave CAD mode while a document it started has unsaved edits, and keeps that
 service running (logging its URL) if the window closes. Sketching, direct-edit
-tools, printing and experiments are later CAD epics
+tools, printing, captured experiment/candidate review and kinematic pose/program
+controls now have native source paths. Experiments use the headless reference
+service and shared Rust runner; native video export requires local ffmpeg.
+These implementations are reviewed by reading, with execution/parity still
+unverified
 ([parity ledger](docs/cad-parity.md)); compare the two step by step with
 [docs/cad-checklist.md](docs/cad-checklist.md). Not compiled or run yet.
 

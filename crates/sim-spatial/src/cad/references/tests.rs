@@ -70,7 +70,7 @@ fn apply_in(args: ReferencesArgs, doc: &mut CadDocument, plane: &mut CadActivePl
     let mut f = Fixture::at(4);
     let (mut continuation, mut replies) = (Value::Null, Replies::default());
     let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
-    let mut cx = Cx { doc, shared: f.shared(), meshes: None, topology: None, view, plane, sketches: None, display: None, views: None, files: None, components: &mut crate::cad::components::ComponentsState::default(), composition: &mut crate::cad::composition::CadCompositionState::default(), camera: Vec::new() };
+    let mut cx = Cx { doc, shared: f.shared(), meshes: None, topology: None, view, plane, sketches: None, display: None, views: None, files: None, components: &mut crate::cad::components::ComponentsState::default(), composition: &mut crate::cad::composition::CadCompositionState::default(), experiments: &mut crate::cad::experiments::ExperimentsState::default(), review: &mut crate::cad::experiment_review::ReviewState::default(), motion: &mut crate::cad::motion::MotionState::default(), camera: Vec::new() };
     let outcome = crate::cad::actions::handle(&args.action(), &mut call, &mut cx);
     (outcome, cx.camera)
 }

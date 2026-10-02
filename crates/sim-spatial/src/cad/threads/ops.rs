@@ -73,6 +73,23 @@ fn commit(cx: &mut Cx, call: &mut Call, began: Option<u64>, label: &str, op: Thr
     sent(cx.doc, result.map(|a| a.committed), outcome, compose)
 }
 
+/// Captured review uses the same annotation adapter, validation, edit and undo
+/// path as surface comments. Evidence names captured time/source, not live pose.
+pub(crate) fn annotate_evidence(cx: &mut Cx, call: &mut Call, evidence: serde_json::Value, body: String) -> Outcome {
+    let parsed = serde_json::from_value::<sim_runtime::cad_client::threads::ExperimentEvidence>(evidence.clone());
+    match parsed.map_err(|e| e.to_string()).and_then(|e| e.validate()) {
+        Ok(()) => {},
+        Err(e) => return done(Err(format!("evidence: {e}"))),
+    }
+    let revision = cx.doc.shown_revision();
+    let author = cx.doc.threads.author.clone();
+    let op = ThreadOp::Create {
+        title: "Experiment evidence".into(), targets: vec![CadAnchor::Evidence { evidence }],
+        body, author, links: Vec::new(), pin_m: None, view: None,
+    };
+    commit(cx, call, Some(revision), ADD, op, None)
+}
+
 /// Put a whole thread (a reattached pin, a part's label) as one RoboCAD call.
 pub(super) fn put(cx: &mut Cx, call: &mut Call, began: Option<u64>, label: &str, thread: Thread<CadAnchor>) -> Outcome {
     let mut source = CadThreadSource::new(cx.doc, call, began);

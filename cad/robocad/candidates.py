@@ -123,34 +123,45 @@ def change_set(before, after):
 
 
 class Candidates:
-    def __init__(self, doc, ops, root):
+    def __init__(self, doc, ops, root, run_on_main=None):
         self.doc, self.ops, self.root = doc, ops, Path(root)
+        self.run_on_main = run_on_main or (lambda fn: fn())
+
+    def _capture(self, request):
+        def owned():
+            with self.doc._lock:
+                if request.get('document_id', self.doc.document_id) != self.doc.document_id:
+                    raise RevisionConflict('Document replaced before candidate capture')
+                check_revision(self.doc, request.get('expected_revision'))
+                return capture(self.doc)
+        return self.run_on_main(owned)
 
     def batch(self, request):
-        with self.doc._lock:
-            check_revision(self.doc, request.get('expected_revision'))
-            before = capture(self.doc)
+        before = self._capture(request)
         staged, outputs = stage(before, request.get('operations'))
         after = capture(staged)
         changes = change_set(before, after)
-        with self.doc._lock:
-            check_revision(self.doc, before.revision)
-            self.ops.stack.push(PublishState(self.doc, staged, request.get('label', 'Atomic edit batch')))
-        return {'revision': self.doc.revision, 'results': outputs, 'changes': changes}
+        def publish():
+            with self.doc._lock:
+                if self.doc.document_id != before.document_id: raise RevisionConflict('Document replaced while batch staged')
+                check_revision(self.doc, before.revision)
+                self.ops.stack.push(PublishState(self.doc, staged, request.get('label', 'Atomic edit batch')))
+                return self.doc.revision
+        revision = self.run_on_main(publish)
+        return {'revision': revision, 'results': outputs, 'changes': changes}
 
     def create(self, request):
-        with self.doc._lock:
-            check_revision(self.doc, request.get('expected_revision'))
-            before = capture(self.doc)
+        before = self._capture(request)
         staged, outputs = stage(before, request.get('operations'))
         snapshot = capture(staged)
         candidate_id = uuid.uuid4().hex
         folder = self.root/candidate_id; folder.mkdir(parents=True)
         (folder/'base.rcad').write_bytes(before.data); (folder/'candidate.rcad').write_bytes(snapshot.data)
-        record = {'id': candidate_id, 'document_id': self.doc.document_id, 'base_revision': before.revision,
+        record = {'id': candidate_id, 'document_id': before.document_id, 'base_revision': before.revision,
                   'revision': snapshot.revision, 'label': request.get('label', f'Candidate {candidate_id[:8]}'),
                   'state': 'draft', 'created_at': time.time(), 'operations': request['operations'], 'results': outputs,
-                  'physical_hash': snapshot.physical_hash, 'changes': change_set(before, snapshot)}
+                  'physical_hash': snapshot.physical_hash, 'cad_archive_hash': snapshot.archive_hash,
+                  'changes': change_set(before, snapshot)}
         write_json(folder/'candidate.json', record)
         return record
 
@@ -179,17 +190,28 @@ class Candidates:
         record = self.get(candidate_id)
         if record['state'] != 'draft': raise KernelError('Only a draft candidate can be accepted')
         staged = self.document(candidate_id)
-        with self.doc._lock:
-            check_revision(self.doc, expected_revision)
-            check_revision(self.doc, record['base_revision'])
-            self.ops.stack.push(PublishState(self.doc, staged, f"Accept {record['label']}"))
-            record.update(state='accepted', accepted_revision=self.doc.revision)
-            write_json(self.root/candidate_id/'candidate.json', record)
-        return record
+        def publish():
+            with self.doc._lock:
+                current = self.get(candidate_id)
+                if current['state'] != 'draft': raise KernelError('Only a draft candidate can be accepted; decision changed while staging')
+                if current['document_id'] != self.doc.document_id: raise RevisionConflict('Document replaced before acceptance')
+                check_revision(self.doc, expected_revision)
+                check_revision(self.doc, current['base_revision'])
+                self.ops.stack.push(PublishState(self.doc, staged, f"Accept {current['label']}"))
+                current.update(state='accepted', accepted_revision=self.doc.revision, updated_at=time.time())
+                try:
+                    write_json(self.root/candidate_id/'candidate.json', current)
+                except OSError as error:
+                    raise KernelError(f'RoboCAD applied it, but candidate receipt could not be written; refresh source/history before retrying: {error}') from error
+                return current
+        return self.run_on_main(publish)
 
     def discard(self, candidate_id):
-        record = self.get(candidate_id)
-        if record['state'] != 'draft': raise KernelError('Only a draft candidate can be discarded')
-        record['state'] = 'discarded'
-        write_json(self.root/candidate_id/'candidate.json', record)
-        return record
+        def refuse():
+            with self.doc._lock:
+                record = self.get(candidate_id)
+                if record['state'] != 'draft': raise KernelError('Only a draft candidate can be discarded')
+                record.update(state='discarded', updated_at=time.time())
+                write_json(self.root/candidate_id/'candidate.json', record)
+                return record
+        return self.run_on_main(refuse)

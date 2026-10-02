@@ -145,8 +145,24 @@ fn thread(doc: &CadDocument, id: &str) -> Result<CadThread, String> {
 /// Show on model (see the module doc).
 pub(super) fn show(cx: &mut Cx, call: &mut Call, id: &str) -> Result<Value, String> {
     let t = thread(cx.doc, id)?;
-    if t.anchor_status == AnchorStatus::Evidence || t.anchor.node_id.is_none() {
-        return Err("This annotation is experiment evidence with no pin on the model: RoboCAD opens it in its experiments panel, which CAD mode does not have yet".into());
+    if t.anchor_status == AnchorStatus::Evidence {
+        let evidence = t.evidence.as_ref().ok_or("Experiment annotation has no captured evidence")?;
+        let run = evidence["run_id"].as_str().ok_or("Experiment evidence has no run_id")?;
+        end(cx, call)?;
+        let args = crate::cad::experiment_review::ReviewArgs {
+            op: crate::cad::experiment_review::ReviewOp::Open,
+            id: Some(run.to_owned()),
+            time: evidence["time_range"][0].as_f64(),
+            value: evidence["signal"].as_str().map(str::to_owned),
+            ..Default::default()
+        };
+        return match crate::cad::experiment_review::handle(&args, call, cx) {
+            Outcome::Done(result) => result,
+            Outcome::Pending => Ok(json!({"captured_run": run, "pending": true})),
+        };
+    }
+    if t.anchor.node_id.is_none() {
+        return Err("This annotation has no model pin or captured experiment evidence".into());
     }
     end(cx, call)?;
     let node = t.anchor.node_id.clone().filter(|n| cx.doc.doc.as_ref().is_some_and(|d| d.nodes.iter().any(|x| x.id == *n)));

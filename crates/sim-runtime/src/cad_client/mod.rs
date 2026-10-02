@@ -29,6 +29,11 @@
 //!   `Infinity` and `-Infinity`; they read as `null` (never as a number).
 //! - **No file writes by accident**: [`CadClient::physical`] never passes
 //!   `path` (RoboCAD would write the description to that file).
+pub mod experiments;
+pub mod candidates;
+pub mod motion;
+#[cfg(test)]
+mod experiments_tests;
 pub mod files;
 pub mod components;
 pub mod composition;
@@ -146,6 +151,9 @@ impl CadError {
     /// adds that RoboCAD may still apply it.
     fn from_transport(method: &'static str, route: &str, e: loopback_http::Error) -> CadError {
         let (status, message) = match e {
+            // A server failure can occur after an authoritative command committed.
+            // Keep its outcome unknown rather than inviting an unsafe retry.
+            loopback_http::Error::Server { status, error } if method != "GET" && status >= 500 => (Some(status), format!("{error}: {MAY_STILL_APPLY}")),
             loopback_http::Error::Server { status, error } => (Some(status), error),
             loopback_http::Error::Transport(m) if method != "GET" && m.contains("timed out") && !m.contains(": connect: ") => {
                 let sep = if m.ends_with("timed out") { ": " } else { " (timed out): " };

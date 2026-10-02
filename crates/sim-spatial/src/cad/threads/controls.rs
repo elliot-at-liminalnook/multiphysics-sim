@@ -55,7 +55,7 @@ pub(crate) fn controls_of(doc: &CadDocument, selection: &[SelectionItem]) -> Vec
     let mut out = Vec::new();
     let mut c = |id: String, label: &str, action: CadAction, ready: Result<(), String>| out.push(Control { id: format!("cad:threads:{id}"), label: label.to_string(), action, ready });
     let draft = not_drafting(doc);
-    let edits = doc.edit_refusal().map_or(Ok(()), Err);
+    let edits = doc.commit_refusal_for(None, true).map_or(Ok(()), Err);
     let current = st.current.as_deref().and_then(|id| read::thread(doc, id));
     let id = current.map(|t| t.id.as_str());
     let need = |more: Result<(), String>| -> Result<(), String> {
@@ -76,10 +76,16 @@ pub(crate) fn controls_of(doc: &CadDocument, selection: &[SelectionItem]) -> Vec
         let number = if t.resolved() { "✓".to_string() } else { n.to_string() };
         c(format!("thread-{}", t.id), &format!("{number} · {}", t.node_name), ThreadsArgs::thread(ThreadsOp::Open, Some(&t.id)), ready);
     }
-    let evidence = current.is_some_and(|t| t.anchor_status == AnchorStatus::Evidence || t.anchor.node_id.is_none());
+    let show_ready = current.map_or(Ok(()), |t| {
+        if t.anchor_status == AnchorStatus::Evidence {
+            if t.evidence.as_ref().and_then(|e| e["run_id"].as_str()).is_some() && doc.client.is_some() { Ok(()) }
+            else { Err("Captured evidence requires a run_id and a connected service".into()) }
+        } else if t.anchor.node_id.is_none() { Err("This annotation has no model pin".into()) }
+        else { Ok(()) }
+    });
     let fit = current.map(|t| isolation::fit_nodes(doc, t)).unwrap_or_default();
     let no_parts = if fit.is_empty() { Err("This annotation has no available linked parts".to_string()) } else { Ok(()) };
-    c("show".into(), "Show on model", ThreadsArgs::thread(ThreadsOp::Show, id), need(if evidence { Err("This annotation is experiment evidence with no pin on the model".into()) } else { Ok(()) }));
+    c("show".into(), "Show on model", ThreadsArgs::thread(ThreadsOp::Show, id), need(show_ready));
     c("fit".into(), "Fit in view", ThreadsArgs::thread(ThreadsOp::Fit, id), need(no_parts.clone()));
     c("reattach".into(), "Reattach…", ThreadsArgs::thread(ThreadsOp::Reattach, id), need(edits.clone()));
     let resolved = current.is_some_and(CadThread::resolved);

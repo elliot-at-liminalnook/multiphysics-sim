@@ -9,6 +9,12 @@
 //! composer's text area and its Cancel / submit buttons are tagged
 //! `KitInput`, so pressing them does not take the keyboard from the field
 //! (the host decides: Post submits the draft, Cancel ends it).
+//!
+//! [`Shown`] and [`filter_row`] are the Open / Resolved / All filter every
+//! host without a filter of its own draws (Inspect notes, Robot mode's CAD
+//! threads); [`Host::warning`] is a thread's truthfulness line (a note on a
+//! part that is gone, a CAD comment that may be on another part now),
+//! drawn in WARN on its list card, its inline card and above its messages.
 use super::text::KitInput;
 use super::{ACCENT, ACCENT_BG, BORDER, FAINT, HOVER_BG, Kit, Look, RAISED, SUBTLE, TEXT, Tint, WARN, size, wrap};
 use bevy::ui::prelude::AccessibleLabel;
@@ -35,6 +41,11 @@ pub(crate) trait Host<A: Anchor> {
     }
     /// Status line under a thread card (e.g. "Codex working").
     fn badge(&self, _thread: &str) -> Option<String> {
+        None
+    }
+    /// A warning about where the thread is (e.g. "Not on any link of this
+    /// export: …"), drawn in WARN on its card and above its messages.
+    fn warning(&self, _thread: &str) -> Option<String> {
         None
     }
     /// Whether this thread is the selected one (list highlight).
@@ -101,6 +112,9 @@ pub(crate) fn list<'t, A: Anchor + 't, H: Host<A>>(body: &mut ChildSpawnerComman
             if let Some(label) = host.badge(&t.id) {
                 card.spawn(k.text(label, size::DETAIL, ACCENT, 1));
             }
+            if let Some(warning) = host.warning(&t.id) {
+                card.spawn(k.text(warning, size::DETAIL, WARN, 0));
+            }
             let places: Vec<String> = t.targets.iter().map(|a| if a.missing() { format!("{} (missing)", host.anchor_text(a)) } else { host.anchor_text(a) }).collect();
             card.spawn(k.text(places.join(" · "), size::DETAIL, ACCENT, 0));
             if let Some(c) = host.previewed(t) {
@@ -118,6 +132,9 @@ pub(crate) fn list<'t, A: Anchor + 't, H: Host<A>>(body: &mut ChildSpawnerComman
 /// (for the comment whose menu is open) edit and delete. A comment without
 /// an author or a time (an Inspect note's text) shows only its body and links.
 pub(crate) fn messages<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k: &Kit, host: &H, thread: &Thread<A>, menu: Option<&str>) {
+    if let Some(warning) = host.warning(&thread.id) {
+        body.spawn(k.text(warning, size::DETAIL, WARN, 0));
+    }
     for c in &thread.comments {
         body.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(7.), padding: UiRect::bottom(Val::Px(8.)), flex_shrink: 0., ..default() }).with_children(|message| {
             if !c.author.is_empty() {
@@ -174,6 +191,44 @@ pub(crate) fn card<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k: &K
             b.spawn(k.text(&thread.title, 15., color, 2));
         });
         messages(card, k, host, thread, None);
+    });
+}
+
+/// Which threads a list shows (the Open / Resolved / All filter, RoboCAD's
+/// combo box; Open is the default there and here).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum Shown {
+    #[default]
+    Open,
+    Resolved,
+    All,
+}
+impl Shown {
+    pub(crate) const ALL: [Shown; 3] = [Shown::Open, Shown::Resolved, Shown::All];
+    pub(crate) fn label(self) -> &'static str {
+        match self {
+            Shown::Open => "Open",
+            Shown::Resolved => "Resolved",
+            Shown::All => "All",
+        }
+    }
+    /// Whether a thread with this resolved flag is listed.
+    pub(crate) fn keeps(self, resolved: bool) -> bool {
+        match self {
+            Shown::Open => !resolved,
+            Shown::Resolved => resolved,
+            Shown::All => true,
+        }
+    }
+}
+
+/// The Open / Resolved / All segments; `action(shown)` is what a press writes.
+pub(crate) fn filter_row<Act: Component>(body: &mut ChildSpawnerCommands, k: &Kit, current: Shown, action: impl Fn(Shown) -> Act) {
+    body.spawn(k.segments()).with_children(|r| {
+        for shown in Shown::ALL {
+            r.spawn(k.segment(shown.label(), action(shown), shown == current, true));
+        }
     });
 }
 

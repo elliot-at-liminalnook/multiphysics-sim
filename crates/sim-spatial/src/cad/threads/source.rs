@@ -335,11 +335,6 @@ impl<'a, 'c> CadThreadSource<'a, 'c> {
         self.outcome = Some(outcome);
         Ok(Committed::Pending(seq))
     }
-
-    /// A known thread, or why not.
-    fn known(&self, id: &str) -> Result<&Thread<CadAnchor>, String> {
-        self.threads.get(id).ok_or_else(|| format!("no comment thread {id} in RoboCAD's comments as last read"))
-    }
 }
 
 /// The surface pin of a thread's first target.
@@ -427,79 +422,100 @@ impl ThreadSource for CadThreadSource<'_, '_> {
     }
     fn commit(&mut self, label: &str, command: ThreadCommand<CadAnchor>) -> Result<Committed, String> {
         match command {
-            ThreadCommand::PutThread { thread } => match self.threads.get(&thread.id) {
-                None => {
-                    if let Some(CadAnchor::Evidence { evidence }) = thread.targets.first() {
-                        let evidence: sim_runtime::cad_client::threads::ExperimentEvidence =
-                            serde_json::from_value(evidence.clone()).map_err(|e| format!("evidence: {e}"))?;
-                        evidence.validate()?;
-                        let first = thread.comments.first().ok_or("Comment must not be empty")?;
-                        let request = sim_runtime::cad_client::threads::NewEvidenceThread {
-                            body: first.body.clone(), author: first.author.clone(), evidence,
-                            document_id: self.doc.doc.as_ref().and_then(|d| d.document_id.clone())
-                                .ok_or("evidence.document_id: unavailable document identity")?,
-                            expected_revision: self.began.ok_or("evidence.revision: required")?,
-                        };
-                        return self.send(if label.is_empty() { ADD } else { label }, None, Request::Evidence(request));
-                    }
-                    let Some(CadAnchor::Surface { node_id, point, face_index, view, .. }) = surface(&thread).cloned() else {
-                        return Err("An annotation requires a part: Annotate model, then click a surface".into());
+            ThreadCommand::PutThread { thread } if !self.threads.contains_key(&thread.id) => {
+                if let Some(CadAnchor::Evidence { evidence }) = thread.targets.first() {
+                    let evidence: sim_runtime::cad_client::threads::ExperimentEvidence =
+                        serde_json::from_value(evidence.clone()).map_err(|e| format!("evidence: {e}"))?;
+                    evidence.validate()?;
+                    let first = thread.comments.first().ok_or("Comment must not be empty")?;
+                    let request = sim_runtime::cad_client::threads::NewEvidenceThread {
+                        body: first.body.clone(), author: first.author.clone(), evidence,
+                        document_id: self.doc.doc.as_ref().and_then(|d| d.document_id.clone())
+                            .ok_or("evidence.document_id: unavailable document identity")?,
+                        expected_revision: self.began.ok_or("evidence.revision: required")?,
                     };
-                    let Some(first) = thread.comments.first() else { return Err("Comment must not be empty".into()) };
-                    let parts = part_refs(&thread);
-                    let new = NewThread {
-                        node_id,
-                        point,
-                        body: first.body.clone(),
-                        author: first.author.clone(),
-                        face: face_index,
-                        view: (!view.is_empty()).then_some(view),
-                        part_refs: (!parts.is_empty()).then_some(parts),
-                    };
-                    self.send(if label.is_empty() { ADD } else { label }, None, Request::Create(new))
+                    return self.send(if label.is_empty() { ADD } else { label }, None, Request::Evidence(request));
                 }
-                Some(old) => {
-                    let p = patch(old, &thread)?;
-                    let id = thread.id.clone();
-                    self.send(if label.is_empty() { UPDATE } else { label }, Some(id.clone()), Request::Update { id, patch: p })
-                }
-            },
-            ThreadCommand::AddComment { thread, comment } => {
-                self.known(&thread)?;
-                text(&comment.body, "Comment")?;
-                text(&comment.author, "Author")?;
-                self.send(REPLY, Some(thread.clone()), Request::Reply { thread, body: comment.body, author: comment.author })
+                let Some(CadAnchor::Surface { node_id, point, face_index, view, .. }) = surface(&thread).cloned() else {
+                    return Err("An annotation requires a part: Annotate model, then click a surface".into());
+                };
+                let Some(first) = thread.comments.first() else { return Err("Comment must not be empty".into()) };
+                let parts = part_refs(&thread);
+                let new = NewThread {
+                    node_id,
+                    point,
+                    body: first.body.clone(),
+                    author: first.author.clone(),
+                    face: face_index,
+                    view: (!view.is_empty()).then_some(view),
+                    part_refs: (!parts.is_empty()).then_some(parts),
+                };
+                self.send(if label.is_empty() { ADD } else { label }, None, Request::Create(new))
             }
-            ThreadCommand::EditComment { thread, comment, body, .. } => {
-                let t = self.known(&thread)?;
-                if !t.comments.iter().any(|c| c.id == comment) {
-                    return Err(format!("annotation or comment not found: {comment}"));
-                }
-                text(&body, "Comment")?;
-                self.send(EDIT_COMMENT, Some(thread), Request::EditComment { id: comment, body })
+            ThreadCommand::Undo | ThreadCommand::Redo => Err(UNDO_IS_ROBOCADS.into()),
+            command => {
+                let (label, thread, request) = request_on(&self.threads, label, command)?;
+                self.send(&label, thread, request)
             }
-            ThreadCommand::DeleteComment { thread, comment } => {
-                let t = self.known(&thread)?;
-                if !t.comments.iter().any(|c| c.id == comment) {
-                    return Err(format!("annotation or comment not found: {comment}"));
-                }
-                // RoboCAD's `_change_comment` refusal, before anything is sent.
-                if t.comments.len() == 1 {
-                    return Err("delete the thread to remove its last comment".into());
-                }
-                self.send(DELETE_COMMENT, Some(thread), Request::DeleteComment { id: comment })
-            }
-            ThreadCommand::Resolve { thread, resolved } => {
-                self.known(&thread)?;
-                let patch = ThreadPatch { status: Some(if resolved { "resolved" } else { "open" }.into()), ..ThreadPatch::default() };
-                let label = if label.is_empty() { UPDATE } else { label };
-                self.send(label, Some(thread.clone()), Request::Update { id: thread, patch })
-            }
-            ThreadCommand::DeleteThread { id } => {
-                self.known(&id)?;
-                self.send(DELETE_THREAD, Some(id.clone()), Request::DeleteThread { id })
-            }
-            ThreadCommand::Undo | ThreadCommand::Redo => Err("RoboCAD's comments are undone and redone with the document's Undo and Redo (Ctrl+Z, Ctrl+Shift+Z): each change is one undo step there".into()),
         }
+    }
+}
+
+/// Why undo and redo are not thread commands here.
+pub(crate) const UNDO_IS_ROBOCADS: &str = "RoboCAD's comments are undone and redone with the document's Undo and Redo (Ctrl+Z, Ctrl+Shift+Z): each change is one undo step there";
+
+/// The one RoboCAD call a command on an existing thread is (shared by CAD
+/// mode's [`CadThreadSource`] and Robot mode's source over the same
+/// threads, `robot::threads`): its undo label, the thread it is about and
+/// the request, or why not (refused before anything is sent, with
+/// RoboCAD's own words where RoboCAD would refuse). `threads` are the
+/// threads as last read. A new thread (a put of an unknown id) and undo or
+/// redo are refused here: only CAD mode creates threads (Annotate model),
+/// and undo is RoboCAD's document's.
+pub(crate) fn request_on(threads: &BTreeMap<String, Thread<CadAnchor>>, label: &str, command: ThreadCommand<CadAnchor>) -> Result<(String, Option<String>, Request), String> {
+    let known = |id: &str| threads.get(id).ok_or_else(|| format!("no comment thread {id} in RoboCAD's comments as last read"));
+    let named = |default: &str| if label.is_empty() { default.to_string() } else { label.to_string() };
+    match command {
+        ThreadCommand::PutThread { thread } => {
+            let old = threads.get(&thread.id).ok_or("a new comment thread is placed in CAD mode: Annotate model, then click a surface")?;
+            let p = patch(old, &thread)?;
+            let id = thread.id.clone();
+            Ok((named(UPDATE), Some(id.clone()), Request::Update { id, patch: p }))
+        }
+        ThreadCommand::AddComment { thread, comment } => {
+            known(&thread)?;
+            text(&comment.body, "Comment")?;
+            text(&comment.author, "Author")?;
+            Ok((REPLY.into(), Some(thread.clone()), Request::Reply { thread, body: comment.body, author: comment.author }))
+        }
+        ThreadCommand::EditComment { thread, comment, body, .. } => {
+            let t = known(&thread)?;
+            if !t.comments.iter().any(|c| c.id == comment) {
+                return Err(format!("annotation or comment not found: {comment}"));
+            }
+            text(&body, "Comment")?;
+            Ok((EDIT_COMMENT.into(), Some(thread), Request::EditComment { id: comment, body }))
+        }
+        ThreadCommand::DeleteComment { thread, comment } => {
+            let t = known(&thread)?;
+            if !t.comments.iter().any(|c| c.id == comment) {
+                return Err(format!("annotation or comment not found: {comment}"));
+            }
+            // RoboCAD's `_change_comment` refusal, before anything is sent.
+            if t.comments.len() == 1 {
+                return Err("delete the thread to remove its last comment".into());
+            }
+            Ok((DELETE_COMMENT.into(), Some(thread), Request::DeleteComment { id: comment }))
+        }
+        ThreadCommand::Resolve { thread, resolved } => {
+            known(&thread)?;
+            let patch = ThreadPatch { status: Some(if resolved { "resolved" } else { "open" }.into()), ..ThreadPatch::default() };
+            Ok((named(UPDATE), Some(thread.clone()), Request::Update { id: thread, patch }))
+        }
+        ThreadCommand::DeleteThread { id } => {
+            known(&id)?;
+            Ok((DELETE_THREAD.into(), Some(id.clone()), Request::DeleteThread { id }))
+        }
+        ThreadCommand::Undo | ThreadCommand::Redo => Err(UNDO_IS_ROBOCADS.into()),
     }
 }

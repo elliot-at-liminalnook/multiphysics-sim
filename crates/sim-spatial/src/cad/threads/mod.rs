@@ -52,6 +52,7 @@ pub(in crate::cad) use controls::controls;
 pub(crate) use controls::{attachment, controls_of, shown_threads, submit_action};
 pub(in crate::cad) use ops::handle;
 pub(crate) use ops::open;
+pub(crate) use source::{Request, UNDO_IS_ROBOCADS, request_on, thread_of};
 pub(crate) use ops::annotate_evidence;
 
 use crate::annotations::InFlight;
@@ -76,6 +77,22 @@ pub(crate) const SAVED: &str = "Annotation saved in document • Ctrl+S writes t
 pub(crate) const HINT: &str = "Click a surface to place a comment • click a pin to read it • Esc cancels";
 /// What the draft-guarded controls say while a draft is open (comments.py:313, 330).
 pub(crate) const DRAFTING: &str = "Post or cancel your current draft first";
+
+/// A thread another mode asked CAD mode to show (Robot mode's "Open in
+/// CAD", `robot::threads`): kept here, in state rather than a message, until
+/// CAD mode's document for `target` has read its threads (the switch and
+/// RoboCAD's start take many frames). Then the Comments dock opens on the
+/// thread (filter All), or the status line says it is gone; a document for
+/// another target drops the request. One writer each way: the asking mode
+/// sets it, [`read`]'s `sync` takes it.
+#[derive(Resource, Default, Clone, Debug, PartialEq)]
+pub(crate) struct RevealThread(pub Option<Reveal>);
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Reveal {
+    /// The CAD document it is in (the switch's target).
+    pub target: crate::cad::CadTarget,
+    pub thread: String,
+}
 
 /// The thread list's filter (RoboCAD's combo box).
 #[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -506,6 +523,7 @@ pub(in crate::cad) fn specs() -> Vec<Spec> {
 pub(crate) struct CoreParts;
 impl Plugin for CoreParts {
     fn build(&self, app: &mut App) {
+        app.init_resource::<RevealThread>();
         read::build_core(app);
     }
 }

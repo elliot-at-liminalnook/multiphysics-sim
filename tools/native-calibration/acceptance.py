@@ -58,10 +58,25 @@ CHECKPOINTS = (
     "HW-03-held",
     "HW-04-stop-tune", "HW-04-stop-campaign", "HW-04-stop-advanced",
     "HW-06-taught", "HW-06-target", "HW-06-reset",
-    "HW-08-stages", "HW-08-terminal",
+    "HW-08-stopped", "HW-08-terminal",
     "HW-07-learned", "HW-07-sweep-all",
-    "HW-09-saved", "HW-09-stopped", "HW-09-terminal",
+    "HW-09-stopped", "HW-09-terminal",
 )
+# Pose capture: the server saves only while holding with velocity < 2
+# counts/s, |target - position| < 3 counts and six stable samples, else it
+# reports "Still settling" (serve_actuator_calibration.rs, sweep sample
+# callback). The viewer polls the server every 150 ms, so six stable samples
+# take about 0.75 s of server sampling; the driver waits this long inside those
+# bounds before each capture, then retries while the server still settles.
+STILL_SECONDS = 0.5
+CAPTURE_TRIES = 5
+CAPTURE_SECONDS = 5
+SETTLING = ("Still settling",)
+# Errors that leave a queued viewer job unanswered. On Python 3.9 a read
+# timeout is socket.timeout (not yet TimeoutError) and a connect failure is
+# URLError; all of them must reach the job-cancel and direct-STOP path.
+TRANSPORT_ERRORS = (TimeoutError, socket.timeout, urllib.error.URLError, ConnectionError,
+                    http.client.HTTPException)
 # Job plus file, per checkpoint (bounded also by the total deadline).
 SCREENSHOT_SECONDS = 20
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
@@ -161,6 +176,27 @@ def satisfied(predicate, value):
 
 def has_text(message, texts):
     return isinstance(message, str) and any(t in message for t in texts)
+
+
+def holding_still(state):
+    """The motor being taught holds inside the server's capture bounds now."""
+    latest = state["server"]["sweep"]["latest"]
+    position = latest["position_continuous"]
+    if position is None:
+        position = latest["position_raw"]
+    return (latest["holding"] is True and abs(latest["velocity_counts_s"]) < 2
+            and abs(latest["target_raw"] - position) < 3)
+
+
+def stop_interrupted(state, kind):
+    """STOP ended `kind` (tuning/campaign) before it finished: no longer
+    running and an error recorded (the server sets `error` only on the
+    stopped path). For the campaign, `result` (set only on completion) must
+    also be absent. The viewer's tuning JSON (view/status.rs) carries no
+    `result` at all, so for tuning the "no result" clause is vacuous: the
+    caller must also check that the motor still has no gains."""
+    work = state["server"][kind]
+    return work["running"] is False and bool(work.get("error")) and not work.get("result")
 
 
 def stop_reply_latched(code, value):
@@ -302,9 +338,15 @@ class IdentityFixture:
         return f"http://127.0.0.1:{self.http.server_port}"
 
     def close(self):
-        self.http.shutdown()
-        self.http.server_close()
-        self.thread.join(timeout=3)
+        # shutdown() waits for serve_forever to exit: never call it when the
+        # serve thread never started (or already ended), or it blocks forever.
+        try:
+            if self.thread.is_alive():
+                self.http.shutdown()
+        finally:
+            self.http.server_close()
+            if self.thread.is_alive():
+                self.thread.join(timeout=3)
 
 
 class Run:
@@ -414,7 +456,13 @@ class Run:
             headers = {"X-Control-Token": self.server_token, "X-Client-Id": CLIENT_DIRECT}
         status, raw = request(base, method, path, body, headers,
                               timeout=max(.1, min(timeout, self.deadline - time.monotonic())))
-        value = decode(raw)
+        try:
+            value = decode(raw)
+        except ValueError:
+            # Retain the undecodable reply before the caller sees the error.
+            self.append("http.jsonl", {"step": self.step, "base": base, "method": method, "path": path,
+                                       "body": body, "http": status, "response": decode_safe(raw)})
+            raise
         self.append("http.jsonl", {"step": self.step, "base": base, "method": method, "path": path,
                                    "body": body, "http": status, "response": value})
         return status, value
@@ -443,8 +491,14 @@ class Run:
 
     def command(self, command, args=None, refusal=False, base=None, seconds=25):
         base = base or self.base
-        code, accepted = self.http(base, "POST", "/v1/batch",
-            {"commands": [{"command": command, "args": args or {}}], "stop_on_error": True})
+        try:
+            code, accepted = self.http(base, "POST", "/v1/batch",
+                {"commands": [{"command": command, "args": args or {}}], "stop_on_error": True})
+        except TRANSPORT_ERRORS + (ValueError,):
+            # The job may be queued with no URL to cancel (or an unreadable
+            # reply hid it): STOP directly.
+            self.direct_stop(f"{command} submission failed")
+            raise
         if code != 202 or not isinstance(accepted, dict):
             raise AssertionError(f"command not queued: {code} {accepted}")
         path = accepted.get("url")
@@ -453,7 +507,8 @@ class Run:
         try:
             job = self.poll(lambda: self.http(base, "GET", path)[1],
                             lambda j: j["status"] in TERMINAL, seconds, f"{command} terminal")
-        except TimeoutError:
+        except TRANSPORT_ERRORS + (ValueError,):
+            # ValueError: a non-JSON poll reply; the job is still pending.
             self.cancel_job(base, path)
             raise
         result = job["results"][0]
@@ -490,7 +545,10 @@ class Run:
             assert has_text(result.get("error"), expect), (name, expect, result)
         return result
 
-    def click(self, name, expect=None, base=None):
+    def click(self, name, expect=None, base=None, seconds=25, activates=None):
+        """Activate a listed control. `activates` names the hardware action
+        the control must currently stand for (e.g. a jog toggle's
+        `jog_release` while held); `seconds` bounds the activation job."""
         listing = self.command("system_ui", {"action": {"operation": "controls"}}, base=base)
         identity = name if name.startswith("mode:") else "hardware:" + name
         controls = [c for c in listing["controls"] if c.get("id") == identity]
@@ -499,8 +557,12 @@ class Run:
             assert controls[0]["enabled"], controls[0]
         else:
             assert not controls[0]["enabled"] and has_text(controls[0].get("disabled_reason"), expect), controls[0]
+        if activates is not None:
+            action = (controls[0].get("action") or {}).get("hardware")
+            assert isinstance(action, dict) and list(action) == [activates], (identity, activates, controls[0])
         result = self.command("system_ui", {"action": {"operation": "activate",
-            "id": identity, "ui_revision": listing["ui_revision"]}}, refusal=expect is not None, base=base)
+            "id": identity, "ui_revision": listing["ui_revision"]}}, refusal=expect is not None, base=base,
+            seconds=seconds)
         if expect is not None:
             assert has_text(result.get("error"), expect), (identity, expect, result)
         return result
@@ -667,25 +729,111 @@ class Run:
     def server_status(self):
         return self.http(self.server, "GET", "/calibration/status")[1]
 
+    def held_inputs(self):
+        """Which jog inputs the viewer holds: `hardware_status.form`
+        `held_upper`/`held_lower` when exposed, else the jog toggles'
+        listed action (`jog_release` while that direction is held)."""
+        form = self.state()["form"]
+        if "held_upper" in form and "held_lower" in form:
+            return {"upper": form["held_upper"] is True, "lower": form["held_lower"] is True, "source": "form"}
+        listing = self.command("system_ui", {"action": {"operation": "controls"}})
+        held = {"source": "controls"}
+        for direction in ("upper", "lower"):
+            control = [c for c in listing["controls"] if c.get("id") == "hardware:jog_" + direction]
+            assert len(control) == 1, control
+            held[direction] = list((control[0].get("action") or {}).get("hardware") or {}) == ["jog_release"]
+        return held
+
+    def jog_toggle(self, direction, release):
+        """Press or release a jog with its own toggle control: the same id
+        activates `jog_press`, then `jog_release` while held."""
+        self.click("jog_" + direction, activates="jog_release" if release else "jog_press")
+        return self.poll(self.held_inputs, lambda h: h[direction] is (not release), 10,
+                         f"jog {direction} {'released' if release else 'held'}")
+
     def jog(self, direction, counts=700):
         before = self.position(self.state())
-        self.click("jog_" + direction)
-        changed = self.wait(lambda s: abs(self.position(s) - before) >= counts, 30, "encoder moved")
-        assert changed["session"]["intent"] != "hold"
-        self.action("jog_release", {"direction": direction})
+        self.jog_toggle(direction, release=False)
+        try:
+            changed = self.wait(lambda s: abs(self.position(s) - before) >= counts, 30, "encoder moved")
+            assert changed["session"]["intent"] != "hold"
+        except BaseException:
+            # Best-effort release; the original failure is what propagates.
+            try:
+                self.jog_toggle(direction, release=True)
+            except Exception as e:
+                try:
+                    self.append("jog-release-failures.jsonl",
+                                {"step": self.step, "direction": direction, "error": f"{type(e).__name__}: {e}"})
+                except Exception:
+                    pass
+            raise
+        self.jog_toggle(direction, release=True)
         return self.held()
+
+    def still(self, label="holding still for capture"):
+        """`holding_still` continuously for STILL_SECONDS."""
+        end = min(self.deadline, time.monotonic() + 20)
+        since, last = None, None
+        while True:
+            last = self.state()
+            if satisfied(holding_still, last):
+                since = time.monotonic() if since is None else since
+                if time.monotonic() - since >= STILL_SECONDS:
+                    return last
+            else:
+                since = None
+            if time.monotonic() >= end:
+                break
+            time.sleep(.05)
+        self.retain(f"timeout-state-{int(time.time() * 1000)}.json", {"step": self.step, "label": label, "last": last})
+        raise TimeoutError(label)
+
+    def calibration_saves(self):
+        """Timestamped calibration files the server writes on each saved pose."""
+        return len(list((self.out / "records").glob("calibration-*.json")))
+
+    def capture(self, boundary, axis):
+        """Save a pose and prove it was saved, retrying while it settles.
+
+        A capture the server judges unsettled is dropped with "Still
+        settling", and an earlier value (e.g. the reference after
+        reset_poses) can already be non-null, so success is a NEW
+        calibration file plus `Saved <boundary> pose` plus the value.
+        """
+        attempts = []
+        for attempt in range(1, CAPTURE_TRIES + 1):
+            self.still()
+            before = self.calibration_saves()
+            self.click("capture_" + boundary)
+            end = min(self.deadline, time.monotonic() + CAPTURE_SECONDS)
+            while True:
+                s = self.state()
+                # hardware_status may report "server": null or empty axes:
+                # missing fields mean "not saved yet".
+                server = s.get("server") if isinstance(s, dict) else None
+                message = server.get("capture_message") if isinstance(server, dict) else None
+                if (self.calibration_saves() > before and message == f"Saved {boundary} pose"
+                        and satisfied(lambda v: v["server"]["axes"][axis][boundary] is not None, s)):
+                    self.append("captures.jsonl", {"step": self.step, "axis": axis, "boundary": boundary,
+                                                   "attempts": attempts + [{"attempt": attempt, "saved": True}]})
+                    return s
+                if time.monotonic() >= end:
+                    break
+                time.sleep(.12)
+            attempts.append({"attempt": attempt, "saved": False, "capture_message": message,
+                             "settling": has_text(message, SETTLING)})
+        self.append("captures.jsonl", {"step": self.step, "axis": axis, "boundary": boundary, "attempts": attempts})
+        raise AssertionError(f"{boundary} pose of motor {axis} not saved after {CAPTURE_TRIES} tries: {attempts}")
 
     def teaching(self, motor=2):
         axis = str(motor)
         self.jog("lower")
-        self.click("capture_lower")
-        lower = self.wait(lambda s: s["server"]["axes"][axis]["lower"] is not None)["server"]["axes"][axis]["lower"]
+        lower = self.capture("lower", axis)["server"]["axes"][axis]["lower"]
         self.jog("upper", 1500)
-        self.click("capture_upper")
-        taught = self.wait(lambda s: s["server"]["axes"][axis]["upper"] is not None)
+        taught = self.capture("upper", axis)
         assert abs(taught["server"]["axes"][axis]["upper"] - lower) >= 1200
-        self.click("capture_reference")
-        self.wait(lambda s: s["server"]["axes"][axis]["reference"] is not None)
+        self.capture("reference", axis)
         return taught
 
     def settled(self, seconds=30, label="bounded target reached"):
@@ -753,12 +901,16 @@ class Run:
         self.wait(lambda s: s["form"]["speed_percent"] == 25)
         self.jog("upper", 60)
         self.jog("lower", 60)
-        self.click("jog_upper")
-        self.click("jog_lower")
+        # Opposing inputs through the toggles: both pressed holds.
+        self.jog_toggle("upper", release=False)
+        both = self.jog_toggle("lower", release=False)
+        assert both["upper"] and both["lower"], both
         held = self.held()
         before = self.position(held)
-        self.action("jog_release", {"direction": "upper"})
-        self.action("jog_release", {"direction": "lower"})
+        # Release each by activating its toggle again.
+        self.jog_toggle("upper", release=True)
+        released = self.jog_toggle("lower", release=True)
+        assert not released["upper"] and not released["lower"], released
         self.held()
         end = time.monotonic() + 1
         while time.monotonic() < end:
@@ -803,7 +955,8 @@ class Run:
                           and not (s.get("sweep") or {}).get("running"), 15, "mode exit STOP")
                 absent = self.command("hardware_status", refusal=True)
                 assert has_text(absent.get("error"), ("the active mode is phenomena",)), absent
-                self.click("mode:robot")
+                # Robot re-entry rebuilds the scene: allow it the connect budget.
+                self.click("mode:robot", seconds=90)
                 self.wait(lambda s: s["connected"] and not s["stale"] and s["generation"] != previous
                           and not s["session"]["ready"], 90, "robot re-entry reconnects idle")
                 self.explicit_form()
@@ -844,30 +997,43 @@ class Run:
         self.action("target", {"percent": 50})
         self.action("target_commit")
         self.settled()
+        # Checked before confirming, so no status job runs between Tune and STOP.
+        assert satisfied(lambda s: s["server"]["axes"]["2"]["tuning"] is None, self.state()), \
+            "motor 2 must start untuned"
         self.click("tune_confirm")
         self.click("tune")
-        self.wait(lambda s: (s["server"].get("tuning") or {}).get("running"), 15)
-        self.screenshot("stages")
-        # The STOP below must land on a running tune, however long the capture took.
-        self.wait(lambda s: (s["server"].get("tuning") or {}).get("running"), 1, "tune running at STOP")
+        self.wait(lambda s: (s["server"].get("tuning") or {}).get("running"), 15, "tune running")
+        # Nothing (no screenshot) runs between seeing the tune run and STOP.
         self.click("stop")
-        self.stopped()
+        stopped = self.stopped()
+        # STOP really interrupted it: the stopped-path error and still no
+        # gains on motor 2 (the tuning JSON has no `result` field to check).
+        assert satisfied(lambda s: stop_interrupted(s, "tuning") and s["server"]["axes"]["2"]["tuning"] is None,
+                         stopped), \
+            ("tune finished before STOP", stopped["server"]["tuning"])
+        self.retain("tune-interrupted.json", stopped["server"]["tuning"])
+        self.screenshot("stopped")
         self.selected()
         self.click("tune_confirm")
         self.click("tune")
-        stages = set()
+        # Stages of the FRESH tune only: polled ones while it runs (the
+        # interrupted tune is no longer running), and the session's
+        # `tune_stages`, which a tune start clears (session/sequences.rs).
+        polled = []
 
         def tune_terminal(s):
             t = s["server"].get("tuning") or {}
-            stages.add(t.get("stage"))
+            if t.get("running") is True and t.get("stage") and (not polled or polled[-1] != t["stage"]):
+                polled.append(t["stage"])
             return not t.get("running") and bool(s["server"]["axes"]["2"].get("tuning")) and not s["form"]["tune_ok"]
         terminal = self.wait(tune_terminal, 120, "terminal tuning gains and record")
         tuning = terminal["server"]["axes"]["2"]["tuning"]
         assert all(math.isfinite(tuning[g]) for g in ["kp", "ki", "kd", "friction_duty"])
-        assert len(stages - {None}) >= 2, stages
+        stages = terminal["session"]["tune_stages"]
+        assert isinstance(stages, list) and len(set(stages)) >= 2, stages
         record = (self.out / "records" / tuning["record"]).resolve()
         assert record.is_relative_to(self.out / "records") and record.is_file()
-        self.retain("tune-stages.json", sorted(str(x) for x in stages))
+        self.retain("tune-stages.json", {"session": stages, "polled_while_running": polled})
         self.screenshot("terminal")
         self.selected(3)
         self.action("target", {"percent": 50})
@@ -943,16 +1109,16 @@ class Run:
         self.click("campaign")
         saved = self.wait(lambda s: s["server"]["campaign"]["running"] and s["server"]["campaign"]["completed"] >= 1,
                           180, "campaign saved stage")
-        completed = saved["server"]["campaign"]["completed"]
+        # Nothing (no screenshot, no record hashing) runs between seeing a
+        # saved stage and STOP.
+        self.click("stop")
+        stopped = self.stopped()
+        assert satisfied(lambda s: stop_interrupted(s, "campaign"), stopped), ("campaign finished before STOP", stopped["server"]["campaign"])
+        completed = stopped["server"]["campaign"]["completed"]
+        assert completed >= saved["server"]["campaign"]["completed"]
         receipts = {k: v for k, v in self.record_hashes().items()
                     if "/receipts/" in k and not k.endswith(".execution.json")}
         assert len(receipts) >= completed, receipts
-        self.screenshot("saved")
-        # The STOP below must land on a running campaign, however long the capture took.
-        self.wait(lambda s: s["server"]["campaign"]["running"], 1, "campaign running at STOP")
-        self.click("stop")
-        self.stopped()
-        assert self.state()["server"]["campaign"]["completed"] >= completed
         self.screenshot("stopped")
         self.selected()
         self.click("campaign_confirm")

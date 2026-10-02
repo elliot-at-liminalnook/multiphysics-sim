@@ -14,6 +14,8 @@ pub mod loopback_http;
 /// Typed client of RoboCAD's loopback REST API and its service lifecycle helpers (native only).
 #[cfg(not(target_arch = "wasm32"))]
 pub mod cad_client;
+/// Graphics-independent CAD migration contracts and paired headless harness.
+pub mod cad_parity;
 pub mod units;
 pub mod contact_audit;
 pub mod contact_planning;

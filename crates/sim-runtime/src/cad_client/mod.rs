@@ -47,6 +47,7 @@ pub mod robot;
 pub mod robot_ops;
 pub mod section;
 pub mod service;
+pub mod parity;
 pub mod sketch;
 pub mod system_link;
 pub mod threads;

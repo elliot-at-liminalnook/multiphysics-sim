@@ -120,7 +120,7 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
         RobotOp::Refresh => {
             cx.doc.robot.data.invalidate();
             cx.doc.touch();
-            Outcome::Done(Ok(json!({"message": "Reading RoboCAD's robot description again (GET /robot and the reads beside it); it shows in cad_state.robot."})))
+            Outcome::Done(Ok(json!({"message": "Reading RoboCAD's robot description again (GET /robot and the reads beside it); the values appear in the Robot panel."})))
         }
         RobotOp::Validate | RobotOp::Library | RobotOp::Pick => tools::handle(args, call, cx),
     }

@@ -81,8 +81,9 @@ fn apply_in(args: ReferencesArgs, doc: &mut CadDocument, plane: &mut CadActivePl
 #[test]
 fn controls_fit_the_pattern_and_round_trip_through_rest() {
     let mut doc = document(true);
-    status(&mut doc, LinkState::Changed);
     super::browse(&mut doc, BrowseKind::System, true);
+    // Opening the dock invalidates its status; model the subsequent read.
+    status(&mut doc, LinkState::Changed);
     doc.references.calibrate = Some(Calibrate { id: "i1".into(), picks: vec![], picked_at: None, distance: String::new(), error: None });
     let controls = controls_of(&doc);
     let ids: Vec<&str> = controls.iter().map(|c| c.0.as_str()).collect();

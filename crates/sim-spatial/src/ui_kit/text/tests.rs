@@ -262,9 +262,11 @@ fn tab_filter_and_chords() {
 }
 
 /// Files allowed to read keyboard messages outside `ui_kit/text/`, each
-/// with its reason. Empty since one-text-entry moved every site; an entry
-/// must name a reason that is not text entry.
-const ALLOWED: &[(&str, &str)] = &[];
+/// with its reason. Every entry must name a nontext use; fixture sources
+/// are excluded because they inject events into the production kit.
+const ALLOWED: &[(&str, &str)] = &[
+    ("ui_kit/activation.rs", "Focused Enter/Space intent resets pointer suppression; it never reads or edits field text"),
+];
 
 /// Nothing outside `ui_kit/text/` reads keyboard messages for text
 /// (`MessageReader`, `MessageCursor` or `Messages` of `KeyboardInput`, or a
@@ -281,12 +283,14 @@ fn keyboard_text_is_read_only_in_the_kit() {
         for entry in std::fs::read_dir(&dir).unwrap() {
             let path = entry.unwrap().path();
             if path.is_dir() {
-                if path != kit {
+                if path != kit && path.file_name().is_none_or(|name| name != "tests") {
                     dirs.push(path);
                 }
             } else if path.extension().is_some_and(|e| e == "rs") {
                 let relative = path.strip_prefix(&src).unwrap().to_string_lossy().replace('\\', "/");
-                let text = std::fs::read_to_string(&path).unwrap();
+                let name = path.file_name().unwrap().to_string_lossy();
+                if name == "tests.rs" || name.ends_with("_tests.rs") { continue; }
+                let text = crate::copy_guard_tests::strip_inline_tests(&std::fs::read_to_string(&path).unwrap());
                 let hits: Vec<String> = text.lines().enumerate().filter(|(_, l)| !l.trim_start().starts_with("//") && l.contains(needle.as_str())).map(|(i, l)| format!("{relative}:{}: {}", i + 1, l.trim())).collect();
                 if !hits.is_empty() && !ALLOWED.iter().any(|(path, _)| *path == relative.as_str()) {
                     offenders.extend(hits);

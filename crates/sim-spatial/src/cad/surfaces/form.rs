@@ -587,9 +587,15 @@ mod suspension_tests {
         let actions: Vec<_> = app.world_mut().resource_mut::<Messages<Act<CadAction>>>().drain().collect();
         assert_eq!(actions.len(), 1);
         assert!(matches!(&actions[0].action, CadAction::Captured { action, .. } if matches!(&**action, CadAction::CadFormSubmit)));
-        // Ordinary navigation is a true Blur, not temporary suspension.
-        fx::key(&mut app, window, KeyCode::Tab, Key::Tab);
-        app.update();
+        // Tab can activate another rendered input, using the same durable
+        // editor. Navigate through the input rows to an ordinary button;
+        // leaving the editor must be a true Blur, not suspension.
+        let controls = app.world_mut().query_filtered::<Entity, With<crate::ui_kit::activation::Ordinary>>().iter(app.world()).count();
+        for _ in 0..controls {
+            fx::key(&mut app, window, KeyCode::Tab, Key::Tab);
+            app.update();
+            if app.world().resource::<bevy::input_focus::InputFocus>().get() != Some(field) { break; }
+        }
         assert!(!app.world().get::<TextField>(field).unwrap().suspended);
         assert_eq!(app.world().resource::<CadDocument>().ops.form.as_ref().unwrap().focus, None);
         assert_ne!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(field));

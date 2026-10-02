@@ -113,13 +113,18 @@ class ConnectionsView(QGraphicsView):
 
 class SystemGraphPanel(QWidget):
     document_event = Signal()
+    import_metadata_ready = Signal(object)
 
     def __init__(self, app):
         super().__init__()
         self.app = app
         self.catalogue = []; self.imported = []; self.import_revision = None; self.registry = RegistryView([])
-        self.import_state = None; self.imports_stale = False
+        self.import_state = None; self.imports_stale = False; self.imports_request_stale = False
         self.checked_components = {}
+        self.import_run_id = None; self.metadata_stale = True
+        self.import_guard_revision = None; self.import_document_id = None
+        self._imports_token = 0; self._imports_running = False
+        self._imports_requested = False; self._imports_loaded_run = None
         self.current = None; self.pending_port = None; self.selected_connection = None
         self.edit_revision = app.doc.revision
         layout = QVBoxLayout(self); layout.setContentsMargins(2, 4, 2, 2)
@@ -196,6 +201,8 @@ class SystemGraphPanel(QWidget):
         splitter.handle(1).setToolTip('Drag to resize the inspector and connection view')
         self.status = QLabel('Ready'); self.status.setWordWrap(True); layout.addWidget(self.status)
         self.document_event.connect(self.refresh)
+        self.document_event.connect(self.refresh_import_metadata)
+        self.import_metadata_ready.connect(self.receive_import_metadata)
         app.doc.listeners.append(self.document_changed)
         self.refresh()
 
@@ -213,7 +220,12 @@ class SystemGraphPanel(QWidget):
 
     def receive_imports(self, result):
         self.imported = result['imported']; self.import_revision = result['revision']
-        self.import_state = result['state']; self.imports_stale = result.get('stale', False)
+        if self.import_run_id != result['run_id']: self.imports_request_stale = False
+        self.import_run_id = result['run_id']
+        self.import_document_id = result.get('guard_document_id')
+        self.import_guard_revision = result.get('guard_revision')
+        self.metadata_stale = result.get('metadata_stale', True)
+        self.import_state = result['state']; self.imports_stale = result.get('stale', False) or self.imports_request_stale
         self.registry = RegistryView(self.catalogue, self.imported)
         self.checked_components = {key: entry for entry in result.get('resolved') or [] for key in (entry['binding'], entry['name'])}
         self.imports.clear()
@@ -223,16 +235,62 @@ class SystemGraphPanel(QWidget):
         self.refresh_checked_values()
         if result.get('error'): self.status.setText(result['error'])
 
+    def load_import_check(self, run_id):
+        if self.import_run_id != run_id: self.imports_request_stale = False
+        self.import_run_id = run_id
+        self.metadata_stale = True
+        self.refresh_import_metadata()
+
+    def refresh_import_metadata(self):
+        if not self.import_run_id: return
+        if self._imports_running:
+            self._imports_requested = True
+            return
+        from ..component_imports import refresh_async
+        self._imports_running = True; self._imports_requested = False
+        self._imports_token += 1
+        refresh_async(self.app.experiments, self.import_run_id, self._imports_token,
+                      self.import_metadata_ready.emit)
+
+    def receive_import_metadata(self, payload):
+        token, result = payload
+        if token != self._imports_token: return
+        self._imports_running = False
+        if result.get('run_id') != self.import_run_id:
+            self._imports_requested = True
+        elif result.get('metadata_error'):
+            self.metadata_stale = True
+            self.status.setText('Imported metadata: '+result['metadata_error'])
+        elif result.get('guard_document_id') == self.app.doc.document_id and result.get('guard_revision') == self.app.doc.revision and result.get('run_id') == self.import_run_id:
+            if self._imports_loaded_run != self.import_run_id:
+                self._imports_loaded_run = self.import_run_id
+                self.receive_imports(result)
+            # Refresh metadata/status only: never refill the editable draft.
+            self.imported = result['imported']
+            self.registry = RegistryView(self.catalogue, self.imported)
+            self.import_document_id = result['guard_document_id']
+            self.import_guard_revision = result['guard_revision']
+            self.metadata_stale = result['metadata_stale']
+            self.imports_stale = result['stale'] or self.imports_request_stale
+            self.refresh_import_status()
+            self.view.show_graph(self.app.doc.component_graph, self.registry, self.current)
+        else:
+            self._imports_requested = True
+        if self._imports_requested: self.refresh_import_metadata()
+
     def mark_imports_stale(self):
+        self.imports_request_stale = True
         self.imports_stale = True
         self.refresh_import_status()
+        self.refresh_import_metadata()
 
     def refresh_import_status(self):
         if self.import_revision is not None:
             state = ' · document has changed; check again for current values' if self.app.doc.revision != self.import_revision else (
                 ' · scripts or settings changed; check again for current values' if self.imports_stale else '')
             if self.import_state != 'completed': state += f' · system {self.import_state}'
-            self.import_status.setText(f'Imported components from captured revision {self.import_revision}{state}')
+            structural = ' · structural metadata stale' if self.metadata_stale else ' · structural ports current'
+            self.import_status.setText(f'Imported components from captured revision {self.import_revision}{state}{structural}')
 
     def refresh_checked_values(self):
         identity = self.binding.text().strip() or ('graph/'+self.current if self.current else None)
@@ -381,8 +439,17 @@ class SystemGraphPanel(QWidget):
         self.body.setCurrentIndex(self.body.findData(bodies[0]))
 
     def publish(self, operation, revision=None):
+        imported = ()
+        # Structural metadata may survive graph-only edits; captured values
+        # retain their stale label. Refresh never rewrites the editable draft.
+        needs_import = bool(operation.get('component', {}).get('binding')) or any(
+            component.get('binding') for component in self.app.doc.component_graph['components'].values())
+        if needs_import:
+            if self.import_guard_revision != self.app.doc.revision or self.import_document_id != self.app.doc.document_id or self.metadata_stale or self.import_state != 'completed':
+                raise KernelError('system.check_id: structural metadata is refreshing or stale; your draft is preserved')
+            imported = self.imported
         result = edit_graph(self.app.doc, self.app.ops, operation,
-            self.app.doc.revision if revision is None else revision, self.catalogue)
+            self.app.doc.revision if revision is None else revision, self.catalogue, imported)
         self.status.setStyleSheet(''); self.status.setText('Saved · undo is available')
         return result
 

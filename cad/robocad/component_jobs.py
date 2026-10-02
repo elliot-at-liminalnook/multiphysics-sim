@@ -107,6 +107,9 @@ class ComponentJob:
         self.state = 'pending'; self.stage = ''; self.done = self.total = 0; self.error = None
         self.result = None; self.prepared = None; self.output = None
         self.log_path = None
+        self.prepare_display = False
+        self.export_temporary = None
+        self.export_target = None
 
     def start(self):
         self.state = 'running'
@@ -116,7 +119,13 @@ class ComponentJob:
     def cancel(self):
         if self.state in ('applied','failed','cancelled'): return
         self.stop.set()
-        if self.process and self.process.poll() is None: self.process.terminate()
+        self.terminate_worker()
+
+    def terminate_worker(self):
+        process = self.process
+        if process is not None and process.poll() is None:
+            try: process.terminate()
+            except ProcessLookupError: pass  # Child exited between poll and signal.
 
     def progress(self, stage, done, total, name=''):
         if self.stop.is_set(): raise InterruptedError('Component preparation cancelled')
@@ -126,14 +135,25 @@ class ComponentJob:
         try:
             with tempfile.TemporaryDirectory(prefix='robocad-component-') as folder:
                 root=Path(folder); request=root/'input'; response=root/'output'
+                args, kwargs = list(self.args), dict(self.kwargs)
+                if self.operation == 'export_component':
+                    target = kwargs.get('path') if 'path' in kwargs else args[1]
+                    self.export_target = str(Path(target).expanduser().resolve())
+                    # Same directory permits an atomic rename after the owner guard.
+                    handle = tempfile.NamedTemporaryFile(prefix='.robocad-component-', suffix='.rcomp',
+                        dir=Path(self.export_target).parent, delete=False)
+                    self.export_temporary = handle.name
+                    handle.close()
+                    if 'path' in kwargs: kwargs['path'] = self.export_temporary
+                    else: args[1] = self.export_temporary
                 packed = pack(self.input, progress=self.progress)
-                with request.open('wb') as stream: pickle.dump((packed,self.operation,self.args,self.kwargs), stream, protocol=5)
+                with request.open('wb') as stream: pickle.dump((packed,self.operation,args,kwargs,self.prepare_display), stream, protocol=5)
                 self.progress('Starting rebuild',0,0)
                 env=os.environ.copy(); env['PYTHONPATH']=str(Path(__file__).resolve().parents[1])+os.pathsep+env.get('PYTHONPATH','')
                 with (root/'errors').open('w+') as errors:
                     self.process=subprocess.Popen([sys.executable,'-m','robocad.component_worker',str(request),str(response)],
                         stdout=subprocess.PIPE,stderr=errors,text=True,env=env)
-                    if self.stop.is_set(): self.process.terminate()
+                    if self.stop.is_set(): self.terminate_worker()
                     for line in self.process.stdout:
                         message=json.loads(line)
                         if 'progress' in message: self.progress(*message['progress'])
@@ -149,6 +169,7 @@ class ComponentJob:
                             detail += '\nDiagnostics: ' + self.log_path
                         raise KernelError(detail or 'Component worker failed')
                 with response.open('rb') as stream: packed,items,meshes,result=pickle.load(stream)
+                if self.export_target is not None: result['path'] = self.export_target
                 candidate=unpack(packed,body_table(self.input),self.progress)
                 candidate.mesh_cache=meshes
                 self.progress('Ready to apply',1,1)
@@ -157,7 +178,7 @@ class ComponentJob:
         except Exception as error: self.messages.put(('failed',str(error)))
         finally:
             if self.process and self.process.poll() is None:
-                self.process.terminate(); self.process.wait()
+                self.terminate_worker(); self.process.wait()
 
     def poll(self):
         # Bounded drain: progress is coalesced by callers' regular timer.
@@ -166,22 +187,24 @@ class ComponentJob:
             except queue.Empty: break
             if kind=='progress': self.stage,self.done,self.total,_=value
             elif kind=='ready':
-                if self.stop.is_set(): self.state='cancelled'
+                if self.stop.is_set(): self.state='cancelled'; self.release()
                 else: self.output,self.prepared,self.result=value; self.state='ready'
-            elif kind=='failed': self.error=value; self.state='failed'; self.input=None
-            elif kind=='cancelled': self.state='cancelled'; self.input=None
+            elif kind=='failed': self.error=value; self.state='failed'; self.release()
+            elif kind=='cancelled': self.state='cancelled'; self.release()
         return self.status()
 
     def status(self):
-        return {'id':self.id,'state':self.state,'stage':self.stage,'done':self.done,'total':self.total,
+        return {'id':self.id,'operation':self.operation,'state':self.state,'stage':self.stage,'done':self.done,'total':self.total,
+                'document_id':self.document_id,'revision':self.revision,
                 'error':self.error,'log_path':self.log_path,'result':self.result if self.state=='applied' else None}
 
     def commit(self, ops, display=None):
         doc=ops.doc
         if self.state!='ready': raise KernelError('Component result is not ready')
-        if self.stop.is_set(): self.state='cancelled'; return
+        if self.stop.is_set(): self.state='cancelled'; self.release(); return
         if doc.document_id!=self.document_id or doc.revision!=self.revision:
             self.state='failed'; self.error='The document changed during preparation. Your edits are preserved; retry the component operation.'
+            self.release()
             return
         candidate=self.output
         if self.operation!='export_component':
@@ -196,6 +219,22 @@ class ComponentJob:
                 command.after_display.update(self.prepared)
             ops.stack.push(command)
             doc._snapshot_body_cache.update(candidate._snapshot_body_cache)
+        if self.operation=='export_component':
+            os.replace(self.export_temporary, self.export_target)
+            self.export_temporary = None
         self.state='applied'
         # Release the transfer snapshot; the undo command owns the necessary state.
         self.input=None; self.output=None
+
+    def release(self):
+        if self.export_temporary is not None:
+            Path(self.export_temporary).unlink(missing_ok=True)
+            self.export_temporary = None
+        self.input = None
+        self.output = None
+        self.prepared = None
+
+    def fail(self, error):
+        self.state = 'failed'
+        self.error = error
+        self.release()

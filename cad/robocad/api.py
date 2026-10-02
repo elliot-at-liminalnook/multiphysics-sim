@@ -295,6 +295,12 @@ class Service:
         self.app = app
         self.run_on_main = run_on_main or self._run_locked
         self.conv = ArgConverter(doc)
+        from .component_service import owner
+        self.component_jobs = getattr(app, '_component_job_service', None) if app is not None else None
+        if self.component_jobs is None:
+            self.component_jobs = owner(self.ops, lambda: self.ops,
+                lambda: self.app.viewport.items if self.app is not None else None, self._refresh)
+            if app is not None: app._component_job_service = self.component_jobs
         from .print_jobs import PrintJobs
         self.print_jobs = PrintJobs(lambda: self.doc, lambda: self.ops, lambda fn: self.run_on_main(fn), lambda: self._refresh())
 
@@ -455,12 +461,32 @@ class Service:
             self._experiments=Experiments(self.doc)
         return self._experiments
 
-    def system_request(self, method, body, parts=None, query=None):
+    def checked_graph_imports(self, check_id):
+        """Read authoritative completed-check metadata on the HTTP worker."""
+        try:
+            with self.doc._lock:
+                record = self.experiments.get(check_id)
+                if (record.get('document_id') or (record.get('provenance') or {}).get('document_id')) != self.doc.document_id:
+                    raise ApiError(409, 'system.check_id: check belongs to another document')
+                result = self.experiments.components(check_id)
+                if result['state'] != 'completed': raise ApiError(422, 'system.check_id: check must be completed')
+                if result.get('metadata_stale', True): raise ApiError(409, 'system.check_id: imported structural metadata is stale; check again externally')
+                return {'document_id': result['guard_document_id'], 'revision': result['guard_revision'], 'imported': result['imported']}
+
+        except KeyError as error: raise ApiError(404, f'system.check_id: {error}')
+        except KernelError as error: raise ApiError(422, f'system.check_id: {error}')
+
+    def system_request(self, method, body, parts=None, query=None, imported_check=None):
         from copy import deepcopy
         from .candidates import check_revision
         from .experiments import RevisionConflict
         try:
             with self.doc._lock:
+                imported = ()
+                if imported_check is not None:
+                    if imported_check['document_id'] != self.doc.document_id or imported_check['revision'] != self.doc.revision:
+                        raise RevisionConflict('system.check_id: document changed while reading imported metadata')
+                    imported = imported_check['imported']
                 if parts and len(parts) > 1:
                     from .component_graph import edit_graph
                     section = parts[1]
@@ -481,10 +507,15 @@ class Service:
                     elif method == 'DELETE' and len(parts) == 3:
                         operation = {'action': 'delete_component' if section == 'components' else 'delete_connection', 'id': parts[2]}
                     else: raise ApiError(405, 'Unsupported system edit')
-                    return edit_graph(self.doc, self.ops, operation, expected, self.experiments.catalogue())
+                    return edit_graph(self.doc, self.ops, operation, expected, self.experiments.catalogue(), imported)
                 if method == 'PUT':
                     check_revision(self.doc, body.get('expected_revision'))
-                    self.ops.set_component_graph(body.get('graph'))
+                    from .component_graph import validate_graph, RegistryView
+                    graph = validate_graph(body.get('graph'), self.doc)
+                    registry = RegistryView(self.experiments.catalogue(), imported)
+                    for component in graph['components'].values(): registry.validate_component(component)
+                    registry.validate_connections(graph)
+                    self.ops.set_component_graph(graph)
                 elif method != 'GET':
                     raise ApiError(405, 'Use GET or PUT for the document system graph')
                 return {'revision': self.doc.revision, 'graph': deepcopy(self.doc.component_graph)}
@@ -892,7 +923,7 @@ class Service:
             out[name] = str(inspect.signature(fn))
         return out
 
-    def op(self, name: str, args: list, kwargs: dict):
+    def op(self, name: str, args: list, kwargs: dict, expected_revision=None, document_id=None):
         from .experiments import RevisionConflict
         if name.startswith("_") or not hasattr(self.ops, name):
             raise ApiError(404, f"no op {name}; see GET /ops")
@@ -900,8 +931,9 @@ class Service:
         a, k = self.conv.convert(fn, args or [], kwargs or {})
         try:
             from .component_jobs import OPERATIONS
-            if self.app is not None and name in OPERATIONS:
-                return {'job': self.app.components_panel.start(name, a, k)}
+            if name in OPERATIONS:
+                status = self.component_jobs.start(name, a, k, expected_revision, document_id)
+                return {'job': status}
             result = fn(*a, **k)
         except RevisionConflict as e:
             raise ApiError(409, str(e))
@@ -910,11 +942,21 @@ class Service:
         self._refresh()
         return {"result": result, "history": self.history()}
 
+    def component_catalogue(self):
+        result = self.ops.component_catalogue()
+        for definition in result['definitions']:
+            source = self.doc.component_definitions[definition['id']]
+            definition['targets'] = [{'id': node.id, 'name': node.name, 'kind': node.kind,
+                'component_member': node.component_member,
+                'component_instance': node.component_instance}
+                for node in source.nodes.values()]
+        return result
+
     def component_job_status(self, job_id, cancel=False):
-        if self.app is None or job_id not in self.app.components_panel.jobs: raise ApiError(404, 'Component job not found')
-        job = self.app.components_panel.jobs[job_id]
-        if cancel: job.cancel()
-        return job.status()
+        try:
+            return self.component_jobs.status(job_id, cancel)
+        except KeyError:
+            raise ApiError(404, 'Component job not found')
 
     def undo(self):
         label = self.ops.undo()
@@ -1425,7 +1467,9 @@ def make_handler(service: Service):
                 return self._send(200, run(s.health))
             head = parts[0]
             if head == 'system':
-                return self._send(201 if method == 'POST' else 200, run(lambda: s.system_request(method, body, parts, q)))
+                check_id = body.get('check_id') or q.get('check_id')
+                imported_check = s.checked_graph_imports(check_id) if check_id and method != 'GET' else None
+                return self._send(201 if method == 'POST' else 200, run(lambda: s.system_request(method, body, parts, q, imported_check)))
             if parts == ['doc', 'script'] and method == 'POST':
                 return self._send(200, s.model_script(body))
             if head == 'print':
@@ -1436,7 +1480,12 @@ def make_handler(service: Service):
                 payload = run(lambda: s.candidate_request(method, parts, body))
                 return self._send(202 if parts[-1] == 'experiments' and method == 'POST' else 200, payload)
             if head=='experiments':
-                payload=run(lambda:s.experiment_request(method,parts,body))
+                if method == 'GET' and len(parts) == 3 and parts[2] == 'components':
+                    # Snapshot freshness and immutable check files are read on
+                    # this HTTP worker; the owner thread only handles edits.
+                    payload = s.experiment_request(method, parts, body)
+                else:
+                    payload=run(lambda:s.experiment_request(method,parts,body))
                 return self._send(202 if method=='POST' else 200,payload)
             if head in ("threads", "comments"):
                 payload = run(lambda: s.annotation_request(method, parts, q, body))
@@ -1498,7 +1547,7 @@ def make_handler(service: Service):
             if head == "ops":
                 if len(parts) == 1:
                     return self._send(200, run(s.ops_list))
-                return self._send(200, run(lambda: s.op(parts[1], body.get("args", []), body.get("kwargs", {}))))
+                return self._send(200, run(lambda: s.op(parts[1], body.get("args", []), body.get("kwargs", {}), body.get("expected_revision"), body.get("document_id"))))
             if head == "clipboard" and len(parts) == 2 and method == "POST":
                 if parts[1] == "copy":
                     return self._send(200, run(lambda: s.copy(body.get("ids"))))
@@ -1518,8 +1567,22 @@ def make_handler(service: Service):
                 if method == "GET":
                     return self._send(200, run(s.view))
                 return self._send(200, run(lambda: s.set_view(body)))
+            if head == 'component-library' and method == 'GET':
+                # Read-only filesystem discovery runs on this HTTP worker, never
+                # through run_on_main. Import/export preparation remains a job.
+                from pathlib import Path
+                folder = Path(q.get('path', str(Path.home() / 'Documents' / 'RoboCAD' / 'Components'))).expanduser()
+                if folder.exists() and not folder.is_dir(): raise ApiError(422, 'component-library.path: expected a directory')
+                files = [{'path': str(path), 'name': path.stem} for path in sorted(folder.glob('*.rcomp'))] if folder.exists() else []
+                return self._send(200, {'path': str(folder), 'files': files})
+            if head == 'component-recipes' and method == 'GET':
+                from .component_derivation import RECIPES
+                from .component_parameters import FEATURES, UNITS
+                return self._send(200, {'recipes': RECIPES, 'features': FEATURES, 'units': list(UNITS)})
             if head == 'components' and method == 'GET':
-                return self._send(200, run(s.ops.component_catalogue))
+                return self._send(200, run(s.component_catalogue))
+            if head == 'component-jobs' and len(parts) == 1 and method == 'GET':
+                return self._send(200, run(s.component_jobs.discover))
             if head == 'component-jobs' and len(parts) == 2 and method in ('GET', 'DELETE'):
                 return self._send(200, run(lambda: s.component_job_status(parts[1], method == 'DELETE')))
             if head == 'motion':

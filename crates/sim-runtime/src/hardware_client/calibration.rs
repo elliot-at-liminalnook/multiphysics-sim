@@ -53,9 +53,10 @@ pub fn authorize_virtual(identity: Option<&ExecutionIdentity>, generation: u64,
     Ok(())
 }
 /// HTTP status the calibration server answers when a command's execution
-/// binding (identity, generation, scope or a lost virtual bench) is refused.
+/// binding (identity, generation or a lost virtual bench) is refused.
 /// Clients revoke their pinned authorization on it; an ordinary business
-/// refusal (400, e.g. "Unknown motor ID") leaves the binding intact.
+/// refusal (400, e.g. "Unknown motor ID" or a command outside
+/// [`virtual_command_allowed`]) leaves the binding intact.
 pub const BINDING_REFUSED_STATUS: u16 = 409;
 /// Error text prefix the server uses for [`BINDING_REFUSED_STATUS`] answers.
 pub const BINDING_REFUSED: &str = "Calibration execution binding refused";

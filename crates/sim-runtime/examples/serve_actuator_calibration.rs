@@ -187,10 +187,33 @@ fn usable(a: &AxisCalibration, session: Option<&str>) -> AxisCalibration {
 fn multi_turn(a: &AxisCalibration) -> bool {
     a.coordinate_session.is_some() || a.reference_session.is_some()
 }
-/// Only a lost serial link can hide encoder turns; motion faults keep them.
+/// Whether the axis's taught poses or alignment are still usable in the live
+/// multi-turn session `session` (a re-stamp is what invalidates them).
+fn bound_to_session(a: &AxisCalibration, session: Option<&str>) -> bool {
+    session.is_some() && (a.coordinate_session.as_deref() == session || a.reference_session.as_deref() == session)
+}
+/// Only lost or untrustworthy readback can hide encoder turns; motion faults
+/// with good readback keep them. Lost: no reply, a receive/serial fault, a
+/// corrupt or foreign frame (servo_bus `reply`, bridge stream decoding), an
+/// ambiguous half-turn jump, or the serial device itself gone ([`device_lost`]).
 fn readback_lost(e: &str) -> bool {
+    link_readback_lost(e) || device_lost(e)
+}
+fn link_readback_lost(e: &str) -> bool {
     let e = e.to_ascii_lowercase();
-    e.contains("timeout") || e.contains("readback") || e.contains("receive") || e.contains("serial")
+    ["timeout", "readback", "receive", "serial", "bad checksum", "framing", "foreign reply", "bridge stream",
+        "payload width", "ambiguous"].iter().any(|k| e.contains(k))
+}
+/// OS errors of a vanished serial adapter: ENXIO after a USB unplug ("Device
+/// not configured" on macOS, "No such device or address" on Linux) and EIO.
+fn device_lost(e: &str) -> bool {
+    let e = e.to_ascii_lowercase();
+    ["device not configured", "no such device or address", "input/output error"].iter().any(|k| e.contains(k))
+}
+/// `stop()`'s bounded-retry wrapper always says "readback"; the attempts'
+/// own errors after it say whether readback was actually lost.
+fn strip_stop_retry(e: &str) -> &str {
+    e.strip_prefix("Stop readback unverified after bounded retries: ").unwrap_or(e)
 }
 /// Transport-class failure of a bus call: readback loss, or a socket-only OS
 /// error ("Broken pipe (os error 32)", "Connection reset by peer", EOF).
@@ -199,10 +222,13 @@ fn readback_lost(e: &str) -> bool {
 /// (a stop, readback or probe), never to whole-command results that may hold
 /// save/receipt failures. `stop()`'s bounded-retry wrapper text is stripped
 /// first, since it always says "readback" even when a motor failed to settle.
+/// A corrupt frame counts: a virtual bench that produces one is dropped like a
+/// silent one. [`device_lost`] does not: a virtual bench is a socket, never a
+/// serial adapter, and EIO can come from the bus log's disk.
 fn transport_lost(e: &str) -> bool {
-    let e = e.strip_prefix("Stop readback unverified after bounded retries: ").unwrap_or(e);
+    let e = strip_stop_retry(e);
     let lower = e.to_ascii_lowercase();
-    readback_lost(e) || ["broken pipe", "connection reset", "connection aborted", "connection refused", "not connected",
+    link_readback_lost(e) || ["broken pipe", "connection reset", "connection aborted", "connection refused", "not connected",
         "resource temporarily unavailable", "unexpected end of file", "failed to fill whole buffer"].iter().any(|k| lower.contains(k))
 }
 /// Drops a lost bus: no further I/O on it (closing a virtual socket makes the
@@ -219,6 +245,28 @@ fn lose_bus(app: &App, bus: &mut Option<CalibrationBus>) {
     if app.execution.is_virtual_calibration() {
         s["execution"] = Value::Null;
     }
+}
+/// The `/calibration/export` document. A virtual execution's export names it
+/// and says simulated, the same keys (and identity JSON) the viewer's
+/// `write_export` adds, so the file is labelled even if no client pinned it.
+/// A physical export is the calibration unchanged.
+fn export_document(app: &App) -> Value {
+    let calibration = app.state.lock().unwrap()["calibration"].clone();
+    if !app.execution.is_virtual_calibration() {
+        return calibration;
+    }
+    let mut doc = match calibration {
+        Value::Object(m) => m,
+        _ => serde_json::Map::new(),
+    };
+    doc.insert("execution".into(), serde_json::to_value(&app.execution).unwrap());
+    doc.insert("simulated".into(), json!(true));
+    Value::Object(doc)
+}
+/// Refusal of a command outside the virtual calibration scope: a business
+/// refusal (HTTP 400) that does not revoke the execution binding.
+fn out_of_scope(action: &str) -> String {
+    format!("Out of virtual calibration scope: {action} is refused on a virtual bench")
 }
 fn motion_request(r: &Request) -> R<MotionCommand> {
     match r.motion.as_str() {
@@ -257,9 +305,14 @@ impl App {
         match pin {
             Some((identity, generation)) => {
                 if !self.execution.is_virtual_calibration() || identity != &self.execution
-                    || *generation == 0 || !virtual_command_allowed(action)
+                    || *generation == 0
                     || self.generations.lock().unwrap().get(client) != Some(generation) {
-                    return Err(format!("{BINDING_REFUSED}: identity/generation mismatch or out-of-scope command"));
+                    return Err(format!("{BINDING_REFUSED}: identity/generation mismatch"));
+                }
+                // The binding holds; refusing this command leaves it intact
+                // (an ordinary 400, never the 409 that revokes the client's pin).
+                if !virtual_command_allowed(action) {
+                    return Err(out_of_scope(action));
                 }
             }
             None if self.execution.is_virtual_calibration() => return Err(format!("{BINDING_REFUSED}: Virtual execution identity required")),
@@ -309,27 +362,81 @@ fn save(path: &PathBuf, c: &Calibration) -> R<()> {
     fs::write(&tmp, serde_json::to_vec_pretty(c).unwrap()).map_err(|e| e.to_string())?;
     fs::rename(tmp, path).map_err(|e| e.to_string())
 }
+/// What a failed STOP torque-off on axis `id` means (see [`observe_stop`]).
+#[derive(Debug, PartialEq, Eq)]
+struct StopOutcome {
+    /// Turns may have been missed while unread: forget them.
+    reset_turns: bool,
+    /// Torque-off unverified: an error. Otherwise only a note.
+    failure: bool,
+    /// The bench is marked disconnected.
+    disconnect: bool,
+    /// Transport-class loss: a virtual bus is dropped (physical keeps it).
+    link_lost: bool,
+}
+fn stop_outcome(id: u8, disabled: bool, error: &str) -> StopOutcome {
+    let attempt = strip_stop_retry(error);
+    let lost = readback_lost(attempt);
+    // The one expected failure: an absent disabled motor never answers its
+    // readback. The FPGA (ID 254) must still answer, and a device, socket or
+    // corrupt-frame error on a disabled axis is as unverified as on any other.
+    // Zero reply bytes: a motor that sent part of a reply is present, and its
+    // corrupt answer is an unverified torque-off.
+    let absent = disabled && attempt.starts_with(&format!("ID {id}: serial reply timeout (0 reply bytes received)"));
+    StopOutcome { reset_turns: lost, failure: !absent, disconnect: lost && !absent, link_lost: transport_lost(error) && !absent }
+}
 /// Acts on a STOP epoch newer than `handled`: per-axis torque-off with
 /// stationary readback for every configured axis on an open bus (regardless of
 /// selection), then clears ownership. Returns the epoch now handled.
-fn observe_stop(app: &App, cfg: &Config, bus: &mut Option<CalibrationBus>, handled: u64, selected: &mut u8, verified: &mut bool, owner: &mut String) -> u64 {
+///
+/// Operator-disabled axes still get the torque-off, but in one attempt
+/// (`stop_single_attempt`) and with no readback expected: only that motor's
+/// reply timeout is a note; any other error (it answered but did not settle,
+/// a device error, a lost bus) is an unverified torque-off ([`stop_outcome`]).
+/// A lost readback forgets that axis's turn count; if its poses or alignment
+/// are still bound to the live multi-turn session, the session is re-stamped
+/// so they stop being usable (see [`usable`]). That includes a disabled axis:
+/// the shared re-stamp then invalidates every axis's multi-turn poses, which is
+/// protective since that axis's turns really were reset. A lost readback other
+/// than an absent disabled motor marks the bench disconnected.
+#[allow(clippy::too_many_arguments)]
+fn observe_stop(app: &App, cfg: &Config, cal: &Calibration, bus: &mut Option<CalibrationBus>, handled: u64, selected: &mut u8, verified: &mut bool, owner: &mut String) -> u64 {
     let epoch = *app.safety.lock().unwrap();
     if epoch == handled {
         return handled;
     }
+    let virtual_mode = app.execution.is_virtual_calibration();
+    let session = app.state.lock().unwrap()["coordinate_session"].as_str().map(str::to_string);
     let mut failures = Vec::new();
+    let mut notes = Vec::new();
     let mut link_lost = false;
+    let mut readback_gone = false;
+    let mut restamp = false;
     if let Some(b) = bus.as_mut() {
         for id in cfg.roles.keys() {
-            match b.stop(*id) {
+            let axis = cal.axes.get(id);
+            let disabled = axis.is_some_and(|a| a.disabled);
+            let result = if disabled { b.stop_single_attempt(*id) } else { b.stop(*id) };
+            match result {
                 Ok(t) => app.state.lock().unwrap()["samples"][id.to_string()] = json!(t),
                 Err(error) => {
-                    failures.push(format!("{}: {error}", cfg.roles[id]));
+                    let outcome = stop_outcome(*id, disabled, &error);
+                    // A motor that read back but never settled kept its turns.
+                    if outcome.reset_turns {
+                        b.reset_turn_tracking_for(*id);
+                        restamp |= axis.is_some_and(|a| bound_to_session(a, session.as_deref()));
+                    }
+                    readback_gone |= outcome.disconnect;
+                    if outcome.failure {
+                        failures.push(format!("{}: {error}", cfg.roles[id]));
+                    } else {
+                        notes.push(format!("disabled {} (ID {id}): no readback expected ({error})", cfg.roles[id]));
+                    }
                     // A hung or dead virtual link would block each remaining
                     // axis for its full retry budget (past the HTTP wait):
                     // stop here. Physical hardware attempts every axis and
-                    // keeps its bus and coordinate session.
-                    if transport_lost(&error) && app.execution.is_virtual_calibration() {
+                    // keeps its bus.
+                    if outcome.link_lost && virtual_mode {
                         link_lost = true;
                         break;
                     }
@@ -344,13 +451,21 @@ fn observe_stop(app: &App, cfg: &Config, bus: &mut Option<CalibrationBus>, handl
     *verified = false;
     owner.clear();
     let mut s = app.state.lock().unwrap();
+    if restamp {
+        s["coordinate_session"] = json!(stamp().to_string());
+    }
+    if readback_gone {
+        // A virtual execution is revoked only with its bus (lose_bus).
+        s["connected"] = json!(false);
+    }
     s["enabled_id"] = Value::Null;
     s["busy"] = json!(false);
+    let notes = if notes.is_empty() { String::new() } else { format!(" Note: {}.", notes.join("; ")) };
     if failures.is_empty() {
-        s["message"] = json!(STOP_LATCHED_MESSAGE);
+        s["message"] = json!(format!("{STOP_LATCHED_MESSAGE}{notes}"));
     } else {
         s["error"] = json!(failures.join("; "));
-        s["message"] = json!(format!("STOP latched; torque-off readback unverified ({}). Cut motor power. Records retained.", failures.join("; ")));
+        s["message"] = json!(format!("STOP latched; torque-off readback unverified ({}). Cut motor power. Records retained.{notes}", failures.join("; ")));
     }
     epoch
 }
@@ -407,14 +522,14 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config, initial_bus: Opti
     // including ones held by hold_others or left after inspect/clear.
     let mut handled_stop_epoch = *app.safety.lock().unwrap();
     loop {
-        handled_stop_epoch = observe_stop(&app, &cfg, &mut bus, handled_stop_epoch, &mut selected, &mut verified, &mut owner);
+        handled_stop_epoch = observe_stop(&app, &cfg, &cal, &mut bus, handled_stop_epoch, &mut selected, &mut verified, &mut owner);
         let job = match rx.recv_timeout(Duration::from_millis(150)) {
             Ok(job) => {
                 // A STOP that landed while waiting is acted on before this job.
-                handled_stop_epoch = observe_stop(&app, &cfg, &mut bus, handled_stop_epoch, &mut selected, &mut verified, &mut owner);
+                handled_stop_epoch = observe_stop(&app, &cfg, &cal, &mut bus, handled_stop_epoch, &mut selected, &mut verified, &mut owner);
                 // Refusals here never ran anything, so they skip the error
                 // path's stop/disown of a live session. Binding first (409; a
-                // generation bump already latched STOP), then expiry, then a
+                // generation bump already latched STOP) and virtual scope (400), then expiry, then a
                 // job captured before the latest STOP/latch.
                 let refusal = app.check_execution(&job.request.action, &job.client, job.execution.as_ref()).err()
                     .or_else(|| (job.queued.elapsed() + Duration::from_secs(1) >= HTTP_WAIT).then(|| "Command expired before execution; nothing ran".to_string()))
@@ -430,7 +545,9 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config, initial_bus: Opti
                 let mut idle_lost = false;
                 if idle_polling {
                     if let Some(b) = bus.as_mut() {
-                        for id in cfg.roles.keys() {
+                        // A disabled motor may be absent: no readback is expected
+                        // from it (as in `observe_stop`), so it is not polled.
+                        for id in cfg.roles.keys().filter(|id| !cal.axes.get(*id).is_some_and(|a| a.disabled)) {
                             match b.feedback(*id) {
                                 Ok(t) => {
                                     app.state.lock().unwrap()["samples"][id.to_string()] = json!(t)
@@ -485,7 +602,8 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config, initial_bus: Opti
                 selected = 0;
                 b.reconnect_stopped(3)?;
                 let mut samples = serde_json::Map::new();
-                for id in cfg.roles.keys() {
+                // Disabled motors may be absent; inspect reads the enabled ones.
+                for id in cfg.roles.keys().filter(|id| !cal.axes.get(*id).is_some_and(|a| a.disabled)) {
                     samples.insert(id.to_string(), json!(b.feedback(*id)?));
                 }
                 let mut s = app.state.lock().unwrap();
@@ -1079,7 +1197,11 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config, initial_bus: Opti
             owner.clear();
             let stopped = bus.as_mut().map(|b| b.stop(if selected == 0 { 3 } else { selected }));
             let link_lost = virtual_mode && matches!(&stopped, Some(Err(stop_error)) if transport_lost(stop_error));
-            let lost = link_lost || readback_lost(e);
+            // The command's text says readback was lost only for a link or
+            // frame fault (never device loss: its EIO may be a save failure);
+            // the stop's own error may also say the adapter is gone.
+            let lost = link_lost || link_readback_lost(strip_stop_retry(e))
+                || matches!(&stopped, Some(Err(stop_error)) if readback_lost(strip_stop_retry(stop_error)));
             if let Some(b) = bus.as_mut() {
                 if lost && selected != 0 {
                     b.reset_turn_tracking_for(selected);
@@ -1246,10 +1368,7 @@ fn handle(mut stream: TcpStream, app: Arc<App>) {
             return Ok(("application/json".into(), serde_json::to_vec(&gait_with_governor(&rel)?).unwrap()));
         }
         if method == "GET" && path == "/calibration/export" {
-            return Ok((
-                "application/json".into(),
-                serde_json::to_vec_pretty(&app.state.lock().unwrap()["calibration"]).unwrap(),
-            ));
+            return Ok(("application/json".into(), serde_json::to_vec_pretty(&export_document(&app)).unwrap()));
         }
         if method != "POST" || path != "/calibration/command" {
             return Err("Unknown endpoint".into());
@@ -1282,8 +1401,9 @@ fn handle(mut stream: TcpStream, app: Arc<App>) {
                 server_instance: h("x-calibration-server").ok_or(format!("{BINDING_REFUSED}: server identity required"))?.into(),
                 bench_instance: h("x-calibration-bench").ok_or(format!("{BINDING_REFUSED}: bench identity required"))?.into() };
             let generation = h("x-calibration-generation").ok_or(format!("{BINDING_REFUSED}: connection generation required"))?.parse::<u64>().map_err(|_| format!("{BINDING_REFUSED}: invalid connection generation"))?;
-            if identity != app.execution || !identity.is_virtual_calibration() || generation == 0 || !virtual_command_allowed(&request.action) {
-                return Err(format!("{BINDING_REFUSED}: identity mismatch or out-of-scope command"));
+            // Scope is checked after the binding, in check_execution (400).
+            if identity != app.execution || !identity.is_virtual_calibration() || generation == 0 {
+                return Err(format!("{BINDING_REFUSED}: identity mismatch"));
             }
             let mut generations = app.generations.lock().unwrap();
             let current = generations.entry(client.into()).or_insert(generation);
@@ -1382,8 +1502,9 @@ fn handle(mut stream: TcpStream, app: Arc<App>) {
     })();
     match result {
         Ok((kind, bytes)) => reply(&mut stream, 200, &kind, &bytes),
-        // Execution-binding refusals (identity, generation, scope, lost virtual
-        // bench) are 409 so clients revoke their pin; business refusals stay 400.
+        // Execution-binding refusals (identity, generation, lost virtual bench)
+        // are 409 so clients revoke their pin; business refusals, including an
+        // out-of-scope virtual command, stay 400.
         Err(e) => reply(
             &mut stream,
             if e.starts_with(BINDING_REFUSED) { BINDING_REFUSED_STATUS } else { 400 },
@@ -2263,7 +2384,12 @@ mod tests {
             let mut replaced = pin.clone(); replaced.server_instance = sim_runtime::hardware_client::new_client_id();
             for proposed in [&pin, &replaced] {
                 let answer = wire_post(app.clone(), &client, json!({"action":"jog","id":1,"delta":1}),Some((proposed,1)));
-                assert!(answer.starts_with("HTTP/1.1 409") && answer.contains(BINDING_REFUSED), "binding refusal, not a business 400");
+                if kind == "virtual_calibration" && proposed == &pin {
+                    // Valid binding, out-of-scope action: an ordinary refusal that keeps the pin.
+                    assert!(answer.starts_with("HTTP/1.1 400") && !answer.contains(BINDING_REFUSED) && answer.contains(&out_of_scope("jog")), "{answer}");
+                } else {
+                    assert!(answer.starts_with("HTTP/1.1 409") && answer.contains(BINDING_REFUSED), "binding refusal, not a business 400");
+                }
             }
             let answer = wire_post(app.clone(),&client,json!({"action":"select","id":1}),Some((&replaced,1)));
             assert!(answer.starts_with("HTTP/1.1 409") && answer.contains(BINDING_REFUSED));
@@ -2303,7 +2429,193 @@ mod tests {
     }
     fn config_fixture(output: PathBuf) -> Config {
         let mut cfg: Config = serde_json::from_str(include_str!("../../../examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/server.json")).unwrap();
+        // Never the real adapter path in server.json: nothing here may open hardware.
+        cfg.serial = "/nonexistent/test-serial".into();
         cfg.output = output; cfg.campaign_plan = None; cfg
+    }
+    #[test]
+    fn out_of_scope_with_a_valid_pin_is_a_400_that_never_runs_and_keeps_the_binding() {
+        let pin = identity();
+        let client = sim_runtime::hardware_client::new_client_id();
+        let (app, rx) = app_fixture(pin.clone());
+        for action in ["jog", "flip", "direction", "gait_start", "gait_update", "lab_step"] {
+            let answer = wire_post(app.clone(), &client, json!({"action":action,"id":1}), Some((&pin, 1)));
+            assert!(answer.starts_with("HTTP/1.1 400") && !answer.contains(BINDING_REFUSED) && answer.contains(&out_of_scope(action)), "{action}: {answer}");
+            assert!(rx.try_recv().is_err(), "{action} never reaches acquisition");
+            assert_eq!(app.check_execution(action, &client, Some(&(pin.clone(), 1))), Err(out_of_scope(action)));
+        }
+        assert_eq!(app.generations.lock().unwrap().get(&client), Some(&1), "the binding is unchanged");
+        assert!(app.check_execution("select", &client, Some(&(pin.clone(), 1))).is_ok(), "in-scope commands still pass");
+        // A wrong identity is a binding refusal whatever the action.
+        let mut replaced = pin.clone(); replaced.bench_instance = sim_runtime::hardware_client::new_client_id();
+        assert!(app.check_execution("jog", &client, Some(&(replaced, 1))).is_err_and(|e| e.starts_with(BINDING_REFUSED)));
+        assert!(app.check_execution("jog", &client, Some(&(pin, 2))).is_err_and(|e| e.starts_with(BINDING_REFUSED)), "generation mismatch first");
+    }
+    #[test]
+    fn session_binding_follows_the_live_coordinate_session() {
+        let mut a = AxisCalibration::default();
+        assert!(!bound_to_session(&a, Some("1")), "no multi-turn poses");
+        a.coordinate_session = Some("1".into());
+        assert!(bound_to_session(&a, Some("1")));
+        assert!(!bound_to_session(&a, Some("2")), "already unusable after a re-stamp; no second re-stamp");
+        assert!(usable(&AxisCalibration { lower: Some(5000), ..a.clone() }, Some("2")).lower.is_none(), "a re-stamp drops the stale poses");
+        a.coordinate_session = None;
+        a.reference_session = Some("2".into());
+        assert!(bound_to_session(&a, Some("2")));
+        assert!(!bound_to_session(&a, None));
+    }
+    #[test]
+    fn stop_outcome_separates_absent_disabled_motors_from_unverified_torque_off() {
+        const WRAP: &str = "Stop readback unverified after bounded retries: ";
+        let timeout = |id: u8| format!("ID {id}: serial reply timeout (0 reply bytes received)");
+        // (id, disabled, error, reset_turns, failure, disconnect, link_lost)
+        let cases = [
+            (1, false, format!("{WRAP}{}", timeout(1)), true, true, true, true),
+            (1, false, format!("{WRAP}Stop not verified: cut motor supply power"), false, true, false, false),
+            (1, false, format!("{WRAP}ID 1: device error 32"), false, true, false, false),
+            (1, false, format!("{WRAP}bad checksum"), true, true, true, true),
+            (1, false, "Device not configured (os error 6)".into(), true, true, true, false),
+            (1, false, "Broken pipe (os error 32)".into(), false, true, false, true),
+            // The one note: the disabled motor itself never answered.
+            (2, true, timeout(2), true, false, false, false),
+            (2, true, timeout(254), true, true, true, true),
+            (2, true, timeout(3), true, true, true, true),
+            (2, true, "Stop not verified: cut motor supply power".into(), false, true, false, false),
+            (2, true, "ID 2: device error 32".into(), false, true, false, false),
+            (2, true, "Broken pipe (os error 32)".into(), false, true, false, true),
+            (2, true, "Device not configured (os error 6)".into(), true, true, true, false),
+            (2, true, "Ambiguous half-turn encoder jump; reference must be re-established".into(), true, true, true, true),
+            (2, true, "STOP sent; receive stream fault prevents physical verification. Cut motor power, then reconnect.".into(), true, true, true, true),
+        ];
+        for (id, disabled, error, reset_turns, failure, disconnect, link_lost) in cases {
+            assert_eq!(stop_outcome(id, disabled, &error), StopOutcome { reset_turns, failure, disconnect, link_lost }, "{id} {disabled} {error}");
+        }
+    }
+    #[test]
+    fn device_loss_and_corrupt_frames_count_as_lost_readback() {
+        // Exact texts from servo_bus.rs, calibration.rs and actuator_sweep.rs.
+        let corrupt = ["bad framing or length", "foreign reply ID", "bad checksum", "unexpected payload width",
+            "Invalid bridge stream frame header or length", "Invalid bridge stream frame checksum",
+            "Ambiguous half-turn encoder jump; reference must be re-established", "ambiguous encoder wrap: observation gap exceeds speed bound"];
+        for e in corrupt {
+            assert!(readback_lost(e) && transport_lost(e), "{e}: turns reset, a virtual bus is dropped");
+        }
+        for e in ["Device not configured (os error 6)", "No such device or address (os error 6)", "Input/output error (os error 5)"] {
+            assert!(readback_lost(e) && !transport_lost(e), "{e}: turns reset; never drops a virtual socket");
+        }
+        for e in ["Unknown motor ID", "ID 1: device error 32", "No space left on device (os error 28)", "Permission denied (os error 13)"] {
+            assert!(!readback_lost(e), "{e}");
+        }
+    }
+    #[test]
+    fn virtual_export_is_labelled_and_physical_export_unchanged() {
+        let (app, _rx) = app_fixture(identity());
+        let doc = export_document(&app);
+        assert_eq!(doc["execution"], serde_json::to_value(&app.execution).unwrap(), "the identity the viewer pins");
+        assert_eq!(doc["simulated"], json!(true));
+        assert_eq!(doc["axes"], app.state.lock().unwrap()["calibration"]["axes"]);
+        let (app, _rx) = app_fixture(physical());
+        assert_eq!(export_document(&app), app.state.lock().unwrap()["calibration"], "no new keys on a physical export");
+    }
+    /// A bench on a Unix socket (never a serial device): completes the
+    /// handshake, then answers each request frame with `respond`.
+    fn fake_bench(respond: fn(&[u8]) -> Option<Vec<u8>>) -> (CalibrationBus, std::thread::JoinHandle<()>, PathBuf) {
+        use std::os::unix::net::UnixListener;
+        // Short absolute base: macOS $TMPDIR exceeds the 104-byte sun_path limit.
+        let dir = PathBuf::from(format!("/tmp/fb-{}-{}", std::process::id(), &sim_runtime::hardware_client::new_client_id()[..8]));
+        fs::create_dir_all(&dir).unwrap();
+        let socket = dir.join("bench.sock");
+        let listener = UnixListener::bind(&socket).unwrap();
+        let instance = sim_runtime::hardware_client::new_client_id();
+        let peer_instance = instance.clone();
+        let peer = std::thread::spawn(move || {
+            let mut peer = listener.accept().unwrap().0;
+            peer.set_read_timeout(Some(Duration::from_secs(10))).unwrap();
+            let mut greeting = [0; 25];
+            peer.read_exact(&mut greeting).unwrap();
+            assert_eq!(&greeting, b"HX-VIRTUAL-CALIBRATION/1\n");
+            writeln!(peer, "{}", json!({"schema_version":1,"kind":"virtual_calibration","bench_instance":peer_instance})).unwrap();
+            // Stay connected until the client closes, like the real bench.
+            let (mut pending, mut buf) = (Vec::new(), [0u8; 256]);
+            loop {
+                match peer.read(&mut buf) {
+                    Ok(0) | Err(_) => break,
+                    Ok(n) => pending.extend_from_slice(&buf[..n]),
+                }
+                while pending.len() >= 4 && pending.len() >= pending[3] as usize + 4 {
+                    let total = pending[3] as usize + 4;
+                    let frame: Vec<u8> = pending.drain(..total).collect();
+                    if let Some(reply) = respond(&frame) {
+                        if peer.write_all(&reply).is_err() { return; }
+                    }
+                }
+            }
+        });
+        let (bus, opened) = CalibrationBus::open_virtual(&socket, Some(&instance), &dir.join("serial.jsonl")).unwrap();
+        assert_eq!(opened, instance);
+        (bus, peer, dir)
+    }
+    /// The FPGA (ID 254) answers every request with a valid calibration
+    /// profile status; motors never answer.
+    fn fpga_reply(frame: &[u8]) -> Option<Vec<u8>> {
+        (frame[2] == 254).then(|| sim_runtime::acquisition::servo_bus::packet(254, 0, &[5, 0, 0, 0, 0, 0, 0, 0, 60, 90, 126, 208, 7]).unwrap())
+    }
+    fn run_observe_stop(app: &App, cfg: &Config, cal: &Calibration, bus: &mut Option<CalibrationBus>) {
+        let handled = *app.safety.lock().unwrap();
+        app.latch_stop();
+        let (mut selected, mut verified, mut owner) = (1u8, true, "owner".to_string());
+        assert_eq!(observe_stop(app, cfg, cal, bus, handled, &mut selected, &mut verified, &mut owner), handled + 1);
+        assert!(selected == 0 && !verified && owner.is_empty(), "STOP clears ownership");
+    }
+    #[test]
+    fn stop_readback_loss_restamps_a_bound_session_and_disabled_absent_motors_are_notes() {
+        // FPGA answers; no motor ever does. Physical execution, so the bus is
+        // kept and every axis is attempted (about 1.2 s of reply timeouts).
+        let (bus, peer, dir) = fake_bench(fpga_reply);
+        let (app, _rx) = app_fixture(physical());
+        { let mut s = app.state.lock().unwrap(); s["coordinate_session"] = json!("S"); s["connected"] = json!(true); }
+        let cfg = config_fixture(dir.clone());
+        let mut cal = Calibration::default();
+        cal.axes.insert(1, AxisCalibration { role: "knee".into(), lower: Some(100), coordinate_session: Some("S".into()), ..Default::default() });
+        for id in [2, 3] {
+            cal.axes.insert(id, AxisCalibration { role: cfg.roles[&id].clone(), disabled: true, ..Default::default() });
+        }
+        let mut bus = Some(bus);
+        run_observe_stop(&app, &cfg, &cal, &mut bus);
+        let s = app.state.lock().unwrap().clone();
+        assert!(bus.is_some(), "physical keeps its bus");
+        assert_ne!(s["coordinate_session"], json!("S"), "knee's turns were reset, so its bound poses are invalidated");
+        assert_eq!(s["connected"], json!(false));
+        let error = s["error"].as_str().unwrap();
+        assert!(error.starts_with("knee: Stop readback unverified after bounded retries: ID 1: serial reply timeout") && !error.contains("worm"), "{error}");
+        let message = s["message"].as_str().unwrap();
+        assert!(message.contains("torque-off readback unverified") && message.contains("Note: disabled worm (ID 2)")
+            && message.contains("disabled belt/hip (ID 3)"), "{message}");
+        drop(bus);
+        peer.join().unwrap();
+        fs::remove_dir_all(dir).ok();
+    }
+    #[test]
+    fn disabled_axis_that_answers_but_fails_to_stop_is_an_unverified_torque_off() {
+        // The FPGA answers; disabled motor 2 answers its readback with a device error.
+        let (bus, peer, dir) = fake_bench(|frame| fpga_reply(frame).or_else(||
+            (frame[2] == 2).then(|| sim_runtime::acquisition::servo_bus::packet(2, 0x20, &[0; 15]).unwrap())));
+        let (app, _rx) = app_fixture(physical());
+        { let mut s = app.state.lock().unwrap(); s["coordinate_session"] = json!("S"); s["connected"] = json!(true); }
+        let mut cfg = config_fixture(dir.clone());
+        cfg.roles.retain(|id, _| *id == 2);
+        let mut cal = Calibration::default();
+        cal.axes.insert(2, AxisCalibration { role: "worm".into(), disabled: true, coordinate_session: Some("S".into()), ..Default::default() });
+        let mut bus = Some(bus);
+        run_observe_stop(&app, &cfg, &cal, &mut bus);
+        let s = app.state.lock().unwrap().clone();
+        assert_eq!(s["error"], json!("worm: ID 2: device error 32"));
+        assert!(s["message"].as_str().unwrap().contains("torque-off readback unverified") && !s["message"].as_str().unwrap().contains("Note:"));
+        assert_eq!(s["coordinate_session"], json!("S"), "it answered, so its turns were kept");
+        assert_eq!(s["connected"], json!(true));
+        drop(bus);
+        peer.join().unwrap();
+        fs::remove_dir_all(dir).ok();
     }
     #[test]
     fn job_captured_before_a_stop_is_refused_and_never_runs() {

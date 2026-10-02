@@ -175,7 +175,8 @@ impl Plugin for CadCorePlugin {
     fn build(&self, app: &mut App) {
         crate::app::actions::register::<CadAction>(app);
         configure_sets(app);
-        app.init_resource::<CadActivePlane>()
+        app.init_resource::<crate::app::settings::SettingsOwner>()
+            .init_resource::<CadActivePlane>()
             .add_systems(
                 OnEnter(ModeScope::Cad),
                 (sync::enter, |mut commands: Commands| {

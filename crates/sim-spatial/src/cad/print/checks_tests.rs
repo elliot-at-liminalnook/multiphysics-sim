@@ -130,12 +130,12 @@ fn a_repeat_check_of_unchanged_nodes_sends_nothing() {
     let mut texts = vec!["1.2".to_string()];
     super::seed(wall, &doc, &Env::default(), &mut texts);
     assert_eq!(texts, ["1.2"]);
-    assert_eq!(checks::state_json(&doc)["threshold"], json!(1.2));
+    assert_eq!(checks::state_json(&doc, None)["threshold"], json!(1.2));
 
     let answer = checks::start_wall(&mut doc, 1.2, nodes.clone()).unwrap();
     assert_eq!((answer["cached"].clone(), answer["sent"].clone()), (json!(2), json!(0)));
     assert_eq!(doc.status, Some(Ok("2 thin region(s) under 1.2 mm".to_string())));
-    let state = checks::state_json(&doc);
+    let state = checks::state_json(&doc, None);
     assert_eq!(state["wall_check_running"], Value::Null);
     assert_eq!(state["wall_check"]["nodes"], json!([{"id": "b1", "name": "Bracket", "count": 2, "geometry": true}, {"id": "s1", "name": "Skin", "count": null, "geometry": false}]));
     assert_eq!((state["wall_check"]["shown"].clone(), state["wall_check"]["stale"].clone()), (json!(true), json!(false)));
@@ -147,7 +147,7 @@ fn a_repeat_check_of_unchanged_nodes_sends_nothing() {
     assert_eq!(doc.status, Some(Ok("No walls thinner than 0.8 mm".to_string())));
     let mut texts = vec!["1.2".to_string()];
     super::seed(wall, &doc, &Env::default(), &mut texts);
-    assert_eq!(texts, ["0.8"]);
+    assert_eq!(texts, ["1.2"], "raw job helper does not own durable defaults");
 }
 
 /// The points are drawn and clearable only at the shown revision.
@@ -165,11 +165,11 @@ fn points_show_at_their_revision_and_clear() {
     // A newer shown revision: kept, not drawn, said so.
     doc.doc_key = Some((None, 5));
     assert!(checks::drawn(&doc).is_none() && checks::controls(&doc).is_empty());
-    let state = checks::state_json(&doc);
+    let state = checks::state_json(&doc, None);
     assert_eq!((state["wall_check"]["stale"].clone(), state["wall_check"]["shown"].clone()), (json!(true), json!(false)));
     assert!(state["wall_check"]["note"].as_str().is_some_and(|n| n.contains("not drawn")));
     doc.doc_key = Some((None, 4));
-    let answer = checks::clear(&mut doc);
+    let answer = checks::clear(&mut doc, None);
     assert_eq!(answer["cleared"], json!(1));
     assert!(checks::drawn(&doc).is_none() && checks::controls(&doc).is_empty());
 }
@@ -208,7 +208,7 @@ fn results_land_for_this_generation_only() {
     world.run_system_once(checks::receive).unwrap();
     let doc = world.resource::<CadDocument>();
     assert_eq!(doc.status, Some(Err("Skin: invalid solid near (0.0, 0.0, 0.0)".to_string())));
-    let state = checks::state_json(doc);
+    let state = checks::state_json(doc, None);
     assert_eq!((state["validation"]["ok"].clone(), state["validation"]["lines"].clone(), state["validation"]["bodies"].clone()), (json!(false), json!(["Skin: invalid solid near (0.0, 0.0, 0.0)"]), json!(2)));
 }
 
@@ -249,4 +249,25 @@ fn overhang_shading_follows_the_build_plate() {
     assert!(d.build_plate && d.overhangs);
     apply_display(&mut d, &DisplayArgs { build_plate: Some(false), ..Default::default() }).unwrap();
     assert!(!d.build_plate && !d.overhangs);
+}
+
+/// An accepted cached launch is sufficient to remember its validated
+/// threshold; neither network nor disk work is needed by this fixture.
+#[test]
+fn accepted_cached_launch_updates_the_owner_and_refusal_does_not() {
+    use crate::app::actions::{Call, Origin, Replies};
+    let mut doc = document();
+    let mut settings = crate::app::settings::SettingsOwner::default();
+    doc.print.checks.cache.insert(cache_key(doc.generation, "b1", 4, 0.8), Some(Vec::new()));
+    let (mut continuation, mut replies) = (Value::Null, Replies::default());
+    let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
+    assert!(matches!(checks::send(&mut doc, &mut call, CheckPlan::Wall { threshold: 0.8, nodes: vec!["b1".into()] }, &mut settings), sim_api::Outcome::Done(Ok(_))));
+    assert_eq!(settings.cad.wall_threshold, Some(0.8));
+    assert_eq!(settings.revision, 1);
+    doc.client = None;
+    assert!(matches!(checks::send(&mut doc, &mut call, CheckPlan::Wall { threshold: 0.9, nodes: vec!["b1".into()] }, &mut settings), sim_api::Outcome::Done(Err(_))));
+    assert_eq!(settings.cad.wall_threshold, Some(0.8));
+    let mut texts = vec!["1.2".into()];
+    super::seed(entry("print.wall_check").unwrap(), &document(), &Env { defaults: Some(&settings.cad), ..Default::default() }, &mut texts);
+    assert_eq!(texts, ["0.8"]);
 }

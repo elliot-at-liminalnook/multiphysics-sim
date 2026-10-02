@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+bevy-settings = "=0.19.1"
 image = { version = "=0.25.10", default-features = false, features = ["png"] }
 sim-model-context = { path = "../sim-model-context" }
 sim-agent = { path = "../sim-agent" }

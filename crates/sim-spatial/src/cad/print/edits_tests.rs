@@ -78,24 +78,25 @@ fn clearance_calls_go_per_node_in_selection_order() {
     assert_eq!(edits::build(PrintCall::Clearance, ops::entry("tool.clearance").unwrap(), &none, &values("tool.clearance", json!({})), &doc, &Env::default()), Err("Select holes, bosses or faces to offset".to_string()));
 }
 
-fn seeded(doc: &CadDocument, id: &str) -> Vec<String> {
+fn seeded(doc: &CadDocument, defaults: &crate::app::settings::CadDefaults, id: &str) -> Vec<String> {
     let entry = ops::entry(id).unwrap();
     let mut texts: Vec<String> = entry.params.iter().map(|p| p.default.to_string()).collect();
-    edits::seed(entry, doc, &Env::default(), &mut texts);
+    edits::seed(entry, doc, &Env { defaults: Some(defaults), ..Default::default() }, &mut texts);
     texts
 }
 
 #[test]
 fn the_forms_open_with_the_remembered_values() {
     let mut doc = document();
+    let mut defaults = crate::app::settings::CadDefaults::default();
     // RoboCAD's first values: M3 clearance, 0, through; 0.2.
-    assert_eq!(seeded(&doc, "tool.fastener"), ["M3", "clearance", "0", "0", ""]);
-    assert_eq!(seeded(&doc, "tool.clearance"), ["0.2"]);
-    doc.print.edits.last_fastener = LastFastener { size: "M5".into(), kind: "insert".into(), extra: 0.1, depth: 12.5 };
-    doc.print.edits.last_clearance = -0.456;
+    assert_eq!(seeded(&doc, &defaults, "tool.fastener"), ["M3", "clearance", "0", "0", ""]);
+    assert_eq!(seeded(&doc, &defaults, "tool.clearance"), ["0.2"]);
+    defaults.fastener = LastFastener { size: "M5".into(), kind: "insert".into(), extra: 0.1, depth: 12.5 };
+    defaults.clearance = -0.456;
     // The spin boxes' two decimals; the point stays empty.
-    assert_eq!(seeded(&doc, "tool.fastener"), ["M5", "insert", "0.1", "12.5", ""]);
-    assert_eq!(seeded(&doc, "tool.clearance"), ["-0.46"]);
+    assert_eq!(seeded(&doc, &defaults, "tool.fastener"), ["M5", "insert", "0.1", "12.5", ""]);
+    assert_eq!(seeded(&doc, &defaults, "tool.clearance"), ["-0.46"]);
 }
 
 #[test]
@@ -104,16 +105,18 @@ fn a_refused_edit_sends_nothing_and_remembers_nothing() {
     doc.client = None;
     let (mut continuation, mut replies) = (Value::Null, Replies::default());
     let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
-    let out = edits::send(&mut doc, &mut call, EditPlan::Clearance { groups: vec![("b1".into(), vec![1])], amount: 0.4, revision: 4 });
+    let mut settings = crate::app::settings::SettingsOwner::default();
+    let out = edits::send(&mut doc, &mut call, EditPlan::Clearance { groups: vec![("b1".into(), vec![1])], amount: 0.4, revision: 4 }, &mut settings);
     assert!(matches!(&out, Outcome::Done(Err(e)) if e.starts_with("not connected to RoboCAD")));
-    assert_eq!(doc.print.edits.last_clearance, edits::FIRST_CLEARANCE);
+    assert_eq!(settings.cad.clearance, edits::FIRST_CLEARANCE);
     assert!(doc.edit.is_none());
     // A pick made before RoboCAD's document moved on is refused by name.
     let mut doc = document();
     let spec = FastenerSpec { size: "M4".into(), ..FastenerSpec::default() };
-    let out = edits::send(&mut doc, &mut call, EditPlan::Fastener { node: "b1".into(), face: 2, point: [0.0; 3], spec, revision: 3 });
+    let mut settings = crate::app::settings::SettingsOwner::default();
+    let out = edits::send(&mut doc, &mut call, EditPlan::Fastener { node: "b1".into(), face: 2, point: [0.0; 3], spec, revision: 3 }, &mut settings);
     assert!(matches!(&out, Outcome::Done(Err(e)) if e.contains("revision 3, now 4")));
-    assert_eq!(doc.print.edits.last_fastener, LastFastener::default());
+    assert_eq!(settings.cad.fastener, LastFastener::default());
 }
 
 fn active(doc: &mut CadDocument) {
@@ -170,7 +173,7 @@ fn apply(action: &CadAction, doc: &mut CadDocument, f: &mut Fixture) -> Outcome 
     let mut plane = crate::cad::sketch::CadActivePlane::default();
     let (mut continuation, mut replies) = (Value::Null, Replies::default());
     let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
-    let mut cx = Cx { doc, shared: f.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches: None, display: None, views: None, files: None, components: &mut crate::cad::components::ComponentsState::default(), composition: &mut crate::cad::composition::CadCompositionState::default(), experiments: &mut crate::cad::experiments::ExperimentsState::default(), review: &mut crate::cad::experiment_review::ReviewState::default(), motion: &mut crate::cad::motion::MotionState::default(), camera: Vec::new() };
+    let mut cx = Cx { settings: &mut crate::app::settings::SettingsOwner::default(), doc, shared: f.shared(), meshes: None, topology: None, view: None, plane: &mut plane, sketches: None, display: None, views: None, files: None, components: &mut crate::cad::components::ComponentsState::default(), composition: &mut crate::cad::composition::CadCompositionState::default(), experiments: &mut crate::cad::experiments::ExperimentsState::default(), review: &mut crate::cad::experiment_review::ReviewState::default(), motion: &mut crate::cad::motion::MotionState::default(), camera: Vec::new() };
     crate::cad::actions::handle(action, &mut call, &mut cx)
 }
 
@@ -192,7 +195,6 @@ fn a_click_pick_is_one_fastener_run_refused_with_nothing_sent() {
     assert_eq!(doc.ops.active, Some("tool.fastener"));
     assert_eq!(doc.print.edits.click, None);
     assert_eq!(doc.print.edits.last_pick, Some((face("b1", 2), 4)));
-    assert_eq!(doc.print.edits.last_fastener, LastFastener::default());
     assert!(doc.edit.is_none());
     // Without a click or a typed point, the face's point needs the topology.
     doc.client = Some(CadClient::new("http://127.0.0.1:8420").unwrap());
@@ -200,27 +202,61 @@ fn a_click_pick_is_one_fastener_run_refused_with_nothing_sent() {
     assert!(doc.edit.is_none());
 }
 
-/// A pick with the tool's form closed takes the remembered dialog values
-/// (RoboCAD's `last_fastener`), not the catalogue defaults: an unusable
-/// remembered size is what the run refuses.
+/// Malformed persisted choices are refused before publication, so forms
+/// cannot acquire an invalid size from preferences.
 #[test]
-fn a_pick_without_the_form_uses_the_remembered_values() {
-    let mut doc = document();
-    let mut f = Fixture::at(4);
-    active(&mut doc);
-    doc.ops.form = None;
-    doc.print.edits.last_fastener = LastFastener { size: "M9".into(), ..LastFastener::default() };
-    doc.print.edits.click = Some(FastenerClick { item: face("b1", 2), picked_at: 4, point: [1.0, 2.0, 3.0], snap: None });
-    let pick = CadAction::CadPrint(pick_args(Some(face("b1", 2)), Some(4)));
-    assert!(matches!(apply(&pick, &mut doc, &mut f), Outcome::Done(Err(e)) if e.contains("\"M9\" is not one of")));
-    assert!(doc.edit.is_none());
+fn a_malformed_fastener_default_is_not_published() {
+    let mut settings = crate::app::settings::SettingsOwner::default();
+    let before = settings.cad.clone();
+    let mut invalid = before.clone();
+    invalid.fastener.size = "M9".into();
+    assert!(settings.set_cad(invalid).is_err());
+    assert_eq!(settings.cad, before);
+    assert_eq!(settings.revision, 0);
 }
 
 /// The remembered clearance is said to be this window's.
 #[test]
 fn the_state_says_whose_clearance_is_remembered() {
     let doc = document();
-    let state = edits::state_json(&doc);
+    let state = edits::state_json(&doc, None);
     assert_eq!(state["last_clearance"], json!(edits::FIRST_CLEARANCE));
     assert_eq!(state["last_clearance_note"], json!(edits::LAST_CLEARANCE_NOTE));
+}
+
+/// Document replacement discards picks, not remembered tool defaults.
+#[test]
+fn replacement_seeds_forms_and_state_from_the_same_global_defaults() {
+    let mut settings = crate::app::settings::SettingsOwner::default();
+    let mut defaults = settings.cad.clone();
+    defaults.fastener = LastFastener { size: "M5".into(), kind: "insert".into(), extra: 0.2, depth: 12.0 };
+    defaults.clearance = -0.45;
+    defaults.wall_threshold = Some(0.8);
+    settings.set_cad(defaults).unwrap();
+    let replacement = document();
+    assert!(replacement.print.edits.click.is_none());
+    assert_eq!(seeded(&replacement, &settings.cad, "tool.fastener"), ["M5", "insert", "0.2", "12", ""]);
+    assert_eq!(seeded(&replacement, &settings.cad, "tool.clearance"), ["-0.45"]);
+    let state = super::state_json(&replacement, Some(&settings.cad));
+    assert_eq!(state["checks"]["threshold"], json!(0.8));
+    assert_eq!(state["edits"]["last_clearance"], json!(-0.45));
+    assert_eq!(state["edits"]["last_fastener"]["size"], "M5");
+}
+
+#[test]
+fn malformed_dimensions_do_not_change_defaults_or_revision() {
+    let mut settings = crate::app::settings::SettingsOwner::default();
+    let mutations: [fn(&mut crate::app::settings::CadDefaults); 4] = [
+        |d: &mut crate::app::settings::CadDefaults| d.wall_threshold = Some(0.0),
+        |d: &mut crate::app::settings::CadDefaults| d.fastener.extra = f64::NAN,
+        |d: &mut crate::app::settings::CadDefaults| d.fastener.depth = 501.0,
+        |d: &mut crate::app::settings::CadDefaults| d.clearance = 5.1,
+    ];
+    for mutate in mutations {
+        let mut invalid = settings.cad.clone();
+        mutate(&mut invalid);
+        assert!(settings.set_cad(invalid).is_err());
+        assert_eq!(settings.cad, crate::app::settings::CadDefaults::default());
+        assert_eq!(settings.revision, 0);
+    }
 }

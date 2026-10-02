@@ -16,7 +16,7 @@
 //!   each its own RoboCAD undo step "Clearance"; the amount is remembered
 //!   once the run starts, as RoboCAD's `ops.last_clearance` is (0.2 at first,
 //!   commands.py:271), and presets the next form as its 2-decimal spin box
-//!   shows it. The memory is this window's: RoboCAD's own stays in the
+//!   shows it. The memory belongs to global viewer preferences: RoboCAD's own stays in the
 //!   service and is not served, so the state says so ([`LAST_CLEARANCE_NOTE`]).
 //!
 //! Each commit goes through `actions::edit_at`: refused by name with
@@ -35,28 +35,16 @@ use sim_api::Outcome;
 use sim_runtime::cad_client::{FastenerSpec, SelectionItem};
 
 /// RoboCAD's first `ops.last_clearance` (commands.py:271).
+#[cfg(test)]
 pub(crate) const FIRST_CLEARANCE: f64 = 0.2;
 
 /// Whose remembered clearance `last_clearance` is: RoboCAD keeps its own
 /// `ops.last_clearance` in the service and does not serve it.
-pub(crate) const LAST_CLEARANCE_NOTE: &str = "the clearance this window last sent (0.2 at first); RoboCAD's own last clearance stays in the service and is not read, so a run from RoboCAD's desktop does not change it";
+pub(crate) const LAST_CLEARANCE_NOTE: &str = "the viewer's persisted last accepted clearance (0.2 at first); RoboCAD's own last clearance stays in the service and is not read, so a run from RoboCAD's desktop does not change it";
 
 /// The Fastener hole dialog's last values (RoboCAD's `last_fastener`,
 /// ui/app.py:87 and :893: depth 0 is "through").
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct LastFastener {
-    pub size: String,
-    pub kind: String,
-    /// Extra clearance (mm).
-    pub extra: f64,
-    /// Depth (mm; 0: through).
-    pub depth: f64,
-}
-impl Default for LastFastener {
-    fn default() -> Self {
-        LastFastener { size: "M3".into(), kind: "clearance".into(), extra: 0.0, depth: 0.0 }
-    }
-}
+pub(crate) use crate::app::settings::FastenerDefaults as LastFastener;
 
 /// A 3D click of the fastener tool, noted for the pick it writes.
 #[derive(Clone, Debug, PartialEq)]
@@ -72,10 +60,6 @@ pub(crate) struct FastenerClick {
 /// The edits' state on the document (reset with it).
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct EditsState {
-    pub last_fastener: LastFastener,
-    /// The clearance this window last sent: our own memory, not RoboCAD's
-    /// `ops.last_clearance` (kept in the service, not served).
-    pub last_clearance: f64,
     /// The click the next pick is for (taken by the pick).
     pub click: Option<FastenerClick>,
     /// The last pick applied: the face and the revision it was read at.
@@ -83,7 +67,7 @@ pub(crate) struct EditsState {
 }
 impl Default for EditsState {
     fn default() -> Self {
-        EditsState { last_fastener: LastFastener::default(), last_clearance: FIRST_CLEARANCE, click: None, last_pick: None }
+        EditsState { click: None, last_pick: None }
     }
 }
 impl EditsState {
@@ -144,20 +128,26 @@ pub(super) fn build(call: PrintCall, entry: &OpEntry, r: &Resolved, values: &Map
 }
 
 /// `print::send` for an edit: one edit job (see the module doc).
-pub(super) fn send(doc: &mut CadDocument, call: &mut Call, plan: EditPlan) -> Outcome {
+pub(super) fn send(doc: &mut CadDocument, call: &mut Call, plan: EditPlan, settings: &mut crate::app::settings::SettingsOwner) -> Outcome {
     match plan {
         EditPlan::Fastener { node, face, point, spec, revision } => {
             let label = spec.label();
             let message = format!("{label} hole in {}", doc.node_name(&node));
             let remembered = LastFastener { size: spec.size.clone(), kind: spec.kind.clone(), extra: spec.extra_clearance, depth: spec.depth.unwrap_or(0.0) };
+            let mut defaults = settings.cad.clone();
+            defaults.fastener = remembered;
+            if let Err(e) = defaults.validate() { return Outcome::Done(Err(e)); }
             let outcome = edit_at(doc, call, Some(revision), label, move |c| c.fastener_hole(&node, face, point, &spec).map(|r| EditDone { message, result: value(&r) }));
             if !matches!(outcome, Outcome::Done(Err(_))) {
-                doc.print.edits.last_fastener = remembered;
-                doc.touch();
+                let _ = settings.set_cad(defaults);
+                settings.claim_cad("fastener");
             }
             outcome
         }
         EditPlan::Clearance { groups, amount, revision } => {
+            let mut defaults = settings.cad.clone();
+            defaults.clearance = amount;
+            if let Err(e) = defaults.validate() { return Outcome::Done(Err(e)); }
             let names: Vec<String> = groups.iter().map(|(n, _)| doc.node_name(n)).collect();
             let n = groups.len();
             let faces: usize = groups.iter().map(|(_, f)| f.len()).sum();
@@ -182,8 +172,8 @@ pub(super) fn send(doc: &mut CadDocument, call: &mut Call, plan: EditPlan) -> Ou
                 Ok(EditDone { message, result })
             });
             if !matches!(outcome, Outcome::Done(Err(_))) {
-                doc.print.edits.last_clearance = amount;
-                doc.touch();
+                let _ = settings.set_cad(defaults);
+                settings.claim_cad("clearance");
             }
             outcome
         }
@@ -205,29 +195,32 @@ fn put(entry: &OpEntry, texts: &mut [String], name: &str, text: String) {
 
 /// A newly opened Fastener hole or Clearance form's presets: the
 /// remembered values (the point stays empty: a click gives it).
-pub(super) fn seed(entry: &OpEntry, doc: &CadDocument, _env: &Env, texts: &mut [String]) {
-    let e = &doc.print.edits;
+pub(super) fn seed(entry: &OpEntry, _doc: &CadDocument, env: &Env, texts: &mut [String]) {
+    let initial = crate::app::settings::CadDefaults::default();
+    let e = env.defaults.unwrap_or(&initial);
     match entry.id {
         "tool.fastener" => {
-            let f = &e.last_fastener;
+            let f = &e.fastener;
             put(entry, texts, "size", f.size.clone());
             put(entry, texts, "kind", f.kind.clone());
             put(entry, texts, "extra", fixed(f.extra, 2));
             put(entry, texts, "depth", fixed(f.depth, 2));
         }
-        "tool.clearance" => put(entry, texts, "amount", fixed(e.last_clearance, 2)),
+        "tool.clearance" => put(entry, texts, "amount", fixed(e.clearance, 2)),
         _ => {}
     }
 }
 
 /// `cad_state.print.edits`.
-pub(super) fn state_json(doc: &CadDocument) -> Value {
+pub(super) fn state_json(doc: &CadDocument, defaults: Option<&crate::app::settings::CadDefaults>) -> Value {
     let e = &doc.print.edits;
-    let f = &e.last_fastener;
+    let initial = crate::app::settings::CadDefaults::default();
+    let defaults = defaults.unwrap_or(&initial);
+    let f = &defaults.fastener;
     json!({
         "fastener_active": super::fastener_tool::active_tool(doc).is_some(),
         "last_fastener": {"size": f.size, "kind": f.kind, "extra": f.extra, "depth": f.depth},
-        "last_clearance": e.last_clearance,
+        "last_clearance": defaults.clearance,
         "last_clearance_note": LAST_CLEARANCE_NOTE,
         "last_pick": e.last_pick.as_ref().map(|(item, revision)| json!({"item": item, "revision": revision})),
         "click_pending": e.click.as_ref().map(|c| json!({"item": c.item, "picked_at": c.picked_at})),

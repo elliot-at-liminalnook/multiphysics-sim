@@ -346,7 +346,7 @@ pub(super) fn pointer(
         s.cursor = snapped;
     }
     let selection = selection.items();
-    let env = Env { selection: &selection, topology: topology.as_deref(), view: Some(&*view), plane: plane.as_deref(), sketches: sketches.as_deref() };
+    let env = Env { defaults: None, selection: &selection, topology: topology.as_deref(), view: Some(&*view), plane: plane.as_deref(), sketches: sketches.as_deref() };
     let mut step = Step::Added;
     let mut error: Option<String> = None;
     if press_at.is_some() && !double {

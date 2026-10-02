@@ -32,6 +32,7 @@
 pub mod actions;
 pub mod picker;
 pub mod recent;
+pub mod settings;
 pub mod route;
 pub mod switch;
 pub mod switcher;
@@ -379,6 +380,7 @@ impl Plugin for CorePlugin {
         .init_resource::<crate::rest::Occlusion>()
         .add_systems(PreUpdate, crate::rest::track_occlusion)
         .add_plugins(crate::ui_kit::UiKitPlugin)
+        .add_plugins(settings::SettingsPlugin)
         .add_systems(Startup, (crate::rest::wake_on_request, switcher::spawn_switcher))
         .add_systems(Update, switcher::switcher_clicks.in_set(ViewerSet::Input))
         .add_systems(Update, (switcher::update_switcher, switcher::publish).in_set(ViewerSet::Present))

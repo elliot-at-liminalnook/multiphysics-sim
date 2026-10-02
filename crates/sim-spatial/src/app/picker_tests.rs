@@ -2,15 +2,15 @@
 //! (MinimalPlugins + StatesPlugin, as `app::tests`): a choice is the switch
 //! `viewer_mode` builds, a click to a mode with no document opens the
 //! picker while REST is refused, the refusals name no REST payload, the
-//! recent file round-trips atomically, and discovery walks a temp tree.
+//! recent values round-trip, and discovery walks an isolated temp tree.
 use super::actions::{Act, Origin, Replies, Reply};
 use super::picker::{Choice, Picker, Section, Sources, discover};
-use super::recent::{self, KEEP, Recents};
+use super::recent::{KEEP, Recents};
 use super::switch::{Document, ModeSwitch, Switcher, WindowAction};
 use super::*;
 use bevy::state::app::StatesPlugin;
 use serde_json::{Map, Value, json};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 
 fn args(v: Value) -> Map<String, Value> {
@@ -202,77 +202,27 @@ fn refusals_name_no_rest_payload() {
     assert!(app.world().resource::<Picker>().open.is_none(), "REST never opens the picker");
 }
 
-fn tmp_files(dir: &Path) -> Vec<String> {
-    std::fs::read_dir(dir).unwrap().filter_map(Result::ok).map(|e| e.file_name().to_string_lossy().into_owned()).filter(|n| n.ends_with(".tmp")).collect()
-}
-
-/// (iv) The recent file: a round trip, newest first, deduplicated and kept
-/// to `KEEP`; another version reads as empty; saves leave no temporary
-/// files; a failed save leaves what was there.
+/// Value semantics remain independent of the owner's persistence seam.
+/// Migration, malformed input and publication failures live in settings fixtures.
 #[test]
-fn recents_round_trip_dedupe_and_save_atomically() {
-    let dir = temp("recents");
-    let file = dir.join(recent::FILE_NAME);
-    assert_eq!(recent::load(&file), Recents::default(), "a missing file reads as empty");
-    let a = Document::Path(dir.join("a.simrobot.json"));
-    recent::record_in(&file, ViewerMode::Robot, &a, 1).unwrap();
-    recent::record_in(&file, ViewerMode::Robot, &Document::Preset("p".into()), 2).unwrap();
-    recent::record_in(&file, ViewerMode::Robot, &a, 3).unwrap();
-    recent::record_in(&file, ViewerMode::Cad, &Document::Url("http://127.0.0.1:8420".into()), 4).unwrap();
-    let loaded = recent::load(&file);
-    assert_eq!(loaded.list(ViewerMode::Robot), vec![a.clone(), Document::Preset("p".into())], "newest first, once");
+fn recents_round_trip_dedupe_and_limit() {
+    let mut recents = Recents::default();
+    let a = Document::Path("/isolated/a.simrobot.json".into());
+    recents.record(ViewerMode::Robot, &a, 1);
+    recents.record(ViewerMode::Robot, &Document::Preset("p".into()), 2);
+    recents.record(ViewerMode::Robot, &a, 3);
+    recents.record(ViewerMode::Cad, &Document::Url("http://127.0.0.1:8420".into()), 4);
+    let loaded: Recents = serde_json::from_slice(&serde_json::to_vec(&recents).unwrap()).unwrap();
+    assert_eq!(loaded.list(ViewerMode::Robot), vec![a, Document::Preset("p".into())]);
+    assert_eq!(loaded.modes["robot"][0].opened, 3);
     assert_eq!(loaded.list(ViewerMode::Cad), vec![Document::Url("http://127.0.0.1:8420".into())]);
     assert!(loaded.list(ViewerMode::Build).is_empty());
     for i in 0..KEEP + 2 {
-        recent::record_in(&file, ViewerMode::Build, &Document::Preset(format!("s{i}")), 10 + i as u64).unwrap();
+        recents.record(ViewerMode::Build, &Document::Preset(format!("s{i}")), 10 + i as u64);
     }
-    let build = recent::load(&file).list(ViewerMode::Build);
+    let build = recents.list(ViewerMode::Build);
     assert_eq!(build.len(), KEEP);
     assert_eq!(build[0], Document::Preset(format!("s{}", KEEP + 1)));
-    assert!(tmp_files(&dir).is_empty(), "saves leave no temporary files: {:?}", tmp_files(&dir));
-
-    // A newer version's file reads as empty.
-    std::fs::write(&file, r#"{"version": 99, "modes": {"robot": [{"document": {"preset": "p"}, "opened": 1}]}}"#).unwrap();
-    assert_eq!(recent::load(&file), Recents::default());
-    std::fs::write(&file, "not json").unwrap();
-    assert_eq!(recent::load(&file), Recents::default());
-
-    // A save that cannot happen leaves the existing file whole and no temporary file.
-    let blocker = dir.join("blocker");
-    std::fs::write(&blocker, "keep").unwrap();
-    assert!(recent::save(&blocker.join(recent::FILE_NAME), &loaded).is_err(), "the parent is a regular file");
-    assert_eq!(std::fs::read_to_string(&blocker).unwrap(), "keep");
-    // The rename fails (a directory is in the way): its temporary file is removed.
-    let occupied = dir.join("occupied");
-    std::fs::create_dir_all(occupied.join("inner")).unwrap();
-    assert!(recent::save(&occupied, &loaded).is_err());
-    assert!(occupied.join("inner").is_dir());
-    assert!(tmp_files(&dir).is_empty(), "a failed save removes its temporary file: {:?}", tmp_files(&dir));
-    std::fs::remove_dir_all(&dir).ok();
-}
-
-/// A record never erases a newer viewer's file: it is left byte for byte
-/// and the record fails naming why; an older version's file is replaced.
-#[test]
-fn a_record_leaves_a_newer_versions_file_alone() {
-    let dir = temp("recents-newer");
-    let file = dir.join(recent::FILE_NAME);
-    let newer = format!(r#"{{"version": {}, "modes": {{"robot": [{{"document": {{"future": 1}}, "opened": 1}}]}}}}"#, recent::VERSION + 1);
-    std::fs::write(&file, &newer).unwrap();
-    let e = recent::record_in(&file, ViewerMode::Robot, &Document::Preset("p".into()), 5).unwrap_err();
-    assert!(e.contains("newer"), "{e}");
-    assert_eq!(std::fs::read(&file).unwrap(), newer.as_bytes(), "the newer file is unchanged");
-    assert_eq!(recent::load(&file), Recents::default(), "the picker reads it as empty");
-
-    // An older version's file (and one that is not JSON) is replaced.
-    std::fs::write(&file, r#"{"version": 0, "modes": {}}"#).unwrap();
-    recent::record_in(&file, ViewerMode::Robot, &Document::Preset("p".into()), 6).unwrap();
-    assert_eq!(recent::load(&file).list(ViewerMode::Robot), vec![Document::Preset("p".into())]);
-    std::fs::write(&file, "not json").unwrap();
-    recent::record_in(&file, ViewerMode::Robot, &Document::Preset("q".into()), 7).unwrap();
-    assert_eq!(recent::load(&file).list(ViewerMode::Robot), vec![Document::Preset("q".into())]);
-    assert!(recent::file().is_none(), "the lib tests never touch the user's own file");
-    std::fs::remove_dir_all(&dir).ok();
 }
 
 fn section<'a>(sources: &'a Sources, title: &str) -> &'a Section {
@@ -290,7 +240,7 @@ fn discovery_finds_examples_and_skips_runs() {
         std::fs::write(path, text).unwrap();
     }
     let go = AtomicBool::new(false);
-    let robot = discover(ViewerMode::Robot, Some(root.clone()), None, None, &go);
+    let robot = discover(ViewerMode::Robot, Some(root.clone()), None, Recents::default(), true, &go);
     let titles: Vec<&str> = robot.sections.iter().map(|s| s.title.as_str()).collect();
     assert_eq!(titles, ["Recent", "Presets", "Examples"]);
     assert!(section(&robot, "Recent").choices.is_empty() && section(&robot, "Presets").choices.is_empty());
@@ -300,35 +250,35 @@ fn discovery_finds_examples_and_skips_runs() {
     assert_eq!(examples[0].document, Document::Path(root.join("examples/a/x.simrobot.json")));
     assert_eq!(robot.start_dir, Some(format!("{}/", root.join("examples").display())));
 
-    let place = discover(ViewerMode::Place, Some(root.clone()), None, None, &go);
+    let place = discover(ViewerMode::Place, Some(root.clone()), None, Recents::default(), true, &go);
     let places = &section(&place, "Examples").choices;
     assert_eq!(places.iter().map(|c| c.label.as_str()).collect::<Vec<_>>(), ["examples/b/place"]);
     assert_eq!(places[0].document, Document::Path(root.join("examples/b/place")));
 
-    let lessons = discover(ViewerMode::Lessons, Some(root.clone()), None, None, &go);
+    let lessons = discover(ViewerMode::Lessons, Some(root.clone()), None, Recents::default(), true, &go);
     assert_eq!(section(&lessons, "Lesson folders").choices.iter().map(|c| c.label.as_str()).collect::<Vec<_>>(), ["lessons"]);
 
-    let cad = discover(ViewerMode::Cad, Some(root.clone()), None, None, &go);
+    let cad = discover(ViewerMode::Cad, Some(root.clone()), None, Recents::default(), true, &go);
     assert_eq!(section(&cad, "RoboCAD service").choices[0].document, Document::Url(sim_runtime::cad_client::DEFAULT_URL.into()));
     assert!(section(&cad, "Examples").choices.is_empty() && !section(&cad, "Examples").empty.is_empty());
 
     // Recent documents: a path that no longer exists is shown, disabled.
-    let recents = root.join("config").join(recent::FILE_NAME);
+    let mut recents = Recents::default();
     let gone = root.join("examples/gone.simrobot.json");
-    recent::record_in(&recents, ViewerMode::Robot, &Document::Path(gone.clone()), 1).unwrap();
-    recent::record_in(&recents, ViewerMode::Robot, &Document::Path(root.join("examples/a/x.simrobot.json")), 2).unwrap();
-    let robot = discover(ViewerMode::Robot, Some(root.clone()), None, Some(recents), &go);
+    recents.record(ViewerMode::Robot, &Document::Path(gone.clone()), 1);
+    recents.record(ViewerMode::Robot, &Document::Path(root.join("examples/a/x.simrobot.json")), 2);
+    let robot = discover(ViewerMode::Robot, Some(root.clone()), None, recents, true, &go);
     let recent = &section(&robot, "Recent").choices;
     assert_eq!(recent.len(), 2);
     assert!(recent[0].enabled && recent[0].label == "examples/a/x.simrobot.json");
     assert!(!recent[1].enabled && recent[1].detail == "missing" && recent[1].document == Document::Path(gone));
 
     // No workspace root: the sections say so instead of listing nothing silently.
-    let none = discover(ViewerMode::Build, None, None, None, &go);
+    let none = discover(ViewerMode::Build, None, None, Recents::default(), true, &go);
     assert!(section(&none, "Examples").empty.contains("No workspace root"));
 
     // A cancelled discovery stops its walk and says the section was cut.
-    let cancelled = discover(ViewerMode::Robot, Some(root.clone()), None, None, &AtomicBool::new(true));
+    let cancelled = discover(ViewerMode::Robot, Some(root.clone()), None, Recents::default(), true, &AtomicBool::new(true));
     let cut = cancelled.sections.iter().find(|s| s.title.starts_with("Examples")).unwrap();
     assert_eq!(cut.title, "Examples (the search stopped early)");
     assert!(cut.choices.is_empty() && cut.empty.contains("first"), "{cut:?}");

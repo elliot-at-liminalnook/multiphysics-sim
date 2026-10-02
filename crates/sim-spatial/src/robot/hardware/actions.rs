@@ -385,17 +385,7 @@ use sim_api::Outcome;
 use sim_runtime::hardware_client::ServerKind;
 use std::time::Instant;
 
-/// The operator's saved panel preferences (drive mode, hold-others, mirror
-/// and live sync bindings), read once from `settings::path()` when the app
-/// is built, before the event loop starts, so entering Robot mode never
-/// reads a file on the UI thread. [`enter`] clones them into
-/// [`Hardware::new`]; [`leave`] writes the panel's `Hardware::settings`
-/// back, so the next entry sees what was changed (each change is also
-/// saved to the file off the UI thread by `Settings::save`).
-#[derive(Resource, Clone, Debug, Default)]
-pub(crate) struct Preferences(pub super::settings::Settings);
-
-/// Registers the action type, the saved preferences ([`Preferences`]), the
+/// Registers the action type and the shared-owner preference adapter, the
 /// lifecycle (OnEnter/OnExit of the Robot scope) and the systems: input
 /// mappings in Input's window step (after the REST poll), [`apply`] in Actions (after
 /// robot mode's own, `RobotSet::Actions`, which passes `system_ui` activations on), the job
@@ -403,7 +393,6 @@ pub(crate) struct Preferences(pub super::settings::Settings);
 /// exit systems, in every mode (it needs only the `Hardware` resource).
 pub(crate) fn build(app: &mut App) {
     actions::register::<HardwareAction>(app);
-    app.insert_resource(Preferences(super::settings::load()));
     app.add_systems(OnEnter(ModeScope::Robot), enter).add_systems(OnExit(ModeScope::Robot), leave).add_systems(
         Update,
         (
@@ -447,12 +436,13 @@ fn stop_on_exit(mut exits: MessageReader<bevy::app::AppExit>, hw: Option<ResMut<
 }
 
 /// OnEnter(Robot): the panel's state from the launch's servers and the
-/// saved preferences ([`Preferences`], already in memory: no file read
+/// shared owner preferences (already in memory: no file read
 /// here); with `--hardware` the panel is open and connects (status only:
 /// nothing moves until the operator selects a motor).
-fn enter(mut commands: Commands, documents: Option<Res<crate::app::switch::Documents>>, preferences: Option<Res<Preferences>>) {
+fn enter(mut commands: Commands, documents: Option<Res<crate::app::switch::Documents>>, preferences: Res<crate::app::settings::SettingsOwner>) {
     let config = documents.map(|d| d.hardware.clone()).unwrap_or_default();
-    let mut hw = Hardware::new(config, preferences.map(|p| p.0.clone()).unwrap_or_default());
+    let mut hw = Hardware::new(config, preferences.hardware.clone());
+    hw.preferences_loaded = preferences.ready;
     if hw.config.calibration.is_some() {
         connect(&mut hw);
     }
@@ -460,16 +450,13 @@ fn enter(mut commands: Commands, documents: Option<Res<crate::app::switch::Docum
 }
 
 /// OnExit(Robot): STOP on the immediate path first, the live sync stopped,
-/// the preferences kept for the next entry ([`Preferences`]), then the state
+/// the shared owner already retains accepted preferences, then the state
 /// is dropped off the UI thread (the link thread sends STOP again as its
 /// channel closes; the STOP job completes on its own).
 fn leave(world: &mut World) {
     let Some(mut hw) = world.remove_resource::<Hardware>() else { return };
     stop_immediate(&mut hw);
     hw.sync.stop_ours("Robot mode was left");
-    if let Some(mut preferences) = world.get_resource_mut::<Preferences>() {
-        preferences.0 = hw.settings.clone();
-    }
     crate::jobs::drop_off_thread(hw, "the hardware panel");
 }
 
@@ -521,11 +508,15 @@ pub(crate) fn apply(
     hw: Option<ResMut<Hardware>>,
     view: Option<Res<crate::robot::RobotView>>,
     mut robot_out: MessageWriter<Act<crate::robot::RobotAction>>,
+    mut preferences: ResMut<crate::app::settings::SettingsOwner>,
 ) {
     let Some(mut hw) = hw else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("the Leg calibration panel is not open in this mode".into())));
         return;
     };
+    if preferences.ready && !hw.preferences_loaded {
+        seed_preferences(&mut hw, &preferences.hardware);
+    }
     let now = Instant::now();
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
         let hw = &mut *hw;
@@ -538,6 +529,21 @@ pub(crate) fn apply(
                 robot_out.write(Act::quiet(a));
             })
         };
+        // Every accepted choice claims its field even when its value equals
+        // the startup default. Untouched persisted choices can still load.
+        let accepted = !matches!(&answer, Answer::Done(Err(_)));
+        let paths = preference_paths(action);
+        if accepted && !paths.is_empty() {
+            preferences.set_hardware_claimed(hw.settings.clone(), paths);
+            // A partial pre-ready edit must still receive the owner's merged
+            // publication on the next frame after readiness.
+            hw.preferences_loaded = preferences.ready;
+        } else if accepted && !preferences.ready && action.starts_motion() {
+            // An active interaction conservatively owns the entire current
+            // snapshot, protecting alignment and drive choices underneath it.
+            preferences.set_hardware_claimed(hw.settings.clone(), vec![String::new()]);
+            hw.preferences_loaded = true;
+        }
         match (answer, call.origin) {
             (Answer::Pending, _) => Outcome::Pending,
             (Answer::Done(result), Origin::Rest(_)) => Outcome::Done(result.map(|v| v.unwrap_or_else(|| super::view::status_json(hw, now)))),
@@ -552,6 +558,41 @@ pub(crate) fn apply(
             (Answer::Done(_), _) => Outcome::Done(Ok(Value::Null)),
         }
     });
+}
+
+/// Seed only remembered choices. No link command, connection, controller,
+/// operator confirmation or session activation is produced by publication.
+fn seed_preferences(hw: &mut Hardware, settings: &super::settings::Settings) {
+    if let Some(mode) = settings.calibration.drive_mode {
+        hw.form.inputs.drive_mode = mode;
+    }
+    if let Some(on) = settings.calibration.hold_others {
+        hw.form.inputs.hold_others = on;
+    }
+    hw.mirror.load_preferences(&settings.mirror);
+    hw.sync.load_preferences(&settings.sync);
+    hw.settings = settings.clone();
+    hw.preferences_loaded = true;
+    hw.ui_revision += 1;
+}
+
+fn preference_paths(action: &HardwareAction) -> Vec<String> {
+    use HardwareAction as H;
+    let paths: Vec<String> = match action {
+        H::DriveMode { .. } => vec!["/calibration/drive_mode".into()],
+        H::HoldOthers { .. } => vec!["/calibration/hold_others".into()],
+        H::MirrorEnabled { .. } => vec!["/mirror/enabled".into()],
+        H::MirrorLeg { .. } => vec!["/mirror/leg".into()],
+        H::MirrorJoint { id, .. } => vec![format!("/mirror/bindings/{id}/joint")],
+        H::MirrorPolarity { id, .. } => vec![format!("/mirror/bindings/{id}/polarity")],
+        H::MirrorAlign { id, .. } => vec![format!("/mirror/bindings/{id}/align")],
+        H::SyncLeg { .. } => vec!["/sync/leg".into(), "/sync/bindings".into()],
+        H::SyncMotor { .. } | H::SyncPolarity { .. } => vec!["/sync/bindings".into()],
+        H::SyncScale { .. } => vec!["/sync/amplitude".into()],
+        H::SyncStart => vec!["/sync".into()],
+        _ => Vec::new(),
+    };
+    paths
 }
 
 /// JobResults: the connect job (a new link, sent the form's inputs), STOP
@@ -624,3 +665,6 @@ fn poll_jobs(hw: Option<ResMut<Hardware>>) {
         inputs_changed(hw);
     }
 }
+
+#[cfg(test)]
+mod tests;

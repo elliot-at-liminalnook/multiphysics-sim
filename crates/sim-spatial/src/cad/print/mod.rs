@@ -71,9 +71,9 @@ use sim_runtime::cad_client::SelectionItem;
 /// generation and document).
 #[derive(Default)]
 pub struct PrintState {
-    /// The wall check and validation reads, the thin points, the last threshold.
+    /// Document-local wall check and validation reads and thin points.
     pub(crate) checks: checks::ChecksState,
-    /// The remembered Fastener hole and Clearance values, the fastener tool's last click.
+    /// The fastener tool's document-local clicks and picks.
     pub(crate) edits: edits::EditsState,
     /// The printing registry (per generation), the print study (per revision), the study started.
     pub(crate) studies: studies::StudiesState,
@@ -133,10 +133,10 @@ pub(in crate::cad) fn build_plan(call: PrintCall, entry: &OpEntry, r: &Resolved,
 
 /// `ops::start` for `Built::Print`: the check's job, the edit or the
 /// study's start (each refused by name with nothing sent when it cannot go).
-pub(in crate::cad) fn send(doc: &mut CadDocument, call: &mut Call, plan: Plan) -> Outcome {
+pub(in crate::cad) fn send(doc: &mut CadDocument, call: &mut Call, plan: Plan, settings: &mut crate::app::settings::SettingsOwner) -> Outcome {
     match plan {
-        Plan::Check(p) => checks::send(doc, call, p),
-        Plan::Edit(p) => edits::send(doc, call, p),
+        Plan::Check(p) => checks::send(doc, call, p, settings),
+        Plan::Edit(p) => edits::send(doc, call, p, settings),
         Plan::Study(p) => studies::send(doc, call, p),
     }
 }
@@ -154,7 +154,7 @@ pub(in crate::cad) fn picks(source: &str, doc: &CadDocument) -> Vec<(String, Str
 pub(in crate::cad) fn seed(entry: &OpEntry, doc: &CadDocument, env: &Env, texts: &mut [String]) {
     match entry.id {
         "tool.fastener" | "tool.clearance" => edits::seed(entry, doc, env, texts),
-        "print.wall_check" => checks::seed(entry, doc, texts),
+        "print.wall_check" => checks::seed(entry, env, texts),
         _ => studies::seed(entry, doc, env, texts),
     }
 }
@@ -245,19 +245,19 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
         return wrong("item and picked_at", "pick");
     }
     match args.op {
-        PrintOp::State => Outcome::Done(Ok(state_json(cx.doc))),
+        PrintOp::State => Outcome::Done(Ok(state_json(cx.doc, Some(&cx.settings.cad)))),
         PrintOp::Jobs => Outcome::Done(jobs_panel::show(cx.doc, args.open)),
         PrintOp::Cancel => jobs_tracker::cancel(cx.doc, call, args.job.as_deref(), args.confirm),
         PrintOp::Pick => fastener_tool::pick(args, call, cx),
-        PrintOp::Clear => Outcome::Done(Ok(checks::clear(cx.doc))),
+        PrintOp::Clear => Outcome::Done(Ok(checks::clear(cx.doc, Some(&cx.settings.cad)))),
     }
 }
 
 /// `cad_state.print`.
-pub(in crate::cad) fn state_json(doc: &CadDocument) -> Value {
+pub(in crate::cad) fn state_json(doc: &CadDocument, defaults: Option<&crate::app::settings::CadDefaults>) -> Value {
     json!({
-        "checks": checks::state_json(doc),
-        "edits": edits::state_json(doc),
+        "checks": checks::state_json(doc, defaults),
+        "edits": edits::state_json(doc, defaults),
         "studies": studies::state_json(doc),
         "jobs": jobs_tracker::state_json(doc),
         "panel": jobs_panel::state_json(doc),

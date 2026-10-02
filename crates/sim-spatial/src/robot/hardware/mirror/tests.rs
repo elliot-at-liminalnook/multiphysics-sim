@@ -139,3 +139,12 @@ fn a_replaced_worker_is_released_off_the_ui_thread() {
     assert!(m.worker.is_none());
     assert!(started.elapsed() < crate::jobs::JOIN_BOUND, "{:?}", started.elapsed());
 }
+
+#[test]
+fn late_disabled_preferences_clear_an_already_shown_mirror() {
+    let mut m=mirror();m.shown=true;
+    let saved=MirrorSettings { enabled:false, ..Default::default() };
+    m.load_preferences(&saved);
+    assert!(!m.shown());assert!(m.take_ended());assert!(!m.settings.enabled);
+    assert!(m.worker.is_none(),"publication does not start a worker");
+}

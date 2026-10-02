@@ -251,8 +251,27 @@ impl LiveSync {
     pub fn selects_enabled(&self) -> bool {
         !(self.server_busy || self.active || self.preparing)
     }
+    /// Publish inactive form choices only; never connect, open a session or
+    /// start a run. Mapping still uses the bench's validated configuration.
+    pub(super) fn load_preferences(&mut self, settings: &SyncSettings) {
+        self.saved = settings.clone();
+        self.amplitude = settings.amplitude.filter(|a| SCALES.iter().any(|(s, _)| s == a)).unwrap_or(SCALES[0].0);
+        if let Some(config) = &self.config {
+            self.leg = settings.leg.clone().filter(|l| self.legs.contains(l)).or_else(|| self.legs.first().cloned()).unwrap_or_default();
+            self.rows = mapping(&config.coordinates, &config.ids, &self.leg, Some(&settings.bindings));
+        }
+        self.revision += 1;
+    }
+
     /// The preferences to persist (the page's `save()`).
     pub fn to_save(&self) -> SyncSettings {
+        // A scale choice before /config must not erase remembered mapping
+        // rows or leg intent that has not yet been validated by the bench.
+        if self.config.is_none() {
+            let mut saved = self.saved.clone();
+            saved.amplitude = Some(self.amplitude);
+            return saved;
+        }
         SyncSettings { leg: Some(self.leg.clone()), amplitude: Some(self.amplitude), bindings: self.rows.clone() }
     }
 

@@ -21,7 +21,7 @@
 //!   the modal picker would cover). REST
 //!   `viewer_mode` without a document is refused as before (CAD falls back
 //!   to RoboCAD at the default URL). A switch that names a document records
-//!   it in the recent documents once entered (`super::recent::record_job`,
+//!   it in the recent documents once entered (`super::settings::SettingsOwner::record`,
 //!   on `Pool::Io`).
 //! - **Refusals** name the reason and keep the current mode: no document
 //!   for the target mode, the builder's `system_open` blockers
@@ -339,7 +339,7 @@ pub(crate) fn build(app: &mut App) {
         .add_systems(PreUpdate, picker::sync.before(crate::ui_kit::text::TextInputSet))
         .add_systems(PreUpdate, picker::keys.after(bevy::input::InputSystems).after(crate::ui_kit::text::TextInputSet))
         .add_systems(Update, picker::clicks.in_set(ViewerSet::Input))
-        .add_systems(Update, picker::receive.in_set(ViewerSet::JobResults))
+        .add_systems(Update, picker::receive.after(crate::app::settings::SettingsSet::Publish).in_set(ViewerSet::JobResults))
         // The REST poll is Input's first step; the screen requests follow it
         // (in Input, unordered against the window's input, as before).
         .add_systems(Update, (actions::serve.in_set(crate::app::InputSet::Rest), lesson_screen_requests).chain().in_set(ViewerSet::Input))
@@ -371,9 +371,11 @@ pub(crate) fn handle(world: &mut World) {
         if let Some((origin, target, summary, document)) = switch.entering.take() {
             if current == target {
                 // A document the request named goes to the recent documents
-                // (on Pool::Io; the handle completes on drop).
+                // through the settings owner (canonicalization runs on jobs).
                 if let Some(document) = document {
-                    drop(super::recent::record_job(target, document));
+                    if let Some(mut settings) = world.get_resource_mut::<super::settings::SettingsOwner>() {
+                        settings.record(target, document);
+                    }
                 }
                 switch.finish(world, origin, Ok(summary));
             } else {

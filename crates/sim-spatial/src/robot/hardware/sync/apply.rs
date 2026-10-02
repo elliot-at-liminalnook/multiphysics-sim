@@ -14,7 +14,6 @@ pub fn apply(hw: &mut Hardware, action: &HardwareAction, view: Option<&RobotView
             if s.preparing {
                 // The page saves the mapping when a session starts.
                 hw.settings.sync = hw.sync.to_save();
-                hw.settings.save();
             }
             return Ok(());
         }
@@ -60,6 +59,5 @@ pub fn apply(hw: &mut Hardware, action: &HardwareAction, view: Option<&RobotView
     s.revision += 1;
     s.samples_revision += 1;
     hw.settings.sync = hw.sync.to_save();
-    hw.settings.save();
     Ok(())
 }

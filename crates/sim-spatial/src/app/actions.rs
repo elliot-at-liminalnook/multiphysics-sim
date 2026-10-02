@@ -349,6 +349,7 @@ pub fn registry() -> &'static [Feature] {
     REGISTRY.get_or_init(|| {
         use super::switch::WindowAction;
         vec![
+            feature::<super::settings::actions::SettingsAction>("settings", <super::settings::actions::SettingsAction as Action>::commands),
             feature::<WindowAction>("window", <WindowAction as Action>::commands),
             feature::<crate::inspect::InspectAction>("inspect", <crate::inspect::InspectAction as Action>::commands),
             feature::<crate::builder::system_actions::SystemAction>("build", <crate::builder::system_actions::SystemAction as Action>::commands),

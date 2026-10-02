@@ -10,12 +10,12 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-## Where it is today (cad-experiments-motion accepted by source review at 4d2725f2/e6f6ed10, compilation and execution unverified; cad-components written, source-reviewed, execution unverified; public-system-sets done pending verification, uncompiled: written and reviewed by reading only; see [Public system sets](#public-system-sets-2026-10-01); re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01); one-text-entry done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [One text entry](#one-text-entry-2026-10-01); cad-organize done pending verification (2026-10-01; written and reviewed by reading; nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), see [CAD organize](#cad-organize-2026-10-01))
+## Where it is today (persisted-settings T45 written, compilation and execution unverified; T44 accepted by source review at 8a7c0cd7/fe2a6eb1, parity unexecuted; cad-experiments-motion accepted by source review at 4d2725f2/e6f6ed10, compilation and execution unverified; cad-components written, source-reviewed, execution unverified; public-system-sets done pending verification, uncompiled: written and reviewed by reading only; see [Public system sets](#public-system-sets-2026-10-01); re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01); one-text-entry done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [One text entry](#one-text-entry-2026-10-01); cad-organize done pending verification (2026-10-01; written and reviewed by reading; nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), see [CAD organize](#cad-organize-2026-10-01))
 
 **Rust changes since aa34ef48 have not been compiled or executed.** Historical
 Python executions remain recorded below (including the cad-organize gap route's
 two passing tests at b476b28e); they do not verify native workflow parity.
-Eight implemented epics since are stacked
+Ten implemented epics since are stacked
 uncompiled: unified-selection-document (f5546fbd, 5e9c34d5, af0bb4be),
 cad-physical-inspect (3fb34225..61f1bea5: 3fb34225, f26842fa, review
 fixes 697a15c1, docs 61f1bea5), cad-print (35ea6de0, 17f90d08, review
@@ -24,8 +24,8 @@ fixes 6c6b1a5a, docs 9afd63f5, fixes 0a1147b3), one-text-entry
 and one kit text field; see [One text entry](#one-text-entry-2026-10-01))
 and cad-organize (b476b28e and the commits after it: the outliner's
 organization, RoboCAD's comment threads, reference images and the system
-link; see [CAD organize](#cad-organize-2026-10-01); nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), and public-system-sets (180b3a54, 5c874455; source review only), plus cad-components (T42; source review only) and cad-experiments-motion (T43; source review only).
-All eight remain uncompiled. Their counts and "done" states below describe
+link; see [CAD organize](#cad-organize-2026-10-01); nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), and public-system-sets (180b3a54, 5c874455; source review only), plus cad-components (T42; source review only) and cad-experiments-motion (T43; source review only), cad-parity-harness (T44; accepted source review at 8a7c0cd7/fe2a6eb1), and persisted-settings (T45; writing-only).
+All ten remain uncompiled. Their counts and "done" states below describe
 source review, not an executed build or native parity result.
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
@@ -342,11 +342,12 @@ source review, not an executed build or native parity result.
     `ViewportNode` (`bevy_ui-0.19.1/src/widget/viewport.rs`, with
     `viewport_picking` under the `bevy_picking` feature) renders a camera
     into a UI node, so the dock layout owns where a view goes. 0 uses.
-  - **Hand-rolled persistence** (`persisted-settings`): `app/recent.rs`
-    writes its own `recent.json`, and remembered values (wall threshold,
-    fastener, clearance) last for one window only. Bevy 0.19 has app
-    settings (`#[derive(SettingsGroup)]`, in `bevy_ecs_macros-0.19.1`); the
-    crate providing the plugin isn't in the lockfile yet.
+  - **Persisted settings gap closed by reading** (T45, uncompiled):
+    `app/settings::SettingsOwner` is the one jobs-owned load, migration,
+    validation, revision, save and publication owner for recents, inactive
+    hardware forms and remembered CAD print defaults. The pinned
+    `bevy-settings =0.19.1` contracts are registered through a narrow custom
+    seam; stock SettingsPlugin is not installed. See [viewer preferences](../viewer-preferences.md).
   - **Small gaps closed by reading** (public-system-sets, uncompiled):
     `physics_view::labels` retains keyed entities and changes Node/Text with
     `set_if_neq`; rounded values, refresh pacing and anchor rules stay intact.
@@ -1263,7 +1264,7 @@ definition) against the final code.
     (`open_initially`), `MirrorDisplay`.
   - `actions.rs`: `HardwareAction` (every intent), `starts_motion` and
     `remote_refusal`, the REST form (`wire::Command`, `parse`),
-    `Preferences` (read once in `build`), the lifecycle `enter` (OnEnter
+    shared-owner inactive preference seeding (T45), the lifecycle `enter` (OnEnter
     Robot: connects with `--hardware`) and `leave` (OnExit Robot: calls
     `stop_immediate` and `LiveSync::stop_ours` directly, keeps the
     preferences, then drops the state off the UI thread), `stop_immediate`,
@@ -1326,8 +1327,8 @@ definition) against the final code.
     (`sync_frames`, `sync_panel`, `row_title`, `rms_and_saturation`,
     `charts`, `chart_note_of`, `sync_overlay`, `sync_texts`): Real motor
     sync against `serve_motor_bench`.
-  - `settings.rs`: the free functions `load` and `path`, and the method
-    `Settings::save` (an Io job), the preferences file.
+  - `settings.rs`: typed validated hardware preferences and exact legacy `path`;
+    `app/settings` owns all loading, migration and publication (T45).
 - Outside the folder: `app/actions.rs` (`Origin::SystemUi`,
   `Action::accepts`, `Call::remote`, the registry entry "hardware"),
   `robot/actions/mod.rs` and `keys.rs` (`apply`: `system_ui` passes `hardware:<name>` on,
@@ -1465,17 +1466,16 @@ definition) against the final code.
   *Why:* the viewer has no downloads folder, and the server's output
   directory is where the calibration's own versions live. *Revisit if* a
   native save dialog is added to the kit.
-- **Preferences file, read once.** `$SIM_SPATIAL_PREFERENCES`, else
-  `~/.config/sim-spatial/hardware-preferences.json`, replaces the pages'
-  localStorage (`calibration-drive-mode`, `calibration-hold-others`,
-  `calibration-mirror-v1`, `walking-hardware-map-v1`). It holds operator
-  preferences only, never calibration data. It is read once when the app
-  is built (`actions::Preferences`), so entering Robot mode reads no file
-  on the UI thread; saves go to an Io job. Unknown or missing fields take
-  their defaults, a stored sign is clamped to ±1. *Why:* the nearest
-  native equivalent, and testable through the env override. *Revisit if*
-  Bevy's app settings (0.19) are adopted for the viewer's other
-  preferences.
+- **Preferences, one asynchronous owner (T45).** `app/settings` reads and
+  publishes validated inactive forms; `hardware::actions` is a consumer
+  adapter, not a disk backend. The exact legacy `$SIM_SPATIAL_PREFERENCES` or
+  `$HOME/.config/sim-spatial/hardware-preferences.json` import identity is
+  retained in the unified file; no alternate platform search is added.
+  Missing fields retain their existing defaults, polarity normalizes to ±1,
+  and alignment remains a CAD pose reference. Loaded choices never arm sync,
+  jog, drive or controllers, restore confirmations or send hardware commands.
+  Calibration, taught travel windows and measured models remain source-owned.
+  See [compatibility and retry](../viewer-preferences.md).
 - **Warnings stamped in UTC.** *Why:* the viewer carries no timezone
   database; a local offset guessed without one could be wrong. *Revisit if*
   a timezone crate is added for another reason.
@@ -1621,8 +1621,9 @@ Shape.
     (`poll_status`).
   - Samples could queue behind a slow post: fixed, the newest wins
     (`drain`, `Outbox`).
-  - Settings file work on the UI thread: fixed, read once at app build
-    and saved by `Settings::save` on an Io job.
+  - Settings file work: the historical adapter read at app build; T45
+    replaces both that read and `Settings::save` with asynchronous jobs-owned
+    loading/publication through `SettingsOwner`.
   - Scene identity (which loaded run the mirror poses): fixed, `SceneId`
     (`Weak::ptr_eq` on the preset or recording).
   - A dead mirror worker went unnoticed: fixed, reported ("Mirror
@@ -4072,15 +4073,16 @@ built or tested (the verification pass does that).
     are written as `Act::ui(WindowAction::Switch(..))` and handled by
     `app::switch::handle`. There is no second switch path.
 - **Recent documents** (`app/recent.rs`):
-  - One file per user, `recent.json` in the config directory:
+  - Historical migration input `recent.json` in the config directory:
     `$SIM_SPATIAL_CONFIG_DIR`, `$XDG_CONFIG_HOME/sim-spatial`,
     `~/Library/Application Support/sim-spatial` or `~/.config/sim-spatial`.
     Never in the repository; `None` under `cfg(test)`.
   - Versioned (`VERSION` 1). A newer version's file, or an unreadable
     file, is never overwritten.
-  - Written atomically: a temp file beside it, `sync_all`, then rename.
-  - Recorded by `switch::handle` once a switch that named a document is
-    entered (`recent::record_job`, `Pool::Io`, `complete_on_drop`).
+  - Current recents publish atomically in the unified settings envelope;
+    the legacy input remains untouched.
+  - Accepted switches record through `SettingsOwner`; jobs canonicalizes paths.
+    Picker reads the same owner, including its explicit startup readiness.
 - **`system_ui`:**
   - While the picker is open, every mode's controls list ends with
     `picker:<mode>:<n>` (the flat index), `picker:path` (activate with an
@@ -4192,8 +4194,9 @@ naming "REST" (as a word), `cad_state.`, `robot_state.` or `system_ui `.
    (`arrival.rs:38`) → `enter` (`arrival.rs:19`) → `NextState(Robot)` →
    OnEnter `arrive` (`arrival.rs:75`).
 6. On the next frame `handle` confirms the switch and records the preset in
-   the recent documents (`switch/mod.rs:399`, `recent::record_job`,
-   `recent.rs:213`). `picker::receive` sees the mode changed and closes the
+   the recent documents through `SettingsOwner::record` (T45). The dated
+   original trace used `recent::record_job`; that writer is superseded.
+   `picker::receive` sees the mode changed and closes the
    picker.
 
 ### Tests (windowless)
@@ -6244,7 +6247,7 @@ on memory.
 | `ViewportNode` | 0.17 | 3D views inside panels (schematic beside spatial, inspector previews); not adopted yet: viewports are computed from dock sizes (epic viewport-nodes) |
 | First-party camera controllers | 0.18 | not adopted (cad-views-export): 0.19.1 has no orbit controller, `FreeCamera` (`bevy_camera_controller`, in neither the lockfile nor the registry) grabs the cursor on a right-click and keeps state REST cannot set as Place's `Fly` yaw/pitch/speed, and `PanCamera` is 2D; the hand-rolled orbit cameras became one shared module instead (`src/camera/`, see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01)) |
 | Easy screenshot and video recording | 0.18 | `ui_capture` and run recordings |
-| App settings | 0.19 | persisted viewer preferences; not adopted yet: `app/recent.rs` writes its own file (epic persisted-settings) |
+| App settings | 0.19 | SettingsGroup reflection/registration adopted through `app/settings` (T45); jobs owns all disk work; stock SettingsPlugin not installed (see [preferences](../viewer-preferences.md)) |
 | Interactive transform gizmo, infinite grid | 0.19 | build-mode placement (display-only); the infinite grid is not adopted for CAD (cad-views-export): CAD draws RoboCAD's `_draw_grid` as gizmo lines (10 mm step, ±200 mm, every 5th line major, X/Y/Z axis colours) because `InfiniteGrid` is infinite and fading, marks every 10th line, colours only X and Z, needs the `bevy_dev_tools` feature and cannot be cut by the section plane |
 | Text gizmos | 0.19 | 3D labels (steady values, fixed anchors) |
 | Diagnostics overlay, frame time graph | 0.17–0.19 | measuring realtime performance, which `AGENTS.md` requires |
@@ -6335,9 +6338,9 @@ The Director re-ranks with evidence, but this is the default:
    cad-components.
    **cad-components**, **public-system-sets** and **cad-experiments-motion**
    are implemented by reading, pending verification and uncompiled.
-   T43 source review was accepted at 4d2725f2/e6f6ed10; T44 writes the phase-2 harness; no phase-1
+   T43 source review was accepted at 4d2725f2/e6f6ed10; T44 was accepted by source review at 8a7c0cd7/fe2a6eb1; the phase-2 harness is unexecuted; no phase-1
    CAD family remains deferred in the source ledger. Exact parity remains unproven.
-8. **Parity harness** (§9 phase 2).
+8. **Parity harness** (§9 phase 2). T44 accepted by source review at 8a7c0cd7/fe2a6eb1; compilation, fixtures and parity remain unexecuted.
 9. **Derivations in Rust** (§9 phase 3). Several epics, one derivation family
    each.
 10. **OCCT from Rust** (§9 phase 4). Several epics, one kernel area each.
@@ -6350,7 +6353,7 @@ The Director re-ranks with evidence, but this is the default:
 "Bevy-practice gaps" in "Where it is today"). one-text-entry and
 cad-organize and **public-system-sets** are done (pending verification,
 uncompiled). T42 implements cad-components and T43 implements cad-experiments-motion
-by accepted source review at 4d2725f2/e6f6ed10; T44 is the current phase-2 harness batch.
+by accepted source review at 4d2725f2/e6f6ed10; T44 was accepted by source review at 8a7c0cd7/fe2a6eb1; T45 realizes persisted settings by reading.
 Interleave structural work with later CAD migration phases, keeping at least
 one epic in three structural:
 
@@ -6376,11 +6379,11 @@ one epic in three structural:
     `screenshot`.
   - Then move the rest, or record per view why not, and update §6 and the
     "Bevy features to use" table.
-- **persisted-settings.** Viewer preferences and remembered values persist
-  through Bevy 0.19's app settings instead of `app/recent.rs`'s own file.
-  - First confirm the crate and feature on docs.rs for 0.19.1 and add them.
-  - Keep or migrate `recent.json` without losing a user's recents.
-  - Values that come from CAD or the actuator registry are never settings.
+- **persisted-settings.** T45.1–T45.3 implemented by reading, uncompiled.
+  One settings owner replaces independent recents/hardware persistence and
+  document-local print defaults. Original migration files and unknown data
+  remain preserved; protected inputs block publication. Source CAD and the
+  actuator registry remain authoritative. See [viewer preferences](../viewer-preferences.md).
 
 After that, feature work resumes on the target shape. The large-file debt
 was paid off by split-large-files (2026-10-01, see
@@ -6625,7 +6628,7 @@ rule (these are future checks, not receipts):
 - [x] Source size and whitespace inspection; no build, test, screenshot
       or hardware operation performed.
 
-Current order: cad-components (T42) and cad-experiments-motion (T43) are implemented by reading. T43 source review was accepted at 4d2725f2/e6f6ed10; T44 is the current phase-2 harness batch. Execution and exact parity remain unverified.
+Current order: cad-components (T42) and cad-experiments-motion (T43) are implemented by reading. T43 source review was accepted at 4d2725f2/e6f6ed10; T44 was accepted by source review at 8a7c0cd7/fe2a6eb1; T45 realizes persisted settings by reading. Execution and exact parity remain unverified.
 
 
 ## CAD components ownership and integration (T42, 2026-10-01)
@@ -6864,3 +6867,45 @@ execution issues separately; those issues block gates. Process ownership retains
 the unreaped leader through final descendant signalling before releasing identity.
 The harness guide records the bounded recovery path and exclusive-wait/process-group
 limitations. Repair fixtures remain uncompiled and unexecuted.
+
+
+## Persisted viewer settings — T45 (2026-10-02)
+
+Global durable preference projections have one writer, `app::settings::SettingsOwner`.
+`PreferenceGroup` uses pinned `SettingsGroup`, `ReflectSettingsGroup` and registered
+reflection. Its named file/group contract identifies the custom JSON envelope;
+registered resources hold validated JSON projections. The stock plugin's immediate
+file load and task-pool-scoped save work do not satisfy §4: only `jobs` may
+perform disk work. The pinned scope waits for completion, while save ticks advance
+after logged store errors; neither behavior provides the required publication Result.
+The [compatibility guide](../viewer-preferences.md) records authoritative pinned
+contracts, field/subgroup mutation ownership, readiness, paths, migration and recovery.
+
+Public ordering remains `ViewerSet` Input → Actions → JobResults → SimSync → Present.
+Settings actions own retry occurrences; pending loads, recents records and dirty
+revisions are durable resource state rather than expiring messages. Settings results
+publish in JobResults through the public settings set; picker readiness follows that
+publication. Consumers never use incidental registration order or change ticks to
+claim durability. Reflection publication follows validation. No settings UI entities
+or second selection/action path are added. Frame systems validate small projections;
+file reads, canonicalization, file-byte serialization and atomic publication run
+through jobs. Small projection/envelope encoding is in-memory frame work.
+
+CAD print forms, closed fastener picks and state reporting read the same global
+CadDefaults through `Cx`, `Env` and snapshot `Parts`. A validated wall-check launch
+or accepted revision-guarded edit dispatch mutates the owner; refused commands do
+not. Picks, cached reads, results, source stamps and jobs remain on CadDocument.
+Geometry and undo continue through RoboCAD's guarded command path (§9). Preferences
+are tool inputs, never physical truth. Hardware choices remain inactive intent (§8):
+connection/config validation, STOP, release/loss handling and explicit activation
+retain their existing owners. Loading cannot issue hardware commands.
+
+Shutdown submits best-effort jobs for dirty latest snapshots, serialized with any
+in-flight save by the publication gate; the UI never blocks on disk. Dropping a job
+handle alone does not guarantee durability; an ordinary immediate process exit
+can also end before final work finishes. Abrupt process exit can lose unsaved
+preferences, including termination during loading. CAD unsaved-edit and hardware
+safety guards are unchanged. Publication errors remain diagnostic and dirty; retry
+requires no unrelated edit. Fixtures are isolated and written only, never executed.
+Python/OCCT and external reference dependencies remain; no parity or legacy
+retirement is established. T44 accepted source review covers 8a7c0cd7/fe2a6eb1 only.

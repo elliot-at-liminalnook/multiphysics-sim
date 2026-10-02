@@ -169,7 +169,6 @@ pub(super) fn handle(hw: &mut Hardware, action: &HardwareAction, call: &mut Call
             hw.form.inputs.hold_others = *on;
             inputs_changed(hw);
             hw.settings.calibration.hold_others = Some(*on);
-            hw.settings.save();
             done()
         }
         H::JogPress { direction } => {
@@ -303,7 +302,6 @@ pub(super) fn handle(hw: &mut Hardware, action: &HardwareAction, call: &mut Call
             hw.form.inputs.drive_mode = *mode;
             inputs_changed(hw);
             hw.settings.calibration.drive_mode = Some(*mode);
-            hw.settings.save();
             done()
         }
         H::PwmCeiling { percent } => {

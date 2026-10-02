@@ -458,6 +458,7 @@ pub struct OpsState {
 /// none: a windowless test, REST before the first frame).
 #[derive(Clone, Copy, Default)]
 pub(crate) struct Env<'a> {
+    pub defaults: Option<&'a crate::app::settings::CadDefaults>,
     pub selection: &'a [SelectionItem],
     pub topology: Option<&'a CadTopology>,
     pub view: Option<&'a CadView>,
@@ -467,11 +468,11 @@ pub(crate) struct Env<'a> {
 impl Cx<'_> {
     /// What a run reads besides the document (`selection`: `cx.shared.items()`).
     pub(in crate::cad) fn env<'s>(&'s self, selection: &'s [SelectionItem]) -> Env<'s> {
-        Env { selection, topology: self.topology.as_deref(), view: self.view, plane: Some(&*self.plane), sketches: self.sketches }
+        Env { defaults: Some(&self.settings.cad), selection, topology: self.topology.as_deref(), view: self.view, plane: Some(&*self.plane), sketches: self.sketches }
     }
     /// The document to change, and what the run reads, borrowed apart.
     pub(in crate::cad) fn split<'s>(&'s mut self, selection: &'s [SelectionItem]) -> (&'s mut CadDocument, Env<'s>) {
-        (&mut *self.doc, Env { selection, topology: self.topology.as_deref(), view: self.view, plane: Some(&*self.plane), sketches: self.sketches })
+        (&mut *self.doc, Env { defaults: Some(&self.settings.cad), selection, topology: self.topology.as_deref(), view: self.view, plane: Some(&*self.plane), sketches: self.sketches })
     }
 }
 
@@ -528,7 +529,7 @@ fn run(entry: &'static OpEntry, params: &Map<String, Value>, items: Option<&[Sel
     match prepared {
         // Viewer state: applied here, never an edit.
         Ok(Built::View(act)) => Outcome::Done(Ok(super::sketch::plane::view_act(&mut *cx.doc, &mut *cx.plane, act))),
-        Ok(built) => start(entry, built, items.is_some(), &selection, call, cx.doc),
+        Ok(built) => start(entry, built, items.is_some(), &selection, call, cx.doc, cx.settings),
         Err(e) => Outcome::Done(Err(e)),
     }
 }
@@ -578,7 +579,7 @@ fn prepare(doc: &CadDocument, env: &Env, entry: &OpEntry, params: &Map<String, V
 /// the rest and is reported verbatim with how many had run), a paste, or a read.
 /// `explicit`: the items were given (REST), not the selection (`selection`:
 /// the shared selection's CAD items the run read).
-fn start(entry: &'static OpEntry, built: Built, explicit: bool, selection: &[SelectionItem], call: &mut Call, doc: &mut CadDocument) -> Outcome {
+fn start(entry: &'static OpEntry, built: Built, explicit: bool, selection: &[SelectionItem], call: &mut Call, doc: &mut CadDocument, settings: &mut crate::app::settings::SettingsOwner) -> Outcome {
     let outcome = match built {
         Built::Edit { calls, label } => {
             let n = calls.len();
@@ -605,7 +606,7 @@ fn start(entry: &'static OpEntry, built: Built, explicit: bool, selection: &[Sel
         }),
         Built::Sketch { target, calls, label } => send_sketch(doc, call, target, calls, label),
         Built::Robot(plan) => robot_args::send(doc, call, plan),
-        Built::Print(plan) => crate::cad::print::send(doc, call, plan),
+        Built::Print(plan) => crate::cad::print::send(doc, call, plan, settings),
         // Applied by `run` before `start`.
         Built::View(_) => return Outcome::Done(Err("viewer state is not sent to RoboCAD".into())),
         Built::Read(read) => {

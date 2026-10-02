@@ -54,8 +54,8 @@
 //!   the Real motor sync section streaming a live run's named motor targets
 //!   to `serve_motor_bench` `/live/*` (samples on its RunThread, `/status`
 //!   and `/stop` on their own jobs, so neither waits behind the other). Their preferences persist in
-//!   [`settings`] (a JSON file; never calibration data), read once when the
-//!   app is built (`actions::Preferences`), never at mode entry.
+//!   the shared `app::settings::SettingsOwner` (never calibration data),
+//!   loaded through jobs and seeded as inactive form choices.
 //! - **UI** ([`panel`], `panel_sections`, [`view`], [`dial`],
 //!   [`motion_view`]): ui_kit widgets in the page's order and labels;
 //!   [`view`] holds the page's `render()` rules as pure functions of the
@@ -156,6 +156,8 @@ pub(crate) struct Hardware {
     pub mirror: mirror::Mirror,
     pub sync: sync::LiveSync,
     pub settings: settings::Settings,
+    /// Explicit startup publication acknowledgement; never a change-tick test.
+    pub preferences_loaded: bool,
     /// Bumped whenever the panel's structure must be rebuilt (connect, gait list, sections).
     pub ui_revision: u64,
     /// The link's snapshot, copied once a frame (`actions::poll_jobs`,
@@ -187,6 +189,7 @@ impl Hardware {
             mirror: mirror::Mirror::new(&settings.mirror),
             sync: sync::LiveSync::new(config.bench.clone(), &settings.sync),
             settings,
+            preferences_loaded: false,
             config,
             ui_revision: 0,
             snapshot: link::LinkSnapshot::default(),

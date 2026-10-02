@@ -54,7 +54,8 @@ pub(crate) use discover::discover;
 pub(crate) use modal::{keys, sync};
 
 use super::actions::Act;
-use super::recent;
+use super::recent::Recents;
+use super::settings::SettingsOwner;
 use super::switch::{Document, ModeSwitch, Switcher, WindowAction};
 use super::{Persistent, ViewerMode};
 use crate::builder::ui_api::Enabled;
@@ -118,6 +119,8 @@ pub(crate) struct Picker {
     /// The sections' scroll offset (px).
     pub(crate) scroll: f32,
     sources: Latest<Sources>,
+    recent_snapshot: Option<(bool, Recents)>,
+    presets: Option<PathBuf>,
     pub(crate) found: Option<Sources>,
     listing: Latest<Listing>,
     pub(crate) listed: Option<Listing>,
@@ -196,12 +199,25 @@ impl Picker {
         self.from = Some(from);
         self.reason = reason;
         self.opened_revision = revision;
+        self.presets = presets;
+        self.refresh_recents(false, &Recents::default());
+    }
+
+    /// Restart discovery only when the explicit owner's snapshot changes.
+    /// Drafts, scroll, directory listing and user-edit ownership are untouched.
+    pub(crate) fn refresh_recents(&mut self, ready: bool, recents: &Recents) {
+        let Some(mode) = self.open else { return };
+        let snapshot = (ready, recents.clone());
+        if self.recent_snapshot.as_ref() == Some(&snapshot) {
+            return;
+        }
+        self.recent_snapshot = Some(snapshot);
+        let recents = recents.clone();
+        let presets = self.presets.clone();
         self.sources.start(Pool::Io, format!("the {} document picker's discovery", mode.name()), move |ctx| {
-            // The workspace root and the config directory are read here, off the UI thread.
             let root = crate::workspace::root().ok().map(Path::to_path_buf);
             let presets = if mode == ViewerMode::Robot { presets.or_else(|| crate::robot::preset::default_file().ok()) } else { None };
-            // Closing the picker drops the job, which cancels the walk.
-            Ok(discover(mode, root, presets, recent::file(), ctx.cancel_flag()))
+            Ok(discover(mode, root, presets, recents, ready, ctx.cancel_flag()))
         });
     }
 
@@ -400,6 +416,7 @@ pub(crate) struct PickerList;
 /// mode was chosen in the switcher).
 pub(crate) fn receive(
     picker: Option<ResMut<Picker>>,
+    settings: Option<Res<SettingsOwner>>,
     mode: Option<Res<State<ViewerMode>>>,
     hardware: Option<Res<crate::robot::hardware::Hardware>>,
     switch: Option<ResMut<Switcher>>,
@@ -432,6 +449,9 @@ pub(crate) fn receive(
         return;
     }
     let picker = &mut *picker;
+    if let Some(settings) = settings {
+        picker.refresh_recents(settings.ready, &settings.recents);
+    }
     if picker.sources.pending().is_some()
         && let Some((_, result)) = picker.sources.poll()
     {
@@ -569,3 +589,6 @@ pub(crate) fn draw(mut commands: Commands, picker: Option<Res<Picker>>, switch: 
         k.document_picker(backdrop, &title, &picker.reason, status, &sections, &view, picker.scroll, PickerList, PickerPart);
     });
 }
+
+#[cfg(test)]
+mod settings_tests;

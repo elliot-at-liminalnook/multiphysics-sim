@@ -260,6 +260,19 @@ impl Mirror {
     pub fn roles(&self) -> Option<&BTreeMap<u8, String>> {
         self.roles.as_ref()
     }
+    /// Publish remembered display choices without commanding hardware or
+    /// creating a worker. Existing roles are reapplied to the saved bindings.
+    pub(super) fn load_preferences(&mut self, saved: &MirrorSettings) {
+        self.saved = saved.clone();
+        self.settings = MirrorSettings { enabled: saved.enabled, leg: saved.leg.clone(), bindings: BTreeMap::new() };
+        if let Some(roles) = self.roles.take() {
+            self.set_roles(roles);
+        }
+        self.restart = true;
+        if !saved.enabled { self.end(); }
+        self.revision += 1;
+    }
+
     /// The preferences to persist (before roles are known, the saved bindings are kept).
     pub fn to_save(&self) -> MirrorSettings {
         let mut s = self.settings.clone();

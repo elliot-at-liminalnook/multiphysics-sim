@@ -2482,3 +2482,36 @@ durable unapplied, unscored cancellation diagnostics. T53 fixtures are written a
 unexecuted; builds, launches, exports, parity and platform durability remain
 unverified. Physical-source authority, §§8–9 and Python/OCCT/browser/hardware
 reference requirements remain unchanged. No legacy retirement is claimed.
+
+
+## Native Leg calibration launch update — LC1–LC3 (2026-10-02)
+
+Robot mode's Leg calibration panel still requires the separate Rust
+`serve_actuator_calibration` server (`--hardware URL`); native UI does not open
+serial. Physical operator launch prerequisites and unexecuted HW-01–HW-09 run
+sheets are in [hardware-checklist.md](hardware-checklist.md). For a separately
+authorized future virtual acceptance pass use the bounded
+[driver/launch guide](../tools/native-calibration/README.md): fresh binary hashes,
+bench-owned capability socket, `serial: virtual-capability-only`, isolated copied
+configuration/output and retained assertion receipts. A PTY path or loopback URL
+alone no longer authorizes virtual execution. No physical serial fallback exists
+in that mode; remote motion remains refused for physical/unknown endpoints and
+outside calibration scope. STOP remains independent and unconditional.
+
+The future driver's positive path connects the viewer directly to the owned
+server. Its loopback identity proxy serves only a labelled physical/unknown
+fixture phase with a second viewer. Each viewer runs with
+`SIM_SPATIAL_CONFIG_DIR`/`SIM_SPATIAL_PREFERENCES` under the output directory,
+and the drive form is set explicitly. The server answers binding refusals
+(identity, generation, scope, lost bench) with HTTP 409 and ordinary refusals with
+400. Its STOP reply carries `stop_latched: true`, `enabled_id: null` and
+`busy: false`. All of this is written and source-reviewed. None of it has been
+executed.
+
+Accepted verification repairs `ee17ef00` through `f971bedb` and
+[their receipts](verification-20261002.md) supersede old blanket uncompiled wording
+only for the documented bounded builds/fixtures and virtual connection/idle STOP.
+HW-02–HW-09 completion, full CAD parity and physical equivalence remain unverified.
+Portable work at `f541b05f` remains set aside/unaccepted. Browser pages and legacy
+reference surfaces remain available; no CAD physical definition or accepted
+actuator registry model is automatically changed.

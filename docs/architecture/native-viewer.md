@@ -48,11 +48,16 @@ T53 portable retained-study artifacts extends the same Study and publication own
 [format, focused inventory and source traces](../portable-study-artifacts.md) record
 its implementation and written unexecuted fixtures. No execution or parity follows.
 
-Rust changes after the historical `aa34ef48` execution checkpoint remain
-uncompiled and unexecuted. The former opening ten-epic count was a stale dated
-snapshot and is superseded by this statement. Historical Python results below
-remain historical and establish no native parity. CAD harness T44 remains
-unexecuted; no Python/browser retirement or physical-source acceptance follows.
+The accepted [2026-10-02 verification receipts](../verification-20261002.md)
+supersede the historical blanket “uncompiled” statements below for their exact
+recorded commands and exercised paths, through repairs `ee17ef00`–`f971bedb`.
+They establish workspace compilation, repaired fixture reruns, bounded CAD
+operations and virtual HW-01 connection/idle STOP. They do not establish
+HW-02–HW-09 calibration completion, full CAD parity or an independent Rust CAD
+replacement. T53 at `f541b05f` remains set aside and unaccepted. Later changes
+remain source-reviewed only unless a new receipt explicitly executes them.
+Historical Python results remain historical; no reference retirement or
+physical-source acceptance follows.
 
 ## Where it is today
 
@@ -5850,7 +5855,7 @@ started before the `App` (tests, `--validate-only`, headless) and
 hardware checklist.* The browser's calibration and hardware pages
 (`web/viewer/calibration-ui.mjs` with `actuator-motion-view.mjs`,
 `calibration-mirror.mjs`, `hardware-sync.mjs`) have a native front end in
-`sim-spatial` with exact feature parity, ledgered row by row in
+`sim-spatial` with source-traced coverage, ledgered row by row in
 [docs/hardware-parity.md](../hardware-parity.md).
 
 - **Placement.** A dock inside Robot mode, not a mode of its own: the
@@ -5892,21 +5897,19 @@ hardware checklist.* The browser's calibration and hardware pages
   `<meta name="calibration-token">`, the bench's `const token='…'` in `/`
   or the `motor-bridge-token` meta of `/walking/`. Or it comes from a file
   the operator names (`--hardware-token-file`, `--motor-bench-token-file`).
-  No server changed.
-- **Refusal rule and origins.** Every intent is a `HardwareAction`.
-  `HardwareAction::starts_motion` (actions.rs) is refused when it comes
-  from `Origin::Rest` or `Origin::SystemUi`, with "hardware `{name}`
-  starts, changes or arms motion and needs an operator at the window: REST
-  and system_ui may read status, list gaits, export, connect, turn the
-  mirror on or off and STOP only": select, set disabled (enable/disable),
-  sweep all, hold others, jog press/release, speed, target and its commit,
-  capture, reset poses, clear lower/upper, sweep, learn, the
-  tune/campaign/gait confirmations, tune, campaign, gait
-  select/mode/speed/effort/play, drive mode, PWM ceiling, flip, raw step
-  value, raw step, live sync's leg/motor/polarity/scale/start, and the
-  mirror's leg, joint, polarity and alignment bindings (the Leg/Both gait
-  bindings and the saved alignment reference come from them). Motion
-  needs a pointer or key in the window, with the operator there. Allowed
+  Browser token discovery remains compatible. Virtual calibration additionally
+  pins execution identity; token discovery alone never authorizes automation.
+- **Refusal rule and origins.** Every intent is a `HardwareAction`, applied
+  by its existing action owner. Remote HW-01–HW-09 calibration is allowed
+  only for a fresh connected virtual session whose strict execution identity
+  matches the identity pinned to that link generation. Physical, unknown,
+  stale, disconnected and replaced sessions retain motion refusal. Reconnect
+  creates a new generation and requires a new identity handshake. The shared
+  runtime contract and server execution checks enforce the same boundary;
+  a URL, pseudo-terminal name, fixture label or client boolean cannot grant it.
+  Gait playback, raw steps, polarity flipping, live sync and unrelated robot
+  motion remain outside this virtual calibration allowlist. Physical motion
+  continues to require the operator at the window. Allowed
   from automation: toggle/close panel, connect, sections, status, STOP,
   loss (except `leaving`, which only the window's close request sends),
   export, load gaits, gait stop, turning the mirror on or off, sync
@@ -5975,6 +5978,51 @@ hardware checklist.* The browser's calibration and hardware pages
   serial port or computes a motor command. The mirror uses the shared
   `sim_runtime::kinematic_mirror`, and gait sampling uses the shared
   `sim_runtime::gait_playback`, as the page's worker does.
+- **Virtual transport isolation (LC1).** `hx_virtual_bench` owns the simulated
+  motor transport. In explicit capability-socket mode, the calibration server
+  receives HX protocol traffic over a connected Unix socket and never opens a
+  serial pathname or runs serial configuration. A failed handshake cannot
+  select the physical opener. Inspect, select and reconnect share that same
+  transport owner. The server publishes its per-start identity and the bench
+  identity; bound commands carry both plus their connection generation. The
+  server validates the binding before accepting an action and again before
+  its worker executes it. STOP bypasses this binding and remains independent.
+  The legacy pseudo-terminal bench remains a reference compatibility surface,
+  not an authorization mechanism for remote calibration.
+  Binding refusals (identity, generation, scope, lost virtual bench) answer
+  HTTP 409 with `calibration::BINDING_REFUSED`; ordinary refusals stay 400.
+  Native links revoke their pinned authorization only on transport/decode
+  failure or 409 (`calibration::binding_lost`), never on a business refusal.
+  STOP's reply is immediate (`stop_latched`, `enabled_id: null`); the
+  server's worker torques off every configured axis whenever the safety epoch
+  advances, and refuses jobs captured before that epoch or older than its
+  HTTP wait.
+- **Remote acknowledgement (LC2).** A remote motion `HardwareAction` is queued
+  as `LinkCommand::Checked { ticket, generation, epoch, inputs, command }`;
+  the link thread re-authorizes, validates, runs it and checks its
+  postcondition (a declined select or tune is an error, not an
+  acknowledgement), then records the ticket result. The REST call stays
+  Pending until then. Robot mode's `system_ui` activation of a
+  `hardware:<name>` control forwards the action with its own reply
+  (`Replies::submit`), so `HardwareAction` keeps its one apply system.
+  Automatic STOPs (loss, leaving, reconnect, revocation) send an id-less
+  all-axes STOP only if this link drove a motor; an operator's STOP always
+  sends. A remote jog release is exempt from freshness checks and becomes a
+  STOP when it cannot be authorized.
+  Decision: use a bench-owned binary-protocol socket capability for automation,
+  rather than authorize a pseudo-terminal pathname. The same `CalibrationBus`
+  packet/controller execution consumes the descriptor; no second physics or
+  calibration implementation is introduced. Revisit the transport only if a
+  descriptor-transfer alternative preserves the no-serial-opener guarantee.
+- **Calibration acceptance scope (LC1–LC3).** The native panel, shared client,
+  acquisition controller and separate Rust calibration server remain the one
+  execution path. The committed driver in the hardware checklist is for a
+  future authorized fresh-binary verification pass only. Written fixtures and
+  source traces do not establish HW-01–HW-09 acceptance. Its virtual encoder
+  and fitted records describe simulated bench responses, not measured hardware;
+  no automatic CAD or actuator-registry promotion follows. HW-10–HW-11 and
+  hardware operation stay outside this batch. Browser compatibility and the
+  separate Rust-server launch requirement remain until parity is demonstrated.
 - **Safety stays underneath the UI.** The FPGA supervisor, taught travel
   windows, watchdogs and STOP are unchanged and hold whatever the UI does.
   STOP sits in the panel's top bar, which never scrolls, so it is reachable
@@ -7255,6 +7303,10 @@ IDs and the §§8–9 boundaries remain unchanged. See the linked T52 source map
 
 
 ## Portable retained-study artifacts — T53 (2026-10-02)
+
+**Set aside and unaccepted at `f541b05f`.** The accepted 2026-10-02
+verification repairs do not accept this batch. Its sources and retained evidence
+stay available; calibration work does not expand its scope or qualification.
 
 [The focused format, inventory and checklist](../portable-study-artifacts.md)
 realizes §§2–4 and §7 through existing Study, Store, native StudyOwner/StudyUi,

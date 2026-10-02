@@ -3,7 +3,7 @@
 //! (json.dumps' separators; shapes captured from a headless RoboCAD with a
 //! ground block, a thigh, an MG996R on a revolute hip, an IMU and a cable),
 //! the exact request line and body of every write, tolerant reads and
-//! RoboCAD's errors verbatim.
+//! RoboCAD's original errors alongside outcome-uncertainty hints.
 use super::tests::{Answer, assert_request, ok, serve};
 use super::*;
 use serde_json::{Map, Value, json};
@@ -222,7 +222,10 @@ fn refusals_carry_robocads_text_and_status() {
     let e = c.add_motor(&AddMotor { spec_id: "x".into(), ..AddMotor::default() }).unwrap_err();
     assert_eq!(e.to_string(), "RoboCAD POST /ops/add_motor: unknown motor x; see the library (HTTP 422)");
     let e = c.add_sensor(&SensorRequest { kind: "gps".into(), body: "a1".into(), ..SensorRequest::default() }).unwrap_err();
-    assert_eq!((e.status, e.message.as_str()), (Some(500), "KernelError: sensor kind must be imu, encoder, current or force"));
+    // A mutating 5xx preserves the server refusal and status while keeping
+    // the source outcome uncertain: the command may have committed first.
+    assert_eq!((e.method, e.route.as_str(), e.status), ("POST", "/sensors", Some(500)));
+    assert_eq!(e.message.strip_suffix(": RoboCAD may still apply it; refresh before retrying"), Some("KernelError: sensor kind must be imu, encoder, current or force"));
     let e = c.configure_robot(41, None, None, None, None).unwrap_err();
     assert!(e.no_gui() && e.message.starts_with("Expected document revision 41"), "{e:?}");
     server.join().unwrap();

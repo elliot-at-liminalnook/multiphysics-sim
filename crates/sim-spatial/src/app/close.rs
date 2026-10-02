@@ -101,11 +101,14 @@ fn apply(mut messages:ResMut<Messages<Act<CloseAction>>>,mut flight:ResMut<InFli
     mut replies:ResMut<Replies>,mut owner:ResMut<CloseOwner>,mut settings:ResMut<SettingsOwner>,
     studies:Option<Res<StudyOwner>>,ui:Option<Res<StudyUi>>,
     mut hardware:Option<ResMut<crate::robot::hardware::Hardware>>) {
-    actions::apply(&mut messages,&mut flight,&mut replies,|action,_| {
+    actions::apply(&mut messages,&mut flight,&mut replies,|action,call| {
         // STOP precedes even preservation refusal and any preference wait.
         if matches!(action,CloseAction::CloseRequest|CloseAction::CloseWithoutPreferences) {
             if let Some(hw)=hardware.as_deref_mut() { crate::robot::hardware::actions::request_close_stop(hw); }
         }
+        // Cancellation never grants close intent or preference-loss consent.
+        // STOP above remains independent of the abandoned request.
+        if call.cancelled { return Outcome::Done(Err("Close request cancelled; lifecycle intent unchanged".into())); }
         let facts=blockers(studies.as_deref(),ui.as_deref());
         let projection=project(&owner,&settings,facts.clone());
         let result=match action {

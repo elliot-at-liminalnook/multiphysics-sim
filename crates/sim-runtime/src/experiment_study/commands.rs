@@ -97,7 +97,13 @@ pub fn apply(s: &mut Study, command: Command) -> Result<(),String> {
             let e=next.evaluations.get_mut(evaluation).ok_or("evaluations: unknown evaluation")?; e.decision=decision;e.notes=notes;
         }
         Command::ResetCandidate=>next.draft=next.baseline.clone(),
-        Command::UseEvaluation(i)=>next.draft=next.evaluations.get(i).ok_or("evaluations: unknown evaluation")?.candidate.clone(),
+        Command::UseEvaluation(i)=>{
+            let evaluation=next.evaluations.get(i).ok_or("evaluations: unknown evaluation")?;
+            let candidate=evaluation.candidate.clone();
+            let ids=evaluation.results.iter().map(|r|r.trial_id.clone()).collect::<Vec<_>>();
+            expose(&mut next,&ids);
+            next.draft=candidate;
+        },
         Command::Expose(selection)=>{ let ids=match selection { EvaluationSelection::Filtered=>filtered_ids(&next), other=>trial_ids(&next,other)? }; expose(&mut next,&ids); }
     }
     next.draft.validate()?; validate_limits(&next.limits)?; validate_view(&next)?;
@@ -107,4 +113,25 @@ pub fn apply(s: &mut Study, command: Command) -> Result<(),String> {
     if let Some(i)=next.view.evaluation { let ids=next.evaluations[i].results.iter().map(|r|r.trial_id.clone()).collect::<Vec<_>>();expose(&mut next,&ids); }
     if exposes_view { let ids=filtered_ids(&next); expose(&mut next,&ids); }
     *s=next; Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn adopting_unselected_held_out_evaluation_records_influence() {
+        let mut study=super::super::input_content_fixtures::study();
+        let id=study.archive.trials.iter().find(|trial|trial.split!="train").unwrap().id.clone();
+        let mut candidate=study.draft.clone();candidate.step_s*=0.5;
+        let evaluation=super::super::evaluate(&study.archive,&[id.clone()],&study.baseline,&candidate,None,false,
+            &std::sync::atomic::AtomicBool::new(true),|_,_|{}).unwrap();
+        study.evaluations.push(evaluation);study.view.evaluation=None;study.view.trial_id=None;
+        study.validate().unwrap();
+        let before=study.clone();
+        assert!(apply(&mut study,Command::UseEvaluation(999)).is_err());
+        assert_eq!(serde_json::to_value(&study).unwrap(),serde_json::to_value(&before).unwrap());
+        apply(&mut study,Command::UseEvaluation(0)).unwrap();
+        assert_eq!(study.draft.step_s,candidate.step_s);
+        assert!(study.validation_seen && study.validation_influenced);
+    }
 }

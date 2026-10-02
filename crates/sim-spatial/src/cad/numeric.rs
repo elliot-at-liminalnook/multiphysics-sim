@@ -312,6 +312,7 @@ pub(super) fn refresh(mut commands: Commands, doc: Option<Res<CadDocument>>, fon
             BarPart::Head => head_key(&doc),
             BarPart::Body => body_key(&doc),
         };
+        let key = format!("{key}|source={}", super::activation::render_key(&doc));
         if shown.iter().any(|(e, s)| *e == entity && *s == key) {
             continue;
         }

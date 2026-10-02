@@ -114,3 +114,65 @@ fn unchanged_owner_projection_keeps_actual_controls_across_every_mode() {
         assert_eq!(actual_button(&mut app, CloseAction::CloseRequest), button);
     }
 }
+
+/// Actual OS request, renderer, pinned dispatch and authoritative cancellation.
+#[test]
+fn pending_close_keyboard_scope_over_retained_form_restores_focus() {
+    use crate::ui_kit::activation::{self, ModalFocus};
+    use crate::ui_kit::text::{TextEntryPlugin, TextFieldApp, TextField, FieldId, TextDraft};
+    use bevy::input_focus::{InputFocus, FocusCause, InputFocusSystems, dispatch_focused_input};
+    use bevy::input::keyboard::{KeyboardInput, Key};
+    const FIELD: FieldId = FieldId("close.fixture.form");
+    let mut app = App::new();
+    app.insert_resource(fonts()).add_plugins(TextEntryPlugin)
+        .add_text_field(FIELD, TextField::new("Retained CAD draft"))
+        .init_resource::<crate::app::actions::Replies>()
+        .init_resource::<crate::app::settings::SettingsOwner>()
+        .add_message::<bevy::window::WindowCloseRequested>()
+        .add_plugins(super::super::ClosePlugin)
+        .add_systems(PreUpdate, dispatch_focused_input::<KeyboardInput>
+            .in_set(InputFocusSystems::Dispatch).after(bevy::input::InputSystems));
+    crate::app::configure_sets(&mut app);
+    activation::install(&mut app);
+    let window = app.world_mut().spawn((Window::default(), bevy::window::PrimaryWindow)).id();
+    let font = fonts(); let k = Kit::new(&font);
+    let underlying = app.world_mut().spawn((Node::default(), ModalFocus, AccessibleLabel("Retained CAD form".into()))).id();
+    let anchor = app.world_mut().spawn((k.input("unsubmitted", "draft", CloseAction::CloseStatus, true), ChildOf(underlying))).id();
+    app.update(); app.update();
+    let field = app.world_mut().query::<(Entity, &FieldId)>().iter(app.world()).find_map(|(e,id)| (*id == FIELD).then_some(e)).unwrap();
+    let identity = app.world().get::<activation::InputIdentity>(anchor).unwrap().0.clone();
+    {
+        let mut text = app.world_mut().get_mut::<TextField>(field).unwrap();
+        text.draft = TextDraft::new("unsubmitted", false);
+        text.focus_anchor = Some(anchor); text.navigation_identity = Some(identity);
+    }
+    app.world_mut().resource_mut::<InputFocus>().set(field, FocusCause::Navigated);
+    app.update();
+    let saved = app.world().get::<TextField>(field).unwrap().draft.clone();
+    app.world_mut().write_message(bevy::window::WindowCloseRequested { window });
+    app.update(); app.update();
+    let cancel = actual_button(&mut app, CloseAction::CloseCancel);
+    let close_root = app.world_mut().query_filtered::<Entity, With<ClosePanel>>().iter(app.world()).next().unwrap();
+    assert_eq!(app.world().get::<activation::ModalPriority>(close_root).unwrap().0, 100);
+    // Traverse through the pinned window observer, never manufacture FocusedInput.
+    for _ in 0..4 {
+        if app.world().resource::<InputFocus>().get() == Some(cancel) { break; }
+        app.world_mut().resource_mut::<Messages<KeyboardInput>>().write(KeyboardInput {
+            key_code: KeyCode::Tab, logical_key: Key::Tab, state: bevy::input::ButtonState::Pressed,
+            text: None, repeat: false, window,
+        });
+        app.update();
+    }
+    assert_eq!(app.world().resource::<InputFocus>().get(), Some(cancel));
+    app.world_mut().resource_mut::<Messages<KeyboardInput>>().write(KeyboardInput {
+        key_code: KeyCode::Enter, logical_key: Key::Enter, state: bevy::input::ButtonState::Pressed,
+        text: None, repeat: false, window,
+    });
+    app.update();
+    assert!(!app.world().resource::<CloseOwner>().pending());
+    // Production render replaces the cancelled pending projection. The next
+    // PreUpdate restores its suspended durable editor through the modal stack.
+    app.update();
+    assert_eq!(app.world().resource::<InputFocus>().get(), Some(field));
+    assert_eq!(app.world().get::<TextField>(field).unwrap().draft, saved);
+}

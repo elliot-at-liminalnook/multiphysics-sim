@@ -357,6 +357,7 @@ pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts:
     let form = doc.as_deref().and_then(|d| d.results.form.as_ref());
     let listed = doc.as_deref().and_then(|d| d.results.listed.as_ref());
     let key = form.map(|f| format!("{f:?}{listed:?}{:?}", doc.as_deref().map(|d| d.results.form_sequence)));
+    let key = key.map(|key| format!("{key}|source={:?}", doc.as_deref().map(crate::cad::activation::render_key)));
     let shown = roots.iter().next().is_some();
     if key == *last && shown == key.is_some() {
         return;

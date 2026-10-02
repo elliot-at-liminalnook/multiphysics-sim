@@ -22,7 +22,7 @@ Document registry and CAD/Study/Builder retain durable sources and revisions.
 The existing `InputFocus` is the sole focus resource. Modal return focus and
 pointer-cause authorization are small global window state; neither owns edits.
 TextField entities retain drafts, caret/selection and source/intent anchors even
-when rendered children are replaced. A unique matching InputIdentity and source
+when rendered children are replaced. A unique matching InputIdentity and current document
 rebinds the anchor; ambiguity, hiding, source replacement or disappearance clears
 focus and emits Blur without deleting the draft. No positional reconstruction is
 used for retained editor identity. Path identity uses its stable label; Study
@@ -158,3 +158,69 @@ task-T49.3 and outcome-1 through outcome-5. Their evidence is the source contrac
 family inventory, representative traces and written fixtures above; acceptance
 is pending the orchestrator's independent source review. No executed or GUI
 acceptance is implied.
+
+
+## Correction of 11e898f7 — T49.1–T49.3
+
+The five call-0372 findings are repaired within the existing batch; all original
+`native-keyboard-activation:task-T49.1`, `task-T49.2`, `task-T49.3` and
+`native-keyboard-activation:outcome-1` through `outcome-5` IDs remain in scope.
+This correction supplies source traces and written fixtures, not execution evidence.
+
+1. Picker focus/Blur is presentation state, not the positional choice revision.
+   Focus-only changes neither advance the choice stamp nor rebuild the panel.
+   Source/listing/path mutations still advance it and refuse replaced choices.
+   The actual-pointer fixture establishes durable PATH focus through the real
+   text schedule before issuing the first pointer press and inspecting typed output.
+2. CAD retained renderer keys include the source lifetime used by both immutable
+   SourceStamp and shared RenderSource. Revision advancement rebuilds controls;
+   old captured occurrences remain refused. Durable editor navigation may transfer
+   only after its old anchor disappears, to one eligible current control with the
+   same stable intent and document identity. Only navigation metadata transfers;
+   no activation stamp is refreshed, draft applied, or source edit acknowledged.
+   CAD editor identity retains document generation and form/numeric/rename lifetime
+   while excluding source revision. Suspended editors also rebind for modal return.
+3. Tree row identity is exposed narrowly to CAD siblings. The new cross-module
+   accesses are inspected against their defining visibility.
+4. Keyboard fixtures write public KeyboardInput messages into the pinned public
+   dispatch_focused_input system in InputFocusSystems::Dispatch. They never construct
+   private FocusedInput fields. Assertions follow Update and deferred delivery,
+   including Tab/Shift+Tab. Keyboard-only setup avoids unrelated mouse dispatch
+   systems and their message-resource requirements.
+5. Pending close is a ModalFocus with ModalPriority(100). The kit deterministically
+   sorts eligible scopes by explicit priority, ancestry depth, then entity bits;
+   the last scope contains focus. Default modals have priority zero. Close cancels
+   through the existing authoritative owner, restoring a valid suspended editor
+   or initializing the remaining underlying scope without discarding drafts.
+   The actual close renderer fixture uses WindowCloseRequested, ClosePlugin,
+   pinned dispatch, keyboard Cancel and production projection removal.
+
+Hidden/disabled refusal, primary press timing, REST/system_ui identities, held jog
+exclusions, unconditional releases, STOP and pending-close motion refusal are
+retained. Compilation, fixtures, GUI behavior and parity remain unexecuted.
+
+
+### Retained CAD key audit
+
+`cad/activation.rs::render_key` contains generation, document snapshot key and
+local presentation revision. `cad/panel.rs::refresh` includes it for every CadList
+part: Top, Document, Status, Tree, TreeTools, Comments, References, Experiments,
+ExperimentReview, Motion, Components, Composition, Name, Inspector, Physical,
+Attributes, Robot, Materials, Print, History and Commands. Independent retained
+roots include it in attach, numeric, display UI/cube, saved views, robot motor
+library, thread pins, tree popup, catalogue surface/form, material form, file form,
+results form/overlay and toolbar tools. Previously once-spawned menu tabs now
+rebuild on source lifetime change too. No protected robot-panel source was edited.
+
+`cad/sync/mod.rs::take_snapshot` follows the shared registry before Present;
+`cad/selection/shared.rs::follow_tree` sets registry revision from the same shown
+snapshot used by the document key. Thus shared RenderSource revision changes
+are included in the rendering lifetime. The actual retained-panel fixture invokes
+production refresh with its retained Local/key state, actual follow_tree, shared
+source stamping/refusal and CAD refusal; old occurrences fail both source paths,
+then freshly rendered current controls produce the existing guarded selection.
+
+The lower-modal rebuild fixture additionally retains both return targets when an
+underlying editor rebuilds beneath close: cancelling close restores its draft,
+then closing that underlying scope restores its original pre-modal focus. This
+repairs the extra source-review finding without changing held-input semantics.

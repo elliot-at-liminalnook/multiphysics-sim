@@ -3,7 +3,7 @@ use super::*;
 use super::activation::*;
 use bevy::input::keyboard::{KeyboardInput, Key};
 use bevy::input::ButtonState;
-use bevy::input_focus::{InputFocus, FocusedInput, FocusCause};
+use bevy::input_focus::{InputFocus, FocusCause};
 use bevy::window::PrimaryWindow;
 use crate::app::actions::Act;
 
@@ -25,6 +25,7 @@ fn convert(controls: Query<&Intent, With<Activated>>, mut out: MessageWriter<Act
 fn fixture() -> (App, Entity, Entity, Entity) {
     let mut app = App::new();
     app.insert_resource(fonts()).add_plugins(text::TextEntryPlugin)
+        .add_systems(PreUpdate, bevy::input_focus::dispatch_focused_input::<KeyboardInput>.in_set(bevy::input_focus::InputFocusSystems::Dispatch).after(bevy::input::InputSystems))
         .add_message::<Act<Intent>>()
         .add_systems(Startup, render)
         .add_systems(Update, convert.in_set(crate::app::InputSet::Window));
@@ -37,12 +38,11 @@ fn fixture() -> (App, Entity, Entity, Entity) {
     let cancel = buttons.iter(app.world()).find_map(|(e, i)| (*i == Intent::Cancel).then_some(e)).unwrap();
     (app, window, submit, cancel)
 }
-fn key(app: &mut App, window: Entity, target: Entity, code: KeyCode, repeat: bool) {
+fn key(app: &mut App, window: Entity, code: KeyCode, repeat: bool) {
     let logical_key = match code { KeyCode::Enter => Key::Enter, KeyCode::Tab => Key::Tab, _ => Key::Space };
-    app.world_mut().trigger(FocusedInput {
-        focused_entity: target, window,
-        input: KeyboardInput { key_code: code, logical_key, state: ButtonState::Pressed, text: None, repeat, window },
-    });
+    // The pinned dispatch system constructs the private FocusedInput event and queues
+    // it in PreUpdate; the assertions follow an update/deferred command flush.
+    app.world_mut().write_message(KeyboardInput { key_code: code, logical_key, state: ButtonState::Pressed, text: None, repeat, window });
 }
 fn press(app: &mut App, window: Entity, entity: Entity, button: bevy::picking::pointer::PointerButton) {
     let camera = app.world_mut().spawn_empty().id();
@@ -74,8 +74,8 @@ fn actual_focused_buttons_enter_space_repeat_and_shortcuts() {
         let (mut app, window, submit, _) = fixture();
         app.world_mut().resource_mut::<InputFocus>().set(submit, FocusCause::Navigated);
         app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(code);
-        key(&mut app, window, submit, code, false);
-        key(&mut app, window, submit, code, true);
+        key(&mut app, window, code, false);
+        key(&mut app, window, code, true);
         app.update(); assert_eq!(drain(&mut app), [Intent::Submit]);
         assert!(!app.world().resource::<ButtonInput<KeyCode>>().just_pressed(code));
     }
@@ -100,10 +100,12 @@ fn actual_hidden_disabled_and_despawned_controls_refuse_capture() {
 fn actual_modal_tab_and_shift_tab_contain_navigation() {
     let (mut app, window, submit, cancel) = fixture();
     app.world_mut().resource_mut::<InputFocus>().set(submit, FocusCause::Navigated);
-    key(&mut app, window, submit, KeyCode::Tab, false);
+    key(&mut app, window, KeyCode::Tab, false);
+    app.update();
     assert_eq!(app.world().resource::<InputFocus>().get(), Some(cancel));
     app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::ShiftLeft);
-    key(&mut app, window, cancel, KeyCode::Tab, false);
+    key(&mut app, window, KeyCode::Tab, false);
+    app.update();
     assert_eq!(app.world().resource::<InputFocus>().get(), Some(submit));
     app.update(); assert!(drain(&mut app).is_empty());
 }
@@ -170,4 +172,46 @@ fn actual_editor_submit_is_single_and_retains_unapplied_text() {
     let submissions: Vec<_> = app.world_mut().resource_mut::<Messages<FieldMsg>>().drain().filter(|m| matches!(m.event, FieldEvent::Submit(_))).collect();
     assert_eq!(submissions.len(), 1);
     assert_eq!(app.world().get::<TextField>(id).unwrap().draft.text, "unapplied");
+}
+
+
+#[test]
+fn lower_modal_rebuild_under_close_preserves_both_return_targets() {
+    use text::{TextFieldApp, TextField, FieldId, TextDraft};
+    const FIELD: FieldId = FieldId("fixture.suspended");
+    let (mut app, _, return_target, _) = fixture();
+    app.add_text_field(FIELD, TextField::new("Suspended editor"));
+    let roots: Vec<Entity> = app.world_mut().query_filtered::<Entity, With<ModalFocus>>().iter(app.world()).collect();
+    for root in roots { app.world_mut().entity_mut(root).remove::<ModalFocus>(); }
+    app.update();
+    app.world_mut().resource_mut::<InputFocus>().set(return_target, FocusCause::Navigated);
+    let fonts = fonts(); let k = Kit::new(&fonts);
+    let lower = app.world_mut().spawn((Node::default(), ModalFocus, bevy::ui::prelude::AccessibleLabel("Draft form".into()))).id();
+    let anchor = app.world_mut().spawn((k.input("retained", "draft", Intent::Submit, true), ChildOf(lower))).id();
+    app.update();
+    let field = app.world_mut().query::<(Entity, &FieldId)>().iter(app.world()).find_map(|(e, id)| (*id == FIELD).then_some(e)).unwrap();
+    let identity = app.world().get::<InputIdentity>(anchor).unwrap().0.clone();
+    {
+        let mut editor = app.world_mut().get_mut::<TextField>(field).unwrap();
+        editor.draft = TextDraft::new("unapplied + selection", false);
+        editor.focus_anchor = Some(anchor); editor.navigation_identity = Some(identity);
+    }
+    app.world_mut().resource_mut::<InputFocus>().set(field, FocusCause::Navigated);
+    app.update();
+    let saved = app.world().get::<TextField>(field).unwrap().draft.clone();
+    let close = app.world_mut().spawn((Node::default(), ModalFocus, ModalPriority(100), bevy::ui::prelude::AccessibleLabel("Pending viewer close".into()))).id();
+    let cancel = app.world_mut().spawn((k.button("Cancel close", Intent::Cancel, Look::Secondary, true), ChildOf(close))).id();
+    app.update();
+    assert_eq!(app.world().resource::<InputFocus>().get(), Some(cancel));
+    app.world_mut().despawn(lower);
+    let replacement = app.world_mut().spawn((Node::default(), ModalFocus, bevy::ui::prelude::AccessibleLabel("Draft form".into()))).id();
+    let new_anchor = app.world_mut().spawn((k.input("unapplied + selection", "draft", Intent::Submit, true), ChildOf(replacement))).id();
+    app.update();
+    assert_eq!(app.world().get::<TextField>(field).unwrap().focus_anchor, Some(new_anchor));
+    assert_eq!(app.world().resource::<InputFocus>().get(), Some(cancel));
+    app.world_mut().despawn(close); app.update();
+    assert_eq!(app.world().resource::<InputFocus>().get(), Some(field));
+    assert_eq!(app.world().get::<TextField>(field).unwrap().draft, saved);
+    app.world_mut().despawn(replacement); app.update();
+    assert_eq!(app.world().resource::<InputFocus>().get(), Some(return_target));
 }

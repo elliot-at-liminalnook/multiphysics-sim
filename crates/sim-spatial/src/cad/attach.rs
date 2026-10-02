@@ -150,17 +150,19 @@ pub(super) fn input(
 }
 
 /// Present: the field, drawn into a new root or redrawn when the draft changes.
-pub(super) fn draw(mut commands: Commands, state: Res<AttachDraft>, typing: Typing, fonts: Res<UiFonts>, roots: Query<Entity, With<AttachRoot>>, mut last: Local<Option<(Entity, AttachDraft, bool)>>) {
+pub(super) fn draw(mut commands: Commands, state: Res<AttachDraft>, typing: Typing, fonts: Res<UiFonts>, roots: Query<Entity, With<AttachRoot>>, doc: Option<Res<CadDocument>>, mut last: Local<Option<(Entity, AttachDraft, bool, Option<String>)>>) {
     let Ok(root) = roots.single() else {
         *last = None;
         return;
     };
     let focused = typing.focused(ATTACH);
-    // Compared, not formatted: nothing is built per frame while unchanged.
-    if last.as_ref().is_some_and(|(e, d, f)| *e == root && *d == *state && *f == focused) {
+    let source = doc.as_deref().map(super::activation::render_key);
+    // Draft equality avoids rebuilding while unchanged; source changes replace
+    // rendered controls without refreshing their captured stamps.
+    if last.as_ref().is_some_and(|(e, d, f, s)| *e == root && *d == *state && *f == focused && *s == source) {
         return;
     }
-    *last = Some((root, state.clone(), focused));
+    *last = Some((root, state.clone(), focused, source));
     let k = Kit::new(&fonts);
     let ready = attach_action(&state.draft.text).is_ok();
     commands.entity(root).despawn_related::<Children>();

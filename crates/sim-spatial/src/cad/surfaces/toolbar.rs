@@ -160,17 +160,21 @@ pub(super) fn refresh(
     mut menu_tabs: Query<(&MenuTab, &mut Look, &mut CadButton)>,
     tools: Query<Entity, With<ToolRow>>,
     mut last: Local<Option<(Entity, String)>>,
+    mut tabs_source: Local<Option<String>>,
     selection: CadSelection,
 ) {
     let (Some(doc), Ok((tabs, spawned)), Ok(tools)) = (doc, tabs.single(), tools.single()) else { return };
     let selection = selection.items();
     let k = Kit::new(&fonts);
-    if spawned.is_none_or(|c| c.is_empty()) {
+    let source = crate::cad::activation::render_key(&doc);
+    if spawned.is_none_or(|c| c.is_empty()) || tabs_source.as_ref() != Some(&source) {
+        *tabs_source = Some(source);
+        commands.entity(tabs).despawn_related::<Children>();
         commands.entity(tabs).with_children(|p| menus::tabs(p, &k, &doc));
     } else {
         menus::light(&doc, &mut menu_tabs);
     }
-    let stamp = (tools, key(&doc, &selection));
+    let stamp = (tools, format!("{}|source={}", key(&doc, &selection), crate::cad::activation::render_key(&doc)));
     if (*last).as_ref() == Some(&stamp) {
         return;
     }

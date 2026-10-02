@@ -46,7 +46,7 @@ fn panel_key(doc: &CadDocument) -> Option<String> {
 
 /// Present: the panel, rebuilt when what it shows changes.
 pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, roots: Query<Entity, With<LibraryRoot>>, mut shown: Local<Option<String>>) {
-    let want = doc.as_deref().and_then(panel_key);
+    let want = doc.as_deref().and_then(|d| panel_key(d).map(|key| format!("{key}|source={}", crate::cad::activation::render_key(d))));
     let present = roots.iter().next().is_some();
     if *shown == want && present == want.is_some() {
         return;

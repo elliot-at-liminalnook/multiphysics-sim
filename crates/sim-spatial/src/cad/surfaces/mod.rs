@@ -435,7 +435,7 @@ fn draw(
     let selection = selection.items();
     let window = windows.single().map_or(Vec2::new(1280.0, 720.0), |w| Vec2::new(w.width(), w.height()));
     let width = window.x;
-    let key = doc.as_deref().and_then(|d| popup_key(d, &selection, window));
+    let key = doc.as_deref().and_then(|d| popup_key(d, &selection, window).map(|key| format!("{key}|source={}", crate::cad::activation::render_key(d))));
     let shown = roots.iter().next().is_some();
     if key == *last && shown == key.is_some() {
         return;

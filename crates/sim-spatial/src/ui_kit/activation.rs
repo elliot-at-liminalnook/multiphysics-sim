@@ -23,6 +23,10 @@ pub(crate) struct Activated;
 #[derive(Component)]
 #[require(TabGroup(TabGroup::modal()))]
 pub(crate) struct ModalFocus;
+/// Higher priorities contain focus above lower modals (pending close uses 100).
+/// Nested groups then sort by ancestry depth; entity bits break sibling ties.
+#[derive(Component, Default, Clone, Copy)]
+pub(crate) struct ModalPriority(pub i32);
 /// Stable intent key on a rendered editor, excluding its working text.
 #[derive(Component, Clone)]
 pub(crate) struct InputIdentity(pub String);
@@ -141,7 +145,7 @@ fn focus_inputs(mut commands: Commands, focus: Res<InputFocus>, inputs: Query<En
 }
 
 fn modal_focus(
-    modals: Query<(Entity, Option<&bevy::ui::prelude::AccessibleLabel>), With<ModalFocus>>,
+    modals: Query<(Entity, Option<&bevy::ui::prelude::AccessibleLabel>, Option<&ModalPriority>), With<ModalFocus>>,
     parents: Query<&ChildOf>,
     mut fields: Query<&mut super::text::TextField>,
     inputs: Query<(Entity, &InputIdentity, Option<&RenderSource>), With<super::text::KitInput>>,
@@ -153,22 +157,35 @@ fn modal_focus(
     mut focus: ResMut<InputFocus>,
     mut stack: ResMut<ModalStack>,
     entities: Query<Entity>,
+    field_entities: Query<Entity, With<super::text::TextField>>,
 ) {
     // Rebind by captured typed intent, never by a position in a rebuilt list.
     // The draft and caret stay on the durable field; no owner focus action runs.
-    if let Some(entity) = focus.get() && let Ok(mut field) = fields.get_mut(entity)
-        && field.focus_anchor.is_some_and(|e| !entities.contains(e))
-    {
-        let matches: Vec<Entity> = inputs.iter().filter(|(entity, identity, source)|
-            field.navigation_identity.as_deref() == Some(identity.0.as_str())
-            && field.navigation_source.as_ref() == *source
-            && eligible(*entity, &nodes)
-        ).map(|(entity, _, _)| entity).collect();
-        if matches.len() == 1 { field.focus_anchor = Some(matches[0]); }
+    for entity in &field_entities {
+        let Ok(mut field) = fields.get_mut(entity) else { continue };
+        if !field.focus_anchor.is_some_and(|e| !entities.contains(e)) { continue; }
+        // A source revision may rebuild an unchanged editor. Transfer only its
+        // navigation anchor, never an activation occurrence, and only to a
+        // unique current control with the same durable document/intent.
+        let matches: Vec<(Entity, Option<RenderSource>)> = inputs.iter().filter(|(entity, identity, source)| {
+            let same_document = match (field.navigation_source.as_ref(), *source) {
+                (None, None) => true,
+                (Some(old), Some(new)) => old.mode == new.mode && old.document.as_ref().map(|(id, _)| id) == new.document.as_ref().map(|(id, _)| id),
+                _ => false,
+            };
+            let current = source.is_none_or(|s| registry.as_ref().is_none_or(|r| r.current(s.mode) == s.document));
+            field.navigation_identity.as_deref() == Some(identity.0.as_str()) && same_document && current && eligible(*entity, &nodes)
+        }).map(|(entity, _, source)| (entity, source.cloned())).collect();
+        if matches.len() == 1 {
+            field.focus_anchor = Some(matches[0].0);
+            field.navigation_source = matches[0].1.clone();
+        }
         else {
             field.focus_anchor = None;
-            if let Ok(&id) = field_ids.get(entity) { out.write(super::text::FieldMsg { field: id, event: super::text::FieldEvent::Blur }); }
-            focus.clear();
+            if focus.get() == Some(entity) {
+                if let Ok(&id) = field_ids.get(entity) { out.write(super::text::FieldMsg { field: id, event: super::text::FieldEvent::Blur }); }
+                focus.clear();
+            }
         }
     }
     if let Some(entity) = focus.get() && let Ok(field) = fields.get(entity) {
@@ -179,24 +196,41 @@ fn modal_focus(
             focus.clear();
         }
     }
+    // Order all live scopes independently of ECS query iteration. Highest
+    // priority wins; nested scopes precede their parent on equal priority.
+    let mut ordered: Vec<_> = modals.iter().filter(|(e, _, _)| eligible(*e, &nodes)).map(|(e, label, priority)| {
+        let key = (priority.map_or(0, |p| p.0), parents.iter_ancestors(e).count(), e.to_bits());
+        (e, label.map_or_else(String::new, |l| l.0.clone()), key)
+    }).collect();
+    ordered.sort_by_key(|(_, _, key)| *key);
     // A presentation rebuild retains the logical modal's original return
     // target. Never replace it with its own durable editor.
     let mut rebuilt = Vec::new();
-    while stack.0.last().is_some_and(|(entity, _, _)| !modals.contains(*entity)) {
+    while stack.0.last().is_some_and(|(entity, _, _)| !ordered.iter().any(|(e, _, _)| e == entity)) {
         let (_, previous, label) = stack.0.pop().unwrap();
-        let replacement = modals.iter().any(|(_, next)| next.map_or("", |l| l.0.as_str()) == label);
+        let replacement = ordered.iter().any(|(_, next, _)| *next == label);
         if replacement { rebuilt.push((label, previous)); continue; }
-        let valid_previous = previous.filter(|e| entities.contains(*e) && fields.get(*e).map_or(true, |f| f.focus_anchor.is_some_and(|a| entities.contains(a) && eligible(a, &nodes))));
+        let valid_previous = previous.filter(|e| entities.contains(*e) && fields.get(*e).map_or_else(|_| eligible(*e, &nodes), |f| f.focus_anchor.is_some_and(|a| entities.contains(a) && eligible(a, &nodes))));
         if let Some(previous) = valid_previous { focus.set(previous, FocusCause::Navigated); }
         else { focus.clear(); }
     }
-    for (entity, label) in &modals {
-        if !stack.0.iter().any(|(e, _, _)| *e == entity) {
-            let label = label.map_or_else(String::new, |l| l.0.clone());
-            let previous = if let Some(index) = rebuilt.iter().position(|(old, _)| *old == label) { rebuilt.remove(index).1 } else { focus.get() };
-            stack.0.push((entity, previous, label));
+    // Disappeared lower scopes must not remain as future return targets.
+    stack.0.retain(|(entity, previous, label)| {
+        if ordered.iter().any(|(e, _, _)| e == entity) { return true; }
+        // A lower scope can rebuild while a higher scope keeps containment.
+        // Its logical return target must not become the higher scope's button.
+        if ordered.iter().any(|(_, next, _)| next == label) {
+            rebuilt.push((label.clone(), *previous));
+        }
+        false
+    });
+    for (entity, label, _) in &ordered {
+        if !stack.0.iter().any(|(e, _, _)| e == entity) {
+            let previous = if let Some(index) = rebuilt.iter().position(|(old, _)| old == label) { rebuilt.remove(index).1 } else { focus.get() };
+            stack.0.push((*entity, previous, label.clone()));
         }
     }
+    stack.0.sort_by_key(|(entity, _, _)| ordered.iter().find(|(e, _, _)| e == entity).unwrap().2);
     if let Some((modal, _, _)) = stack.0.last() {
         let anchor = focus.get().and_then(|e| fields.get(e).ok().and_then(|f| f.focus_anchor).or(Some(e)));
         let inside = anchor.is_some_and(|e| e == *modal || parents.iter_ancestors(e).any(|p| p == *modal));
@@ -206,7 +240,7 @@ fn modal_focus(
 
 /// Stamp once after feature Present renderers. Persistent shell controls are
 /// window intent and intentionally have no physical/document source.
-fn stamp_sources(mut commands: Commands, mode: Option<Res<State<crate::app::ViewerMode>>>, registry: Option<Res<crate::document::DocumentRegistry>>, controls: Query<Entity, (With<Ordinary>, Without<RenderSource>)>, ancestry: Query<(Option<&ChildOf>, Has<crate::app::Persistent>)>) {
+pub(crate) fn stamp_sources(mut commands: Commands, mode: Option<Res<State<crate::app::ViewerMode>>>, registry: Option<Res<crate::document::DocumentRegistry>>, controls: Query<Entity, (With<Ordinary>, Without<RenderSource>)>, ancestry: Query<(Option<&ChildOf>, Has<crate::app::Persistent>)>) {
     let (Some(mode), Some(registry)) = (mode, registry) else { return };
     for entity in &controls {
         let mut next = Some(entity);
@@ -219,7 +253,7 @@ fn stamp_sources(mut commands: Commands, mode: Option<Res<State<crate::app::View
         if !persistent { commands.entity(entity).insert(RenderSource { mode: *mode.get(), document: registry.current(*mode.get()) }); }
     }
 }
-fn validate_sources(mut commands: Commands, registry: Option<Res<crate::document::DocumentRegistry>>, mode: Option<Res<State<crate::app::ViewerMode>>>, controls: Query<(Entity, &RenderSource), With<Activated>>) {
+pub(crate) fn validate_sources(mut commands: Commands, registry: Option<Res<crate::document::DocumentRegistry>>, mode: Option<Res<State<crate::app::ViewerMode>>>, controls: Query<(Entity, &RenderSource), With<Activated>>) {
     let (Some(registry), Some(mode)) = (registry, mode) else { return };
     for (entity, source) in &controls {
         if source.mode != *mode.get() || source.document != registry.current(source.mode) { commands.entity(entity).remove::<Activated>(); }

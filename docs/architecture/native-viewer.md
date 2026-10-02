@@ -7067,3 +7067,29 @@ viewport surfaces are named exceptions; tree keyboard selection still uses the
 ordinary contract. Implementation and written fixtures are source-reviewed only;
 compilation, execution and GUI parity remain unverified. External Python/OCCT and
 browser reference workflows stay available; no migration retirement is claimed.
+
+
+### T49 correction: retained lifetimes and modal priority
+
+Call-0372's five findings in `11e898f7` require this correction within T49.1–T49.3,
+retaining every native-keyboard-activation outcome ID. Focus-only picker changes
+are presentation state and cannot invalidate a source choice stamp. CAD retained
+presentation keys include their source lifetime: a new source revision rebuilds
+controls rather than refreshing immutable occurrence stamps. Old captured actions
+still fail the existing source validation before authoritative application.
+
+The one editor may transfer navigation to a unique eligible current control of the
+same durable document and stable intent when its old anchor disappears, including
+while suspended under another modal. This preserves draft/caret only; action stamps,
+physical values and draft acknowledgment never transfer. CAD identities retain
+source generation and form/numeric/rename lifetimes while excluding source revision.
+
+ModalFocus priority is explicit through ModalPriority (default zero; pending close
+100), then ancestry depth, then generational entity bits as a deterministic sibling
+tie-break. The highest eligible scope owns containment; cancellation restores valid
+previous focus or initializes the remaining scope. Logical lower scopes retain
+their original return target even when they rebuild beneath a higher close scope. Pending close uses this same
+InputFocus, pinned TabNavigation and typed CloseOwner lifecycle above existing forms.
+Fixtures feed KeyboardInput through pinned public dispatch rather than constructing
+private FocusedInput fields, and inspect results only after deferred delivery.
+All repair evidence remains source-only, with fixtures and compilation unexecuted.

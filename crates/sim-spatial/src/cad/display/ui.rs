@@ -112,6 +112,7 @@ pub(super) fn cube_press(clicks: Query<(&CubeButton, Option<&Enabled>), (With<cr
 #[derive(Clone, PartialEq)]
 pub(super) struct Shown {
     root: Entity,
+    source: Option<String>,
     mode: DisplayMode,
     toggles: [bool; DisplaySetting::ALL.len()],
     section: bool,
@@ -127,6 +128,7 @@ pub(super) struct Shown {
 pub(super) fn toolbar(
     mut commands: Commands,
     display: Option<Res<CadDisplay>>,
+    doc: Option<Res<crate::cad::document::CadDocument>>,
     meshes: Option<Res<CadMeshes>>,
     entry: Option<Res<SectionEntry>>,
     cameras: Query<&Orbit, With<Camera3d>>,
@@ -169,7 +171,7 @@ pub(super) fn toolbar(
     });
     let bounds = meshes.as_deref().and_then(super::section::model_bounds);
     let centre = bounds.map(|(lo, hi)| [0, 1, 2].map(|i| ((lo[i] + hi[i]) / 2.0 * 1000.0).round() as i64));
-    let shown = Shown { root, mode: display.mode, toggles: DisplaySetting::ALL.map(|s| s.get(&display)), section: display.section.enabled, cube: display.view_cube, facing, centre, offset: entry.as_ref().and_then(|e| e.typing.clone()) };
+    let shown = Shown { root, source: doc.as_deref().map(crate::cad::activation::render_key), mode: display.mode, toggles: DisplaySetting::ALL.map(|s| s.get(&display)), section: display.section.enabled, cube: display.view_cube, facing, centre, offset: entry.as_ref().and_then(|e| e.typing.clone()) };
     if last.as_ref() == Some(&shown) {
         return;
     }

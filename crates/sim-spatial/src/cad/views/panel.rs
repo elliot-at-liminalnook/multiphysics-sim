@@ -228,7 +228,7 @@ fn panel_key(views: &CadViews, doc: &CadDocument) -> Option<String> {
 /// Present: the panel, rebuilt when what it shows changes.
 pub(super) fn draw(mut commands: Commands, views: Option<Res<CadViews>>, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, roots: Query<Entity, With<ViewsRoot>>, mut shown: Local<Option<String>>) {
     let want = match (views.as_deref(), doc.as_deref()) {
-        (Some(v), Some(d)) => panel_key(v, d),
+        (Some(v), Some(d)) => panel_key(v, d).map(|key| format!("{key}|source={}", crate::cad::activation::render_key(d))),
         _ => None,
     };
     let present = roots.iter().next().is_some();

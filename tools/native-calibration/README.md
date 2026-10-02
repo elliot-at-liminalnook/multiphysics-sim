@@ -4,7 +4,7 @@
 Normal writing turns must not run it, build binaries, launch a viewer or capture
 screenshots. The accepted 2026-10-02 verification
 ([verification-20261002.md](../../docs/verification-20261002.md)) only observed
-virtual HW-01 connection and idle STOP; HW-02–HW-09 and LC1–LC3 acceptance remain
+virtual HW-01 connection and idle STOP; HW-02–HW-11 and LC1–LC3 acceptance remain
 pending. Portable work at f541b05f remains set aside/unaccepted.
 
 **No executed evidence exists for this driver.** Neither `acceptance.py` nor
@@ -145,7 +145,7 @@ server process whose log shows it bound the recorded port, and (for viewers)
 
 ## Two phases
 
-**Positive HW-01–HW-09 path: direct.** The main viewer starts with
+**Positive HW-01–HW-11 path: direct.** The main viewer starts with
 `--hardware <owned server URL>` and HW-01 asserts that `url` is exactly that. No
 proxy sits between the viewer and the server.
 
@@ -171,7 +171,7 @@ during HW-01 leaves the server frozen.** To recover, find the pid in
 `processes.json` and run `kill -CONT <pid>`. Then STOP it (POST
 `{"action":"stop"}` with the page token) or kill that server.
 
-**LC1 refusal on the real server.** Out-of-scope `raw_step`, `gait_play` and
+**LC1 refusal on the real server.** Out-of-scope `raw_step`, `flip` and
 `sync_start` are refused natively with the remote-refusal text. Direct requests
 with no identity headers and with a foreign server UUID get 409 plus the binding
 text, and STOP with the same headers returns `stop_latched: true`, `enabled_id:
@@ -200,18 +200,26 @@ of the phase.
 | HW-03 | `hardware:jog_upper/lower` (toggles: activating a held direction's control again releases it); REST `speed` | Each press and release goes through the control, which must list `jog_press` before a press and `jog_release` while held. Encoder movement, held feedback (`hardware_status.form` `held_upper`/`held_lower`, or the controls' listed action if the form does not expose them), and the opposing-input case: upper then lower pressed shows both held and holds; both released by activating each control again; position stays within 32 counts for 1 s. |
 | HW-04 | `hardware:section_*`, `hardware:stop` | Top STOP listed and enabled while sections toggle; each STOP ends the jog (server `enabled_id: null`, not busy). Visual non-scrolling placement is judged from the `HW-04-stop-*` screenshots by the operator, not by the driver. |
 | HW-05 | REST `loss {reason: focus_lost}`; `hardware:close`, `hardware:toggle_panel`; `mode:phenomena` then `mode:robot` | Drive ends with no ready motion. Closed panel reports `open: false`. Mode exit: direct server status shows `enabled_id: null` and not busy, and `hardware_status` is refused with "the active mode is phenomena". Re-entry reconnects idle with a new generation. `mode:build` is not used because Build refuses to open without a document (`switch/prepare.rs` `needs`). REST loss exercises the interruption consumer, not an OS focus event. |
-| HW-06 | `hardware:capture_lower/upper/reference`, `hardware:reset_poses`; REST `speed`, `target`, `target_commit` | Before each capture the motor holds still within the server's capture bounds (`server.sweep.latest`: holding, velocity under 2 counts/s, target within 3 counts) for 0.5 s (the server needs six stable samples and the viewer polls it every 150 ms); a capture counts only with a new `records/calibration-*.json`, `capture_message` `Saved <pose> pose` and the value set, and is retried up to 5 times while not saved, e.g. while the server reports "Still settling" (attempts in `captures.jsonl`). After poses are taught, `speed`/`target` of −1 and 101 are refused with "must be a number from". The encoder reaches each target, and the commanded target lies inside the four-count inset of the taught lower/upper. The reference pose is captured (non-null). Reset clears lower/upper. Motor 3 is taught too. |
+| HW-06 | `hardware:capture_lower/upper/reference`, `hardware:reset_poses`; REST `speed`, `target`, `target_commit` | Before each capture the motor holds still within the server's capture bounds (`server.sweep.latest`: holding, velocity under 2 counts/s, target within 3 counts) for 0.5 s (the server needs six stable samples and the viewer polls it every 150 ms); the capture's own answer is the verdict (a capture answers only after the server saved the pose, or with its refusal; the `system_ui` activation over REST is forwarded with a REST reply, so it carries that verdict): an error with the server's "Still settling" is retried after holding still again, up to 5 times; any other error fails; an OK answer must already show the value in the returned `hardware_status` (else in the next one, read once), and a new `records/calibration-*.json` is checked once as evidence. Nothing is polled for (attempts in `captures.jsonl`). After poses are taught, `speed`/`target` of −1 and 101 are refused with "must be a number from". The encoder reaches each target, and the commanded target lies inside the four-count inset of the taught lower/upper. The reference pose is captured (non-null). Reset clears lower/upper. Motor 3 is taught too. |
 | HW-08 | `hardware:tune_confirm`, `hardware:tune`, `hardware:stop` | STOP is pressed as soon as the tune is seen running (no screenshot in between), and it interrupted the tune: `tuning.error` set (the server sets it only on the stopped path) and still no gains on motor 2 (`tune-interrupted.json`). The viewer's tuning status carries no `result` field, so the evidence for tuning is that stopped-path error plus motor 2's gains, checked absent before the tune is confirmed, still absent after STOP. The fresh tune's `session.tune_stages` (cleared at each tune start) shows at least 2 stages, plus finite gains, a retained record file inside the output, and the confirmation cleared. Repeated for motor 3. |
 | HW-07 | `hardware:sweep`, `hardware:learn`, `hardware:sweep_all`, `hardware:stop`; REST `loss` | Saved-range travel stays within poses. Pause holds. Interruption keeps poses. `session.learning_terminal` shows `learning_complete` with at least three stops each way, `learning: false` and intent hold (no second Learn press, which would start a new run). Two taught motors complete two half cycles each. Another sweep-all is interrupted by STOP. |
 | HW-09 | `hardware:campaign_confirm`, `hardware:campaign`, `hardware:campaign_resume`, `hardware:stop` | STOP is pressed as soon as a saved stage is seen with the campaign running (no screenshot in between), and it interrupted the campaign: `campaign.error` set and no result. At least one saved receipt per completed stage (`*.execution.json` provenance files are not counted). Completed count retained across STOP. Receipt hashes unchanged after resume. Terminal report inside the output. Confirmation cleared. |
+| HW-10a-sim | `hardware_gaits`; `hardware:gait_select_0`, `hardware:gait_mode_sim`, `hardware:gait_play` (label Play, Pause, Resume), `hardware:gait_stop`; REST `gait_speed`, `gait_effort` | Gait options listed. Sim only plays (`session.gait` mode `sim`, playing, not leg) and `t` advances 0.5 s within 5 s; Pause holds `t` exactly over 0.6 s; Resume advances it again; `gait_speed` 50 gives `session.gait.scale` 0.5; Stop leaves `session.gait` null. |
+| HW-10b-leg | REST `speed`, `target`, `target_commit`; `hardware:reset_poses`, `hardware:capture_*`, `hardware:mirror_on`, `hardware:select_2`, `hardware:gait_mode_leg`, `hardware:gait_confirm`, `hardware:gait_play`, `hardware:gait_stop` | Preconditions: motors 3 and 2 reset and re-taught wide (lower 1600 counts below, upper 3200 above, at least 2800 apart) so the gait fits the server's 95 % window check; mirror model loaded and shown; each aligned with Save sim alignment at the 50 % target, the saved axis carrying a finite `reference_joint_rad`; motor 2 selected with hold others (no "watchdog check failed"). Then 25 % speed, 50 % effort, confirmed, Leg only: the Play activation's own answer must be OK (a refusal is recorded in `hw10-leg-refused.json` and reported as a misfit or not); within 60 s `server.gait.running` and `phase` playing, `session.gait` mode `leg`, the Leg status line labelled "VIRTUAL (simulated)" with phase `playing` and " · error … counts"; the taught roles are not in `skipped` (the untaught knee is). The gait's Stop ends it within 30 s: server not running, `session.gait` null, the Recent leg runs headings changed with a "VIRTUAL (simulated) · " row; then drive is stopped. Phases seen in `hw10-leg.json`. |
+| HW-10b-both | as Leg, with `hardware:gait_mode_both` | As Leg, plus `session.gait.mode` `both`, `mirror.gait` true and `link_state` `live`, and `session.gait.t` advancing between reads while live (`hw10-both.json`). Afterwards the form is left Sim only at 100 %, unconfirmed, the mirror hidden. |
+| HW-11 | `hardware:mirror_on`, `hardware:capture_reference`, `hardware:jog_upper`, `hardware:mirror_off`, `hardware:stop`; REST `robot_run {action: start}` | Mirror shown with its model loaded. Motor 2 at its 50 % target, held; Save sim alignment answers OK and within 10 s the mirror line reads the worm's "0.0° from its alignment pose" (the save's own status reads exactly 0.0; a later poll may differ by the hold's jitter, so |value| ≤ 0.3°, about 3 counts: the capture itself needs six samples within 2 counts) with `mirror.leg_data` live; a 100-count jog up moves that reading to at least 1.0°; `robot_run start` is refused with the mirroring text; mirror off hides it. |
 | LC1 real server | see "Two phases" | 409 plus binding text, latched STOP replies, expiry refusals and the new server UUID. |
 | LC1 FIXTURE | second viewer via proxy | Virtual-requirement refusals with no crossings. |
 
-The order is HW-01–HW-06, HW-08, HW-07, HW-09: tuning both taught motors before
+The order is HW-01–HW-06, HW-08, HW-07, HW-09, HW-10a-sim, HW-10b-leg,
+HW-10b-both, HW-11, then LC1: tuning both taught motors before
 sweep-all supplies its existing measured-model stopping envelope rather than
 raising the adaptive bootstrap limit or pretending an untuned slow traverse fits
 a short deadline (`calibration_sweep.rs`, tuned-braking branch). This virtual
 prerequisite remains simulated; physical tuning must still be supervised.
+HW-10 Leg and Both run only against the virtual bench here; they are not the
+physical HW-10, which still needs the gait-lab requalification and an operator
+(docs/hardware-checklist.md).
 
 Wait conditions treat missing fields, wrong types and `None` as "not yet".
 The driver issues one command at a time and waits for each job to finish before
@@ -256,6 +264,10 @@ preflight refusal before any subprocess or git call; failure-receipt retention
 with no STOP sent to an unowned server; refusal of an existing evidence directory;
 the fail-closed config placeholders; the "not yet" wait semantics; the
 latched-STOP reply check; the capture stillness and STOP-interrupted predicates;
+the capture verdict (Still settling retried, another refusal failing at once, an OK
+answer needing the value and a new calibration file, nothing polled); the Leg
+status line, VIRTUAL run-row and mirror-degree parsers, and that the misfit,
+settling and mirroring texts still appear in their Rust owners;
 transport errors and non-JSON poll replies on a pending job reaching job-cancel, and a failed submission sending only the direct STOP; proxy
 robustness against an in-process stub and closing a proxy that never started; receipt
 helper refusals (no, missing or empty build log, empty binary, existing output)

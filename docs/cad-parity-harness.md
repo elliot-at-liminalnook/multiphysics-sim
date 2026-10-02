@@ -264,3 +264,22 @@ error permanently disables further PID/group operations. This keeps the existing
 containment owner and avoids reaping before the last signal or ignoring `EPERM`
 for live processes. Actual-child fixtures cover natural exit, a live descendant,
 and external reaping; their execution results belong to the verification report.
+
+### Executed request-bound repair (2026-10-02)
+
+The wheeled verification run exposed a five-second startup timeout leaking into
+all native-adapter requests, including physical derivation. The adapter now
+retains the shared `REQUEST_TIMEOUT` (30 seconds) for reads and uses
+`EDIT_TIMEOUT` (130 seconds) for synchronous source mutations. Startup health
+probes remain independently capped at two seconds by `wait_until_live`;
+asynchronous component polling remains on the normal client. No mutation is
+retried. Cancellation is observed between requests/polls and cannot preempt a
+synchronous request already in flight; it can await that transport bound before
+owned service cleanup. Receipts preserve uncertain outcomes.
+
+Decision: restore existing shared CAD-client bounds rather than let startup
+probe settings govern geometry and mutations. Revisit if executed bounded
+requests still fail or a reviewed interruptible transport replaces synchronous
+calls. These receipts establish bounded service behavior only; shared
+Python/OCCT authority and absent original provenance/uncertainty still prevent
+independent replacement qualification. See [verification scope and receipts](verification-20261002.md).

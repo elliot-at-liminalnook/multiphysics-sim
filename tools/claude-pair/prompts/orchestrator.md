@@ -76,7 +76,11 @@ realizes. Every review checks:
 - **Superseded code is deleted in the same epic.** Callers are migrated, not left
   on the old path.
 - **Current Bevy.** Code uses the pinned Bevy's own facilities instead of
-  hand-rolled equivalents, checked against that version's docs.
+  hand-rolled equivalents, checked against that version's docs. Hold
+  assignments and reviews to `tools/claude-pair/prompts/bevy.md` (the Bevy
+  practice section of your instructions): any pattern from its "Never write
+  these" table is a reason to revise. Put its pre-write questions into
+  assignments where they apply.
 - **The document stays true.** A change that alters the shape updates the
   document in the same commit, and any deviation is recorded as a decision with
   its reason.

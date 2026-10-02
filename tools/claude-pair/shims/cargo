@@ -1,0 +1,14 @@
+#!/bin/bash
+# Codex has no per-command time limit (Claude Code stops every shell command
+# itself), so Codex agents get this cargo first on their PATH: the real cargo,
+# stopped by `within` after PAIR_SHELL_SECONDS. A timeout is unverified, not failed.
+here="$(cd "$(dirname "$0")" && pwd)"
+path=":$PATH:"
+path="${path//:$here:/:}"
+path="${path#:}"
+export PATH="${path%:}"
+real="$(command -v cargo)" || { echo "cargo: not found on PATH" >&2; exit 127; }
+if [ -z "$PAIR_SHELL_SECONDS" ] || [ "$PAIR_SHELL_SECONDS" = "0" ]; then
+  exec "$real" "$@"
+fi
+exec "$here/../bin/within" "$PAIR_SHELL_SECONDS" "$real" "$@"

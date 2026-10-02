@@ -50,7 +50,9 @@ Exercise taste in concrete terms:
   panels or demos.
 - **Lean on current Bevy.** Use what the pinned version provides (the document
   lists the features that matter here) instead of hand-rolled equivalents,
-  verified against its docs.
+  verified against its docs. `tools/claude-pair/prompts/bevy.md` (the Bevy
+  practice section of your instructions) says how; a recurring Bevy-practice
+  cost counts as a named cost when ranking candidates.
 - **A structural epic must remove a named, recurring cost:** duplicated
   handlers, hand-rolled threads, separate per-mode apps, bespoke widgets,
   thousand-line files. Renaming and churn don't count.

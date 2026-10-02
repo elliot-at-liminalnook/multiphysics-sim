@@ -438,3 +438,7 @@ details.ev.error .ev-icon { background: var(--bad-soft); color: var(--bad); }
 .agent-act { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 12.5px; padding: 3px 0; border-top: 1px dashed var(--border); }
 .agent-act:first-child { border-top: 0; }
 .agent-card .btn { align-self: flex-start; }
+
+/* Header backend toggle: a mixed setup (per-role overrides) shows neither pressed. */
+.backend-toggle button { padding: 5px 11px; font-size: 12.5px; }
+.backend-toggle.mixed { outline: 1px dashed var(--line, currentColor); outline-offset: 1px; }

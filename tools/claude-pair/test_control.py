@@ -20,10 +20,12 @@ HERE = Path(__file__).resolve().parent
 class ControlTests(unittest.TestCase):
     def runner(self, tmp, **config):
         root = fixtures.PairTests().initialize_fixture(Path(tmp).resolve())
-        if config:
-            data = pair.read_json(root / "config.json")
-            data.update(config)
-            pair.write_json(root / "config.json", data)
+        data = pair.read_json(root / "config.json")
+        # These tests predate automatic backend switching and must not depend on
+        # whether codex is installed here; test_backends.AutoSwitch covers it.
+        data["auto_switch"] = {"enabled": False, "at": 0.95}
+        data.update(config)
+        pair.write_json(root / "config.json", data)
         runner = pair.Runner(root)
         runner.deadline = time.monotonic() + 60
         return runner

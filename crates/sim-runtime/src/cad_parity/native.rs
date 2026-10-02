@@ -101,8 +101,10 @@ impl Adapter for NativeAdapter {
             );
         let mut child = OwnedProcess::spawn(&mut command)?;
         let client = CadClient::new(&format!("http://127.0.0.1:{port}"))
-            .map_err(|e| e.to_string())?
-            .with_timeout(Duration::from_secs(5));
+            .map_err(|e| e.to_string())?;
+        // Startup polling caps its own probes. Do not leak that short timeout
+        // into physical reads or synchronous source edits after readiness.
+        let edits = client.clone().with_timeout(cad_client::EDIT_TIMEOUT);
         cad_client::service::wait_until_live(
             &client,
             Instant::now() + cad_client::service::START_TIMEOUT,
@@ -163,16 +165,16 @@ impl Adapter for NativeAdapter {
                 let value = match &step.operation {
                     Operation::Observe => Value::Null,
                     Operation::Rename { node, name } => {
-                        client.rename(node, name).map_err(error)?.result
+                        edits.rename(node, name).map_err(error)?.result
                     }
                     Operation::Undo => {
-                        json!(client.undo().map_err(error)?.undone.ok_or_else(|| (
+                        json!(edits.undo().map_err(error)?.undone.ok_or_else(|| (
                             ExecutionStatus::Failed,
                             "No command available to undo".into()
                         ))?)
                     }
                     Operation::Redo => {
-                        json!(client.redo().map_err(error)?.redone.ok_or_else(|| (
+                        json!(edits.redo().map_err(error)?.redone.ok_or_else(|| (
                             ExecutionStatus::Failed,
                             "No command available to redo".into()
                         ))?)
@@ -191,7 +193,7 @@ impl Adapter for NativeAdapter {
                                 format!("op {name} is outside bounded non-filesystem allowlist"),
                             ));
                         }
-                        client
+                        edits
                             .op(name, args, &kwargs.clone().into_iter().collect())
                             .map_err(error)?
                             .result
@@ -200,7 +202,7 @@ impl Adapter for NativeAdapter {
                         revision_offset,
                         updates,
                     } => {
-                        client
+                        edits
                             .configure_robot(
                                 stamp_revision(health.revision, *revision_offset)
                                     .map_err(|e| (ExecutionStatus::Incomplete, e))?,
@@ -285,7 +287,7 @@ impl Adapter for NativeAdapter {
                             )
                             .map_err(error)?;
                         if let Some(node) = interfere {
-                            client
+                            edits
                                 .rename(
                                     node,
                                     &format!(

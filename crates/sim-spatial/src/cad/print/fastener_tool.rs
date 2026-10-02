@@ -23,7 +23,7 @@
 use super::edits::FastenerClick;
 use super::{PrintArgs, PrintOp};
 use crate::app::actions::{Act, Call};
-use crate::app::{ViewerMode, ViewerSet};
+use crate::app::{ViewerMode};
 use crate::cad::actions::{CadAction, Cx};
 use crate::cad::document::CadDocument;
 use crate::cad::mesh::{CadBody, CadMeshes};
@@ -194,5 +194,5 @@ fn click(
 
 /// CadPlugin: the fastener tool's 3D clicks.
 pub(super) fn build(app: &mut App) {
-    app.add_systems(Update, click.in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)));
+    app.add_systems(Update, click.in_set(crate::app::InputSet::Window).run_if(in_state(ViewerMode::Cad)));
 }

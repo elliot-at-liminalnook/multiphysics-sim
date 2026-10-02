@@ -27,7 +27,7 @@
 use super::dock::ThreadsInput;
 use super::{Field, ThreadsArgs, ThreadsOp, submit_action};
 use crate::app::actions::Act;
-use crate::app::{ViewerMode, ViewerSet};
+use crate::app::{ViewerMode};
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
 use crate::ui_kit::text::{EnterKey, FieldEvent, FieldId, FieldMsg, TextDraft, TextField, TextFocus};
@@ -236,7 +236,7 @@ pub(super) fn build(app: &mut App) {
             Update,
             (
                 // Before CAD's keys: a field given the keyboard this frame holds the frame's keys.
-                input.in_set(crate::app::InputSet::Window).in_set(crate::cad::CadKeySet::Focus).in_set(ViewerSet::Input),
+                input.in_set(crate::cad::CadKeySet::Focus),
                 // After the reference calibrate tool's Escape (which ends that tool first) and
                 // before the Select tool's (`transform::keys`); it consumes the key when it acts.
                 escape
@@ -245,7 +245,7 @@ pub(super) fn build(app: &mut App) {
                     .after(crate::cad::CadKeySet::Gate)
                     .after(crate::cad::references::calibrate::escape)
                     .before(crate::cad::CadKeySet::ToolKeys)
-                    .in_set(ViewerSet::Input),
+                    ,
             )
                 .run_if(in_state(ViewerMode::Cad)),
         );

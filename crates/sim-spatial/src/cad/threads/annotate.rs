@@ -25,7 +25,7 @@
 //!   `point`, `face` and `view` ([`reattach`]), and the thread is opened.
 use super::{HINT, ThreadsArgs, ThreadsOp, Tool, UPDATE, read};
 use crate::app::actions::{Act, Call};
-use crate::app::{ViewerMode, ViewerSet};
+use crate::app::{ViewerMode};
 use crate::cad::actions::{CadAction, Cx};
 use crate::cad::display::CadDisplay;
 use crate::cad::document::{CadDocument, CadTool};
@@ -203,5 +203,5 @@ fn click(
 
 /// CadPlugin: Annotate's 3D clicks (Input).
 pub(super) fn build(app: &mut App) {
-    app.add_systems(Update, click.in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)));
+    app.add_systems(Update, click.in_set(crate::app::InputSet::Window).run_if(in_state(ViewerMode::Cad)));
 }

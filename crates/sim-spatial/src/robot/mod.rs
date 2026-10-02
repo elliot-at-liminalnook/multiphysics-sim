@@ -223,7 +223,7 @@ impl Plugin for RobotPlugin {
                     // Before the shared camera (`crate::camera`): its viewport reads the
                     // ViewArea `view_area` sets, its place step frames the bounds `receive`
                     // and `planar_sync` write.
-                    (watch, receive, stress_paint, apply_frames.in_set(RobotSet::Frames), planar_sync, scroll, view_area, highlight).chain().in_set(ViewerSet::SimSync).before(CameraSet::Viewport),
+                    (watch.in_set(ViewerSet::SimSync), receive.in_set(ViewerSet::SimSync), stress_paint.in_set(ViewerSet::SimSync), apply_frames.in_set(RobotSet::Frames), planar_sync.in_set(ViewerSet::SimSync), scroll.in_set(ViewerSet::SimSync), view_area.in_set(ViewerSet::SimSync), highlight.in_set(ViewerSet::SimSync)).chain().before(CameraSet::Viewport),
                     (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, recorded_panel, gait_panel, panel_ui::gait_path_draw, graph_dock, draw, actions::publish).chain().in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Robot)),

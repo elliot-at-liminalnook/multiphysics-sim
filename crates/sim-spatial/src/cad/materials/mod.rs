@@ -387,9 +387,7 @@ pub(in crate::cad) fn build(app: &mut App) {
     app.add_text_field(panel::SEARCH, panel::search_field()).add_text_field(panel::FORM, panel::form_field()).add_systems(
         Update,
         panel::input
-            .in_set(crate::app::InputSet::Window)
             .in_set(crate::cad::CadKeySet::Focus)
-            .in_set(ViewerSet::Input)
             .run_if(in_state(ViewerMode::Cad)),
     )
     .add_systems(Update, (panel::scroll_form, panel::draw_form).chain().in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));

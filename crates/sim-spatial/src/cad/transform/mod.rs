@@ -202,7 +202,7 @@ impl Delta {
 
 /// Where a body preview is in its life.
 #[derive(Clone, Debug, PartialEq)]
-pub enum Phase {
+pub(crate) enum Phase {
     /// Following a drag.
     Live,
     /// Released: the commit action was written and waits for the handler.
@@ -220,7 +220,7 @@ pub struct Preview {
     pub delta: Delta,
     /// RoboCAD's revision the drag began at.
     pub began: u64,
-    pub phase: Phase,
+    pub(crate) phase: Phase,
 }
 
 /// The active tool's state (`CadDocument::tool_state`); reset when a tool is activated.
@@ -266,11 +266,10 @@ pub(super) fn build(app: &mut App) {
             Update,
             (
                 // Before CAD's keys: a Tab or press that gives the bar the keyboard holds the frame's keys.
-                super::numeric::entry.in_set(crate::app::InputSet::Window).in_set(crate::cad::CadKeySet::Focus),
+                super::numeric::entry.in_set(crate::cad::CadKeySet::Focus),
                 // After the two-step key gate (`keys::free` reads it) and the numeric bar (its Tab may take the keyboard first).
-                keys.in_set(crate::cad::CadKeySet::ToolKeys).in_set(crate::app::InputSet::Window).after(crate::cad::CadKeySet::Gate).after(super::numeric::entry).run_if(super::keys::free),
+                keys.in_set(crate::cad::CadKeySet::ToolKeys).after(crate::cad::CadKeySet::Gate).after(super::numeric::entry).run_if(super::keys::free),
             )
-                .in_set(ViewerSet::Input)
                 .run_if(in_state(ViewerMode::Cad)),
         )
         .add_systems(

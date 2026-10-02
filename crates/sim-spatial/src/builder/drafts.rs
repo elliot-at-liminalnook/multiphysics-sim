@@ -70,8 +70,6 @@ impl Builder {
             Purpose::ActuatorConsumer => self.actuators_request(None, Some(vec![PathBuf::from(text)])).map(|_| ()),
             Purpose::GaitResults if text.is_empty() => Err("Type the path of a gait-lab results folder".into()),
             Purpose::GaitResults => self.gait_reports_request(Some(PathBuf::from(text))).map(|_| ()),
-            Purpose::CalibrationArchive if text.is_empty() => Err("Type the path of an identification archive folder".into()),
-            Purpose::CalibrationArchive => self.calibration_request(Some(PathBuf::from(text))).map(|_| ()),
             Purpose::Distance { id, first, second } => match text.parse::<f32>() {
                 Ok(d) => self.apply("Calibrate reference", vec![SystemCommand::CalibrateReference { at: self.level.clone(), id, first, second, distance: d }]).map(|_| ()),
                 Err(_) => Err("Enter the real distance between the two points in meters".into()),

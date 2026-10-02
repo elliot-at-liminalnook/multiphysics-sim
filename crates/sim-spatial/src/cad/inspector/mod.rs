@@ -50,7 +50,7 @@ pub(super) use sections::{attributes, attributes_key, commands, commands_key, hi
 
 use super::document::CadDocument;
 use super::panel::{Inert, column};
-use crate::app::{ViewerMode, ViewerSet};
+use crate::app::{ViewerMode};
 use crate::ui_kit::{Kit, SUBTLE, VALUE, size};
 use bevy::prelude::*;
 use serde_json::Value;
@@ -62,9 +62,7 @@ pub(super) fn build(app: &mut App) {
     app.add_text_field(editors::EDITOR, editors::editor_field()).add_systems(
         Update,
         editor_entry
-            .in_set(crate::app::InputSet::Window)
             .in_set(crate::cad::CadKeySet::Focus)
-            .in_set(ViewerSet::Input)
             .run_if(in_state(ViewerMode::Cad)),
     );
 }

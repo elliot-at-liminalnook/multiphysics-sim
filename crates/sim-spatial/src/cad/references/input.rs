@@ -17,7 +17,7 @@
 //! The kit's focus is the record; `ReferencesState::focus` mirrors it each frame.
 use super::{Browse, BrowseKind, Focus, ReferencesArgs, ReferencesOp, form::ROWS};
 use crate::app::actions::Act;
-use crate::app::{ViewerMode, ViewerSet};
+use crate::app::{ViewerMode};
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
 use crate::ui_kit::form::{FieldKind, FieldValue, Unit, evaluate};
@@ -300,5 +300,5 @@ pub(super) fn build(app: &mut App) {
     app.add_text_field(FORM, TextField::new("Reference placement").select_on_focus())
         .add_text_field(PATH, TextField::new("Reference or system file path").placeholder("~/…"))
         .add_text_field(DISTANCE, TextField::new("Real distance").select_on_focus().sticky())
-        .add_systems(Update, input.in_set(crate::app::InputSet::Window).before(crate::cad::CadKeySet::Gate).in_set(crate::cad::CadKeySet::Focus).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)));
+        .add_systems(Update, input.before(crate::cad::CadKeySet::Gate).in_set(crate::cad::CadKeySet::Focus).run_if(in_state(ViewerMode::Cad)));
 }

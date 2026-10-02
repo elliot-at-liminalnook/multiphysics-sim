@@ -433,6 +433,7 @@ impl Builder {
         result
     }
 
+    #[cfg(test)]
     pub(super) fn set_calibration_filter(&mut self, split: Option<SplitFilter>, outcome: Option<OutcomeFilter>) {
         if let Some(s) = split {
             self.calibration.split = s;
@@ -441,12 +442,6 @@ impl Builder {
             self.calibration.outcome = o;
         }
         self.calibration.page = 0;
-        self.panel_dirty = true;
-    }
-
-    pub(super) fn set_calibration_page(&mut self, page: usize) {
-        let pages = self.calibration.pages(self.calibration.visible().len());
-        self.calibration.page = page.min(pages - 1);
         self.panel_dirty = true;
     }
 

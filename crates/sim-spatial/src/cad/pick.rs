@@ -69,7 +69,7 @@ use super::ops::Flow;
 use super::topology::{CadTopology, NodeTopology};
 use super::view::CadView;
 use crate::app::actions::Act;
-use crate::app::{ModeScope, ViewerMode, ViewerSet};
+use crate::app::{ModeScope, ViewerMode};
 use crate::jobs::{Job, Pool};
 use bevy::picking::hover::HoverMap;
 use bevy::picking::mesh_picking::ray_cast::{MeshRayCast, MeshRayCastSettings, RayCastVisibility};
@@ -167,7 +167,6 @@ pub(super) fn build(app: &mut App) {
                 .in_set(crate::app::InputSet::Window)
                 .after(crate::cad::CadKeySet::Gate)
                 .after(super::numeric::entry)
-                .in_set(ViewerSet::Input)
                 .run_if(in_state(ViewerMode::Cad)),
         );
 }

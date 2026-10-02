@@ -80,8 +80,6 @@ enum Purpose {
     ActuatorConsumer,
     /// Path of a gait-lab results folder to read (read-only).
     GaitResults,
-    /// Path of an identification archive folder to review (read-only).
-    CalibrationArchive,
 }
 
 #[derive(Clone, Debug)]
@@ -530,7 +528,7 @@ impl Plugin for BuilderPlugin {
         drafts::add_fields(app);
         // Buttons and keys write the builder's actions (after REST's, as the old chain
         // applied them); its one handler applies them and REST's in Actions.
-        app.add_systems(Update, (actions::buttons, actions::keys.run_if(building.clone()).run_if(not(crate::ui_kit::text::typing))).chain().in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input).run_if(in_state(ModeScope::Builder)))
+        app.add_systems(Update, (actions::buttons, actions::keys.run_if(building.clone()).run_if(not(crate::ui_kit::text::typing))).chain().in_set(crate::app::InputSet::Window).run_if(in_state(ModeScope::Builder)))
             .add_systems(Update, system_actions::apply.in_set(ViewerSet::Actions).run_if(in_state(ModeScope::Builder)));
         app.add_systems(
             Update,

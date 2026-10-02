@@ -19,7 +19,7 @@ struct GlobalStatus;
 pub(crate) fn register(app:&mut App) {
     app.init_resource::<StudyUi>()
         .add_text_field(super::forms::FIELD,TextField::new("Measured study field").enter(EnterKey::ShiftNewline))
-        .add_systems(Update,super::forms::input.in_set(InputSet::Window).in_set(ViewerSet::Input))
+        .add_systems(Update,super::forms::input.in_set(InputSet::Window))
         .add_systems(Update,recording_chart::receive.in_set(ViewerSet::JobResults))
         .add_systems(Update,recording_chart::request.in_set(ViewerSet::SimSync))
         .add_systems(Update,refinement_chart::receive.in_set(ViewerSet::JobResults))

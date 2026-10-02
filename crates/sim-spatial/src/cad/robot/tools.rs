@@ -460,7 +460,7 @@ pub(crate) fn controls(doc: &CadDocument) -> Vec<(String, String, CadAction, Res
 
 /// CadPlugin: the click tools' 3D clicks, a click's validate, the library panel.
 pub(crate) fn build(app: &mut App) {
-    app.add_systems(Update, click::click.in_set(crate::app::InputSet::Window).in_set(ViewerSet::Input).run_if(in_state(ViewerMode::Cad)))
+    app.add_systems(Update, click::click.in_set(crate::app::InputSet::Window).run_if(in_state(ViewerMode::Cad)))
         .add_systems(Update, settle.after(super::data::sync).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)))
         .add_systems(Update, library::draw.in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }

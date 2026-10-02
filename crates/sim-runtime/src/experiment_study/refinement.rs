@@ -202,6 +202,13 @@ pub fn apply_outcome_with_inputs(s:&mut Study,outcome:Outcome,inputs:serde_json:
     let c=&outcome.capture;let captured=&c.study;
     let receipt_operation=match &c.operation {Operation::FitCombined{..}=>Operation::FitCombined{additional:None},op=>op.clone()};
     let mut receipt=Receipt{operation:receipt_operation,inputs,runtime:c.runtime.clone(),result_kind:None,result_index:None,failure:None,cancelled:outcome.cancelled};
+    // Exact input content is retained once by the existing Study owner. Only
+    // bounded content references belong in receipts; merging Arc-backed inputs is
+    // cheap and must precede rejection/cancellation/reservation attachment guards.
+    if let Err(error)=s.input_contents.merge(&captured.input_contents) {
+        receipt.failure=Some(format!("refinement.result.input_contents: {error}"));
+        s.refinement_evidence.receipts.push(receipt);return;
+    }
     s.validation_seen |= captured.validation_seen;s.validation_influenced |= captured.validation_influenced;
     s.refinement_evidence.recording_held_out.extend(captured.refinement_evidence.recording_held_out.iter().cloned());
     for (hash,influenced) in &captured.refinement_evidence.recording_exposure {*s.refinement_evidence.recording_exposure.entry(hash.clone()).or_default()|=*influenced||s.validation_influenced;}

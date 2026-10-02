@@ -161,6 +161,15 @@ pub(crate) fn retain_form_inputs(captured:&mut Study,stamp:StudyStamp,inputs:Opt
     }
 }
 
+/// The existing publication owner captures without disk work; immutable blobs stay
+/// Arc-backed in the Study snapshot until the adopted file job publishes them.
+pub(super) fn prepare_publication_capture(study:&Study,stamp:StudyStamp,destination:&std::path::Path,export:bool,source:&str,document:Option<&DocumentCapture>,inputs:Option<serde_json::Value>)->Study {
+    let mut captured=study.clone();
+    retain_durable(&mut captured,"native_publication_captures",json!({"study":stamp,"destination":destination.display().to_string(),"kind":if export {"export_new"} else {"save_new"},"source":source,"document":document.map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),"execution":experiment_study::execution_identity(),"status":"immutable captured revision prepared for publication"}));
+    retain_form_inputs(&mut captured,stamp,inputs);
+    captured
+}
+
 pub fn start_publication(owner:&mut StudyOwner,stamp:StudyStamp,value:&str,export:bool)->Result<u64,String> {
     start_publication_with_inputs(owner,stamp,value,export,None)
 }
@@ -168,13 +177,8 @@ pub fn start_publication_with_inputs(owner:&mut StudyOwner,stamp:StudyStamp,valu
     let destination=path(value)?;
     if owner.pending.iter().any(|p|matches!(p.kind,JobKind::Save|JobKind::Export) && p.source==destination.display().to_string()) { return Err("study.path: publication to this destination is already pending".into()); }
     let retained=owner.validate_stamp(stamp)?;
-    let mut captured=retained.study.clone();
     let document=retained.document.clone();
-    // Saved artifacts carry the immutable capture identity and destination.
-    // This is pre-publication evidence, not a fabricated terminal acknowledgment.
-    // Do not dirty the live revision merely to add artifact-envelope metadata.
-    retain_durable(&mut captured,"native_publication_captures",json!({"study":stamp,"destination":destination.display().to_string(),"kind":if export {"export_new"} else {"save_new"},"source":retained.source,"document":document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),"execution":experiment_study::execution_identity(),"status":"immutable captured revision prepared for publication"}));
-    retain_form_inputs(&mut captured,stamp,inputs);
+    let captured=prepare_publication_capture(&retained.study,stamp,&destination,export,&retained.source,document.as_ref(),inputs);
     // Full saved-schema validation/serialization belongs to the file job.
     let gate=Arc::new(Mutex::new(PublicationGate::default()));
     let worker_gate=gate.clone();
@@ -296,8 +300,8 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
                 _=>None,
             };
             receipt.launch=json!({"inputs":pending.launch,"terminal":{"execution_cancelled":execution_cancelled,"cancellation_requested":pending.cancel_requested,"stale":stale,"displaced":displaced}});
-            // Retain captured bytes even for orphan outcomes; durable receipts contain
-            // no parsed Study/older receipts beyond the immutable source input itself.
+            // Orphan outcomes retain their Study-owned content store in memory;
+            // durable receipt metadata contains bounded content references only.
             if let Some(input)=inputs.get("additional_input") {receipt.launch["additional_input"]=input.clone();}
             receipt.launch["recording_applied"]=json!(false);
             if let Some(study)=pending.stamp.and_then(|stamp|owner.get_mut(stamp.id)) {

@@ -149,7 +149,10 @@ review. Revisit only if versioned attempt identity changes.
 Additional saved-study bytes are captured before parsing in the existing job,
 with path, content identity, byte length, exact recoverable input and named read,
 parse or validation failure. Parsed provenance is bounded; prior studies and
-receipts are not recursively embedded as structured captures. Terminal evidence
+receipts are not recursively embedded as structured captures. The initial
+`11b9ce82` storage still embedded raw source JSON in two receipt collections;
+call-0384 rejected that storage representation. The content-reference repair
+below supersedes it without removing historical evidence. Terminal evidence
 uses existing retained receipts and immutable publication. Cancellation after
 read preserves the captured input. Unreadable files retain a diagnostic and path
 without claiming bytes were acquired. This replaces path-only rejection evidence;
@@ -193,3 +196,64 @@ Fixtures added for these paths are written but unexecuted. No compilation,
 rendering, hit testing, publication execution, parity execution or hardware
 qualification is claimed. Python/OCCT, browser references, FPGA, electrical/power,
 raw sweep, hardware acquisition and remaining legacy experiments stay available.
+
+## Call-0384 input content storage
+
+All seven original checklist IDs remain in scope. The functional captured-fit
+review, source guards and two-source quarantine repairs remain intact. This focused
+repair changes input storage, not physics, optimization, focus, selection or modes.
+
+The existing shared Study owns an additive input-content manifest and a deduplicated
+in-memory byte cache. Serialized manifests and receipts carry only version, BLAKE3
+identity and byte length. Exact source bytes, including malformed JSON or invalid
+UTF-8, are captured once before parsing or cancellation checks. They are never
+placed in new refinement or native receipt JSON. A successful combined operation
+retains its immutable datasets and bounded source provenance rather than enclosing
+the previous Study in each receipt. Imported source companion contents merge by
+identity so earlier rejected inputs remain accessible without duplicating them.
+
+Existing immutable publication jobs write companions to the destination parent's
+`.study-inputs/<blake3>.bin` before publishing the new Study manifest. Existing
+identical files are verified and reused; existing corrupt/different content is
+refused, never overwritten. A failed main publication may leave valid unreferenced
+companions; they are preserved, not deleted. Pending and live Study snapshots keep
+their byte cache even after failure, cancellation or displacement. Publication
+acknowledgment still applies only to the captured revision.
+
+Save-new and export use the same owner. Reopening hydrates and verifies referenced
+content with path/hash-named missing and corrupt-artifact errors. Moving or sharing
+a saved Study or report requires its companion directory. Old inline raw inputs
+and opaque deferred payloads remain unchanged and readable; there is no silent
+migration, stripping or retirement. JSON deserialization alone is not content
+reopening: consumers use the shared load path to hydrate and verify companions.
+
+This representation replaces raw receipt embedding and a separate artifact service.
+It keeps reversible publication and existing ownership while preventing repeated
+generations from recursively enclosing prior raw inputs. Revisit if a versioned
+portable artifact bundle is adopted. Dataset and ordinary receipt history can still
+grow with experiments; this repair promises deduplicated recoverable content and
+bounded receipt references, not constant-size studies or measured performance.
+
+Shared schema validation/compatibility and native capture/application/publication
+fixtures are written but unexecuted. No builds, tests, launches, screenshots,
+executed publication/export or parity checks are performed. All external workflow
+requirements listed above remain unchanged.
+
+Storage repair source traces (all fixtures unexecuted):
+
+| Original checklist coverage | Concrete consumer trace |
+|---|---|
+| outcome-1 / task-T50.2 | Existing `study/recording_jobs.rs:98` captures into Study before rejection and emits content references through unchanged StudyAction/jobs routing. Fit selection/UI/chart consumers have no storage-repair diff. |
+| outcome-2 / task-T50.1 | `experiment_study/input_content.rs:21` captures/deduplicates, `:29` cheaply merges, `:49` crosschecks reference schema; `experiment_study.rs:433` validates recognized envelopes and `:533` reopens through verified hydration. |
+| outcome-3 | `experiment_study/refinement.rs:205` merges pending content before outcome guards; `study/jobs.rs:166` prepares existing publication snapshots and `:176` runs immutable publication in its adopted job. |
+| outcome-4 | Shared Study save/load/export owns companion handling for every caller; legacy inline raw and opaque evidence is unchanged. `experiment_study/input_content_fixtures.rs:68` records compatibility preservation. |
+| task-T50.3 | `study/recording_lifecycle.rs:262` covers cancelled/displaced/rejected inputs, failed publication and reopen; `:322` traces three production save/combine generations. Shared `input_content_fixtures.rs:55` exercises named missing/corrupt failures and no overwrite. |
+
+The abbreviated IDs above refer to the seven full
+`native-recording-fit-authoring:*` IDs retained in the original checklist.
+Independent reviewers read generation growth, cancellation/failure/publication,
+compatibility and unchanged functional consumers. Reading also exposed a second
+potential embedding path through unvalidated provenance Values: models/experiments
+now project typed identities, and other setup/role metadata is normalized through
+its shared schema. Invalid unknown receipt trees remain only in recoverable source
+content, never new receipt projections.

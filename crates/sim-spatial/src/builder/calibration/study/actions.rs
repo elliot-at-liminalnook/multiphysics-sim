@@ -147,7 +147,7 @@ fn apply_action_with_inputs(owner:&mut StudyOwner,registry:&DocumentRegistry,act
             checked(owner,registry,*stamp)?;
             // Sample/source/dataset validation belongs in jobs for every recording
             // authoring consumer, including typed REST payloads and rendered controls.
-            if matches!(command,refinement::Command::ImportRecording{..}|refinement::Command::SelectRecording{..}|refinement::Command::SetPredictionPurpose(_)|refinement::Command::AppendContext{..}|refinement::Command::AssignRecording{..}|refinement::Command::UseRecordingFit{..}) {
+            if matches!(command,refinement::Command::ImportRecording{..}|refinement::Command::SelectRecording{..}|refinement::Command::SelectFitCase{..}|refinement::Command::SetPredictionPurpose(_)|refinement::Command::AppendContext{..}|refinement::Command::AssignRecording{..}|refinement::Command::UseRecordingFit{..}) {
                 let id=super::recording_jobs::start_command(owner,*stamp,command.clone())?;
                 return Ok(json!({"job":id,"message":"Validating immutable recording authoring inputs in a retained job"}));
             }

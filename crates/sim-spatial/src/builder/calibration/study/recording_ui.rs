@@ -67,10 +67,13 @@ pub(crate) fn section(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui
     field(body,k,ui,stamp,Field::Recording("additional".into()),"Optional additional saved study path · Enter loads and fits; blank uses current archive + recordings",String::new(),usable&&!owner.busy());
     button(body,k,"study:recording:combined","Fit current archive + frozen recordings",StudyAction::FitCombined{stamp,additional_path:None},usable&&!owner.busy());
     if ui.recording_charts.current(owner){
-        body.spawn(k.caption(format!("Captured-time measured / predicted angle [rad] · time {}–{} s · angle {}–{} rad",ui.recording_charts.axes.1.0,ui.recording_charts.axes.1.1,ui.recording_charts.axes.0.0,ui.recording_charts.axes.0.1)));
+        body.spawn(k.caption(&ui.recording_charts.label));
+        body.spawn(k.caption(if s.refinement_evidence.selected_fit_case.is_some(){"Trace colors: measured teal, baseline orange, candidate blue; each series keeps its original sample times."}else{"Trace colors: measured teal, standalone prediction orange; each series keeps its original sample times."}));
+        body.spawn(k.caption(format!("Captured-time angle [rad] · time {}–{} s · angle {}–{} rad",ui.recording_charts.axes.1.0,ui.recording_charts.axes.1.1,ui.recording_charts.axes.0.0,ui.recording_charts.axes.0.1)));
         if let Some(image)=&ui.recording_charts.image{body.spawn(k.chart_image(image.clone(),Node{width:Val::Percent(100.),height:Val::Px(180.),..default()},true));}
     }
     if let Some(error)=&ui.recording_charts.error{body.spawn(k.text(error,size::DETAIL,WARN,0));}
+    apply(body,k,stamp,"study:recording:case:clear".into(),"Return chart to selected recording / standalone prediction",Command::SelectFitCase{selection:None},usable);
     review(body,k,ui,stamp,s,usable);
 }
 fn review(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:StudyStamp,s:&Study,usable:bool){
@@ -90,6 +93,13 @@ fn review(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:StudyStamp,s:&
         body.spawn(k.caption(format!("Captured objective history: {} evaluations; first 32 shown, full history remains in immutable evidence",a.evaluations.len())));
         for (step,e) in a.evaluations.iter().take(32).enumerate(){body.spawn(k.caption(format!("Evaluation {step} · parameters {:?} · residual sum squares {:?} · failure {:?}",e.values,e.residual_sum_squares,e.failure)));}
         if let Some(partial)=&a.partial{body.spawn(k.text(format!("UNSCORED partial evidence · optimizer {:?} · scores {:?}",optimizer_summary(&partial.optimizer),partial.scores.iter().map(|v|(&v.id,v.device,&v.split,v.baseline.as_ref().map(|c|(c.rmse,c.final_error,c.maximum_abs_error,c.passes)),v.candidate.as_ref().map(|c|(c.rmse,c.final_error,c.maximum_abs_error,c.passes)),&v.failure)).collect::<Vec<_>>()),size::DETAIL,WARN,0));}
+        if let Some(identity)=sim_runtime::experiment_study::refinement::recordings::fit_identity(s,kind,i){
+            if let Ok(cases)=sim_runtime::experiment_study::refinement::recordings::fit_case_ids(s,kind,i){for case_id in cases{
+                let selection=sim_runtime::experiment_study::refinement::recordings::FitCaseSelection{kind:kind.into(),index:i,fit_blake3:identity.into(),case_id:case_id.clone()};
+                let selected=s.refinement_evidence.selected_fit_case.as_ref()==Some(&selection);
+                apply(body,k,stamp,format!("study:recording:case:{kind}:{i}:{case_id}"),&format!("{}Inspect immutable case {case_id} · measured / baseline / candidate",if selected{"Selected · "}else{""}),Command::SelectFitCase{selection:Some(selection)},usable);
+            }}
+        }
         let complete=a.outcome.as_ref().is_some_and(|f|f.has_verified_traces()&&!f.training_ids.iter().any(|id|s.refinement_evidence.recording_held_out.contains(id))&&!f.scores.is_empty()&&f.scores.iter().any(|v|v.device==s.refinement.experiment.device)&&f.scores.iter().all(|v|v.failure.is_none()&&v.baseline.is_some()&&v.candidate.is_some()))&&!a.cancelled&&a.failure.is_none();
         if let Some(f)=&a.outcome{body.spawn(k.caption(format!("Outcome {} · optimizer {:?} · frozen tuning {:?} · held-out {:?} · influence {} · scores {:?}",f.status,optimizer_summary(&f.optimizer),f.training_ids,f.validation_ids,f.validation_influenced,f.scores.iter().map(|v|(&v.id,v.device,&v.split,v.baseline.as_ref().map(|c|(c.rmse,c.final_error,c.maximum_abs_error,c.passes)),v.candidate.as_ref().map(|c|(c.rmse,c.final_error,c.maximum_abs_error,c.passes)),&v.failure)).collect::<Vec<_>>())));}
         if !complete{body.spawn(k.text("UNSCORED / unusable candidate: failure, cancellation or incomplete captured comparisons",size::DETAIL,WARN,0));}

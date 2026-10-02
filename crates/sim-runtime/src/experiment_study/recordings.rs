@@ -13,7 +13,10 @@ pub fn classify(bytes:&[u8])->Result<ImportClassification,String> {
     let r:Recording=serde_json::from_value(v).map_err(|e|format!("recording.import.controller: {e}"))?;r.validate().map_err(|e|format!("recording.import.controller: {e}"))?;Ok(ImportClassification::Controller(r))
 }
 /// Derived presentation cache populated by host load/import jobs; not another source.
-pub fn cache_identities(s:&mut Study) {s.refinement_evidence.recording_identities=s.refinement.recordings.iter().map(Recording::fingerprint).collect();}
+pub fn cache_identities(s:&mut Study) {s.refinement_evidence.recording_identities=s.refinement.recordings.iter().map(Recording::fingerprint).collect();
+    s.refinement_evidence.fit_identities.insert("recording_fit".into(),s.refinement.recording_fits.iter().map(fit_hash).collect());
+    s.refinement_evidence.fit_identities.insert("combined_fit".into(),s.refinement.combined_fits.iter().map(fit_hash).collect());
+}
 pub fn cached_source<'a>(s:&'a Study,hash:&str)->Option<&'a Recording> {
     s.refinement_evidence.recording_identities.iter().position(|id|id==hash).and_then(|i|s.refinement.recordings.get(i))
 }
@@ -79,8 +82,13 @@ pub fn dataset(s:&Study,additional:Option<&Study>)->Result<data::CombinedDataset
     let mut recordings=s.refinement.recordings.clone();let mut assignments=s.refinement.recording_assignments.clone();let mut archives=vec![s.archive.clone()];
     if let Some(extra)=additional {
         extra.validate().map_err(|e|format!("recording.additional.study: {e}"))?;
+        if assignments.iter().any(|a|a.role==data::Role::Train&&extra.refinement_evidence.recording_held_out.contains(&a.recording_hash)){return Err("recording.additional.assignment: current tuning identity has additional held-out reservation".into());}
+        // Historical declarations remain inspectable; only assignments actually
+        // joining this dataset are new tuning inputs. Hosts need not merge quarantine.
+        for a in &extra.refinement.recording_assignments {
+            if a.role==data::Role::Train&&(s.refinement_evidence.recording_held_out.contains(&a.recording_hash)||extra.refinement_evidence.recording_held_out.contains(&a.recording_hash)){return Err(format!("recording.additional.assignment.{}: tuning identity has held-out reservation",a.recording_hash));}
+        }
         for (hash,a) in frozen(extra)? {
-            if a.role==data::Role::Train&&s.refinement_evidence.recording_held_out.contains(&hash){return Err("recording.additional.assignment: tuning identity has held-out reservation".into());}
             if current_frozen.get(&hash).is_some_and(|old|old!=&a) {
                 return Err(format!("recording.additional.assignment.{hash}: conflicts with historical reservation"));
             }
@@ -126,12 +134,13 @@ pub fn use_fit(s:&mut Study,kind:String,index:usize,device:Option<u8>)->Result<(
     for id in &fit.validation_ids{expose(s,id,true);}s.validation_seen=true;s.validation_influenced=true;s.candidate_edited();s.draft=model;
     s.refinement_evidence.recording_candidate_uses.push(CandidateUse{kind,index,source_blake3:hash,device:Some(target),draft_blake3:s.draft.fingerprint()});Ok(())
 }
-pub fn command(s:&mut Study,c:Command)->Result<(),String>{match c {Command::ImportRecording{recording}=>import(s,recording),Command::SelectRecording{recording_hash}=>{source(s,&recording_hash)?;expose(s,&recording_hash,false);s.refinement_evidence.selected_recording=Some(recording_hash);Ok(())},Command::AppendContext{context:c}=>context(s,c),Command::AssignRecording{assignment}=>assign(s,assignment),Command::UseRecordingFit{kind,index,device}=>use_fit(s,kind,index,device),_=>unreachable!()}}
+pub fn command(s:&mut Study,c:Command)->Result<(),String>{match c {Command::SelectFitCase{selection}=>select_fit_case(s,selection),Command::ImportRecording{recording}=>import(s,recording),Command::SelectRecording{recording_hash}=>{source(s,&recording_hash)?;expose(s,&recording_hash,false);s.refinement_evidence.selected_recording=Some(recording_hash);Ok(())},Command::AppendContext{context:c}=>context(s,c),Command::AssignRecording{assignment}=>assign(s,assignment),Command::UseRecordingFit{kind,index,device}=>use_fit(s,kind,index,device),_=>unreachable!()}}
 pub fn prepare(s:&Study,op:&Operation)->Result<(),String>{match op {Operation::PredictRecording{recording_hash,..}=>{let r=source(s,recording_hash)?;if !r.completed||!r.stop_verified{return Err("recording.prediction.source: incomplete captures remain inspectable and unscored".into());}limits(s,recording_hash)?;},Operation::FitRecordings=>{let d=data::RecordingDataset::capture(&s.refinement.recordings,&s.refinement.recording_assignments).map_err(|e|format!("recording.fit.dataset: {e}"))?;request(s,&d)?;},Operation::FitCombined{additional}=>{let d=dataset(s,additional.as_deref())?;combined_request(s,&d)?;},_=>{}}Ok(())}
 /// Immutable candidate-use links are validated against the full attempt and dataset.
 pub fn validate_evidence(s:&Study)->Result<(),String>{
     frozen(s)?;
     let e=&s.refinement_evidence;
+    if let Some(selection)=&e.selected_fit_case{validate_fit_selection(s,selection)?;}
     if let Some(hash)=&e.selected_recording{source(s,hash).map_err(|e|format!("refinement_evidence.selected_recording: {e}"))?;}
     for (hash,a) in &e.recording_reservations {if &a.recording_hash!=hash||a.rationale.trim().is_empty(){return Err("refinement_evidence.recording_reservations: identity and rationale required".into());}crate::experiment_study::commands::validate_limits(&Some(a.limits.clone()))?;if s.refinement.recording_assignments.iter().any(|local|local.recording_hash==*hash&&local!=a){return Err("refinement_evidence.recording_reservations: conflicts with assignment".into());}}
     // Historical repeated imports with identical content remain readable. New imports are idempotent.
@@ -167,3 +176,51 @@ pub fn validate_result(c:&super::Capture,r:&super::ResultData)->Result<(),String
         (Operation::PredictRecording{..}|Operation::FitRecordings|Operation::FitCombined{..},_)=>return Err("recording.result.kind: differs from captured operation".into()),_=>{}}
     Ok(())
 }
+
+/// Durable review selection names one immutable full attempt, not the current model.
+#[derive(Clone,Debug,PartialEq,Eq,Serialize,Deserialize)]
+pub struct FitCaseSelection {pub kind:String,pub index:usize,pub fit_blake3:String,pub case_id:String}
+fn fit_hash(value:&impl Serialize)->String {blake3::hash(&serde_json::to_vec(value).expect("serializable retained fit")).to_hex().to_string()}
+pub fn fit_identity<'a>(s:&'a Study,kind:&str,index:usize)->Option<&'a str> {s.refinement_evidence.fit_identities.get(kind)?.get(index).map(String::as_str)}
+pub fn fit_attempt<'a>(s:&'a Study,kind:&str,index:usize)->Result<&'a cal::FitAttempt,String> {
+    match kind {"recording_fit"=>s.refinement.recording_fits.get(index).map(|f|&f.attempt),"combined_fit"=>s.refinement.combined_fits.get(index).map(|f|&f.attempt),_=>return Err("recording.fit_case.kind: expected recording_fit or combined_fit".into())}.ok_or_else(||"recording.fit_case.index: missing immutable attempt".into())
+}
+/// Cheap identifiers only; trace conversion and source hashing belong to jobs.
+pub fn fit_case_ids(s:&Study,kind:&str,index:usize)->Result<Vec<String>,String> {
+    fit_attempt(s,kind,index)?;
+    Ok(match kind {
+        "recording_fit"=>s.refinement.recording_fits[index].dataset.assignments.iter().map(|a|a.recording_hash.clone()).collect(),
+        "combined_fit"=>{let d=&s.refinement.combined_fits[index].dataset;d.archives.iter().flat_map(|a|a.trials.iter().map(|t|t.id.clone())).chain(d.recordings.iter().flat_map(|d|d.assignments.iter().map(|a|a.recording_hash.clone()))).collect()},_=>unreachable!()
+    })
+}
+pub fn validate_fit_selection(s:&Study,selection:&FitCaseSelection)->Result<(),String> {
+    let hash=match selection.kind.as_str(){"recording_fit"=>fit_hash(s.refinement.recording_fits.get(selection.index).ok_or("recording.fit_case.index: missing recording attempt")?),"combined_fit"=>fit_hash(s.refinement.combined_fits.get(selection.index).ok_or("recording.fit_case.index: missing combined attempt")?),_=>return Err("recording.fit_case.kind: expected recording_fit or combined_fit".into())};
+    if hash!=selection.fit_blake3{return Err("recording.fit_case.fit_blake3: immutable source changed".into());}
+    if !fit_case_ids(s,&selection.kind,selection.index)?.contains(&selection.case_id){return Err("recording.fit_case.case_id: absent from immutable dataset".into());}Ok(())
+}
+pub fn select_fit_case(s:&mut Study,selection:Option<FitCaseSelection>)->Result<(),String> {
+    if let Some(value)=&selection {
+        validate_fit_selection(s,value)?;
+        let recording_held=match value.kind.as_str(){"recording_fit"=>s.refinement.recording_fits[value.index].dataset.assignments.iter().any(|a|a.recording_hash==value.case_id&&a.role==data::Role::HeldOut),"combined_fit"=>s.refinement.combined_fits[value.index].dataset.recordings.iter().any(|d|d.assignments.iter().any(|a|a.recording_hash==value.case_id&&a.role==data::Role::HeldOut)),_=>false};
+        let archive_held=value.kind=="combined_fit"&&s.refinement.combined_fits[value.index].dataset.archives.iter().any(|a|a.trials.iter().any(|t|t.id==value.case_id&&t.split!="train"));
+        if archive_held{super::commands::expose(s,std::slice::from_ref(&value.case_id));s.validation_seen=true;}
+        if recording_held{s.validation_seen=true;s.refinement_evidence.recording_exposure.entry(value.case_id.clone()).or_default();}
+    }
+    cache_identities(s);s.refinement_evidence.selected_fit_case=selection;Ok(())
+}
+#[derive(Clone,Debug)]
+pub struct FitCaseTraces {pub case:data::Case,pub baseline:Option<crate::experiment_comparison::Trace>,pub candidate:Option<crate::experiment_comparison::Trace>,pub failure:Option<String>,pub unscored:bool}
+/// Worker-only immutable review: does not predict, optimize or adopt a model.
+pub fn fit_case_traces(s:&Study,selection:&FitCaseSelection)->Result<FitCaseTraces,String> {
+    validate_fit_selection(s,selection)?;
+    let cases=match selection.kind.as_str(){"recording_fit"=>s.refinement.recording_fits[selection.index].dataset.cases()?,"combined_fit"=>s.refinement.combined_fits[selection.index].dataset.cases()?,_=>unreachable!()};
+    let case=cases.into_iter().find(|c|c.id==selection.case_id).ok_or("recording.fit_case.case_id: missing captured observations")?;
+    let attempt=fit_attempt(s,&selection.kind,selection.index)?;
+    let score=attempt.outcome.as_ref().or(attempt.partial.as_ref()).and_then(|fit|fit.scores.iter().find(|score|score.id==selection.case_id));
+    let unscored=attempt.cancelled||attempt.failure.is_some()||attempt.outcome.is_none()||score.is_none_or(|s|s.failure.is_some()||s.baseline.is_none()||s.candidate.is_none());
+    Ok(FitCaseTraces{case,unscored,baseline:score.and_then(|s|s.baseline_prediction.clone()),candidate:score.and_then(|s|s.candidate_prediction.clone()),failure:score.and_then(|s|s.failure.clone()).or_else(||attempt.failure.clone())})
+}
+
+pub fn input_identity(bytes:&[u8])->String {blake3::hash(bytes).to_hex().to_string()}
+/// Computed in the execution job, then passed through the bounded input envelope.
+pub fn result_fit_identity(result:&super::ResultData)->Option<String> {match result {super::ResultData::RecordingFit(f)=>Some(fit_hash(f)),super::ResultData::CombinedFit(f)=>Some(fit_hash(f)),_=>None}}

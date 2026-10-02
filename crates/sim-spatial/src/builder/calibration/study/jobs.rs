@@ -296,6 +296,9 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
                 _=>None,
             };
             receipt.launch=json!({"inputs":pending.launch,"terminal":{"execution_cancelled":execution_cancelled,"cancellation_requested":pending.cancel_requested,"stale":stale,"displaced":displaced}});
+            // Retain captured bytes even for orphan outcomes; durable receipts contain
+            // no parsed Study/older receipts beyond the immutable source input itself.
+            if let Some(input)=inputs.get("additional_input") {receipt.launch["additional_input"]=input.clone();}
             receipt.launch["recording_applied"]=json!(false);
             if let Some(study)=pending.stamp.and_then(|stamp|owner.get_mut(stamp.id)) {
                 receipt.launch["recording_applied"]=json!(!stale && !displaced && !execution_cancelled && receipt.error.is_none());

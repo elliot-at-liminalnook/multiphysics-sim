@@ -70,3 +70,27 @@ fn immutable_destination_conflict_preserves_bytes() {
     assert_eq!(std::fs::read(&path).unwrap(),b"preexisting evidence");
     std::fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn html_outcomes_filters_and_summary_share_incomplete_pair_rule() {
+    let mut s=fixture();let t=s.archive.trials.iter().find(|t|t.comparison.passes).unwrap().clone();let ids=vec![t.id.clone()];
+    let mut e=evaluate(&s.archive,&ids,&s.baseline,&s.draft,None,false,&AtomicBool::new(true),|_,_|{}).unwrap();
+    let prediction=Prediction{trace:t.predicted.clone(),metrics:t.comparison.clone()};
+    assert!(prediction.metrics.passes);
+    e.results[0].errors.clear();
+    e.results[0].candidate=Some(prediction.clone());
+    assert_eq!(e.results[0].outcome(),TrialOutcome::Unscored);
+    s.evaluations.push(e);s.view.evaluation=Some(0);s.view.outcome="Pass".into();
+    assert!(!commands::filtered_ids(&s).contains(&t.id));
+    s.view.outcome="Unscored".into();assert!(commands::filtered_ids(&s).contains(&t.id));
+    let html=s.render_html().unwrap();let needle=format!("<tr><td>{}<br>",t.id);let row=html.split(needle.as_str()).nth(1).unwrap().split("</tr>").next().unwrap();
+    assert!(row.contains("<td>UNSCORED</td>"));assert!(row.contains(&format!("{:.6}",prediction.metrics.rmse)));
+    s.evaluations[0].results[0].baseline=Some(prediction);
+    s.evaluations[0].results[0].errors.push("Baseline worker failed after producing a trace".into());
+    assert_eq!(s.evaluations[0].results[0].outcome(),TrialOutcome::Unscored,"errors still prohibit score despite complete traces");
+    assert_eq!(s.evaluations[0].summary(&ids).unscored,1);
+    let html=s.render_html().unwrap();let needle=format!("<tr><td>{}<br>",t.id);let row=html.split(needle.as_str()).nth(1).unwrap().split("</tr>").next().unwrap();
+    assert!(row.contains("<td>UNSCORED</td>"));
+    s.evaluations[0].results[0].errors.clear();
+    assert!(s.evaluations[0].results[0].outcome().is_scored());
+}

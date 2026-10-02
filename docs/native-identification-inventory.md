@@ -75,3 +75,12 @@ State reads remain metadata-only. The written legacy fixture reads the full revi
 checks idempotent exposure revision handling, edits the candidate and round-trips
 both leakage flags. Native launch snapshots use shared `execution_identity()` for
 intended runtime/integrator/seed evidence even when cancelled before execution.
+
+`TrialResult::outcome` is the sole measured-evaluation PASS/FAIL/UNSCORED contract:
+baseline and candidate must both exist and the error list must be empty. Shared
+summary, outcome filters, native/legacy rows and HTML report outcomes consume it;
+individual prediction metrics and traces remain inspectable. The archived empirical
+reference uses its separate frozen archival comparison. `Study::render_html` is the
+actual report renderer used by `export_html_new`; written fixtures inspect its trial
+row for candidate-only and error-bearing complete pairs, without publishing a file.
+This centralization prevents presentation consumers from silently relaxing scoring.

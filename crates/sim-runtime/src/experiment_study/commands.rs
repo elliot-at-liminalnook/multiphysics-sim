@@ -60,11 +60,12 @@ pub fn validate_view(s: &Study) -> Result<(), String> {
 pub fn filtered_ids(s: &Study) -> Vec<String> {
     s.archive.trials.iter().filter(|t| {
         let r=s.view.evaluation.and_then(|i|s.evaluations.get(i)).and_then(|e|e.results.iter().find(|r|r.trial_id==t.id));
-        let pair=r.and_then(|r|r.baseline.as_ref().zip(r.candidate.as_ref())).filter(|_|r.is_some_and(|r|r.errors.is_empty()));
+        let pair=r.and_then(|r|r.pair());
+        let outcome=r.map(|r|r.outcome()).unwrap_or(super::TrialOutcome::Unscored);
         (s.view.device==0 || s.view.device==t.device) && (s.view.direction==0 || t.drive.signum() as i8==s.view.direction)
         && t.drive.abs()>=s.view.min_drive && t.drive.abs()<=s.view.max_drive
         && (s.view.role=="All" || (s.view.role=="Tuning")== (t.split=="train"))
-        && match s.view.outcome.as_str() { "Pass"=>pair.is_some_and(|(_,c)|c.metrics.passes), "Fail"=>pair.is_some_and(|(_,c)|!c.metrics.passes), "Unscored"=>pair.is_none(), "Regression"=>pair.is_some_and(|(b,c)|c.metrics.rmse>b.metrics.rmse), "Empirical failure"=>!t.comparison.passes, _=>true }
+        && match s.view.outcome.as_str() { "Pass"=>outcome==super::TrialOutcome::Pass, "Fail"=>outcome==super::TrialOutcome::Fail, "Unscored"=>outcome==super::TrialOutcome::Unscored, "Regression"=>pair.is_some_and(|(b,c)|c.metrics.rmse>b.metrics.rmse), "Empirical failure"=>!t.comparison.passes, _=>true }
     }).map(|t|t.id.clone()).collect()
 }
 pub fn trial_ids(s: &Study, selection: EvaluationSelection) -> Result<Vec<String>,String> {

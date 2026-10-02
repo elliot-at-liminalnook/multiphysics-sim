@@ -209,6 +209,24 @@ pub struct TrialResult {
     pub candidate: Option<Prediction>,
     pub errors: Vec<String>,
 }
+/// Comparison outcomes require a complete error-free baseline/candidate pair.
+/// A surviving individual prediction retains inspectable metrics, not a pair score.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum TrialOutcome { Pass, Fail, Unscored }
+impl TrialOutcome {
+    pub fn label(self)->&'static str {match self {Self::Pass=>"PASS",Self::Fail=>"FAIL",Self::Unscored=>"UNSCORED"}}
+    pub fn is_scored(self)->bool {self!=Self::Unscored}
+}
+impl TrialResult {
+    pub fn pair(&self)->Option<(&Prediction,&Prediction)> {
+        if !self.errors.is_empty() {return None;}
+        self.baseline.as_ref().zip(self.candidate.as_ref())
+    }
+    pub fn outcome(&self)->TrialOutcome {
+        match self.pair() {Some((_,c)) if c.metrics.passes=>TrialOutcome::Pass,Some(_)=>TrialOutcome::Fail,None=>TrialOutcome::Unscored}
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Evaluation {
     /// Captured archive/document evidence; absent in historical reviews.
@@ -529,17 +547,14 @@ impl Evaluation {
                 s.unscored += 1;
                 continue;
             };
-            if !r.errors.is_empty() || r.baseline.is_none() || r.candidate.is_none() {
+            if !r.outcome().is_scored() {
                 s.unscored += 1;
                 continue;
             }
-            if let Some(c) = &r.candidate {
-                if c.metrics.passes {
-                    s.passes += 1;
-                } else {
-                    s.failures += 1;
-                }
-                if let Some(b) = &r.baseline {
+            if let Some((b,c)) = r.pair() {
+                match r.outcome() {TrialOutcome::Pass=>s.passes+=1,TrialOutcome::Fail=>s.failures+=1,TrialOutcome::Unscored=>{}}
+
+                {
                     if c.metrics.rmse < b.metrics.rmse {
                         s.improved += 1;
                     }
@@ -566,6 +581,10 @@ fn escape(s: &str) -> String {
 impl Study {
     /// Standalone shareable report with all run settings, metrics and embedded SVG plots.
     pub fn export_html_new(&self, path: &Path) -> Result<(), String> {
+        write_new(path, self.render_html()?.as_bytes())
+    }
+    /// Actual report rendering without file publication; used by compatibility fixtures.
+    pub fn render_html(&self) -> Result<String, String> {
         self.validate()?;
         let mut html = String::from(
             "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><title>Experiment comparison</title><style>body{font:15px system-ui;max-width:1100px;margin:40px auto;color:#223}table{border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid #ddd;text-align:left}pre{white-space:pre-wrap}svg{width:100%;background:#f5f7fa}section{break-inside:avoid;margin:30px 0}.muted{color:#567}</style><h1>Measured response / model refinement</h1>",
@@ -979,10 +998,7 @@ impl Study {
                     value(&r.candidate, 0),
                     value(&r.candidate, 1),
                     value(&r.candidate, 2),
-                    r.candidate
-                        .as_ref()
-                        .map(|p| if p.metrics.passes { "PASS" } else { "FAIL" })
-                        .unwrap_or("UNSCORED")
+                    r.outcome().label()
                 );
             }
             html += "</table>";
@@ -1049,7 +1065,7 @@ impl Study {
         html += "</pre><p>";
         html += &escape(&self.archive.interpretation);
         html += "</p></details></html>";
-        write_new(path, html.as_bytes())
+        Ok(html)
     }
 }
 fn svg_plot(series: &[(&str, Vec<(f64, f64)>)]) -> String {

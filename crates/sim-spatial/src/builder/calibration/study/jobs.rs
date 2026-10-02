@@ -163,7 +163,13 @@ pub fn start_publication(owner:&mut StudyOwner,stamp:StudyStamp,value:&str,expor
     Ok(id)
 }
 
-pub fn poll(mut owner:ResMut<StudyOwner>,registry:Res<DocumentRegistry>) { poll_owner(&mut owner,&registry); }
+pub fn poll(mut owner:ResMut<StudyOwner>,registry:Res<DocumentRegistry>) {
+    let before=owner.changed;
+    // Polling an empty queue or unchanged handles is observation, not an edit.
+    // publish() and first document displacement explicitly advance this counter.
+    poll_owner(owner.bypass_change_detection(),&registry);
+    if owner.changed!=before {owner.set_changed();}
+}
 pub fn poll_owner(owner:&mut StudyOwner,registry:&DocumentRegistry) {
     let mut index=0;
     while index<owner.pending.len() {
@@ -205,9 +211,20 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
                 }
             }
         }
-        Ok(JobOutput::Evaluated(evaluation))=>{
+        Ok(JobOutput::Evaluated(mut evaluation))=>{
             // Cancellation can arrive after worker completion. Preserve the runtime's
-            // actual cancelled flag, with the later request separately in the receipt.
+            // actual cancelled flag, and durably retain the later request separately.
+            evaluation.capture.insert("native_terminal".into(),json!({
+                "job_id":pending.id,
+                "study":pending.stamp,
+                "document":pending.document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),
+                "source":pending.source,
+                "launch":pending.launch,
+                "cancellation_requested":pending.cancel_requested,
+                "execution_cancelled":evaluation.cancelled,
+                "stale":stale,
+                "displaced":displaced,
+            }));
             let original=pending.stamp.and_then(|stamp|owner.get_mut(stamp.id));
             if let Some(study)=original {
                 // Never attach by active index or matching revision alone.

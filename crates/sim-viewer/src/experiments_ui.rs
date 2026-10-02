@@ -410,7 +410,7 @@ impl ExperimentsPanel {
                     egui::ScrollArea::vertical().id_salt("trial-list").max_height(380.).show(ui,|ui|{
                         for id in &ids {let t=s.archive.trials.iter().find(|t|&t.id==id).unwrap();
                             let result=active_evaluation(s).and_then(|e|e.results.iter().find(|r|r.trial_id==*id));
-                            let outcome=result.filter(|r|r.errors.is_empty() && r.baseline.is_some()).and_then(|r|r.candidate.as_ref()).map(|p|if p.metrics.passes{"PASS"}else{"FAIL"}).unwrap_or("—");
+                            let outcome=trial_outcome_label(result);
                             if ui.selectable_label(s.view.trial_id.as_ref()==Some(id),format!("{outcome} ID {} · {:+.1}% · {}",t.device,t.drive*100.,if t.split=="train"{"tune"}else{"held"})).on_hover_text(format!("{} · stage {}\n{} · {:.0} ms · encoder displacement",t.run,t.stage,t.kind,t.duration_s*1000.)).clicked(){s.view.trial_id=Some(id.clone());self.plot.reset_time();}
                         }
                     });
@@ -491,7 +491,7 @@ impl ExperimentsPanel {
                                     ui.label(format!("Baseline {} · candidate {}", &e.baseline.fingerprint()[..12], &e.candidate.fingerprint()[..12]));
                                     for change in study::changes(&e.baseline,&e.candidate) {ui.label(change);}
                                 });
-                                if e.cancelled || e.results.iter().any(|r|r.candidate.is_none()) {ui.colored_label(Color32::DARK_RED,"Incomplete evaluation: unscored trials do not count as passing validation.");}
+                                if e.cancelled || e.results.iter().any(|r|!r.outcome().is_scored()) {ui.colored_label(Color32::DARK_RED,"Incomplete evaluation: unscored trials do not count as passing validation.");}
                                 ui.small(format!("{} whole trials in this evaluation. Scope is retained per device, direction, drive, duration and conditions.",e.results.len()));
                             }
                         }
@@ -552,6 +552,10 @@ fn retain_rejected_draft(study:&mut Study, attempted:&Study, error:&str)->bool {
     let array=study.retained_fields.entry(key).or_insert_with(||serde_json::json!([])).as_array_mut().expect("selected absent/array key");
     if array.last()==Some(&value) {return false;}
     array.push(value);true
+}
+/// Rendered trial rows and measured result lists share runtime pair scoring.
+fn trial_outcome_label(result:Option<&study::TrialResult>)->&'static str {
+    result.map(|r|r.outcome()).unwrap_or(study::TrialOutcome::Unscored).label()
 }
 fn active_evaluation(s: &Study) -> Option<&Evaluation> {
     s.view.evaluation.and_then(|i| s.evaluations.get(i))
@@ -725,7 +729,7 @@ fn summary(ui: &mut egui::Ui, s: &mut Study) {
                         .find(|id| {
                             e.results.iter().any(|r| {
                                 &r.trial_id == *id
-                                    && r.candidate.as_ref().is_some_and(|p| !p.metrics.passes)
+                                    && r.outcome()==study::TrialOutcome::Fail
                             })
                         })
                         .cloned()
@@ -745,7 +749,7 @@ fn summary(ui: &mut egui::Ui, s: &mut Study) {
                         .map(|p| {
                             format!(
                                 "{} RMSE {:.5}, max {:.5}, final {:.5} rad",
-                                if p.metrics.passes { "PASS" } else { "FAIL" },
+                                trial_outcome_label(Some(r)),
                                 p.metrics.rmse,
                                 p.metrics.maximum_abs_error,
                                 p.metrics.final_error.abs()
@@ -784,6 +788,19 @@ fn parameter_info() -> Vec<(String, String, String, String, Option<f64>)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn actual_legacy_outcome_helper_retains_metrics_but_refuses_incomplete_pairs() {
+        let p=panel();let t=p.studies[0].archive.trials.iter().find(|t|t.comparison.passes).unwrap();
+        let prediction=study::Prediction{trace:t.predicted.clone(),metrics:t.comparison.clone()};
+        assert!(prediction.metrics.passes);
+        let mut result=study::TrialResult{trial_id:t.id.clone(),baseline:None,candidate:Some(prediction.clone()),errors:vec![]};
+        assert_eq!(trial_outcome_label(Some(&result)),"UNSCORED");
+        assert!(result.candidate.is_some());
+        result.baseline=Some(prediction);result.errors.push("Baseline worker failed".into());
+        assert_eq!(trial_outcome_label(Some(&result)),"UNSCORED");
+        assert_eq!(trial_outcome_label(None),"UNSCORED");
+        result.errors.clear();assert_ne!(trial_outcome_label(Some(&result)),"UNSCORED");
+    }
     #[test]
     fn full_rest_study_read_exposes_held_out_before_candidate_edit() {
         let mut p=panel();let ctx=egui::Context::default();let mut continuation=serde_json::json!({});

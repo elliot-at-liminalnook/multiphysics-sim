@@ -6891,6 +6891,22 @@ different retained study at the same revision. Text intent uses the kit service,
 with identity/revision guards against late submissions. A global status/cancellation
 surface remains reachable when the evidence dock closes.
 
+T46 repair contract: one runtime complete-pair outcome governs summary, filters,
+native/legacy labels and HTML. Missing baseline/candidate predictions or either
+error means UNSCORED; available metrics and traces remain inspectable. Evaluation
+capture records terminal native job identity and cancellation requested separately
+from the runtime's actual execution-cancelled flag. This additive saved metadata
+survives reopening without rewriting scores or making save acknowledgments dirty.
+
+Decision: polling a handle is not a semantic resource publication. Jobs poll
+through pinned Bevy change-detection bypass and mark the owner changed only for
+terminal publication or displacement. Form/chart presentation likewise invalidates
+on real input or publication, rather than idle mutable polling. Progress remains
+observable independently through the global status projection. Rejected alternative:
+using every ResMut dereference as a reason to reconstruct the whole Build panel.
+Revisit if a shared presentation revision contract replaces these explicit semantic
+publication boundaries. All repair fixtures and execution remain unverified.
+
 Immutable publication captures a Study revision and uses runtime save_new or
 export_html_new in jobs. A successful save marks only the captured revision saved;
 later drafts remain dirty. Failed/cancelled work retains named receipts. Normal

@@ -113,7 +113,7 @@ fn kind_text(kind: &InstanceKind) -> String {
 #[allow(clippy::too_many_arguments)]
 pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>, panels: Query<Entity, With<BuilderPanel>>, scene: Res<SpatialScene>, fonts: Option<Res<UiFonts>>, buttons: Res<ButtonInput<MouseButton>>, scrolls:Query<(&ScrollPosition,&Scroll)>, selection: Res<Selection>, registry: Res<DocumentRegistry>, studies: Res<calibration::study::StudyOwner>, study_ui: Res<calibration::study::forms::StudyUi>) {
     let Some(fonts) = fonts else { return };
-    if studies.is_changed() || study_ui.is_changed() {
+    if calibration::study::ui::presentation_changed(&studies,&study_ui) {
         builder.panel_dirty = true;
     }
     // Keep the pressed palette entity alive until its drag or click finishes.

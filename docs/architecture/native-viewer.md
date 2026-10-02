@@ -1459,10 +1459,14 @@ definition) against the final code.
     (`crates/sim-spatial/src/robot/hardware/actions.rs`, refusing with
     `remote_refusal`): allowed only on a verified virtual calibration link
     (server and bench identity plus the current connection generation,
-    fresh) and only for the in-scope calibration actions. Physical, unknown,
-    mismatched or replaced endpoints are refused, and flip, raw step, every
-    gait setting and play, live sync and the mirror's bindings are refused
-    remotely on every link. Robot mode refuses a disabled `hardware:<name>`
+    fresh) and only for the in-scope calibration actions, which include the
+    gait settings and Play since HW-10 (2026-10-02: `GaitSelect`, `GaitMode`,
+    `GaitSpeed`, `GaitEffort`, `GaitConfirm`, `GaitPlay`; a remote Play goes
+    to the link as a checked command and answers once the gait started).
+    Physical, unknown, mismatched or replaced endpoints are refused, and
+    flip, raw step, live sync and the mirror's bindings (leg, joint,
+    polarity, alignment pose) are refused remotely on every link. The gait's
+    Stop is never refused, like STOP. Robot mode refuses a disabled `hardware:<name>`
     control itself, and the hardware handler checks again
     (`handlers::remote_check` in `crates/sim-spatial/src/robot/hardware/handlers.rs`).
   - *Only a lost binding revokes.* An identity mismatch, a stale or replaced
@@ -1476,8 +1480,8 @@ definition) against the final code.
     having lost its virtual bench ("the virtual calibration bench was lost
     (disconnected)"), both "reconnect required".
   - *Everything else is an ordinary refusal.* Any other refusal, including
-    an out-of-scope command on a virtual bench (flip, raw step, a Leg or Both
-    gait: anything `calibration::virtual_command_allowed` rejects), is HTTP
+    an out-of-scope command on a virtual bench (flip, raw step, lesson
+    motion: anything `calibration::virtual_command_allowed` rejects), is HTTP
     400: it never runs, keeps the binding, and is shown as an ordinary
     refusal (the REST answer, or the panel's notice for a one-way
     `system_ui` activation; a one-way jog press the link refuses after
@@ -1493,9 +1497,26 @@ definition) against the final code.
     puts its direction's held flag back to what it was before the press, so
     an operator already holding that direction keeps the hold and their
     release still reaches the link.
-  - *On a virtual link* flip, raw step and the Leg and Both gait modes (and
-    play in them) are listed disabled with `panel::OUT_OF_VIRTUAL_SCOPE`, for
-    the operator too.
+  - *On a virtual link* flip and raw step are listed disabled with
+    `panel::OUT_OF_VIRTUAL_SCOPE`, for the operator too. Leg and Both gait
+    playback is in scope (HW-10, 2026-10-02): `gait_start` and `gait_update`
+    are in `calibration::virtual_command_allowed`, and the server's one
+    `run_gait` loop drives the virtual bench exactly as it drives the leg,
+    with every precondition (suspended confirmation, bindings, taught poses,
+    proven watchdogs, alignment session, the 95 % fit) unchanged.
+  - *Virtual gait runs are labelled simulated* the way exports are: the run
+    record under `gait-runs/`, the `gait_start`/`gait_end` events in
+    `gait.jsonl`, the live `gait` status and each `gait_runs` history row
+    carry `execution` and `simulated` (a row from an older record without
+    the field reads as not simulated). The panel's Leg line and each
+    simulated Recent leg runs heading start `VIRTUAL (simulated) · `
+    (`view::render_gait`). Every record also names the supply its limits
+    were computed at and whether it was assumed (`supply_v`,
+    `supply_assumed`), and a virtual one lists what the bench does not
+    emulate (`virtual_limits`).
+  - *The suspended-leg confirmation does not survive a new link*
+    (`actions::poll_jobs`): it can now be ticked remotely on a virtual
+    bench, and must never carry to a physical leg after a reconnect.
   - *A virtual export is labelled simulated* (`handlers::write_export`): the
     file carries `execution` and `"simulated": true` and is named
     `leg-calibration-<unix_ms>-virtual.json`, also when the link has no
@@ -1557,6 +1578,66 @@ definition) against the final code.
   motion controls are blocked. *Why:* the page silently keeps the last
   answer; the native link publishes a timestamp, so it can say so.
   *Revisit if* the poll periods change.
+- **One leg gait clock (HW-10 Both, 2026-10-02).** The server's
+  `state.gait.t` is the clock. Its one writer on the native side is the
+  session's `leg_frame`, which copies it into `GaitRun::t` at the end of
+  every `adopt` (so the base and `read_at` change together); readers derive
+  the time now with `LinkSnapshot::leg_clock` → `link::leg_gait_time`:
+  advanced by the time since the read × the server's `speed_scale` only while
+  the data is live, the run has started and is not paused here, and the
+  server reports the `playing` phase, and never by more than `POLL_ACTIVE`
+  (150 ms) past the read. The mirror's Both sample uses it every frame
+  (`Mirror::follow_gait`); a new read that puts it behind the last sample by
+  at most one capped interval holds the sample there instead of stepping
+  back. The gait line shows the read time (steady between reads) and
+  `hardware_status` the clock's. Sim-only playback keeps `sim_frame`'s wall
+  time × scale. *Why:* the leg is the source of truth for where the real
+  motion is; the cap keeps the display from claiming motion the server has
+  not reported. *Revisit if* measured status latency shows the cap too
+  tight or too loose (the cap is per read, so each request's own latency
+  shows as a short hold).
+- **Link health: stale and disconnected are never shown as live
+  (2026-10-02).** `LinkSnapshot::health` (Waiting, Live, Stale with its
+  age, Disconnected with why) is the one judgement. `mirror_sync` checks it
+  every frame, before anything can pose (a stale link brings no new
+  revision): while not live the mirror solves no pose from the encoders,
+  holds the last one, and its line leads with "Leg data stale — last read
+  N s ago; not live" or "Leg disconnected — why; not live" (whole seconds);
+  live again, it is updated by force. The gait line freezes its clock with
+  the same note. `LinkSnapshot::disconnected` is set by the session when a
+  status reports the bus disconnected after reporting it connected (a STOP
+  that lost readback, a lost bench), when a pinned execution is gone or
+  replaced, or when a request finds the binding lost; it clears on a
+  connected status, except for a revoked virtual pin. The panel's status
+  line then starts "DISCONNECTED — why." without blocking motor selection
+  (selecting a motor is how the server reopens its bus), and
+  `hardware_status` reports `link_state` (none, waiting, live, stale,
+  disconnected) and `link_note` next to the unchanged `connected`/`stale`.
+  *Why:* AGENTS.md: never show old encoders as live. *Revisit if* the link
+  gains a push channel that makes the poll age meaningless.
+- **Captures answered after the save (2026-10-02).** `capture_hold` waits
+  (≤ 1 s for the hold session to take it, ≤ 2 s more for the outcome) and
+  answers 200 with the full state once the pose is saved, or 400 with the
+  reason ("Still settling…"); a capture never taken is withdrawn, and taking
+  or saving one renews the motion lease. The native session adopts the
+  answered state (`session/buttons.rs`), so the reply to REST/`system_ui`
+  and the panel change only on a confirmed save, and the mirror at once
+  shows "{role}: 0.0° from its alignment pose". An answer that is not a
+  full status (an older server's `{"ok":true}`) is an error, never taken as
+  saved. Save sim alignment without a mirror angle (no model loaded) still
+  saves the reference without one, as the page does; the mirror and the
+  gait then take CAD home. *Why:* an Ok before the save let a caller act on
+  a pose that was never stored. *Revisit if* the server gains a capture
+  receipt id.
+- **Reconnect after a lost virtual bench (2026-10-02).** A lost bench
+  cannot come back on the same server (`lose_bus` clears its execution
+  until restart). Reconnect pins through the existing verification whenever
+  the server reports a virtual execution (a restarted bench: new identity,
+  new generation); otherwise the link stays unpinned ("physical or
+  unknown"), remote motion is refused, and the panel's notice says why
+  (`actions::BENCH_GONE`). *Rejected:* re-pinning to a remembered identity
+  (the bench is gone; nothing could verify it). *Revisit if* the server can
+  reopen a virtual bench without a restart.
 - **No free-text number fields.** The PWM ceiling (0–100 in 0.1 steps) and
   the raw step (−4095..4095) are a slider/stepper, not the page's number
   fields. *Why:* the kit has no validated number entry, and a control that
@@ -5943,8 +6024,14 @@ hardware checklist.* The browser's calibration and hardware pages
   creates a new generation and requires a new identity handshake. The shared
   runtime contract and server execution checks enforce the same boundary;
   a URL, pseudo-terminal name, fixture label or client boolean cannot grant it.
-  Gait playback, raw steps, polarity flipping, live sync and unrelated robot
-  motion remain outside this virtual calibration allowlist. Physical motion
+  Since HW-10 (2026-10-02) the allowlist also holds gait playback (select,
+  mode, speed, effort, the suspended confirmation and Play), run by the
+  server's one gait loop on the virtual bench and labelled simulated; raw
+  steps, polarity flipping, the mirror's bindings, live sync and unrelated
+  robot motion remain outside it. The leg gait's clock, the link's health
+  (stale and disconnected never shown as live) and captures answered only
+  after their save are in the
+  [Hardware front end decisions](#hardware-front-end-2026-09-30). Physical motion
   continues to require the operator at the window. Allowed
   from automation: toggle/close panel, connect, sections, status, STOP,
   loss (except `leaving`, which only the window's close request sends),

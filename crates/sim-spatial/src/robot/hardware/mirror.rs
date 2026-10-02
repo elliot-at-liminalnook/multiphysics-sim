@@ -15,7 +15,13 @@
 //!   or Both mode is sampled on the worker with the shared
 //!   `sim_runtime::gait_playback` (governed when the gait has a governor, as
 //!   `sim-web`'s `GaitPlayer::governed`); in Both the bound leg's motors stay
-//!   on the encoders.
+//!   on the encoders. Sim samples at the link thread's [`GaitRun::t`]; Both
+//!   at the leg's clock ([`super::link::LinkSnapshot::leg_clock`]), the one
+//!   the server's leg runs on, so the simulated legs and the real one keep
+//!   step. While the leg's data is not live the gait pose is held.
+//! - **Live data only** ([`Mirror::set_leg_health`]): the encoders pose the
+//!   leg only while the link is live. Stale or disconnected, the last solved
+//!   pose stays and the status line says it is not live, with its age.
 //! - **Preferences**: the page's `calibration-mirror-v1` is
 //!   `settings::MirrorSettings`, saved on every change.
 mod apply;
@@ -24,7 +30,7 @@ mod thread;
 pub use apply::apply;
 
 use super::actions::{Align, GaitMode};
-use super::link::GaitRun;
+use super::link::{GaitRun, LegClock, LinkHealth, POLL_ACTIVE};
 use super::settings::{MirrorBinding, MirrorSettings, sign};
 use super::view::fixed;
 use crate::robot::preset::{PresetRun, RecordedRun};
@@ -175,10 +181,17 @@ pub struct Mirror {
     coordinates: Option<Vec<Coordinate>>,
     loading: bool,
     error: Option<String>,
-    /// The status line's text (without the error override).
+    /// The status line's text (without the error override and the leg's data note).
     line: String,
+    /// `line` describes encoder readings (not a loading or simulated-gait line).
+    line_is_reading: bool,
     /// The text the next solve's status is built from (`this.text`).
     text: String,
+    /// `text` describes encoder readings.
+    text_is_reading: bool,
+    /// The leg's data as of this frame (`mirror_sync`, [`Mirror::set_leg_health`]):
+    /// the encoders pose the leg only while it is `Live`.
+    leg_health: LinkHealth,
     /// The values last requested (`this.pending`).
     pending: Option<Vec<f64>>,
     pose_sent: u64,
@@ -202,6 +215,9 @@ pub struct Mirror {
     sample_done: u64,
     sample_both: bool,
     last_sample: Option<Instant>,
+    /// The leg clock time (s) last sampled in this play, and the scale it was
+    /// interpolated at (Both only; see [`Mirror::follow_gait`]).
+    last_t: Option<(f64, f64)>,
     /// A gait load or sample error (the page shows it in the Gait playback status).
     gait_notice: Option<String>,
     /// Bumped when roles or settings change (the panel rebuilds its rows).
@@ -220,7 +236,10 @@ impl Mirror {
             loading: false,
             error: None,
             line: String::new(),
+            line_is_reading: false,
             text: String::new(),
+            text_is_reading: false,
+            leg_health: LinkHealth::Waiting,
             pending: None,
             pose_sent: 0,
             pose_done: 0,
@@ -237,6 +256,7 @@ impl Mirror {
             sample_done: 0,
             sample_both: false,
             last_sample: None,
+            last_t: None,
             gait_notice: None,
             revision: 1,
         }
@@ -319,11 +339,43 @@ impl Mirror {
     }
 
     /// The status line (`status()`, :47): the error overrides the text.
+    /// While the shown leg's data is not live the line says so first, with
+    /// the last reading after it ("Leg data stale — last read 3 s ago; not
+    /// live · last reading: hip: 2.1° from its alignment pose").
     pub fn status_text(&self) -> String {
-        match &self.error {
-            Some(e) => format!("Mirror unavailable: {e}"),
-            None => self.line.clone(),
+        if let Some(e) = &self.error {
+            return format!("Mirror unavailable: {e}");
         }
+        match self.leg_note() {
+            None => self.line.clone(),
+            Some(note) if self.line.is_empty() => note,
+            Some(note) if self.line_is_reading => format!("{note} · last reading: {}", self.line),
+            Some(note) => format!("{note} · {}", self.line),
+        }
+    }
+
+    /// The leg's health for this frame (`mirror_sync` sets it every frame:
+    /// the link's [`super::link::LinkSnapshot::health`], `Waiting` with no
+    /// link). Returns true when the data has just become live again: the
+    /// caller then forces an [`Mirror::update`] with the current status so
+    /// the live pose and line return. Compared before it is written.
+    pub(crate) fn set_leg_health(&mut self, health: &LinkHealth) -> bool {
+        let recovered = *health == LinkHealth::Live && self.leg_health != LinkHealth::Live;
+        if self.leg_health != *health {
+            self.leg_health = health.clone();
+        }
+        recovered
+    }
+    fn live(&self) -> bool {
+        self.leg_health == LinkHealth::Live
+    }
+    /// Why the shown leg is not live (None when live, or when a simulated
+    /// gait poses every leg and no encoder is shown).
+    fn leg_note(&self) -> Option<String> {
+        if self.gait.is_some() && !self.gait_real_leg {
+            return None;
+        }
+        self.leg_health.leg_note()
     }
 
     /// `record()` (:49): the display binding, for exports.
@@ -335,7 +387,8 @@ impl Mirror {
     /// For `hardware_status`.
     pub fn state_json(&self) -> Value {
         json!({"enabled": self.settings.enabled, "leg": self.settings.leg, "shown": self.shown, "status": self.status_text(), "coordinates": self.coordinates.as_ref().map(Vec::len),
-            "busy": self.busy(), "gait": self.gait.is_some(), "gait_real_leg": self.gait_real_leg, "gait_notice": self.gait_notice, "record": self.record()})
+            "busy": self.busy(), "gait": self.gait.is_some(), "gait_real_leg": self.gait_real_leg, "gait_notice": self.gait_notice, "record": self.record(),
+            "leg_data": self.leg_health.name(), "leg_note": self.leg_health.leg_note()})
     }
 
     /// The page's `begin()`: run the begin procedure again at the next frame.
@@ -371,6 +424,7 @@ impl Mirror {
             }
             Ok(None) => {
                 self.line = "Waiting for the robot model to load…".into();
+                self.line_is_reading = false;
                 return None;
             }
             Ok(Some(s)) => s,
@@ -386,6 +440,7 @@ impl Mirror {
             self.loading = false;
             self.gait_number = None;
             self.gait_ready = false;
+            self.last_t = None;
             self.pending = None;
             self.pose_done = self.pose_sent;
             self.sample_done = self.sample_sent;
@@ -394,6 +449,7 @@ impl Mirror {
         if self.coordinates.is_none() {
             if !self.loading || restart {
                 self.line = "Preparing the suspended robot…".into();
+                self.line_is_reading = false;
                 self.loading = true;
                 self.error = None;
                 self.send(MirrorCommand::Load { scene: source, links: links.to_vec() });
@@ -440,7 +496,7 @@ impl Mirror {
         self.loading = false;
         self.coordinates = None;
         self.pending = None;
-        (self.pose_done, self.sample_done, self.gait_number, self.gait_ready) = (self.pose_sent, self.sample_sent, None, false);
+        (self.pose_done, self.sample_done, self.gait_number, self.gait_ready, self.last_t) = (self.pose_sent, self.sample_sent, None, false, None);
         self.error = Some(WORKER_FAILED.into());
         self.end();
     }
@@ -453,6 +509,12 @@ impl Mirror {
     }
 
     /// `update(state, force)` (:76-100): called on every new server state.
+    ///
+    /// While the leg's data is not live ([`Mirror::set_leg_health`]) the
+    /// encoders pose nothing: the last solved pose and its text are held
+    /// (also when `prepare` or a gait sample calls this with the cached
+    /// state), and [`Mirror::status_text`] says why. Only a simulated gait
+    /// that poses every leg (Sim, no encoder shown) is still solved.
     pub fn update(&mut self, state: &Status, force: bool) {
         self.last = Some(state.clone());
         if !self.settings.enabled || self.error.is_some() {
@@ -464,9 +526,13 @@ impl Mirror {
         let mut values: Vec<f64> = coordinates.iter().map(|c| self.gait.as_ref().and_then(|g| g.get(&c.joint)).copied().unwrap_or(c.home)).collect();
         if self.gait.is_some() && !self.gait_real_leg {
             self.text = "Simulated gait".into();
+            self.text_is_reading = false;
             if force || self.pending.as_ref() != Some(&values) {
                 self.solve(values);
             }
+            return;
+        }
+        if !self.live() {
             return;
         }
         let none = Axis::default();
@@ -500,6 +566,7 @@ impl Mirror {
             return;
         }
         self.text = lines.join(" · ");
+        self.text_is_reading = true;
         self.solve(values);
     }
 
@@ -526,13 +593,29 @@ impl Mirror {
     /// The link's gait run (calibration-ui.mjs:241-270): load a compiled gait
     /// played in Sim or Both, sample it once per frame with no sample in
     /// flight (`gaitSampling`), and clear the gait pose when the run ends.
-    /// `leg_speed`: the leg's `state.gait.speed_scale`.
-    pub(crate) fn follow_gait(&mut self, run: Option<&GaitRun>, compiled: Option<&(u64, Arc<Value>, String)>, leg_speed: Option<f64>, now: Instant) {
+    ///
+    /// The clock: Sim samples at the link thread's `run.t` × `run.scale`
+    /// (wall time, unchanged). Both samples at `leg_clock`
+    /// ([`super::link::LinkSnapshot::leg_clock`] of the same snapshot), the
+    /// server's leg gait time interpolated since the last read, so the
+    /// simulated legs move with the real one between polls rather than in
+    /// 150 ms steps. While that clock is frozen (the leg's data is stale or
+    /// lost) no sample is sent and the last gait pose is held; a leg run
+    /// with no clock is held the same way. A paused or approaching leg gait
+    /// is sampled at its held time (the pose holds).
+    ///
+    /// The interpolation may run ahead of the server by at most
+    /// [`POLL_ACTIVE`] × scale, so the next status can put the time slightly
+    /// behind the last sample. Within that bound the sample stays at the
+    /// last time (the display waits for the server to catch up instead of
+    /// stepping back); a larger step back is the server's own and is taken.
+    pub(crate) fn follow_gait(&mut self, run: Option<&GaitRun>, compiled: Option<&(u64, Arc<Value>, String)>, leg_clock: Option<&LegClock>, now: Instant) {
         let Some(run) = run else {
             if self.gait_number.take().is_some() || self.gait.is_some() {
                 self.gait_ready = false;
                 self.sampled = false;
                 self.last_sample = None;
+                self.last_t = None;
                 self.set_gait(None, true);
             }
             return;
@@ -546,6 +629,7 @@ impl Mirror {
             self.gait_ready = false;
             self.sampled = false;
             self.last_sample = None;
+            self.last_t = None;
             self.gait_notice = None;
             self.send(MirrorCommand::Gait { number: *number, compiled: gait.clone(), name: name.clone() });
             return;
@@ -553,15 +637,29 @@ impl Mirror {
         if !self.gait_ready || self.sample_sent > self.sample_done {
             return;
         }
-        let dt = self.last_sample.map_or(0.0, |at| now.duration_since(at).as_secs_f64()).clamp(0.001, 0.2);
+        let (t, scale) = if run.leg {
+            let Some(clock) = leg_clock.filter(|c| c.frozen.is_none()) else {
+                // Held: the first sample after the data is live again steps the shortest dt.
+                self.last_sample = None;
+                return;
+            };
+            let t = match self.last_t {
+                Some((last, last_scale)) if clock.t < last && last - clock.t <= POLL_ACTIVE.as_secs_f64() * last_scale + 1e-9 => last,
+                _ => clock.t,
+            };
+            self.last_t = Some((t, clock.scale));
+            (t, clock.scale)
+        } else {
+            (run.t, run.scale)
+        };
+        let dt = self.last_sample.map_or(0.0, |at| now.saturating_duration_since(at).as_secs_f64()).clamp(0.001, 0.2);
         self.last_sample = Some(now);
-        let scale = if run.leg { leg_speed.unwrap_or(run.scale) } else { run.scale };
         let reset = !self.sampled;
         self.sampled = true;
         self.sample_both = run.mode == GaitMode::Both;
         self.sample_sent += 1;
         let seq = self.sample_sent;
-        self.send(MirrorCommand::Sample { seq, t: run.t, dt, scale, reset });
+        self.send(MirrorCommand::Sample { seq, t, dt, scale, reset });
     }
 
     /// Takes the worker's results; returns a solved pose to show.
@@ -607,12 +705,16 @@ impl Mirror {
         self.pose_done = self.pose_done.max(seq);
         match result {
             Ok((solved, violations)) => {
-                let limits: Vec<String> = violations.into_iter().filter(|n| n.starts_with(&self.settings.leg)).collect();
+                // The mirrored leg's joints only ("{leg} | {joint}", as the tint).
+                let prefix = format!("{} |", self.settings.leg);
+                let limits: Vec<String> = violations.into_iter().filter(|n| n.starts_with(&prefix)).collect();
                 self.line = if limits.is_empty() { self.text.clone() } else { format!("{} · Beyond CAD limit: {}", self.text, limits.join(", ")) };
+                self.line_is_reading = self.text_is_reading;
                 self.shown.then_some(solved)
             }
             Err(e) => {
                 self.line = format!("{} · Pose not solved: {e}", self.text);
+                self.line_is_reading = self.text_is_reading;
                 None
             }
         }

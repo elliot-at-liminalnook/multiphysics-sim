@@ -14,6 +14,21 @@
 //! ([`PanelView::block`]); STOP stays enabled. The panel blocks the same
 //! controls while no link exists.
 //!
+//! **Deliberate addition: link health** ([`LinkSnapshot::health`]). A
+//! disconnected link (the server reported its bus lost after it was
+//! connected, a pinned virtual bench gone, a request that found the binding
+//! gone) prefixes the status line with "DISCONNECTED — why." without
+//! blocking anything by itself (a physical bus lost on a STOP readback is
+//! reconnected by selecting a motor); a leg gait's clock
+//! ([`LinkSnapshot::leg_clock`]) is shown frozen with the reason whenever
+//! the leg's data is not live.
+//!
+//! **Simulated results are labelled.** A leg gait on a virtual bench (the
+//! server's gait state says `simulated`, or the link is pinned to a virtual
+//! execution) reads "VIRTUAL (simulated) · Leg: …", and a recent leg run the
+//! server recorded as simulated is headed "VIRTUAL (simulated) · …"; a run
+//! row without the field (an older server) is physical or unknown.
+//!
 //! Side effects the page's `render()` makes (ending a finished learn, ending
 //! a finished leg gait) belong to the link thread, which has the newest state.
 mod status;
@@ -22,7 +37,7 @@ pub use status::status_json;
 
 use super::Section;
 use super::actions::{DriveMode, GaitMode};
-use super::link::{Inputs, Intent, LinkSnapshot};
+use super::link::{Inputs, Intent, LinkHealth, LinkSnapshot};
 use serde::Serialize;
 use serde_json::Value;
 use sim_runtime::hardware_client::calibration::{Axis, GaitEntry, GaitStatistics, Status};
@@ -183,6 +198,10 @@ pub struct GaitView {
 pub const STATS_HEADER: [&str; 11] = ["Motor", "RMS error", "Peak", "Sim RMS", "Lag", "Effort", "At ceiling", "Governed", "Peak accel", "Min V", "Max °C"];
 /// "Recent leg runs" when there are none.
 pub const NO_RUNS: &str = "No leg runs yet.";
+/// The label of a simulated (virtual bench) leg gait and leg run.
+pub const VIRTUAL_SIMULATED: &str = "VIRTUAL (simulated)";
+/// The status line's prefix while the link is disconnected ([`mark_disconnected`]).
+pub const DISCONNECTED: &str = "DISCONNECTED";
 
 /// The page's motor chips (:13), always these three.
 const DEFAULT_MOTORS: [(u8, &str); 3] = [(1, "Knee"), (2, "Worm"), (3, "Belt")];
@@ -485,7 +504,7 @@ pub fn render(s: &LinkSnapshot, form: &Form, now: Instant) -> PanelView {
         flip_enabled: s.id.is_some() && !s.busy,
         clear_enabled: s.id.is_some() && !s.busy,
         raw_step_enabled: s.id.is_some() && form.step != 0 && (-4095..=4095).contains(&form.step),
-        gait: render_gait(s, form),
+        gait: render_gait(s, form, now),
         motion: super::motion_view::update(s.id, &a, t, st.sweep.as_ref()),
         blocked: None,
     };
@@ -496,7 +515,26 @@ pub fn render(s: &LinkSnapshot, form: &Form, now: Instant) -> PanelView {
         };
         view.block(reason);
     }
+    mark_disconnected(&mut view, s, now);
     view
+}
+
+/// While the link is disconnected ([`LinkHealth::Disconnected`]), the status
+/// line starts "DISCONNECTED — {why}." (the line after it unless the reason
+/// already says it). Idempotent: the panel calls it again after a block
+/// replaced the line. Blocks nothing by itself.
+pub fn mark_disconnected(view: &mut PanelView, s: &LinkSnapshot, now: Instant) {
+    let LinkHealth::Disconnected { why } = s.health(now) else { return };
+    if view.status.starts_with(DISCONNECTED) {
+        return;
+    }
+    let why = why.trim().trim_end_matches('.');
+    let rest = view.status.trim().trim_end_matches('.');
+    view.status = if rest.is_empty() || why.contains(rest) {
+        format!("{DISCONNECTED} — {why}.")
+    } else {
+        format!("{DISCONNECTED} — {why}. {}", view.status)
+    };
 }
 
 /// `Math.round(v)` as the page prints it, "—" for a missing (null) value.
@@ -543,8 +581,12 @@ impl PanelView {
     }
 }
 
-/// `renderGait()` (:214-233).
-fn render_gait(s: &LinkSnapshot, form: &Form) -> GaitView {
+/// `renderGait()` (:214-233) at `now`. A leg gait's time and speed are the
+/// one leg clock ([`LinkSnapshot::leg_clock`]: the server's gait time,
+/// advanced between reads only while live), the same the mirror samples and
+/// `hardware_status` reports; when the leg's data is not live the clock is
+/// shown frozen with why ([`LinkHealth::leg_note`]), until a fresh status.
+fn render_gait(s: &LinkSnapshot, form: &Form, now: Instant) -> GaitView {
     let st = &s.state;
     let g = st.gait.as_ref();
     let run = s.gait.as_ref();
@@ -555,8 +597,23 @@ fn render_gait(s: &LinkSnapshot, form: &Form) -> GaitView {
             GaitMode::Leg => "Leg only",
             GaitMode::Both => "Sim + leg",
         };
-        let scale = if run.leg { g.and_then(|g| g.speed_scale).unwrap_or(run.scale) } else { run.scale };
-        text = format!("{mode} · gait time {} s of {} s period · {}% speed", fixed(run.t, 2), fixed(run.period_s, 2), fixed(scale * 100.0, 0));
+        let clock = if run.leg { s.leg_clock(now) } else { None };
+        // The line shows the gait time as last read from the server (the
+        // clock's base, `GaitRun::t`: it changes once per status read, not
+        // every frame, so the label stays steady); the simulated legs sample
+        // the same clock interpolated between reads (`Mirror::follow_gait`).
+        let (t, scale) = (run.t, clock.as_ref().map_or(run.scale, |c| c.scale));
+        let frozen = clock.as_ref().and_then(|c| c.frozen.as_ref());
+        text = format!(
+            "{mode} · gait time {} s{} of {} s period · {}% speed",
+            fixed(t, 2),
+            if frozen.is_some() { " (clock frozen)" } else { "" },
+            fixed(run.period_s, 2),
+            fixed(scale * 100.0, 0)
+        );
+        if let Some(note) = frozen.and_then(LinkHealth::leg_note) {
+            text += &format!("\n{note}");
+        }
         // Deliberate difference: the page tests `g?.limits`, and an empty
         // `limits` object is truthy there, so it prints a bare "Limits: "
         // line; here the line is left out when there are no limits. A null
@@ -567,7 +624,10 @@ fn render_gait(s: &LinkSnapshot, form: &Form) -> GaitView {
             text += &format!("\nLimits: {}", limits.join(" · "));
         }
         if run.leg {
-            text += &format!("\nLeg: {}", g.and_then(|g| g.phase.clone()).unwrap_or_else(|| "starting".into()));
+            // Simulated: the server's gait state says so, or the link is pinned to a virtual bench.
+            let simulated = g.is_some_and(|g| g.simulated) || s.execution.as_ref().is_some_and(|i| i.is_virtual_calibration());
+            let label = if simulated { format!("{VIRTUAL_SIMULATED} · ") } else { String::new() };
+            text += &format!("\n{label}Leg: {}", g.and_then(|g| g.phase.clone()).unwrap_or_else(|| "starting".into()));
             if let Some(errors) = g.and_then(|g| g.errors.as_ref()) {
                 let role = |k: &str| k.parse::<u8>().ok().and_then(|id| st.calibration.as_ref()?.axes.get(&id)).map(|a| a.role.clone()).filter(|r| !r.is_empty()).unwrap_or_else(|| k.to_string());
                 // A null error prints "—" (deliberate: the page's `Math.round(null)`
@@ -604,8 +664,11 @@ fn render_gait(s: &LinkSnapshot, form: &Form) -> GaitView {
             // page's text names nothing), and `r.outcome` missing prints ""
             // where the page prints "undefined" or "null".
             let name = if parts.len() >= 2 { parts[parts.len() - 2].to_string() } else { path.clone() };
+            // A run the server recorded as simulated (a row without the
+            // field, from an older server, is physical or unknown: unlabelled).
+            let label = if r.simulated { format!("{VIRTUAL_SIMULATED} · ") } else { String::new() };
             let heading = format!(
-                "{name} · effort {}% · speed {}% · {} s · {}",
+                "{label}{name} · effort {}% · speed {}% · {} s · {}",
                 js_num(js_round(r.effort.unwrap_or(0.0) * 100.0)),
                 js_num(js_round(r.speed_scale.unwrap_or(0.0) * 100.0)),
                 fixed(r.gait_time_s.unwrap_or(0.0), 1),

@@ -7,7 +7,11 @@ use std::collections::BTreeMap;
 use std::time::Instant;
 
 /// REST `hardware_status`: the link (connected, url, generation, stale and
-/// the age of the last read), the page's session state, the form, every
+/// the age of the last read; `link_state`, one of `none`, `waiting`, `live`,
+/// `stale`, `disconnected` ([`LinkHealth::name`](crate::robot::hardware::link::LinkHealth::name)),
+/// and `link_note`, why the leg's data is not live), the page's session
+/// state (a leg gait's `t` is the one leg clock, `LinkSnapshot::leg_clock`,
+/// with `clock_frozen` while the leg's data is not live), the form, every
 /// rendered text and flag, the mirror and live-sync state, and the
 /// server's last status.
 pub fn status_json(hw: &Hardware, now: Instant) -> Value {
@@ -15,7 +19,15 @@ pub fn status_json(hw: &Hardware, now: Instant) -> Value {
     let view = panel_view(hw, now);
     let connected = hw.link.is_some() && s.connection_valid && s.state.connected;
     let age_ms = s.read_at.map(|t| now.duration_since(t).as_millis() as u64);
-    let gait = s.gait.as_ref().map(|g| json!({"mode": g.mode, "period_s": g.period_s, "t": g.t, "playing": g.playing, "scale": g.scale, "leg": g.leg, "skipped": g.skipped, "started": g.started}));
+    let health = hw.link.as_ref().map(|_| s.health(now));
+    let link_state = health.as_ref().map_or("none", |h| h.name());
+    let link_note = health.as_ref().and_then(|h| h.leg_note());
+    let clock = s.leg_clock(now);
+    let gait = s.gait.as_ref().map(|g| {
+        let t = clock.as_ref().map_or(g.t, |c| c.t);
+        let clock_frozen = clock.as_ref().is_some_and(|c| c.frozen.is_some());
+        json!({"mode": g.mode, "period_s": g.period_s, "t": t, "clock_frozen": clock_frozen, "playing": g.playing, "scale": clock.as_ref().map_or(g.scale, |c| c.scale), "leg": g.leg, "skipped": g.skipped, "started": g.started})
+    });
     let f = &hw.form;
     json!({
         "open": hw.open,
@@ -25,6 +37,8 @@ pub fn status_json(hw: &Hardware, now: Instant) -> Value {
         "generation": hw.link.as_ref().map(|l| l.generation),
         "stale": hw.link.is_some() && (s.stale(now) || !s.connection_valid || s.authorization_revoked),
         "link_reachable": hw.link.is_some() && s.connection_valid,
+        "link_state": link_state,
+        "link_note": link_note,
         "authorization_revoked": s.authorization_revoked,
         "execution": s.execution,
         "age_ms": if connected { age_ms } else { None },
@@ -88,7 +102,7 @@ fn server_json(st: &Status) -> Value {
         "campaign": st.campaign.as_ref().map(|c| json!({"running": c.running, "stage": c.stage, "completed": c.completed, "error": c.error, "directory":c.directory, "skipped":c.skipped,
             "last":c.last.as_ref().map(|l| json!({"stage":l.stage,"axis":l.axis,"completed":l.completed,"abort":l.abort})),
             "result": c.result.as_ref().map(|r| json!({"headline": r.headline, "directory": r.directory}))})),
-        "gait": st.gait.as_ref().map(|g| json!({"running": g.running, "t": g.t, "speed_scale": g.speed_scale, "phase": g.phase, "clamped": g.clamped, "error": g.error})),
+        "gait": st.gait.as_ref().map(|g| json!({"running": g.running, "t": g.t, "speed_scale": g.speed_scale, "phase": g.phase, "clamped": g.clamped, "error": g.error, "simulated": g.simulated})),
         "gait_runs": st.gait_runs.len(),
     })
 }

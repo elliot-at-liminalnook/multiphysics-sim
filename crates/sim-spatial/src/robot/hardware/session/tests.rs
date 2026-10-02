@@ -900,27 +900,31 @@ fn an_operator_drive_mode_edit_while_pending_is_not_overwritten() {
 // Virtual scope, jog toggle and refused-press fixtures.
 
 /// A virtual link lists the commands its bench does not simulate (flip, raw
-/// step, a gait on the leg) disabled with the scope reason; a physical or
-/// unknown one keeps their ordinary reasons.
+/// step) disabled with the scope reason; a physical or unknown one keeps
+/// their ordinary reasons. Gait playback on the leg (Leg only, Both, Play)
+/// is in scope on a virtual bench (HW-10/HW-11).
 #[test]
-fn a_virtual_link_lists_flip_raw_step_and_leg_gaits_out_of_scope() {
+fn a_virtual_link_lists_flip_and_raw_step_out_of_scope_and_leg_gaits_in_scope() {
     use crate::robot::hardware::{Hardware, HardwareConfig, actions::GaitMode, panel::{OUT_OF_VIRTUAL_SCOPE, controls}, settings};
     let mut hw = Hardware::new(HardwareConfig::default(), settings::Settings::default());
     hw.form.gait_mode = GaitMode::Leg;
     let reason = |hw: &Hardware, id: &str| controls(hw).into_iter().find(|(i, ..)| i == id).unwrap_or_else(|| panic!("{id} is not listed")).3;
-    let out_of_scope = ["hardware:flip", "hardware:raw_step", "hardware:gait_mode_leg", "hardware:gait_mode_both", "hardware:gait_play"];
-    for id in out_of_scope {
+    let out_of_scope = ["hardware:flip", "hardware:raw_step"];
+    let gait = ["hardware:gait_mode_sim", "hardware:gait_mode_leg", "hardware:gait_mode_both", "hardware:gait_play"];
+    for id in out_of_scope.into_iter().chain(gait) {
         assert_ne!(reason(&hw, id), Err(OUT_OF_VIRTUAL_SCOPE.to_string()), "{id} without a virtual execution");
     }
     hw.snapshot.execution = Some(virtual_identity(SERVER_A));
     for id in out_of_scope {
         assert_eq!(reason(&hw, id), Err(OUT_OF_VIRTUAL_SCOPE.to_string()), "{id}");
     }
-    // Sim-only playback and the form's own controls stay in scope.
-    assert_ne!(reason(&hw, "hardware:gait_mode_sim"), Err(OUT_OF_VIRTUAL_SCOPE.to_string()));
+    for id in gait {
+        assert_ne!(reason(&hw, id), Err(OUT_OF_VIRTUAL_SCOPE.to_string()), "{id} is in scope");
+    }
+    // The radios follow only "not while a gait plays".
+    assert_eq!(reason(&hw, "hardware:gait_mode_leg"), Ok(()));
+    assert_eq!(reason(&hw, "hardware:gait_mode_both"), Ok(()));
     assert_eq!(reason(&hw, "hardware:raw_step_plus_1"), Ok(()));
-    hw.form.gait_mode = GaitMode::Sim;
-    assert_ne!(reason(&hw, "hardware:gait_play"), Err(OUT_OF_VIRTUAL_SCOPE.to_string()));
 }
 
 /// The server answers an out-of-scope command on a virtual bench with an
@@ -1135,6 +1139,9 @@ fn a_lost_virtual_bench_revokes_and_says_so() {
     assert!(session.snap.authorization_revoked && !session.snap.connection_valid && !session.snap.ready);
     let message = session.snap.state.message.clone().unwrap_or_default();
     assert!(message.contains("virtual calibration bench was lost") && message.contains("reconnect required"), "{message}");
+    // Marked disconnected with the same reason (the panel's DISCONNECTED line, `link_state`).
+    assert!(session.snap.disconnected.as_deref().is_some_and(|why| why.contains("virtual calibration bench was lost")), "{:?}", session.snap.disconnected);
+    assert!(matches!(session.snap.health(Instant::now()), crate::robot::hardware::link::LinkHealth::Disconnected { .. }));
     assert_eq!(session.axis().tuning.unwrap().record, "retained-tune.json", "accepted records stay");
 }
 
@@ -1160,4 +1167,205 @@ fn a_pinless_download_the_server_labels_simulated_is_written_as_virtual() {
     let written = write_export(json!({"a": 3, "simulated": false}), Value::Null, Some(&out), 3, None).unwrap();
     assert_eq!(written, Exported { path: exports.join("leg-calibration-3.json"), simulated: false });
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+// HW-10/HW-11: the disconnected marker, the capture answered after the save
+// and remote gait playback. Written and source-inspected, not executed.
+
+fn status_of(v: Value) -> Status {
+    serde_json::from_value(v).expect("status")
+}
+
+/// `adopt` marks the link disconnected when its bus goes from connected to
+/// not (with the server's message), keeps the mark while it stays so, and
+/// clears it when the bus reports connected. A server whose bus never
+/// connected is not disconnected; a lost request's mark goes with the next status read.
+#[test]
+fn adopt_marks_a_bus_lost_after_it_connected_and_clears_it_on_reconnect() {
+    use crate::robot::hardware::link::LinkHealth;
+    let fake = Fake::start(motor_server(1));
+    let (mut s, _) = session(&fake, Arc::default());
+    // A physical server before its first inspect: never connected, not disconnected.
+    s.adopt(status_of(json!({ "connected": false, "message": "Select a motor to connect" })));
+    assert_eq!(s.snap.disconnected, None);
+    assert_eq!(s.snap.health(Instant::now()), LinkHealth::Live);
+    s.adopt(status_of(json!({ "connected": true, "enabled_id": 1 })));
+    assert_eq!(s.snap.disconnected, None);
+    // A STOP that lost readback: the server reports its bus disconnected.
+    s.adopt(status_of(json!({ "connected": false, "message": "Readback lost from Knee: timed out. Select a motor to reconnect." })));
+    let why = s.snap.disconnected.clone().expect("disconnected");
+    assert_eq!(why, "the server reports its bus disconnected: Readback lost from Knee: timed out. Select a motor to reconnect.");
+    assert!(matches!(s.snap.health(Instant::now()), LinkHealth::Disconnected { .. }));
+    assert!(!s.snap.authorization_revoked && s.snap.connection_valid, "a physical bus loss revokes nothing");
+    // Still down: still marked, with the first reason.
+    s.adopt(status_of(json!({ "connected": false })));
+    assert_eq!(s.snap.disconnected.as_deref(), Some(why.as_str()));
+    // Reconnected (a motor selected): cleared.
+    s.adopt(status_of(json!({ "connected": true, "enabled_id": 1 })));
+    assert_eq!(s.snap.disconnected, None);
+    assert_eq!(s.snap.health(Instant::now()), LinkHealth::Live);
+    // A request that found the connection gone marks it; the next status read clears it.
+    s.lose_binding();
+    assert_eq!(s.snap.disconnected.as_deref(), Some("the connection or its execution binding was lost or refused"));
+    s.adopt(status_of(json!({ "connected": true })));
+    assert_eq!(s.snap.disconnected, None);
+    // Also when that server's bus never connected (nothing was revoked).
+    let (mut never, _) = session(&fake, Arc::default());
+    never.lose_binding();
+    never.adopt(status_of(json!({ "connected": false })));
+    assert_eq!(never.snap.disconnected, None);
+}
+
+/// A server that answers `capture_hold` with `answer` (and as `motor_server(1)` otherwise).
+fn capture_server(answer: Value) -> Handler {
+    let motor = motor_server(1);
+    Arc::new(move |path: &str, body: &Value| -> Result<Value, String> {
+        if body["action"] == "capture_hold" { Ok(answer.clone()) } else { motor(path, body) }
+    })
+}
+
+/// A session holding motor 1 in run 7 (selected, jogged, released).
+fn holding(fake: &Fake) -> (Session, Arc<Mutex<LinkSnapshot>>) {
+    let (mut s, shared) = session(fake, Arc::default());
+    s.handle(LinkCommand::Select { id: 1 });
+    s.handle(LinkCommand::Press { direction: Direction::Lower });
+    s.handle(LinkCommand::Release);
+    assert_eq!((s.snap.run, s.snap.intent), (Some(7), Intent::Hold), "{:?}", s.snap.state.message);
+    (s, shared)
+}
+
+/// `capture_hold` is answered after the save with the full status, which is
+/// adopted and published at once (the panel and the mirror show the saved
+/// pose); an answer that is not a status (an older server's `{"ok":true}`)
+/// is an error, not a save.
+#[test]
+fn a_held_capture_adopts_the_saved_status_and_an_unconfirmed_answer_is_an_error() {
+    use crate::robot::hardware::actions::Boundary;
+    let saved = json!({ "connected": true, "enabled_id": 1, "capture_message": "Saved lower pose", "calibration": { "axes": { "1": { "lower": 1234 } } } });
+    let fake = Fake::start(capture_server(saved));
+    let (mut s, shared) = holding(&fake);
+    let revision = shared.lock().unwrap().revision;
+    s.command_error = None;
+    s.handle(LinkCommand::Capture { boundary: Boundary::Lower, reference_joint_rad: None });
+    assert!(actions(&fake.commands()).iter().any(|a| a == "capture_hold"), "{:?}", fake.commands());
+    assert_eq!(s.command_error, None);
+    assert_eq!(s.axis().lower, Some(1234));
+    assert_eq!(s.snap.state.capture_message.as_deref(), Some("Saved lower pose"));
+    let published = shared.lock().unwrap().clone();
+    assert!(published.revision > revision, "published with the capture");
+    assert_eq!(published.state.calibration.as_ref().and_then(|c| c.axes.get(&1)).and_then(|a| a.lower), Some(1234));
+
+    let fake = Fake::start(capture_server(json!({ "ok": true })));
+    let (mut s, _) = holding(&fake);
+    let before = s.axis();
+    s.command_error = None;
+    s.handle(LinkCommand::Capture { boundary: Boundary::Upper, reference_joint_rad: None });
+    assert_eq!(s.command_error.as_deref(), Some(super::buttons::CAPTURE_UNCONFIRMED));
+    assert_eq!(s.snap.state.capture_message.as_deref(), Some(super::buttons::CAPTURE_UNCONFIRMED));
+    assert_eq!(s.axis(), before, "nothing adopted from an unconfirmed answer");
+}
+
+/// The compiled gait the remote gait tests play (the gait search's comparison trial).
+const GAIT_FIXTURE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/full-robot/measured-actuator-integration/gait-search-comparison-2026-09-19/comparison/2301-CmaEs-000/compiled.json");
+const GAIT_PATH: &str = "examples/full-robot/measured-actuator-integration/gait-search-comparison-2026-09-19/comparison/2301-CmaEs-000/compiled.json";
+
+/// A virtual bench (SERVER_A) that lists and serves the fixture gait and
+/// starts a simulated leg gait, or refuses `gait_start` with a 400.
+fn gait_server(refuse_start: bool) -> Fake {
+    let status = virtual_document(&virtual_identity(SERVER_A));
+    let compiled: Value = serde_json::from_slice(&std::fs::read(GAIT_FIXTURE).expect("gait fixture")).expect("gait fixture JSON");
+    Fake::start(Arc::new(move |path: &str, body: &Value| -> Result<Value, String> {
+        if path == "/calibration/gaits" {
+            return Ok(json!({ "gaits": [{ "path": GAIT_PATH, "study": "comparison", "trial": "2301-CmaEs-000" }] }));
+        }
+        if path.starts_with("/calibration/gait?") {
+            return Ok(compiled.clone());
+        }
+        match body["action"].as_str() {
+            Some("gait_start") if refuse_start => Err("Out of virtual calibration scope: gait_start".into()),
+            Some("gait_start") => {
+                let mut started = status.clone();
+                started["gait"] = json!({ "running": true, "phase": "approach", "t": 0.0, "speed_scale": 1.0, "simulated": true });
+                Ok(started)
+            }
+            _ => Ok(status.clone()),
+        }
+    }))
+}
+
+/// A remote Leg play on a virtual bench (a checked command) is answered Ok
+/// only once `gait_start` was answered and the gait runs; a refused start
+/// is the answer, with the play's own reason, and revokes nothing.
+#[test]
+fn a_checked_leg_gait_play_answers_ok_only_after_the_gait_started() {
+    use crate::robot::hardware::actions::GaitMode;
+    let play = || LinkCommand::GaitPlay {
+        entry: calibration::GaitEntry { path: GAIT_PATH.into(), study: "comparison".into(), trial: "2301-CmaEs-000".into(), ..Default::default() },
+        mode: GaitMode::Leg,
+        bindings: vec![calibration::GaitBinding { id: 1, joint: "+X | Foot servo output".into(), polarity: 1.0, home_rad: 0.0 }],
+        skipped: Vec::new(),
+    };
+    let fake = gait_server(false);
+    let mut session = pinned_session(&fake, virtual_identity(SERVER_A));
+    session.handle(LinkCommand::Checked { ticket: 1, epoch: session.epoch_now(), generation: 1, inputs: None, command: Box::new(play()) });
+    assert_eq!(session.snap.command_results[&1], Ok(()));
+    assert!(actions(&fake.commands()).iter().any(|a| a == "gait_start"), "{:?}", fake.commands());
+    let run = session.snap.gait.clone().expect("the gait plays");
+    assert!(run.leg && run.started && run.mode == GaitMode::Leg);
+    assert!(session.snap.state.gait.as_ref().is_some_and(|g| g.running && g.simulated));
+    // Play again: a pause, judged by what it did.
+    session.handle(LinkCommand::Checked { ticket: 2, epoch: session.epoch_now(), generation: 1, inputs: None, command: Box::new(LinkCommand::GaitToggle) });
+    assert_eq!(session.snap.command_results[&2], Ok(()));
+    assert!(session.snap.gait.as_ref().is_some_and(|g| !g.playing));
+
+    let fake = gait_server(true);
+    let mut session = pinned_session(&fake, virtual_identity(SERVER_A));
+    session.handle(LinkCommand::Checked { ticket: 1, epoch: session.epoch_now(), generation: 1, inputs: None, command: Box::new(play()) });
+    let result = session.snap.command_results[&1].clone();
+    assert!(result.as_ref().is_err_and(|e| e.contains("Out of virtual calibration scope: gait_start")), "{result:?}");
+    assert!(session.snap.gait.is_none());
+    assert!(!session.snap.authorization_revoked && session.snap.connection_valid, "a 400 refusal must not revoke");
+}
+
+/// Through the panel's remote dispatch: the gait form intents are answered at
+/// once once authorized, and Play waits for the link's verdict; a Leg play
+/// without the mirror's bindings is refused with the play's reason.
+#[test]
+fn remote_gait_intents_are_authorized_and_play_waits_for_the_link() {
+    use crate::app::actions::{Origin, Replies};
+    use crate::robot::hardware::{actions::{GaitMode, HardwareAction}, handlers::Answer};
+    let fake = gait_server(false);
+    let mut hw = remote_hardware(&fake);
+    hw.link.as_ref().unwrap().send(LinkCommand::LoadGaits);
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while !hw.link.as_ref().unwrap().snapshot().gaits_loaded {
+        assert!(Instant::now() < deadline, "gait list deadline");
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    hw.snapshot = hw.link.as_ref().unwrap().snapshot();
+    let mut replies = Replies::default();
+    for action in [HardwareAction::GaitSelect { index: 0 }, HardwareAction::GaitMode { mode: GaitMode::Leg }, HardwareAction::GaitConfirm { on: true }] {
+        let origin = Origin::Rest(replies.open());
+        let mut continuation = Value::Null;
+        assert!(matches!(dispatch_as(&mut hw, &action, origin, &mut continuation, &mut replies), Answer::Done(Ok(_))), "{action:?}");
+    }
+    assert!(hw.form.gait_ok && hw.form.gait_mode == GaitMode::Leg);
+    // No robot model in the mirror: no bindings, so the leg play is refused with why.
+    let origin = Origin::Rest(replies.open());
+    let mut continuation = Value::Null;
+    assert!(matches!(dispatch_as(&mut hw, &HardwareAction::GaitPlay, origin, &mut continuation, &mut replies), Answer::Pending));
+    let refused = settle_remote(&mut hw, &HardwareAction::GaitPlay, origin, &mut continuation, &mut replies);
+    assert!(refused.as_ref().is_err_and(|e| e.contains("No motor is aligned")), "{refused:?}");
+    assert!(!actions(&fake.commands()).iter().any(|a| a == "gait_start"));
+    // Sim only: answered once the gait plays.
+    let origin = Origin::Rest(replies.open());
+    let mut continuation = Value::Null;
+    assert!(matches!(dispatch_as(&mut hw, &HardwareAction::GaitMode { mode: GaitMode::Sim }, origin, &mut continuation, &mut replies), Answer::Done(Ok(_))));
+    let origin = Origin::Rest(replies.open());
+    let mut continuation = Value::Null;
+    assert!(settle_remote(&mut hw, &HardwareAction::GaitPlay, origin, &mut continuation, &mut replies).is_ok());
+    assert!(hw.snapshot.gait.as_ref().is_some_and(|g| g.mode == GaitMode::Sim && g.playing));
+    // The gait's Stop is never refused.
+    let mut local = Value::Null;
+    assert!(matches!(dispatch_as(&mut hw, &HardwareAction::GaitStop, Origin::SystemUi, &mut local, &mut replies), Answer::Done(Ok(_))));
 }

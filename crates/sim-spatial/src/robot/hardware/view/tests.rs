@@ -1,12 +1,14 @@
 use super::*;
 use sim_runtime::hardware_client::calibration::{CalibrationDoc, GaitLimit, GaitState, Sweep, SweepSample, Telemetry};
+use std::time::Duration;
 
 fn axis(lower: Option<i64>, upper: Option<i64>, reverse: bool) -> Axis {
     Axis { lower, upper, reverse, ..Default::default() }
 }
 
+/// A live link's snapshot (read now, its connection holding).
 fn snapshot(id: u8, position: i64, a: Axis) -> LinkSnapshot {
-    let mut s = LinkSnapshot { id: Some(id), read_at: Some(Instant::now()), ..Default::default() };
+    let mut s = LinkSnapshot { id: Some(id), read_at: Some(Instant::now()), connection_valid: true, ..Default::default() };
     s.state.samples.insert(id, Telemetry { position_raw: position, ..Default::default() });
     s.state.calibration = Some(CalibrationDoc { axes: [(id, a)].into_iter().collect(), ..Default::default() });
     s
@@ -87,7 +89,7 @@ fn outside_pose_names_the_pose_or_the_session() {
 fn status_line_precedence() {
     let now = Instant::now();
     let form = Form::default();
-    let mut s = LinkSnapshot { read_at: Some(now), ..Default::default() };
+    let mut s = LinkSnapshot { read_at: Some(now), connection_valid: true, ..Default::default() };
     assert_eq!(render(&s, &form, now).status, "Choose the motor you want to calibrate.");
     s.busy = true;
     assert_eq!(render(&s, &form, now).status, "Connecting and checking this motor at zero drive…");
@@ -172,4 +174,103 @@ fn chips_are_the_page_three_whatever_the_calibration_names() {
     // No calibration: the same three.
     let v = render(&LinkSnapshot::default(), &Form::default(), Instant::now());
     assert_eq!(v.chips.iter().map(|c| c.label.as_str()).collect::<Vec<_>>(), ["Knee 1", "Worm 2", "Belt 3"]);
+}
+
+// HW-10/HW-11 labels, the one leg clock and the disconnected marker: written
+// and source-inspected, not executed.
+
+/// A leg gait playing on the server: Leg only, at t 0.5 s of a 2 s period, half speed.
+fn leg_gait(s: &mut LinkSnapshot, simulated: bool) {
+    s.gait = Some(super::super::link::GaitRun { mode: GaitMode::Leg, period_s: 2.0, t: 0.5, playing: true, scale: 0.5, leg: true, skipped: Vec::new(), started: true });
+    s.state.gait = Some(GaitState {
+        running: true,
+        phase: Some("playing".into()),
+        errors: Some([("1".to_string(), Some(2.0))].into_iter().collect()),
+        simulated,
+        ..Default::default()
+    });
+}
+
+#[test]
+fn a_simulated_leg_gait_and_run_are_labelled_virtual() {
+    use sim_runtime::hardware_client::calibration::GaitRun as RunRecord;
+    let now = Instant::now();
+    let mut s = snapshot(1, 2000, Axis { role: "Knee".into(), ..Default::default() });
+    s.read_at = Some(now);
+    leg_gait(&mut s, true);
+    let text = render(&s, &Form::default(), now).gait.status;
+    assert!(text.contains("\nVIRTUAL (simulated) · Leg: playing · error Knee 2 counts"), "{text}");
+    // Not simulated by the server's word, but the link is pinned to a virtual bench.
+    leg_gait(&mut s, false);
+    s.execution = Some(sim_runtime::hardware_client::calibration::ExecutionIdentity {
+        schema_version: 1,
+        kind: "virtual_calibration".into(),
+        server_instance: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa".into(),
+        bench_instance: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb".into(),
+    });
+    assert!(render(&s, &Form::default(), now).gait.status.contains("\nVIRTUAL (simulated) · Leg: playing"));
+    // A physical or unknown leg: no label.
+    s.execution = None;
+    let text = render(&s, &Form::default(), now).gait.status;
+    assert!(text.contains("\nLeg: playing") && !text.contains("VIRTUAL"), "{text}");
+    // Recent leg runs: a simulated row is labelled; a row without the field is not.
+    s.gait = None;
+    s.state.gait_runs = vec![
+        RunRecord { gait: Some("study/trial/compiled.json".into()), effort: Some(0.5), speed_scale: Some(1.0), gait_time_s: Some(4.0), outcome: Some("completed".into()), simulated: true, ..Default::default() },
+        serde_json::from_value(serde_json::json!({"gait": "study/older/compiled.json", "effort": 0.5, "speed_scale": 1.0, "gait_time_s": 4.0, "outcome": "completed"})).unwrap(),
+    ];
+    let runs = render(&s, &Form::default(), now).gait.runs;
+    assert_eq!(runs[0].0, "VIRTUAL (simulated) · trial · effort 50% · speed 100% · 4.0 s · completed");
+    assert_eq!(runs[1].0, "older · effort 50% · speed 100% · 4.0 s · completed");
+}
+
+#[test]
+fn the_leg_gait_time_is_the_one_clock_and_freezes_with_why_when_not_live() {
+    let read = Instant::now();
+    let mut s = snapshot(1, 2000, Axis::default());
+    s.read_at = Some(read);
+    leg_gait(&mut s, false);
+    s.state.gait.as_mut().unwrap().speed_scale = Some(1.0);
+    let line = |s: &LinkSnapshot, now: Instant| render(s, &Form::default(), now).gait.status.lines().next().unwrap_or_default().to_string();
+    // Live: the line shows the time as last read (steady between reads, at
+    // the server's speed); the mirror samples it interpolated (link/tests.rs).
+    assert_eq!(line(&s, read + Duration::from_millis(100)), "Leg only · gait time 0.50 s of 2.00 s period · 100% speed");
+    assert!(s.leg_clock(read + Duration::from_secs(1)).is_some_and(|c| (c.t - 0.65).abs() < 1e-9));
+    // Stale: frozen at the last read, with the reason under it.
+    let now = read + Duration::from_secs(3);
+    let text = render(&s, &Form::default(), now).gait.status;
+    assert!(text.starts_with("Leg only · gait time 0.50 s (clock frozen) of 2.00 s period · 100% speed\nLeg data stale — last read 3 s ago; not live\n"), "{text}");
+    // A fresh status restores the live text.
+    s.read_at = Some(now);
+    let text = render(&s, &Form::default(), now).gait.status;
+    assert!(!text.contains("frozen") && !text.contains("not live"), "{text}");
+    // Disconnected: frozen with that reason.
+    s.disconnected = Some("the server reports its bus disconnected".into());
+    let text = render(&s, &Form::default(), now).gait.status;
+    assert!(text.contains("(clock frozen)") && text.contains("Leg disconnected — the server reports its bus disconnected; not live"), "{text}");
+}
+
+#[test]
+fn a_disconnected_link_prefixes_the_status_line_without_blocking() {
+    let now = Instant::now();
+    let mut s = snapshot(1, 2000, axis(Some(1000), Some(3000), false));
+    s.read_at = Some(now);
+    s.ready = true;
+    s.state.message = Some("Ready".into());
+    s.disconnected = Some("the server reports its bus disconnected: Readback lost from Knee: timed out. Select a motor to reconnect.".into());
+    let v = render(&s, &Form::default(), now);
+    assert_eq!(v.status, "DISCONNECTED — the server reports its bus disconnected: Readback lost from Knee: timed out. Select a motor to reconnect. Ready");
+    // Selecting a motor is how the server reconnects: nothing is blocked.
+    assert!(v.blocked.is_none() && v.chips.iter().all(|c| c.enabled));
+    // The server's own message already says it: not repeated.
+    s.state.message = Some("Readback lost from Knee: timed out. Select a motor to reconnect.".into());
+    assert_eq!(render(&s, &Form::default(), now).status, "DISCONNECTED — the server reports its bus disconnected: Readback lost from Knee: timed out. Select a motor to reconnect.");
+    // Idempotent (the panel says it again after a block).
+    let mut v = render(&s, &Form::default(), now);
+    let once = v.status.clone();
+    mark_disconnected(&mut v, &s, now);
+    assert_eq!(v.status, once);
+    // A status that reports the bus connected clears the marker (the session's `adopt`): no prefix.
+    s.disconnected = None;
+    assert!(!render(&s, &Form::default(), now).status.starts_with("DISCONNECTED"));
 }

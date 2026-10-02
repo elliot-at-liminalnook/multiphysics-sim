@@ -283,6 +283,115 @@ pub struct LinkSnapshot {
     pub tune_stages: Vec<String>,
     pub campaign_done: u64,
     pub speed_reset: u64,
+    /// Why the server's bus or this link's binding is gone, set by the
+    /// session (its `adopt`, `lose_binding`): the server reported its bus
+    /// connected and then not (a STOP that lost readback, a lost virtual
+    /// bench), or a request found the binding refused. Cleared by the next
+    /// status that reports the bus connected. A server that never connected
+    /// its bus (a physical server before the first inspect) is not disconnected.
+    pub disconnected: Option<String>,
+}
+
+/// How the link's view of the server stands now ([`LinkSnapshot::health`]).
+/// One judgement for the panel's status line, `hardware_status`'s
+/// `link_state`, the gait status line and the leg mirror: only `Live` data
+/// may be shown as live.
+#[derive(Clone, Debug, PartialEq)]
+pub enum LinkHealth {
+    /// No status read yet.
+    Waiting,
+    /// A status read within [`STALE_AFTER`] from a link whose connection holds.
+    Live,
+    /// The last status is older than [`STALE_AFTER`]: shown with its age, never as live.
+    Stale { age: Duration },
+    /// The server's bus or this link's binding is gone ([`LinkSnapshot::disconnected`],
+    /// or the connection was found invalid after a read).
+    Disconnected { why: String },
+}
+impl LinkHealth {
+    /// `hardware_status`'s `link_state`.
+    pub fn name(&self) -> &'static str {
+        match self {
+            LinkHealth::Waiting => "waiting",
+            LinkHealth::Live => "live",
+            LinkHealth::Stale { .. } => "stale",
+            LinkHealth::Disconnected { .. } => "disconnected",
+        }
+    }
+    /// The leg's data as a person reads it when it is not live: "stale —
+    /// last read N s ago" (whole seconds, so the text changes once a
+    /// second), "disconnected — why", "not read yet"; None when live.
+    pub fn leg_note(&self) -> Option<String> {
+        match self {
+            LinkHealth::Live => None,
+            LinkHealth::Waiting => Some("Leg data not read yet".into()),
+            LinkHealth::Stale { age } => Some(format!("Leg data stale — last read {} s ago; not live", age.as_secs())),
+            LinkHealth::Disconnected { why } => Some(format!("Leg disconnected — {why}; not live")),
+        }
+    }
+}
+
+/// The leg gait's clock between two status reads (HW-10 Both): the
+/// server's gait time `t_read` (`state.gait.t` as last read), advanced by
+/// the time since that read × the server's `speed_scale` while `advancing`,
+/// and never by more than one active poll interval ([`POLL_ACTIVE`]): the
+/// next poll is due by then, and the display must not claim motion the
+/// server has not reported. A new status resets it (a new `t_read`, a new
+/// read instant). Not advancing (paused, approaching, stale, lost): `t_read`.
+pub fn leg_gait_time(t_read: f64, speed_scale: f64, advancing: bool, since_read: Duration) -> f64 {
+    if !advancing || !t_read.is_finite() || !speed_scale.is_finite() || speed_scale <= 0.0 {
+        return t_read;
+    }
+    t_read + since_read.min(POLL_ACTIVE).as_secs_f64() * speed_scale
+}
+
+/// The leg gait clock now ([`LinkSnapshot::leg_clock`]).
+#[derive(Clone, Debug, PartialEq)]
+pub struct LegClock {
+    /// Gait time (s) the simulated legs and the gait status line show.
+    pub t: f64,
+    /// The server's playback speed fraction (the run's own until the server reports one).
+    pub scale: f64,
+    /// The clock advances between reads (the server reports the gait playing, the data is live).
+    pub advancing: bool,
+    /// Why it is frozen when the leg's data is not live (None: live).
+    pub frozen: Option<LinkHealth>,
+}
+
+impl LinkSnapshot {
+    /// The link's health now: disconnected first, then never read, stale, live.
+    pub fn health(&self, now: Instant) -> LinkHealth {
+        if let Some(why) = &self.disconnected {
+            return LinkHealth::Disconnected { why: why.clone() };
+        }
+        let Some(at) = self.read_at else { return LinkHealth::Waiting };
+        if !self.connection_valid {
+            return LinkHealth::Disconnected { why: "the connection to the calibration server or its execution binding was lost".into() };
+        }
+        let age = now.saturating_duration_since(at);
+        if age > STALE_AFTER { LinkHealth::Stale { age } } else { LinkHealth::Live }
+    }
+    /// The one gait clock of a leg gait (Leg or Both; None for none or Sim
+    /// only, whose clock is [`GaitRun::t`] advanced by wall time on the link
+    /// thread). The base is written by one writer, the session's
+    /// `leg_frame`, which copies `state.gait.t` into [`GaitRun::t`] on each
+    /// status it adopts (`read_at`); every reader (the mirror's gait sample,
+    /// the gait status line, `hardware_status`) derives the time now from
+    /// that with [`leg_gait_time`]. It advances only while the server
+    /// reports the gait running in its `playing` phase, the run has started
+    /// and is not paused here, and the data is live; otherwise it holds the
+    /// last read time, and `frozen` says why when the data is not live.
+    pub fn leg_clock(&self, now: Instant) -> Option<LegClock> {
+        let run = self.gait.as_ref().filter(|g| g.leg)?;
+        let g = self.state.gait.as_ref();
+        let scale = g.and_then(|g| g.speed_scale).filter(|s| s.is_finite() && *s > 0.0).unwrap_or(run.scale);
+        let health = self.health(now);
+        let live = health == LinkHealth::Live;
+        let playing = g.is_some_and(|g| g.running && g.phase.as_deref() == Some("playing"));
+        let advancing = live && run.started && run.playing && playing;
+        let since = self.read_at.map_or(Duration::ZERO, |at| now.saturating_duration_since(at));
+        Some(LegClock { t: leg_gait_time(run.t, scale, advancing, since), scale, advancing, frozen: (!live).then_some(health) })
+    }
 }
 impl crate::jobs::Stamped for LinkSnapshot {
     fn generation(&self) -> u64 {
@@ -466,3 +575,6 @@ pub fn stop_now(link: &Link, id: Option<u8>, all_axes: bool) -> (u64, Option<cra
     });
     (epoch, Some(job.complete_on_drop()))
 }
+
+#[cfg(test)]
+mod tests;

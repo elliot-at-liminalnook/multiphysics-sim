@@ -23,9 +23,10 @@ pub(super) fn done() -> Answer {
 
 /// A remote (REST, `system_ui`) action whose panel control is disabled now
 /// is refused with its reason, as the page's disabled button would be.
-/// Reads, STOP, loss, export (REST waits for a running one) and gait list are not checked.
+/// Reads, STOP, the gait's Stop, loss, export (REST waits for a running one)
+/// and gait list are not checked.
 pub(super) fn remote_check(hw: &Hardware, action: &HardwareAction, call: &Call) -> Result<(), String> {
-    if !call.remote() || matches!(action, HardwareAction::Status | HardwareAction::Stop | HardwareAction::Loss { .. } | HardwareAction::Export | HardwareAction::LoadGaits) {
+    if !call.remote() || matches!(action, HardwareAction::Status | HardwareAction::Stop | HardwareAction::GaitStop | HardwareAction::Loss { .. } | HardwareAction::Export | HardwareAction::LoadGaits) {
         return Ok(());
     }
     let view = super::panel::panel_view(hw, Instant::now());
@@ -518,6 +519,12 @@ fn handle_inner(hw: &mut Hardware, action: &HardwareAction, call: &mut Call, now
         },
         H::TargetCommit => send(hw, LinkCommand::TargetCommit),
         H::Capture { boundary } => {
+            // "Save sim alignment here" sends the mirror's joint angle with
+            // the reference. Without one (the robot model not loaded, or the
+            // motor not bound to a CAD joint) it is saved without an angle,
+            // as the browser page does (`mirror?.alignmentAngle(id)`): the
+            // mirror and the leg gait then take the alignment as CAD home
+            // (`Mirror::saved_angle`, the server's `run_gait`).
             let reference = match (boundary, hw.snapshot.id) {
                 (Boundary::Reference, Some(id)) => hw.mirror.alignment_angle(id),
                 _ => None,
@@ -593,6 +600,10 @@ fn handle_inner(hw: &mut Hardware, action: &HardwareAction, call: &mut Call, now
         }
         H::GaitPlay => gait_play(hw),
         H::GaitStop => {
+            // Never refused, as STOP is not: without a link nothing plays.
+            if hw.link.is_none() {
+                return done();
+            }
             // A gait on the leg stops on the immediate path first (the queued
             // link may be waiting on a slow request); the link then ends the run.
             if hw.snapshot.gait.as_ref().is_some_and(|g| g.leg) || hw.link.as_ref().and_then(|l| l.snapshot().gait).is_some_and(|g| g.leg) {
@@ -654,7 +665,11 @@ fn handle_inner(hw: &mut Hardware, action: &HardwareAction, call: &mut Call, now
 }
 
 /// "Play": with a gait playing, pause or resume it; else the selected gait
-/// in the chosen place, with the mirror's bindings for Leg and Both.
+/// in the chosen place, with the mirror's bindings for Leg and Both. A click
+/// and a remote `gait_play` take the same path (the bindings from this
+/// frame's status, `Mirror::gait_bindings`); a remote one is queued as a
+/// checked command (`send`), and its caller is answered by the link's
+/// verdict on whether the gait started (or paused/resumed).
 fn gait_play(hw: &mut Hardware) -> Answer {
     let s = &hw.snapshot;
     if s.gait.is_some() {

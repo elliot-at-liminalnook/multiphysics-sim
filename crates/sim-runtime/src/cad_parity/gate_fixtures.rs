@@ -94,3 +94,24 @@ fn rejection_receipt_requires_the_declared_outcome() {
         .value = ObservedValue::Present(json!("rejected"));
     assert!(gates(&s, &a, &a)[0].passed);
 }
+
+#[test]
+fn shutdown_issue_blocks_even_complete_passing_receipts_without_rewriting_them() {
+    let (s, a) = inputs();
+    let mut interrupted = a.clone();
+    interrupted
+        .execution_issues
+        .push("timeout; descendant cleanup uncertain".into());
+    assert_eq!(interrupted.receipts, a.receipts);
+    let results = gates(&s, &interrupted, &a);
+    assert!(results.iter().all(|g| !g.passed));
+    assert!(
+        results[0]
+            .reasons
+            .iter()
+            .any(|r| r.contains("cleanup uncertain"))
+    );
+    let bytes = serde_json::to_vec(&interrupted).unwrap();
+    let decoded: AdapterRun = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(decoded, interrupted);
+}

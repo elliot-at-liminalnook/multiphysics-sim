@@ -1,87 +1,286 @@
-//! Synchronous process ownership for headless jobs. Unlike viewer jobs' asynchronous
-//! reaper this owner polls on the caller's worker, never starts a feature thread.
+//! Synchronous Unix child ownership. WNOWAIT retains the leader's PID (and PGID)
+//! even after exit until ALL group signals are finished. No feature thread.
+//! Requires exclusive wait ownership and a non-auto-reaping SIGCHLD disposition.
+//! ECHILD/observation errors abandon identity before any further signal. Final
+//! KILL delivery precedes reaping; escaped process groups are not contained.
 use std::{
     process::{Child, Command, ExitStatus},
     time::{Duration, Instant},
 };
-pub struct OwnedProcess {
+
+#[derive(Clone, Debug)]
+pub struct ProcessCompletion {
+    pub exit: Option<ExitStatus>,
+    pub interruption: Option<String>,
+    pub cleanup_error: Option<String>,
+}
+const GROUP_TERM: i32 = 15; // Unix SIGTERM
+const GROUP_KILL: i32 = 9; // Unix SIGKILL
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Phase {
+    Owned,
+    SignalsFinished,
+    Released,
+    Lost,
+}
+trait Backend {
+    /// Observe without consuming the waitable leader. ECHILD means ownership lost.
+    fn observe(&mut self) -> Result<bool, String>;
+    fn signal(&mut self, signal: i32) -> Result<(), String>;
+    fn reap(&mut self) -> Result<Option<ExitStatus>, String>;
+    fn now(&self) -> Duration;
+    fn pause(&mut self);
+}
+struct Lifecycle<B> {
+    backend: B,
+    phase: Phase,
+    exit: Option<ExitStatus>,
+    error: Option<String>,
+}
+impl<B: Backend> Lifecycle<B> {
+    fn record_error(&mut self, error: String) {
+        self.error = Some(match self.error.take() {
+            Some(previous) => format!("{previous}; {error}"),
+            None => error,
+        });
+    }
+    fn observe(&mut self) -> Result<bool, String> {
+        if self.phase != Phase::Owned {
+            return Err("child identity no longer signal-owned".into());
+        }
+        match self.backend.observe() {
+            Ok(exited) => Ok(exited),
+            Err(error) => {
+                // Unknown wait ownership is never permission to signal a cached number.
+                self.phase = Phase::Lost;
+                self.record_error(error);
+                Err(self.error.clone().expect("observation error was recorded"))
+            }
+        }
+    }
+    fn completion(
+        &mut self,
+        deadline: Duration,
+        cancelled: &dyn Fn() -> bool,
+    ) -> ProcessCompletion {
+        let mut interruption = None;
+        if self.phase == Phase::Owned {
+            loop {
+                if cancelled() {
+                    interruption = Some("cancelled".into());
+                    break;
+                }
+                if self.backend.now() >= deadline {
+                    interruption = Some("bounded child wait expired".into());
+                    break;
+                }
+                match self.observe() {
+                    Ok(true) => break,
+                    Ok(false) => self.backend.pause(),
+                    Err(error) => {
+                        interruption = Some(error);
+                        break;
+                    }
+                }
+            }
+        }
+        let cleanup_error = self.cleanup().err();
+        ProcessCompletion {
+            exit: self.exit,
+            interruption,
+            cleanup_error,
+        }
+    }
+    fn cleanup(&mut self) -> Result<(), String> {
+        if self.phase == Phase::Owned {
+            self.observe()?;
+            if let Err(error) = self.backend.signal(GROUP_TERM) {
+                self.record_error(error);
+            }
+            // Keep the zombie leader waitable throughout the grace interval. An
+            // exited leader is not evidence that its descendants have stopped.
+            let end = self.backend.now() + Duration::from_secs(2);
+            while self.backend.now() < end {
+                self.observe()?;
+                self.backend.pause();
+            }
+            if let Err(error) = self.backend.signal(GROUP_KILL) {
+                self.record_error(error);
+            }
+            // Never signal again, even if bounded reaping fails or Drop repeats.
+            self.phase = Phase::SignalsFinished;
+        }
+        if self.phase == Phase::SignalsFinished {
+            let end = self.backend.now() + Duration::from_secs(2);
+            loop {
+                match self.backend.reap() {
+                    Ok(Some(exit)) => {
+                        self.exit = Some(exit);
+                        self.phase = Phase::Released;
+                        break;
+                    }
+                    Ok(None) if self.backend.now() < end => self.backend.pause(),
+                    Ok(None) => {
+                        self.record_error(
+                            "bounded reaping expired; identity retained, no further signals".into(),
+                        );
+                        break;
+                    }
+                    Err(error) => {
+                        self.phase = Phase::Lost;
+                        self.record_error(error);
+                        break;
+                    }
+                }
+            }
+        }
+        self.error.clone().map_or(Ok(()), Err)
+    }
+}
+struct ChildBackend {
     child: Child,
     group: u32,
-    stopped: bool,
+    epoch: Instant,
 }
-#[cfg(unix)]
-unsafe extern "C" {
-    fn kill(pid: i32, signal: i32) -> i32;
-}
-#[cfg(unix)]
-fn signal_group(group: u32, signal: i32) {
-    unsafe {
-        kill(-(group as i32), signal);
+impl Backend for ChildBackend {
+    fn observe(&mut self) -> Result<bool, String> {
+        #[cfg(unix)]
+        {
+            let mut info: libc::siginfo_t = unsafe { std::mem::zeroed() };
+            // Apple SDK sys/wait.h: WNOWAIT leaves process returned waitable.
+            let result = unsafe {
+                libc::waitid(
+                    libc::P_PID,
+                    self.group as libc::id_t,
+                    &mut info,
+                    libc::WEXITED | libc::WNOHANG | libc::WNOWAIT,
+                )
+            };
+            if result == 0 {
+                return Ok(unsafe { info.si_pid() } != 0);
+            }
+            let error = std::io::Error::last_os_error();
+            if error.raw_os_error() == Some(libc::EINTR) {
+                return Ok(false);
+            }
+            Err(format!(
+                "non-reaping child observation failed; ownership abandoned: {error}"
+            ))
+        }
+        #[cfg(not(unix))]
+        {
+            Err("retained process-group ownership requires Unix".into())
+        }
     }
+    fn signal(&mut self, signal: i32) -> Result<(), String> {
+        #[cfg(unix)]
+        {
+            let result = unsafe { libc::kill(-(self.group as libc::pid_t), signal) };
+            if result == 0 {
+                return Ok(());
+            }
+            let error = std::io::Error::last_os_error();
+            // ESRCH is an empty group while the waitable leader still reserves PID.
+            if error.raw_os_error() == Some(libc::ESRCH) {
+                Ok(())
+            } else {
+                Err(format!("owned group signal failed: {error}"))
+            }
+        }
+        #[cfg(not(unix))]
+        {
+            let _ = signal;
+            Err("process-group cleanup requires Unix".into())
+        }
+    }
+    fn reap(&mut self) -> Result<Option<ExitStatus>, String> {
+        self.child
+            .try_wait()
+            .map_err(|error| format!("child reap failed: {error}"))
+    }
+    fn now(&self) -> Duration {
+        self.epoch.elapsed()
+    }
+    fn pause(&mut self) {
+        std::thread::sleep(Duration::from_millis(25));
+    }
+}
+pub struct OwnedProcess {
+    lifecycle: Lifecycle<ChildBackend>,
+    completion: Option<ProcessCompletion>,
 }
 impl OwnedProcess {
     pub fn spawn(command: &mut Command) -> Result<Self, String> {
+        #[cfg(unix)]
         {
-            #[cfg(unix)]
-            {
-                use std::os::unix::process::CommandExt;
-                command.process_group(0);
-            }
-            command.spawn().map(|child| Self {
-                group: child.id(),
-                child,
-                stopped: false,
+            use std::os::unix::process::CommandExt;
+            command.process_group(0);
+            let child = command.spawn().map_err(|error| error.to_string())?;
+            Ok(Self {
+                completion: None,
+                lifecycle: Lifecycle {
+                    backend: ChildBackend {
+                        group: child.id(),
+                        child,
+                        epoch: Instant::now(),
+                    },
+                    phase: Phase::Owned,
+                    exit: None,
+                    error: None,
+                },
             })
         }
-        .map_err(|e| e.to_string())
+        #[cfg(not(unix))]
+        {
+            let _ = command;
+            Err("safe retained child identity requires Unix; process not started".into())
+        }
     }
     pub fn alive(&mut self) -> Result<(), String> {
-        match self.child.try_wait().map_err(|e| e.to_string())? {
-            None => Ok(()),
-            Some(s) => Err(format!("owned child exited: {s}")),
+        if self.lifecycle.observe()? {
+            self.stop()?;
+            Err("owned child exited (descendant cleanup completed)".into())
+        } else {
+            Ok(())
         }
+    }
+    pub fn wait_completion(
+        &mut self,
+        deadline: Instant,
+        cancelled: &dyn Fn() -> bool,
+    ) -> ProcessCompletion {
+        if let Some(completion) = &self.completion {
+            return completion.clone();
+        }
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        let deadline = self.lifecycle.backend.now() + remaining;
+        let completion = self.lifecycle.completion(deadline, cancelled);
+        self.completion = Some(completion.clone());
+        completion
     }
     pub fn wait(
         &mut self,
         deadline: Instant,
         cancelled: &dyn Fn() -> bool,
     ) -> Result<ExitStatus, String> {
-        loop {
-            if let Some(s) = self.child.try_wait().map_err(|e| e.to_string())? {
-                return Ok(s);
-            }
-            if cancelled() {
-                self.stop()?;
-                return Err("cancelled".into());
-            }
-            if Instant::now() >= deadline {
-                self.stop()?;
-                return Err("bounded child wait expired".into());
-            }
-            std::thread::sleep(Duration::from_millis(25));
+        let completion = self.wait_completion(deadline, cancelled);
+        if completion.interruption.is_some() || completion.cleanup_error.is_some() {
+            return Err(format!(
+                "{}{}",
+                completion.interruption.unwrap_or_default(),
+                completion
+                    .cleanup_error
+                    .map(|error| format!("; cleanup: {error}"))
+                    .unwrap_or_default()
+            ));
         }
+        completion
+            .exit
+            .ok_or_else(|| "child completion has no exit evidence".into())
     }
     pub fn stop(&mut self) -> Result<(), String> {
-        if self.stopped {
-            return Ok(());
-        }
-        self.stopped = true;
-        #[cfg(unix)]
-        {
-            signal_group(self.group, 15);
-            let deadline = Instant::now() + Duration::from_secs(2);
-            while Instant::now() < deadline {
-                if self.child.try_wait().map_err(|e| e.to_string())?.is_some() {
-                    break;
-                }
-                std::thread::sleep(Duration::from_millis(25));
-            }
-            signal_group(self.group, 9);
-        }
-        if self.child.try_wait().map_err(|e| e.to_string())?.is_none() {
-            self.child.kill().map_err(|e| e.to_string())?;
-        }
-        self.child.wait().map(|_| ()).map_err(|e| e.to_string())
+        self.lifecycle.cleanup()
     }
 }
 impl Drop for OwnedProcess {
@@ -89,3 +288,6 @@ impl Drop for OwnedProcess {
         let _ = self.stop();
     }
 }
+#[cfg(test)]
+#[path = "process_fixtures.rs"]
+mod fixtures;

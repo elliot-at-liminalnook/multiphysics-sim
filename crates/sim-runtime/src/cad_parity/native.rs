@@ -460,6 +460,7 @@ impl Adapter for NativeAdapter {
             identity: identity(),
             source: m.source.clone(),
             receipts,
+            execution_issues: Vec::new(),
         })
     }
 }

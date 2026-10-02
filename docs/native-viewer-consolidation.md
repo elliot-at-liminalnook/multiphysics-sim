@@ -2397,3 +2397,9 @@ registry/experiment executables remain dependencies; no Qt window is required
 by these headless paths. Positive captured-run corpus evidence and whole-ledger
 coverage remain missing. T43 was accepted by source review at 4d2725f2/e6f6ed10;
 no compilation, execution or user checklist completion is inferred.
+
+The T44 shutdown repair keeps actual partial reference receipts and separately
+reports interruption/cleanup issues. Group cleanup completes its signalling before
+reaping releases the leader identity. Source review and unexecuted fixtures support
+these paths; they provide no executed parity or stronger descendant containment
+than the documented owned process group.

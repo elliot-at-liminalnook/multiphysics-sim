@@ -76,6 +76,9 @@ pub fn aggregate(
         }
     }
     for (side, run) in [("reference", reference), ("native", native)] {
+        for issue in &run.execution_issues {
+            reasons.push(format!("{side}: execution incomplete: {issue}"));
+        }
         if !usable(&run.identity) {
             reasons.push(format!("{side}: adapter identity incomplete"));
         }

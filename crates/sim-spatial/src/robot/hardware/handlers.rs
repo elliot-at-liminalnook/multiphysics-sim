@@ -51,8 +51,9 @@ fn send(hw: &mut Hardware, command: LinkCommand) -> Answer {
     send_with(hw, None, command)
 }
 
-/// [`send`], with the form values a remote command brings (a speed or PWM
-/// ceiling): the link thread adopts them only once it has authorized and
+/// [`send`], with the form values a remote command brings (a speed, PWM
+/// ceiling, hold-others or drive mode; the last two as a bare
+/// [`LinkCommand::Inputs`], which only needs authorization): the link thread adopts them only once it has authorized and
 /// validated the command, and keeps them only if it succeeds; the form takes
 /// them when the ticket resolves ([`apply_resolved`]). Only a ticketed
 /// (remote motion) command carries them.
@@ -166,6 +167,7 @@ pub(crate) fn dispatch(hw: &mut Hardware, action: &HardwareAction, call: &mut Ca
         }
         if call.cancelled {
             stop_immediate(hw);
+            resync_unresolved_inputs(hw, action);
             return Answer::Done(Err("hardware action cancelled; STOP requested".into()));
         }
         let expired = call.continuation.get("deadline_ms").and_then(Value::as_u64).is_some_and(|deadline| unix_ms() > deadline);
@@ -173,9 +175,11 @@ pub(crate) fn dispatch(hw: &mut Hardware, action: &HardwareAction, call: &mut Ca
         // answer (this command's, or one queued before it) is not lost.
         if expired || (s.stale(now) && !s.awaiting_answer(now)) {
             stop_immediate(hw);
+            resync_unresolved_inputs(hw, action);
             return Answer::Done(Err("hardware command lost its fresh connection or deadline; STOP requested".into()));
         }
         if s.command_results.keys().next().is_some_and(|first| ticket < *first) {
+            resync_unresolved_inputs(hw, action);
             return Answer::Done(Err("hardware command acknowledgement expired".into()));
         }
         return Answer::Pending;
@@ -191,17 +195,21 @@ pub(crate) fn dispatch(hw: &mut Hardware, action: &HardwareAction, call: &mut Ca
     let answer = handle_inner(hw, action, call, now, view, run);
     hw.active_ticket = None;
     if hw.queued_ticket && call.rest() {
-        // The form's values now: a remote speed or PWM ceiling is adopted
-        // only if the operator has not changed it since ([`apply_resolved`]).
+        // The form's values now: a remote speed, PWM ceiling, hold-others or
+        // drive mode is adopted only if the operator has not changed it
+        // since ([`apply_resolved`]).
         *call.continuation = json!({"hardware_ticket": hw.command_seq, "generation": hw.generation, "deadline_ms": unix_ms() + 45_000,
-            "speed_reset": hw.form.inputs.speed_reset, "form_speed": hw.form.inputs.speed_percent, "form_pwm": hw.form.inputs.pwm_percent});
+            "speed_reset": hw.form.inputs.speed_reset, "form_speed": hw.form.inputs.speed_percent, "form_pwm": hw.form.inputs.pwm_percent,
+            "form_hold_others": hw.form.inputs.hold_others, "form_drive_mode": hw.form.inputs.drive_mode.wire()});
         Answer::Pending
     } else { answer }
 }
 
-/// A remote speed or PWM ceiling the link thread accepted (or applied
-/// before a STOP, [`super::session::APPLIED_THEN_STOPPED`]) becomes the
-/// form's value, and is sent back as the form's inputs so a later form edit
+/// A remote speed, PWM ceiling, hold-others or drive mode the link thread
+/// accepted (or applied before a STOP,
+/// [`super::session::APPLIED_THEN_STOPPED`]) becomes the form's value (and,
+/// for hold-others and drive mode, the remembered preference), and is sent
+/// back as the form's inputs so a later form edit
 /// keeps it, but only while the form still holds the value it had when the
 /// command was queued: a newer operator edit (sent to the link after the
 /// command, so already the link's value) wins, and nothing is sent. A speed
@@ -229,7 +237,34 @@ fn apply_resolved(hw: &mut Hardware, action: &HardwareAction, result: &Result<()
                 inputs_changed(hw);
             }
         }
+        // The preference is set with the form; `actions::apply` claims it
+        // when this Done(Ok) is answered.
+        HardwareAction::HoldOthers { on } => {
+            if continuation.get("form_hold_others").and_then(Value::as_bool) == Some(hw.form.inputs.hold_others) {
+                hw.form.inputs.hold_others = *on;
+                hw.settings.calibration.hold_others = Some(*on);
+                inputs_changed(hw);
+            }
+        }
+        HardwareAction::DriveMode { mode } => {
+            if continuation.get("form_drive_mode").and_then(Value::as_str) == Some(hw.form.inputs.drive_mode.wire()) {
+                hw.form.inputs.drive_mode = *mode;
+                hw.settings.calibration.drive_mode = Some(*mode);
+                inputs_changed(hw);
+            }
+        }
         _ => {}
+    }
+}
+
+/// A remote command that brought form values ended without a recorded
+/// verdict (cancelled, deadline, connection lost, receipt evicted): the link
+/// thread may still have taken them just before the STOP, so the form's
+/// values (unchanged) are sent after it, FIFO, and the link ends with what the
+/// form shows.
+fn resync_unresolved_inputs(hw: &Hardware, action: &HardwareAction) {
+    if matches!(action, HardwareAction::Speed { .. } | HardwareAction::PwmCeiling { .. } | HardwareAction::HoldOthers { .. } | HardwareAction::DriveMode { .. }) {
+        inputs_changed(hw);
     }
 }
 
@@ -288,6 +323,13 @@ fn handle_inner(hw: &mut Hardware, action: &HardwareAction, call: &mut Call, now
         H::SetDisabled => send(hw, LinkCommand::SetDisabled),
         H::SweepAll => send(hw, LinkCommand::SweepAll),
         H::HoldOthers { on } => {
+            // Remote: the form and the preference change only once the link
+            // thread accepts it ([`apply_resolved`]).
+            if hw.active_ticket.is_some() && call.rest() {
+                let mut inputs = hw.form.inputs.clone();
+                inputs.hold_others = *on;
+                return send_with(hw, Some(inputs.clone()), LinkCommand::Inputs(inputs));
+            }
             hw.form.inputs.hold_others = *on;
             inputs_changed(hw);
             hw.settings.calibration.hold_others = Some(*on);
@@ -434,6 +476,13 @@ fn handle_inner(hw: &mut Hardware, action: &HardwareAction, call: &mut Call, now
             send(hw, LinkCommand::GaitStop)
         }
         H::DriveMode { mode } => {
+            // Remote: the form and the preference change only once the link
+            // thread accepts it ([`apply_resolved`]).
+            if hw.active_ticket.is_some() && call.rest() {
+                let mut inputs = hw.form.inputs.clone();
+                inputs.drive_mode = *mode;
+                return send_with(hw, Some(inputs.clone()), LinkCommand::Inputs(inputs));
+            }
             hw.form.inputs.drive_mode = *mode;
             inputs_changed(hw);
             hw.settings.calibration.drive_mode = Some(*mode);

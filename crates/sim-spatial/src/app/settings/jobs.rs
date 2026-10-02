@@ -381,6 +381,19 @@ pub(super) fn snapshot(
     result["schema"] = SCHEMA.into();
     Ok(result)
 }
+/// Normalize in an Io job. Missing paths remain useful recents; other failures
+/// cannot silently drop an accepted record or acknowledge a relative fallback.
+pub(super) fn normalize(document: &Document) -> Result<Document, String> {
+    let Document::Path(path) = document else { return Ok(document.clone()); };
+    let absolute = if path.is_absolute() { path.clone() } else {
+        std::env::current_dir().map_err(|e| format!("recent normalization current directory: {e}"))?.join(path)
+    };
+    match std::fs::canonicalize(&absolute) {
+        Ok(path) => Ok(Document::Path(path)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Document::Path(absolute)),
+        Err(e) => Err(format!("recent normalization {}: {e}", absolute.display())),
+    }
+}
 pub(super) fn shutdown_snapshot(
     raw: &Value,
     mut recents: Recents,
@@ -389,7 +402,7 @@ pub(super) fn shutdown_snapshot(
     records: VecDeque<(ViewerMode, Document, u64)>,
 ) -> Result<Value, String> {
     for (mode, document, now) in records {
-        recents.record(mode, &super::super::recent::absolute(&document), now);
+        recents.record(mode, &normalize(&document)?, now);
     }
     snapshot(raw, &recents, hardware, cad)
 }
@@ -414,7 +427,7 @@ pub(super) fn publish_ordered(
         .lock()
         .map_err(|_| "preference publication gate poisoned")?;
     if published.revision > revision {
-        return Ok(published.revision);
+        return Err(format!("Preference publication superseded: requested {revision}, published {}", published.revision));
     }
     let path = paths
         .unified

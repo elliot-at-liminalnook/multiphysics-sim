@@ -397,7 +397,7 @@ pub(crate) fn build(app: &mut App) {
         Update,
         (
             (buttons, jog_buttons, keys, window_loss, sliders).chain().in_set(crate::app::InputSet::Window),
-            apply.after(crate::robot::RobotSet::Actions).in_set(ViewerSet::Actions),
+            apply.after(crate::robot::RobotSet::Actions).before(crate::app::close::CloseSet::Apply).in_set(ViewerSet::Actions),
             poll_jobs.in_set(ViewerSet::JobResults),
         )
             .run_if(in_state(ViewerMode::Robot)),
@@ -475,6 +475,14 @@ pub(super) fn stop_immediate(hw: &mut Hardware) {
     link.send(LinkCommand::Stopped { epoch });
 }
 
+/// Ordinary close requests stop our sessions before preference publication.
+/// This is the existing immediate jobs path, without the bounded blocking
+/// shutdown fallback retained by window loss, AppExit and Link::drop.
+pub(crate) fn request_close_stop(hw: &mut Hardware) {
+    hw.sync.stop_ours("Window closing");
+    stop_immediate(hw);
+}
+
 /// Token discovery and the client, off the UI thread; `poll_jobs` starts
 /// the link. A link already open is stopped and dropped first.
 pub(super) fn connect(hw: &mut Hardware) {
@@ -509,6 +517,7 @@ pub(crate) fn apply(
     view: Option<Res<crate::robot::RobotView>>,
     mut robot_out: MessageWriter<Act<crate::robot::RobotAction>>,
     mut preferences: ResMut<crate::app::settings::SettingsOwner>,
+    closing: Option<Res<crate::app::close::CloseOwner>>,
 ) {
     let Some(mut hw) = hw else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("the Leg calibration panel is not open in this mode".into())));
@@ -520,7 +529,9 @@ pub(crate) fn apply(
     let now = Instant::now();
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
         let hw = &mut *hw;
-        let answer = if call.remote() && action.starts_motion() {
+        let answer = if closing.as_ref().is_some_and(|close| close.pending()) && action.starts_motion() {
+            Answer::Done(Err("Window closure is pending; cancel close before starting, changing or arming motion".into()))
+        } else if call.remote() && action.starts_motion() {
             Answer::Done(Err(action.remote_refusal()))
         } else if let Err(e) = remote_check(hw, action, call) {
             Answer::Done(Err(e))

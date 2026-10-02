@@ -73,6 +73,14 @@ your config directory, never in the repository), the repository's example
 files and lesson or place folders, plus an "Open file…" path field.
 `cargo run -p sim-spatial` with no arguments is enough to reach every mode.
 
+The native viewer's global **Close viewer** control and ordinary window close
+share an observable lifecycle: preserve study drafts, request hardware STOP,
+then wait for acknowledged preferences and recent documents. Retry preferences,
+Cancel close and an explicit preference-only exit remain visible while waiting.
+The [close workflow source guide](docs/graceful-preference-exit.md) documents
+commands, preservation rules and abrupt/platform-quit limits. This implementation
+is reviewed by reading only; fixtures and interactive behavior remain unexecuted.
+
 The browser workspace is built and served as described in
 [web/README.md](web/README.md).
 

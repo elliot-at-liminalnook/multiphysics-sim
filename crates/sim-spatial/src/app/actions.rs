@@ -349,6 +349,7 @@ pub fn registry() -> &'static [Feature] {
     REGISTRY.get_or_init(|| {
         use super::switch::WindowAction;
         vec![
+            feature::<super::close::CloseAction>("close", <super::close::CloseAction as Action>::commands),
             feature::<super::settings::actions::SettingsAction>("settings", <super::settings::actions::SettingsAction as Action>::commands),
             feature::<WindowAction>("window", <WindowAction as Action>::commands),
             feature::<crate::inspect::InspectAction>("inspect", <crate::inspect::InspectAction as Action>::commands),
@@ -504,6 +505,7 @@ fn annotate_studies(world: &World, mode: ViewerMode, command: &sim_api::Command,
     if command.command == "system_ui" && command.args["action"]["operation"] == "controls" {
         if let Outcome::Done(Ok(value)) = &mut outcome {
             if let Some(controls) = value.get_mut("controls").and_then(Value::as_array_mut) {
+                controls.extend(super::close::ui::controls_in(world));
                 if let Some(ui) = world.get_resource::<crate::builder::calibration::study::forms::StudyUi>() {
                     controls.extend(crate::builder::calibration::study::ui::controls(ui));
                 }

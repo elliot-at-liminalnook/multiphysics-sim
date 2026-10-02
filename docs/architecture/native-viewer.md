@@ -6879,6 +6879,11 @@ limitations. Repair fixtures remain uncompiled and unexecuted.
 
 ## Native offline identification authoring — T46 (2026-10-02)
 
+Accepted by source review in call-0360 across 1b0ca533, d238d6b6 and c380210b.
+This acceptance resolves the three repair findings; compilation, fixtures,
+interactive usability and executed export/parity remain unverified. Historical
+stacked-uncompiled counts elsewhere are dated snapshots, not execution evidence.
+
 The existing Build → Actuators → Measured evidence dock presents retained studies
 through `builder/calibration/study`. `StudyOwner` is global durable window state;
 transient widgets use the existing dock and UI kit. Typed StudyAction occurrences
@@ -6968,7 +6973,7 @@ removed rows. The preferences guide specifies identities and recovery. T45 repai
 fixtures are written and source-reviewed only; compilation and execution remain
 unverified. The SettingsGroup seam, jobs owner and public schedule ordering remain.
 
-Shutdown submits best-effort jobs for dirty latest snapshots, serialized with any
+Abrupt/uninterceptable shutdown submits best-effort jobs for dirty latest snapshots, serialized with any
 in-flight save by the publication gate; the UI never blocks on disk. Dropping a job
 handle alone does not guarantee durability; an ordinary immediate process exit
 can also end before final work finishes. Abrupt process exit can lose unsaved
@@ -6977,3 +6982,34 @@ safety guards are unchanged. Publication errors remain diagnostic and dirty; ret
 requires no unrelated edit. Fixtures are isolated and written only, never executed.
 Python/OCCT and external reference dependencies remain; no parity or legacy
 retirement is established. T44 accepted source review covers 8a7c0cd7/fe2a6eb1 only.
+
+## One ordinary native close lifecycle — T47 (2026-10-02)
+
+[T47 source map and checklist](../graceful-preference-exit.md) records T47.1–T47.3
+and all eight graceful-preference-exit IDs. `app::close::CloseOwner` is the sole
+ordinary close decision owner, retaining pending intent and revision-scoped
+preference-loss acknowledgment. Window, actual global kit controls, system_ui
+and REST feed its typed CloseAction. The former guarded_close orchestration is
+removed. StudyOwner and StudyUi remain authoritative preservation-fact owners;
+CAD release_child remains authoritative for preserving potentially unsaved
+self-started services. No authored-work discard or automatic save is added.
+
+Public CloseSet::Apply in Actions follows hardware action handling; STOP is
+requested immediately, independently of preference jobs. Pending closure refuses
+new hardware motion; loss, AppExit and bounded Drop fallbacks remain independent.
+SettingsSet::Publish lands existing jobs in JobResults. CloseSet::Publish in
+Present exposes semantic status. The final Last authorization before ExitSystems
+rechecks current settings and preservation, arms ClosingWindow, and rechecks the
+same stamp on the next frame before despawning. Expiring messages never carry
+pending close work. Cancel-close retains jobs and drafts. UI polling avoids idle
+semantic changes or panel reconstruction.
+
+Ordinary success requires acknowledged latest preference publication and an
+empty required recent queue. Loading, unavailable destinations, protected sources,
+normalization/snapshot/publication failures remain named states. Retry and an
+explicit preference-only exit are visible globally; a later edit or recent record
+invalidates the bypass acknowledgment. Drop is only best effort. Arbitrary
+AppExit and Cocoa termination cannot be delayed by an observer; abrupt exits
+cannot guarantee draft recovery or CAD release. The source map states those
+limits honestly. Written lifecycle/window/control/settings/CAD/safety fixtures
+and implementation were source-reviewed; no compilation or execution is claimed.

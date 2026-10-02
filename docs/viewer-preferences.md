@@ -1,9 +1,33 @@
-# Native viewer preferences (T45)
+# Native viewer preferences (T45, T47)
 
 `app::settings::SettingsOwner` owns preference loading, legacy migration,
 validated projections, readiness, dirty revisions, serialized publication,
 diagnostics, retry and best-effort shutdown. T45 is verified by source reading
 only: no builds, fixtures, launches, hardware operations or parity runs executed.
+
+Ordinary closure now uses the [T47 lifecycle](graceful-preference-exit.md).
+`SettingsOwner::drain_status` distinguishes Loading, ProtectedSource,
+ConfigUnavailable, Normalizing, NormalizationFailed, SnapshotFailed, Publishing,
+PublicationFailed, PendingPublication and Ready. Only Ready proves ordinary
+drain completion. A failed recent normalization retains its required queue item;
+retry does not discard it. A save completion must match the exact captured
+revision and cannot acknowledge a newer edit. Failed or superseded publication
+never returns another snapshot's revision as proof of saving this one.
+
+The global Close viewer panel reports blockers and pending work in every mode.
+`close_request`, `close_status`, `close_retry`, `close_cancel` and
+`close_without_preferences` are shared typed commands; system_ui lists their
+actual `close:*` buttons. Preference-only exit acknowledges the current scope,
+including queued recents; later accepted edits, records or startup publication
+invalidate it. Authored studies and unresolved study fields still refuse closure.
+Cancel-close retains settings jobs, queues and drafts. Hardware STOP is requested
+before persistence waiting and its independent exit/loss safeguards remain.
+
+Drop publication is a best-effort fallback for abrupt/uninterceptable teardown,
+not ordinary durability proof. Arbitrary AppExit, direct window destruction,
+macOS Cocoa termination and crashes can bypass the drain. See the linked source
+map for pinned Bevy/winit traces and CAD detachment limits. These contracts and
+isolated written fixtures were checked by reading only; none were executed.
 
 Launch remains `cargo run -p sim-spatial -- path/to/model.rcad` or
 `--cad-url http://127.0.0.1:8420`; these are instructions, not execution receipts.
@@ -188,11 +212,12 @@ Pending work is resource state, not an expiring mode-gated message. File-byte se
 and disk publication belong to jobs; small validated projection/envelope encoding
 happens in frame systems before handing owned snapshots to jobs; transient UI entities own no durable settings.
 
-Shutdown submits the latest dirty snapshot and still-queued accepted recents
+Fallback Drop shutdown submits the latest dirty snapshot and still-queued accepted recents
 without synchronous UI I/O. The final job canonicalizes queued records and
 publishes through the same gate, serialized against existing work. It is best effort: dropping a handle
-alone is not guaranteed durability; even an ordinary immediate process exit can
-end before the final job finishes. Abrupt exit can lose dirty preferences or
+alone is not guaranteed durability; an immediate process exit can
+end before the final job finishes. Ordinary T47 closure waits for acknowledged
+publication instead of relying on this fallback. Abrupt exit can lose dirty preferences or
 interrupt startup/migration before publication. CAD unsaved-edit guards and hardware
 STOP/loss handling remain unchanged. Later authorized execution must verify the
 isolated migration, precedence/override, unknown/future/corrupt inputs, late-load,

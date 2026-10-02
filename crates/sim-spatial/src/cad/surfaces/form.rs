@@ -459,6 +459,36 @@ pub(in crate::cad) mod suspension_fixture {
     use crate::cad::document::{CadDocument, CadTarget};
     use crate::cad::actions::CadAction;
     use crate::app::{close::{ClosePlugin, CloseAction, CloseOwner}, actions::{Act, Replies}, settings::SettingsOwner};
+    // Isolated backend-output injection at the production Hover boundary.
+    // Rendering/hit testing is not exercised; containment, deferred pointer
+    // observers, text input and both real action owners run on app.update().
+    #[derive(Resource, Default)]
+    struct PendingPointer(Option<(FieldId, Entity, Entity, Entity)>);
+    fn hover_press(mut pending: ResMut<PendingPointer>, fields: Query<&TextField>, mut commands: Commands) {
+        let Some((_id, field, window, target)) = pending.0.take() else { return };
+        assert!(fields.get(field).unwrap().suspended,
+            "containment must record the departing editor before Hover can assign pointer focus");
+        commands.trigger(bevy::picking::events::Pointer::new(
+            bevy::picking::pointer::PointerId::Mouse,
+            bevy::picking::pointer::Location { target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO },
+            bevy::picking::events::Press { button: bevy::picking::pointer::PointerButton::Primary, hit: bevy::picking::backend::HitData::new(window, 0., None, None), count: 1 }, target));
+    }
+    pub fn first_pointer_cancel(app: &mut App, window: Entity, id: FieldId) {
+        let editor = field(app, id);
+        assert!(!app.world().get::<TextField>(editor).unwrap().suspended);
+        app.world_mut().write_message(bevy::window::WindowCloseRequested { window });
+        app.update(); // Present renders close; its first containment frame has not run.
+        assert!(app.world().resource::<CloseOwner>().pending());
+        assert!(!app.world().get::<TextField>(editor).unwrap().suspended);
+        let cancel = app.world_mut().query::<(Entity, &CloseAction)>().iter(app.world()).find_map(|(e,a)| (*a == CloseAction::CloseCancel).then_some(e)).unwrap();
+        app.world_mut().resource_mut::<PendingPointer>().0 = Some((id, editor, window, cancel));
+        app.update(); // Containment -> Hover pointer observers -> text -> real CloseCancel.
+        assert!(!app.world().resource::<CloseOwner>().pending());
+        assert_eq!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(cancel), "the actual pointer observer assigned close focus");
+        assert!(app.world().get::<TextField>(editor).unwrap().suspended);
+        app.update(); // Restore validated editor before the real form consumer runs.
+        assert_eq!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(editor));
+    }
     pub fn app(id: FieldId) -> (App, Entity) {
         let mut app = App::new();
         app.insert_resource(UiFonts { regular: default(), italic: default(), mono: default(), medium: default(), semibold: default(), icons: default() })
@@ -472,6 +502,15 @@ pub(in crate::cad) mod suspension_fixture {
             .add_systems(PostUpdate, crate::cad::activation::stamp);
         crate::app::configure_sets(&mut app);
         activation::install(&mut app);
+        app.init_resource::<PendingPointer>()
+            .configure_sets(PreUpdate, (
+                bevy::picking::PickingSystems::ProcessInput,
+                bevy::picking::PickingSystems::Backend,
+                bevy::picking::PickingSystems::Hover,
+                bevy::picking::PickingSystems::PostHover,
+                bevy::picking::PickingSystems::Last,
+            ).chain())
+            .add_systems(PreUpdate, hover_press.in_set(bevy::picking::PickingSystems::Hover));
         let window = app.world_mut().spawn((Window::default(), bevy::window::PrimaryWindow)).id();
         (app, window)
     }
@@ -554,6 +593,23 @@ mod suspension_tests {
         assert!(!app.world().get::<TextField>(field).unwrap().suspended);
         assert_eq!(app.world().resource::<CadDocument>().ops.form.as_ref().unwrap().focus, None);
         assert_ne!(app.world().resource::<bevy::input_focus::InputFocus>().get(), Some(field));
+    }
+    #[test]
+    fn actual_catalogue_first_close_pointer_preserves_nonfirst_field_owner() {
+        let (mut app, window) = fixture();
+        let editor = fx::field(&mut app, FORM);
+        let saved = app.world().get::<TextField>(editor).unwrap().draft.clone();
+        fx::first_pointer_cancel(&mut app, window, FORM);
+        assert_eq!(app.world().get::<TextField>(editor).unwrap().draft, saved);
+        assert_eq!(app.world().resource::<CadDocument>().ops.form.as_ref().unwrap().focus, Some(1));
+        assert!(app.world().resource::<Messages<Act<CadAction>>>().is_empty());
+        fx::key(&mut app, window, KeyCode::Digit8, Key::Character("8".into()));
+        let form = app.world().resource::<CadDocument>().ops.form.as_ref().unwrap();
+        assert_eq!(form.texts[1], "7, 7, 78"); assert_ne!(form.texts[0], "7, 7, 78");
+        fx::key(&mut app, window, KeyCode::Enter, Key::Enter);
+        let actions: Vec<_> = app.world_mut().resource_mut::<Messages<Act<CadAction>>>().drain().collect();
+        assert_eq!(actions.len(), 1);
+        assert!(matches!(&actions[0].action, CadAction::Captured { action, .. } if matches!(&**action, CadAction::CadFormSubmit)));
     }
     #[test]
     fn actual_catalogue_replaced_form_refuses_suspended_editor() {

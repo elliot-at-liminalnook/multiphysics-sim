@@ -600,7 +600,10 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config, initial_bus: Opti
                 verified = false;
                 owner.clear();
                 selected = 0;
-                b.reconnect_stopped(3)?;
+                // The STOP readback proof comes from an enabled motor: a
+                // disabled one may be absent (ID 3 as before if all are disabled).
+                let probe = cfg.roles.keys().copied().find(|id| !cal.axes.get(id).is_some_and(|a| a.disabled)).unwrap_or(3);
+                b.reconnect_stopped(probe)?;
                 let mut samples = serde_json::Map::new();
                 // Disabled motors may be absent; inspect reads the enabled ones.
                 for id in cfg.roles.keys().filter(|id| !cal.axes.get(*id).is_some_and(|a| a.disabled)) {
@@ -1195,7 +1198,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config, initial_bus: Opti
             app.stop.store(true, Ordering::SeqCst);
             verified = false;
             owner.clear();
-            let stopped = bus.as_mut().map(|b| b.stop(if selected == 0 { 3 } else { selected }));
+            let stopped = bus.as_mut().map(|b| b.stop(if selected != 0 { selected } else { cfg.roles.keys().copied().find(|id| !cal.axes.get(id).is_some_and(|a| a.disabled)).unwrap_or(3) }));
             let link_lost = virtual_mode && matches!(&stopped, Some(Err(stop_error)) if transport_lost(stop_error));
             // The command's text says readback was lost only for a link or
             // frame fault (never device loss: its EIO may be a save failure);
@@ -1231,7 +1234,7 @@ fn worker(app: Arc<App>, rx: mpsc::Receiver<Job>, cfg: Config, initial_bus: Opti
                     "Physical stop unverified; keep motor power off until resolved"
                 }
             ));
-        } else if probe_link && bus.as_mut().and_then(|b| cfg.roles.keys().next().map(|id| b.feedback(*id))).is_some_and(|probe| probe.is_err_and(|e| transport_lost(&e))) {
+        } else if probe_link && bus.as_mut().and_then(|b| cfg.roles.keys().find(|id| !cal.axes.get(*id).is_some_and(|a| a.disabled)).map(|id| b.feedback(*id))).is_some_and(|probe| probe.is_err_and(|e| transport_lost(&e))) {
             idle_polling = false;
             verified = false;
             owner.clear();

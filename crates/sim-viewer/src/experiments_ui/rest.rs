@@ -63,6 +63,12 @@ impl ExperimentsPanel {
         _continuation: &mut Value,
         ctx: &egui::Context,
     ) -> sim_api::Outcome {
+        let rejected_input=match &command {
+            Command::Configure{fields}=>Some(json!({"operation":"configure","fields":fields})),
+            Command::Refine{action}=>action.operation().map(|op|json!({"operation":"refine","action":op})),
+            _=>None,
+        };
+        let original_index=self.current;
         let result = (|| -> sim_api::Result {
             match command {
                 Command::State => return Ok(self.api_state()),
@@ -71,6 +77,7 @@ impl ExperimentsPanel {
                     let seen=s.validation_seen;
                     let ids=s.archive.trials.iter().map(|t|t.id.clone()).collect::<Vec<_>>();
                     study::commands::expose(s,&ids);
+                    study::refinement::expose_review(s);
                     if !seen && s.validation_seen {self.revisions[self.current]+=1;}
                     return Ok(json!(s));
                 }
@@ -111,10 +118,19 @@ impl ExperimentsPanel {
                                     "draft" | "view" | "limits" | "notes" => {
                                         value[key] = field.clone()
                                     }
-                                    "experiment"
-                                    | "coordinates"
-                                    | "scenarios"
-                                    | "capture_contexts"
+                                    "experiment" => {
+                                        let _:sim_runtime::controller_refinement::control::Experiment=serde_json::from_value(field.clone()).map_err(|e|format!("configure.experiment: {e}"))?;
+                                        value["refinement"][key]=field.clone();
+                                    }
+                                    "coordinates" => {
+                                        let _:Vec<sim_runtime::controller_refinement::calibration::Coordinate>=serde_json::from_value(field.clone()).map_err(|e|format!("configure.coordinates: {e}"))?;
+                                        value["refinement"][key]=field.clone();
+                                    }
+                                    "scenarios" => {
+                                        let _:Vec<sim_runtime::controller_refinement::calibration::Variant>=serde_json::from_value(field.clone()).map_err(|e|format!("configure.scenarios: {e}"))?;
+                                        value["refinement"][key]=field.clone();
+                                    }
+                                    "capture_contexts"
                                     | "recording_assignments"
                                     | "fpga_design_drafts" => {
                                         value["refinement"][key] = field.clone()
@@ -128,11 +144,19 @@ impl ExperimentsPanel {
                             }
                             let mut next: Study =
                                 serde_json::from_value(value).map_err(|e| e.to_string())?;
-                            next.validate()?;
                             let mut shared=original.clone();
                             for command in [study::commands::Command::SetCandidate(next.draft.clone()), study::commands::Command::SetLimits(next.limits), study::commands::Command::SetView(next.view.clone()), study::commands::Command::SetNotes(next.notes.clone())] { study::commands::apply(&mut shared,command)?; }
+                            use study::refinement::{self as refinement_shared,Command as RefinementCommand};
+                            refinement_shared::apply(&mut shared,RefinementCommand::SetExperiment(next.refinement.experiment.clone()))?;
+                            refinement_shared::apply(&mut shared,RefinementCommand::SetCoordinates(next.refinement.coordinates.clone()))?;
+                            refinement_shared::apply(&mut shared,RefinementCommand::SetScenarios(next.refinement.scenarios.clone()))?;
+                            // Deferred compatibility payloads retain their existing validation path.
+                            next.refinement.experiment=shared.refinement.experiment.clone();
+                            next.refinement.coordinates=shared.refinement.coordinates.clone();
+                            next.refinement.scenarios=shared.refinement.scenarios.clone();
                             shared.refinement=next.refinement;
                             next=shared;
+                            next.validate()?;
                             self.studies[self.current] = next;
                             self.revisions[self.current] += 1;
                         }
@@ -187,11 +211,18 @@ impl ExperimentsPanel {
                         Command::Refine { action } => {
                             let index = self.current;
                             let s = self.studies.get_mut(index).ok_or("no study loaded")?;
-                            // Match UI accounting of held-out evidence exposure.
+                            if let Some(operation)=action.operation() {
+                                if let Err(error)=study::refinement::prepare(s,operation) {
+                                    s.refinement.failures.push(error.clone());
+                                    self.revisions[index]+=1;
+                                    return Err(error);
+                                }
+                                self.revisions[index]+=1;
+                            }
+                            // Deferred fitting retains its existing exposure accounting.
                             if matches!(
                                 &action,
-                                refinement::Action::Fit(..)
-                                    | refinement::Action::FitRecordings
+                                refinement::Action::FitRecordings
                                     | refinement::Action::FitCombined { .. }
                             ) {
                                 s.validation_seen = true;
@@ -239,6 +270,12 @@ impl ExperimentsPanel {
             }
             Ok(self.api_state())
         })();
+        if let (Err(error),Some(input))=(&result,rejected_input) {
+            if let Some(study)=self.studies.get_mut(original_index) {
+                study.refinement.failures.push(format!("Legacy rejected offline input {input}: {error}"));
+                self.revisions[original_index]+=1;
+            }
+        }
         sim_api::Outcome::Done(result)
     }
 }

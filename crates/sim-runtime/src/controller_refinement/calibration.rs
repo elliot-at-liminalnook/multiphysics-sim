@@ -151,7 +151,7 @@ impl Family {
         Ok(next)
     }
 }
-fn validate_coordinates(f: &Family, coords: &[Coordinate]) -> Result<Vec<f64>, String> {
+pub fn validate_coordinates(f: &Family, coords: &[Coordinate]) -> Result<Vec<f64>, String> {
     if coords.is_empty() || coords.len() > 16 {
         return Err("Select 1–16 bounded parameters".into());
     }
@@ -485,7 +485,8 @@ fn fit_audited(
     let mut scores = vec![];
     for t in trials.iter().chain(&held) {
         if cancel.load(Ordering::Relaxed) {
-            return Err("Cancelled during held-out evaluation".into());
+            scores.push(TrialScore{id:t.id.clone(),device:t.device,split:t.split.clone(),baseline:None,candidate:None,failure:Some("Cancelled before trial scoring".into()),baseline_prediction:None,candidate_prediction:None});
+            continue;
         }
         let score = |family: &Family| {
             a.predict(&t.id, &family.model(t.device)?, cancel)
@@ -493,7 +494,8 @@ fn fit_audited(
         };
         let baseline = score(f);
         let fitted = score(&candidate);
-        let failure = baseline.as_ref().err().or(fitted.as_ref().err()).cloned();
+        let errors=baseline.as_ref().err().into_iter().map(|e|format!("Baseline: {e}")).chain(fitted.as_ref().err().into_iter().map(|e|format!("Candidate: {e}"))).collect::<Vec<_>>();
+        let failure=(!errors.is_empty()).then(||errors.join("; "));
         scores.push(TrialScore {
             id: t.id.clone(),
             device: t.device,
@@ -505,6 +507,7 @@ fn fit_audited(
             failure,
         });
     }
+    let status=if scores.iter().any(|s|s.failure.is_some()){ "Incomplete trial scoring; UNSCORED, not a usable fitted candidate" }else{ "Candidate only; convergence does not imply identified constants or accepted validation" };
     Ok(Fit {
         baseline: f.clone(),
         candidate,
@@ -515,9 +518,7 @@ fn fit_audited(
         scores,
         validation_influenced,
         runtime: RuntimeIdentity::current(),
-        status:
-            "Candidate only; convergence does not imply identified constants or accepted validation"
-                .into(),
+        status:status.into(),
     })
 }
 
@@ -543,6 +544,9 @@ pub struct FitAttempt {
     pub runtime: RuntimeIdentity,
     pub evaluations: Vec<ModelEvaluation>,
     pub outcome: Option<Fit>,
+    /// Incomplete scoring evidence is retained for review, never a usable fit candidate.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub partial: Option<Fit>,
     pub failure: Option<String>,
     pub cancelled: bool,
 }
@@ -573,14 +577,17 @@ pub fn attempt(
             });
         },
     );
+    let (outcome,partial,failure,cancelled)=match result {
+        Ok(fit)=>{
+            let errors=fit.scores.iter().filter_map(|s|s.failure.as_ref().map(|e|format!("{}: {e}",s.id))).collect::<Vec<_>>();
+            let cancelled=errors.iter().any(|e|e.to_lowercase().contains("cancelled"));
+            if errors.is_empty(){(Some(fit),None,None,false)}else{(None,Some(fit),Some(errors.join("; ")),cancelled)}
+        },
+        Err(e)=>{let cancelled=e.to_lowercase().contains("cancelled");(None,None,Some(e),cancelled)}
+    };
     FitAttempt {
-        request: request.clone(),
-        archive_hash: a.fingerprint(),
-        runtime: RuntimeIdentity::current(),
-        evaluations,
-        failure: result.as_ref().err().cloned(),
-        outcome: result.ok(),
-        cancelled: cancel.load(Ordering::Relaxed),
+        request: request.clone(),archive_hash: a.fingerprint(),runtime: RuntimeIdentity::current(),
+        evaluations,outcome,partial,failure,cancelled,
     }
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -743,7 +750,7 @@ pub fn robustness(
     } else {
         vec![]
     };
-    Ok(Robustness{variants:variants.to_vec(),cancelled:cancel.load(Ordering::Relaxed),experiment:e.clone(),runs,prediction_envelope:envelope,failures,interpretation:"Scenario envelope, not a calibrated confidence band. Controller tracking scores are separate from measured model-prediction error. Different schedules contribute only at shared output times.".into()})
+    Ok(Robustness{variants:variants.to_vec(),cancelled:runs.iter().any(|(_,_,r)|r.cancelled) || failures.iter().any(|e|e.to_lowercase().contains("cancelled")),experiment:e.clone(),runs,prediction_envelope:envelope,failures,interpretation:"Scenario envelope, not a calibrated confidence band. Controller tracking scores are separate from measured model-prediction error. Different schedules contribute only at shared output times.".into()})
 }
 
 impl FitAttempt {
@@ -752,7 +759,7 @@ impl FitAttempt {
         if self.archive_hash != data.fingerprint() {
             return Err("Fit attempt refers to a different measurement archive".into());
         }
-        if let Some(fit) = &self.outcome {
+        for fit in self.outcome.iter().chain(self.partial.iter()) {
             fit.validate(data)?;
             let r = &self.request;
             if fit.baseline != r.model
@@ -774,6 +781,9 @@ impl FitAttempt {
             {
                 return Err("Invalid retained objective evaluation".into());
             }
+        }
+        if self.partial.is_some() && (self.outcome.is_some() || self.failure.is_none() || self.partial.as_ref().is_some_and(|f|f.scores.iter().all(|s|s.failure.is_none()))) {
+            return Err("Partial fit requires retained scoring failures and cannot also be a candidate".into());
         }
         if (self.cancelled || self.failure.is_some()) && self.outcome.is_some() {
             return Err("Failed/cancelled attempt cannot contain an adopted fitted result".into());

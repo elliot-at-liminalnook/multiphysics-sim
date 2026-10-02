@@ -10,31 +10,23 @@ project rules in `AGENTS.md` still govern everything here. In particular, CAD
 owns physical definitions, physics lives in shared crates, and the viewer never
 duplicates physics.
 
-Current acceptance clarification (T46): T45 persisted settings was accepted by
-source review at `6f3b701e`/`33d9da46`; its compilation and fixture execution remain
-unverified. Older "written" wording below is historical, not an outstanding T45
-source acceptance request. The offline measured-PWM authoring path is documented
-in [T46 source evidence](../native-identification-authoring.md) and its
-[compatibility inventory](../native-identification-inventory.md). T46 adds no mode,
-hardware intent, physical definitions, solver, or legacy retirement.
+## Current source-review status — 2026-10-02
 
-## Where it is today (persisted-settings T45 written, compilation and execution unverified; T44 accepted by source review at 8a7c0cd7/fe2a6eb1, parity unexecuted; cad-experiments-motion accepted by source review at 4d2725f2/e6f6ed10, compilation and execution unverified; cad-components written, source-reviewed, execution unverified; public-system-sets done pending verification, uncompiled: written and reviewed by reading only; see [Public system sets](#public-system-sets-2026-10-01); re-measured 2026-10-01; window-first-usability verified at aa34ef48 (sim-spatial lib 369 passed, 1 ignored; bins 4/4; workspace check clean), see [Window-first usability](#window-first-usability-2026-10-01); CAD mode verified at a4fe42d3; fold-sim-app verified at 80b5997e; cad-select-transform verified at c0ed9b29; cad-modify verified at e0996878; split-large-files verified at 9765dcb6, see [Split large files](#split-large-files-2026-10-01); cad-sketch verified at cc7ac194 (sim-spatial lib 293 passed, 1 ignored; bins 4; cad_client 47; units 29; api pytests 61; sim-web wasm check clean), see [CAD sketch](#cad-sketch-2026-10-01); cad-views-export verified at bcf0c56c (sim-spatial lib 356 passed, 1 ignored; bins 4; cad_client 65; units 29; RoboCAD pytests 396; sim-web wasm check without errors), see [Shared camera and CAD views](#shared-camera-and-cad-views-2026-10-01); cad-physical-inspect done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD physical properties](#cad-physical-properties-2026-10-01); cad-print done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [CAD print](#cad-print-2026-10-01); one-text-entry done pending verification (2026-10-01; written and reviewed by reading, nothing compiled or run), see [One text entry](#one-text-entry-2026-10-01); cad-organize done pending verification (2026-10-01; written and reviewed by reading; nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), see [CAD organize](#cad-organize-2026-10-01))
+T45 settings was accepted by source review at `6f3b701e`/`33d9da46`.
+T46 retained offline identification was accepted in call-0360 across
+`1b0ca533`, `d238d6b6`, `c380210b`; T47 ordinary close preservation was accepted
+in call-0364 at `a0671a6b`. These are source acceptances, not compilation or
+execution receipts. T48 controller refinement extends those owners; its
+[source evidence](../native-refinement-authoring.md) and
+[field inventory](../native-refinement-inventory.md) define this bounded batch.
 
-**Rust changes since aa34ef48 have not been compiled or executed.** Historical
-Python executions remain recorded below (including the cad-organize gap route's
-two passing tests at b476b28e); they do not verify native workflow parity.
-Ten implemented epics since are stacked
-uncompiled: unified-selection-document (f5546fbd, 5e9c34d5, af0bb4be),
-cad-physical-inspect (3fb34225..61f1bea5: 3fb34225, f26842fa, review
-fixes 697a15c1, docs 61f1bea5), cad-print (35ea6de0, 17f90d08, review
-fixes 6c6b1a5a, docs 9afd63f5, fixes 0a1147b3), one-text-entry
-(d385e7eb, 8627fd51, 91c44f38 and its docs commit: one keyboard focus
-and one kit text field; see [One text entry](#one-text-entry-2026-10-01))
-and cad-organize (b476b28e and the commits after it: the outliner's
-organization, RoboCAD's comment threads, reference images and the system
-link; see [CAD organize](#cad-organize-2026-10-01); nothing compiled; only the gap route's pytest ran (2 passed at b476b28e; the third test added after review is unverified)), and public-system-sets (180b3a54, 5c874455; source review only), plus cad-components (T42; source review only) and cad-experiments-motion (T43; source review only), cad-parity-harness (T44; accepted source review at 8a7c0cd7/fe2a6eb1), and persisted-settings (T45; writing-only).
-All ten remain uncompiled. Their counts and "done" states below describe
-source review, not an executed build or native parity result.
+Rust changes after the historical `aa34ef48` execution checkpoint remain
+uncompiled and unexecuted. The former opening ten-epic count was a stale dated
+snapshot and is superseded by this statement. Historical Python results below
+remain historical and establish no native parity. CAD harness T44 remains
+unexecuted; no Python/browser retirement or physical-source acceptance follows.
+
+## Where it is today
 
 - **Bevy 0.19.1**, pinned in the workspace `Cargo.toml` and in
   `crates/sim-spatial/Cargo.toml` (hand-picked features, see
@@ -6925,8 +6917,8 @@ file. This keeps evidence destinations explicit and immutable. Rejected alternat
 are discard-on-close and automatic overwrite. Revisit if a separately reviewed
 recovery-store contract supplies user-visible durable destinations. Saved unknown
 supported payloads remain round-trippable without migrating refinement controls.
-Broader controller, power and FPGA refinement, raw sweep UI and accepted registry
-promotion still use existing external paths. Compilation, all new fixtures, export
+Controller refinement now follows T48 below; power and FPGA refinement, raw sweep
+UI and accepted registry promotion still use existing external paths. Compilation, all new fixtures, export
 execution and exact parity remain unverified; legacy sim-viewer stays available.
 
 ## Persisted viewer settings — T45 (2026-10-02)
@@ -7013,3 +7005,31 @@ AppExit and Cocoa termination cannot be delayed by an observer; abrupt exits
 cannot guarantee draft recovery or CAD release. The source map states those
 limits honestly. Written lifecycle/window/control/settings/CAD/safety fixtures
 and implementation were source-reviewed; no compilation or execution is claimed.
+
+## Native offline controller refinement — T48 (2026-10-02)
+
+The [T48 evidence](../native-refinement-authoring.md) and
+[field inventory](../native-refinement-inventory.md) extend §§1–7 through the
+existing StudyPlugin, StudyOwner, StudyUi and global jobs, with no new mode or
+persistence owner. Shared `experiment_study::refinement` owns transactional
+commands, immutable preparation/dispatch and result application, consumed by
+native typed actions and migrated legacy operations. Individual kit fields and
+structured rows author experiments, coordinates and scenarios; archive selectors
+keep frozen splits. Captured review and chart jobs preserve sample times and model,
+runtime, timing and task-limit identity. Explicit candidate use changes only an
+exploratory draft and records its source fit/exposure; review decisions never
+accept physical properties. Failed/incomplete/cancelled analyses remain unscored.
+
+Decision: additive bounded shared execution evidence and native receipt/publication
+captures survive saved Study reopening. Existing opaque payloads remain intact;
+receipts do not recursively nest previous Studies. Revision-scoped save
+acknowledgments and existing T47 preservation facts remain the only lifecycle
+contract. This is source-reading verification with unexecuted fixtures, no
+hardware/CAD/registry promotion, legacy retirement or parity execution. Deferred
+power, FPGA, recording/combined fitting and hardware paths stay available.
+
+T48 publication includes retained malformed/unsubmitted form text as raw unapplied
+evidence from StudyUi, through the existing action owner and publication snapshot.
+It does not apply or clear that text, alter acknowledgment revisions or remove
+close blockers. Reopened artifacts show the captured raw intent for inspection;
+physical and exploratory settings are still only shared validated commands.

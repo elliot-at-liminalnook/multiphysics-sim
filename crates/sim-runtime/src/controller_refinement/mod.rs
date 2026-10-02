@@ -28,3 +28,5 @@ pub mod power;
 pub mod electrical_measurements;
 
 pub mod live_stream;
+
+pub mod authoring;

@@ -675,14 +675,17 @@ pub fn simulate(
     let mut truth = vec![[0., 0.]];
     let mut electrical = bench.electrical_sample(0.).into_iter().collect::<Vec<_>>();
     let mut failure = None;
+    let mut cancelled = false;
     let mut time = 0.;
     for i in 0..count {
         if cancel.load(Ordering::Relaxed) {
+            cancelled = true;
             break;
         }
         let target = ((i + 1) as f64 * experiment.timing.period_s).min(experiment.duration_s);
         while time < target {
             if cancel.load(Ordering::Relaxed) {
+                cancelled = true;
                 break;
             }
             let step = (target - time).min(if model.power.is_some() {
@@ -706,14 +709,13 @@ pub fn simulate(
                 }
             }
         }
-        if failure.is_some() || cancel.load(Ordering::Relaxed) {
+        if failure.is_some() || cancelled {
             break;
         }
         truth.push([time, bench.runtime.get(bench.angle)]);
         progress(i + 1, count);
     }
     let frames = frames.lock().map_err(|e| e.to_string())?.clone();
-    let cancelled = cancel.load(Ordering::Relaxed);
     let score = if failure.is_none() && !cancelled {
         score(&frames, &experiment.limits)
     } else {

@@ -11,6 +11,7 @@ pub(crate) const FIELD: FieldId = FieldId("build.measured-study");
 pub(crate) enum Field {
     Archive, Review, Save, Export, Parameter(bool, String), Condition(&'static str), Step,
     Limit(&'static str), Filter(&'static str), Notes, DecisionNotes(usize),
+    Refinement(String), RefineDecision(String,usize),
 }
 #[derive(Component, Clone, Debug)]
 pub(crate) enum Hit {
@@ -19,6 +20,7 @@ pub(crate) enum Hit {
     Path { stamp: Option<StudyStamp>, field: Field, text: String },
     Discard { key: DraftKey },
     SelectedComponent { stamp:StudyStamp },
+    RefineTrial {stamp:StudyStamp,role:String,id:String,defaults:Vec<String>},
 }
 pub(crate) type DraftKey=(Option<(u64,u64)>,Field);
 #[derive(Resource)]
@@ -28,6 +30,7 @@ pub(crate) struct StudyUi {
     pub(crate) buffer: String,
     pub(crate) error: Option<String>,
     pub(crate) chart: super::chart::Chart,
+    pub(crate) refinement_charts:super::ui::refinement_chart::Charts,
     pub(crate) epoch: u64,
     pub(crate) rendered: BTreeMap<String, super::ui::RenderedControl>,
     pub(crate) pending: Vec<Hit>,
@@ -38,7 +41,7 @@ pub(crate) struct StudyUi {
 impl Default for StudyUi {
     fn default()->Self {
         let archive=crate::workspace::path(super::super::DEFAULT_ARCHIVE).map(|p|p.display().to_string()).unwrap_or_else(|_|super::super::DEFAULT_ARCHIVE.into());
-        Self {paths:BTreeMap::from([(Field::Archive,archive)]),focus:None,buffer:String::new(),error:None,chart:Default::default(),epoch:0,rendered:BTreeMap::new(),pending:Vec::new(),drafts:BTreeMap::new(),awaiting:BTreeMap::new(),blur_requested:false}
+        Self {paths:BTreeMap::from([(Field::Archive,archive)]),focus:None,buffer:String::new(),error:None,chart:Default::default(),refinement_charts:Default::default(),epoch:0,rendered:BTreeMap::new(),pending:Vec::new(),drafts:BTreeMap::new(),awaiting:BTreeMap::new(),blur_requested:false}
     }
 }
 pub(crate) fn activate(ui: &StudyUi, id: &str) -> Result<Hit, String> {
@@ -47,6 +50,15 @@ pub(crate) fn activate(ui: &StudyUi, id: &str) -> Result<Hit, String> {
     Ok(control.hit.clone())
 }
 impl StudyUi {
+    /// Snapshot raw intent for immutable publication; this does not apply it or
+    /// clear drafts. Old revisions remain labelled as rejected/unsubmitted intent.
+    pub(crate) fn publication_inputs(&self,id:u64)->serde_json::Value {
+        let belongs=|key:&DraftKey|key.0.is_none_or(|(study,_)|study==id);
+        serde_json::json!({"status":"raw retained form intent; not applied study settings",
+            "current_global_diagnostic":self.error,
+            "drafts":self.drafts.iter().filter(|(key,_)|belongs(key)).map(|(key,text)|serde_json::json!({"stamp":key.0,"field":format!("{:?}",key.1),"text":text})).collect::<Vec<_>>(),
+            "awaiting":self.awaiting.values().filter(|(key,_)|belongs(key)).map(|(key,text)|serde_json::json!({"stamp":key.0,"field":format!("{:?}",key.1),"text":text})).collect::<Vec<_>>()})
+    }
     pub(crate) fn blocking_reason(&self)->Option<String> {
         (!self.drafts.is_empty() || !self.awaiting.is_empty() || !self.pending.is_empty() || self.focus.is_some()).then(||"Measured study fields have unresolved input. Submit the retained field drafts or explicitly discard them before leaving.".into())
     }
@@ -118,6 +130,10 @@ pub(crate) fn submission(owner: &StudyOwner, stamp: Option<StudyStamp>, field: &
         _ => {}
     }
     let study = &retained.study;
+    if let Field::Refinement(path)=field { return refinement_forms::submission(study,stamp,path,text); }
+    if let Field::RefineDecision(kind,index)=field {
+        return Ok(StudyAction::RefineApply{stamp,command:sim_runtime::experiment_study::refinement::Command::SetDecision{kind:kind.clone(),index:*index,decision:study.refinement_evidence.decisions.iter().rev().find(|d|d.kind==*kind&&d.index==*index).map(|d|d.decision.clone()).unwrap_or("reviewed".into()),notes:text.into()}});
+    }
     let command = match field {
         Field::Parameter(bridge,name) => Command::SetParameter { group: if *bridge { ParameterGroup::Bridge } else { ParameterGroup::Motor }, name:name.clone(), value:number(name,text)? },
         Field::Step => Command::SetStep(number("draft.step_s",text)?),
@@ -213,6 +229,14 @@ pub(crate) fn input(
                 if ui.focus.clone().map(|(stamp,field)|draft_key(stamp,field))==Some(key.clone()){ui.focus=None;focus.blur(FIELD);}
                 ui.error=None;ui.epoch+=1;if let Some(builder)=builder.as_mut(){builder.panel_dirty=true;}
             }
+            Hit::RefineTrial{stamp,role,id,defaults}=> {
+                if owner.validate_stamp(*stamp).is_err(){ui.error=Some("Refinement selection: displayed revision changed".into());continue}
+                let Some(retained)=owner.active() else {continue};
+                let mut ids=retained.study.refinement_evidence.selections.get(role).cloned().unwrap_or_else(||defaults.clone());
+                if let Some(i)=ids.iter().position(|s|s==id){ids.remove(i);}else{ids.push(id.clone());}
+                actions.write(Act::ui(StudyAction::RefineApply{stamp:*stamp,command:sim_runtime::experiment_study::refinement::Command::SetSelection{kind:role.clone(),ids}}));
+                ui.epoch+=1;if let Some(builder)=builder.as_mut(){builder.panel_dirty=true;}
+            }
             Hit::SelectedComponent{stamp}=> {
                 let result=(|| {
                     let retained=owner.validate_stamp(*stamp)?;
@@ -228,3 +252,6 @@ pub(crate) fn input(
         }
     }
 }
+
+#[path="refinement_forms.rs"]
+pub(crate) mod refinement_forms;

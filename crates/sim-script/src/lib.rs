@@ -567,6 +567,26 @@ impl RhaiController {
         Self::with_seed_and_registry(sources, parameters, seed, &registry)
     }
 
+    /// Static offline authoring check. Compiles captured code but never evaluates
+    /// top-level statements or invokes controller callbacks on the UI thread.
+    pub fn validate_source(
+        sources: Sources,
+        parameters: Map,
+        seed: u64,
+        registry: &BehaviorRegistry,
+    ) -> ScriptResult<()> {
+        if seed > (1_u64 << 53) - 1 {return Err(error("seed exceeds the exact numeric range"));}
+        if sources.files.values().map(String::len).sum::<usize>() > 32_768 {
+            return Err(error("captured controller source exceeds the 32 KiB authoring limit"));
+        }
+        let mut compiler=engine(sources.clone(),parameters,seed);
+        install_primitive_functions(&mut compiler,registry);
+        let ast=sources.compile(&compiler,&sources.entry)?;
+        if !ast.iter_functions().any(|f|f.name=="control" && f.params.len()==4 && f.access==rhai::FnAccess::Public) {
+            return Err(error("controller.rhai requires public fn control(t, sensors, actions, state)"));
+        }
+        Ok(())
+    }
     /// Share the host's exact primitive catalog without importing host/domain
     /// dependencies into the script crate. Captured script state is unchanged.
     pub fn with_seed_and_registry(

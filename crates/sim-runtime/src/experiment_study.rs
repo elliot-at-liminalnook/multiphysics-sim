@@ -1,6 +1,7 @@
 //! Retained measurements → shared physical runtime → immutable candidate evidence.
 //! No hardware IO and no CAD mutation. Hosts schedule work off the UI thread.
 pub mod commands;
+pub mod refinement;
 #[cfg(test)]
 mod compatibility;
 
@@ -384,6 +385,8 @@ pub struct Study {
     pub notes: String,
     #[serde(default)]
     pub refinement: crate::controller_refinement::workspace::Workspace,
+    #[serde(default)]
+    pub refinement_evidence: refinement::Evidence,
     #[serde(flatten, default)]
     pub retained_fields: BTreeMap<String, serde_json::Value>,
 }
@@ -408,6 +411,7 @@ impl Study {
             validation_influenced: false,
             notes: String::new(),
             refinement: Default::default(),
+            refinement_evidence: Default::default(),
             retained_fields: Default::default(),
         })
     }
@@ -424,6 +428,7 @@ impl Study {
         self.draft.validate()?;
         self.refinement.validate()?;
         self.refinement.validate_archive(&self.archive)?;
+        refinement::validate_evidence(self)?;
         commands::validate_limits(&self.limits)?;
         commands::validate_view(self)?;
         let mut ids = std::collections::BTreeSet::new();
@@ -598,6 +603,11 @@ impl Study {
             escape(&self.archive.observation_blake3),
             escape(&self.archive.model_blake3)
         );
+        // Additive authored review/provenance and native lifecycle evidence are
+        // part of the immutable report, not only ephemeral window state.
+        let native: BTreeMap<_,_> = self.retained_fields.iter().filter(|(name,_)|name.starts_with("native_")).collect();
+        html += &format!("<details><summary>Captured offline refinement actions, source links and lifecycle receipts</summary><pre>{}</pre></details>",
+            escape(&serde_json::to_string_pretty(&serde_json::json!({"refinement_evidence":self.refinement_evidence,"native_receipts":native})).map_err(|e|e.to_string())?));
         for issue in &self.archive.integrity_issues {
             html += &format!("<p>Source integrity issue: {}</p>", escape(issue));
         }

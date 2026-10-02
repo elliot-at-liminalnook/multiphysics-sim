@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sim_runtime::experiment_study::commands::{self, Command, EvaluationSelection};
 use sim_api::Outcome;
+use sim_runtime::experiment_study::refinement;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag="op",rename_all="snake_case",deny_unknown_fields)]
@@ -15,6 +16,8 @@ pub enum StudyAction {
     Choose { id:u64 },
     Apply { stamp:StudyStamp, command:Command },
     Evaluate { stamp:StudyStamp, set:EvaluationSelection },
+    RefineApply { stamp:StudyStamp, command:refinement::Command },
+    RefineRun { stamp:StudyStamp, operation:refinement::Operation },
     Cancel { job:u64 },
     Save { stamp:StudyStamp, path:String },
     Export { stamp:StudyStamp, path:String },
@@ -22,7 +25,7 @@ pub enum StudyAction {
     Status,
 }
 impl Action for StudyAction {
-    fn commands()->Vec<Spec> { vec![actions::spec("system_measured_study",actions::BUILDER,json!({"op":"status"}),"Offline retained measured-PWM authoring. Typed operations open_archive/open_review/choose/apply/evaluate/cancel/save/export/status. Apply commands use shared experiment_study validation; all scoped operations require stamp {id,revision}. Publication creates new destinations only; accepted jobs return an id and retain receipts.")] }
+    fn commands()->Vec<Spec> { vec![actions::spec("system_measured_study",actions::BUILDER,json!({"op":"status"}),"Offline retained measured-PWM authoring. Typed operations open_archive/open_review/choose/apply/evaluate/refine_apply/refine_run/cancel/save/export/status. Apply commands use shared experiment_study validation; all scoped operations require stamp {id,revision}. Publication creates new destinations only; accepted jobs return an id and retain receipts.")] }
     fn parse(c:&sim_api::Command)->Result<Self,String> {
         if c.command=="system_ui" {
             let a=&c.args["action"];
@@ -46,14 +49,14 @@ pub fn apply(mut owner:ResMut<StudyOwner>, registry:Res<DocumentRegistry>, mut u
             return match super::forms::activate(&ui,id) {
                 Ok(hit) if text.is_some()=>match super::forms::text_submission(&mut ui,&owner,hit,text.as_deref().unwrap_or_default()) {
                     Ok(action)=>{
-                        let outcome=handle(owner.bypass_change_detection(),&registry,&action,call);
+                        let outcome=handle_with_inputs(owner.bypass_change_detection(),&registry,&action,call,publication_inputs(&ui,&action));
                         if !ui.awaiting.is_empty() {super::forms::acknowledge(ui.bypass_change_detection(),&action,&outcome);}
                         outcome
                     }
                     Err(e)=>{ui.error=Some(e.clone());Outcome::Done(Err(e))},
                 },
                 Ok(super::forms::Hit::Action(action))=>{
-                    let outcome=handle(owner.bypass_change_detection(),&registry,&action,call);
+                    let outcome=handle_with_inputs(owner.bypass_change_detection(),&registry,&action,call,publication_inputs(&ui,&action));
                     if !ui.awaiting.is_empty() {super::forms::acknowledge(ui.bypass_change_detection(),&action,&outcome);}
                     outcome
                 },
@@ -61,17 +64,32 @@ pub fn apply(mut owner:ResMut<StudyOwner>, registry:Res<DocumentRegistry>, mut u
                 Err(e)=>{owner.status=e.clone();Outcome::Done(Err(e))},
             };
         }
-        let outcome=handle(owner.bypass_change_detection(),&registry,action,call);
+        let outcome=handle_with_inputs(owner.bypass_change_detection(),&registry,action,call,publication_inputs(&ui,action));
         if !ui.awaiting.is_empty() {super::forms::acknowledge(ui.bypass_change_detection(),action,&outcome);}
         outcome
     });
     if owner.changed!=before {owner.set_changed();}
     if ui.epoch!=ui_before {ui.set_changed();}
 }
+fn publication_inputs(ui:&super::forms::StudyUi,action:&StudyAction)->Option<serde_json::Value> {
+    match action {StudyAction::Save{stamp,..}|StudyAction::Export{stamp,..}=>Some(ui.publication_inputs(stamp.id)),_=>None}
+}
 pub fn handle(owner:&mut StudyOwner, registry:&DocumentRegistry, action:&StudyAction, call:&mut Call)->Outcome {
+    handle_with_inputs(owner,registry,action,call,None)
+}
+pub fn handle_with_inputs(owner:&mut StudyOwner, registry:&DocumentRegistry, action:&StudyAction, call:&mut Call,inputs:Option<serde_json::Value>)->Outcome {
     if call.cancelled { return Outcome::Done(Err("Measured study request cancelled before application; retained work is unchanged".into())); }
     if matches!(action,StudyAction::Status) { return Outcome::Done(apply_action(owner,registry,action)); }
-    let result=apply_action(owner,registry,action);
+    let result=apply_action_with_inputs(owner,registry,action,inputs);
+    if let Err(error)=&result {
+        let stamp=match action {StudyAction::RefineApply{stamp,..}|StudyAction::RefineRun{stamp,..}=>Some(*stamp),_=>None};
+        if let Some(stamp)=stamp {
+            if let Some(retained)=owner.get_mut(stamp.id) {
+                jobs::retain_durable(&mut retained.study,"native_refinement_rejections",json!({"stamp":stamp,"action":action,"error":error}));
+                retained.revision+=1;
+            }
+        }
+    }
     match &result { Ok(v)=>owner.status=v.get("message").and_then(|v|v.as_str()).unwrap_or("Measured study action accepted").into(), Err(e)=>owner.status=e.clone() }
     owner.changed+=1;
     Outcome::Done(result)
@@ -86,6 +104,9 @@ fn checked(owner:&StudyOwner,registry:&DocumentRegistry,stamp:StudyStamp)->Resul
 }
 
 pub fn apply_action(owner:&mut StudyOwner,registry:&DocumentRegistry,action:&StudyAction)->Result<serde_json::Value,String> {
+    apply_action_with_inputs(owner,registry,action,None)
+}
+fn apply_action_with_inputs(owner:&mut StudyOwner,registry:&DocumentRegistry,action:&StudyAction,inputs:Option<serde_json::Value>)->Result<serde_json::Value,String> {
     match action {
         StudyAction::Status=>{
             // Full status includes traces from every retained archive, irrespective
@@ -94,6 +115,7 @@ pub fn apply_action(owner:&mut StudyOwner,registry:&DocumentRegistry,action:&Stu
                 let seen=retained.study.validation_seen;
                 let ids=retained.study.archive.trials.iter().map(|t|t.id.clone()).collect::<Vec<_>>();
                 commands::expose(&mut retained.study,&ids);
+                refinement::expose_review(&mut retained.study);
                 if retained.study.validation_seen!=seen {retained.revision+=1;owner.changed+=1;}
             }
             return Ok(owner.snapshot());
@@ -109,6 +131,7 @@ pub fn apply_action(owner:&mut StudyOwner,registry:&DocumentRegistry,action:&Stu
             let seen=s.study.validation_seen;
             let ids=commands::filtered_ids(&s.study);
             commands::expose(&mut s.study,&ids);
+            refinement::expose_review(&mut s.study);
             if s.study.validation_seen!=seen { s.revision+=1; }
             owner.active=Some(*id);owner.selection_epoch+=1;
         }
@@ -117,6 +140,17 @@ pub fn apply_action(owner:&mut StudyOwner,registry:&DocumentRegistry,action:&Stu
             let retained=owner.get_mut(stamp.id).ok_or("study.id: missing retained study")?;
             commands::apply(&mut retained.study,command.clone())?;
             retained.revision+=1;
+        }
+        StudyAction::RefineApply{stamp,command}=>{
+            checked(owner,registry,*stamp)?;
+            let retained=owner.get_mut(stamp.id).ok_or("study.id: missing retained study")?;
+            refinement::apply(&mut retained.study,command.clone())?;
+            retained.revision+=1;
+        }
+        StudyAction::RefineRun{stamp,operation}=>{
+            checked(owner,registry,*stamp)?;
+            let id=jobs::start_refinement(owner,*stamp,operation.clone())?;
+            return Ok(json!({"job":id,"message":"Running shared refinement from immutable captured inputs; results never adopt candidates automatically"}));
         }
         StudyAction::Evaluate{stamp,set}=>{
             checked(owner,registry,*stamp)?;
@@ -133,7 +167,7 @@ pub fn apply_action(owner:&mut StudyOwner,registry:&DocumentRegistry,action:&Stu
             // this publishes captured evidence, not a mutation of that document.
             owner.validate_stamp(*stamp)?;
             let export=matches!(action,StudyAction::Export{..});
-            let id=jobs::start_publication(owner,*stamp,path,export)?;
+            let id=jobs::start_publication_with_inputs(owner,*stamp,path,export,inputs)?;
             return Ok(json!({"job":id,"message":"Publishing a new immutable captured review revision"}));
         }
         StudyAction::SystemUi{..}=>return Err("study.system_ui: rendered controls must be resolved by the apply owner".into()),

@@ -220,3 +220,79 @@ fn empty_study_owner_idle_frames_keep_actual_open_controls() {
     for _ in 0..3{schedule.run(&mut world);world.clear_trackers();}
     assert_eq!(panels.single(&world).unwrap(),original);assert_eq!(world.resource::<Reconstructions>().0,1);
 }
+
+// T48 actual rendered-control fixtures. Written but unexecuted by batch contract.
+#[test]
+fn refinement_actual_inputs_actions_selections_and_busy_bindings() {
+    let mut o=owner();
+    o.studies[0].study.refinement.scenarios=sim_runtime::experiment_study::refinement::default_scenarios(&o.studies[0].study);
+    let mut world=world(o);world.run_system_once(render).unwrap();world.run_system_once(collect).unwrap();
+    let ui=world.resource::<StudyUi>();
+    for path in ["experiment:/name","experiment:/device","experiment:/fixture","experiment:/component_id","experiment:/initial_encoder_rad","experiment:/timing/evidence","experiment:/timing/period_s","experiment:/controller/parameters/kp","experiment:/limits/rms_rad","experiment:/trajectory/0/time_s","experiment:/trajectory/0/position_rad","scenarios:/0/label","scenarios:/0/timing/command_delay_ticks"] {
+        assert!(ui.rendered.values().any(|c|matches!(&c.hit,Hit::Focus{field:Field::Refinement(p),..} if p==path)),"actual Button input for {path}");
+    }
+    for id in ["simulate","sensitivity","fit","robustness"] {
+        let Hit::Action(StudyAction::RefineRun{stamp,..})=super::super::forms::activate(ui,&format!("study:refine:run:{id}")).unwrap()else{panic!("wrong typed action")};
+        assert_eq!(stamp,StudyStamp{id:11,revision:4});
+    }
+    assert!(ui.rendered.values().any(|c|matches!(&c.hit,Hit::RefineTrial{role,..}if role=="train")));
+    let mut o=owner();pending(&mut o);let mut world=world(o);world.run_system_once(render).unwrap();world.run_system_once(collect).unwrap();
+    for id in ["simulate","sensitivity","fit","robustness"]{assert!(!world.resource::<StudyUi>().rendered[&format!("study:refine:run:{id}")].enabled);}
+}
+#[test]
+fn refinement_scalar_submission_preserves_electrical_and_stamped_late_drafts() {
+    let mut o=owner();let stamp=o.active().unwrap().stamp();
+    let action=super::super::forms::submission(&o,Some(stamp),&Field::Refinement("experiment:/timing/evidence".into()),"captured source link").unwrap();
+    let StudyAction::RefineApply{command:sim_runtime::experiment_study::refinement::Command::SetExperiment(e),..}=action else{panic!("wrong shared mutation")};
+    assert_eq!(e.timing.evidence,"captured source link");assert_eq!(e.electrical,o.active().unwrap().study.refinement.experiment.electrical);
+    assert!(super::super::forms::submission(&o,Some(stamp),&Field::Refinement("experiment:/device".into()),"2.5").unwrap_err().contains("refinement.experiment:/device"));
+    o.studies[0].revision+=1;let mut ui=StudyUi::default();
+    assert!(super::super::forms::text_submission(&mut ui,&o,Hit::Focus{stamp:Some(stamp),field:Field::Refinement("experiment:/fixture".into()),text:String::new()},"late fixture").is_err());
+    assert!(ui.drafts.values().any(|v|v=="late fixture"));assert!(ui.blocking_reason().is_some());
+}
+#[test]
+fn actual_refinement_review_never_scores_cancelled_run_and_notes_are_distinct() {
+    use sim_runtime::controller_refinement::control::{Run,TrackingScore};
+    let mut o=owner();let s=&mut o.studies[0].study;
+    s.refinement.controller_runs.push(Run{version:1,experiment:s.refinement.experiment.clone(),model:s.draft.clone(),runtime:sim_runtime::physics_context::RuntimeIdentity::current(),frames:vec![],truth:vec![[0.013,0.1],[0.097,0.2]],electrical:None,score:Some(TrackingScore{rms_rad:0.,peak_rad:0.,settled_error_rad:0.,saturation_fraction:0.,error_sign_changes:0,passes:true}),failure:None,cancelled:true,evidence_kind:"synthetic unexecuted fixture".into()});
+    let mut world=world(o);world.run_system_once(render).unwrap();world.run_system_once(collect).unwrap();
+    let ui=world.resource::<StudyUi>();
+    let Hit::Action(StudyAction::RefineApply{command:sim_runtime::experiment_study::refinement::Command::SetDecision{kind,index,..},..})=super::super::forms::activate(ui,"study:refine:decision:controller:0:reviewed").unwrap()else{panic!("review action must remain separate from candidate use")};
+    assert_eq!(kind,"controller");assert_eq!(index,0);
+    assert!(!ui.rendered.contains_key("study:refine:use-fit:0"));
+    let Hit::Action(StudyAction::RefineApply{command:sim_runtime::experiment_study::refinement::Command::SelectControllerRun(index),..})=super::super::forms::activate(ui,"study:refine:chart-run:0").unwrap()else{panic!("captured chart selector must use shared typed action")};
+    assert_eq!(index,0);
+    let mut texts=world.query::<&Text>();let text=texts.iter(&world).map(|t|t.0.as_str()).collect::<Vec<_>>().join("\n");
+    assert!(text.contains("UNSCORED incomplete/failed/cancelled"));assert!(text.contains("physical t=0.013000 s"));assert!(text.contains("physical t=0.097000 s"));
+}
+
+// T48 repair fixtures are source-reviewed only, never executed in this batch.
+#[test]
+fn rhai_parameter_rows_keep_schema_named_keys_and_nested_values_authorable() {
+    use sim_runtime::{controller_refinement::control::Policy,experiment_study::refinement::Command};
+    let mut o=owner();let stamp=o.active().unwrap().stamp();
+    o.studies[0].study.refinement.experiment.controller=Policy::Rhai{source:"fn control(t,s,a,state) { #{commands: #{duty: 0.0}, state: state} }".into(),parameters:serde_json::json!({"kind":{"version":[1,2]},"power":true}),duty_limit:0.5};
+    let added=super::super::forms::submission(&o,Some(stamp),&Field::Refinement("parameter_new:".into()),"electrical = {\"gains\":[1,2]}").unwrap();
+    let StudyAction::RefineApply{command:Command::SetExperiment(e),..}=added else{panic!("parameter row must submit typed experiment")};
+    let Policy::Rhai{parameters,..}=e.controller else{panic!("policy changed")};
+    assert_eq!(parameters["electrical"]["gains"],serde_json::json!([1,2]));
+    let mut world=world(o);world.run_system_once(render).unwrap();world.run_system_once(collect).unwrap();
+    let ui=world.resource::<StudyUi>();
+    for name in ["kind","power"] {
+        assert!(ui.rendered.values().any(|c|matches!(&c.hit,Hit::Focus{field:Field::Refinement(path),..}if path==&format!("parameter_value:{name}"))));
+        assert!(ui.rendered.contains_key(&format!("study:refine:parameter:remove:{name}")));
+    }
+}
+
+#[test]
+fn immutable_publication_projection_retains_raw_rejected_text_without_acknowledging_it() {
+    let mut ui=StudyUi::default();
+    ui.drafts.insert((Some((11,4)),Field::Refinement("experiment:/device".into())),"invalid device text".into());
+    ui.drafts.insert((Some((22,1)),Field::Notes),"another study remains separate".into());
+    ui.error=Some("current global parse diagnostic, not attributed to every draft".into());
+    let projection=ui.publication_inputs(11);
+    assert!(projection["current_global_diagnostic"].as_str().unwrap().contains("global parse diagnostic"));
+    assert_eq!(projection["drafts"].as_array().unwrap().len(),1);
+    assert_eq!(projection["drafts"][0]["text"],"invalid device text");
+    assert!(ui.blocking_reason().is_some());assert_eq!(ui.drafts.len(),2);
+}

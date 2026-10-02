@@ -235,21 +235,18 @@ impl ExperimentsPanel {
                     self.message = Some(result.unwrap_or_else(|e| e));
                 }
                 ResultMessage::Refined(index, label, result) => {
+                    let result = match result {
+                        Ok(refinement::Outcome::Shared(outcome)) => {
+                            sim_runtime::experiment_study::refinement::apply_outcome(&mut self.studies[index],outcome);
+                            self.revisions[index]+=1;
+                            self.message=Some(format!("{label}: captured shared result retained in this review."));
+                            return;
+                        }
+                        other=>other,
+                    };
                     let w = &mut self.studies[index].refinement;
                     match result {
-                        Ok(refinement::Outcome::Controller(run)) => w.controller_runs.push(run),
-                        Ok(refinement::Outcome::Sensitivity(report)) => {
-                            w.sensitivities.push(report)
-                        }
-                        Ok(refinement::Outcome::FitAttempt(attempt)) => {
-                            if let Some(fit) = &attempt.outcome {
-                                w.fits.push(fit.clone());
-                            }
-                            if let Some(error) = &attempt.failure {
-                                w.failures.push(format!("Fitting: {error}"));
-                            }
-                            w.fit_attempts.push(attempt);
-                        }
+                        Ok(refinement::Outcome::Shared(_))=>unreachable!("shared result applied above"),
                         Ok(refinement::Outcome::CombinedFit(attempt)) => {
                             if let Some(error) = &attempt.attempt.failure {
                                 w.failures.push(format!("Combined fitting: {error}"));
@@ -263,7 +260,6 @@ impl ExperimentsPanel {
                             }
                             w.recording_fits.push(attempt);
                         }
-                        Ok(refinement::Outcome::Robustness(report)) => w.robustness.push(report),
                         Ok(refinement::Outcome::FpgaRecording(report)) => {
                             w.fpga_recordings.push(report)
                         }
@@ -371,6 +367,15 @@ impl ExperimentsPanel {
                 if changed { self.revisions[self.current] += 1; }
                 if let Some(action) = action {
                     let index = self.current;
+                    if let Some(operation)=action.operation() {
+                        if let Err(error)=sim_runtime::experiment_study::refinement::prepare(&mut self.studies[index],operation) {
+                            self.studies[index].refinement.failures.push(error.clone());
+                            self.revisions[index]+=1;
+                            self.message=Some(error);
+                            return;
+                        }
+                        self.revisions[index]+=1;
+                    }
                     let s = self.studies[index].clone();
                     let label = action.label().to_string();
                     let job_label = label.clone();

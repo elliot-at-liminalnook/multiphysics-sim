@@ -59,8 +59,8 @@ impl StudyOwner {
     pub(crate) fn get_mut(&mut self,id:u64)->Option<&mut RetainedStudy> { self.studies.iter_mut().find(|s|s.id==id) }
     pub fn busy(&self)->bool { !self.pending.is_empty() }
     pub fn blocking_reason(&self)->Option<String> {
-        if !self.pending.is_empty() { return Some("Measured study work is pending. Cancel or wait and save the retained evidence before leaving.".into()); }
-        self.studies.iter().find(|s|s.dirty()).map(|s|format!("Measured study {} has unsaved draft or evidence. Save a new review before leaving.",s.id))
+        if !self.pending.is_empty() { return Some("Retained measured/controller study work is pending. Cancel or wait for terminal evidence, then save a new review before leaving.".into()); }
+        self.studies.iter().find(|s|s.dirty()).map(|s|format!("Retained measured/controller study {} has unsaved draft or evidence. Save a new review before leaving.",s.id))
     }
     pub fn validate_stamp(&self, stamp:StudyStamp)->Result<&RetainedStudy,String> {
         let s=self.get(stamp.id).ok_or("study.id: retained study is missing")?;

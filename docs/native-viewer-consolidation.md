@@ -2442,3 +2442,17 @@ follows identity, while a bounded flat archive preserves newly encountered remov
 row data across later startups. Overflow refuses publication rather than evicting
 records. These fixtures remain unexecuted. This is a repair within T45, so the ten
 uncompiled epic count and T44 accepted source-only status remain unchanged.
+
+## Native offline controller refinement — T48 (2026-10-02)
+
+Build → Actuators → Measured evidence now extends the T46 retained studies with
+individual controller/timing/trajectory/coordinate/scenario authoring, archive fit
+selection and captured analysis review over the same shared Rust runtime.
+[Evidence/checklist](native-refinement-authoring.md) and the
+[field inventory](native-refinement-inventory.md) record the actual shared/native/
+legacy source traces and deferred workflows. T46 acceptance in call-0360 and T47
+acceptance in call-0364 are source reviews, not execution. This implementation is
+source-reviewed only: no compilation, test, window launch, screenshot, publication
+or parity execution occurred. External power, FPGA, recording/combined fitting,
+hardware acquisition, raw sweeps and physical-source/registry promotion remain
+available through their legacy surfaces; no legacy retirement is claimed.

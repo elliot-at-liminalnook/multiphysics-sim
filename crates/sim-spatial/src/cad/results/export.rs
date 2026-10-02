@@ -10,9 +10,9 @@
 //!   starts when the running one ends.
 //! - **Progress**: "exporting {label} in the background… n s" in the status
 //!   line, refreshed once a second.
-//! - **Cancel** drops the job: nothing is written. RoboCAD's request itself
+//! - **Cancel** requests cancellation and retains the job until completion. RoboCAD's request itself
 //!   cannot be aborted (it derives the model to the end; api.py has no
-//!   cancel route), only its answer is discarded. The job checks the
+//!   cancel route). Cancellation after the final check cannot revoke a rename. The job checks the
 //!   cancel again just before the rename and then deletes its temporary
 //!   file (each job's own name: pid and a process-wide counter). Leaving
 //!   CAD mode, or opening another document, is refused while an export runs
@@ -60,6 +60,7 @@ pub(crate) struct Running {
     pub started: Instant,
     /// Whole seconds last shown in the status line.
     pub shown: u64,
+    pub cancel_requested: bool,
 }
 
 /// The exports: the running one, the queued live-link one, the last outcome.
@@ -80,6 +81,7 @@ impl Exports {
             "running": self.running.as_ref().map(|r| {
                 let mut v = req(&r.request);
                 v["seconds"] = json!(r.started.elapsed().as_secs());
+                v["cancel_requested"] = json!(r.cancel_requested);
                 v
             }),
             "queued": self.queued.as_ref().map(req),
@@ -146,7 +148,7 @@ fn start(doc: &mut CadDocument, request: ExportRequest) -> Result<(), String> {
         write_model(&path, &model, &|| ctx.cancelled())
     });
     doc.show(Ok(format!("exporting {} in the background…", request.label)));
-    doc.results.exports.running = Some(Running { request, job, started: Instant::now(), shown: 0 });
+    doc.results.exports.running = Some(Running { request, job, started: Instant::now(), shown: 0, cancel_requested: false });
     Ok(())
 }
 
@@ -190,15 +192,13 @@ pub(crate) fn write_model(path: &Path, model: &Value, cancelled: &dyn Fn() -> bo
 
 /// `op: export_cancel`.
 pub(crate) fn cancel(doc: &mut CadDocument) -> Result<Value, String> {
-    let Some(running) = doc.results.exports.running.take() else { return Err("no export is running".into()) };
-    // Dropping the job cancels it: the answer is discarded and nothing is written.
-    drop(running.job);
-    let message = format!("{} export cancelled", running.request.label);
-    doc.results.exports.last = Some((running.request.label.clone(), running.request.path.clone(), Err(message.clone())));
+    let Some(running) = doc.results.exports.running.as_mut() else { return Err("no export is running".into()) };
+    running.cancel_requested = true;
+    running.job.cancel();
+    let label = running.request.label.clone();
+    let message = format!("{label} cancellation requested; waiting for the export outcome");
     doc.show(Ok(message.clone()));
-    // A queued live-link export starts now, as RoboCAD starts the pending one.
-    let next = start_queued(doc);
-    Ok(json!({"cancelled": running.request.label, "message": message, "note": "RoboCAD's request was already sent and runs to the end; its answer is discarded and nothing is written", "started": next}))
+    Ok(json!({"cancelling": label, "message": message, "note": "RoboCAD's request runs to the end. Cancellation before the final rename leaves the destination unchanged; a completed rename cannot be revoked. Queued exports wait for this job's terminal outcome."}))
 }
 
 /// Starts the queued export, if any; its label, or the reason it could not start.
@@ -234,11 +234,12 @@ pub(crate) fn poll(doc: &mut CadDocument) -> Option<Landed> {
         }
         return None;
     };
-    let Running { request, .. } = results.exports.running.take()?;
+    let Running { request, cancel_requested, .. } = results.exports.running.take()?;
     let (label, path) = (request.label.clone(), request.path.clone());
     let landed = match outcome {
         Ok(w) => {
-            let message = format!("{label} written: {} ({} links, {} flexible)", path.display(), w.links, w.flexible);
+            let mut message = format!("{label} written: {} ({} links, {} flexible)", path.display(), w.links, w.flexible);
+            if cancel_requested { message.push_str("; cancellation arrived after the final publication check and could not revoke the write"); }
             doc.show(Ok(message.clone()));
             doc.results.exports.last = Some((label, path.clone(), Ok(message)));
             doc.results.exports.written = Some(path.clone());

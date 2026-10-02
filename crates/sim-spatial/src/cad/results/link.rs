@@ -27,7 +27,7 @@
 //!   here (one mode at a time), so there is no in-place reload to request.
 //! - **Show in Robot mode** switches on request (the link's model, else
 //!   the last export written). While an export runs it is refused ("wait
-//!   for it or cancel it"): the switch would drop the export with the
+//!   for it or request cancellation and wait for its outcome"): the switch would drop the export with the
 //!   document, and the model on disk is still the previous one.
 //! - The link outlives the document ([`LiveLink`], kept across mode
 //!   switches): it watches a `.rcad` path, so returning to CAD mode on the
@@ -240,15 +240,21 @@ pub(super) fn receive(
         doc.touch();
     }
     settle(doc);
-    if let Some((path, job)) = &doc.results.profiles_read
+    if let Some((_, job, _, _)) = &doc.results.profiles_read
         && let Some(result) = job.poll()
     {
-        let path = path.clone();
-        doc.results.profiles_read = None;
+        let (path, _, mut captured, revision) = doc.results.profiles_read.take().unwrap();
         match result {
             Ok(profiles) => {
-                if let Some(mut out) = cad {
-                    out.write(Act::ui(CadAction::CadResults(super::ResultsArgs { op: super::ResultsOp::Profiles, profiles: Some(profiles), ..Default::default() })));
+                let valid = matches!(&captured, CadAction::Captured { source, .. } if crate::cad::activation::current(source, doc)) && revision == doc.revision;
+                doc.results.profiles_retained = Some((path.clone(), profiles.clone()));
+                if valid && cad.is_some() {
+                    if let CadAction::Captured { action, .. } = &mut captured {
+                        **action = CadAction::CadResults(super::ResultsArgs { op: super::ResultsOp::Profiles, profiles: Some(profiles), revision: Some(revision), ..Default::default() });
+                    }
+                    if let Some(mut out) = cad { out.write(Act::ui(captured)); }
+                } else {
+                    doc.show(Err(format!("Actuator profiles not applied: captured document changed or action consumer unavailable; input retained ({path})")));
                 }
             }
             Err(e) => doc.show(Err(format!("Actuator profiles not applied: {e} ({path})"))),

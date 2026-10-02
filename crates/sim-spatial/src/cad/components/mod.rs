@@ -146,7 +146,10 @@ impl Plugin for CoreParts {
     }
 }
 
-pub(crate) fn handle(a: &ComponentsArgs, _call: &mut Call, cx: &mut Cx) -> Outcome {
+pub(crate) fn handle(a: &ComponentsArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
+    if call.cancelled && matches!(a.op, ComponentsOp::Submit | ComponentsOp::ImportSelected) {
+        return Outcome::Done(Err("components: cancelled before submission; draft retained".into()));
+    }
     let items = cx.shared.items();
     let doc = &mut *cx.doc;
     let st = &mut *cx.components;

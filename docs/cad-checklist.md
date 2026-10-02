@@ -591,3 +591,13 @@ When every step passes, record it in the coordination journal; the ledger's
 
 These IDs describe implementation and reading evidence. Part J, compilation and
 exact reference parity remain unexecuted; no historical receipt is replaced.
+
+
+### T42 repair acceptance additions (written, unexecuted)
+
+| Step | Native workflow | Reference/observable acceptance |
+|---|---|---|
+| CAD-210 Explicit family target | Select library family; open LinkFamily with a distinct occurrence ID | Definition comes from library selection, ID names occurrence; same typed operation as no-ID shared-selection path |
+| CAD-211 Stale first pick | Pick a port; edit source/reload same-revision document; pick another or Leave open | First generation/document/revision stamp refused; pending intent and diagnostic retained |
+| CAD-212 Open/cancel/remove | Pick unused physical or signal-output port; Leave port open; separately Cancel connection or Remove connection | Leave creates singleton ID and undo; connected port refuses; Cancel performs no source edit; Remove deletes whole net |
+| CAD-213 Build failure | Present invalid shared graph twice; then change source key | Path-named diagnostic retained, unchanged failed key schedules no retry; prior layout labelled stale; changed key retries |

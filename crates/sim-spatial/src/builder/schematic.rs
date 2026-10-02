@@ -103,13 +103,14 @@ fn level_description(d: &SystemDescription, level: &str) -> SystemDescription {
 /// Lay out one level with the shared layer: subsystems directly at `level`
 /// collapse to one node each, then `initial_state_cancellable` places and
 /// `route_cancellable` routes. None when cancelled.
-pub(crate) fn lay_out(description: &SystemDescription, key: Key, cancel: &AtomicBool) -> Option<Laid> {
+pub(crate) fn lay_out(description: &SystemDescription, key: Key, cancel: &AtomicBool) -> Result<Option<Laid>, String> {
+    if cancel.load(std::sync::atomic::Ordering::Acquire) { return Ok(None); }
     let started = std::time::Instant::now();
-    let composition = sim_system::composition::Composition::new(description.clone()).ok()?;
+    let composition = sim_system::composition::Composition::new(description.clone())?;
     let scoped = level_description(&composition.description, &key.level);
     let parent = (!key.level.is_empty()).then_some(key.level.as_str());
     let collapsed: BTreeSet<String> = scoped.groups.values().filter(|g| g.parent.as_deref() == parent).map(|g| g.id.clone()).collect();
-    let presented = sim_diagram::composition::present(&scoped, &collapsed, None, cancel)?;
+    let Some(presented) = sim_diagram::composition::present(&scoped, &collapsed, None, cancel) else { return Ok(None) };
     let projection = presented.projection;
     let layout = presented.layout;
     let instances = projection
@@ -122,7 +123,7 @@ pub(crate) fn lay_out(description: &SystemDescription, key: Key, cancel: &Atomic
             instance_at(&key.level, path).map(|i| (id.clone(), i))
         })
         .collect();
-    Some(Laid { key, projection, layout, instances, layout_ms: started.elapsed().as_secs_f64() * 1e3 })
+    Ok(Some(Laid { key, projection, layout, instances, layout_ms: started.elapsed().as_secs_f64() * 1e3 }))
 }
 
 impl Schematic {
@@ -165,27 +166,16 @@ impl Schematic {
     /// Poll the worker, cancel a job for an old key and start one for the
     /// current key. Cheap; called every frame. Never blocks.
     pub(crate) fn tick(&mut self, revision: u64, level: &str) {
-        if let Some(job) = self.job.as_mut() {
-            match job.work.poll() {
-                Some(Ok(Some(laid))) => {
-                    self.laid = Some(laid);
-                    self.error = None;
-                    self.job = None;
-                }
-                Some(Ok(None)) => self.job = None,
-                Some(Err(e)) => {
-                    self.error = Some(e);
-                    self.failed = Some(job.key.clone());
-                    self.job = None;
-                }
-                None => {}
-            }
-        }
         let current = self.current(revision, level);
-        // A newer revision or level supersedes the pending job (dropping it cancels the worker).
+        // Drop superseded work before polling, including already delivered results.
         if self.job.as_ref().is_some_and(|j| Some(&j.key) != current.as_ref()) {
             self.job = None;
             self.superseded += 1;
+        }
+        let completed = self.job.as_mut().and_then(|job| job.work.poll().map(|result| (job.key.clone(), result)));
+        if let Some((key, result)) = completed {
+            self.job = None;
+            self.finish(key, result);
         }
         if !self.visible {
             return;
@@ -194,15 +184,28 @@ impl Schematic {
         // compile lands the shown layout stays marked stale.
         let Some((description, compiled)) = self.source.clone() else { return };
         let Some(key) = current.filter(|_| compiled == revision) else { return };
-        if self.laid.as_ref().is_some_and(|l| l.key == key) || self.job.is_some() || self.failed.as_ref() == Some(&key) {
+        if !self.needs_layout(&key) {
             return;
         }
         self.start(description, key);
     }
 
+    /// Cancellation changes neither the usable layout nor diagnostic history.
+    fn finish(&mut self, key: Key, result: Result<Option<Laid>, String>) {
+        match result {
+            Ok(Some(laid)) => { self.laid = Some(laid); self.error = None; self.failed = None; }
+            Ok(None) => {}
+            Err(error) => { self.error = Some(error); self.failed = Some(key); }
+        }
+    }
+
+    fn needs_layout(&self, key: &Key) -> bool {
+        !self.laid.as_ref().is_some_and(|l| &l.key == key) && self.job.is_none() && self.failed.as_ref() != Some(key)
+    }
+
     fn start(&mut self, description: Arc<SystemDescription>, key: Key) {
         let job_key = key.clone();
-        let work = crate::jobs::Job::spawn(crate::jobs::Pool::Compute, key.revision, "the layout worker", move |ctx| Ok(lay_out(&description, job_key, ctx.cancel_flag())));
+        let work = crate::jobs::Job::spawn(crate::jobs::Pool::Compute, key.revision, "the layout worker", move |ctx| lay_out(&description, job_key, ctx.cancel_flag()));
         self.error = None;
         self.job = Some(Job { key, work });
     }
@@ -239,6 +242,7 @@ impl Schematic {
             "ui_build_ms": self.build_ms,
             "superseded_jobs": self.superseded,
             "error": self.error,
+            "failed": self.failed,
             "nodes": laid.map(|l| l.instances.iter().map(|(id, i)| serde_json::json!({"node": id, "instance": i, "label": l.projection.view.components.get(id).map(|c| c.label.clone()), "highlighted": highlighted.contains(id)})).collect::<Vec<_>>()),
         })
     }
@@ -311,7 +315,8 @@ pub(super) fn pane(commands: &mut Commands, k: &Kit, b: &Builder, selected: &BTr
     let stale = s.stale(revision, level);
     let place = if level.is_empty() { b.document.title.clone() } else { level.to_string() };
     let status = match (&s.laid, s.pending(), stale, &s.error) {
-        (_, _, _, Some(e)) => (format!("Layout failed: {e}"), WARN),
+        (_, _, true, Some(e)) => (format!("Stale layout · layout failed: {e}"), WARN),
+        (_, _, false, Some(e)) => (format!("Layout failed: {e}"), WARN),
         (None, _, _, None) if b.compile_error.is_some() => ("Waiting for a compiling system".into(), WARN),
         (None, _, _, None) => ("Laying out…".into(), WARN),
         (Some(l), pending, true, None) => (format!("Stale: showing revision {}{} · {}", l.key.revision, if l.key.level != level { format!(" of {}", if l.key.level.is_empty() { "the top level" } else { &l.key.level }) } else { String::new() }, if pending { "laying out the current one…" } else if b.compile_error.is_some() { "the current revision does not compile" } else if b.job.is_some() || b.scene_dirty { "waiting for the compile…" } else { "laying out the current one…" }), WARN),
@@ -432,6 +437,48 @@ fn draw(canvas: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, l: &Laid, highl
 mod tests {
     use super::*;
     #[test]
+    fn validation_failure_keeps_layout_and_diagnostic_and_suppresses_same_key() {
+        let mut d: SystemDescription = serde_json::from_str(include_str!("../../../../examples/systems-viewer/full-robot.description.json")).unwrap();
+        d.nets.clear();
+        let description_id = d.id.clone();
+        let key = |revision| Key { description_id: description_id.clone(), revision, level: String::new() };
+        let good_key = key(1);
+        let failed_key = key(2);
+        let next_key = key(3);
+        let mut schematic = Schematic { visible: true, ..Default::default() };
+        schematic.set_source(&d, 1);
+        let laid = lay_out(&d, good_key.clone(), &AtomicBool::new(false)).unwrap().unwrap();
+        schematic.finish(good_key.clone(), Ok(Some(laid)));
+        d.nets.insert("broken".into(), sim_inspect::NetDescription { id: "broken".into(), ports: vec!["missing-terminal".into()] });
+        schematic.set_source(&d, 2);
+        let result = lay_out(&d, failed_key.clone(), &AtomicBool::new(false));
+        assert!(matches!(&result, Err(error) if error.contains("nets.broken.ports[0]")));
+        schematic.finish(failed_key.clone(), result);
+        assert_eq!(schematic.failed, Some(failed_key.clone()));
+        assert_eq!(schematic.laid().unwrap().key, good_key);
+        assert!(schematic.stale(2, ""));
+        let diagnostic = schematic.error.clone();
+        // Delivered superseded failures are discarded before polling, too.
+        schematic.job = Some(Job { key: good_key.clone(), work: crate::jobs::Job::finished(1, Err("obsolete worker failure".into())) });
+        // Real tick consumes the same admission gate; no worker is spawned.
+        schematic.tick(2, "");
+        assert_eq!(schematic.superseded, 1);
+        schematic.tick(2, "");
+        assert!(!schematic.pending());
+        assert_eq!(schematic.error, diagnostic);
+        assert!(!schematic.needs_layout(&failed_key));
+        assert!(schematic.needs_layout(&next_key), "changed source can retry");
+        schematic.finish(next_key.clone(), Ok(None));
+        assert_eq!(schematic.error, diagnostic, "cancellation does not erase failure history");
+        assert!(schematic.needs_layout(&next_key), "cancelled work may be retried");
+        assert!(matches!(lay_out(&d, next_key, &AtomicBool::new(true)), Ok(None)), "cancellation alone returns None");
+        let json = schematic.json(2, "", &BTreeSet::new());
+        assert_eq!(json["failed"]["revision"], 2);
+        assert_eq!(json["stale"], true);
+        assert!(json["error"].as_str().unwrap().contains("nets.broken.ports[0]"));
+    }
+
+    #[test]
     fn scoped_external_signal_source_is_presentation_context_not_invalid_source() {
         let mut d:SystemDescription=serde_json::from_str(include_str!("../../../../examples/systems-viewer/full-robot.description.json")).unwrap();
         let template=d.components.values().next().unwrap().clone();
@@ -444,7 +491,7 @@ mod tests {
         d.nets.insert("signal-node".into(),sim_inspect::NetDescription{id:"signal-node".into(),ports:d.ports.keys().cloned().collect()});
         sim_system::composition::Composition::new(d.clone()).unwrap();
         assert_eq!(level_description(&d,"inside").nets["signal-node"].ports.len(),2);
-        let laid=lay_out(&d,Key{description_id:d.id.clone(),revision:23,level:"inside".into()},&AtomicBool::new(false)).unwrap();
+        let laid=lay_out(&d,Key{description_id:d.id.clone(),revision:23,level:"inside".into()},&AtomicBool::new(false)).unwrap().unwrap();
         assert_eq!(laid.projection.view.nets["signal-node"].ports.len(),2);
     }
 

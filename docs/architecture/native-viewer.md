@@ -6737,3 +6737,65 @@ field. Selecting another form does not redirect the old field's unsaved text.
 Component Apply refuses if its displayed draft is no longer selected; graph Copy
 explicitly captures a new document stamp. This chooses preserved drafts and named
 refusal over silently applying inputs to a different form/document.
+
+### T42 repair review: family identity, pending ports and failed layout
+
+The four findings from call-0332 are repaired by source review; compilation,
+fixtures and exact parity remain unexecuted. Existing T42.1–T42.4 and all eight
+batch evidence IDs remain in force. No persisted schema or geometry owner changes.
+
+`cad_components {op:"open",kind:"link_family",id:"occurrence-id"}` now treats
+`id` only as an occurrence (or a materialized member resolved to its occurrence).
+Select the family definition with `op:"select",id:"family-definition-id"` first.
+Omitting the form ID uses shared source Selection for the occurrence and library
+selection for the family. This is the same form path for window, system_ui and
+REST; one ID no longer ambiguously names both sources. Separate new fields were
+rejected because existing independent selections already express the two values.
+
+Pending graph picks are durable presentation intent owned by composition state,
+not source geometry or an expiring message. Each first pick captures endpoint,
+generation, document ID and source revision after validating the displayed
+snapshot. Connecting a second pick or Leave port open validates that original
+stamp; an intervening edit or same-revision document replacement refuses with a
+named diagnostic, preserving pending intent until explicit cancellation. Snapshot
+reads do not silently rebase the first pick. Window controls, system_ui and REST
+share `Port`, `LeaveOpen` and `CancelPort` typed intents in the existing action
+pipeline. Leave open creates an explicit singleton connection through guarded
+source commands and undo, refusing already-connected ports. Remove connection
+continues to delete a complete connection; Cancel connection changes only pending
+intent. No complete-graph JSON workaround is required for these operations.
+
+Build layout validation now returns path-named errors through the jobs Result.
+Cancellation alone returns no layout. Failed source keys and diagnostics remain
+recorded, so an unchanged invalid description does not launch a new job each
+frame. A changed source key may retry. Any prior usable layout remains visibly
+stale with the diagnostic and disabled source interaction. Validation/layout stays
+on the existing jobs module; source truth stays in the shared runtime/model.
+
+Written fixtures cover explicit family/occurrence identities, stamped first picks,
+intervening revisions, document replacement, singleton physical and signal-output
+nets, connected-port refusal, cancellation without mutation, and layout failure
+retention/retry suppression. These choices prefer named refusal and preserved
+intent over silent rebasing/retry. Revisit only if independent execution or source
+review demonstrates a missing lifecycle case. Transient panel descendants, public
+system-set ordering and the existing kit text service remain unchanged.
+
+Repair source owners: `components/form.rs::open` plus `components/tests.rs`
+prove explicit family occurrence semantics; `composition/ports.rs::{pick,
+validate_pending,leave_open,cancel}` owns stamped intent and the singleton command,
+with `composition/ui.rs::controls` exposing Leave open/Cancel.
+`builder/schematic.rs::{lay_out,finish,needs_layout,tick}` owns path-error delivery
+and failed-key suppression. Independent reading reviewers found no remaining
+correctness findings in these repairs. All new fixtures remain unexecuted.
+
+Final lifecycle reading found one additional race at accepted dispatch: a later
+source revision refusal must retain connection intent, as Qt publication does.
+`SubmittedPort` now records the submitted generation/edit sequence and pending
+stamp. `sync::finish_edit` resolves it from the authoritative answer before the
+independent REST result is stored. Success clears matching intent; failure retains
+it with a diagnostic; repeated port submissions wait for acknowledgment. Cancel
+may discard local intent but keeps the marker and explicitly states that the sent
+source edit continues. This reuses the existing CAD job/result owner, with an
+optional composition resource parameter checked against pinned Bevy 0.19.1, and
+adds no competing job lifecycle or private ordering edge. Fixtures cover refusal,
+success, mismatched answers and cancellation without resurrecting intent.

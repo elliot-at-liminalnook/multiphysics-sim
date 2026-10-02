@@ -715,7 +715,7 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   `system_snap` on a compatible port, then `system_state` shows the new
   instance and a net. `system_undo` restores the previous revision.
 
-**CAD components update (T42, 2026-10-01; reading evidence only).** The
+**CAD components update (T42, 2026-10-01; reading evidence only).** Repair review additionally traces occurrence-only LinkFamily IDs, stamped pending port intent, native Leave open/Cancel connection controls and Build layout diagnostic/retry retention; fixtures remain unexecuted. The
 native entry is CAD → Components and System composition; `components.show` and
 `components.make` now resolve to typed `CadComponents` actions. The library dock
 finds embedded definitions, authors parametric definitions/families/defaults and

@@ -20,6 +20,8 @@ pub(crate) fn register(app:&mut App) {
     app.init_resource::<StudyUi>()
         .add_text_field(super::forms::FIELD,TextField::new("Measured study field").enter(EnterKey::ShiftNewline))
         .add_systems(Update,super::forms::input.in_set(InputSet::Window).in_set(ViewerSet::Input))
+        .add_systems(Update,refinement_chart::receive.in_set(ViewerSet::JobResults))
+        .add_systems(Update,refinement_chart::request.in_set(ViewerSet::SimSync))
         .add_systems(Update,chart::receive.in_set(ViewerSet::JobResults))
         .add_systems(Update,chart::request.in_set(ViewerSet::SimSync))
         .add_systems(Update,(status,collect).chain().in_set(ViewerSet::Present));
@@ -41,6 +43,7 @@ pub(crate) fn collect(buttons:Query<(Option<&ControlId>,&Hit,Option<&Enabled>,&b
             Hit::Path{stamp,field,..}=>format!("study:path:{}:{field:?}",stamp.map(|s|s.id).unwrap_or(0)),
             Hit::Action(_)=>String::new(),
             Hit::Discard{key}=>format!("study:discard:{key:?}"),
+            Hit::RefineTrial{stamp,role,id,..}=>format!("study:refine:selection:{}:{role}:{id}",stamp.id),
             Hit::SelectedComponent{stamp}=>format!("study:link:{}",stamp.id),
         };
         // Action buttons supply an explicit ID; input/path identities derive
@@ -53,10 +56,10 @@ pub(crate) fn collect(buttons:Query<(Option<&ControlId>,&Hit,Option<&Enabled>,&b
     // not invalidate and reconstruct those same controls on the next frame.
     if signature(&ui.rendered)!=signature(&rendered) {ui.bypass_change_detection().rendered=rendered;}
 }
-fn button(body:&mut ChildSpawnerCommands,k:&Kit,id:impl Into<String>,label:&str,action:StudyAction,enabled:bool) {
+pub(super) fn button(body:&mut ChildSpawnerCommands,k:&Kit,id:impl Into<String>,label:&str,action:StudyAction,enabled:bool) {
     body.spawn(k.button(label,Hit::Action(action),Look::Secondary,enabled)).insert(ControlId(id.into()));
 }
-fn field(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:StudyStamp,field:Field,label:&str,value:String,enabled:bool) {
+pub(super) fn field(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:StudyStamp,field:Field,label:&str,value:String,enabled:bool) {
     let shown=ui.shown(Some(stamp),&field,value);
     body.spawn(k.text(label,size::DETAIL,FAINT,1));
     body.spawn(k.input(&shown,"Enter to apply",Hit::Focus{stamp:Some(stamp),field:field.clone(),text:shown.clone()},ui.focused(Some(stamp),&field)))
@@ -74,7 +77,7 @@ fn path(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:Option<StudyStam
 }
 pub(crate) fn section(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui:&StudyUi) {
     body.spawn(k.section("Offline measured-PWM study"));
-    body.spawn(k.caption("Exploratory hypotheses from archived measurements. No hardware acquisition, registry promotion or CAD changes. Power/controller/FPGA refinement remains external."));
+    body.spawn(k.caption("Exploratory hypotheses from archived measurements. No hardware acquisition, registry promotion or CAD changes. Power/electrical, FPGA and hardware acquisition remain external."));
     path(body,k,ui,None,Field::Archive,"Identification archive folder","Open archive",!owner.busy());
     path(body,k,ui,None,Field::Review,"Saved study JSON","Open review",!owner.busy());
     if let Some(error)=&ui.error {body.spawn(k.text(error,size::SMALL,DANGER,0));}
@@ -114,6 +117,7 @@ pub(crate) fn section(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui
         }
     }
     candidate(body,k,ui,stamp,s,usable);
+    refinement_ui::section(body,k,owner,ui,stamp,s,usable);
     for (name,label,value) in [("device","Device filter · 0: all",s.view.device.to_string()),("direction","Direction filter · -1 / 0 (all) / 1",s.view.direction.to_string()),("min_drive","Minimum |PWM| fraction [0…1]",s.view.min_drive.to_string()),("max_drive","Maximum |PWM| fraction [0…1]",s.view.max_drive.to_string())] {
         field(body,k,ui,stamp,Field::Filter(name),label,value,usable);
     }
@@ -278,3 +282,9 @@ pub(crate) fn status(mut commands:Commands,old:Query<Entity,With<GlobalStatus>>,
 #[cfg(test)]
 #[path="ui_tests.rs"]
 mod tests;
+
+#[path="refinement_ui.rs"]
+pub(crate) mod refinement_ui;
+
+#[path="refinement_chart.rs"]
+pub(crate) mod refinement_chart;

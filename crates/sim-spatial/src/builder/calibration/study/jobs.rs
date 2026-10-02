@@ -5,16 +5,17 @@ use bevy::prelude::*;
 use sim_runtime::{experiment_comparison::hx_archive, experiment_study::{self, Study, Evaluation, commands::{self, EvaluationSelection}}};
 use std::{path::PathBuf,sync::{Arc,Mutex}};
 use serde_json::json;
+use sim_runtime::experiment_study::refinement;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum JobKind { Archive, Review, Evaluate, Save, Export }
+pub enum JobKind { Archive, Review, Evaluate, Refinement, Save, Export }
 impl JobKind { pub fn is_load(self)->bool { matches!(self,Self::Archive|Self::Review) } }
 
 /// The tiny gate linearizes cancel acceptance and the start of irreversible
 /// create-new publication. No disk work occurs while this mutex is held.
 #[derive(Default)]
 pub struct PublicationGate { pub started:bool, pub cancelled:bool }
-pub enum JobOutput { Loaded(Study), Evaluated(Evaluation), Published }
+pub enum JobOutput { Loaded(Study), Evaluated(Evaluation), Refined(refinement::Outcome), Published }
 pub struct PendingJob {
     pub id:u64,
     pub kind:JobKind,
@@ -63,15 +64,17 @@ pub struct JobReceipt {
     pub captured:Option<Study>,
     /// Kept separately when a result cannot be attached to its original identity.
     pub evaluation:Option<Evaluation>,
+    /// Complete orphan outcome remains inspectable when original study is missing.
+    pub refinement:Option<refinement::Outcome>,
 }
 impl JobReceipt {
     /// Bounded-to-inputs receipt representation for the saved Study envelope.
     /// Never recursively embeds older receipts or duplicates the archive samples.
     pub fn durable(&self)->serde_json::Value {
-        json!({"id":self.id,"kind":format!("{:?}",self.kind),"stamp":self.stamp,"source":self.source,"trial_ids":self.trial_ids,"launch":self.launch,"cancelled":self.cancelled,"displaced":self.displaced,"stale":self.stale,"message":self.message,"error":self.error,"document":self.document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),"inputs":self.captured.as_ref().map(|s|json!({"baseline":s.baseline,"candidate":s.draft,"limits":s.limits,"validation_seen":s.validation_seen,"validation_influenced":s.validation_influenced,"observation_blake3":s.archive.observation_blake3,"model_blake3":s.archive.model_blake3,"assumptions":experiment_study::ASSUMPTIONS}))})
+        json!({"id":self.id,"kind":format!("{:?}",self.kind),"stamp":self.stamp,"source":self.source,"trial_ids":self.trial_ids,"launch":self.launch,"cancelled":self.cancelled,"cancellation_requested":self.cancelled,"displaced":self.displaced,"stale":self.stale,"message":self.message,"error":self.error,"document":self.document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),"inputs":self.captured.as_ref().map(|s|json!({"baseline":s.baseline,"candidate":s.draft,"limits":s.limits,"validation_seen":s.validation_seen,"validation_influenced":s.validation_influenced,"observation_blake3":s.archive.observation_blake3,"model_blake3":s.archive.model_blake3,"assumptions":experiment_study::ASSUMPTIONS}))})
     }
     pub fn snapshot(&self)->serde_json::Value {
-        json!({"id":self.id,"kind":format!("{:?}",self.kind),"stamp":self.stamp,"source":self.source,"trial_ids":self.trial_ids,"launch":self.launch,"cancelled":self.cancelled,"displaced":self.displaced,"stale":self.stale,"message":self.message,"error":self.error,"evaluation":self.evaluation,"captured":self.captured,"document":self.document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source}))})
+        json!({"id":self.id,"kind":format!("{:?}",self.kind),"stamp":self.stamp,"source":self.source,"trial_ids":self.trial_ids,"launch":self.launch,"cancelled":self.cancelled,"cancellation_requested":self.cancelled,"displaced":self.displaced,"stale":self.stale,"message":self.message,"error":self.error,"evaluation":self.evaluation,"refinement":self.refinement,"captured":self.captured,"document":self.document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source}))})
     }
 }
 fn path(value:&str)->Result<PathBuf,String> {
@@ -133,12 +136,72 @@ pub fn start_evaluation(owner:&mut StudyOwner,stamp:StudyStamp,set:EvaluationSel
     owner.pending.push(PendingJob{id,kind:JobKind::Evaluate,stamp:Some(capture_stamp),document,source,trial_ids:ids,launch,cancel_requested:false,job,selection_epoch:owner.selection_epoch,gate:None,captured:Some(captured)});
     Ok(id)
 }
+pub fn start_refinement(owner:&mut StudyOwner,stamp:StudyStamp,operation:refinement::Operation)->Result<u64,String> {
+    if owner.pending.iter().any(|p|p.kind==JobKind::Refinement && p.stamp.is_some_and(|s|s.id==stamp.id)) {
+        return Err("study.refinement: this retained study already has refinement work pending".into());
+    }
+    let retained=owner.get_mut(stamp.id).ok_or("study.id: missing retained study")?;
+    let before=retained.study.validation_seen;
+    let capture=refinement::prepare(&mut retained.study,operation)?;
+    if before!=retained.study.validation_seen {retained.revision+=1;}
+    let stamp=retained.stamp();
+    let captured=capture.study.clone();
+    let document=retained.document.clone();
+    let source=retained.source.clone();
+    let trial_ids=match &capture.operation {
+        refinement::Operation::Fit{train,validation}=>train.iter().chain(validation).cloned().collect(),
+        refinement::Operation::Sensitivity{selected}=>selected.clone(),
+        _=>vec![],
+    };
+    let launch=json!({"study":stamp,"document":document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),"source":source,"inputs":capture.inputs(),"execution":capture.runtime});
+    let id=next(owner);
+    let label=capture.label().to_string();
+    let job=Job::spawn(Pool::Dedicated,id,label.clone(),move |ctx| {
+        ctx.message(format!("Running {label} with shared runtime and captured timing assumptions"));
+        let outcome=refinement::execute(capture,ctx.cancel_flag(),|done,total| {
+            ctx.steps(done as u64,total as u64);
+            if total>0 {ctx.fraction(done as f64/total as f64);}
+        })?;
+        Ok(JobOutput::Refined(outcome))
+    });
+    owner.pending.push(PendingJob{id,kind:JobKind::Refinement,stamp:Some(stamp),document,source,trial_ids,launch,cancel_requested:false,job,selection_epoch:owner.selection_epoch,gate:None,captured:Some(captured)});
+    Ok(id)
+}
+
+/// Additive durable metadata preserves opaque older payloads instead of replacing them.
+pub(crate) fn retain_durable(study:&mut Study,key:&str,value:serde_json::Value) {
+    match study.retained_fields.get_mut(key) {
+        Some(serde_json::Value::Array(rows))=>rows.push(value),
+        Some(_)=>{
+            let mut suffix=1u64;
+            while study.retained_fields.contains_key(&format!("{key}_retained_{suffix}")) {suffix+=1;}
+            study.retained_fields.insert(format!("{key}_retained_{suffix}"),json!([value]));
+        }
+        None=>{study.retained_fields.insert(key.into(),json!([value]));}
+    }
+}
+
+/// Artifact-only projection: rejected text is evidence, never a shared draft mutation.
+pub(crate) fn retain_form_inputs(captured:&mut Study,stamp:StudyStamp,inputs:Option<serde_json::Value>) {
+    if let Some(inputs)=inputs {
+        retain_durable(captured,"native_form_inputs",json!({"study":stamp,"status":"raw rejected or unsubmitted inputs; not applied to the shared draft","inputs":inputs}));
+    }
+}
+
 pub fn start_publication(owner:&mut StudyOwner,stamp:StudyStamp,value:&str,export:bool)->Result<u64,String> {
+    start_publication_with_inputs(owner,stamp,value,export,None)
+}
+pub fn start_publication_with_inputs(owner:&mut StudyOwner,stamp:StudyStamp,value:&str,export:bool,inputs:Option<serde_json::Value>)->Result<u64,String> {
     let destination=path(value)?;
     if owner.pending.iter().any(|p|matches!(p.kind,JobKind::Save|JobKind::Export) && p.source==destination.display().to_string()) { return Err("study.path: publication to this destination is already pending".into()); }
     let retained=owner.validate_stamp(stamp)?;
-    let captured=retained.study.clone();
+    let mut captured=retained.study.clone();
     let document=retained.document.clone();
+    // Saved artifacts carry the immutable capture identity and destination.
+    // This is pre-publication evidence, not a fabricated terminal acknowledgment.
+    // Do not dirty the live revision merely to add artifact-envelope metadata.
+    retain_durable(&mut captured,"native_publication_captures",json!({"study":stamp,"destination":destination.display().to_string(),"kind":if export {"export_new"} else {"save_new"},"source":retained.source,"document":document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),"execution":experiment_study::execution_identity(),"status":"immutable captured revision prepared for publication"}));
+    retain_form_inputs(&mut captured,stamp,inputs);
     // Full saved-schema validation/serialization belongs to the file job.
     let gate=Arc::new(Mutex::new(PublicationGate::default()));
     let worker_gate=gate.clone();
@@ -188,9 +251,15 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
     let displaced=pending.document.as_ref().is_some_and(|d|!d.matches(registry))
         || pending.stamp.is_some_and(|s|owner.get(s.id).is_none());
     let stale=pending.stamp.is_some_and(|s|owner.get(s.id).is_none_or(|r|r.revision!=s.revision));
-    let mut receipt=JobReceipt{id:pending.id,kind:pending.kind,stamp:pending.stamp,source:pending.source.clone(),trial_ids:pending.trial_ids.clone(),launch:pending.launch.clone(),document:pending.document.clone(),cancelled:pending.cancel_requested,displaced,stale,message:String::new(),error:None,captured:pending.captured,evaluation:None};
+    let mut receipt=JobReceipt{id:pending.id,kind:pending.kind,stamp:pending.stamp,source:pending.source.clone(),trial_ids:pending.trial_ids.clone(),launch:pending.launch.clone(),document:pending.document.clone(),cancelled:pending.cancel_requested,displaced,stale,message:String::new(),error:None,captured:pending.captured,evaluation:None,refinement:None};
     match result {
-        Err(e)=>{receipt.message="Job failed or cancelled; inputs and existing evidence remain retained and unscored".into();receipt.error=Some(e);}
+        Err(e)=>{
+            receipt.message="Job failed or cancelled; inputs and existing evidence remain retained and unscored".into();
+            if pending.kind==JobKind::Refinement {
+                receipt.launch=json!({"inputs":pending.launch,"terminal":{"execution_cancelled":serde_json::Value::Null,"execution_status":"no runtime outcome returned; cancellation observation unknown","cancellation_requested":pending.cancel_requested,"stale":stale,"displaced":displaced}});
+            }
+            receipt.error=Some(e);
+        }
         Ok(JobOutput::Loaded(mut study))=>{
             if pending.cancel_requested {
                 receipt.captured=Some(study.clone());
@@ -203,6 +272,7 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
                 else {
                     let ids=commands::filtered_ids(&study);
                     commands::expose(&mut study,&ids);
+                    refinement::expose_review(&mut study);
                     let changed=seen!=study.validation_seen;
                     let activate=owner.selection_epoch==pending.selection_epoch && !displaced;
                     let id=owner.retain(study,pending.source,pending.document,pending.kind==JobKind::Review && !changed,activate);
@@ -235,6 +305,27 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
             } else {receipt.message="Original study identity is missing; evaluation retained only in the displaced receipt".into();}
             receipt.evaluation=Some(evaluation);
         }
+        Ok(JobOutput::Refined(outcome))=>{
+            let execution_cancelled=outcome.cancelled;
+            receipt.error=match &outcome.result {
+                Err(error)=>Some(error.clone()),
+                Ok(refinement::ResultData::Controller(run))=>run.failure.clone(),
+                Ok(refinement::ResultData::FitAttempt(attempt))=>attempt.failure.clone(),
+                Ok(refinement::ResultData::Robustness(result))=>{
+                    let failures=result.failures.iter().cloned().chain(result.runs.iter().filter_map(|(label,_,run)|run.failure.as_ref().map(|e|format!("{label}: {e}")))).collect::<Vec<_>>();
+                    (!failures.is_empty()).then(||failures.join("; "))
+                },
+                _=>None,
+            };
+            receipt.launch=json!({"inputs":pending.launch,"terminal":{"execution_cancelled":execution_cancelled,"cancellation_requested":pending.cancel_requested,"stale":stale,"displaced":displaced}});
+            if let Some(study)=pending.stamp.and_then(|stamp|owner.get_mut(stamp.id)) {
+                refinement::apply_outcome(&mut study.study,outcome.clone());
+                study.revision+=1;
+                if displaced {study.displaced=Some("Refinement completed for a displaced document; captured settings remain linked to the original study".into());}
+                receipt.message=if execution_cancelled || receipt.error.is_some() {"Refinement failed or cancelled; captured attempt retained and unscored"} else if stale||displaced {"Refinement retained on its original study as stale/displaced evidence"} else {"Refinement retained for review; candidate adoption requires an explicit action"}.into();
+            } else {receipt.message="Original study identity is missing; refinement outcome retained in the displaced receipt".into();}
+            receipt.refinement=Some(outcome);
+        }
         Ok(JobOutput::Published)=>{
             if pending.kind==JobKind::Save {
                 if let Some(stamp)=pending.stamp {
@@ -244,26 +335,13 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
             receipt.message=if stale {"Published the captured revision; later edits remain unsaved"} else if pending.kind==JobKind::Export {"Published new HTML evidence; export does not mark the draft saved"} else {"Published a new immutable review of the captured revision"}.into();
         }
     }
-    if receipt.error.is_some() {
+    if receipt.error.is_some() || receipt.kind==JobKind::Refinement {
         // Failed evaluation/publication evidence is part of the saved round trip,
         // while successful save acknowledgements must not create a new dirty edit.
         if let Some(stamp)=receipt.stamp {
             if let Some(study)=owner.get_mut(stamp.id) {
-                let key="native_offline_job_receipts";
                 let value=receipt.durable();
-                // Preserve an unsupported older payload rather than overwriting it.
-                match study.study.retained_fields.get_mut(key) {
-                    Some(serde_json::Value::Array(rows))=>rows.push(value),
-                    Some(_)=>{
-                        let mut suffix=1u64;
-                        let mut retained_key=format!("{key}_retained_{suffix}");
-                        while study.study.retained_fields.contains_key(&retained_key) {
-                            suffix+=1;retained_key=format!("{key}_retained_{suffix}");
-                        }
-                        study.study.retained_fields.insert(retained_key,json!([value]));
-                    }
-                    None=>{study.study.retained_fields.insert(key.into(),json!([value]));}
-                }
+                retain_durable(&mut study.study,"native_offline_job_receipts",value);
                 study.revision+=1;
             }
         }
@@ -271,4 +349,28 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
     owner.status=receipt.error.clone().unwrap_or_else(||receipt.message.clone());
     owner.receipts.push(receipt);
     owner.changed+=1;
+}
+
+#[cfg(test)]
+mod publication_input_fixtures {
+    //! T48 source-written fixture; NOT executed. No publication or job starts.
+    use super::*;
+    #[test]
+    fn raw_rejected_inputs_are_artifact_evidence_without_applying_or_losing_opaque_fields() {
+        let root=crate::workspace::root().unwrap();
+        let archive=hx_archive::load(&root.join(super::super::super::DEFAULT_ARCHIVE),root).unwrap();
+        let live=Study::new(archive).unwrap();
+        let mut captured=live.clone();
+        captured.retained_fields.insert("native_form_inputs".into(),json!({"opaque":"future"}));
+        let stamp=StudyStamp{id:7,revision:11};
+        retain_form_inputs(&mut captured,stamp,Some(json!({"field":"period_s","text":"malformed duration","error":"refinement.experiment.timing.period_s: expected number"})));
+        assert_eq!(serde_json::to_value(&live.refinement.experiment).unwrap(),serde_json::to_value(&captured.refinement.experiment).unwrap());
+        assert!(!live.retained_fields.contains_key("native_form_inputs"));
+        let reopened:Study=serde_json::from_value(serde_json::to_value(captured).unwrap()).unwrap();
+        assert_eq!(reopened.retained_fields["native_form_inputs"]["opaque"],"future");
+        let row=&reopened.retained_fields["native_form_inputs_retained_1"][0];
+        assert_eq!(row["study"]["revision"],11);
+        assert_eq!(row["inputs"]["text"],"malformed duration");
+        assert!(row["status"].as_str().unwrap().contains("not applied"));
+    }
 }

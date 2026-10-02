@@ -8,12 +8,9 @@ use sim_runtime::{
 use std::{collections::BTreeMap, sync::atomic::AtomicBool};
 
 pub enum Outcome {
-    Controller(control::Run),
-    Sensitivity(cal::Sensitivity),
-    FitAttempt(cal::FitAttempt),
+    Shared(sim_runtime::experiment_study::refinement::Outcome),
     RecordingFit(data::RecordingFitAttempt),
     CombinedFit(data::CombinedFitAttempt),
-    Robustness(cal::Robustness),
     Recording(recording::Recording),
     FpgaRecording(sim_runtime::controller_refinement::fpga::Recording),
     FpgaReview(sim_runtime::controller_refinement::fpga_review::Review),
@@ -56,7 +53,18 @@ pub enum Action {
     Accept(usize, String, String, String),
 }
 impl Action {
+    pub fn operation(&self) -> Option<sim_runtime::experiment_study::refinement::Operation> {
+        use sim_runtime::experiment_study::refinement::Operation;
+        match self {
+            Self::Simulate => Some(Operation::Simulate),
+            Self::Sensitivity(selected) => Some(Operation::Sensitivity { selected:selected.clone() }),
+            Self::Fit(train,validation) => Some(Operation::Fit {train:train.clone(),validation:validation.clone()}),
+            Self::Robustness => Some(Operation::Robustness),
+            _ => None,
+        }
+    }
     pub fn label(&self) -> &str {
+        if let Some(operation)=self.operation() {return operation.label();}
         match self {
             Self::ReviewFpga(_, _) | Self::ReviewFpgaFit(_, _, _) => {
                 "Comparing captured FPGA controller"
@@ -64,15 +72,12 @@ impl Action {
             Self::FitFpga => "Fitting FPGA motor response",
             Self::DesignFpga(_) => "Simulating a new FPGA controller design",
             Self::ExportFpgaPlan(_, _) => "Exporting FPGA experiment plan",
+            Self::Simulate | Self::Sensitivity(_) | Self::Fit(_,_) | Self::Robustness => unreachable!("shared label dispatched above"),
             Self::CompareElectrical(_, _) => "Comparing electrical measurement channels",
-            Self::Simulate => "Simulating PWM controller",
-            Self::Sensitivity(_) => "Parameter sensitivity",
-            Self::Fit(_, _) => "Bounded model fitting",
             Self::FitRecordings => "Fitting captured PWM command histories",
             Self::FitCombined { .. } => {
                 "Fitting pulse, release and captured PWM histories together"
             }
-            Self::Robustness => "Controller robustness",
             Self::Import(_) => "Importing captured hardware controller run",
             Self::Propose(_) => "Preparing CAD property proposal",
             Self::Accept(_, _, _, _) => "Saving accepted CAD artifact",
@@ -85,6 +90,7 @@ impl Action {
         }
     }
     pub fn total(&self, s: &Study) -> usize {
+        if let Some(operation)=self.operation() {return operation.total(s);}
         match self {
             Self::ReviewFpga(i, _) | Self::ReviewFpgaFit(i, _, _) => {
                 s.refinement.fpga_recordings[*i].plan.ids.len() * 1000
@@ -92,21 +98,8 @@ impl Action {
             Self::FitFpga => 40,
             Self::DesignFpga(e) => e.plan.ids.len() * 1000,
             Self::ExportFpgaPlan(_, _) => 0,
-            Self::Simulate => (s.refinement.experiment.duration_s
-                / s.refinement.experiment.timing.period_s)
-                .ceil() as usize,
-            Self::Sensitivity(_) => s.refinement.coordinates.len(),
-            Self::Fit(_, _) | Self::FitRecordings | Self::FitCombined { .. } => 40,
-            Self::Robustness => {
-                s.refinement
-                    .scenarios
-                    .len()
-                    .max(if s.refinement.scenarios.is_empty() {
-                        4
-                    } else {
-                        0
-                    })
-            }
+            Self::Simulate | Self::Sensitivity(_) | Self::Fit(_,_) | Self::Robustness => unreachable!("shared total dispatched above"),
+            Self::FitRecordings | Self::FitCombined { .. } => 40,
             Self::Import(_)
             | Self::CompareElectrical(_, _)
             | Self::Propose(_)
@@ -120,6 +113,11 @@ impl Action {
         cancel: &AtomicBool,
         progress: impl FnMut(usize, usize),
     ) -> Result<Outcome, String> {
+        if let Some(operation) = self.operation() {
+            let mut captured = s;
+            let capture = sim_runtime::experiment_study::refinement::prepare(&mut captured, operation)?;
+            return sim_runtime::experiment_study::refinement::execute(capture, cancel, progress).map(Outcome::Shared);
+        }
         let family = cal::Family {
             shared: s.draft.clone(),
             device_deltas: BTreeMap::new(),
@@ -355,65 +353,7 @@ impl Action {
                 )
                 .map(Outcome::Prediction)
             }
-            Self::Simulate => control::simulate(&w.experiment, &s.draft, cancel, progress)
-                .map(Outcome::Controller),
-            Self::Sensitivity(ids) => {
-                cal::sensitivity(&s.archive, &family, &ids, &w.coordinates, cancel, progress)
-                    .map(Outcome::Sensitivity)
-            }
-            Self::Fit(training, held) => Ok(Outcome::FitAttempt(cal::attempt(
-                &s.archive,
-                &cal::FitRequest {
-                    model: family,
-                    training_ids: training,
-                    validation_ids: held,
-                    coordinates: w.coordinates.clone(),
-                    maximum_evaluations: 40,
-                    validation_influenced: s.validation_influenced,
-                },
-                cancel,
-                progress,
-            ))),
-            Self::Robustness => {
-                if !w.scenarios.is_empty() {
-                    return cal::robustness(&w.experiment, &w.scenarios, cancel, progress)
-                        .map(Outcome::Robustness);
-                }
-                let timing = w.experiment.timing.clone();
-                let mut slow = timing.clone();
-                slow.command_delay_ticks += 1;
-                let mut load = s.draft.clone();
-                load.conditions.load_inertia *= 1.25;
-                let variants = vec![
-                    cal::Variant {
-                        label: "Baseline".into(),
-                        model: s.baseline.clone(),
-                        timing: timing.clone(),
-                        evidence: "Retained baseline hypothesis".into(),
-                    },
-                    cal::Variant {
-                        label: "Candidate".into(),
-                        model: s.draft.clone(),
-                        timing: timing.clone(),
-                        evidence: "Current candidate hypothesis".into(),
-                    },
-                    cal::Variant {
-                        label: "One additional command tick".into(),
-                        model: s.draft.clone(),
-                        timing: slow,
-                        evidence: "Exploratory timing stress; not a measured uncertainty bound"
-                            .into(),
-                    },
-                    cal::Variant {
-                        label: "25% additional output inertia".into(),
-                        model: load,
-                        timing,
-                        evidence: "Exploratory load stress; not a measured uncertainty bound"
-                            .into(),
-                    },
-                ];
-                cal::robustness(&w.experiment, &variants, cancel, progress).map(Outcome::Robustness)
-            }
+            Self::Simulate | Self::Sensitivity(_) | Self::Fit(_,_) | Self::Robustness => unreachable!("shared operation dispatched above"),
         }
     }
 }
@@ -455,6 +395,9 @@ impl State {
         self.selected_recording = 0;
     }
     pub fn show(&mut self, ui: &mut egui::Ui, s: &mut Study, busy: bool) -> (Option<Action>, bool) {
+        let exposure_before=s.validation_seen;
+        sim_runtime::experiment_study::refinement::expose_review(s);
+        let original = s.clone();
         let before = serde_json::to_vec(&(
             &s.refinement.experiment,
             &s.refinement.coordinates,
@@ -463,7 +406,7 @@ impl State {
             &s.refinement.fpga_design_drafts,
         ))
         .unwrap();
-        let mut changed = false;
+        let mut changed = exposure_before!=s.validation_seen;
         let mut action = None;
         ui.horizontal(|ui| {
             for (i, label) in [
@@ -577,7 +520,7 @@ impl State {
                     for (i,attempt) in s.refinement.fit_attempts.iter().enumerate().rev(){ui.collapsing(format!("Attempt {} · {} evaluations · {}",i+1,attempt.evaluations.len(),if attempt.outcome.is_some(){"result retained"}else{"failed / cancelled"}),|ui|{if let Some(error)=&attempt.failure{ui.colored_label(Color32::DARK_RED,error);}ui.monospace(serde_json::to_string_pretty(attempt).unwrap());});}
                     let mut adopt=None;
                     for (i,f) in s.refinement.fits.iter().enumerate().rev(){ui.collapsing(format!("Fit {} · {} training / {} held",i+1,f.training_ids.len(),f.validation_ids.len()),|ui|{ui.label(&f.status);if !f.has_verified_traces(){ui.colored_label(Color32::DARK_RED,"Legacy fit summaries lack captured prediction traces; rerun before treating them as verified evidence.");}if f.validation_influenced{ui.colored_label(Color32::DARK_RED,"Validation-influenced candidate; needs fresh confirmation.");}for r in &f.scores{ui.label(format!("ID {} · {} · baseline {:?} → candidate {:?} rad {}",r.device,r.split,r.baseline.as_ref().map(|s|s.rmse),r.candidate.as_ref().map(|s|s.rmse),r.failure.clone().unwrap_or_default()));}ui.collapsing("Optimizer history",|ui|{ui.monospace(serde_json::to_string_pretty(&f.optimizer).unwrap());});if ui.button("Use fitted model for selected controller device").clicked(){adopt=Some(i);}});}
-                    if let Some(i)=adopt{match s.refinement.fits[i].candidate.model(s.refinement.experiment.device){Ok(m)=>{s.draft=m;s.candidate_edited();changed=true;},Err(e)=>s.refinement.failures.push(e)}}
+                    if let Some(i)=adopt{let device=s.refinement.experiment.device;match sim_runtime::experiment_study::refinement::apply(s,sim_runtime::experiment_study::refinement::Command::UseFit{fit:i,device:Some(device)}){Ok(())=>changed=true,Err(e)=>s.refinement.failures.push(e)}}
                     ui.separator();ui.strong("Fit full recorded PWM histories");
                     ui.label("Freeze whole-run roles and prediction limits, then fit the same parameters to written PWM and captured timing. The simulated feedback controller is not in this fitting objective; validate its own-feedback behavior separately.");
                     ui.small("These imported recordings have been available for inspection. Fits are conservatively labelled validation-influenced and need fresh confirmation. A reserved run cannot later be assigned to tuning in this review.");
@@ -675,6 +618,29 @@ impl State {
             }
             if !s.refinement.failures.is_empty(){ui.collapsing("Retained failures and cancellations",|ui|{for e in &s.refinement.failures{ui.colored_label(Color32::DARK_RED,e);}});}
         });
+        // Legacy widgets edit a temporary projection; reusable validators own commit.
+        let mut validated = s.clone();
+        validated.refinement.experiment=original.refinement.experiment.clone();
+        validated.refinement.coordinates=original.refinement.coordinates.clone();
+        validated.refinement.scenarios=original.refinement.scenarios.clone();
+        let result = (|| -> Result<(),String> {
+            use sim_runtime::experiment_study::refinement::{self as shared, Command};
+            if s.refinement.experiment != original.refinement.experiment { shared::apply(&mut validated,Command::SetExperiment(s.refinement.experiment.clone()))?; }
+            if serde_json::to_value(&s.refinement.coordinates).unwrap() != serde_json::to_value(&original.refinement.coordinates).unwrap() { shared::apply(&mut validated,Command::SetCoordinates(s.refinement.coordinates.clone()))?; }
+            if serde_json::to_value(&s.refinement.scenarios).unwrap() != serde_json::to_value(&original.refinement.scenarios).unwrap() { shared::apply(&mut validated,Command::SetScenarios(s.refinement.scenarios.clone()))?; }
+            Ok(())
+        })();
+        if let Err(error) = result {
+            let rejected=serde_json::json!({"experiment":s.refinement.experiment,"coordinates":s.refinement.coordinates,"scenarios":s.refinement.scenarios});
+            s.refinement.failures.push(format!("Legacy rejected authoring projection {rejected}: {error}"));
+            s.refinement.experiment=original.refinement.experiment;
+            s.refinement.coordinates=original.refinement.coordinates;
+            s.refinement.scenarios=original.refinement.scenarios;
+            s.refinement.failures.push(error);
+            changed=true;
+        } else {
+            *s=validated;
+        }
         (
             action,
             changed

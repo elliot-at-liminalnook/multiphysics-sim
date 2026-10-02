@@ -1,4 +1,4 @@
-//! Offline measured-PWM authoring within the existing Actuators surface.
+//! Offline measured-PWM and controller-refinement authoring within the existing Actuators surface.
 //! Global retained state outlives docks and modes. Input occurrences drain in
 //! Actions; job receipts publish globally in JobResults. No frame system runs physics.
 pub mod actions;
@@ -25,3 +25,6 @@ impl Plugin for StudyPlugin {
 }
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod refinement_lifecycle;

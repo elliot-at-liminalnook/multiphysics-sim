@@ -81,8 +81,37 @@ fn review(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:StudyStamp,s:&
     for(i,r)in s.refinement.controller_runs.iter().enumerate().filter(|(_,r)|r.electrical.is_some()){
         button(body,k,format!("study:electrical:run:{i}"),&format!("Select captured electrical run {i}"),StudyAction::RefineApply{stamp,command:Command::SelectControllerRun(i)},usable);
         body.spawn(k.caption(format!("Run {i} · runtime {} · captured feedback {:?} · command delay {} s · cancellation {} · failure {:?} · {}",r.runtime.library_source_blake3,r.experiment.electrical,r.experiment.timing.command_delay_ticks as f64*r.experiment.timing.period_s,r.cancelled,r.failure,if r.model==s.draft&&r.experiment==s.refinement.experiment{"captured inputs match draft"}else{"STALE to current draft"})));
-        if let Some(t)=&r.electrical{trace_review(body,k,t,!r.cancelled&&r.failure.is_none());}
+        if let Some(t)=&r.electrical{trace_review(body,k,t,sim_runtime::experiment_study::refinement::terminal::run_complete(r));}
         for f in r.frames.iter().filter(|f|!f.electrical_limit_reasons.is_empty()).take(16){body.spawn(k.mono(format!("Sampled protection t {:.6} s · observed {:.6} s · received {:.6} s · channels {:?} · reasons {:?} · requested / applied PWM {} / {}",f.time_s,f.observation.observed_s,f.observation.received_s,f.observation.electrical,f.electrical_limit_reasons,f.requested_duty,f.applied_duty),size::DETAIL,WARN));}
+    }
+    // Hydration is job-only. Presentation reads the same retained cache after reopen.
+    for reference in &s.refinement_evidence.terminals {
+        body.spawn(k.caption(format!("Retained terminal {} · UNSCORED / UNAPPLIED · cancellation {} · failure {:?} · exact content {} · captured {}",reference.kind,reference.cancelled,reference.failure,reference.content_ref.blake3,reference.captured_unix_ns)));
+        match sim_runtime::experiment_study::refinement::terminal::cached(s,reference) {
+            Some(sim_runtime::experiment_study::refinement::ResultData::Controller(run))=>{
+                body.spawn(k.caption(format!("Captured model {} · runtime {} · duration {} s · run cancellation {} · failure {:?} · feedback {:?}",run.model.fingerprint(),run.runtime.library_source_blake3,run.experiment.duration_s,run.cancelled,run.failure,run.experiment.electrical)));
+                if let Some(trace)=&run.electrical{trace_review(body,k,trace,false);}
+                for frame in run.frames.iter().filter(|f|!f.electrical_limit_reasons.is_empty()).take(16){body.spawn(k.mono(format!("Diagnostic protection t {} s · observed {} · received {} · reasons {:?} · requested / applied PWM {} / {}",frame.time_s,frame.observation.observed_s,frame.observation.received_s,frame.electrical_limit_reasons,frame.requested_duty,frame.applied_duty),size::DETAIL,WARN));}
+            },
+            Some(sim_runtime::experiment_study::refinement::ResultData::Prediction(prediction))=>{
+                body.spawn(k.caption(format!("Diagnostic prediction {:?} · recording {} · model {} · runtime {} · {}",prediction.purpose,prediction.recording_hash,prediction.model.fingerprint(),prediction.runtime.library_source_blake3,prediction.assumptions)));
+                if let Some(trace)=&prediction.electrical{trace_review(body,k,trace,false);}
+            },
+            Some(sim_runtime::experiment_study::refinement::ResultData::Electrical(result))=>{
+                let evidence=result.evaluation();
+                body.spawn(k.caption(format!("Diagnostic comparison · prediction {} · recording {} · measurement schema {} · timing {} · sources {:?}",evidence.prediction_hash,evidence.measurements.recording_hash,evidence.measurements.version,evidence.measurements.timing_evidence,evidence.measurements.source_hashes)));
+                for channel in &evidence.measurements.channels{
+                    body.spawn(k.caption(format!("Measured {} · calibration {} · circuit {} · gain/polarity {} · offset {} · uncertainty {} · evidence {}",channel.name,channel.calibration.sensor,channel.calibration.circuit_location,channel.calibration.gain,channel.calibration.offset,channel.calibration.uncertainty,channel.calibration.evidence)));
+                    for value in channel.raw_samples.iter().take(8){body.spawn(k.mono(format!("Raw {} t {} s · observation window {}–{} s · {} {}",channel.name,value.time_s,value.request_s,value.completion_s,value.value,channel.calibration.raw_unit),size::DETAIL,FAINT));}
+                }
+                for channel in &evidence.channels{
+                    body.spawn(k.caption(format!("{} · UNSCORED / UNAPPLIED · diagnostic RMSE {} {} · maximum absolute error {}",channel.name,channel.rmse,channel.measured.unit,channel.maximum_abs_error)));
+                    for(label,trace)in[("measured / derived",&channel.measured),("hypothetical",&channel.predicted)]{for value in trace.samples.iter().take(8){body.spawn(k.mono(format!("{label} {} t {} s · window {}–{} s · {} {}",channel.name,value.time_s,value.request_s,value.completion_s,value.value,trace.unit),size::DETAIL,FAINT));}}
+                }
+                body.spawn(k.caption(format!("Synchronized supply-energy diagnostic {:?} · no acceptance inferred",evidence.supply_energy)));
+            },
+            _=>{body.spawn(k.caption("Terminal cache unavailable; exact companion is retained, no acceptance inferred."));},
+        }
     }
     body.spawn(k.caption("Servo current registers remain raw uncalibrated counts; they are not battery or winding amps, watts or joules. Only calibrated synchronized channels produce measured power. Missing channels and limits remain unscored."));
     for(i,e)in s.refinement.electrical_comparisons.iter().enumerate(){

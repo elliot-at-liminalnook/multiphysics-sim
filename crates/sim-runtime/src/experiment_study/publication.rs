@@ -27,6 +27,8 @@ impl Study {
         // The content store validates safe hash/reference paths before reading.
         // Calibrated electrical evidence validates exact companions after hydration.
         study.input_contents.hydrate(path)?;
+        // Worker-only decoding restores diagnostic terminals for the existing review.
+        super::refinement::terminal::cache(&mut study)?;
         study.validate()?;
         Ok(study)
     }

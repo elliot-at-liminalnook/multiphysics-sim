@@ -7233,3 +7233,13 @@ Studies. This is source-only implementation evidence, not executed parity. §§8
 CAD/registry authority and independent hardware safety remain unchanged. Python/OCCT,
 FPGA refinement, raw sweeps and hardware acquisition/driving remain external; reference
 implementations remain available until separately authorized parity proves migration.
+
+T52 cancellation repair (call-0394): terminal ResultData uses the existing Study
+content companion owner and bounded references; serialization and reopen decoding
+remain in existing jobs. Partial, failed and late-cancelled electrical terminals
+are inspectable after reopen as unapplied UNSCORED diagnostics, without restoring
+comparison attachment capabilities. Reports and native review share completeness
+gating even when sampled summaries pass declared limits. This decision prevents
+cancellation from erasing evidence or presenting incomplete sampled results as
+accepted. Source-review fixtures are written but unexecuted; all seven T52 checklist
+IDs and the §§8–9 boundaries remain unchanged. See the linked T52 source map.

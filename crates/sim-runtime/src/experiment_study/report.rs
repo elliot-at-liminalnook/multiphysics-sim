@@ -61,11 +61,13 @@ impl Study {
         for (i, run) in self.refinement.controller_runs.iter().enumerate() {
             if let Some(trace) = &run.electrical {
                 html += &format!(
-                    "<section><h3>Electrical simulation {}: {}</h3><p>Simulation only. Electrical limits: {:?}; motion tracking: {:?}. Failure: {}</p><p>Voltage {:.4}–{:.4} V; peak discharge {:.4} A; peak winding {:.4} A; peak draw {:.4} W. Drawn {:.6} Wh; returned {:.6} Wh.</p><p>{}</p>",
+                    "<section><h3>Electrical simulation {}: {}</h3><p>Simulation only. Electrical limits: {}; motion tracking: {:?}. Cancelled: {}; complete: {}. Failure: {}</p><p>Voltage {:.4}–{:.4} V; peak discharge {:.4} A; peak winding {:.4} A; peak draw {:.4} W. Drawn {:.6} Wh; returned {:.6} Wh.</p><p>{}</p>",
                     i + 1,
                     escape(&run.experiment.name),
-                    trace.summary.passes,
-                    run.score.as_ref().map(|s| s.passes),
+                    electrical_acceptance(run),
+                    if terminal::run_complete(run) { run.score.as_ref().map(|s| s.passes) } else { None },
+                    run.cancelled,
+                    terminal::run_complete(run),
                     escape(run.failure.as_deref().unwrap_or("none")),
                     trace.summary.minimum_voltage_v,
                     trace.summary.maximum_voltage_v,
@@ -97,6 +99,16 @@ impl Study {
                 }
                 html += "</section>";
             }
+        }
+        for terminal in &self.refinement_evidence.terminals {
+            html += "<section><h3>Retained unapplied electrical terminal — UNSCORED</h3><p>Cancellation or attachment refusal retained exact diagnostic evidence. This terminal does not establish passing acceptance.</p>";
+            html += &format!("<pre>{}</pre>", escape(&serde_json::to_string_pretty(terminal).map_err(|e|e.to_string())?));
+            if let Some(result) = terminal::cached(self, terminal) {
+                html += &format!("<details><summary>Exact terminal diagnostics — UNSCORED</summary><pre>{}</pre></details>", escape(&serde_json::to_string_pretty(result).map_err(|e|e.to_string())?));
+            } else {
+                html += "<p>Exact terminal diagnostics unavailable: evidence failure; UNSCORED.</p>";
+            }
+            html += "</section>";
         }
         for (index,e) in self.refinement.electrical_comparisons.iter().enumerate() {
             html += &format!(
@@ -553,3 +565,19 @@ fn svg_plot(series: &[(&str, Vec<(f64, f64)>)]) -> String {
     svg += "</svg>";
     svg
 }
+
+/// Sampled limits remain diagnostic when the captured controller interval is incomplete.
+fn electrical_acceptance(run: &crate::controller_refinement::control::Run) -> String {
+    if !terminal::run_complete(run) {
+        "UNSCORED (cancelled, failed or incomplete)".into()
+    } else {
+        match run.electrical.as_ref().and_then(|trace| trace.summary.passes) {
+            Some(true) => "PASS (sampled limits only)".into(),
+            Some(false) => "FAIL (sampled limits only)".into(),
+            None => "UNSCORED (no declared limits)".into(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod cancellation_fixtures;

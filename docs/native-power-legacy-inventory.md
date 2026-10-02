@@ -58,3 +58,10 @@ Decision: malformed sidecars retain exact content companions and a rejected-inpu
 operation, rather than running another comparison as a fallback. Decision:
 legacy structured controls use an editable projection and shared transaction;
 rejected source/controller values remain editable without partial Study mutation.
+
+Cancellation consumer repair: legacy shared execution precomputes bounded receipt
+inputs in its existing worker (`experiments_ui/refinement.rs:116`). Polling marks
+late cancellation without replacing exact results, delegates fail-closed attachment
+to Study, and exposes job-hydrated terminal diagnostics (`refinement.rs:575`). Exact
+terminal companion publication/reopen is covered by a written unexecuted fixture
+at `experiments_ui.rs:878`; no legacy reference UI or hardware path is retired.

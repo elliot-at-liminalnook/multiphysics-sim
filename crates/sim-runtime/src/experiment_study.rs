@@ -2,6 +2,7 @@
 //! No hardware IO and no CAD mutation. Hosts schedule work off the UI thread.
 pub mod commands;
 pub mod input_content;
+pub mod terminal;
 mod publication;
 mod report;
 #[cfg(test)]
@@ -440,6 +441,9 @@ impl Study {
         }
         self.input_contents.validate()?;
         for (i, receipt) in self.refinement_evidence.receipts.iter().enumerate() {
+            if let Some(envelope)=receipt.inputs.get("terminal_result").filter(|v| !v.is_null()) {
+                self.input_contents.validate_envelope(envelope,&format!("refinement_evidence.receipts.{i}.inputs.terminal_result"))?;
+            }
             if let Some(envelope)=receipt.inputs.get("electrical") {
                 self.input_contents.validate_envelope(envelope,&format!("refinement_evidence.receipts.{i}.inputs.electrical"))?;
             }
@@ -451,6 +455,9 @@ impl Study {
             if key == "native_offline_job_receipts" || key.starts_with("native_offline_job_receipts_retained_") {
                 if let Some(rows) = value.as_array() {
                     for (i, row) in rows.iter().enumerate() {
+                        if let Some(envelope)=row.get("terminal_result").filter(|v| !v.is_null()) {
+                            self.input_contents.validate_envelope(envelope,&format!("{key}.{i}.terminal_result"))?;
+                        }
                         if let Some(envelope) = row.get("launch").and_then(|launch| launch.get("additional_input")) {
                             self.input_contents.validate_envelope(envelope, &format!("{key}.{i}.launch.additional_input"))?;
                         }

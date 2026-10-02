@@ -79,6 +79,10 @@ pub struct ResultData {
     #[serde(skip)]
     captured_unix_ns: String,
 }
+impl ResultData {
+    pub fn evaluation(&self)->&measurements::Evaluation {&self.evaluation}
+    pub fn prediction(&self)->&recording::Prediction {&self.prediction}
+}
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Evidence {
@@ -195,7 +199,6 @@ pub fn execute(s:&Study,operation:&Operation,cancel:&AtomicBool)->Result<ResultD
     let (_,p,m)=sources(s,operation)?;
     let prediction_index=match operation {Operation::CompareServoVoltage{prediction,..}|Operation::CompareMeasurements{prediction,..}=>*prediction,_=>return Err("refinement.electrical: receipt is not executable".into())};
     let result=ResultData{evaluation:measurements::evaluate(&m,p)?,prediction:p.clone(),validated:false,prediction_index,captured_unix_ns:String::new()};
-    if cancel.load(Ordering::Relaxed){return Err("refinement.electrical: cancelled during comparison".into());}
     Ok(result)
 }
 pub fn validate_result(capture:&super::Capture,result:&ResultData)->Result<(),String>{

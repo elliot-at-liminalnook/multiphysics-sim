@@ -71,7 +71,7 @@ impl JobReceipt {
     /// Bounded-to-inputs receipt representation for the saved Study envelope.
     /// Never recursively embeds older receipts or duplicates the archive samples.
     pub fn durable(&self)->serde_json::Value {
-        json!({"id":self.id,"kind":format!("{:?}",self.kind),"stamp":self.stamp,"source":self.source,"trial_ids":self.trial_ids,"launch":self.launch,"cancelled":self.cancelled,"cancellation_requested":self.cancelled,"displaced":self.displaced,"stale":self.stale,"message":self.message,"error":self.error,"document":self.document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),"inputs":self.captured.as_ref().map(|s|json!({"baseline":s.baseline,"candidate":s.draft,"limits":s.limits,"validation_seen":s.validation_seen,"validation_influenced":s.validation_influenced,"observation_blake3":s.archive.observation_blake3,"model_blake3":s.archive.model_blake3,"assumptions":experiment_study::ASSUMPTIONS}))})
+        json!({"id":self.id,"kind":format!("{:?}",self.kind),"stamp":self.stamp,"source":self.source,"trial_ids":self.trial_ids,"launch":self.launch,"cancelled":self.cancelled,"cancellation_requested":self.cancelled,"displaced":self.displaced,"stale":self.stale,"message":self.message,"error":self.error,"terminal_result":self.refinement.as_ref().and_then(refinement::terminal::reference),"document":self.document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),"inputs":self.captured.as_ref().map(|s|json!({"baseline":s.baseline,"candidate":s.draft,"limits":s.limits,"validation_seen":s.validation_seen,"validation_influenced":s.validation_influenced,"observation_blake3":s.archive.observation_blake3,"model_blake3":s.archive.model_blake3,"assumptions":experiment_study::ASSUMPTIONS}))})
     }
     pub fn snapshot(&self)->serde_json::Value {
         json!({"id":self.id,"kind":format!("{:?}",self.kind),"stamp":self.stamp,"source":self.source,"trial_ids":self.trial_ids,"launch":self.launch,"cancelled":self.cancelled,"cancellation_requested":self.cancelled,"displaced":self.displaced,"stale":self.stale,"message":self.message,"error":self.error,"evaluation":self.evaluation,"refinement":self.refinement,"captured":self.captured,"document":self.document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source}))})
@@ -297,6 +297,15 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
         }
         Ok(JobOutput::Refined{outcome,inputs})=>{
             let execution_cancelled=outcome.cancelled;
+            // Recovery snapshots own the worker's newly captured terminal bytes,
+            // not merely the pre-execution launch snapshot. Clones share Arc content.
+            let mut recovery=outcome.capture.study.clone();
+            if outcome.cancelled || pending.cancel_requested || pending.stamp.is_none_or(|stamp|owner.get(stamp.id).is_none()) {
+                if let Err(error)=refinement::terminal::retain(&mut recovery,&outcome.capture,outcome.cancelled||pending.cancel_requested){
+                    receipt.error=Some(error);
+                }
+            }
+            receipt.captured=Some(recovery);
             receipt.error=match &outcome.result {
                 Err(error)=>Some(error.clone()),
                 Ok(refinement::ResultData::Controller(run))=>run.failure.clone(),
@@ -308,27 +317,26 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
                     (!failures.is_empty()).then(||failures.join("; "))
                 },
                 _=>None,
-            };
+            }.or_else(||receipt.error.take());
             receipt.launch=json!({"inputs":pending.launch,"terminal":{"execution_cancelled":execution_cancelled,"cancellation_requested":pending.cancel_requested,"stale":stale,"displaced":displaced}});
             // Orphan outcomes retain their Study-owned content store in memory;
             // durable receipt metadata contains bounded content references only.
             if let Some(input)=inputs.get("additional_input") {receipt.launch["additional_input"]=input.clone();}
             receipt.launch["recording_applied"]=json!(false);
             if let Some(study)=pending.stamp.and_then(|stamp|owner.get_mut(stamp.id)) {
-                receipt.launch["recording_applied"]=json!(!stale && !displaced && !execution_cancelled && receipt.error.is_none());
+                receipt.launch["recording_applied"]=json!(!stale && !displaced && !execution_cancelled && !pending.cancel_requested && receipt.error.is_none());
                 // Prepared prediction choice is already shared-validated in the job.
                 // A later edit/selection must never be overwritten by terminal delivery.
-                if !stale && !displaced && !pending.cancel_requested && matches!(&outcome.result,Ok(refinement::ResultData::Prediction(_))) {
+                if !stale && !displaced && !execution_cancelled && !pending.cancel_requested && receipt.error.is_none() && matches!(&outcome.result,Ok(refinement::ResultData::Prediction(_))) {
                     study.study.refinement_evidence.selected_recording=outcome.capture.study.refinement_evidence.selected_recording.clone();
                     study.study.refinement_evidence.prediction_purpose=outcome.capture.study.refinement_evidence.prediction_purpose;
                 }
-                // A late user cancellation cannot publish a scored electrical comparison.
-                // The receipt still retains the actual completed execution for inspection.
+                // Worker-owned terminal content is retained exactly; cancellation
+                // changes attachment classification, never the terminal bytes.
                 let mut attached=outcome.clone();
-                if pending.cancel_requested && match &attached.result {Ok(refinement::ResultData::Electrical(_))=>true,Ok(refinement::ResultData::Controller(run))=>run.electrical.is_some(),Ok(refinement::ResultData::Prediction(prediction))=>prediction.electrical.is_some(),_=>false} {
-                    attached.cancelled=true;
-                    attached.result=Err("study.electrical: cancellation requested before attachment; completed execution retained unapplied and unscored in receipt".into());
-                    receipt.error=attached.result.as_ref().err().cloned();
+                attached.cancelled |= pending.cancel_requested;
+                if attached.cancelled {
+                    receipt.error.get_or_insert_with(||"study.electrical: cancelled terminal retained unapplied and UNSCORED".into());
                     receipt.launch["recording_applied"]=json!(false);
                 }
                 refinement::apply_outcome_with_inputs(&mut study.study,attached,inputs);
@@ -336,7 +344,9 @@ fn publish(owner:&mut StudyOwner,registry:&DocumentRegistry,pending:PendingJob,r
                 if displaced {study.displaced=Some("Refinement completed for a displaced document; captured settings remain linked to the original study".into());}
                 receipt.message=if execution_cancelled || receipt.error.is_some() {"Refinement failed or cancelled; captured attempt retained and unscored"} else if stale||displaced {"Refinement retained on its original study as stale/displaced evidence"} else {"Refinement retained for review; candidate adoption requires an explicit action"}.into();
             } else {receipt.message="Original study identity is missing; refinement outcome retained in the displaced receipt".into();}
-            receipt.refinement=Some(outcome);
+            let mut retained_outcome=outcome;
+            retained_outcome.cancelled |= pending.cancel_requested;
+            receipt.refinement=Some(retained_outcome);
         }
         Ok(JobOutput::Published)=>{
             if pending.kind==JobKind::Save {

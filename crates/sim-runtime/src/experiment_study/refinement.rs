@@ -3,6 +3,7 @@
 use super::{Study, commands};
 #[path="recordings.rs"] pub mod recordings;
 #[path="electrical.rs"] pub mod electrical;
+pub use super::terminal;
 use crate::controller_refinement::{recording, context, calibration_data as data};
 use crate::controller_refinement::{authoring, calibration as cal, control};
 use serde::{Deserialize, Serialize};
@@ -31,7 +32,7 @@ impl Capture {
     /// Bounded projection: never nests previous workspace results or receipts.
     pub fn inputs(&self)->serde_json::Value {
         let s=&self.study;
-        serde_json::json!({"electrical":match &self.operation {Operation::Electrical(op)=>electrical::inputs(s,op),_=>serde_json::Value::Null},"schema_version":s.version,"captured_unix_ns":self.captured_unix_ns,"operation":self.operation_identity(),"recordings":s.refinement.recordings.iter().map(|r|serde_json::json!({"recording_hash":r.fingerprint(),"source_hashes":r.source_hashes,"runtime":r.runtime,"experiment":r.experiment,"completed":r.completed,"timing_evidence":r.timing_evidence,"stop_request_s":r.stop_request_s,"stop_receipt_s":r.stop_receipt_s})).collect::<Vec<_>>(),"contexts":s.refinement.capture_contexts,"assignments":s.refinement.recording_assignments,"recording_exposure":s.refinement_evidence.recording_exposure,"recording_reservations":s.refinement_evidence.recording_reservations,"recording_held_out":s.refinement_evidence.recording_held_out,"archive_observation_blake3":s.archive.observation_blake3,"archive_model_blake3":s.archive.model_blake3,"trial_splits":s.archive.trials.iter().map(|t|(&t.id,&t.split)).collect::<BTreeMap<_,_>>(),"model":s.draft,"experiment":s.refinement.experiment,"coordinates":s.refinement.coordinates,"scenarios":s.refinement.scenarios,"selections":s.refinement_evidence.selections,"validation_seen":s.validation_seen,"validation_influenced":s.validation_influenced,"assumptions":"Offline exploratory controller tracking and archive model calibration. Timing evidence and task limits are captured hypotheses; no hardware validation or physical-source acceptance."})
+        serde_json::json!({"terminal_result":s.refinement_evidence.terminals.iter().rev().find(|r|r.captured_unix_ns==self.captured_unix_ns),"electrical":match &self.operation {Operation::Electrical(op)=>electrical::inputs(s,op),_=>serde_json::Value::Null},"schema_version":s.version,"captured_unix_ns":self.captured_unix_ns,"operation":self.operation_identity(),"recordings":s.refinement.recordings.iter().map(|r|serde_json::json!({"recording_hash":r.fingerprint(),"source_hashes":r.source_hashes,"runtime":r.runtime,"experiment":r.experiment,"completed":r.completed,"timing_evidence":r.timing_evidence,"stop_request_s":r.stop_request_s,"stop_receipt_s":r.stop_receipt_s})).collect::<Vec<_>>(),"contexts":s.refinement.capture_contexts,"assignments":s.refinement.recording_assignments,"recording_exposure":s.refinement_evidence.recording_exposure,"recording_reservations":s.refinement_evidence.recording_reservations,"recording_held_out":s.refinement_evidence.recording_held_out,"archive_observation_blake3":s.archive.observation_blake3,"archive_model_blake3":s.archive.model_blake3,"trial_splits":s.archive.trials.iter().map(|t|(&t.id,&t.split)).collect::<BTreeMap<_,_>>(),"model":s.draft,"experiment":s.refinement.experiment,"coordinates":s.refinement.coordinates,"scenarios":s.refinement.scenarios,"selections":s.refinement_evidence.selections,"validation_seen":s.validation_seen,"validation_influenced":s.validation_influenced,"assumptions":"Offline exploratory controller tracking and archive model calibration. Timing evidence and task limits are captured hypotheses; no hardware validation or physical-source acceptance."})
     }
     fn operation_identity(&self)->serde_json::Value {match &self.operation {
         Operation::FitCombined{additional}=>serde_json::json!({"FitCombined":{"additional":additional.as_ref().map(|s|serde_json::json!({"schema_version":s.version,"archive_hash":data::CalibrationData::fingerprint(&s.archive),"model_hash":s.draft.fingerprint(),"contexts":s.refinement.capture_contexts,"assignments":s.refinement.recording_assignments,"trial_roles_limits":s.archive.trials.iter().map(|t|serde_json::json!({"id":t.id,"device":t.device,"split":t.split,"limits":t.limits})).collect::<Vec<_>>(),"recordings":s.refinement.recordings.iter().map(|r|serde_json::json!({"recording_hash":r.fingerprint(),"schema_version":r.version,"runtime":r.runtime,"experiment":r.experiment,"timing_evidence":r.timing_evidence,"source_hashes":r.source_hashes,"completed":r.completed})).collect::<Vec<_>>(),"validation_seen":s.validation_seen,"validation_influenced":s.validation_influenced}))}}),
@@ -56,6 +57,8 @@ pub struct Outcome {pub capture:Capture,pub result:Result<ResultData,String>,pub
 #[serde(default)]
 pub struct Evidence {
     pub electrical:electrical::Evidence,
+    pub terminals:Vec<terminal::Reference>,
+    #[serde(skip)] pub terminal_cache:BTreeMap<String,std::sync::Arc<ResultData>>,
     pub receipts:Vec<Receipt>,pub decisions:Vec<Decision>,pub candidate_uses:Vec<CandidateUse>,
     pub selections:BTreeMap<String,Vec<String>>,
     pub controller_run:Option<usize>,
@@ -189,7 +192,7 @@ pub fn prepare(s:&mut Study,mut operation:Operation)->Result<Capture,String> {
 /// Existing runtime implementations are the only executors. Failure remains inspectable evidence.
 pub fn execute(capture:Capture,cancel:&AtomicBool,progress:impl FnMut(usize,usize))->Result<Outcome,String> {
     let s=&capture.study;let w=&s.refinement;let f=family(s);
-    let mut result=match &capture.operation {
+    let result=match &capture.operation {
         Operation::Electrical(op)=>electrical::execute(s,op,cancel).map(ResultData::Electrical),
         Operation::PredictRecording{recording_hash,purpose}=>recording::predict(recordings::source(s,recording_hash)?,&s.draft,*purpose,&recordings::limits(s,recording_hash)?,cancel,progress).map(ResultData::Prediction),
         Operation::FitRecordings=>{let dataset=data::RecordingDataset::capture(&w.recordings,&w.recording_assignments)?;let request=recordings::request(s,&dataset)?;let attempt=cal::attempt(&dataset,&request,cancel,progress);Ok(ResultData::RecordingFit(data::RecordingFitAttempt{dataset,attempt}))},
@@ -199,11 +202,19 @@ pub fn execute(capture:Capture,cancel:&AtomicBool,progress:impl FnMut(usize,usiz
         Operation::Fit{train,validation}=>Ok(ResultData::FitAttempt(cal::attempt(&s.archive,&cal::FitRequest{model:f,training_ids:train.clone(),validation_ids:validation.clone(),coordinates:w.coordinates.clone(),maximum_evaluations:40,validation_influenced:s.validation_influenced},cancel,progress))),
         Operation::Robustness=>cal::robustness(&w.experiment,&w.scenarios,cancel,progress).map(ResultData::Robustness),
     };
-    if let Ok(value)=&result {if let Err(error)=recordings::validate_result(&capture,value){result=Err(format!("refinement.result: {error}"));}}
-    if let Ok(ResultData::Electrical(v))=&mut result {if let Err(error)=electrical::confirm(&capture,v){result=Err(error);}}
-    if cancel.load(std::sync::atomic::Ordering::Relaxed) && match &result {Ok(ResultData::Electrical(_))=>true,Ok(ResultData::Controller(run))=>run.electrical.is_some(),Ok(ResultData::Prediction(prediction))=>prediction.electrical.is_some(),_=>false} {result=Err("refinement.electrical: cancelled before terminal delivery".into());}
-    let cancelled=match &result {Ok(ResultData::RecordingFit(r))=>r.attempt.cancelled,Ok(ResultData::CombinedFit(r))=>r.attempt.cancelled,Ok(ResultData::Electrical(_))=>false,Ok(ResultData::Prediction(_))=>false,Ok(ResultData::Controller(r))=>r.cancelled,Ok(ResultData::FitAttempt(r))=>r.cancelled,Ok(ResultData::Robustness(r))=>r.cancelled,Ok(ResultData::Sensitivity(_))=>false,Err(e)=>e.to_lowercase().contains("cancelled")};
-    Ok(Outcome{capture,result,cancelled})
+    let electrical_terminal=matches!(&result,Ok(ResultData::Electrical(_))) || matches!(&result,Ok(ResultData::Controller(r)) if r.electrical.is_some()) || matches!(&result,Ok(ResultData::Prediction(r)) if r.electrical.is_some());
+    let cancelled=(electrical_terminal && cancel.load(std::sync::atomic::Ordering::Relaxed)) || match &result {Ok(ResultData::Controller(r))=>r.cancelled,Ok(ResultData::RecordingFit(r))=>r.attempt.cancelled,Ok(ResultData::CombinedFit(r))=>r.attempt.cancelled,Ok(ResultData::FitAttempt(r))=>r.cancelled,Ok(ResultData::Robustness(r))=>r.cancelled,Err(e)=>e.to_lowercase().contains("cancelled"),_=>false};
+    let mut outcome=Outcome{capture,result,cancelled};
+    terminal::capture_outcome(&mut outcome)?;
+    if let Ok(value)=&outcome.result {if let Err(error)=recordings::validate_result(&outcome.capture,value){outcome.result=Err(format!("refinement.result: {error}"));}}
+    if let Ok(ResultData::Electrical(v))=&mut outcome.result {if let Err(error)=electrical::confirm(&outcome.capture,v){outcome.result=Err(error);}}
+    outcome.cancelled |= electrical_terminal && cancel.load(std::sync::atomic::Ordering::Relaxed);
+    for r in outcome.capture.study.refinement_evidence.terminals.iter_mut().filter(|r|r.captured_unix_ns==outcome.capture.captured_unix_ns) {
+        r.cancelled|=outcome.cancelled;
+        if let Err(error)=&outcome.result {r.failure=Some(error.clone());r.unscored=true;}
+        r.unscored|=outcome.cancelled;
+    }
+    Ok(outcome)
 }
 pub fn apply_outcome(s:&mut Study,outcome:Outcome) {
     let mut inputs=outcome.capture.inputs();if let Ok(result)=&outcome.result{if let Some(hash)=recordings::result_fit_identity(result){inputs["fit_result_blake3"]=serde_json::json!(hash);}}apply_outcome_with_inputs(s,outcome,inputs);
@@ -220,19 +231,21 @@ pub fn apply_outcome_with_inputs(s:&mut Study,outcome:Outcome,inputs:serde_json:
         receipt.failure=Some(format!("refinement.result.input_contents: {error}"));
         s.refinement_evidence.receipts.push(receipt);return;
     }
+    let diagnostic=outcome.cancelled || outcome.result.is_err() || matches!(&outcome.result,Ok(ResultData::Controller(r)) if !terminal::run_complete(r));
+    if diagnostic {if let Err(error)=terminal::retain(s,c,outcome.cancelled){receipt.failure=Some(error);s.refinement_evidence.receipts.push(receipt);return;}}
     s.validation_seen |= captured.validation_seen;s.validation_influenced |= captured.validation_influenced;
     s.refinement_evidence.recording_held_out.extend(captured.refinement_evidence.recording_held_out.iter().cloned());
     for (hash,influenced) in &captured.refinement_evidence.recording_exposure {*s.refinement_evidence.recording_exposure.entry(hash.clone()).or_default()|=*influenced||s.validation_influenced;}
     for (hash,a) in &captured.refinement_evidence.recording_reservations {
         if s.refinement_evidence.recording_reservations.get(hash).is_some_and(|old|old!=a)||s.refinement.recording_assignments.iter().any(|old|old.recording_hash==*hash&&old!=a) {
-            receipt.failure=Some(format!("refinement.result.recording_reservations.{hash}: conflicts with current frozen assignment"));s.refinement_evidence.receipts.push(receipt);return;
+            receipt.failure=Some(format!("refinement.result.recording_reservations.{hash}: conflicts with current frozen assignment"));if let Err(error)=terminal::retain(s,c,outcome.cancelled){receipt.failure=Some(error);}if let Some(error)=&receipt.failure{terminal::note_failure(s,c,error);}s.refinement_evidence.receipts.push(receipt);return;
         }
     }
     for (hash,a) in &captured.refinement_evidence.recording_reservations{s.refinement_evidence.recording_reservations.entry(hash.clone()).or_insert_with(||a.clone());}
     match outcome.result {
         Ok(ResultData::Electrical(v))=>{if receipt.cancelled || !electrical::belongs_to(&v,c) {receipt.failure=Some("refinement.result.electrical: cancelled or unvalidated captured comparison remains unscored".into());}else if let Operation::Electrical(op)=&c.operation {match electrical::apply_result(s,op,&v) {Ok((kind,index))=>{receipt.result_kind=Some(kind);receipt.result_index=Some(index);},Err(error)=>receipt.failure=Some(error)}}else{receipt.failure=Some("refinement.result.electrical: operation mismatch".into());}},
         Ok(ResultData::Prediction(v)) if receipt.cancelled && v.electrical.is_some()=>{receipt.failure=Some("refinement.result.electrical: cancelled prediction remains unscored".into());},
-        Ok(ResultData::Controller(v)) if receipt.cancelled && v.electrical.is_some()=>{receipt.failure=Some("refinement.result.electrical: cancelled simulation remains unscored".into());},
+        Ok(ResultData::Controller(v)) if v.electrical.is_some() && (receipt.cancelled || !terminal::run_complete(&v))=>{receipt.failure=Some("refinement.result.electrical: cancelled, failed or incomplete simulation remains unscored".into());},
         Ok(ResultData::Prediction(v))=>{receipt.result_kind=Some("prediction".into());receipt.result_index=Some(s.refinement.predictions.len());s.refinement.predictions.push(v);},
         Ok(ResultData::RecordingFit(v))=>{receipt.result_kind=Some("recording_fit".into());receipt.result_index=Some(s.refinement.recording_fits.len());receipt.failure=v.attempt.failure.clone();receipt.cancelled|=v.attempt.cancelled;s.refinement.recording_fits.push(v);},
         Ok(ResultData::CombinedFit(v))=>{receipt.result_kind=Some("combined_fit".into());receipt.result_index=Some(s.refinement.combined_fits.len());receipt.failure=v.attempt.failure.clone();receipt.cancelled|=v.attempt.cancelled;s.refinement.combined_fits.push(v);},
@@ -248,6 +261,7 @@ pub fn apply_outcome_with_inputs(s:&mut Study,outcome:Outcome,inputs:serde_json:
             if ids.len()==index{ids.push(hash.to_owned());}
         }
     }
+    if receipt.failure.is_some() {if let Err(error)=terminal::retain(s,c,outcome.cancelled){receipt.failure=Some(error);}if let Some(error)=&receipt.failure{terminal::note_failure(s,c,error);}}
     s.refinement_evidence.receipts.push(receipt);
 }
 
@@ -275,6 +289,7 @@ pub fn expose_review(s:&mut Study) {
 pub fn validate_evidence(s:&Study)->Result<(),String> {
     recordings::validate_evidence(s)?;
     electrical::validate(s)?;
+    terminal::validate(s)?;
     let e=&s.refinement_evidence;
     for (kind,ids) in &e.selections {
         let training=match kind.as_str(){"train"=>Some(true),"validation"=>Some(false),"sensitivity"=>None,_=>continue};

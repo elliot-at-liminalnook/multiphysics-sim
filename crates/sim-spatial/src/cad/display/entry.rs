@@ -129,7 +129,7 @@ pub(super) fn input(
     }
     // The kit's focus is the record: a field that lost the keyboard without
     // a message read here ends; a field without a draft gives it back.
-    if typing.is_some() && !text.focused(SECTION) {
+    if typing.is_some() && !text.focused(SECTION) && !text.suspended(SECTION) {
         typing = None;
     }
     if typing.is_none() {

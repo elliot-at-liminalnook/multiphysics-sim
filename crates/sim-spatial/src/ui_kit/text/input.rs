@@ -157,7 +157,8 @@ pub(crate) fn keys(
     if let Some(previous) = *last
         && current.is_none()
         && focus.get().is_some()
-        && let Ok((&field, _)) = fields.get(previous)
+        && let Ok((&field, text)) = fields.get(previous)
+        && !text.suspended
     {
         out.write(FieldMsg { field, event: FieldEvent::Blur });
     }

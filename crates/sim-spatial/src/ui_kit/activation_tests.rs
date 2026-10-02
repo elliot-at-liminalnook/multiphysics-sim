@@ -215,3 +215,43 @@ fn lower_modal_rebuild_under_close_preserves_both_return_targets() {
     app.world_mut().despawn(replacement); app.update();
     assert_eq!(app.world().resource::<InputFocus>().get(), Some(return_target));
 }
+
+
+#[test]
+fn suspension_is_not_blur_but_tab_away_after_return_is() {
+    use text::{TextFieldApp, TextField, FieldId, FieldMsg, FieldEvent, TextDraft};
+    const FIELD: FieldId = FieldId("fixture.suspension.blur");
+    let (mut app, window, _, _) = fixture();
+    app.add_text_field(FIELD, TextField::new("Suspended property"));
+    let old_roots: Vec<Entity> = app.world_mut().query_filtered::<Entity, With<ModalFocus>>().iter(app.world()).collect();
+    for root in old_roots { app.world_mut().entity_mut(root).remove::<ModalFocus>(); }
+    let fonts = fonts(); let k = Kit::new(&fonts);
+    let lower = app.world_mut().spawn((Node::default(), ModalFocus, bevy::ui::prelude::AccessibleLabel("Property form".into()))).id();
+    let anchor = app.world_mut().spawn((k.input("draft", "property", Intent::Submit, true), ChildOf(lower))).id();
+    let tab_target = app.world_mut().spawn((k.button("OK", Intent::Cancel, Look::Primary, true), ChildOf(lower))).id();
+    app.update();
+    let field = app.world_mut().query::<(Entity, &FieldId)>().iter(app.world()).find_map(|(e, id)| (*id == FIELD).then_some(e)).unwrap();
+    let identity = app.world().get::<InputIdentity>(anchor).unwrap().0.clone();
+    {
+        let mut editor = app.world_mut().get_mut::<TextField>(field).unwrap();
+        editor.draft = TextDraft::new("unapplied", true);
+        editor.focus_anchor = Some(anchor); editor.navigation_identity = Some(identity);
+    }
+    app.world_mut().resource_mut::<InputFocus>().set(field, FocusCause::Navigated);
+    app.update();
+    app.world_mut().resource_mut::<Messages<FieldMsg>>().drain().for_each(drop);
+    let saved = app.world().get::<TextField>(field).unwrap().draft.clone();
+    let close = app.world_mut().spawn((Node::default(), ModalFocus, ModalPriority(100), bevy::ui::prelude::AccessibleLabel("Pending viewer close".into()))).id();
+    app.world_mut().spawn((k.button("Cancel close", Intent::Cancel, Look::Secondary, true), ChildOf(close)));
+    app.update();
+    assert!(app.world().get::<TextField>(field).unwrap().suspended);
+    assert!(!app.world_mut().resource_mut::<Messages<FieldMsg>>().drain().any(|m| m.field == FIELD && m.event == FieldEvent::Blur));
+    app.world_mut().despawn(close); app.update();
+    assert_eq!(app.world().resource::<InputFocus>().get(), Some(field));
+    assert!(!app.world().get::<TextField>(field).unwrap().suspended);
+    assert_eq!(app.world().get::<TextField>(field).unwrap().draft, saved);
+    key(&mut app, window, KeyCode::Tab, false); app.update();
+    assert_eq!(app.world().resource::<InputFocus>().get(), Some(tab_target));
+    app.update();
+    assert!(app.world_mut().resource_mut::<Messages<FieldMsg>>().drain().any(|m| m.field == FIELD && m.event == FieldEvent::Blur));
+}

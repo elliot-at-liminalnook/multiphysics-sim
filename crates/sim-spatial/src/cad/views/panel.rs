@@ -201,7 +201,7 @@ pub(super) fn input(
     // The kit's focus is the record: a field that lost the keyboard
     // without a message read here ends, and one the handler closed (the
     // panel hidden) gives the keyboard back.
-    if typing.is_some() && !text.focused(VIEWS) {
+    if typing.is_some() && !text.focused(VIEWS) && !text.suspended(VIEWS) {
         keep_name(&mut views, typing.as_ref());
         typing = None;
     }

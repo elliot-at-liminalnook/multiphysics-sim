@@ -73,6 +73,9 @@ pub(crate) enum TabKey {
 pub(crate) struct TextField {
     /// Transient rendered navigation anchor; never owns or parents the draft.
     pub(crate) focus_anchor: Option<Entity>,
+    /// Temporary higher-modal takeover; the kit alone marks suspension.
+    /// Owners retain their active property mapping without claiming keyboard focus.
+    pub(crate) suspended: bool,
     pub(crate) navigation_back: bool,
     pub(crate) navigation_identity: Option<String>,
     pub(crate) navigation_source: Option<super::activation::RenderSource>,
@@ -204,6 +207,11 @@ impl TextFocus<'_, '_> {
     pub(crate) fn focused(&self, id: FieldId) -> bool {
         self.focused_entity().is_some_and(|e| self.fields.get(e).is_ok_and(|(_, f, _)| *f == id))
     }
+    /// A higher modal temporarily owns navigation. This is not typing or Blur;
+    /// consumers must retain mapping/draft and refrain from refocusing/applying.
+    pub(crate) fn suspended(&self, id: FieldId) -> bool {
+        self.fields.iter().any(|(_, field, text)| *field == id && text.suspended)
+    }
     /// Navigation currently targets a rendered ordinary control, including a
     /// modal submit/cancel button. Owners must not steal that focus back.
     pub(crate) fn ordinary_focused(&self) -> bool {
@@ -245,6 +253,7 @@ impl TextFocus<'_, '_> {
                     field.navigation_source = source.cloned();
                 }
             }
+            field.suspended = false;
             field.draft = draft;
         }
         let Some(focus) = self.focus.as_mut() else { return false };
@@ -281,6 +290,10 @@ impl TextFocus<'_, '_> {
 
     /// Take the keyboard from `id` (no message: the owner knows).
     pub(crate) fn blur(&mut self, id: FieldId) {
+        if let Some((_, _, mut field)) = self.fields.iter_mut().find(|(_, f, _)| **f == id) {
+            field.suspended = false;
+            field.focus_anchor = None;
+        }
         if self.focused(id)
             && let Some(focus) = self.focus.as_mut()
         {

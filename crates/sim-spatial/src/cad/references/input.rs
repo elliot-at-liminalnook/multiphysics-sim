@@ -253,7 +253,7 @@ fn input(
     }
     // The kit's focus is the record.
     if let Some(f) = at
-        && (!usable(d, f) || !text.focused(field_of(f)))
+        && (!usable(d, f) || (!text.focused(field_of(f)) && !text.suspended(field_of(f))))
     {
         at = None;
     }

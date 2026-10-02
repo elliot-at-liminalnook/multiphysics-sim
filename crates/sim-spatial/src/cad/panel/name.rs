@@ -158,7 +158,7 @@ pub(in crate::cad) fn name_entry(
     }
     // The kit's focus is the record: a draft whose field lost the keyboard
     // without a message this system read (another system's blur) ends.
-    if draft.node.is_some() && !text.focused(NAME) {
+    if draft.node.is_some() && !text.focused(NAME) && !text.suspended(NAME) {
         end(&mut draft);
     }
 }

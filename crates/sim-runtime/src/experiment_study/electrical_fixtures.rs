@@ -117,9 +117,29 @@ fn captured_voltage_comparison_saves_reopens_and_rejects_changed_companion_ident
     s.limits=Some(crate::experiment_comparison::Limits{rmse:1.,final_abs_error:1.});
     let cancel=AtomicBool::new(false);
     let captured=shared::prepare(&mut s,shared::Operation::PredictRecording{recording_hash:hash.clone(),purpose:recording::Purpose::RecordedCommandReplay}).unwrap();
-    let outcome=shared::execute(captured,&cancel,|_,_|{}).unwrap();assert!(outcome.result.is_ok());shared::apply_outcome(&mut s,outcome);
+    let outcome=shared::execute(captured,&cancel,|_,_|{}).unwrap();assert!(outcome.result.is_ok());
+    // A late cancellation retains the exact successful prediction/comparison but
+    // never places it in scored arrays; publication and reopen retain diagnostics.
+    let mut cancelled=outcome.clone();cancelled.cancelled=true;let exact=serde_json::to_vec(cancelled.result.as_ref().unwrap()).unwrap();
+    let mut diagnostic=s.clone();let predictions=diagnostic.refinement.predictions.len();let comparisons=diagnostic.refinement.electrical_comparisons.len();
+    shared::apply_outcome(&mut diagnostic,cancelled);
+    assert_eq!(diagnostic.refinement.predictions.len(),predictions);assert_eq!(diagnostic.refinement.electrical_comparisons.len(),comparisons);
+    let dir=std::env::temp_dir().join(format!("late-terminal-{}",std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));std::fs::create_dir_all(&dir).unwrap();let path=dir.join("study.json");diagnostic.save_new(&path).unwrap();let reopened=Study::load(&path).unwrap();
+    let reference=reopened.refinement_evidence.terminals.last().unwrap();assert!(reference.cancelled&&reference.unapplied&&reference.unscored);assert_eq!(reopened.input_contents.resolve(&reference.content_ref.blake3).unwrap(),exact);assert!(shared::terminal::cached(&reopened,reference).is_some());
+    std::fs::remove_dir_all(dir).unwrap();
+    shared::apply_outcome(&mut s,outcome);
     let captured=shared::prepare(&mut s,shared::Operation::Electrical(Operation::CompareServoVoltage{recording_hash:hash,prediction:0})).unwrap();
-    let outcome=shared::execute(captured,&cancel,|_,_|{}).unwrap();assert!(outcome.result.is_ok());shared::apply_outcome(&mut s,outcome);
+    let outcome=shared::execute(captured,&cancel,|_,_|{}).unwrap();assert!(outcome.result.is_ok());
+    // A late cancellation retains the exact successful prediction/comparison but
+    // never places it in scored arrays; publication and reopen retain diagnostics.
+    let mut cancelled=outcome.clone();cancelled.cancelled=true;let exact=serde_json::to_vec(cancelled.result.as_ref().unwrap()).unwrap();
+    let mut diagnostic=s.clone();let predictions=diagnostic.refinement.predictions.len();let comparisons=diagnostic.refinement.electrical_comparisons.len();
+    shared::apply_outcome(&mut diagnostic,cancelled);
+    assert_eq!(diagnostic.refinement.predictions.len(),predictions);assert_eq!(diagnostic.refinement.electrical_comparisons.len(),comparisons);
+    let dir=std::env::temp_dir().join(format!("late-terminal-{}",std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));std::fs::create_dir_all(&dir).unwrap();let path=dir.join("study.json");diagnostic.save_new(&path).unwrap();let reopened=Study::load(&path).unwrap();
+    let reference=reopened.refinement_evidence.terminals.last().unwrap();assert!(reference.cancelled&&reference.unapplied&&reference.unscored);assert_eq!(reopened.input_contents.resolve(&reference.content_ref.blake3).unwrap(),exact);assert!(shared::terminal::cached(&reopened,reference).is_some());
+    std::fs::remove_dir_all(dir).unwrap();
+    shared::apply_outcome(&mut s,outcome);
     assert_eq!(s.refinement.electrical_comparisons.len(),1);
     assert!(s.refinement.electrical_comparisons[0].channels.iter().all(|c|c.passes.is_none()),"voltage-only registers have no declared measurement limits");
     shared::apply(&mut s,shared::Command::SetDecision{kind:"electrical".into(),index:0,decision:"investigating".into(),notes:"Synthetic review never promotes physical source".into()}).unwrap();

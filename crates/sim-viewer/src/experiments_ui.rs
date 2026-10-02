@@ -871,6 +871,38 @@ mod tests {
                 < 0.)
         );
     }
+    /// Written lifecycle fixture: finished electrical work reaches the real late-cancel poll
+    /// owner, remains unapplied, and survives immutable companion publication/reopen.
+    #[test]
+    fn late_cancelled_electrical_terminal_survives_legacy_poll_save_reopen() {
+        use sim_runtime::{controller_refinement::{control,power},experiment_study::{refinement as shared,terminal}};
+        let mut p=panel();let ctx=egui::Context::default();
+        let mut captured=p.studies[0].clone();
+        captured.draft.conditions.voltage_v=None;
+        captured.draft.conditions.command_delay_s=0.;
+        captured.draft.power=Some(power::Setup{source_component:"electrical.voltage_source".into(),source_parameters:std::collections::BTreeMap::from([("voltage".into(),12.)]),auxiliary_current_a:0.,evidence:"Written offline terminal fixture".into(),limits:Default::default()});
+        let run=control::simulate(&captured.refinement.experiment,&captured.draft,&AtomicBool::new(false),|_,_|{}).unwrap();
+        let exact=serde_json::to_vec(&shared::ResultData::Controller(run.clone())).unwrap();
+        let mut outcome=shared::Outcome{capture:shared::Capture{study:captured,operation:shared::Operation::Simulate,runtime:study::execution_identity(),captured_unix_ns:"456".into()},result:Ok(shared::ResultData::Controller(run)),cancelled:false};
+        terminal::capture_outcome(&mut outcome).unwrap();
+        let inputs=outcome.capture.inputs();
+        let(tx,rx)=mpsc::channel();
+        p.job=Some(Job{rx,cancel:Arc::new(AtomicBool::new(true)),progress:Arc::new(AtomicUsize::new(0)),total:0,label:"Late completed electrical simulation".into()});
+        tx.send(ResultMessage::Refined(0,"Electrical simulation".into(),Ok(refinement::Outcome::SharedInputs(outcome,inputs)))).unwrap();
+        p.poll(&ctx);
+        assert!(p.studies[0].refinement.controller_runs.is_empty());
+        let reference=p.studies[0].refinement_evidence.terminals[0].clone();
+        assert!(reference.cancelled&&reference.unapplied&&reference.unscored);
+        assert_eq!(p.studies[0].input_contents.resolve(&reference.content_ref.blake3).unwrap(),exact);
+        let nonce=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let dir=std::env::temp_dir().join(format!("legacy-terminal-{nonce}"));std::fs::create_dir(&dir).unwrap();
+        let path=dir.join("cancelled.json");p.studies[0].save_new(&path).unwrap();
+        let reopened=Study::load(&path).unwrap();
+        assert_eq!(reopened.input_contents.resolve(&reference.content_ref.blake3).unwrap(),exact);
+        assert!(terminal::cached(&reopened,&reference).is_some());
+        assert!(reopened.refinement.controller_runs.is_empty());
+        assert!(reopened.render_html().unwrap().contains("Retained unapplied electrical terminal — UNSCORED"));
+    }
     #[test]
     fn worker_host_renders_retains_candidate_and_cancels_without_losing_history() {
         let mut p = panel();

@@ -113,7 +113,9 @@ impl Action {
         if let Some(operation) = self.operation() {
             let mut captured = s;
             let capture = sim_runtime::experiment_study::refinement::prepare(&mut captured, operation)?;
-            return sim_runtime::experiment_study::refinement::execute(capture, cancel, progress).map(Outcome::Shared);
+            let outcome = sim_runtime::experiment_study::refinement::execute(capture, cancel, progress)?;
+            let inputs = outcome.capture.inputs();
+            return Ok(Outcome::SharedInputs(outcome, inputs));
         }
         let family = cal::Family {
             shared: s.draft.clone(),
@@ -229,13 +231,19 @@ impl Action {
                     Ok(capture)=>capture,
                     Err(error)=>return Ok(Outcome::Shared(shared::Outcome{capture:shared::Capture{study:snapshot,operation:rejected,runtime:sim_runtime::experiment_study::execution_identity(),captured_unix_ns:std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|e|e.to_string())?.as_nanos().to_string()},result:Err(error),cancelled:false})),
                 };
-                shared::execute(capture,cancel,progress).map(Outcome::Shared)
+                shared::execute(capture,cancel,progress).map(|outcome| {
+                    let inputs=outcome.capture.inputs();
+                    Outcome::SharedInputs(outcome,inputs)
+                })
             }
             Self::FitRecordings => {
                 use sim_runtime::experiment_study::refinement::{self as shared, Operation};
                 let mut snapshot=s;
                 let capture=shared::prepare(&mut snapshot,Operation::FitRecordings)?;
-                shared::execute(capture,cancel,progress).map(Outcome::Shared)
+                shared::execute(capture,cancel,progress).map(|outcome| {
+                    let inputs=outcome.capture.inputs();
+                    Outcome::SharedInputs(outcome,inputs)
+                })
             }
             Self::Propose(path) => {
                 let source: serde_json::Value =
@@ -291,7 +299,10 @@ impl Action {
                 let hash=w.recordings.get(i).ok_or("refinement.predict.recording: missing recording")?.fingerprint();
                 let mut snapshot=s;
                 let capture=shared::prepare(&mut snapshot,Operation::PredictRecording{recording_hash:hash,purpose})?;
-                shared::execute(capture,cancel,progress).map(Outcome::Shared)
+                shared::execute(capture,cancel,progress).map(|outcome| {
+                    let inputs=outcome.capture.inputs();
+                    Outcome::SharedInputs(outcome,inputs)
+                })
             }
             Self::Simulate | Self::Sensitivity(_) | Self::Fit(_,_) | Self::Robustness => unreachable!("shared operation dispatched above"),
         }
@@ -560,6 +571,23 @@ impl State {
                     });}
                     for a in &s.refinement.cad_acceptances{ui.label(format!("Accepted artifact: {} · {}",a.new_file,a.artifact_hash));}
                 }
+            }
+            if !s.refinement_evidence.terminals.is_empty() {
+                ui.collapsing("Retained unapplied electrical terminals — UNSCORED",|ui| {
+                    for reference in &s.refinement_evidence.terminals {
+                        ui.label(format!("{} · cancelled {} · unapplied {} · UNSCORED · {} bytes · {}",reference.kind,reference.cancelled,reference.unapplied,reference.content_ref.byte_length,reference.content_ref.blake3));
+                        if let Some(error)=&reference.failure {ui.colored_label(Color32::DARK_RED,error);}
+                        match sim_runtime::experiment_study::terminal::cached(s,reference) {
+                            Some(sim_runtime::experiment_study::refinement::ResultData::Controller(run))=> {
+                                ui.label(format!("Exact diagnostics: {} controller frames, {} truth samples; failure {:?}",run.frames.len(),run.truth.len(),run.failure));
+                                if let Some(trace)=&run.electrical {ui.label(format!("{} electrical samples · sampled peak draw {} W · drawn {} J · returned {} J; no acceptance",trace.samples.len(),trace.summary.peak_draw_power_w,trace.summary.drawn_energy_j,trace.summary.returned_energy_j));}
+                            },
+                            Some(sim_runtime::experiment_study::refinement::ResultData::Prediction(p))=>{ui.label(format!("Exact prediction {} · {:?} · {} simulated frames; no acceptance",p.recording_hash,p.purpose,p.simulated_frames.len()));},
+                            Some(sim_runtime::experiment_study::refinement::ResultData::Electrical(_))=>{ui.label("Exact calibrated comparison retained in immutable report diagnostics; no acceptance");},
+                            _=>{ui.colored_label(Color32::DARK_RED,"Terminal diagnostics unavailable; UNSCORED");},
+                        }
+                    }
+                });
             }
             if !s.refinement.failures.is_empty(){ui.collapsing("Retained failures and cancellations",|ui|{for e in &s.refinement.failures{ui.colored_label(Color32::DARK_RED,e);}});}
         });

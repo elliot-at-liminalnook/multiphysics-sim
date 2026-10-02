@@ -57,8 +57,10 @@ identities, not nested prior Studies or receipts. Original sidecar bytes, includ
 unknown/malformed input, are retained before parsing. Refused typed authoring keeps
 its original state and command content. Current, stale, cancelled, failed and
 switched/displaced completions remain on the original study or orphan receipt;
-terminal work cannot replace newer drafts. Late cancellation retains the completed
-execution in the receipt but refuses scored comparison attachment. Existing T51
+terminal work cannot replace newer drafts. Partial and late cancellation retain exact terminal ResultData in immutable
+Study content companions, with bounded diagnostic references and a job-hydrated
+review cache. Cancelled, failed and incomplete electrical terminals stay unapplied
+and UNSCORED; regular scored arrays and accepted comparisons cannot receive them. Existing T51
 publication snapshots retain raw unsubmitted form inputs; revision-scoped
 acknowledgment never marks newer edits saved. Visible but durability-unconfirmed
 publication remains failure and needs a fresh immutable destination.
@@ -109,9 +111,9 @@ Paths below are relative to the repository. These are reading traces, not execut
 | system_ui / REST → same authoritative apply owner | `crates/sim-spatial/src/builder/calibration/study/actions.rs:30`, `:46`, `:83`; actual entity collector `study/ui.rs:43` |
 | Simulate / both prediction purposes → captured existing execution | `study/electrical_ui.rs:52`, `:58`; `study/jobs.rs:140`; `study/recording_jobs.rs:180`; `crates/sim-runtime/src/experiment_study/refinement.rs:190` |
 | Captured servo voltage / calibrated sidecar → exact companions and job validation | `study/electrical_ui.rs:64`; `study/actions.rs:164`; `study/recording_jobs.rs:168`; `crates/sim-runtime/src/experiment_study/electrical.rs:170`, `:176`, `:208` |
-| Original-study attachment; cancellation cannot yield passing vectors | `study/jobs.rs:314`, `:321`, `:328`; `crates/sim-runtime/src/experiment_study/refinement.rs:203`, `:231` |
-| Separate captured electrical trace/calibration/protection review | `study/electrical_ui.rs:71`, `:80`, `:89`; `crates/sim-runtime/src/experiment_study/report.rs:101` |
-| Save-new/reopen, exact companions, review and raw drafts | `study/forms.rs:60`; `study/jobs.rs:166`, `:176`, `:340`; `crates/sim-runtime/src/experiment_study/publication.rs:12`, `:24`; `experiment_study/electrical.rs:233` |
+| Original-study attachment; cancellation cannot yield passing vectors | `study/jobs.rs:299`, `:337`; `crates/sim-runtime/src/experiment_study/refinement.rs:208`, `:234`, `:249`; `experiment_study/terminal.rs:31` |
+| Separate captured electrical trace/calibration/protection review | `study/electrical_ui.rs:71`, `:84`, `:88`; `crates/sim-runtime/src/experiment_study/report.rs:64`, `:103`, `:570` |
+| Save-new/reopen, exact companions, review and raw drafts | `study/forms.rs:60`; `study/jobs.rs:166`, `:176`, `:299`; `crates/sim-runtime/src/experiment_study/publication.rs:12`, `:24`; `experiment_study/electrical.rs:233` |
 | Legacy source/config/compare consumers delegate shared contracts | `crates/sim-viewer/src/experiments_ui/power_ui.rs:440`; `experiments_ui/rest.rs:148`; `experiments_ui/refinement.rs:178`; `experiments_ui.rs:240` |
 | Written compatibility / actual-control / modal / lifecycle / publication fixtures | `crates/sim-runtime/src/experiment_study/electrical_fixtures.rs:1`; `study/electrical_ui_tests.rs:1`; `study/ui_tests.rs:421`; `study/electrical_lifecycle.rs:1`; `study/publication_lifecycle.rs:41`, `:79` |
 
@@ -128,3 +130,32 @@ Reopen first hydrates companions through Store metadata/path validation, then va
 the Study against their exact content. Reading found that validation before hydration
 could never reopen new calibrated captures; publication policy and acknowledgment
 owners are unchanged. Missing/corrupt companions still refuse reopening.
+
+
+## Cancellation repair source review
+
+Call-0394 repairs extend all seven checklist IDs above within T52.1–T52.3.
+`experiment_study/terminal.rs:20` captures only ResultData, never a Capture, Study or
+receipt. Existing workers serialize once before validation or cancellation can
+suppress attachment; native frame delivery merges Arc-backed content and bounded
+metadata (`study/jobs.rs:299`). Reopen hydrates exact companions and the review cache
+in the existing load job (`experiment_study/publication.rs:31`). Runtime companions
+retain original model, timing, samples, calibration and runtime identities. A
+nonserialized comparison attachment capability is never restored by diagnostic load.
+
+Cancellation classification changes metadata, never exact terminal bytes.
+`experiment_study/refinement.rs:208` captures partial/completed results, and its
+attachment guards keep cancelled/failed/incomplete electrical runs and cancelled
+predictions/comparisons out of accepted result arrays. Native and legacy review
+show retained diagnostics after reopen; reports gate sampled acceptance on actual
+completion (`experiment_study/report.rs:64`). Sampled peaks and energy remain
+inspectable without claiming electrical limit acceptance or switching peaks.
+
+Written, unexecuted fixtures cover partial and late simulation cancellation
+(`experiment_study/terminal_fixtures.rs`), prediction/comparison cancellation
+(`experiment_study/electrical_fixtures.rs`), actual native and legacy terminal delivery
+(`study/electrical_lifecycle.rs`; `experiments_ui.rs:878`) and an incomplete run whose
+sampled summary otherwise passes (`experiment_study/report/cancellation_fixtures.rs`).
+No compilation, fixture execution, export, GUI parity or durability qualification
+was performed. Existing source identities, revision acknowledgments, publication
+failure recovery and external requirements above remain unchanged.

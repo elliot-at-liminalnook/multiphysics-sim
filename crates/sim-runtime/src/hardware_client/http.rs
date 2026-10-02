@@ -99,7 +99,7 @@ impl Client {
     /// The headers after `Host`: for a control request the token, client id
     /// and `Content-Type` (in the pages' order), checked for control
     /// characters before connecting; none for a page load.
-    fn headers<'a>(&'a self, control: bool, path: &str, body: Option<&str>, generation: Option<&'a str>) -> Result<Vec<(&'static str, &str)>, ClientError> {
+    fn headers<'a>(&'a self, control: bool, path: &str, body: Option<&str>, generation: Option<&'a str>) -> Result<Vec<(&'static str, &'a str)>, ClientError> {
         if !control {
             return Ok(Vec::new());
         }

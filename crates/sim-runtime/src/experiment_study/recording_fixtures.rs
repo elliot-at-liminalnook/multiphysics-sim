@@ -132,3 +132,44 @@ fn historical_tuning_declaration_survives_new_heldout_quarantine_for_reopen(){
     assert!(recordings::request(&loaded,&dataset).unwrap_err().contains("held-out"));
     let mut inspection=loaded;shared::apply(&mut inspection,shared::Command::SelectRecording{recording_hash:r.fingerprint()}).unwrap();
 }
+
+#[test]
+fn direct_combined_preparation_rejects_additional_quarantine_without_host_reservation(){
+    let mut primary=study();let mut additional=study();
+    for t in &mut additional.archive.trials{t.id=format!("additional:{}",t.id);}
+    let r=recording(true);shared::apply(&mut additional,shared::Command::ImportRecording{recording:r.clone()}).unwrap();
+    shared::apply(&mut additional,shared::Command::AssignRecording{assignment:assignment(&r,Role::Train)}).unwrap();
+    let resistance=primary.draft.motor["resistance"];
+    primary.refinement.coordinates=vec![crate::controller_refinement::calibration::Coordinate{path:"motor.resistance".into(),device:None,lower:resistance*0.5,upper:resistance*1.5}];
+    assert!(shared::prepare(&mut primary,shared::Operation::FitCombined{additional:Some(Box::new(additional.clone()))}).is_ok());
+    additional.refinement_evidence.recording_held_out.insert(r.fingerprint());
+    additional.validate().unwrap(); // Historical Train is retained evidence, not artifact corruption.
+    let reopened:Study=serde_json::from_value(serde_json::to_value(&additional).unwrap()).unwrap();
+    let before=serde_json::to_value(&primary).unwrap();
+    let error=shared::prepare(&mut primary,shared::Operation::FitCombined{additional:Some(Box::new(reopened))}).unwrap_err();
+    assert!(error.contains("recording.additional.assignment")&&error.contains("held-out"));
+    assert_eq!(before,serde_json::to_value(&primary).unwrap());
+    assert_eq!(additional.refinement.recording_assignments[0].role,Role::Train);
+    // Historical-only reservations are evidence, not cases joining this request.
+    // Compatibility artifacts may retain them without a current assignment.
+    additional.refinement.recording_assignments.clear();
+    additional.validate().unwrap();
+    let capture=shared::prepare(&mut primary,shared::Operation::FitCombined{additional:Some(Box::new(additional))}).unwrap();
+    let shared::Operation::FitCombined{additional:Some(extra)}=&capture.operation else{panic!("captured additional study")};
+    let dataset=recordings::dataset(&capture.study,Some(extra)).unwrap();
+    assert!(dataset.recordings.is_none());
+}
+#[test]
+fn immutable_failed_fit_case_selection_reopens_and_stale_source_is_transactional(){
+    use crate::controller_refinement::{calibration as cal,calibration_data as data};
+    let mut s=study();let r=recording(true);
+    let dataset=data::RecordingDataset::capture(std::slice::from_ref(&r),&[assignment(&r,Role::HeldOut)]).unwrap();
+    let attempt=cal::FitAttempt{request:cal::FitRequest{model:cal::Family{shared:s.draft.clone(),device_deltas:Default::default()},training_ids:vec![],validation_ids:vec![r.fingerprint()],coordinates:vec![],maximum_evaluations:40,validation_influenced:false},archive_hash:data::CalibrationData::fingerprint(&dataset),runtime:crate::physics_context::RuntimeIdentity::current(),evaluations:vec![],outcome:None,partial:None,failure:Some("Scoring cancelled".into()),cancelled:true};
+    s.refinement.recording_fits.push(data::RecordingFitAttempt{dataset,attempt});recordings::cache_identities(&mut s);
+    let selection=recordings::FitCaseSelection{kind:"recording_fit".into(),index:0,fit_blake3:recordings::fit_identity(&s,"recording_fit",0).unwrap().into(),case_id:r.fingerprint()};
+    shared::apply(&mut s,shared::Command::SelectFitCase{selection:Some(selection.clone())}).unwrap();assert!(s.validation_seen);
+    let review=recordings::fit_case_traces(&s,&selection).unwrap();assert!(!review.case.measured.samples.is_empty());assert!(review.baseline.is_none()&&review.candidate.is_none());
+    let loaded:Study=serde_json::from_value(serde_json::to_value(&s).unwrap()).unwrap();loaded.validate().unwrap();assert_eq!(loaded.refinement_evidence.selected_fit_case,Some(selection.clone()));
+    let before=serde_json::to_value(&s).unwrap();let mut stale=selection;stale.fit_blake3="stale".into();assert!(shared::apply(&mut s,shared::Command::SelectFitCase{selection:Some(stale)}).unwrap_err().contains("fit_blake3"));assert_eq!(before,serde_json::to_value(&s).unwrap());
+    shared::apply(&mut s,shared::Command::SelectFitCase{selection:None}).unwrap();assert!(s.refinement_evidence.selected_fit_case.is_none());
+}

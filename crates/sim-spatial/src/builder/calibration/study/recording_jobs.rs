@@ -87,6 +87,50 @@ pub fn start_combined(owner:&mut StudyOwner,stamp:StudyStamp,additional_path:Opt
     if let Some(value)=&additional_path {jobs::path(value).map_err(|e|format!("study.combined.additional_path: {e}"))?;}
     start_operation(owner,stamp,refinement::Operation::FitCombined{additional:None},additional_path)
 }
+/// Worker-only capture. Raw bytes are immutable evidence, not a nested Study owner.
+/// Parsed provenance is deliberately whitelisted and excludes receipts/evaluations.
+pub(super) fn capture_additional(path:&str,read:Result<Vec<u8>,String>,cancelled:bool)->(Option<Study>,Value,Option<String>) {
+    let mut input=json!({"path":path,"execution_cancelled":cancelled});
+    let bytes=match read {
+        Ok(bytes)=>bytes,
+        Err(error)=>{let error=format!("study.combined.additional_path {path}: read failed: {error}");input["read_error"]=json!(error);return (None,input,Some(error));}
+    };
+    input["byte_length"]=json!(bytes.len());
+    input["content_blake3"]=json!(recordings::input_identity(&bytes));
+    input["raw"]=json!(String::from_utf8_lossy(&bytes));
+    if std::str::from_utf8(&bytes).is_err(){input["invalid_utf8_bytes"]=json!(bytes);}
+    if cancelled {
+        let error="study.combined.additional_input: cancelled after read; immutable bytes retained unparsed and unapplied".to_string();
+        input["rejection"]=json!(error);return (None,input,Some(error));
+    }
+    let result=(|| {
+        let parsed:Value=serde_json::from_slice(&bytes).map_err(|e|format!("study.combined.additional_input.json {path}: {e}"))?;
+        let mut provenance=serde_json::Map::new();
+        for key in ["version","baseline","draft","limits","validation_seen","validation_influenced"] {
+            if let Some(value)=parsed.get(key){provenance.insert(key.into(),value.clone());}
+        }
+        let archive=&parsed["archive"];
+        provenance.insert("archive".into(),json!({"observation_blake3":archive["observation_blake3"],"model_blake3":archive["model_blake3"],"input_blake3":archive["input_blake3"],"trial_roles":archive["trials"].as_array().map(|rows|rows.iter().map(|t|json!({"id":t["id"],"split":t["split"]})).collect::<Vec<_>>())}));
+        let refinement=&parsed["refinement"];
+        provenance.insert("recording_assignments".into(),refinement["recording_assignments"].clone());
+        provenance.insert("capture_contexts".into(),refinement["capture_contexts"].clone());
+        provenance.insert("recordings".into(),json!(refinement["recordings"].as_array().map(|rows|rows.iter().map(|r|json!({"version":r["version"],"experiment":r["experiment"],"runtime":r["runtime"],"source_hashes":r["source_hashes"],"timing_evidence":r["timing_evidence"]})).collect::<Vec<_>>())));
+        let evidence=&parsed["refinement_evidence"];
+        for key in ["recording_held_out","recording_reservations","recording_exposure"] {provenance.insert(key.into(),evidence[key].clone());}
+        input["parsed_provenance"]=Value::Object(provenance);
+        let mut study:Study=serde_json::from_value(parsed).map_err(|e|format!("study.combined.additional_input.study {path}: {e}"))?;
+        study.validate().map_err(|e|format!("study.combined.additional_input.validation {path}: {e}"))?;
+        recordings::cache_identities(&mut study);
+        Ok(study)
+    })();
+    match result {Ok(study)=>(Some(study),input,None),Err(error)=>{input["rejection"]=json!(error);(None,input,Some(error))}}
+}
+pub(super) fn rejected_output(study:Study,operation:refinement::Operation,error:String,cancelled:bool,additional_input:Option<Value>)->JobOutput {
+    let capture=refinement::Capture{study,operation,runtime:sim_runtime::experiment_study::execution_identity(),captured_unix_ns:std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d|d.as_nanos().to_string()).unwrap_or_else(|e|format!("unavailable: {e}"))};
+    let mut inputs=capture.inputs();
+    if let Some(mut input)=additional_input{input["execution_cancelled"]=json!(cancelled);inputs["additional_input"]=input;}
+    JobOutput::Refined{outcome:refinement::Outcome{capture,result:Err(error),cancelled},inputs}
+}
 /// Preparation itself belongs in the job. Action-time capture is an immutable clone.
 /// Conservative launch exposure prevents edits during a pending held-out review from
 /// escaping later influence accounting. No scores or passing assessment are implied.
@@ -115,12 +159,18 @@ pub fn start_operation(owner:&mut StudyOwner,stamp:StudyStamp,operation:refineme
     let id=jobs::next(owner);
     let job=Job::spawn(Pool::Dedicated,id,label.clone(),move |ctx| {
         let mut operation=operation;
+        let mut additional_input=None;
         if let Some(path)=additional_path {
-            ctx.message("Loading additional saved study without changing the current archive");
-            let mut additional=Study::load(std::path::Path::new(&path)).map_err(|e|format!("study.combined.additional_path {path}: {e}"))?;
-            additional.validate().map_err(|e|format!("study.combined.additional_study: {e}"))?;
-            recordings::cache_identities(&mut additional);
-            operation=refinement::Operation::FitCombined{additional:Some(Box::new(additional))};
+            ctx.message("Capturing additional saved-study bytes before parsing and validation");
+            let read=std::fs::read(&path).map_err(|e|e.to_string());
+            let (additional,input,error)=capture_additional(&path,read,ctx.cancelled());
+            additional_input=Some(input);
+            if let Some(error)=error {return Ok(rejected_output(worker,operation,error,ctx.cancelled(),additional_input));}
+            operation=refinement::Operation::FitCombined{additional:additional.map(Box::new)};
+            if ctx.cancelled() {
+                if let Some(input)=additional_input.as_mut(){input["execution_cancelled"]=json!(true);}
+                return Ok(rejected_output(worker,operation,"study.combined.additional_input: cancelled after validation; captured source retained unapplied".into(),true,additional_input));
+            }
         }
         // Shared quarantine remembers held-out identities even when an additional
         // source conflicts with a frozen tuning assignment and fitting is refused.
@@ -135,17 +185,21 @@ pub fn start_operation(owner:&mut StudyOwner,stamp:StudyStamp,operation:refineme
         let capture=match preparation {
             Ok(capture)=>capture,
             Err(error)=>{
-                let capture=refinement::Capture{study:worker,operation:rejected_operation,runtime:sim_runtime::experiment_study::execution_identity(),captured_unix_ns:std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|e|format!("study.capture.time: {e}"))?.as_nanos().to_string()};
-                let inputs=capture.inputs();
-                return Ok(JobOutput::Refined{outcome:refinement::Outcome{capture,result:Err(error),cancelled:ctx.cancelled()},inputs});
+                return Ok(rejected_output(worker,rejected_operation,error,ctx.cancelled(),additional_input));
             }
         };
         ctx.message(format!("Running {label} with shared runtime and captured timing assumptions"));
-        let outcome=refinement::execute(capture,ctx.cancel_flag(),|done,total| {
+        let rejected_capture=capture.clone();
+        let outcome=match refinement::execute(capture,ctx.cancel_flag(),|done,total| {
             ctx.steps(done as u64,total as u64);
             if total>0 {ctx.fraction(done as f64/total as f64);}
-        })?;
-        let inputs=outcome.capture.inputs();
+        }) {
+            Ok(outcome)=>outcome,
+            Err(error)=>return Ok(rejected_output(rejected_capture.study,rejected_capture.operation,error,ctx.cancelled(),additional_input)),
+        };
+        let mut inputs=outcome.capture.inputs();
+        if let Ok(result)=&outcome.result {if let Some(identity)=recordings::result_fit_identity(result){inputs["fit_result_blake3"]=json!(identity);}}
+        if let Some(mut input)=additional_input {input["execution_cancelled"]=json!(outcome.cancelled);inputs["additional_input"]=input;}
         Ok(JobOutput::Refined{outcome,inputs})
     });
     owner.pending.push(PendingJob{id,kind:JobKind::Refinement,stamp:Some(stamp),document,source,trial_ids,launch,cancel_requested:false,job,selection_epoch:owner.selection_epoch,gate:None,captured:Some(captured)});

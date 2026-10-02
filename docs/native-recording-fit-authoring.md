@@ -127,3 +127,69 @@ Reading-only checks: scoped `git diff --check` reports no whitespace defects;
 source searches confirm adopted jobs/public sets, bounded modules and unchanged
 reference handlers. There were no builds, test runs, launches, screenshots, exports,
 hardware operations, cache cleanup, data deletion or remote operations.
+
+## Call-0382 repairs
+
+The initial T50 implementation at `5dd26014` did not complete three required
+source paths. Fit metrics lacked native captured comparison traces; failed
+additional-study parsing/validation lost the read bytes; and direct shared
+combined preparation depended on a host first merging quarantine. This repair
+keeps every checklist ID above and the original bounded batch scope.
+
+Fit/case selection is durable shared review state, stamped with the immutable
+attempt content identity as well as kind, index and case ID. Native controls use
+the existing typed action apply owner and jobs-owned validation. Presentation
+caches are derived, not a new source or persistence owner. Raster jobs read the
+selected attempt's immutable dataset and captured score predictions; they never
+run fresh physics or require candidate adoption. Missing baseline/candidate
+comparisons remain explicitly unscored and measured evidence stays inspectable.
+This replaces the rejected alternative of constructing fresh predictions for
+review. Revisit only if versioned attempt identity changes.
+
+Additional saved-study bytes are captured before parsing in the existing job,
+with path, content identity, byte length, exact recoverable input and named read,
+parse or validation failure. Parsed provenance is bounded; prior studies and
+receipts are not recursively embedded as structured captures. Terminal evidence
+uses existing retained receipts and immutable publication. Cancellation after
+read preserves the captured input. Unreadable files retain a diagnostic and path
+without claiming bytes were acquired. This replaces path-only rejection evidence;
+revisit if a shared external immutable artifact store becomes available.
+
+Shared combined dataset construction refuses any tuning recording quarantined
+in either source, independently of host reservation calls. Saved studies may
+retain historical Train declarations alongside later quarantine; loading the
+artifact remains valid, while using that source for new tuning is refused.
+Reservations and exposure remain monotonic. This replaces host-dependent checks;
+revisit only with an explicitly reviewed dataset-version migration.
+
+Independent reading also found that a fully traced case inside a cancelled or
+partial attempt needs an explicit unscored status, even when its individual score
+has no failure. The shared trace resolver carries that attempt status to the
+raster label. Comparison fixtures must satisfy the actual saved-fit validator
+(dataset fingerprint, frozen selections, optimizer values, and metrics matching
+captured traces); JSON deserialization alone does not prove valid reopening.
+
+The final shared reread narrowed quarantine enforcement to Train assignments
+actually joining the dataset. Inactive historical Train declarations are preserved
+and inspectable without refusing unrelated combined cases; historical identity
+collision guards still apply. The direct-preparation fixture includes this case.
+
+| Repair | Concrete source trace |
+|---|---|
+| Captured fit/case controls and review | `study/recording_ui.rs:96` emits stamped `SelectFitCase` controls; `study/actions.rs:150` routes them to the existing authoring job. `experiment_study/recordings.rs:196` validates attempt fingerprint and case membership; `study/recording_chart.rs:30` resolves captured series in the compute job and `:59` guards reception. `study/ui_tests.rs:483` exercises actual activation, action/poll and chart request/receive, additional cases, missing traces and valid reopening. |
+| Rejected additional input publication | `study/recording_jobs.rs:92` captures read evidence before parsing/validation and `:128` builds structured failed outcomes; `:166` is the production read consumer. `study/jobs.rs:301` preserves additional inputs in terminal receipts; shared receipt application and existing immutable publication preserve them on save/reopen. `study/recording_lifecycle.rs:190` exercises malformed/invalid/cancelled/read-failure cases and revision acknowledgment. |
+| Host-independent two-source quarantine | `experiment_study/recordings.rs:79` checks joined tuning assignments against both sources before shared preparation; native and legacy callers still delegate to this contract. `experiment_study/recording_fixtures.rs:137` covers direct compatible/refused preparation and inactive historical reservation preservation. |
+
+`study/` abbreviates `crates/sim-spatial/src/builder/calibration/study/`;
+`experiment_study/` abbreviates `crates/sim-runtime/src/experiment_study/`.
+The repair augments all seven original checklist IDs rather than creating a new
+batch. Independent reviewers reread shared selection/quarantine, rejected-input
+publication, and actual native controls/chart consumers; reported defects were
+repaired. This is source evidence, not execution or independent batch acceptance.
+Chart requests still use the existing whole-study snapshot clone pattern; large
+retained inputs may increase that copy cost, which is unprofiled in this run.
+
+Fixtures added for these paths are written but unexecuted. No compilation,
+rendering, hit testing, publication execution, parity execution or hardware
+qualification is claimed. Python/OCCT, browser references, FPGA, electrical/power,
+raw sweep, hardware acquisition and remaining legacy experiments stay available.

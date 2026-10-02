@@ -185,3 +185,69 @@ fn rejected_additional_heldout_conflict_quarantines_identity_without_rewriting_f
     jobs::poll_owner(&mut owner,&registry);assert_eq!(owner.receipts.last().unwrap().launch["recording_applied"],false);
     assert!(owner.receipts.last().unwrap().error.as_ref().unwrap().contains("held_out"));
 }
+
+#[test]
+fn rejected_additional_bytes_reach_production_receipts_and_immutable_round_trip() {
+    let (mut owner,registry)=owner();
+    let original=owner.active().unwrap().study.clone();
+    let mut invalid=serde_json::to_value(&original).unwrap();
+    invalid["version"]=json!(0);
+    // A parsed source can contain old receipts; the provenance projection never
+    // embeds those receipt owners, while exact raw bytes remain reproducible.
+    invalid["retained_fields"]=json!({"old_receipts":{"opaque":"preserved only as source bytes"}});
+    let invalid=serde_json::to_vec(&invalid).unwrap();
+    for (bytes,cancelled,diagnostic) in [(b"{malformed".to_vec(),false,".json"),(invalid,false,".validation"),(serde_json::to_vec(&original).unwrap(),true,"cancelled after read")] {
+        let raw=String::from_utf8(bytes.clone()).unwrap();
+        let hash=refinement::recordings::input_identity(&bytes);
+        let (parsed,input,error)=super::recording_jobs::capture_additional("changing-source.study.json",Ok(bytes),cancelled);
+        assert!(parsed.is_none());assert!(error.as_ref().unwrap().contains(diagnostic));
+        assert_eq!(input["content_blake3"],hash);
+        assert!(input["parsed_provenance"].get("retained_fields").is_none());
+        let output=super::recording_jobs::rejected_output(owner.active().unwrap().study.clone(),Operation::FitCombined{additional:None},error.unwrap(),cancelled,Some(input));
+        finished(&mut owner,JobKind::Refinement,output);
+        jobs::poll_owner(&mut owner,&registry);
+        let reopened:Study=serde_json::from_slice(&serde_json::to_vec(&owner.active().unwrap().study).unwrap()).unwrap();
+        reopened.validate().unwrap();
+        let receipt=reopened.refinement_evidence.receipts.last().unwrap();
+        assert_eq!(receipt.inputs["additional_input"]["raw"],raw);
+        assert_eq!(receipt.inputs["additional_input"]["content_blake3"],hash);
+        assert_eq!(receipt.inputs["additional_input"]["execution_cancelled"],cancelled);
+        assert!(receipt.failure.is_some());assert!(reopened.refinement.combined_fits.is_empty());
+        let durable=reopened.retained_fields["native_offline_job_receipts"].as_array().unwrap().last().unwrap();
+        assert_eq!(durable["launch"]["additional_input"]["raw"],raw);
+    }
+    // Terminal rejection dirties the revision; an earlier publication cannot
+    // acknowledge it. This invokes the existing immutable publication consumer.
+    finished(&mut owner,JobKind::Save,JobOutput::Published);
+    owner.get_mut(1).unwrap().revision+=1;
+    jobs::poll_owner(&mut owner,&registry);
+    assert!(owner.active().unwrap().dirty());assert!(owner.receipts.last().unwrap().stale);
+}
+#[test]
+fn unreadable_and_non_utf8_additional_sources_keep_honest_input_diagnostics() {
+    let (mut owner,registry)=owner();
+    for (read,cancelled) in [(Err("permission denied (os error 13)".to_string()),false),(Ok(vec![0xff,0xfe]),false)] {
+        let (_,input,error)=super::recording_jobs::capture_additional("unreadable.study.json",read,cancelled);
+        assert!(error.is_some());
+        if input.get("read_error").is_some(){assert!(input.get("raw").is_none());assert!(input.get("content_blake3").is_none());}
+        else {assert_eq!(input["invalid_utf8_bytes"],json!([255,254]));}
+        let output=super::recording_jobs::rejected_output(owner.active().unwrap().study.clone(),Operation::FitCombined{additional:None},error.unwrap(),false,Some(input.clone()));
+        finished(&mut owner,JobKind::Refinement,output);jobs::poll_owner(&mut owner,&registry);
+        assert_eq!(owner.receipts.last().unwrap().launch["additional_input"],input);
+    }
+}
+#[test]
+fn cancellation_before_worker_start_retains_path_without_inventing_read_evidence() {
+    let (mut owner,registry)=owner();
+    let id=finished(&mut owner,JobKind::Refinement,JobOutput::Published);
+    let pending=owner.pending.last_mut().unwrap();
+    pending.launch=json!({"additional_path":"never-read.study.json"});
+    pending.job=Job::finished(id,Err("Combined fitting was cancelled before it started.".into()));
+    pending.cancel_requested=true;
+    jobs::poll_owner(&mut owner,&registry);
+    let receipt=&owner.receipts[0];
+    assert_eq!(receipt.launch["inputs"]["additional_path"],"never-read.study.json");
+    assert!(receipt.launch.get("additional_input").is_none());
+    assert!(receipt.launch["terminal"]["execution_cancelled"].is_null());
+    assert!(receipt.cancelled);
+}

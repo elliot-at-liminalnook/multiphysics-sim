@@ -25,6 +25,14 @@ T49 ordinary activation and focus was accepted in call-0378 across
 ordering and actual-consumer focus repairs are accepted by source review only;
 compilation, fixtures, rendering and hit testing remain unexecuted.
 
+T50 recording authoring at `5dd26014` remains under source review after
+call-0382 identified missing captured fit traces, lost rejected additional-study
+inputs, and host-dependent additional-source quarantine. The bounded repairs
+extend the same study action/job/presentation owners: durable source-stamped
+fit/case review, jobs-owned immutable additional-input evidence, and shared
+two-source quarantine enforcement. See [T50 repair evidence](../native-recording-fit-authoring.md#call-0382-repairs).
+These repairs do not establish executed parity or retire any reference surface.
+
 Rust changes after the historical `aa34ef48` execution checkpoint remain
 uncompiled and unexecuted. The former opening ten-epic count was a stale dated
 snapshot and is superseded by this statement. Historical Python results below

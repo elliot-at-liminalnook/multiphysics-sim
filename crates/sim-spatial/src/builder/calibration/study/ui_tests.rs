@@ -476,3 +476,81 @@ fn immediate_recording_group_refusal_retains_raw_fields_and_unlocks_retry(){
     for(name,_)in fields{assert!(!world.resource::<StudyUi>().awaiting_key(&(Some((stamp.id,stamp.revision)),Field::Recording(format!("{prefix}{name}")))));}
     assert!(super::super::forms::stage_group(&mut world.resource_mut::<StudyUi>(),stamp,&prefix,action).is_ok());
 }
+
+/// Captured attempts may have no usable outcome. Real controls still reach the
+/// immutable dataset/chart consumer; review does not execute a new prediction.
+#[test]
+fn actual_fit_case_controls_review_additional_and_partial_sources_without_adoption(){
+    use sim_runtime::{controller_refinement::{calibration as cal,calibration_data as data,control::{ControllerSession,Feedback},recording::{Recording,MeasuredFrame}},experiment_study::refinement::{self as shared,recordings}};
+    let mut o=owner();let s=&mut o.studies[0].study;
+    let e=s.refinement.experiment.clone();let mut session=ControllerSession::new(e.clone()).unwrap();
+    let f=session.tick(0.015,Feedback{electrical:None,observed_s:0.01,request_s:0.009,completion_s:0.012,received_s:0.012,encoder_rad:0.1}).unwrap();
+    let drive_counts=(f.applied_duty*1000.).round() as i16;
+    let r=Recording{version:1,experiment:e,runtime:sim_runtime::physics_context::RuntimeIdentity::current(),frames:vec![MeasuredFrame{control:f,command_request_s:0.016,command_receipt_s:0.02,drive_counts,voltage_v:12.,temperature_c:25.,current_raw_uncalibrated:0}],stop_request_s:0.03,stop_receipt_s:0.04,completed:true,failure:None,stop_verified:true,initial_registers:Value::Null,transactions_origin_host_s:0.,timing_evidence:"Synthetic original sample times".into(),source_hashes:BTreeMap::from([("synthetic acquisition".into(),"original captured run".into())])};
+    let hash=r.fingerprint();let assignment=data::Assignment{recording_hash:hash.clone(),role:data::Role::HeldOut,limits:sim_runtime::experiment_comparison::Limits{rmse:0.01,final_abs_error:0.02},rationale:"Reserved immutable case".into()};
+    let mut tuning=r.clone();tuning.source_hashes.insert("synthetic acquisition".into(),"distinct run".into());
+    let train=data::Assignment{recording_hash:tuning.fingerprint(),role:data::Role::Train,limits:assignment.limits.clone(),rationale:"Reserved tuning run".into()};
+    for recording in [r.clone(),tuning.clone()]{shared::apply(s,shared::Command::ImportRecording{recording}).unwrap();}
+    for assignment in [assignment.clone(),train.clone()]{shared::apply(s,shared::Command::AssignRecording{assignment}).unwrap();}
+    let dataset=data::RecordingDataset::capture(&[r,tuning],&[assignment,train]).unwrap();
+    let initial=s.draft.conditions.load_inertia;
+    let coordinates=vec![cal::Coordinate{device:None,path:"condition.load_inertia".into(),lower:initial*0.5,upper:initial*1.5}];
+    let make_attempt=|cases:Vec<data::Case>,fingerprint:String|{
+        let request=cal::FitRequest{model:cal::Family{shared:s.draft.clone(),device_deltas:BTreeMap::new()},training_ids:cases.iter().filter(|c|c.split=="train").map(|c|c.id.clone()).collect(),validation_ids:cases.iter().filter(|c|c.split!="train").map(|c|c.id.clone()).collect(),coordinates:coordinates.clone(),maximum_evaluations:40,validation_influenced:false};
+        let scores=cases.into_iter().map(|c|{
+            let metrics=sim_runtime::experiment_comparison::compare(&c.measured,&c.measured,&c.limits).unwrap();
+            let missing=c.id==hash;
+            cal::TrialScore{id:c.id,device:c.device,split:c.split,baseline:Some(metrics.clone()),candidate:(!missing).then_some(metrics),failure:missing.then(||"Candidate comparison not reached".into()),baseline_prediction:Some(c.measured.clone()),candidate_prediction:(!missing).then_some(c.measured)}
+        }).collect();
+        let partial=cal::Fit{baseline:request.model.clone(),candidate:request.model.clone(),coordinates:request.coordinates.clone(),training_ids:request.training_ids.clone(),validation_ids:request.validation_ids.clone(),optimizer:json!({"values":[initial]}),scores,validation_influenced:false,runtime:sim_runtime::physics_context::RuntimeIdentity::current(),status:"partial / unscored".into()};
+        cal::FitAttempt{request,archive_hash:fingerprint,runtime:sim_runtime::physics_context::RuntimeIdentity::current(),evaluations:vec![],outcome:None,partial:Some(partial),failure:Some("Scoring interrupted before final comparison".into()),cancelled:true}
+    };
+    use sim_runtime::controller_refinement::calibration_data::CalibrationData;
+    let recording_attempt=make_attempt(dataset.cases().unwrap(),dataset.fingerprint());
+    let mut extra=s.archive.clone();for trial in &mut extra.trials{trial.id=format!("saved-additional:{}",trial.id);}
+    let additional_id=extra.trials[0].id.clone();let additional_samples=extra.trials[0].measured.samples.len();let original_span=(extra.trials[0].measured.samples.first().unwrap().time_s,extra.trials[0].measured.samples.last().unwrap().time_s);
+    let combined=data::CombinedDataset{archives:vec![s.archive.clone(),extra],recordings:Some(dataset.clone())};
+    let combined_attempt=make_attempt(combined.cases().unwrap(),combined.fingerprint());
+    s.refinement.recording_fits.push(data::RecordingFitAttempt{dataset,attempt:recording_attempt});
+    s.refinement.combined_fits.push(data::CombinedFitAttempt{dataset:combined,attempt:combined_attempt});
+    recordings::cache_identities(s);
+    let mut w=world(o);w.init_resource::<bevy::input_focus::InputFocus>();w.init_resource::<Messages<crate::ui_kit::text::FieldMsg>>();w.init_resource::<Messages<crate::app::actions::Act<StudyAction>>>();
+    for (kind,case) in [("recording_fit",hash.as_str()),("combined_fit",additional_id.as_str()),("combined_fit",hash.as_str())]{
+        w.run_system_once(render).unwrap();w.run_system_once(collect).unwrap();
+        let id=format!("study:recording:case:{kind}:0:{case}");
+        let stamp=w.resource::<StudyOwner>().active().unwrap().stamp();
+        let entity=w.query::<(Entity,&ControlId,&Hit)>().iter(&w).find_map(|(e,c,h)|(c.0==id&&matches!(h,Hit::Action(StudyAction::RefineApply{stamp:s,..}) if *s==stamp)).then_some(e)).unwrap();
+        assert!(w.get::<crate::ui_kit::activation::Ordinary>(entity).is_some());w.entity_mut(entity).insert(crate::ui_kit::activation::Activated);
+        w.run_system_once(super::super::forms::input).unwrap();
+        w.entity_mut(entity).remove::<crate::ui_kit::activation::Activated>();
+        let actions:Vec<_>=w.resource_mut::<Messages<crate::app::actions::Act<StudyAction>>>().drain().collect();
+        let action=actions[0].action.clone();
+        let StudyAction::RefineApply{command:shared::Command::SelectFitCase{selection},..}=action.clone()else{panic!("actual fit case action")};
+        let registry=crate::document::DocumentRegistry::default();
+        super::super::actions::apply_action(&mut w.resource_mut::<StudyOwner>(),&registry,&action).unwrap();
+        let deadline=std::time::Instant::now()+std::time::Duration::from_secs(2);
+        while !w.resource::<StudyOwner>().pending.is_empty(){
+            super::super::jobs::poll_owner(&mut w.resource_mut::<StudyOwner>(),&registry);
+            assert!(std::time::Instant::now()<deadline,"actual authoring job did not finish");std::thread::yield_now();
+        }
+        assert_eq!(w.resource::<StudyOwner>().active().unwrap().study.refinement_evidence.selected_fit_case,selection);
+        // The exact rendered occurrence is stale after terminal attachment advances
+        // its source revision; it cannot submit another job or retarget the chart.
+        assert!(super::super::actions::apply_action(&mut w.resource_mut::<StudyOwner>(),&registry,&action).unwrap_err().contains("revision"));
+        assert!(w.resource::<StudyOwner>().pending.is_empty());
+        w.init_resource::<Assets<Image>>();w.run_system_once(super::recording_chart::request).unwrap();
+        while !w.resource::<StudyUi>().recording_charts.current(w.resource::<StudyOwner>()){
+            w.run_system_once(super::recording_chart::receive).unwrap();
+            assert!(std::time::Instant::now()<deadline,"actual raster job did not finish");std::thread::yield_now();
+        }
+        assert!(w.resource::<StudyUi>().recording_charts.image.is_some());
+        let (label,axes)=super::recording_chart::inspect_fixture(w.resource::<StudyOwner>()).unwrap();
+        assert!(label.contains("UNSCORED"));assert!(label.contains(case));
+        if case==hash {assert!(label.contains("baseline 1 / candidate 0"));}
+        if case==additional_id {assert_eq!(axes.1,original_span);assert!(label.contains(&format!("baseline {additional_samples} / candidate {additional_samples}")));}
+        let reopened:sim_runtime::experiment_study::Study=serde_json::from_value(serde_json::to_value(&w.resource::<StudyOwner>().studies[0].study).unwrap()).unwrap();
+        reopened.validate().unwrap();assert_eq!(reopened.refinement_evidence.selected_fit_case,selection);
+    }
+    {let s=&mut w.resource_mut::<StudyOwner>().studies[0].study;s.refinement.combined_fits[0].attempt.failure=Some("replaced immutable source".into());recordings::cache_identities(s);}
+    assert!(super::recording_chart::inspect_fixture(w.resource::<StudyOwner>()).unwrap_err().contains("stale"));
+}

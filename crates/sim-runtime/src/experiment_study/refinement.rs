@@ -10,6 +10,7 @@ use std::{collections::BTreeMap, sync::atomic::{AtomicBool}};
 pub enum Command {
     ImportRecording{recording:recording::Recording}, SelectRecording{recording_hash:String},
     AppendContext{context:context::CaptureContext}, AssignRecording{assignment:data::Assignment},
+    SelectFitCase{selection:Option<recordings::FitCaseSelection>},
     UseRecordingFit{kind:String,index:usize,device:Option<u8>}, SetPredictionPurpose(recording::Purpose),
     SetExperiment(control::Experiment), SetCoordinates(Vec<cal::Coordinate>),
     SetScenarios(Vec<cal::Variant>), SetSelection{kind:String,ids:Vec<String>}, UseFit{fit:usize,device:Option<u8>},
@@ -54,6 +55,8 @@ pub struct Evidence {
     pub selections:BTreeMap<String,Vec<String>>,
     pub controller_run:Option<usize>,
     pub selected_recording:Option<String>,pub prediction_purpose:Option<recording::Purpose>,
+    pub selected_fit_case:Option<recordings::FitCaseSelection>,
+    #[serde(skip)] pub fit_identities:BTreeMap<String,Vec<String>>,
     #[serde(skip)] pub recording_identities:Vec<String>,
     pub recording_held_out:std::collections::BTreeSet<String>,
     pub recording_exposure:BTreeMap<String,bool>,pub recording_reservations:BTreeMap<String,data::Assignment>,pub recording_candidate_uses:Vec<recordings::CandidateUse>,
@@ -98,7 +101,7 @@ fn coordinate_devices(s:&Study,coords:&[cal::Coordinate],ids:Option<&[String]>)-
 pub fn apply(s:&mut Study,command:Command)->Result<(),String> {
     let mut next=s.clone();
     match command {
-        c @ (Command::ImportRecording{..}|Command::SelectRecording{..}|Command::AppendContext{..}|Command::AssignRecording{..}|Command::UseRecordingFit{..})=>recordings::command(&mut next,c)?,
+        c @ (Command::ImportRecording{..}|Command::SelectRecording{..}|Command::AppendContext{..}|Command::AssignRecording{..}|Command::UseRecordingFit{..}|Command::SelectFitCase{..})=>recordings::command(&mut next,c)?,
         Command::SetPredictionPurpose(p)=>next.refinement_evidence.prediction_purpose=Some(p),
         Command::SetExperiment(e)=>{authoring::experiment(&e)?;if next.refinement.experiment!=e {next.refinement.experiment=e;next.candidate_edited();}},
         Command::SetCoordinates(coords)=>{coordinate_devices(&next,&coords,None)?;if !coords.is_empty(){authoring::coordinates(&family(&next),&coords)?;}if next.refinement.coordinates!=coords {next.refinement.coordinates=coords;next.candidate_edited();}},
@@ -192,7 +195,7 @@ pub fn execute(capture:Capture,cancel:&AtomicBool,progress:impl FnMut(usize,usiz
     Ok(Outcome{capture,result,cancelled})
 }
 pub fn apply_outcome(s:&mut Study,outcome:Outcome) {
-    let inputs=outcome.capture.inputs();apply_outcome_with_inputs(s,outcome,inputs);
+    let mut inputs=outcome.capture.inputs();if let Ok(result)=&outcome.result{if let Some(hash)=recordings::result_fit_identity(result){inputs["fit_result_blake3"]=serde_json::json!(hash);}}apply_outcome_with_inputs(s,outcome,inputs);
 }
 /// Job hosts compute the bounded input projection before dispatching terminal attachment.
 pub fn apply_outcome_with_inputs(s:&mut Study,outcome:Outcome,inputs:serde_json::Value) {
@@ -217,6 +220,12 @@ pub fn apply_outcome_with_inputs(s:&mut Study,outcome:Outcome,inputs:serde_json:
         Ok(ResultData::FitAttempt(v))=>{receipt.result_kind=Some("fit_attempt".into());receipt.result_index=Some(s.refinement.fit_attempts.len());receipt.failure=v.failure.clone();receipt.cancelled|=v.cancelled;if let Some(f)=&v.outcome {s.refinement.fits.push(f.clone());}s.refinement.fit_attempts.push(v);},
         Ok(ResultData::Robustness(v))=>{receipt.result_kind=Some("robustness".into());receipt.result_index=Some(s.refinement.robustness.len());receipt.cancelled|=v.cancelled;let failures=v.failures.iter().cloned().chain(v.runs.iter().filter_map(|(label,_,r)|r.failure.as_ref().map(|e|format!("{label}: {e}")))).collect::<Vec<_>>();if !failures.is_empty(){receipt.failure=Some(failures.join("; "));}s.refinement.robustness.push(v);},
         Err(e)=>{s.refinement.failures.push(format!("{}: {e}",c.label()));receipt.failure=Some(e);}
+    }
+    if let (Some(kind),Some(index),Some(hash))=(&receipt.result_kind,receipt.result_index,receipt.inputs.get("fit_result_blake3").and_then(|v|v.as_str())) {
+        if kind=="recording_fit"||kind=="combined_fit" {
+            let ids=s.refinement_evidence.fit_identities.entry(kind.clone()).or_default();
+            if ids.len()==index{ids.push(hash.to_owned());}
+        }
     }
     s.refinement_evidence.receipts.push(receipt);
 }

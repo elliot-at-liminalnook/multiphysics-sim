@@ -6,10 +6,13 @@
 //! `hardware {action}`), and applied by [`apply`] in `ViewerSet::Actions`.
 //!
 //! **Authorization.** Physical and unknown executions require an operator at
-//! the window. Remote HW-01–HW-09 calibration alone can use a verified virtual
-//! identity pinned to a fresh connection generation. [`HardwareAction::authorize`]
-//! is shared by listings and authoritative dispatch. Gait, raw step, live sync
-//! and binding motion remain refused. STOP bypasses this policy and queues.
+//! the window. Remote HW-01–HW-09 calibration and gait playback (HW-10/HW-11:
+//! selecting, the mode, speed, effort, confirmation and Play) alone can use a
+//! verified virtual identity pinned to a fresh connection generation.
+//! [`HardwareAction::authorize`] is shared by listings and authoritative
+//! dispatch. Raw step, flip, live sync and the mirror's bindings remain
+//! refused remotely on every link. STOP and the gait's Stop bypass this
+//! policy.
 // Implementation below the enum: the panel part (input systems, apply).
 use crate::app::actions::{self, Spec, spec};
 use serde::{Deserialize, Serialize};
@@ -231,8 +234,10 @@ impl HardwareAction {
         }
     }
 
-    /// Whether this action can start, change or arm motion, and so is
-    /// refused from REST and `system_ui`: energizing or moving a motor, a
+    /// Whether this action can start, change or arm motion, and so needs an
+    /// operator at the window, or from REST and `system_ui` the remote
+    /// policy of [`HardwareAction::authorize`] (a pinned fresh virtual
+    /// execution, and only for the calibration and gait intents it lists): energizing or moving a motor, a
     /// session, sweep, tune, campaign, gait on the leg, raw step or live
     /// sync; the speed, effort, target, PWM ceiling, drive mode and
     /// hold-others of motion; the operator's safety confirmations (tune,
@@ -306,26 +311,46 @@ impl HardwareAction {
     /// The only remote-motion policy, reused by listing and authoritative dispatch.
     pub(crate) fn authorize(&self, hw: &super::Hardware, now: std::time::Instant) -> Result<(), String> {
         if !self.starts_motion() { return Ok(()); }
+        let link = hw.link.as_ref().map(|link| (link.generation, link.snapshot()));
+        self.authorize_with(link.as_ref().map(|(generation, s)| (*generation, s)), hw.generation, now)
+    }
+
+    /// [`HardwareAction::authorize`] against a link's generation and its
+    /// newest snapshot (None: no link) and the panel's current generation.
+    ///
+    /// Allowed remotely, only through the virtual check (a verified virtual
+    /// identity, the current generation, a connection and bus that hold, no
+    /// revocation or disconnection, a fresh status): HW-01–HW-09 calibration,
+    /// and gait playback, whose form intents (select, mode, speed, effort,
+    /// confirmation) and Play (Leg and Both drive the virtual bench's leg;
+    /// pause and resume) are everything `starts_motion` lists for the gait.
+    /// Never allowed remotely: flip, raw step, the mirror's bindings (they
+    /// become `gait_start`'s bindings and the saved alignment angle) and
+    /// live sync. A release (move to hold) needs only a link; STOP and the
+    /// gait's Stop are not motion starts and are never refused.
+    pub(crate) fn authorize_with(&self, link: Option<(u64, &super::link::LinkSnapshot)>, generation: u64, now: std::time::Instant) -> Result<(), String> {
+        if !self.starts_motion() { return Ok(()); }
         use HardwareAction as H;
         // A release is a move to hold: like STOP it is never refused for a
         // stale status or a replaced generation (refusing it would leave the
         // motor moving); it needs only a link to send it to. The link thread
         // holds, or STOPs if the session may no longer be driven.
         if matches!(self, H::JogRelease { .. }) {
-            return if hw.link.is_some() { Ok(()) } else { Err(format!("hardware `{}`: not connected", self.name())) };
+            return if link.is_some() { Ok(()) } else { Err(format!("hardware `{}`: not connected", self.name())) };
         }
         if !matches!(self, H::Select { .. } | H::SetDisabled | H::SweepAll | H::HoldOthers { .. }
             | H::JogPress { .. } | H::JogRelease { .. } | H::Speed { .. } | H::Target { .. }
             | H::TargetCommit | H::Capture { .. } | H::ResetPoses | H::ClearLower | H::ClearUpper
             | H::Sweep | H::Learn | H::TuneConfirm { .. } | H::Tune
-            | H::CampaignConfirm { .. } | H::Campaign { .. } | H::DriveMode { .. } | H::PwmCeiling { .. }) {
+            | H::CampaignConfirm { .. } | H::Campaign { .. } | H::DriveMode { .. } | H::PwmCeiling { .. }
+            | H::GaitSelect { .. } | H::GaitMode { .. } | H::GaitSpeed { .. } | H::GaitEffort { .. }
+            | H::GaitConfirm { .. } | H::GaitPlay) {
             return Err(self.remote_refusal());
         }
-        let Some(link) = &hw.link else { return Err(self.remote_refusal()); };
-        let s = link.snapshot();
+        let Some((link_generation, s)) = link else { return Err(self.remote_refusal()); };
         sim_runtime::hardware_client::calibration::authorize_virtual(
-            s.execution.as_ref(), s.generation, hw.generation,
-            s.connection_valid && s.state.connected && !s.authorization_revoked && link.generation == hw.generation,
+            s.execution.as_ref(), s.generation, generation,
+            s.connection_valid && s.state.connected && !s.authorization_revoked && s.disconnected.is_none() && link_generation == generation,
             !s.stale(now),
         ).map_err(|why| format!("hardware `{}`: {why}", self.name()))
     }
@@ -367,7 +392,7 @@ impl actions::Action for HardwareAction {
                 "hardware",
                 r,
                 json!({"action": {"mirror_enabled": {"on": true}}}),
-                "Any Leg calibration intent. HW-01–HW-09 remote calibration requires a fresh pinned virtual execution identity and connection generation; replies await the authoritative session consumer. Physical, unknown, stale, replaced and out-of-scope motion (gait, raw step, live sync and bindings) is refused. STOP, reads, export, connect, sections and focus_lost/panel_closed losses remain allowed; leaving is the actual window close.",
+                "Any Leg calibration intent. HW-01–HW-09 remote calibration and gait playback (gait_select, gait_mode, gait_speed, gait_effort, gait_confirm, gait_play: Leg and Both drive the virtual bench's leg, labelled VIRTUAL (simulated)) require a fresh pinned virtual execution identity and connection generation; replies await the authoritative session consumer (gait_play answers once the gait started, or with why not). Physical, unknown, stale, replaced and disconnected motion is refused, and so are flip, raw step, live sync and the mirror's bindings on every link. STOP, gait_stop, reads, export, connect, sections and focus_lost/panel_closed losses remain allowed; leaving is the actual window close.",
             ),
         ]
     }
@@ -531,10 +556,24 @@ pub(crate) fn request_close_stop(hw: &mut Hardware) {
 
 /// Token discovery and the client, off the UI thread; `poll_jobs` starts
 /// the link. A link already open is stopped and dropped first.
+///
+/// Reconnect re-pins through the same verification whenever the server
+/// reports a virtual execution now: a restarted bench or server has a new
+/// identity, pinned with this connect's new generation (the client carries
+/// both; `Link::spawn` hands them to the session, which publishes them as
+/// the snapshot's `execution` and `generation`, and `hw.generation` is the
+/// new one). Otherwise the new link is unpinned (physical or unknown) and
+/// [`HardwareAction::authorize`] refuses remote motion on it; when the link
+/// it replaces was pinned to a virtual bench, the panel's notice says so
+/// ([`BENCH_GONE`]).
 pub(super) fn connect(hw: &mut Hardware) {
     if hw.connecting.is_some() {
         return;
     }
+    // The link being replaced was pinned to a virtual bench: if the new one
+    // is not (the server reports no virtual execution now), `poll_jobs`
+    // says why remote motion is refused. Kept across a failed connect.
+    hw.replaced_virtual |= hw.link.as_ref().is_some_and(|link| link.client.calibration_execution.as_ref().is_some_and(|(identity, _)| identity.is_virtual_calibration()));
     if hw.link.is_some() {
         stop_immediate(hw);
         if let Some(old) = hw.link.take() {
@@ -567,6 +606,10 @@ pub(super) fn connect(hw: &mut Hardware) {
         })
     }));
 }
+
+/// The panel's notice after a reconnect that replaced a link pinned to a
+/// virtual bench with an unpinned one.
+pub(super) const BENCH_GONE: &str = "The virtual bench this panel was pinned to is gone and the server reports no virtual execution now: this link is not pinned (physical or unknown), so remote motion is refused. Restart the virtual bench server, then Reconnect to pin its new identity.";
 
 /// Actions: the panel's one apply system. Remote calibration uses the shared
 /// fail-closed virtual authorization; a control disabled at submission is
@@ -686,12 +729,21 @@ fn poll_jobs(hw: Option<ResMut<Hardware>>) {
         let generation = hw.connecting.take().map_or(hw.generation, |j| j.generation());
         match result {
             Ok(client) => {
+                let pinned = client.calibration_execution.as_ref().is_some_and(|(identity, _)| identity.is_virtual_calibration());
                 let link = link::Link::spawn(client, generation);
                 // A new link counts its speed resets from 0.
                 hw.form.inputs.speed_reset = 0;
                 link.send(LinkCommand::Inputs(hw.form.inputs.clone()));
                 hw.link = Some(link);
                 hw.notice = None;
+                if std::mem::take(&mut hw.replaced_virtual) && !pinned {
+                    hw.notice = Some(BENCH_GONE.into());
+                }
+                // The suspended-leg confirmation attests the leg on the link it
+                // was given for (remotely, only a virtual one): a new link
+                // starts unchecked, so a confirmation never carries from a
+                // virtual bench to a physical leg.
+                hw.form.gait_ok = false;
                 hw.form.seen_tune_done = 0;
                 hw.form.seen_campaign_done = 0;
                 hw.form.seen_speed_reset = 0;

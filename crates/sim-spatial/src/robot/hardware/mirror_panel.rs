@@ -5,13 +5,17 @@
 //! - `mirror_sync` (SimSync, before `robot::apply_frames`): takes the
 //!   mirror worker's results, builds the roles from the first status that
 //!   lists axes, begins or ends the mirror as the panel opens, closes, the
-//!   link comes or goes and the preference changes, updates it on every new
-//!   link snapshot, follows a gait played in Sim or Both, and writes
+//!   link comes or goes and the preference changes, judges the link's health
+//!   every frame (`LinkSnapshot::health`: a stale or lost link holds the
+//!   last pose and says so; becoming live again forces an update), updates
+//!   it on every new link snapshot, follows a gait played in Sim or Both
+//!   (Both on the leg's clock, `LinkSnapshot::leg_clock`), and writes
 //!   `RobotView::mirror` (poses and tinted links) with `pose_dirty`.
 //! - `mirror_panel` (Present): fills [`MirrorRoot`] (spawned by the panel at
 //!   the page's position) with the section's controls, rebuilt only when the
 //!   roles or preferences change; the status line is updated in place.
 use super::actions::HardwareAction;
+use super::link::LinkHealth;
 use super::{Hardware, MirrorDisplay, mirror};
 use crate::app::actions::Act;
 use crate::app::{ViewerMode, ViewerSet};
@@ -50,6 +54,12 @@ struct Seen {
 fn mirror_sync(hw: Option<ResMut<Hardware>>, view: Option<ResMut<RobotView>>, mut acts: MessageWriter<Act<RobotAction>>, mut redraw: MessageWriter<bevy::window::RequestRedraw>, mut seen: Local<Seen>) {
     let (Some(mut hw), Some(mut view)) = (hw, view) else { return };
     let (hw, view) = (&mut *hw, &mut *view);
+    // The leg's data now, every frame and before anything can pose from it (a
+    // gait sample landing in `poll` re-poses the encoders): a link that stops
+    // answering goes stale without a new revision. No link: nothing read.
+    let now = Instant::now();
+    let health = if hw.link.is_some() { hw.snapshot.health(now) } else { LinkHealth::Waiting };
+    let recovered = hw.mirror.set_leg_health(&health);
     // The worker's results first: loaded coordinates show the mirror this frame.
     if let Some(solved) = hw.mirror.poll() {
         if let Some(display) = view.mirror.as_mut() {
@@ -81,13 +91,16 @@ fn mirror_sync(hw: Option<ResMut<Hardware>>, view: Option<ResMut<RobotView>>, mu
     seen.wanted = want;
     let snap = &hw.snapshot;
     let key = (snap.generation, snap.revision);
-    if hw.link.is_some() && seen.snapshot != Some(key) {
+    if hw.link.is_some() && (recovered || seen.snapshot != Some(key)) {
         seen.snapshot = Some(key);
-        hw.mirror.update(&snap.state, false);
+        // `update` poses from the encoders only while live (else it holds);
+        // live again, it is forced so the live pose and line return.
+        hw.mirror.update(&snap.state, recovered);
     }
     // No link: no gait run (a dropped link ends its gait).
     let gait_run = hw.link.as_ref().and(snap.gait.as_ref());
-    hw.mirror.follow_gait(gait_run, snap.compiled_gait.as_ref(), snap.state.gait.as_ref().and_then(|g| g.speed_scale), Instant::now());
+    let leg_clock = hw.link.as_ref().and_then(|_| snap.leg_clock(now));
+    hw.mirror.follow_gait(gait_run, snap.compiled_gait.as_ref(), leg_clock.as_ref(), now);
     if want && hw.mirror.due() {
         let links = mirror::link_names(view);
         if let Some(tinted) = hw.mirror.prepare(scene, &links) {

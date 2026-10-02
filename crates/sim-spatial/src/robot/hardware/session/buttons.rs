@@ -4,7 +4,26 @@
 use super::Session;
 use crate::robot::hardware::actions::Boundary;
 use crate::robot::hardware::link::Intent;
-use sim_runtime::hardware_client::calibration;
+use serde_json::Value;
+use sim_runtime::hardware_client::calibration::{self, Status};
+
+/// Why a `capture_hold` answer that is not the server's status (an older
+/// server's `{"ok":true}`, sent before its hold session saved anything) is
+/// an error: the pose may not be saved.
+pub(in crate::robot::hardware) const CAPTURE_UNCONFIRMED: &str = "the server accepted the capture but did not confirm the save; check the pose before relying on it";
+
+/// `capture_hold`'s answer: the server answers once its hold session saved
+/// the pose, with its full status (as `/calibration/status`); a refusal
+/// ("Still settling…", "Pose not saved: …") is a 400 and never reaches
+/// here. The status types are tolerant (any object reads as a status), so
+/// the answer must carry the status's own `connected` and `calibration`.
+fn saved_status(answer: Value) -> Result<Status, String> {
+    let is_status = answer.get("connected").is_some_and(Value::is_boolean) && answer.get("calibration").is_some_and(Value::is_object);
+    if !is_status {
+        return Err(CAPTURE_UNCONFIRMED.into());
+    }
+    serde_json::from_value(answer).map_err(|e| format!("{CAPTURE_UNCONFIRMED} (status: {e})"))
+}
 
 impl Session {
     /// The target slider :299: a raw target between the taught poses, 4 counts inside them.
@@ -37,6 +56,15 @@ impl Session {
     /// so the beat posts it (in order with the heartbeats, its sequence drawn
     /// as it is sent); a sequence drawn here could reach the server before a
     /// heartbeat in flight with a lower one, and either would be refused as stale.
+    ///
+    /// The server answers `capture_hold` only after its hold session saved
+    /// the pose (at most its 1 s wait for the session plus 2 s for the
+    /// outcome; the beat's request timeout is the client's, 10 s, and
+    /// [`Session::beat_wait`] longer), with its full status, which is adopted
+    /// at once: the panel and the mirror (its next `mirror_sync` sees the new
+    /// revision) show the saved pose. An answer that is not a status is an
+    /// error ([`CAPTURE_UNCONFIRMED`]). A status answered after a UI STOP was
+    /// pressed is left to the next poll (the STOP's own answer may be newer).
     pub(super) fn capture(&mut self, boundary: Boundary, reference_joint_rad: Option<f64>) {
         let Some(id) = self.snap.id else { return self.decline("no motor is selected") };
         let name = boundary.name();
@@ -44,7 +72,16 @@ impl Session {
         let result = match self.snap.run {
             Some(run) => {
                 let input = self.input();
-                self.send_in_session(Box::new(move |sequence| calibration::capture_hold(id, sequence, name, run, &input, joint))).map(|_| ())
+                let e = self.epoch_now();
+                match self.send_in_session(Box::new(move |sequence| calibration::capture_hold(id, sequence, name, run, &input, joint))).and_then(saved_status) {
+                    Ok(status) => {
+                        if e == self.epoch_now() {
+                            self.adopt(status);
+                        }
+                        Ok(())
+                    }
+                    Err(error) => Err(error),
+                }
             }
             None => self.send_status(calibration::capture(id, self.seq(), name, joint)).map(|s| self.adopt(s)),
         };

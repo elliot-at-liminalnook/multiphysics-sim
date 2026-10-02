@@ -21,9 +21,10 @@
 //!   to this connection generation; a stale status (unless the link thread
 //!   still awaits a request's answer), a lost connection or binding (transport,
 //!   or the server's 409) and an identity replacement revoke it until an
-//!   explicit reconnect; an ordinary refusal (400) does not. Gait, raw step,
-//!   live sync and bindings stay refused. STOP is immediate and
-//!   unconditional. Remote replies (REST, and `system_ui` activations, which
+//!   explicit reconnect; an ordinary refusal (400) does not. Gait playback
+//!   (Leg and Both on the virtual bench, labelled simulated) is allowed the
+//!   same way; raw step, flip, live sync and bindings stay refused. STOP
+//!   and the gait's Stop are immediate and unconditional. Remote replies (REST, and `system_ui` activations, which
 //!   robot mode passes on with their own reply) await the link thread's
 //!   verdict on what the command achieved; queueing is not success.
 //! - **Link** ([`link`], [`session`]): one `jobs::RunThread`
@@ -192,6 +193,10 @@ pub(crate) struct Hardware {
     /// Remote jog presses queued on the link whose verdict is not yet known
     /// (`handlers::settle_presses`).
     pub pending_presses: Vec<PendingPress>,
+    /// A connect replaced a link pinned to a virtual bench and no connect
+    /// has succeeded since: if the next link is not pinned, the notice says
+    /// why remote motion is refused (`actions::connect`, `actions::BENCH_GONE`).
+    pub replaced_virtual: bool,
 }
 
 /// A remote jog press queued on the link as a checked command, until its
@@ -245,6 +250,7 @@ impl Hardware {
             export_virtual: false,
             jog_presses: [0; 2],
             pending_presses: Vec::new(),
+            replaced_virtual: false,
         }
     }
 

@@ -90,3 +90,114 @@ fn claims_are_narrow_and_mirror_pose_reference_is_distinct_from_joint() {
     assert_eq!(preference_paths(&HardwareAction::SyncLeg { leg: "-X".into() }), vec!["/sync/leg", "/sync/bindings"]);
     assert_eq!(preference_paths(&HardwareAction::SyncStart), vec!["/sync"]);
 }
+
+// Remote gait authorization (HW-10/HW-11): written and source-inspected, not
+// executed. Pure: `authorize_with` on constructed snapshots, no link thread.
+mod remote_gait {
+    use super::*;
+    use crate::robot::hardware::link::{LinkSnapshot, STALE_AFTER};
+    use sim_runtime::hardware_client::calibration::ExecutionIdentity;
+    use std::time::{Duration, Instant};
+
+    fn identity(kind: &str) -> ExecutionIdentity {
+        ExecutionIdentity {
+            schema_version: 1,
+            kind: kind.into(),
+            server_instance: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa".into(),
+            bench_instance: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb".into(),
+        }
+    }
+
+    /// A link of generation 7 pinned to a virtual bench, its status read `now`, its bus connected.
+    fn fresh(now: Instant) -> LinkSnapshot {
+        let mut s = LinkSnapshot { generation: 7, execution: Some(identity("virtual_calibration")), connection_valid: true, read_at: Some(now), ..Default::default() };
+        s.state.connected = true;
+        s
+    }
+
+    /// Every gait intent `starts_motion` lists.
+    fn gait_intents() -> Vec<HardwareAction> {
+        vec![
+            HardwareAction::GaitSelect { index: 0 },
+            HardwareAction::GaitMode { mode: GaitMode::Leg },
+            HardwareAction::GaitMode { mode: GaitMode::Both },
+            HardwareAction::GaitSpeed { percent: 50.0 },
+            HardwareAction::GaitEffort { percent: 40.0 },
+            HardwareAction::GaitConfirm { on: true },
+            HardwareAction::GaitPlay,
+        ]
+    }
+
+    #[test]
+    fn gait_intents_pass_on_a_fresh_pinned_virtual_link_of_the_current_generation() {
+        let now = Instant::now();
+        let s = fresh(now);
+        for action in gait_intents() {
+            assert!(action.starts_motion(), "{action:?}");
+            assert_eq!(action.authorize_with(Some((7, &s)), 7, now), Ok(()), "{action:?}");
+        }
+    }
+
+    #[test]
+    fn gait_intents_are_refused_on_every_other_link() {
+        let now = Instant::now();
+        let ok = fresh(now);
+        let mut cases: Vec<(&str, LinkSnapshot, u64, u64)> = vec![
+            ("physical identity", LinkSnapshot { execution: Some(identity("physical")), ..ok.clone() }, 7, 7),
+            ("no identity", LinkSnapshot { execution: None, ..ok.clone() }, 7, 7),
+            ("stale status", LinkSnapshot { read_at: Some(now - STALE_AFTER - Duration::from_millis(1)), ..ok.clone() }, 7, 7),
+            ("never read", LinkSnapshot { read_at: None, ..ok.clone() }, 7, 7),
+            ("revoked", LinkSnapshot { authorization_revoked: true, ..ok.clone() }, 7, 7),
+            ("connection lost", LinkSnapshot { connection_valid: false, ..ok.clone() }, 7, 7),
+            ("disconnected", LinkSnapshot { disconnected: Some("the server reports its bus disconnected".into()), ..ok.clone() }, 7, 7),
+            ("snapshot of another generation", LinkSnapshot { generation: 6, ..ok.clone() }, 7, 7),
+            // The panel reconnected since (a newer generation), or the link is an older one.
+            ("replaced generation", ok.clone(), 7, 8),
+            ("older link", ok.clone(), 6, 7),
+        ];
+        let mut bus_down = ok.clone();
+        bus_down.state.connected = false;
+        cases.push(("bus not connected", bus_down, 7, 7));
+        for action in gait_intents() {
+            for (why, s, link_generation, generation) in &cases {
+                assert!(action.authorize_with(Some((*link_generation, s)), *generation, now).is_err(), "{action:?} on {why}");
+            }
+            assert_eq!(action.authorize_with(None, 7, now), Err(action.remote_refusal()), "{action:?} without a link");
+            // The real entry point without a link refuses the same way.
+            let hw = Hardware::new(HardwareConfig::default(), settings::Settings::default());
+            assert!(action.authorize(&hw, now).is_err(), "{action:?}");
+        }
+    }
+
+    #[test]
+    fn stop_and_the_gait_stop_are_never_refused() {
+        let now = Instant::now();
+        let hw = Hardware::new(HardwareConfig::default(), settings::Settings::default());
+        let mut lost = fresh(now);
+        lost.execution = None;
+        lost.authorization_revoked = true;
+        for action in [HardwareAction::Stop, HardwareAction::GaitStop] {
+            assert!(!action.starts_motion(), "{action:?}");
+            assert_eq!(action.authorize(&hw, now), Ok(()), "{action:?} without a link");
+            assert_eq!(action.authorize_with(Some((7, &lost)), 8, now), Ok(()), "{action:?} on a lost link");
+        }
+    }
+
+    #[test]
+    fn bindings_flip_and_raw_step_stay_refused_remotely_on_a_virtual_link() {
+        let now = Instant::now();
+        let s = fresh(now);
+        for action in [
+            HardwareAction::MirrorPolarity { id: 1, polarity: -1 },
+            HardwareAction::MirrorJoint { id: 1, joint: "Foot servo output".into() },
+            HardwareAction::MirrorLeg { leg: "+X".into() },
+            HardwareAction::MirrorAlign { id: 1, align: Align::Mid },
+            HardwareAction::Flip,
+            HardwareAction::RawStep,
+            HardwareAction::RawStepValue { delta: 5 },
+            HardwareAction::SyncStart,
+        ] {
+            assert_eq!(action.authorize_with(Some((7, &s)), 7, now), Err(action.remote_refusal()), "{action:?}");
+        }
+    }
+}

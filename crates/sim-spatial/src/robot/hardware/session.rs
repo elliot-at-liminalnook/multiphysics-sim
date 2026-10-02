@@ -45,7 +45,7 @@
 //!   too, so that domain has one sender. The beat sends nothing while a STOP
 //!   is pending, and its periodic failures are acted on here
 //!   ([`Session::beat_failure`]) only if their run and epoch still hold.
-use super::actions::Direction;
+use super::actions::{Direction, GaitMode};
 use super::link::{Inputs, Intent, LinkCommand, LinkSnapshot, POLL_IDLE};
 use serde_json::Value;
 use sim_runtime::hardware_client::calibration::{self, Axis, Input, Status, SweepSample};
@@ -79,6 +79,10 @@ pub(in crate::robot::hardware) const APPLIED_THEN_STOPPED: &str = "applied, but 
 const BEAT_GONE: &str = "The heartbeat sender did not answer.";
 /// Why a pinned virtual session sends nothing but `stop` any more.
 const REVOKED: &str = "virtual calibration authorization revoked; reconnect required";
+/// Why a pinned virtual session's server no longer reports its execution (its bench was lost).
+const BENCH_LOST: &str = "the virtual calibration bench was lost (disconnected); reconnect required";
+/// Why a pinned virtual session's server reports another execution.
+const IDENTITY_CHANGED: &str = "virtual execution identity changed; reconnect required";
 /// Margin on a request's own deadline before the UI may take its wait for a lost connection.
 const AWAIT_MARGIN: Duration = Duration::from_secs(1);
 
@@ -154,6 +158,9 @@ pub(super) struct Session {
     authorization: Arc<std::sync::atomic::AtomicBool>,
     /// The highest epoch a UI STOP bumped to whose `Stopped` was handled.
     ui_stop_epoch: u64,
+    /// [`LinkSnapshot::disconnected`] was set by [`Session::lose_binding`]
+    /// (a request found the connection or binding gone), not by a status.
+    lost_binding: bool,
 }
 
 impl Session {
@@ -192,6 +199,7 @@ impl Session {
             command_error: None,
             authorization: Arc::default(),
             ui_stop_epoch: 0,
+            lost_binding: false,
         };
         session.sync_beat();
         session
@@ -345,10 +353,16 @@ impl Session {
         self.snap.execution.is_some() && (self.snap.authorization_revoked || self.authorization.load(SeqCst))
     }
     /// The connection or its execution binding is gone: a pinned virtual
-    /// session's automation is revoked until an explicit reconnect.
+    /// session's automation is revoked until an explicit reconnect, and the
+    /// link is marked disconnected ([`LinkSnapshot::disconnected`]; a reason
+    /// already there, more specific, is kept).
     fn lose_binding(&mut self) {
         self.snap.authorization_revoked |= self.snap.execution.is_some();
         self.snap.connection_valid = false;
+        if self.snap.disconnected.is_none() {
+            self.snap.disconnected = Some("the connection or its execution binding was lost or refused".into());
+            self.lost_binding = true;
+        }
     }
     /// Publishes, without a full publish, that this thread waits up to
     /// `wait` for an answer (None: no longer), so the UI does not take the
@@ -404,18 +418,42 @@ impl Session {
         self.request(|client| client.get_as::<Status>(STATUS))
     }
     /// `state = s` with a status read from the server.
+    ///
+    /// Also keeps [`LinkSnapshot::disconnected`]: set when this status
+    /// reports the bus not connected after the previous adopted one reported
+    /// it connected (a STOP that lost readback, a lost bench; with the
+    /// server's message), when a pinned virtual execution is gone or
+    /// replaced; cleared by a status that reports the bus connected, except
+    /// for a pinned virtual session whose binding was revoked (it stays
+    /// marked until an explicit reconnect). A server whose bus never
+    /// connected (a physical server before its first inspect) is not
+    /// disconnected; a status read after a lost request
+    /// ([`Session::lose_binding`]) clears that request's mark unless the
+    /// binding was revoked. Ends with [`Session::leg_frame`], so the leg
+    /// gait clock's base (`GaitRun::t`) and `read_at` change together.
     fn adopt(&mut self, status: Status) {
+        let was_connected = self.snap.read_at.is_some() && self.snap.state.connected;
+        let lost_binding = std::mem::take(&mut self.lost_binding);
         if self.snap.execution.is_some() && self.snap.execution != status.execution {
             self.snap.authorization_revoked = true;
             self.snap.connection_valid = false;
             // No execution any more: the server lost its virtual bench (its
             // `lose_bus`); another one: the server or bench was replaced.
             // Either revokes the same way.
-            self.message(if status.execution.is_none() {
-                "the virtual calibration bench was lost (disconnected); reconnect required".into()
-            } else {
-                "virtual execution identity changed; reconnect required".into()
-            });
+            let why = if status.execution.is_none() { BENCH_LOST } else { IDENTITY_CHANGED };
+            // Every later poll finds a mismatch: the stop below is sent once,
+            // not again every 600 ms (nor when a lost bench comes back as
+            // another instance, which this link never drove). Only the
+            // reason shown follows the server.
+            if self.snap.disconnected.as_deref().is_some_and(|d| d == BENCH_LOST || d == IDENTITY_CHANGED) {
+                if self.snap.disconnected.as_deref() != Some(why) {
+                    self.snap.disconnected = Some(why.into());
+                    self.snap.state.message = Some(why.into());
+                }
+                return;
+            }
+            self.snap.disconnected = Some(why.into());
+            self.message(why.into());
             self.bump_epoch();
             self.stopped_locally();
             // Our motor ids mean nothing on another instance: id-less, and
@@ -433,6 +471,22 @@ impl Session {
                 self.stopped_locally();
             }
         }
+        // A pinned virtual session whose binding was revoked stays marked
+        // until an explicit reconnect, however its server answers now.
+        let revoked_pin = self.snap.execution.is_some() && self.snap.authorization_revoked;
+        if status.connected {
+            if !revoked_pin {
+                self.snap.disconnected = None;
+            }
+        } else if was_connected {
+            let detail = [status.message.as_deref(), status.error.as_deref()].into_iter().flatten().map(str::trim).find(|m| !m.is_empty());
+            self.snap.disconnected = Some(match detail {
+                Some(m) => format!("the server reports its bus disconnected: {m}"),
+                None => "the server reports its bus disconnected".into(),
+            });
+        } else if lost_binding && !self.snap.authorization_revoked {
+            self.snap.disconnected = None;
+        }
         if let Some(tuning) = &status.tuning {
             if !tuning.stage.is_empty() && self.snap.tune_stages.last() != Some(&tuning.stage) {
                 self.snap.tune_stages.push(tuning.stage.clone());
@@ -440,6 +494,9 @@ impl Session {
         }
         self.snap.state = status;
         self.snap.read_at = Some(Instant::now());
+        // The leg gait clock's base goes with the read it came from, also
+        // when this status is published without a render.
+        self.leg_frame();
     }
     fn message(&mut self, text: String) {
         self.command_error = Some(text.clone());
@@ -743,6 +800,8 @@ impl Session {
         let (was_tuning, was_campaigning) = (self.snap.tuning, self.snap.campaigning);
         let chosen = self.snap.id;
         let was_disabled = chosen.and_then(|id| self.axis_of(id)).map(|a| a.disabled);
+        // A gait already playing: Play pauses or resumes it.
+        let was_playing = self.snap.gait.as_ref().map(|g| g.playing);
         let clearing = match &command {
             C::Clear { boundary } => Some(boundary.name()),
             C::ResetPoses => Some(self.reset_boundary()),
@@ -789,6 +848,28 @@ impl Session {
                 });
                 (cleared, "the pose was not cleared".into())
             }
+            // Pause/resume is judged by the request: for a leg gait the beat
+            // carries it to the server with its next `gait_update` (errors
+            // ignored, as the page's); a pause the server never hears is still
+            // ended by its 1.5 s lease, and the next status shows its phase.
+            C::GaitPlay { .. } | C::GaitToggle if was_playing.is_some() => (
+                self.snap.gait.as_ref().is_some_and(|g| Some(g.playing) != was_playing),
+                if was_playing == Some(true) { "the gait did not pause".into() } else { "the gait did not resume".into() },
+            ),
+            C::GaitToggle => (false, "no gait is playing".into()),
+            // Answered once the gait started: a sim gait is playing on this
+            // thread; a leg gait's `gait_start` was answered and adopted with
+            // nothing failing on the way. Else the play's own reason.
+            C::GaitPlay { mode, .. } => {
+                let error = self.command_error.take();
+                let started = self.snap.gait.as_ref().is_some_and(|g| g.mode == mode);
+                if started && (mode == GaitMode::Sim || error.is_none()) {
+                    return Ok(());
+                }
+                let why = if started { error } else { self.snap.gait_notice.clone().filter(|n| !n.is_empty()).or(error) };
+                let why = why.unwrap_or_else(|| "the gait did not start".into());
+                return Err(if started { format!("{why} (the gait started on the leg regardless; check the status, or Stop it)") } else { why });
+            }
             _ => return self.command_error.take().map_or(Ok(()), Err),
         };
         let error = self.command_error.take();
@@ -817,6 +898,10 @@ impl Session {
             if !self.snap.state.calibration.as_ref().is_some_and(|c| c.axes.contains_key(id)) {
                 return Err(format!("unknown calibration motor {id}"));
             }
+        }
+        // A new play (not a pause or resume) waits for a tune or campaign to end.
+        if matches!(command, C::GaitPlay { .. }) && self.snap.gait.is_none() && (self.snap.tuning || self.snap.campaigning) {
+            return Err("not while a tune or campaign runs".into());
         }
         Ok(())
     }

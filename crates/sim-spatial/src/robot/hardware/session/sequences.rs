@@ -337,7 +337,10 @@ impl Session {
         self.snap.gait = None;
         self.sync_beat();
     }
-    /// `gaitFrame` :244 for a sim-only gait: its clock advances by wall time × scale while playing.
+    /// `gaitFrame` :244 for a sim-only gait: its clock advances by wall time
+    /// × scale while playing. This is a Sim run's only clock ([`GaitRun::t`]
+    /// read as is by the mirror and the gait line); a leg run's is
+    /// [`Session::leg_frame`]'s, which this leaves alone.
     pub(in crate::robot::hardware) fn sim_frame(&mut self) {
         let now = Instant::now();
         if let Some(run) = self.snap.gait.as_mut().filter(|g| !g.leg && g.playing) {
@@ -346,6 +349,15 @@ impl Session {
         self.gait_last = now;
     }
     /// `gaitFrame` :243 for a leg gait: the leg's time, and `started` once the server reports it running.
+    ///
+    /// The one writer of a leg gait clock's base (Leg and Both): it copies the
+    /// adopted status's `state.gait.t` into [`GaitRun::t`] at the end of every
+    /// `adopt` (and again on every render), so the base always belongs to the status read at
+    /// [`LinkSnapshot::read_at`](crate::robot::hardware::link::LinkSnapshot::read_at) (`adopt` stamps it; nothing else changes
+    /// `state.gait` between reads). Readers never advance it themselves:
+    /// they derive the time now with [`LinkSnapshot::leg_clock`](crate::robot::hardware::link::LinkSnapshot::leg_clock), which
+    /// interpolates by at most one active poll and freezes while the data is
+    /// not live.
     pub(in crate::robot::hardware) fn leg_frame(&mut self) {
         let (t, running) = self.snap.state.gait.as_ref().map_or((0.0, false), |g| (g.t.unwrap_or(0.0), g.running));
         if let Some(run) = self.snap.gait.as_mut().filter(|g| g.leg) {

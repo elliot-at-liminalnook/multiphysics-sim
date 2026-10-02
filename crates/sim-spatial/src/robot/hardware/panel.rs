@@ -178,8 +178,10 @@ pub(super) const TUNE_OK: &str = "The motor is mid-travel with room to move both
 pub(super) const CAMPAIGN_OK: &str = "The leg is suspended with clear space around every joint";
 pub(super) const GAIT_OK: &str = "The leg is suspended with clear space around every joint (needed for Leg and Both)";
 pub(super) const HOLD_OTHERS: &str = "Hold the other enabled motors in place while one moves";
-/// Why a command the virtual bench does not simulate (flip, raw step, a gait
-/// on the leg) is disabled on a virtual calibration link.
+/// Why a command the virtual bench does not simulate (flip, raw step) is
+/// disabled on a virtual calibration link. Gait playback on the leg (Leg
+/// only, Both) is in scope: the virtual bench runs `gait_start` and its
+/// lease, and its results are labelled simulated (`view::render_gait`).
 pub(crate) const OUT_OF_VIRTUAL_SCOPE: &str = "Outside virtual calibration scope: the virtual bench does not simulate this command";
 pub(super) const NOT_CONNECTED: &str = "the Leg calibration panel is not connected to the calibration server (Connect first)";
 /// The raw step stepper: (id suffix, label, change).
@@ -210,6 +212,12 @@ pub(crate) fn panel_view(hw: &Hardware, now: Instant) -> PanelView {
     }
     if hw.snapshot.authorization_revoked || (hw.link.is_some() && !hw.snapshot.connection_valid) {
         v.block("Connection or execution identity lost; reconnect required before calibration automation.".into());
+    }
+    // A block replaces the status line: the disconnection is said again
+    // (`view::render` said it first; idempotent). Only a lost binding blocks:
+    // a physical bus lost on a STOP readback is reconnected by selecting a motor.
+    if hw.link.is_some() {
+        view::mark_disconnected(&mut v, &hw.snapshot, now);
     }
     if hw.snapshot.execution.as_ref().is_some_and(|i| i.is_virtual_calibration()) {
         v.status = format!("VIRTUAL · simulated bench telemetry and results, not physical measurements. {}", v.status);
@@ -268,7 +276,8 @@ pub(crate) fn control_list(hw: &Hardware, v: &PanelView) -> Vec<Control> {
     }
     use super::actions::Boundary;
     for (i, (id, label, boundary)) in [("capture_lower", "Save lower here", Boundary::Lower), ("capture_upper", "Save upper here", Boundary::Upper), ("capture_reference", "Save sim alignment here", Boundary::Reference)].into_iter().enumerate() {
-        add(s(id), s(label), HardwareAction::Capture { boundary }, why_m(v.poses[i].1, "save a pose while a ready motor holds still"), None);
+        let ready = why_m(v.poses[i].1, "save a pose while a ready motor holds still");
+        add(s(id), s(label), HardwareAction::Capture { boundary }, ready, None);
     }
     add(s("sweep"), v.sweep.text.clone(), HardwareAction::Sweep, why_m(v.sweep.enabled, "needs a ready motor with both poses taught in this encoder session"), None);
     add(s("reset_poses"), v.reset.text.clone(), HardwareAction::ResetPoses, why_m(v.reset.enabled, "no motor is ready: select one first"), None);
@@ -286,15 +295,14 @@ pub(crate) fn control_list(hw: &Hardware, v: &PanelView) -> Vec<Control> {
     for (index, label) in v.gait.options.iter().enumerate() {
         add(format!("gait_select_{index}"), label.clone(), HardwareAction::GaitSelect { index }, Ok(()), Some(index == f.gait_index));
     }
+    // Leg only and Both are in scope on a virtual bench too (the normal
+    // readiness rules apply: the confirmation, no tune or campaign, a fresh status).
     for mode in [GaitMode::Sim, GaitMode::Leg, GaitMode::Both] {
-        let ready = if mode != GaitMode::Sim && virtual_bench { Err(OUT_OF_VIRTUAL_SCOPE.to_string()) } else { why(v.gait.modes_enabled, "not while a gait plays") };
-        add(format!("gait_mode_{}", gait_mode_name(mode)), s(gait_mode_label(mode)), HardwareAction::GaitMode { mode }, ready, Some(f.gait_mode == mode));
+        add(format!("gait_mode_{}", gait_mode_name(mode)), s(gait_mode_label(mode)), HardwareAction::GaitMode { mode }, why(v.gait.modes_enabled, "not while a gait plays"), Some(f.gait_mode == mode));
     }
     add(s("gait_confirm"), s(GAIT_OK), HardwareAction::GaitConfirm { on: !f.gait_ok }, Ok(()), Some(f.gait_ok));
     let play_reason = "needs a gait (and for Leg or Both, the confirmation), and no tune or campaign running";
-    // A gait already playing on a virtual bench (Sim only) may still pause or resume.
-    let play = if f.gait_mode != GaitMode::Sim && hw.snapshot.gait.is_none() { in_scope(v.gait.play.enabled, play_reason) } else { why_m(v.gait.play.enabled, play_reason) };
-    add(s("gait_play"), v.gait.play.text.clone(), HardwareAction::GaitPlay, play, None);
+    add(s("gait_play"), v.gait.play.text.clone(), HardwareAction::GaitPlay, why_m(v.gait.play.enabled, play_reason), None);
     add(s("gait_stop"), s("Stop"), HardwareAction::GaitStop, why(v.gait.stop_enabled, "no gait is playing"), None);
     for mode in DriveMode::ALL {
         add(format!("drive_mode_{}", mode.wire()), s(mode.label()), HardwareAction::DriveMode { mode }, Ok(()), Some(f.inputs.drive_mode == mode));

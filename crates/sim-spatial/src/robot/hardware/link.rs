@@ -121,6 +121,16 @@ impl Default for Inputs {
 /// One page handler, run on the link thread in arrival order.
 #[derive(Clone, Debug, PartialEq)]
 pub enum LinkCommand {
+    /// A remote (REST, `system_ui`) command whose caller waits for this
+    /// thread's verdict, recorded in [`LinkSnapshot::command_results`] under
+    /// `ticket`: re-authorized against the `generation` the UI authorized it
+    /// for, refused if a STOP was pressed after `epoch` (the shared epoch when
+    /// it was queued), validated, run, and judged by what it achieved.
+    /// `inputs`: form values the command brings (a remote speed or PWM
+    /// ceiling), adopted only once it is authorized and validated, and put
+    /// back if it fails. A `Release` (a move to hold) is exempt from the
+    /// freshness and generation check, as a safety action.
+    Checked { ticket: u64, epoch: u64, generation: u64, inputs: Option<Inputs>, command: Box<LinkCommand> },
     /// New form values (no request by itself; the page reads them at send time).
     Inputs(Inputs),
     /// A motor chip (`selectMotor(id)`; a running sweep-all stops with its text).
@@ -213,11 +223,30 @@ pub struct LinkSnapshot {
     pub generation: u64,
     /// Bumped on every publish (the panel re-renders on a change).
     pub revision: u64,
+    /// Immutable identity pinned during this connection generation.
+    pub execution: Option<calibration::ExecutionIdentity>,
+    /// Sticky revocation; only a new connection can restore automation.
+    pub authorization_revoked: bool,
+    pub connection_valid: bool,
+    /// Acknowledgements retained until the requesting action consumes them.
+    pub command_results: std::collections::BTreeMap<u64, Result<(), String>>,
     /// The page's `state`: the last server status adopted, with the page's
     /// local edits (`state.message = e.message`, `state.capture_message`).
     pub state: Status,
     /// When `state` was last read from the server (None: never).
     pub read_at: Option<Instant>,
+    /// The link thread is waiting for a request's answer: since when, and the
+    /// longest it may wait. While it waits no status poll runs, so `read_at`
+    /// ages without the connection being lost ([`LinkSnapshot::awaiting_answer`]).
+    /// After a successful answer it stays set for one idle poll period (plus
+    /// a margin) until the next poll can refresh `read_at`; after a failure
+    /// it is cleared at once.
+    pub awaiting: Option<(Instant, Duration)>,
+    /// This link has asked the server to enable a motor (`select`) in this
+    /// generation. Only then may an automatic STOP without a known motor be
+    /// sent id-less (all axes): a link that never drove must not end another
+    /// client's session. An operator's STOP is always sent.
+    pub drove: bool,
     pub id: Option<u8>,
     pub ready: bool,
     pub busy: bool,
@@ -227,6 +256,8 @@ pub struct LinkSnapshot {
     pub target_raw: f64,
     pub sweeping: bool,
     pub learning: bool,
+    /// Completed learning survives Hold samples and STOP, until an explicit new run.
+    pub learning_terminal: Option<(u64, calibration::Adaptation)>,
     pub tuning: bool,
     pub campaigning: bool,
     /// A sweep-all is running (`sweepAllRun`).
@@ -248,6 +279,7 @@ pub struct LinkSnapshot {
     /// Counters the UI follows: the tune and campaign confirmation boxes are
     /// unchecked when these grow; the speed slider goes to 0 when `speed_reset` grows.
     pub tune_done: u64,
+    pub tune_stages: Vec<String>,
     pub campaign_done: u64,
     pub speed_reset: u64,
 }
@@ -260,6 +292,18 @@ impl LinkSnapshot {
     /// The server status is older than [`STALE_AFTER`] (or was never read).
     pub fn stale(&self, now: Instant) -> bool {
         self.read_at.is_none_or(|t| now.duration_since(t) > STALE_AFTER)
+    }
+    /// A request on the link thread may still answer (its own deadline has
+    /// not passed). The status still shows as [`LinkSnapshot::stale`]; this
+    /// only keeps a slow but live request from being taken for a lost binding.
+    pub fn awaiting_answer(&self, now: Instant) -> bool {
+        self.awaiting.is_some_and(|(since, wait)| now.saturating_duration_since(since) <= wait)
+    }
+    /// Whether an automatic STOP has anything of this link's to stop: a
+    /// known motor (sent with its id), or none known but this link drove
+    /// (sent id-less). See [`LinkSnapshot::drove`].
+    pub fn stop_target(&self) -> bool {
+        self.id.is_some() || self.drove
     }
 }
 
@@ -282,6 +326,8 @@ pub struct Link {
     pub(super) thread: crate::jobs::RunThread<LinkCommand, LinkSnapshot>,
     pub client: Client,
     pub generation: u64,
+    /// UI-owned sticky revocation; the session reads it before every queued send.
+    pub authorization: Arc<std::sync::atomic::AtomicBool>,
     /// The page's `sequence` counter, shared with the immediate STOP path.
     pub sequence: Arc<AtomicU64>,
     /// The page's `epoch`, shared: bumped by the UI before an immediate STOP.
@@ -302,26 +348,34 @@ impl Link {
     /// `jobs::JOIN_BOUND`, which would only log a "did not stop" warning.
     /// The detached thread still sends that STOP and then returns.
     pub fn spawn(client: Client, generation: u64) -> Link {
-        let sequence = Arc::new(AtomicU64::new(0));
+        let sequence = Arc::new(AtomicU64::new(if client.calibration_execution.is_some() { 1 } else { 0 }));
         let epoch = Arc::new(AtomicU64::new(0));
+        let authorization = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let thread_authorization = authorization.clone();
         let (thread_client, thread_sequence, thread_epoch) = (client.clone(), sequence.clone(), epoch.clone());
         let thread = crate::jobs::RunThread::spawn("hardware-link", LinkSnapshot { generation, ..Default::default() }, move |rx, shared| {
-            super::session::run(thread_client, generation, thread_sequence, thread_epoch, rx, shared)
+            super::session::run(thread_client, generation, thread_sequence, thread_epoch, thread_authorization, rx, shared)
         })
         .join_bound(Duration::ZERO);
-        Link { thread, client, generation, sequence, epoch, stop_posted: Default::default() }
+        Link { thread, client, generation, authorization, sequence, epoch, stop_posted: Default::default() }
     }
     /// Queues one page handler. A link whose thread has ended ignores it
     /// (the panel shows the last snapshot, which goes stale).
     pub fn send(&self, command: LinkCommand) {
         let _ = self.thread.send(command);
     }
+    pub fn try_send(&self, command: LinkCommand) -> Result<(), String> {
+        self.thread.send(command).map_err(|_| "hardware link worker ended; reconnect required".into())
+    }
     /// The published snapshot.
     pub fn snapshot(&self) -> LinkSnapshot {
-        self.thread.latest(self.generation).unwrap_or_else(|| self.thread.lock().clone())
+        let mut snapshot = self.thread.latest(self.generation).unwrap_or_else(|| self.thread.lock().clone());
+        snapshot.authorization_revoked |= self.authorization.load(Ordering::SeqCst);
+        snapshot
     }
     /// STOP written synchronously on its own connection when a motor is
-    /// known, for when the process may end before the immediate path's job
+    /// known (id-less when none is but this link drove,
+    /// [`LinkSnapshot::stop_target`]; nothing otherwise), for when the process may end before the immediate path's job
     /// (or the link thread's shutdown STOP) runs: the page's `fetch(...,
     /// {keepalive:true})` on `pagehide`. The request is sent and its answer is
     /// never read ([`Client::send_only`]); the server latches STOP as soon as
@@ -335,13 +389,18 @@ impl Link {
     /// sequence counter, so sequences only grow; a duplicate STOP (the job's,
     /// the thread's) is harmless.
     pub fn post_stop_sync(&self, why: &str) {
-        let Some(id) = self.snapshot().id else { return };
+        let snapshot = self.snapshot();
+        // Nothing of this link's to stop: no id-less STOP that could end another client's session.
+        if !snapshot.stop_target() {
+            return;
+        }
+        let id = snapshot.id;
         if self.stop_posted.swap(true, Ordering::SeqCst) {
             return;
         }
         let sequence = self.sequence.fetch_add(1, Ordering::SeqCst) + 1;
         let client = self.client.clone().with_timeout(SYNC_STOP_TIMEOUT);
-        if let Err(e) = client.send_only(calibration::COMMAND, &calibration::stop(Some(id), sequence)) {
+        if let Err(e) = client.send_only(calibration::COMMAND, &calibration::stop(id, sequence)) {
             // A later exit path (the link's drop at teardown) tries once more.
             self.stop_posted.store(false, Ordering::SeqCst);
             bevy::log::warn!("STOP ({why}) could not be written: {e} (the STOP job and the link's own STOP remain)");
@@ -366,10 +425,16 @@ impl Drop for Link {
 
 /// The immediate STOP (the page's `stop()` request): bumps the shared epoch
 /// (so an answer to a request in flight is dropped, as the page's `++epoch`
-/// does) and, when a motor is chosen, posts `stop` with the next sequence on
-/// a fresh connection from its own `Pool::Dedicated` job with the short
-/// STOP timeout. Returns the epoch it bumped to, and the job (None when `id`
-/// is None: the page's `if(id==null)return`).
+/// does) and, when a motor is chosen or `all_axes` is set, posts `stop` (with
+/// the motor's id, else id-less: every axis) with the next sequence on a
+/// fresh connection from its own `Pool::Dedicated` job with the short STOP
+/// timeout. Returns the epoch it bumped to, and the job (None when `id` is
+/// None and `all_axes` is not set: the page's `if(id==null)return`).
+///
+/// `all_axes` is set for an operator's STOP (the button, Z/Escape, REST
+/// `hardware_stop`: a person's STOP is never skipped) and for an automatic
+/// STOP from a link that drove ([`LinkSnapshot::drove`]); an automatic STOP
+/// from a link that never drove sends nothing without a known motor.
 ///
 /// It cannot queue behind the link thread: that thread sends one request at
 /// a time and may be waiting up to 8 s for a hardware reply (a select
@@ -387,13 +452,15 @@ impl Drop for Link {
 /// `Stopped`), and later forward the job's result as
 /// [`LinkCommand::StopAnswered`]. The job is `complete_on_drop`: dropping
 /// its handle never cancels the STOP.
-pub fn stop_now(link: &Link, id: Option<u8>) -> (u64, Option<crate::jobs::Job<serde_json::Value>>) {
+pub fn stop_now(link: &Link, id: Option<u8>, all_axes: bool) -> (u64, Option<crate::jobs::Job<serde_json::Value>>) {
     let epoch = link.epoch.fetch_add(1, Ordering::SeqCst) + 1;
-    let Some(id) = id else { return (epoch, None) };
+    if id.is_none() && !all_axes {
+        return (epoch, None);
+    }
     let client = link.client.clone();
     let sequence = link.sequence.clone();
     let job = crate::jobs::Job::spawn(crate::jobs::Pool::Dedicated, link.generation, "hardware STOP", move |_| {
-        let body = calibration::stop(Some(id), sequence.fetch_add(1, Ordering::SeqCst) + 1);
+        let body = calibration::stop(id, sequence.fetch_add(1, Ordering::SeqCst) + 1);
         client.with_timeout(STOP_TIMEOUT).post("/calibration/command", &body).map_err(|e| e.to_string())
     });
     (epoch, Some(job.complete_on_drop()))

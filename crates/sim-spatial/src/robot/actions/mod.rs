@@ -517,11 +517,16 @@ fn handle(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, re
 /// the header's run message; a REST caller gets it (or `robot_state`).
 /// `system_ui` also lists the Leg calibration panel's controls
 /// (`hardware:<name>`, from `hardware::panel::controls`) after robot mode's
-/// own: activating one passes its `HardwareAction` on with
-/// `Origin::SystemUi`, and one that starts motion is refused here, naming it
-/// (the hardware handler refuses it again). Their ids are stable names, so
-/// they need no `ui_revision`. Link selection goes through the shared
-/// selection (`picked`), applied here as its adapter.
+/// own. Activating one is checked here once, on its first application
+/// (the control exists, is enabled, passes `HardwareAction::authorize`, and
+/// no window close is pending for motion), then written as an
+/// `Act<HardwareAction>` with its own REST reply (`Replies::submit`): the
+/// panel's one apply system (`hardware::actions::apply`, after this one in
+/// the same frame) handles it as a REST call, so a remote calibration
+/// command is answered only by the link thread's verdict, and this call
+/// answers with that reply. Their ids are stable names, so they need no
+/// `ui_revision`. Link selection goes through the shared selection
+/// (`picked`), applied here as its adapter.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn apply(
     mut messages: ResMut<Messages<Act<RobotAction>>>,
@@ -533,9 +538,16 @@ pub(super) fn apply(
     mut to_hardware: MessageWriter<Act<super::hardware::HardwareAction>>,
     mut selection: ResMut<Selection>,
     mut registry: ResMut<DocumentRegistry>,
+    closing: Option<Res<crate::app::close::CloseOwner>>,
 ) {
     let (Some(mut view), Some(mut orbit)) = (view, orbit) else {
-        actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("the robot view is not open".into())));
+        actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
+            // A forwarded hardware activation's own reply is no longer waited for.
+            if is_hardware_activation(action) {
+                forget_forwarded(call);
+            }
+            Outcome::Done(Err("the robot view is not open".into()))
+        });
         return;
     };
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
@@ -543,24 +555,49 @@ pub(super) fn apply(
         let result = match action {
             _ if synced && call.remote() && moves_synced_motors(&view, picked::link(&selection, &registry), action) => Err(SYNC_REMOTE_REFUSAL.to_string()),
             RobotAction::Activate { id, .. } if id.starts_with("hardware:") => {
-                let found = hardware.as_ref().and_then(|hw| super::hardware::panel::controls(hw).into_iter().find(|(i, ..)| i == id));
-                match found {
-                    None => Err("unknown control; request controls".to_string()),
-                    Some((_, _, action, _)) if action.starts_motion() => Err(action.remote_refusal()),
-                    // Disabled now: refused here with its reason (the hardware handler's own
-                    // answer to a SystemUi action is dropped, so it would read as success).
-                    Some((id, _, _, Err(why))) => Err(format!("{id} is disabled: {why}")),
-                    Some((_, _, action, _)) => {
-                        to_hardware.write(Act { action, origin: Origin::SystemUi });
-                        Ok(None)
+                // Runs only on the first application (`submit` takes the reply after that).
+                let eligible = || -> Result<super::hardware::HardwareAction, String> {
+                    let hw = hardware.as_deref().ok_or("the Leg calibration panel is not open in this mode")?;
+                    let (id, _, action, ready) = super::hardware::panel::controls(hw).into_iter().find(|(i, ..)| i == id).ok_or("unknown control; request controls")?;
+                    ready.map_err(|why| format!("{id} is disabled: {why}"))?;
+                    action.authorize(hw, std::time::Instant::now())?;
+                    if action.starts_motion() && !matches!(action, super::hardware::HardwareAction::JogRelease { .. }) && closing.as_ref().is_some_and(|close| close.pending()) {
+                        return Err("Window closure is pending; cancel close before starting, changing or arming motion".into());
                     }
+                    Ok(action)
+                };
+                if call.rest() {
+                    if call.cancelled {
+                        // Answered already: that is the outcome. Else the
+                        // hardware reply is forgotten: its handler takes a
+                        // forgotten reply as cancelled (STOP for a queued
+                        // command) and nothing is left waiting on it.
+                        if let Some(inner) = forwarded(call) {
+                            if let Some(outcome) = call.replies.take(inner) {
+                                return outcome;
+                            }
+                            call.replies.forget(inner);
+                            return Outcome::Done(Err("hardware action cancelled; STOP requested".into()));
+                        }
+                        return Outcome::Done(Err("hardware action cancelled before it was applied".into()));
+                    }
+                    return call.replies.submit(call.continuation, call.cancelled, eligible, |act| {
+                        to_hardware.write(act);
+                        true
+                    });
                 }
+                // Not REST, so nobody waits for a reply: passed on one-way (the
+                // hardware handler shows its refusal as the panel's notice).
+                eligible().map(|action| {
+                    to_hardware.write(Act { action, origin: Origin::SystemUi });
+                    None
+                })
             }
             RobotAction::Controls => handle(&mut view, &mut orbit, &mut selection, &mut registry, action).map(|answer| {
                 answer.map(|mut listing| {
                     if let (Some(hw), Some(items)) = (hardware.as_ref(), listing.get_mut("controls").and_then(Value::as_array_mut)) {
                         for (id, label, action, ready) in super::hardware::panel::controls(hw) {
-                            let reason = if action.starts_motion() { Some(action.remote_refusal()) } else { ready.err() };
+                            let reason = action.authorize(hw, std::time::Instant::now()).err().or_else(|| ready.err());
                             items.push(json!({"id": id, "label": label, "enabled": reason.is_none(), "disabled_reason": reason, "action": {"hardware": action}}));
                         }
                     }
@@ -578,6 +615,34 @@ pub(super) fn apply(
             Origin::Quiet | Origin::SystemUi => Outcome::Done(Ok(Value::Null)),
         }
     });
+}
+
+/// A `system_ui` activation of a Leg calibration control (`hardware:<name>`).
+fn is_hardware_activation(action: &RobotAction) -> bool {
+    matches!(action, RobotAction::Activate { id, .. } if id.starts_with("hardware:"))
+}
+
+/// The reply a forwarded hardware activation was written with
+/// (`Replies::submit` keeps it in the continuation under "reply").
+fn forwarded(call: &actions::Call) -> Option<actions::Reply> {
+    call.continuation.get("reply").and_then(Value::as_u64).map(actions::Reply::from_id)
+}
+
+/// Nobody will take the forwarded reply: close its slot.
+fn forget_forwarded(call: &mut actions::Call) {
+    if let Some(inner) = forwarded(call) {
+        call.replies.forget(inner);
+    }
+}
+
+/// Robot mode's exit (`InFlight::abandon_with`): a carried hardware
+/// activation's forwarded reply is closed, as nobody will take it.
+pub(super) fn forget_forwarded_on_exit(action: &RobotAction, continuation: &Value, replies: &mut Replies) {
+    if is_hardware_activation(action)
+        && let Some(inner) = continuation.get("reply").and_then(Value::as_u64)
+    {
+        replies.forget(actions::Reply::from_id(inner));
+    }
 }
 
 /// Why REST and `system_ui` may not steer the run while live motor sync

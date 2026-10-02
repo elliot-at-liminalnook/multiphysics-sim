@@ -35,7 +35,6 @@ const ALLOWLIST: &[(&str, &str, &str)] = &[
     ("builder/system_actions.rs", "Legacy read-only archive review compatibility API.", "capability description constructed inside the local Spec helper; never rendered window copy"),
     ("rest.rs", "Answering REST commands", "macOS activity reason (NSProcessInfo): seen by the OS, never shown in the window"),
     ("main.rs", "Physical REST (", "eprintln of the REST address to the terminal at launch, not window text"),
-    ("robot/hardware/actions.rs", "REST and system_ui may read status", "hardware safety rule refusing motion to REST callers; stays as written"),
     ("robot/hardware/handlers.rs", "not accepted from REST or system_ui", "hardware safety refusal answered only to a REST or system_ui caller; stays as written"),
     ("robot/actions/mod.rs", "REST and system_ui may not start", "SYNC_REMOTE_REFUSAL: live motor sync refusal answered only to remote callers; stays as written"),
     ("cad/ops/catalogue/rest_only.rs", "a REST run must pass the revision", "the op's source note in the REST catalogue (where the revision rule comes from), read through cad_op's catalogue"),

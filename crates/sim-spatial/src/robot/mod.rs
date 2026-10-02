@@ -207,8 +207,13 @@ impl Plugin for RobotPlugin {
         app.insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
             .init_resource::<RobotPanelUi>()
             .add_systems(OnEnter(ModeScope::Robot), setup)
-            .add_systems(OnExit(ModeScope::Robot), |mut commands: Commands| {
+            .add_systems(OnExit(ModeScope::Robot), |mut commands: Commands, mut in_flight: ResMut<crate::app::actions::InFlight<RobotAction>>, mut replies: ResMut<crate::app::actions::Replies>| {
                 commands.remove_resource::<Materials>();
+                // `actions::apply` does not run outside Robot mode: a carried
+                // call (a forwarded `hardware:<name>` activation waiting on
+                // its acknowledgement) would otherwise hang until re-entry.
+                // A forwarded activation's own hardware reply is closed first.
+                in_flight.abandon_with(&mut replies, "left Robot mode before the command finished", actions::forget_forwarded_on_exit);
             })
             .add_systems(
                 Update,

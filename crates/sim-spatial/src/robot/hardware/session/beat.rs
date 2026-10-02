@@ -70,13 +70,32 @@ pub(super) struct GaitBeat {
     pub playing: bool,
 }
 
+/// A request through the beat that failed: its text, and whether the
+/// failure means the connection or its execution binding is gone
+/// ([`calibration::binding_lost`]: transport, decode, or the server's 409),
+/// not a refusal of the request itself.
+#[derive(Clone, Debug, PartialEq)]
+pub(super) struct Refused {
+    pub error: String,
+    pub binding_lost: bool,
+}
+impl Refused {
+    /// Not sent, or no answer from the beat: nothing says the binding is gone.
+    pub fn local(error: &str) -> Self {
+        Refused { error: error.into(), binding_lost: false }
+    }
+    fn client(error: sim_runtime::hardware_client::ClientError) -> Self {
+        Refused { binding_lost: calibration::binding_lost(&error), error: error.to_string() }
+    }
+}
+
 /// A periodic `motion_update` the server refused or that failed in transit.
 #[derive(Clone, Debug, PartialEq)]
 pub(super) struct Failure {
     pub run: u64,
     /// The shared epoch when it was sent.
     pub epoch: u64,
-    pub error: String,
+    pub refused: Refused,
 }
 
 /// Builds a request of the motion session's sequence domain from its sequence.
@@ -86,11 +105,11 @@ pub(super) enum Beat {
     Plan(Plan),
     /// Send `motion_update` for the current plan now and answer with its
     /// result (`Ok` also when nothing was sent: no motion, or a STOP pending).
-    Now(mpsc::Sender<Result<(), String>>),
+    Now(mpsc::Sender<Result<(), Refused>>),
     /// Post another request of the motion session's sequence domain
     /// (`capture_hold`), in order with the heartbeats; refused with
     /// [`STOP_PENDING`] while a STOP is pending.
-    Post(Build, mpsc::Sender<Result<Value, String>>),
+    Post(Build, mpsc::Sender<Result<Value, Refused>>),
     /// Answers once every earlier message (and any request in flight) is done.
     #[cfg(test)]
     Flush(mpsc::Sender<()>),
@@ -171,7 +190,7 @@ impl Beater {
             }
             Beat::Now(reply) => {
                 let result = match self.motion() {
-                    Some(Err(failure)) => Err(failure.error),
+                    Some(Err(failure)) => Err(failure.refused),
                     _ => Ok(()),
                 };
                 let _ = reply.send(result);
@@ -179,9 +198,9 @@ impl Beater {
             Beat::Post(build, reply) => {
                 let result = if self.applied() {
                     let body = build(self.seq());
-                    self.client.post(COMMAND, &body).map_err(|e| e.to_string())
+                    self.client.post(COMMAND, &body).map_err(Refused::client)
                 } else {
-                    Err(STOP_PENDING.into())
+                    Err(Refused::local(STOP_PENDING))
                 };
                 let _ = reply.send(result);
             }
@@ -224,7 +243,7 @@ impl Beater {
             return None;
         }
         let body = calibration::motion_update(motion.id, self.seq(), motion.run, &motion.input);
-        let result = self.client.post(COMMAND, &body).map(|_| ()).map_err(|e| Failure { run: motion.run, epoch, error: e.to_string() });
+        let result = self.client.post(COMMAND, &body).map(|_| ()).map_err(|e| Failure { run: motion.run, epoch, refused: Refused::client(e) });
         self.next_motion = Instant::now() + HEARTBEAT;
         Some(result)
     }

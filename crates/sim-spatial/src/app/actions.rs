@@ -109,11 +109,12 @@ pub enum Origin {
     Ui,
     /// Not shown to anyone (a file watch, a 3D pick): the outcome is dropped.
     Quiet,
-    /// A `system_ui` activation that one mode's handler passed on to another
-    /// action type (robot mode's `hardware:<name>` controls): remote like
-    /// `Rest`, but its REST command was answered by the handler that passed
-    /// it on, so the outcome is dropped. Hardware motion is refused from it
-    /// (`robot::hardware::HardwareAction::starts_motion`).
+    /// A forwarded automation occurrence nobody waits on: remote like `Rest`,
+    /// its outcome dropped (a refusal is shown where the mode shows it). A
+    /// forwarding handler whose caller does wait (robot mode passing a
+    /// `system_ui` activation on to `HardwareAction`) writes the target action
+    /// with its own reply instead (`Replies::submit` from the forwarding
+    /// handler), so the target's one apply system answers that reply.
     SystemUi,
 }
 
@@ -284,6 +285,15 @@ impl<A> InFlight<A> {
                 replies.answer(r, Outcome::Done(Err(reason.to_string())));
             }
         }
+    }
+    /// [`InFlight::abandon`], first showing `release` each carried call's
+    /// action and continuation, so a handler that forwarded the call to
+    /// another action type with its own reply can close that reply.
+    pub fn abandon_with(&mut self, replies: &mut Replies, reason: &str, mut release: impl FnMut(&A, &Value, &mut Replies)) {
+        for (action, _, continuation) in &self.0 {
+            release(action, continuation, replies);
+        }
+        self.abandon(replies, reason);
     }
 }
 

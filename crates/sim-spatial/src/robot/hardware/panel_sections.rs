@@ -18,7 +18,7 @@ const GAIT_TEXT: &str = "Plays a gait found by the gait search. Sim only animate
 const GOVERNOR_TEXT: &str = "Both run the gait through its own reference governor, the one the simulation used. Leg effort caps each real motor at that fraction of its measured speed and acceleration (accepted motor profiles). The belt/hip also stays at the campaign plan's belt limit. The PWM ceiling in Advanced still applies.";
 const LEARN_TEXT: &str = "Teach both poses, then learn stopping response at the desired speed.";
 const ANGLE_NOTE: &str = "Continuous motor angle · zero is not a travel stop";
-const TARGET_NOTE: &str = "Green = measured · blue = requested. Teach poses before contact. Z disables torque; releasing Q/A keeps active hold. Changing tabs stops drive.";
+pub(super) const TARGET_NOTE: &str = "Green = measured · blue = requested. Teach poses before contact. Z disables torque; releasing Q/A keeps active hold. Changing tabs stops drive.";
 const SERVO_NOTE: &str = "Servo modes use the servo's own fast loop; the host streams goals from the same reference, within the same saved poses. Applies when a motion session starts. Tuning always uses PWM.";
 const PWM_NOTE: &str = "The controller adjusts effort within this ceiling. Holding gains are provisional until tested on this loaded fixture.";
 
@@ -197,7 +197,7 @@ pub(super) fn body(p: &mut ChildSpawnerCommands, k: &Kit, dial: Handle<Image>, m
     });
     labelled(p, k, "Move to a taught pose", PanelText::TargetLabel);
     slider(p, k, PanelSlider::Target, 0.5, "Target pose between saved limits");
-    p.spawn(k.caption(TARGET_NOTE));
+    p.spawn((k.caption(TARGET_NOTE), PanelText::TargetNote));
     section(p, k, Section::Mirror, |c| {
         c.spawn((column(6.0), super::mirror_panel::MirrorRoot));
     });

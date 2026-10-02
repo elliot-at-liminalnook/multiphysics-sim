@@ -35,10 +35,15 @@ impl Session {
                 }
             }
             Err(err) => {
-                if self.snap.ready {
+                // Only a lost connection or binding revokes a virtual
+                // session; any failed poll stops what may be driving.
+                if calibration::binding_lost(&err) {
+                    self.lose_binding();
+                }
+                if self.drive_active() {
                     self.stop();
                 }
-                self.message(err);
+                self.message(err.to_string());
                 self.render();
             }
         }

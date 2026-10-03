@@ -2761,35 +2761,47 @@ recorded):
 
 ### Open in CAD refused: no pending reveal
 
-1. Robot mode's Open in CAD: `robot/threads/act.rs:open_in_cad` (127)
-   sets `RevealThread` (139) and writes `Act<WindowAction>::Switch {Cad,
-   document}` (140), both in Robot's one apply system (`RobotSet::Actions`
-   within `ViewerSet::Actions`, `robot/mod.rs:196`). The reveal is state
-   set before the message, so the switch handler sees it whichever of the
-   two `ViewerSet::Actions` systems runs first (this frame or the next).
-2. `app/switch/mod.rs:handle` (367) → `start` (458; 514-573): any refusal
-   (another switch loading or being entered, the leave blockers, a
-   document `prepare` refuses) returns `Err`.
-3. **The line that proves no reveal stays pending:**
-   `app/switch/mod.rs:460` — `drop_reveal` on every refused switch whose
-   target is CAD, which clears `RevealThread` (481) unless CAD mode is
-   already active or another switch to it is loading or being entered
-   (476: a second Open in CAD refused as "still being applied" keeps
-   the first one's reveal).
-4. CAD switches never load (`prepare.rs:273-292`, `Prepared::Now`), so
-   `finish_load`'s refusals cannot apply; leaving CAD mode with a reveal
-   that never landed also drops it (`app/switch/leave.rs:104-106`).
-5. Gap found and fixed: a refused Open in CAD left the reveal pending, so a
-   later, unrelated visit to the same CAD document opened the Comments
-   dock and that thread (`app/switch/mod.rs:457-462`, 468-484;
-   `app/switch/leave.rs:104-106`).
-6. Recorded, not fixed (low): a second Open in CAD while the first switch
-   is still being entered overwrites `RevealThread` (`robot/threads/act.rs:139`)
-   before its switch is refused as "still being applied", and `drop_reveal`
-   keeps the reveal for the first switch (476), so the first switch lands
-   on the second thread. Fixing it needs `open_in_cad` to carry the reveal
-   with the switch request (on the `Switch` action or keyed by it), not as
-   separate state.
+1. Robot mode's Open in CAD: `robot/threads/act.rs:open_in_cad` (130)
+   builds the reveal (144) and writes `Act<WindowAction>::Switch` with
+   `ModeSwitch {mode: Cad, document, reveal}` (145) in Robot's one apply
+   system (`RobotSet::Actions` within `ViewerSet::Actions`,
+   `robot/mod.rs:196`). It no longer writes `RevealThread`: the robot apply
+   only reads whether the resource exists (`robot/actions/mod.rs:550`,
+   `reveal.is_some()` at 565; "CAD mode is not part of this window",
+   `act.rs:140-142`).
+2. The reveal travels with its own request: `app/switch/mod.rs:122`
+   (`ModeSwitch::reveal`). `handle` (373) passes the request to `start`
+   (466, 502). Every refusal returns `Err` before the install: another
+   switch still loading (505) or being entered (508), the target already
+   active with a document, the leave blockers, the picker branch, and a
+   document `prepare` refuses (552). A refused request and its reveal are
+   dropped together (464-468).
+3. **The line that proves the right thread is revealed:**
+   `app/switch/mod.rs:557-561`. Only once `prepare` has accepted a switch
+   to CAD mode does `start` install that request's own reveal into
+   `RevealThread` with `set_if_neq`. None clears a reveal an earlier visit
+   left. `RevealThread`'s writers are this install, CAD mode's read that
+   takes it (`cad/threads/read.rs:243-277`, called from `sync` at 281) and
+   `leave_cad` (`app/switch/leave.rs:104-106`).
+4. Two Open in CAD requests during entry: the first is accepted, installs
+   reveal A (560) and `enter` sets `switch.entering` and
+   `NextState(Cad)` (`app/switch/arrival.rs:33-35`). The second, in the
+   same frame or a later one before the entry finishes (388), is refused
+   at 508 ("the switch to CAD mode is still being applied"), and its
+   reveal B goes with the request. CAD mode lands and `read.rs:sync`
+   (281-289) opens A once its document's threads are read. Nothing stale
+   is left: the landed reveal is taken (`pending.0 = None`, `read.rs:276`),
+   and leaving CAD mode drops one that never landed. Unit test
+   (unexecuted): `app/tests.rs:443`
+   `a_refused_switch_to_cad_cannot_change_the_reveal_of_the_one_that_lands`.
+5. CAD switches never load (`prepare.rs:292`, `Prepared::Now`), so
+   `finish_load`'s refusals cannot apply. If one ever did, the next
+   accepted switch to CAD mode would replace the reveal (557-561).
+6. Gap closed (this batch): a second Open in CAD while the first switch was
+   entering used to overwrite `RevealThread` before its own refusal, so
+   the first switch landed on the second thread. The old `drop_reveal` is
+   deleted: no refused request ever touches `RevealThread` now.
+   By reading, unexecuted.
 
 ### Escape order
 

@@ -547,7 +547,7 @@ pub(super) fn apply(
     mut selection: ResMut<Selection>,
     mut registry: ResMut<DocumentRegistry>,
     closing: Option<Res<crate::app::close::CloseOwner>>,
-    (mut threads, mut reveal, mut window): (ResMut<crate::robot::threads::RobotThreads>, Option<ResMut<crate::cad::threads::RevealThread>>, MessageWriter<Act<crate::app::switch::WindowAction>>),
+    (mut threads, reveal, mut window): (ResMut<crate::robot::threads::RobotThreads>, Option<Res<crate::cad::threads::RevealThread>>, MessageWriter<Act<crate::app::switch::WindowAction>>),
 ) {
     let (Some(mut view), Some(mut orbit)) = (view, orbit) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
@@ -562,7 +562,7 @@ pub(super) fn apply(
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
         // RoboCAD's comment threads: their own handler, outcome and REST wait.
         if let RobotAction::Threads { act } = action {
-            return crate::robot::threads::handle(act, call, &mut threads, &view, &registry, &mut selection, reveal.as_deref_mut(), &mut window);
+            return crate::robot::threads::handle(act, call, &mut threads, &view, &registry, &mut selection, reveal.is_some(), &mut window);
         }
         let synced = hardware.as_ref().is_some_and(|hw| hw.sync.engaged());
         let result = match action {

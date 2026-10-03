@@ -114,6 +114,12 @@ impl Document {
 pub struct ModeSwitch {
     pub mode: ViewerMode,
     pub document: Option<Document>,
+    /// A comment thread to reveal once CAD mode has read its threads (Robot
+    /// mode's Open in CAD; None elsewhere). It travels with its own request:
+    /// [`start`] installs it into `cad::threads::RevealThread` only when
+    /// this switch to CAD mode is accepted, so a refused request's reveal
+    /// goes away with it and cannot change what another switch reveals.
+    pub(crate) reveal: Option<crate::cad::threads::Reveal>,
 }
 impl ModeSwitch {
     /// `viewer_mode {mode, path?, preset?, url?}`.
@@ -138,7 +144,7 @@ impl ModeSwitch {
             (None, None, None) => None,
             _ => return Err("viewer_mode takes one of path, preset or url".into()),
         };
-        Ok(ModeSwitch { mode, document })
+        Ok(ModeSwitch { mode, document, reveal: None })
     }
 }
 
@@ -192,7 +198,7 @@ impl WindowAction {
             return None;
         }
         let target = action["id"].as_str()?.strip_prefix("mode:")?;
-        Some(ViewerMode::parse(target).map(|mode| ModeSwitch { mode, document: None }))
+        Some(ViewerMode::parse(target).map(|mode| ModeSwitch { mode, document: None, reveal: None }))
     }
     /// `system_ui` in a mode whose only controls are the switcher's.
     fn switcher_ui(mode: ViewerMode, args: &Map<String, Value>) -> Result<Value, String> {
@@ -455,31 +461,13 @@ pub(crate) fn handle(world: &mut World) {
                 }
             };
             let target = request.mode;
+            // A refused request's reveal goes with it (`start` installs a
+            // reveal only for a switch it accepts).
             if let Err(e) = start(world, &mut switch, current, origin, request, interactive) {
-                if target == ViewerMode::Cad {
-                    drop_reveal(world, &switch, current);
-                }
                 switch.finish(world, origin, Err(e));
             }
         }
     });
-}
-
-/// A refused switch to CAD mode drops the thread another mode asked CAD mode
-/// to reveal (`cad::threads::RevealThread`, set by Robot mode's Open in CAD
-/// just before it writes this switch), so no reveal stays pending to land on
-/// a later, unrelated visit. Kept when the reveal belongs to a CAD mode that
-/// is active, or to another switch to CAD mode still loading or being
-/// entered (a second Open in CAD refused as "still being applied").
-fn drop_reveal(world: &mut World, switch: &Switcher, current: ViewerMode) {
-    let cad = ViewerMode::Cad;
-    let theirs = current == cad || switch.pending.as_ref().is_some_and(|p| p.mode == cad) || switch.entering.as_ref().is_some_and(|e| e.1 == cad);
-    if theirs {
-        return;
-    }
-    if let Some(mut reveal) = world.get_resource_mut::<crate::cad::threads::RevealThread>() {
-        reveal.set_if_neq(crate::cad::threads::RevealThread(None));
-    }
 }
 
 /// `screenshot`: the window as drawn, saved on the render thread after the next frame.
@@ -561,7 +549,17 @@ fn start(world: &mut World, switch: &mut Switcher, current: ViewerMode, origin: 
         answer(world, origin, Ok(json!({"picker": target, "message": message, "controls": controls})));
         return Ok(());
     }
-    match prepare(world, current, &request).map_err(|e| refusal(target, current, &e))? {
+    let prepared = prepare(world, current, &request).map_err(|e| refusal(target, current, &e))?;
+    // Accepted: a switch to CAD mode installs its own reveal (None clears
+    // one an earlier visit left), the one writer of `RevealThread` besides
+    // CAD mode's read (which takes it) and `leave::leave_cad` (which drops
+    // it). A request refused above never reaches here.
+    if target == ViewerMode::Cad
+        && let Some(mut pending) = world.get_resource_mut::<crate::cad::threads::RevealThread>()
+    {
+        pending.set_if_neq(crate::cad::threads::RevealThread(request.reveal.clone()));
+    }
+    match prepared {
         Prepared::Now(arrival) => enter(world, switch, origin, current, target, arrival, Instant::now(), request.document),
         Prepared::Load(what, work) => {
             switch.message = Some(Ok(format!("Switching to {} mode: loading {what} off the UI thread…", target.label())));
@@ -578,7 +576,7 @@ fn start(world: &mut World, switch: &mut Switcher, current: ViewerMode, origin: 
 /// nested reply kept in the continuation, and waits ([`awaited_switch`]).
 pub(crate) fn ask_switch(out: &mut MessageWriter<Act<WindowAction>>, call: &mut actions::Call, mode: ViewerMode) -> Outcome {
     let reply = call.replies.open();
-    out.write(Act { action: WindowAction::Switch(ModeSwitch { mode, document: None }), origin: Origin::Rest(reply) });
+    out.write(Act { action: WindowAction::Switch(ModeSwitch { mode, document: None, reveal: None }), origin: Origin::Rest(reply) });
     *call.continuation = json!({"switch": reply.id()});
     Outcome::Pending
 }
@@ -615,6 +613,6 @@ fn lesson_screen_requests(learn: Option<ResMut<Learn>>, mode: Res<State<ViewerMo
     let Some(lessons) = learn.take_screen_request() else { return };
     let target = if lessons { ViewerMode::Lessons } else { ViewerMode::Build };
     if *mode.get() != target {
-        switch.write(Act::ui(WindowAction::Switch(ModeSwitch { mode: target, document: None })));
+        switch.write(Act::ui(WindowAction::Switch(ModeSwitch { mode: target, document: None, reveal: None })));
     }
 }

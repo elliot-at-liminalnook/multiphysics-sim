@@ -8,7 +8,7 @@ use crate::app::actions::{Act, Call, Origin};
 use crate::app::switch::sources::{cad_target, document_source};
 use crate::app::switch::{Document, ModeSwitch, WindowAction};
 use crate::cad::CadTarget;
-use crate::cad::threads::{DRAFTING, Reveal, RevealThread};
+use crate::cad::threads::{DRAFTING, Reveal};
 use crate::selection::Selection;
 use serde::Serialize;
 use sim_api::Outcome;
@@ -120,11 +120,14 @@ pub(crate) fn reveal_target(document: &Document) -> Option<CadTarget> {
     cad_target(&document_source(document))
 }
 
-/// Open in CAD: the switch to CAD mode on the CAD source, with `thread` to
-/// reveal there once CAD mode has read its threads. The switch is applied
-/// later (`app::switch::handle`, this frame or the next); if it is refused
-/// the reveal is dropped there (`drop_reveal`), so none stays pending.
-fn open_in_cad(st: &RobotThreads, view: &RobotView, registry: &DocumentRegistry, reveal: Option<&mut RevealThread>, window: &mut MessageWriter<Act<WindowAction>>, thread: Option<String>) -> Result<(), String> {
+/// Open in CAD: the switch to CAD mode on the CAD source, carrying `thread`
+/// to reveal there once CAD mode has read its threads. The reveal travels
+/// with its own switch request (`ModeSwitch::reveal`): `app::switch::start`
+/// installs it into `cad::threads::RevealThread` only when this switch is
+/// accepted, so a refused request (a second Open in CAD while the first is
+/// still being entered) goes away with its reveal and cannot change what the
+/// landing switch reveals. `cad_mode`: CAD mode is part of this window.
+fn open_in_cad(st: &RobotThreads, view: &RobotView, registry: &DocumentRegistry, cad_mode: bool, window: &mut MessageWriter<Act<WindowAction>>, thread: Option<String>) -> Result<(), String> {
     // The draft would be lost with the switch.
     if st.drafting() {
         return Err(DRAFTING.into());
@@ -134,10 +137,12 @@ fn open_in_cad(st: &RobotThreads, view: &RobotView, registry: &DocumentRegistry,
     let attached = attached_document(st, base_of(view, registry).as_ref())?;
     let document = cad_document(attached.as_deref(), cad);
     let target = reveal_target(&document).ok_or("no CAD target for this document")?;
-    let reveal = reveal.ok_or("CAD mode is not part of this window")?;
-    // No thread: no reveal (an earlier request for another thread goes).
-    reveal.0 = thread.or_else(|| st.current.clone()).map(|thread| Reveal::new(target, thread));
-    window.write(Act { action: WindowAction::Switch(ModeSwitch { mode: ViewerMode::Cad, document: Some(document) }), origin: Origin::Ui });
+    if !cad_mode {
+        return Err("CAD mode is not part of this window".into());
+    }
+    // No thread: no reveal (the accepted switch clears an earlier one).
+    let reveal = thread.or_else(|| st.current.clone()).map(|thread| Reveal::new(target, thread));
+    window.write(Act { action: WindowAction::Switch(ModeSwitch { mode: ViewerMode::Cad, document: Some(document), reveal }), origin: Origin::Ui });
     Ok(())
 }
 
@@ -177,7 +182,7 @@ fn owner(st: &RobotThreads, base: Option<&Base>, thread: Option<&String>, commen
 }
 
 /// One act; `Ok(Some(seq))` when a change was sent.
-fn act_on(act: &ThreadsAct, st: &mut RobotThreads, view: &RobotView, registry: &DocumentRegistry, selection: &mut Selection, reveal: Option<&mut RevealThread>, window: &mut MessageWriter<Act<WindowAction>>) -> Result<Option<u64>, String> {
+fn act_on(act: &ThreadsAct, st: &mut RobotThreads, view: &RobotView, registry: &DocumentRegistry, selection: &mut Selection, cad_mode: bool, window: &mut MessageWriter<Act<WindowAction>>) -> Result<Option<u64>, String> {
     let base = base_of(view, registry);
     match act {
         ThreadsAct::State => Ok(None),
@@ -281,7 +286,7 @@ fn act_on(act: &ThreadsAct, st: &mut RobotThreads, view: &RobotView, registry: &
             commit(st, view, registry, ThreadOp::Resolve { thread, resolved })
         }
         ThreadsAct::OpenInCad { thread } => {
-            open_in_cad(st, view, registry, reveal, window, thread.clone())?;
+            open_in_cad(st, view, registry, cad_mode, window, thread.clone())?;
             Ok(None)
         }
         ThreadsAct::SelectLink { index, name } => {
@@ -319,9 +324,9 @@ fn answer(st: &mut RobotThreads, view: &RobotView, registry: &DocumentRegistry) 
 /// before the first read is not refused as "not open"), then acts; a REST
 /// change then waits for RoboCAD's answer.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn handle(act: &ThreadsAct, call: &mut Call, st: &mut RobotThreads, view: &RobotView, registry: &DocumentRegistry, selection: &mut Selection, reveal: Option<&mut RevealThread>, window: &mut MessageWriter<Act<WindowAction>>) -> Outcome {
+pub(crate) fn handle(act: &ThreadsAct, call: &mut Call, st: &mut RobotThreads, view: &RobotView, registry: &DocumentRegistry, selection: &mut Selection, cad_mode: bool, window: &mut MessageWriter<Act<WindowAction>>) -> Outcome {
     if !call.rest() {
-        if let Err(e) = act_on(act, st, view, registry, selection, reveal, window) {
+        if let Err(e) = act_on(act, st, view, registry, selection, cad_mode, window) {
             st.error = Some(e);
         }
         return Outcome::Done(Ok(Value::Null));
@@ -371,7 +376,7 @@ pub(crate) fn handle(act: &ThreadsAct, call: &mut Call, st: &mut RobotThreads, v
     if !acts {
         return answer(st, view, registry);
     }
-    match act_on(act, st, view, registry, selection, reveal, window) {
+    match act_on(act, st, view, registry, selection, cad_mode, window) {
         Ok(Some(seq)) => {
             *call.continuation = json!({ "robot_threads_wait": seq });
             Outcome::Pending

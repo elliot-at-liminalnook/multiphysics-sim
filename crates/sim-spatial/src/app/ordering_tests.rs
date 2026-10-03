@@ -22,6 +22,8 @@ fn public_sets_and_spatial_consumers_have_no_ordering_cycle() {
         (|| {}).in_set(crate::cad::CadKeySet::Focus),
         (|| {}).in_set(crate::cad::CadKeySet::Keys),
         (|| {}).in_set(crate::cad::CadKeySet::ToolKeys),
+        (|| {}).in_set(crate::cad::CadKeySet::EscapeTool),
+        (|| {}).in_set(crate::cad::CadKeySet::Escape),
         (|| {}).in_set(crate::robot::RobotSet::Actions),
         (|| {}).in_set(CameraSet::Viewport),
         (|| {}).in_set(CameraSet::Navigate),

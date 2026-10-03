@@ -139,7 +139,11 @@ pub enum CadSet {
 /// configured: the two-step key gate comes before RoboCAD's shortcuts and the
 /// Select tool's keys, and every field-focusing reader before the shortcuts.
 /// `Focus` is not ordered against `Gate` (readers that must follow the gate
-/// say so), and `Keys` is not ordered against `ToolKeys`.
+/// say so), and `Keys` is not ordered against `ToolKeys`. Escape's consumers
+/// after the gate are two public steps, so no feature orders against another
+/// feature's Escape system: `Gate` → `EscapeTool` → `Escape` → `ToolKeys`
+/// (`EscapeTool` also before `Keys`). Each consumer clears the key only when
+/// it acted, so one press ends at most one thing.
 #[derive(SystemSet, Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum CadKeySet {
     /// The two-step key gate (`keys::gate`). Readers that take a key first
@@ -152,6 +156,15 @@ pub enum CadKeySet {
     Keys,
     /// The Select tool's keys (`transform::keys`).
     ToolKeys,
+    /// Escape for a tool that holds the pointer (the reference calibrate
+    /// tool, `references::calibrate::escape`): after the gate, before
+    /// RoboCAD's shortcuts and before [`CadKeySet::Escape`].
+    EscapeTool,
+    /// Escape that ends a lighter state (Annotate or Reattach, the linked
+    /// parts shown alone: `threads::input::escape`): after
+    /// [`CadKeySet::EscapeTool`], before the Select tool's Escape
+    /// (`ToolKeys`).
+    Escape,
 }
 
 /// [`CadSet`] and [`CadKeySet`] in the pipeline (CadCorePlugin, and the
@@ -159,9 +172,11 @@ pub enum CadKeySet {
 pub(crate) fn configure_sets(app: &mut App) {
     app.configure_sets(Update, CadSet::Results.in_set(ViewerSet::JobResults))
         .configure_sets(Update, (CadSet::Mesh, CadSet::Highlight, CadSet::Plane, CadSet::View).in_set(ViewerSet::SimSync))
-        .configure_sets(Update, (CadKeySet::Gate, CadKeySet::Focus, CadKeySet::Keys, CadKeySet::ToolKeys).in_set(InputSet::Window))
+        .configure_sets(Update, (CadKeySet::Gate, CadKeySet::Focus, CadKeySet::Keys, CadKeySet::ToolKeys, CadKeySet::EscapeTool, CadKeySet::Escape).in_set(InputSet::Window))
         .configure_sets(Update, CadKeySet::Gate.before(CadKeySet::Keys).before(CadKeySet::ToolKeys))
-        .configure_sets(Update, CadKeySet::Focus.before(CadKeySet::Keys));
+        .configure_sets(Update, CadKeySet::Focus.before(CadKeySet::Keys))
+        .configure_sets(Update, (CadKeySet::Gate, CadKeySet::EscapeTool, CadKeySet::Escape, CadKeySet::ToolKeys).chain())
+        .configure_sets(Update, CadKeySet::EscapeTool.before(CadKeySet::Keys));
 }
 
 /// What CAD mode needs without a window (the switch test runs it with

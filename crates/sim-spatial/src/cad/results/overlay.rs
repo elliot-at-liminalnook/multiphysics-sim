@@ -245,7 +245,7 @@ pub(super) struct ResultsPanelRoot;
 /// What the panel shows, as a key (rebuilt when it changes; seconds tick once a second).
 fn panel_key(doc: &CadDocument, paint: Option<&StressPaint>) -> Option<String> {
     let r = &doc.results;
-    let running = r.exports.running.as_ref().map(|x| (x.request.label.clone(), x.started.elapsed().as_secs()));
+    let running = r.exports.running.as_ref().map(|x| (x.request.label.clone(), x.started.elapsed().as_secs(), x.cancel_requested));
     if !r.overlay && running.is_none() && !link_active(doc) {
         return None;
     }
@@ -337,7 +337,8 @@ fn body(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, paint: Option<
     }
     if let Some(running) = &r.exports.running {
         p.spawn(k.title("Export"));
-        p.spawn(k.caption(format!("exporting {} in the background… {} s", running.request.label, running.started.elapsed().as_secs())));
+        let cancelling = if running.cancel_requested { " (cancellation requested; waiting for the outcome)" } else { "" };
+        p.spawn(k.caption(format!("exporting {} in the background… {} s{cancelling}", running.request.label, running.started.elapsed().as_secs())));
         p.spawn(k.note(running.request.path.display().to_string()));
         if let Some(q) = &r.exports.queued {
             p.spawn(k.note(format!("Next: {} (the latest save)", q.label)));

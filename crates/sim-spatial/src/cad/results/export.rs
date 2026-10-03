@@ -61,6 +61,10 @@ pub(crate) struct Running {
     /// Whole seconds last shown in the status line.
     pub shown: u64,
     pub cancel_requested: bool,
+    /// The shown revision when it started: RoboCAD exports its document as
+    /// it is when the request arrives, so an edit made while the export
+    /// runs is not in the file ([`poll`] says so when it lands).
+    pub revision: u64,
 }
 
 /// The exports: the running one, the queued live-link one, the last outcome.
@@ -148,7 +152,8 @@ fn start(doc: &mut CadDocument, request: ExportRequest) -> Result<(), String> {
         write_model(&path, &model, &|| ctx.cancelled())
     });
     doc.show(Ok(format!("exporting {} in the background…", request.label)));
-    doc.results.exports.running = Some(Running { request, job, started: Instant::now(), shown: 0, cancel_requested: false });
+    let revision = doc.shown_revision();
+    doc.results.exports.running = Some(Running { request, job, started: Instant::now(), shown: 0, cancel_requested: false, revision });
     Ok(())
 }
 
@@ -229,21 +234,39 @@ pub(crate) fn poll(doc: &mut CadDocument) -> Option<Landed> {
         let seconds = running.started.elapsed().as_secs();
         if seconds != running.shown {
             running.shown = seconds;
-            let line = format!("exporting {} in the background… {seconds} s", running.request.label);
+            // RoboCAD's progress text; after a cancel request it keeps running until its outcome, and says so.
+            let cancelling = if running.cancel_requested { " (cancellation requested; waiting for the outcome)" } else { "" };
+            let line = format!("exporting {} in the background… {seconds} s{cancelling}", running.request.label);
             doc.show(Ok(line));
         }
         return None;
     };
-    let Running { request, cancel_requested, .. } = results.exports.running.take()?;
+    let Running { request, cancel_requested, revision, job, .. } = results.exports.running.take()?;
     let (label, path) = (request.label.clone(), request.path.clone());
+    // The document this export was made for: a job of an older connection
+    // or document (generation) never drives the live link or Robot mode.
+    let same_document = job.generation() == doc.generation;
+    let now = doc.shown_revision();
     let landed = match outcome {
         Ok(w) => {
             let mut message = format!("{label} written: {} ({} links, {} flexible)", path.display(), w.links, w.flexible);
             if cancel_requested { message.push_str("; cancellation arrived after the final publication check and could not revoke the write"); }
+            if !same_document {
+                message.push_str("; it was exported from the document as it was before CAD mode reconnected or opened another one, so Robot mode does not follow it");
+            } else if revision != now {
+                message.push_str(&format!("; it holds the document at revision {revision}, when the export started: the document changed while it ran (now revision {now})"));
+            }
             doc.show(Ok(message.clone()));
             doc.results.exports.last = Some((label, path.clone(), Ok(message)));
             doc.results.exports.written = Some(path.clone());
-            Some(Landed { path, link: request.link })
+            same_document.then_some(Landed { path, link: request.link })
+        }
+        // A cancel that arrived before publication: nothing was written (RoboCAD's "{label} export cancelled").
+        Err(e) if cancel_requested && e == "cancelled" => {
+            let message = format!("{label} export cancelled: nothing was written to {}", path.display());
+            doc.show(Ok(message.clone()));
+            doc.results.exports.last = Some((label, path, Err(message)));
+            None
         }
         Err(e) => {
             let message = format!("{label} export failed: {e}");

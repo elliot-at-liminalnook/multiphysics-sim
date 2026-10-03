@@ -15,7 +15,9 @@
 //! the document generation, the shown revision, the edit sequence and the
 //! selected nodes; [`cancel_reason`] (the rule [`sync`] applies each frame)
 //! drops it on any edit (one sent from here, or a newer revision shown) and
-//! on any selection change, and the status line says why. A value RoboCAD
+//! on any selection change, and the facts line and the status line say
+//! why ([`sync`]; a result is only ever shown for the stamp it was measured
+//! at, [`ExactState::facts`]). A value RoboCAD
 //! sent as null is an error naming it, never a number.
 //!
 //! **Cancel stops waiting; it does not stop RoboCAD.** Deliberately
@@ -217,7 +219,8 @@ pub(crate) fn cancel(doc: &mut CadDocument) -> Result<Value, String> {
     let Some(run) = doc.physical_edit.exact.run.take() else { return Err("no exact measurement is running".into()) };
     let message = format!("Exact measurements cancelled. {SENT}");
     doc.physical_edit.exact.status = Some((run.stamp, message.clone()));
-    doc.touch();
+    // The status line says it too, as a stop by an edit or a selection change does (`sync`).
+    doc.show(Ok(message.clone()));
     Ok(json!({"message": message}))
 }
 
@@ -295,7 +298,18 @@ pub(crate) fn sync(doc: Option<ResMut<CadDocument>>, selection: CadSelection) {
         return;
     }
     let now = Stamp::of(&doc, &selection.items());
+    let had_run = doc.physical_edit.exact.run.is_some();
     if settle(&mut doc.physical_edit.exact, &now) {
-        doc.touch();
+        // A run dropped because the document was edited or replaced or the
+        // selection changed (`settle` keeps the reason as its status, and a
+        // run that landed leaves a result instead): the status line says why.
+        let cancelled = {
+            let e = &doc.physical_edit.exact;
+            if had_run && e.run.is_none() && e.result.is_none() { e.status.as_ref().map(|(_, why)| why.clone()) } else { None }
+        };
+        match cancelled {
+            Some(why) => doc.show(Ok(why)),
+            None => doc.touch(),
+        }
     }
 }

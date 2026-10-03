@@ -204,17 +204,17 @@ fn the_file_forms_rows_units_guess_and_listing_picks() {
     import.set("unit", "cm".into());
     import.guessed("/data/scan.stl", &json!({"guess": "m"}));
     assert_eq!(import.text("unit"), "cm", "a unit chosen by hand is kept");
-    assert_eq!(import.action().unwrap(), CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/data/scan.stl".into()), unit: Some("cm".into()) }));
+    assert_eq!(import.action().unwrap(), CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/data/scan.stl".into()), unit: Some("cm".into()), job: None }));
     // Another mesh starts over: its own guess, or a unit chosen for it.
     import.set("path", "/data/part.obj".into());
     assert_eq!(import.ask_guess().as_deref(), Some("/data/part.obj"));
     assert!(import.action().is_err());
     import.set("unit", "mm".into());
-    assert_eq!(import.action().unwrap(), CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/data/part.obj".into()), unit: Some("mm".into()) }));
+    assert_eq!(import.action().unwrap(), CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/data/part.obj".into()), unit: Some("mm".into()), job: None }));
     // A STEP file takes no unit and needs no guess.
     import.set("path", "/data/part.step".into());
     assert_eq!(import.ask_guess(), None);
-    assert_eq!(import.action().unwrap(), CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/data/part.step".into()), unit: None }));
+    assert_eq!(import.action().unwrap(), CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/data/part.step".into()), unit: None, job: None }));
     let mut save = FileForm::new(Kind::File(FileOp::SaveAs), "/work/", "turntable", None, &cx, &none).unwrap();
     assert_eq!(save.text("path"), "/work/turntable.rcad");
     save.pick("/work", "old", true);
@@ -269,7 +269,7 @@ fn controls_and_command_actions_round_trip_through_rest() {
         actions_.push(command_action(id).unwrap_or_else(|| panic!("{id}")));
     }
     assert_eq!(command_action("file.quit"), None);
-    actions_.push(CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/a.stl".into()), unit: Some("in".into()) }));
+    actions_.push(CadAction::CadFile(FileArgs { op: FileOp::Import, path: Some("/a.stl".into()), unit: Some("in".into()), job: None }));
     actions_.push(CadAction::CadExport(ExportArgs { format: Some("stl".into()), path: Some("/a.stl".into()), settings: json!({"binary": false}).as_object().unwrap().clone(), ids: Some(vec!["n1".into()]) }));
     actions_.push(CadAction::CadRender(RenderArgs { path: Some("/a.png".into()), w: Some(640), tolerance: Some(0.1), labels: Some(true), ..Default::default() }));
     for action in actions_ {
@@ -286,4 +286,30 @@ fn controls_and_command_actions_round_trip_through_rest() {
     for s in specs() {
         <CadAction as Action>::parse(&sim_api::Command { command: s.name.into(), args: s.example.clone() }).unwrap_or_else(|e| panic!("{}: {e}", s.name));
     }
+}
+
+#[test]
+fn a_cancel_asks_exports_and_renders_and_says_what_it_can_stop() {
+    let job = |seq: u64, kind: &'static str| jobs::FileJob { seq, kind, label: format!("{kind} {seq}"), job: crate::jobs::Job::finished(seq, Ok(Value::Null)), started: std::time::Instant::now(), waited: false, then: jobs::Then::Nothing, cancelled: false };
+    let mut files = CadFiles::default();
+    files.jobs = vec![job(1, "export"), job(2, "render"), job(3, "guess_unit")];
+    // A read is not a write a cancel applies to; an unknown job is named.
+    assert!(jobs::cancel(&mut files, Some(3)).unwrap_err().contains("no export or render job 3"), "the unit guess is a read");
+    assert!(jobs::cancel(&mut files, Some(9)).unwrap_err().contains("job 9"));
+    let render = jobs::cancel(&mut files, Some(2)).unwrap();
+    assert_eq!(render["cancelled"], json!([2]));
+    assert!(render["message"].as_str().unwrap().contains("does not write the PNG"), "{render}");
+    let controls = control_list(&document(false), Some(&files));
+    let cancel: Vec<(&str, bool)> = controls.iter().filter(|c| c.0.starts_with("cad:file:cancel-")).map(|c| (c.0.as_str(), c.3.is_ok())).collect();
+    assert_eq!(cancel, [("cad:file:cancel-1", true), ("cad:file:cancel-2", false)], "asked once, then disabled saying so");
+    // Without a job: every export and render; an export's note says RoboCAD writes it anyway.
+    let all = jobs::cancel(&mut files, None).unwrap();
+    assert_eq!(all["cancelled"], json!([1, 2]));
+    assert!(all["message"].as_str().unwrap().contains("RoboCAD writes the file anyway"), "{all}");
+    assert!(files.jobs.iter().all(|j| j.cancelled == (j.kind != "guess_unit")));
+    // The control's action round-trips through REST; job belongs to cancel only.
+    let action = CadAction::CadFile(FileArgs { op: FileOp::Cancel, job: Some(2), ..Default::default() });
+    let Value::Object(mut args) = rest_form(&action) else { panic!("not an object") };
+    let name = args.remove("command").and_then(|v| v.as_str().map(str::to_string)).unwrap();
+    assert_eq!(<CadAction as Action>::parse(&sim_api::Command { command: name, args: Value::Object(args) }).unwrap(), action);
 }

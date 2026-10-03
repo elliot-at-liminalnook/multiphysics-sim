@@ -37,7 +37,7 @@ mod annotate;
 mod controls;
 pub(in crate::cad) mod dock;
 mod input;
-mod isolation;
+pub(crate) mod isolation;
 mod ops;
 mod pins;
 mod read;

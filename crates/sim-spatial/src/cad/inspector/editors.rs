@@ -1,5 +1,5 @@
 //! The inspector's pivot and transform editors (cad-modify; RoboCAD's
-//! `PATCH /nodes/{id}`, api.py:573-611): the inspected node's pivot
+//! `PATCH /nodes/{id}`, `Service.patch`, api.py:748-787): the inspected node's pivot
 //! (`{"pivot": [x, y, z]}`, or `null` from "Clear pivot") and, for the
 //! nodes RoboCAD keeps a placement for (instances and reference meshes and
 //! images: `Transform`, document.py:142-144; bodies are baked in world),
@@ -22,7 +22,7 @@
 //!   changed component is sent with the other three as RoboCAD last
 //!   reported them (`NodeSummary::transform`); a transform RoboCAD sent
 //!   without one of them is not edited (nothing is filled in).
-//! - **Refused as RoboCAD refuses them** (api.py:575-578), with nothing
+//! - **Refused as RoboCAD refuses them** (api.py:750-753), with nothing
 //!   sent and the reason shown instead of the field: a component member's
 //!   pivot and transform ("Edit component parameters or detach the
 //!   occurrence first"), a component occurrence's transform ("Use
@@ -39,7 +39,7 @@
 //! - **Tessellation tolerance** (cad-views-export; RoboCAD's inspector
 //!   spin box "Tessellation tolerance (mm)", ui/widgets.py:469-476: 0.005–2
 //!   mm, three decimals, default 0.05): one `CadPatch
-//!   {"tessellation_tolerance": mm}` (api.py:645, one undo step "Set
+//!   {"tessellation_tolerance": mm}` (api.py:774-775 and 782-785, one undo step "Set
 //!   attributes") on the inspected body, sheet or instance. RoboCAD's
 //!   spin box writes every selected node directly, without undo
 //!   (`_tol_changed`, widgets.py:729-735); here it is the inspected node,
@@ -181,7 +181,7 @@ fn truthy(v: Option<&Value>) -> bool {
     }
 }
 
-/// Why RoboCAD refuses this edit of node `n` (api.py:575-578), if it does.
+/// Why RoboCAD refuses this edit of node `n` (api.py:750-753), if it does.
 pub fn refusal(n: &NodeSummary, key: EditKey) -> Option<&'static str> {
     if truthy(n.component_member.as_ref()) {
         return Some("Edit component parameters or detach the occurrence first");
@@ -535,7 +535,7 @@ mod tests {
         assert!(patch_for(&partial, EditKey::Scale, "2", None).unwrap_err().contains("axis"));
     }
 
-    /// RoboCAD's refusals (api.py:575-578): a component member's pivot and
+    /// RoboCAD's refusals (api.py:750-753): a component member's pivot and
     /// transform, a component occurrence's transform (its pivot is allowed).
     #[test]
     fn component_occurrences_are_refused_as_robocad_refuses_them() {

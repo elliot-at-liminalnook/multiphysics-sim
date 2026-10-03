@@ -49,6 +49,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_api::Outcome;
+use crate::cad::selection::Shared;
 use sim_runtime::cad_client::{SavedView, ViewState, check_view_name};
 
 /// (document generation, RoboCAD's shown revision): what a list was read at.
@@ -254,7 +255,7 @@ fn id_of<'a>(args: &'a ViewsArgs, op: &str) -> Result<&'a str, String> {
 /// `CadViews`, from any entry point.
 pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcome {
     let CadAction::CadViews(args) = action else { return Outcome::Done(Err("not a saved-views action".into())) };
-    let Cx { doc, views, display, camera, .. } = cx;
+    let Cx { doc, views, display, camera, shared, .. } = cx;
     let doc: &mut CadDocument = doc;
     let Some(views) = views.as_deref_mut() else { return Outcome::Done(Err(NO_WINDOW.into())) };
     let done = |r: Result<Value, String>| Outcome::Done(r);
@@ -291,7 +292,11 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
             let Some(view) = views.shown(doc).iter().find(|v| v.id == id).cloned() else {
                 return done(Err(format!("no saved view {id} (RoboCAD's /views lists {}); op list lists them", views.shown(doc).len())));
             };
-            done(restore(&view, views, display.as_deref_mut(), camera, doc))
+            let restored = restore(&view, views, display.as_deref_mut(), camera, doc);
+            done(restored.map(|mut answer| {
+                answer["returned_to_assembly"] = json!(end_part_view(doc, shared));
+                answer
+            }))
         }
         ViewsOp::Save => {
             let name = match check_view_name(args.name.as_deref().unwrap_or("")) {
@@ -365,6 +370,21 @@ fn restore(view: &SavedView, views: &mut CadViews, display: Option<&mut CadDispl
         "note": note,
         "route": "read from RoboCAD's GET /views and applied to the native camera and display; RoboCAD's GUI-only POST /views/{id}/restore is not used",
     }))
+}
+
+/// After a restore: RoboCAD's restore first ends a comment thread's part
+/// view (`saved_view_request`'s restore and `SavedViewsPanel.restore` call
+/// `comments.end_inspection()`, and `restore_view` clears `inspection_ids`),
+/// so the parts shown alone (cad-organize's "Show only linked parts") are
+/// drawn again and the selection from before comes back, without parts
+/// deleted since. The part view's camera and display are not put back: the
+/// saved view just applied sets them, as RoboCAD's `restore_view` after
+/// `end_inspection` does. True when a part view ended.
+fn end_part_view(doc: &mut CadDocument, shared: &mut Shared) -> bool {
+    let Some(isolation) = doc.threads.isolation.take() else { return false };
+    // A selection RoboCAD's tree no longer allows stays as it is.
+    let _ = crate::cad::threads::isolation::restore_selection(doc, shared, isolation.selection);
+    true
 }
 
 /// Opens RoboCAD's field-of-view entry (`view.fov`: degrees, 5–120), filled

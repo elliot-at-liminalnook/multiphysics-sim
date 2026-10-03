@@ -16,7 +16,7 @@ use crate::session::{EpisodeFrame, InputChannel, Scene, Session};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_domain_control::drive::kinematics::{self, Axes, BodyTwist, Deadman, Limits};
-use sim_domain_control::drive::profile::ActionRequest;
+use sim_domain_control::drive::profile::{ActionRequest, DriveProfile, ResolvedDrive};
 
 /// Largest heartbeat the `command.heartbeat` channel carries (2^53, exact in
 /// f64): the runtime's own bound on that input (`controller_binding::HEARTBEAT_MAX`), as an integer.
@@ -66,13 +66,19 @@ impl DriveRequest {
     /// an action by its name in the profile (`stop` or `halt`; an unknown name
     /// is refused listing the profile's actions); stop as a zero twist.
     pub fn interpret(&self, controlled: &ControlledRobot) -> Result<(BodyTwist, bool), String> {
+        self.interpret_with(&controlled.profile, &controlled.resolved)
+    }
+    /// [`DriveRequest::interpret`] against a profile and its resolved form
+    /// directly (the embedded drive, `crate::embedded_drive`, has no
+    /// [`ControlledRobot`]).
+    pub fn interpret_with(&self, profile: &DriveProfile, resolved: &ResolvedDrive) -> Result<(BodyTwist, bool), String> {
         match self {
             DriveRequest::Axes { forward, lateral, yaw } => {
-                let twist = kinematics::scale(Axes { forward: *forward, lateral: *lateral, yaw: *yaw }, &controlled.resolved.limits())
-                    .map_err(|e| format!("drive request refused: {e} (profile {})", controlled.resolved.profile))?;
+                let twist = kinematics::scale(Axes { forward: *forward, lateral: *lateral, yaw: *yaw }, &resolved.limits())
+                    .map_err(|e| format!("drive request refused: {e} (profile {})", resolved.profile))?;
                 Ok((twist, false))
             }
-            DriveRequest::Action { name } => match controlled.profile.action(name)?.request {
+            DriveRequest::Action { name } => match profile.action(name)?.request {
                 ActionRequest::Stop => Ok((BodyTwist::ZERO, false)),
                 ActionRequest::Halt => Ok((BodyTwist::ZERO, true)),
             },

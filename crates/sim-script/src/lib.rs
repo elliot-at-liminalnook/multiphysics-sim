@@ -3,6 +3,8 @@
 pub mod presentation;
 pub mod pacing;
 pub mod expr;
+/// Rhai drive functions (mixers and the controller-side deadman) over `sim_domain_control::drive`.
+pub mod drive;
 use rhai::{
     Array, CallFnOptions, Dynamic, Engine, EvalAltResult, Map, Module, NativeCallContext, Position,
     Scope, AST,
@@ -242,6 +244,9 @@ fn engine(sources: Sources, parameters: Map, seed: u64) -> Engine {
         sim_domain_control::heading::HeadingFeedback::new(config).map_err(error)?
             .correction(target, actual, target_rate, actual_rate).map_err(error)
     });
+    // Teleoperation kinematic adapters mix and apply the controller-side
+    // deadman only through these (sim_domain_control::drive).
+    drive::register(&mut engine);
     engine
 }
 

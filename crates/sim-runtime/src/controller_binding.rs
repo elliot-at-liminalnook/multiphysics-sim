@@ -38,6 +38,34 @@ pub struct ControllerBinding {
     pub controller: BoundController,
     /// The drive profile, relative to the binding file.
     pub drive_profile: PathBuf,
+    /// The same kinematic adapter as an embedded Rhai program, for hosts
+    /// that cannot start the external one (the browser): run in the shared
+    /// embedded session (`crate::embedded_drive`). Absent in older files,
+    /// which read unchanged.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub embedded: Option<EmbeddedController>,
+}
+
+/// A binding's embedded program: a Rhai controller over the same four
+/// command channels ([`COMMAND_CHANNELS`]) and wheel targets as the
+/// external one, mixing through the Rust drive functions `sim-script`
+/// registers from `sim_domain_control::drive`. Paths are relative to the
+/// binding file.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EmbeddedController {
+    /// Only `rhai`.
+    pub language: String,
+    /// The program's entry file (it defines `control(t, sensors, commands, state)`).
+    pub entry: PathBuf,
+    /// Further files it imports, captured with the entry. Each is keyed in
+    /// the captured sources by its path relative to the entry's directory.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub files: Vec<PathBuf>,
+    /// The embedded session's experiment recipe (`crate::embedded::Config`:
+    /// step, servo boundaries and the policy's software target envelope);
+    /// the builder derives the horizon, report stride and the CAD hash check.
+    pub config: PathBuf,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -98,6 +126,24 @@ impl ControllerBinding {
         }
         if self.drive_profile.as_os_str().is_empty() {
             return at("drive_profile", "is empty");
+        }
+        if let Some(embedded) = &self.embedded {
+            if embedded.language != "rhai" {
+                return Err(format!(
+                    "{}: embedded.language: `{}` is not supported; embedded programs are `rhai`",
+                    file.display(),
+                    embedded.language
+                ));
+            }
+            if embedded.entry.as_os_str().is_empty() {
+                return at("embedded.entry", "is empty");
+            }
+            if let Some(i) = embedded.files.iter().position(|f| f.as_os_str().is_empty()) {
+                return Err(format!("{}: embedded.files[{i}]: is empty", file.display()));
+            }
+            if embedded.config.as_os_str().is_empty() {
+                return at("embedded.config", "is empty");
+            }
         }
         Ok(())
     }
@@ -219,6 +265,17 @@ pub fn identity_of(program: &ControllerProgram) -> Result<Option<ControllerIdent
     }))
 }
 
+/// The drive profile resolved against `model`: the geometry derived from the
+/// model (or the profile's declared geometry, with its source) and the
+/// profile's limits and deadman (`DriveProfile::resolve`). One rule for the
+/// external binding ([`load`]) and the embedded program
+/// (`crate::embedded_drive::build`); errors name `profile_path`.
+pub fn resolve_drive(model: &PhysicalModel, profile: &DriveProfile, profile_path: &Path, profile_sha256: &str) -> Result<ResolvedDrive, String> {
+    let geometry = sim_domain_robot::drive_geometry::resolve(model, profile)
+        .map_err(|e| format!("{}: {e}", profile_path.display()))?;
+    profile.resolve(profile_path, profile_sha256, geometry).map_err(|e| e.to_string())
+}
+
 /// A model's bound controller, resolved and ready to put in a [`Scene`].
 #[derive(Clone, Debug)]
 pub struct ControlledRobot {
@@ -269,9 +326,7 @@ pub fn load(binding_path: &Path, model: &PhysicalModel) -> Result<ControlledRobo
     let profile_path = std::fs::canonicalize(&given)
         .map_err(|e| format!("{shown}: drive_profile: {} cannot be found: {e}", given.display()))?;
     let (profile, profile_sha256) = DriveProfile::load(&profile_path).map_err(|e| e.to_string())?;
-    let geometry = sim_domain_robot::drive_geometry::resolve(model, &profile)
-        .map_err(|e| format!("{}: {e}", profile_path.display()))?;
-    let resolved = profile.resolve(&profile_path, &profile_sha256, geometry).map_err(|e| e.to_string())?;
+    let resolved = resolve_drive(model, &profile, &profile_path, &profile_sha256)?;
     let drive_json = serde_json::to_string(&resolved)
         .map_err(|e| format!("{}: cannot encode the resolved drive: {e}", profile_path.display()))?;
 
@@ -306,14 +361,66 @@ pub fn load(binding_path: &Path, model: &PhysicalModel) -> Result<ControlledRobo
 /// The driven scene: the model held by its CAD control block, the bound
 /// controller on the seam at the model's control period, default build options.
 pub fn scene(model: PhysicalModel, controlled: &ControlledRobot, duration_s: f64) -> Scene {
+    scene_with(model, controlled.program.clone(), duration_s, BuildOptions::default(), None)
+}
+
+/// A driven scene for any controller program: the model held by its CAD
+/// control block, `program` at the model's control period
+/// (`model.control.period_s`), the given build options. `robot_input` is
+/// the retained original model document, when the host has it
+/// (`crate::embedded_drive::build` does; [`scene`] passes `None`, as before).
+pub fn scene_with(model: PhysicalModel, program: ControllerProgram, duration_s: f64, options: BuildOptions, robot_input: Option<crate::robot_input::RobotInput>) -> Scene {
     let period_s = model.control.period_s;
-    Scene {
-        version: 1,
-        robot: model,
-        options: BuildOptions::default(),
-        controller: Some(controlled.program.clone()),
-        period_s,
-        duration_s,
-        robot_input: None,
+    Scene { version: 1, robot: model, options, controller: Some(program), period_s, duration_s, robot_input }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The binding as committed before `embedded` existed: it reads unchanged.
+    const OLDER: &str = r#"{
+  "schema": "sim.controller-binding/1",
+  "description": "The rover's teleoperation controller: an external Python simloop program on the control.external seam that applies the drive profile's deadman and limits, mixes the twist with the differential drive derived from the model, and integrates wheel position targets.",
+  "controller": {"language": "python", "script": "../../../clients/python/examples/diff_drive_rover.py", "args": []},
+  "drive_profile": "robot.drive.json"
+}
+"#;
+
+    #[test]
+    fn an_older_binding_without_embedded_reads_unchanged() {
+        let file = Path::new("examples/wheeled-robot/baseline/robot.controller.json");
+        let binding = ControllerBinding::from_json(OLDER, file).unwrap();
+        assert_eq!(binding.embedded, None);
+        assert_eq!(binding.controller.script, PathBuf::from("../../../clients/python/examples/diff_drive_rover.py"));
+        assert_eq!(binding.drive_profile, PathBuf::from("robot.drive.json"));
+        // Written back, it has no `embedded` key.
+        let written = serde_json::to_value(&binding).unwrap();
+        assert!(written.get("embedded").is_none(), "{written}");
+    }
+
+    #[test]
+    fn the_embedded_program_is_checked_by_field() {
+        let file = Path::new("robot.controller.json");
+        let with = |embedded: serde_json::Value| {
+            let mut v: serde_json::Value = serde_json::from_str(OLDER).unwrap();
+            v["embedded"] = embedded;
+            ControllerBinding::from_json(&v.to_string(), file)
+        };
+        let ok = with(serde_json::json!({"language": "rhai", "entry": "../drive-adapter.rhai", "config": "../drive-adapter.config.json"})).unwrap();
+        let embedded = ok.embedded.unwrap();
+        assert_eq!((embedded.entry, embedded.config), (PathBuf::from("../drive-adapter.rhai"), PathBuf::from("../drive-adapter.config.json")));
+        assert!(embedded.files.is_empty());
+        let e = with(serde_json::json!({"language": "lua", "entry": "a.lua", "config": "c.json"})).unwrap_err();
+        assert!(e.starts_with("robot.controller.json: embedded.language:") && e.contains("`lua`") && e.contains("rhai"), "{e}");
+        let e = with(serde_json::json!({"language": "rhai", "entry": "", "config": "c.json"})).unwrap_err();
+        assert!(e.starts_with("robot.controller.json: embedded.entry: is empty"), "{e}");
+        let e = with(serde_json::json!({"language": "rhai", "entry": "a.rhai", "config": ""})).unwrap_err();
+        assert!(e.starts_with("robot.controller.json: embedded.config: is empty"), "{e}");
+        let e = with(serde_json::json!({"language": "rhai", "entry": "a.rhai", "files": [""], "config": "c.json"})).unwrap_err();
+        assert!(e.starts_with("robot.controller.json: embedded.files[0]: is empty"), "{e}");
+        // An unknown field is named by serde.
+        let e = with(serde_json::json!({"language": "rhai", "entry": "a.rhai", "config": "c.json", "gains": 1})).unwrap_err();
+        assert!(e.contains("gains"), "{e}");
     }
 }

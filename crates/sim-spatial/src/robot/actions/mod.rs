@@ -78,6 +78,10 @@ pub(crate) enum RobotAction {
     Activate { id: String, ui_revision: u64 },
     /// REST `camera`: an absolute orbit.
     Camera { focus: [f32; 3], radius: f32, yaw: f32, pitch: f32 },
+    /// RoboCAD's comment threads on the CAD source (the Comments section's
+    /// presses and composer, REST `robot_threads`), applied by
+    /// `threads::handle` from [`apply`].
+    Threads { act: crate::robot::threads::ThreadsAct },
 }
 
 /// The action that flips one overlay from its current requested value.
@@ -187,6 +191,8 @@ pub(super) fn check(view: &RobotView, action: &RobotAction) -> Result<(), String
         _ => Ok(()),
     }
 }
+/// Thread acts need the thread state, which only [`apply`] holds.
+const THREADS_IN_APPLY: &str = "comment thread actions are applied by robot mode's apply system (threads::handle)";
 /// The planar view, for a handler that `check_planar` already accepted.
 fn planar(view: &mut RobotView) -> Result<&mut PlanarView, String> {
     view.planar.as_mut().ok_or_else(|| "the planar v2 file is no longer loaded".to_string())
@@ -242,6 +248,7 @@ fn dispatch_planar(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Sele
         RobotAction::Motion { .. } | RobotAction::SaveRecording { .. } | RobotAction::Replay { .. } | RobotAction::CancelReplay | RobotAction::RefreshRecordings
         | RobotAction::Gait { .. } | RobotAction::Recorded { .. } | RobotAction::ToggleGraphs => return Err("refused for a planar v2 file".into()),
         RobotAction::State | RobotAction::RobotState | RobotAction::Presets | RobotAction::OpenPreset { .. } | RobotAction::Controls | RobotAction::Activate { .. } | RobotAction::Camera { .. } => unreachable!("answered by `handle`"),
+        RobotAction::Threads { .. } => return Err(THREADS_IN_APPLY.into()),
     }
     Ok(())
 }
@@ -263,6 +270,7 @@ fn dispatch(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, 
     match action {
         RobotAction::Motion { .. } | RobotAction::SaveRecording { .. } => unreachable!("handled above"),
         RobotAction::State | RobotAction::RobotState | RobotAction::Presets | RobotAction::OpenPreset { .. } | RobotAction::Controls | RobotAction::Activate { .. } | RobotAction::Camera { .. } => unreachable!("answered by `handle`"),
+        RobotAction::Threads { .. } => return Err(THREADS_IN_APPLY.into()),
         RobotAction::Replay { file, path } => {
             view.run.as_mut().ok_or("the robot has not loaded")?.replay(file.as_deref(), path.as_deref())?;
         }
@@ -539,6 +547,7 @@ pub(super) fn apply(
     mut selection: ResMut<Selection>,
     mut registry: ResMut<DocumentRegistry>,
     closing: Option<Res<crate::app::close::CloseOwner>>,
+    (mut threads, mut reveal, mut window): (ResMut<crate::robot::threads::RobotThreads>, Option<ResMut<crate::cad::threads::RevealThread>>, MessageWriter<Act<crate::app::switch::WindowAction>>),
 ) {
     let (Some(mut view), Some(mut orbit)) = (view, orbit) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
@@ -551,6 +560,10 @@ pub(super) fn apply(
         return;
     };
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
+        // RoboCAD's comment threads: their own handler, outcome and REST wait.
+        if let RobotAction::Threads { act } = action {
+            return crate::robot::threads::handle(act, call, &mut threads, &view, &registry, &mut selection, reveal.as_deref_mut(), &mut window);
+        }
         let synced = hardware.as_ref().is_some_and(|hw| hw.sync.engaged());
         let result = match action {
             _ if synced && call.remote() && moves_synced_motors(&view, picked::link(&selection, &registry), action) => Err(SYNC_REMOTE_REFUSAL.to_string()),
@@ -607,7 +620,22 @@ pub(super) fn apply(
             _ => handle(&mut view, &mut orbit, &mut selection, &mut registry, action),
         };
         match call.origin {
-            Origin::Rest(_) => Outcome::Done(result.map(|answer| answer.unwrap_or_else(|| view.state_json(picked::link(&selection, &registry))))),
+            Origin::Rest(_) => Outcome::Done(result.map(|answer| {
+                // `robot_state.cad_threads`: every answer that carries the state carries it.
+                let cad_threads = || crate::robot::threads::state_json(&view, &registry, &threads);
+                match (answer, action) {
+                    (None, _) => view.state_with_threads(picked::link(&selection, &registry), cad_threads()),
+                    (Some(mut answer), RobotAction::State) => {
+                        answer["robot_state"]["cad_threads"] = cad_threads();
+                        answer
+                    }
+                    (Some(mut answer), RobotAction::Controls) => {
+                        answer["state"]["cad_threads"] = cad_threads();
+                        answer
+                    }
+                    (Some(answer), _) => answer,
+                }
+            })),
             Origin::Ui => {
                 view.run_message = result.err();
                 Outcome::Done(Ok(Value::Null))
@@ -669,11 +697,12 @@ mod tests;
 
 pub(super) use keys::{buttons, graph_key, motion_keys, overlay_keys, pick_link, planar_keys, speed_keys};
 
-/// Present: `/v1/robot_state`, at most every 100 ms.
-pub(super) fn publish(rest: Option<ResMut<crate::rest::Rest>>, view: Res<RobotView>, selection: Res<Selection>, registry: Res<DocumentRegistry>) {
+/// Present: `/v1/robot_state` (with `cad_threads`), at most every 100 ms.
+pub(super) fn publish(rest: Option<ResMut<crate::rest::Rest>>, view: Res<RobotView>, selection: Res<Selection>, registry: Res<DocumentRegistry>, threads: Res<crate::robot::threads::RobotThreads>) {
     let Some(mut rest) = rest else { return };
     if rest.0.snapshot_due() {
-        rest.0.publish("robot_state", view.state_json(picked::link(&selection, &registry)));
+        let cad_threads = crate::robot::threads::state_json(&view, &registry, &threads);
+        rest.0.publish("robot_state", view.state_with_threads(picked::link(&selection, &registry), cad_threads));
     }
 }
 
@@ -708,5 +737,6 @@ pub(crate) mod wire {
         RobotOverlay { contacts: Option<bool>, joints: Option<bool>, deflections: Option<bool>, stress: Option<bool> },
         RobotSpeed { action: Option<String>, scale: Option<f64> },
         RobotRecorded { action: String, t: Option<f64>, scale: Option<f64>, delta: Option<i64> },
+        RobotThreads { op: Option<String>, thread: Option<String>, comment: Option<String>, body: Option<String>, author: Option<String>, resolved: Option<bool> },
     }
 }

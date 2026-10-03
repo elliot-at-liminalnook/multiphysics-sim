@@ -9,8 +9,11 @@
 //!   [`ThreadSource::commit`], which applies one `sim_annotate::ThreadCommand`
 //!   to its own document in its own on-disk format. The adapters:
 //!   - Inspect notes (`notes.rs`, `sim_inspect::annotations` in
-//!     `*.annotations.json`): a note is shown as a one-message thread
-//!     (`notes::NoteAnchor`); saved views and navigation stay Inspect's;
+//!     `*.annotations.json`): a note is shown as a thread whose first
+//!     message is the note's text (its id is the note's; it is edited, not
+//!     deleted) followed by its replies, resolved as the note is
+//!     (`notes::NoteAnchor`; replies and resolves are the sidecar's version
+//!     2, written only while used); saved views and navigation stay Inspect's;
 //!   - system discussions (`builder/discussion.rs`, `sim_system::display`
 //!     threads inside the system document, saved by the builder's own save
 //!     path with the system's undo);
@@ -21,6 +24,12 @@
 //!     each commit is one RoboCAD call on CAD mode's edit job, refused by
 //!     name when stale, in flight or disconnected, and reports
 //!     [`Committed::Pending`] with the edit's sequence; RoboCAD's undo).
+//!   - the robot's CAD source's RoboCAD threads in Robot mode
+//!     (`robot/threads/`, `RobotCadThreads`): the same threads, anchored by
+//!     CAD node id and mapped to the export's links; read on jobs from the
+//!     attached RoboCAD that has the source open, each change one RoboCAD
+//!     call through `cad::threads::request_on` on a job; refused by name
+//!     with "Open in CAD" when the source is not open there.
 //! - **Operations.** Every intent is a [`ThreadOp`]; [`apply`] lowers it to
 //!   one command ([`lower`]: new ids and timestamps here; title, link, pin
 //!   and link-carrying edits as a whole-thread put), validates a put thread

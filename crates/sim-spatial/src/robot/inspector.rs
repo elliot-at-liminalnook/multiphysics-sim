@@ -101,6 +101,8 @@ pub(super) fn panels(
     }
     let link = picked::link(&selection, &registry);
     let body = match &view.model {
+        // The Comments section is drawn by `threads` under this text.
+        _ if view.section == Section::Comments => String::new(),
         None => view.planar.as_ref().map_or(String::new(), |p| {
             let watch = view.source.as_ref().map(file_watch_text).unwrap_or_default();
             planar::inspector_text(p, &view.section.label().to_lowercase(), link, &watch)
@@ -110,6 +112,7 @@ pub(super) fn panels(
             Section::Joints => joints_text(&view, m, link),
             Section::Drives => drives_text(&view, m),
             Section::Source => source_text(&view, m),
+            Section::Comments => String::new(),
         },
     };
     let failure = view.run.as_ref().and_then(|r| r.error().map(|e| format!("RUN FAILED: {e}\n\n")));

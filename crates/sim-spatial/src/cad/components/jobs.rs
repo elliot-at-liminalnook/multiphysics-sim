@@ -9,10 +9,26 @@ use crate::jobs::{Job, Pool};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use sim_runtime::cad_client::{
-    CadClient, ComponentJobState, ComponentJobStatus, ComponentOperation,
+    CadClient, CadError, ComponentJobState, ComponentJobStatus, ComponentOperation,
     ComponentStarted,
 };
 use std::time::{Duration, Instant};
+
+/// What the start job answers: the job IDs RoboCAD listed before the POST
+/// (lost-answer recovery may adopt only a job that is not among them), and
+/// the POST's own outcome. The job's own error means the listing failed and
+/// no POST was sent.
+pub(crate) type Started = (Vec<String>, Result<ComponentStarted, String>);
+/// How long after a start's answer was lost a listing that still shows no
+/// matching new job ends the wait. The POST waits `EDIT_TIMEOUT`, longer
+/// than RoboCAD's own 120 s run-on-main deadline, so by then the service has
+/// begun or cancelled it; this margin covers a start it had begun.
+const NOT_LISTED_AFTER: Duration = Duration::from_secs(30);
+/// Marks a status or cancel error for a job id the service does not have
+/// (HTTP 404): it restarted or was replaced, so the job can no longer end.
+const GONE: &str = "RoboCAD no longer has this job (its service restarted or was replaced)";
+/// Marks a connect failure: nothing was sent to the service.
+const UNREACHABLE: &str = "the service that runs this job cannot be reached";
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub(crate) struct Identity {
@@ -40,7 +56,7 @@ pub(crate) struct Active {
     pub expected_revision: u64,
     pub client: CadClient,
     pub operation: ComponentOperation,
-    pub start: Option<Job<ComponentStarted>>,
+    pub start: Option<Job<Started>>,
     pub status: Option<ComponentJobStatus>,
     poll: Option<Job<ComponentJobStatus>>,
     cancel: Option<Job<ComponentJobStatus>>,
@@ -48,7 +64,14 @@ pub(crate) struct Active {
     cancel_sent: bool,
     last: Option<Instant>,
     uncertain: Option<String>,
+    /// When the start's answer was lost (`uncertain` set).
+    uncertain_at: Option<Instant>,
     recovery: Option<Job<Vec<ComponentJobStatus>>>,
+    /// Job IDs listed before the POST; never adopted by recovery.
+    known: Vec<String>,
+    /// The retained draft this request was built from (drafts are never
+    /// removed, so the index stays valid); None for a typed direct operation.
+    pub draft: Option<usize>,
 }
 impl Active {
     pub fn new(
@@ -56,7 +79,8 @@ impl Active {
         expected_revision: u64,
         client: CadClient,
         operation: ComponentOperation,
-        start: Job<ComponentStarted>,
+        start: Job<Started>,
+        draft: Option<usize>,
     ) -> Self {
         Self {
             identity,
@@ -71,7 +95,10 @@ impl Active {
             cancel_sent: false,
             last: None,
             uncertain: None,
+            uncertain_at: None,
             recovery: None,
+            known: Vec::new(),
+            draft,
         }
     }
 }
@@ -155,10 +182,21 @@ pub(crate) fn tick(
         return;
     };
     let mut ended = false;
+    let op = active.operation.op_name();
+    // A displaced identity (another connection or document) is cancelled
+    // using its captured client, never through the replacement's service.
+    let displaced = !doc.as_deref().is_some_and(|d| active.identity.matches(d));
     if let Some(result) = active.start.as_ref().and_then(Job::poll) {
         active.start = None;
         match result {
-            Ok(started) => {
+            Err(e) => {
+                // The listing before the POST failed: nothing was sent.
+                let error = format!("components.{op}: nothing was sent: {e}");
+                report(&mut st, &active, doc.as_deref_mut(), error);
+                ended = true;
+            }
+            Ok((known, Ok(started))) => {
+                active.known = known;
                 let status = started.job;
                 if status.document_id != active.identity.document_id
                     || status.revision != active.expected_revision
@@ -169,11 +207,17 @@ pub(crate) fn tick(
                 }
                 active.status = Some(status);
             }
-            Err(e) => {
-                st.error = Some(format!("components.{}: {e}", active.operation.op_name()));
+            Ok((known, Err(e))) => {
+                active.known = known;
+                let error = format!("components.{op}: {e}");
                 if ambiguous_start(&e) {
+                    st.error = Some(error);
                     active.uncertain = Some(e);
+                    active.uncertain_at = Some(Instant::now());
                 } else {
+                    // A refusal (e.g. RoboCAD's revision guard): the draft
+                    // that was sent keeps the reason and stays editable.
+                    report(&mut st, &active, doc.as_deref_mut(), error);
                     ended = true;
                 }
             }
@@ -182,11 +226,35 @@ pub(crate) fn tick(
     }
     if let Some(result) = active.recovery.as_ref().and_then(Job::poll) {
         active.recovery = None;
+        let waited = active
+            .uncertain_at
+            .is_some_and(|t| t.elapsed() >= NOT_LISTED_AFTER);
         match result {
-            Ok(list) => {
-                if let Err(error) = recover(&mut active, list) {
-                    st.error = Some(error);
+            Ok(list) => match recover(&mut active, list) {
+                Ok(true) => {}
+                Ok(false) if waited => {
+                    let error = format!(
+                        "components.{op}: RoboCAD still lists no job for this request {} s after its answer was lost; nothing was retried. Check the model before applying the retained draft again",
+                        NOT_LISTED_AFTER.as_secs()
+                    );
+                    report(&mut st, &active, doc.as_deref_mut(), error);
+                    active.uncertain = None;
+                    ended = true;
                 }
+                Ok(false) => {
+                    st.error = Some(format!(
+                        "components.{op}: outcome uncertain; RoboCAD lists no matching new job yet; reading again (no POST is retried)"
+                    ))
+                }
+                Err(error) => st.error = Some(error),
+            },
+            Err(e) if waited && displaced => {
+                let error = format!(
+                    "components.{op}: the service that received this request can no longer be read ({e}); whether it changed the model is not known here"
+                );
+                report(&mut st, &active, doc.as_deref_mut(), error);
+                active.uncertain = None;
+                ended = true;
             }
             Err(e) => {
                 st.error = Some(format!(
@@ -228,7 +296,7 @@ pub(crate) fn tick(
             move |_| {
                 client
                     .cancel_component_job(&id)
-                    .map_err(|e| format!("components.job.{id}.cancel: {e}"))
+                    .map_err(|e| job_error(&id, ".cancel", &e))
             },
         ));
         active.cancel_sent = true;
@@ -238,6 +306,15 @@ pub(crate) fn tick(
         active.cancel = None;
         match result {
             Ok(status) => accept_cancel(&mut active, status),
+            // The job cannot end on a service that no longer has it (unless
+            // its terminal status already arrived, reported below).
+            Err(e)
+                if !terminal(&active)
+                    && (e.contains(GONE) || (displaced && e.contains(UNREACHABLE))) =>
+            {
+                report(&mut st, &active, doc.as_deref_mut(), lost(op, &e));
+                ended = true;
+            }
             Err(e) => {
                 st.error = Some(e);
                 active.cancel_sent = false;
@@ -249,11 +326,16 @@ pub(crate) fn tick(
         active.poll = None;
         match result {
             Ok(status) => accept_status(&mut active, status),
+            Err(e) if !terminal(&active) && e.contains(GONE) => {
+                report(&mut st, &active, doc.as_deref_mut(), lost(op, &e));
+                ended = true;
+            }
             Err(e) => st.error = Some(e),
         }
         st.touch();
     }
-    if let Some(status) = &active.status
+    if !ended
+        && let Some(status) = &active.status
         && status.state.terminal()
     {
         ended = true;
@@ -301,30 +383,41 @@ pub(crate) fn tick(
                     if let Some(target) = target {
                         st.selection_after = Some((active.identity.clone(), target.into()));
                     }
-                    d.show(Ok(
-                        if matches!(active.operation, ComponentOperation::Export { .. }) {
-                            "Saved to the component library."
-                        } else {
-                            "Component updated. Undo restores the previous version."
+                    // The applied form closes, as RoboCAD's dialog does; it
+                    // stays in the list but is no longer offered to resume.
+                    if let Some(i) = active.draft {
+                        if let Some(draft) = st.drafts.get_mut(i) {
+                            draft.applied = true;
+                            draft.error = None;
                         }
-                        .into(),
-                    ));
+                        if st.current == Some(i) {
+                            st.current = None;
+                            st.focus = None;
+                        }
+                    }
+                    let done = if matches!(active.operation, ComponentOperation::Export { .. }) {
+                        "Saved to the component library."
+                    } else {
+                        "Component updated. Undo restores the previous version."
+                    };
+                    // DELETE cannot undo a commit RoboCAD had already made.
+                    d.show(Ok(if active.cancel_requested {
+                        format!("Cancel arrived after RoboCAD had applied it. {done}")
+                    } else {
+                        done.into()
+                    }));
                 }
                 ComponentJobState::Failed => {
-                    let error = format!(
-                        "components.{}: {}{}",
-                        active.operation.op_name(),
-                        status.error.as_deref().unwrap_or("rebuild failed"),
-                        status
-                            .log_path
-                            .as_ref()
-                            .map_or(String::new(), |p| format!("; diagnostics: {p}"))
-                    );
-                    st.error = Some(error.clone());
-                    if let Some(draft) = st.draft_mut() {
-                        draft.error = Some(error.clone());
-                    }
-                    d.show(Err(error));
+                    let error = status.error.as_deref().unwrap_or("Component rebuild failed");
+                    // RoboCAD's message already names its diagnostics file
+                    // when it has one (component_jobs.py ComponentJob.run).
+                    let log = status
+                        .log_path
+                        .as_ref()
+                        .filter(|p| !error.contains(p.as_str()))
+                        .map_or(String::new(), |p| format!("; diagnostics: {p}"));
+                    let error = format!("components.{op}: {error}{log}");
+                    report(&mut st, &active, Some(d), error);
                 }
                 ComponentJobState::Cancelled => {
                     d.show(Ok("Rebuild cancelled. Model unchanged.".into()))
@@ -336,15 +429,15 @@ pub(crate) fn tick(
         st.touch();
     }
     if ended {
-        if let Some(d) = doc.as_deref_mut().filter(|d| active.identity.matches(d)) {
+        // Only this request sets the busy guard, and only one runs at a time,
+        // so it is cleared on whichever document is open now: a reconnect
+        // keeps the same document resource under a new generation.
+        if let Some(d) = doc.as_deref_mut() {
             d.component_busy = None;
             d.touch();
         }
-    }
-    if !ended {
-        // A displaced identity is cancelled using its captured client, never
-        // redirected through the replacement document's service.
-        if !doc.as_deref().is_some_and(|d| active.identity.matches(d)) {
+    } else {
+        if displaced {
             active.cancel_requested = true;
         }
         if !active.cancel_requested
@@ -361,17 +454,47 @@ pub(crate) fn tick(
                 Pool::Dedicated,
                 active.identity.generation,
                 "cad component status",
-                move |_| {
-                    client
-                        .component_job(&id)
-                        .map_err(|e| format!("components.job.{id}: {e}"))
-                },
+                move |_| client.component_job(&id).map_err(|e| job_error(&id, "", &e)),
             ));
             active.last = Some(Instant::now());
         }
         st.active = Some(active);
     }
     read(&mut st, doc.as_deref());
+}
+
+/// A refusal or failure of this request, named in the dock, on the draft it
+/// was built from (not whichever form is open now) and in the status line of
+/// the document it was sent for.
+fn report(st: &mut ComponentsState, active: &Active, doc: Option<&mut CadDocument>, error: String) {
+    st.error = Some(error.clone());
+    if let Some(draft) = active.draft.and_then(|i| st.drafts.get_mut(i)) {
+        draft.error = Some(error.clone());
+    }
+    if let Some(d) = doc.filter(|d| active.identity.matches(d)) {
+        d.show(Err(error));
+    }
+}
+
+fn terminal(active: &Active) -> bool {
+    active.status.as_ref().is_some_and(|s| s.state.terminal())
+}
+
+/// A status or cancel error, marked when the job can no longer end there.
+fn job_error(id: &str, what: &str, e: &CadError) -> String {
+    if e.not_found() {
+        format!("components.job.{id}{what}: {GONE}: {e}")
+    } else if e.status.is_none() && e.message.contains(": connect: ") {
+        format!("components.job.{id}{what}: {UNREACHABLE}: {e}")
+    } else {
+        format!("components.job.{id}{what}: {e}")
+    }
+}
+
+fn lost(op: &str, error: &str) -> String {
+    format!(
+        "components.{op}: {error}; whether it changed the model is not known here: check the model and its undo history before applying the retained draft again"
+    )
 }
 
 fn read(st: &mut ComponentsState, doc: Option<&CadDocument>) {
@@ -456,15 +579,22 @@ fn accept_cancel(active: &mut Active, status: ComponentJobStatus) {
     }
 }
 
-fn recover(active: &mut Active, list: Vec<ComponentJobStatus>) -> Result<(), String> {
+/// Adopts the one new job matching the captured operation, document and
+/// revision (true); false while none is listed. A job listed before the POST
+/// (an earlier failed or cancelled try at the same revision) is never ours.
+fn recover(active: &mut Active, list: Vec<ComponentJobStatus>) -> Result<bool, String> {
     let matching = list
         .into_iter()
         .filter(|s| {
             s.document_id == active.identity.document_id
                 && s.revision == active.expected_revision
                 && s.operation == active.operation.op_name()
+                && !active.known.contains(&s.id)
         })
         .collect::<Vec<_>>();
+    if matching.is_empty() {
+        return Ok(false);
+    }
     if matching.len() != 1 {
         return Err(format!(
             "components.start: unresolved request ({} matching jobs); no POST is retried",
@@ -473,7 +603,8 @@ fn recover(active: &mut Active, list: Vec<ComponentJobStatus>) -> Result<(), Str
     }
     active.status = matching.into_iter().next();
     active.uncertain = None;
-    Ok(())
+    active.uncertain_at = None;
+    Ok(true)
 }
 
 #[cfg(test)]
@@ -514,7 +645,10 @@ mod tests {
             cancel_sent: false,
             last: None,
             uncertain: None,
+            uncertain_at: None,
             recovery: None,
+            known: Vec::new(),
+            draft: None,
         }
     }
     #[test]
@@ -535,7 +669,7 @@ mod tests {
         active.cancel_requested = true;
         let mut other = status(ComponentJobState::Applied);
         other.document_id = "doc-b".into();
-        recover(&mut active, vec![other, status(ComponentJobState::Ready)]).unwrap();
+        assert!(recover(&mut active, vec![other, status(ComponentJobState::Ready)]).unwrap());
         assert!(active.cancel_requested);
         assert!(active.uncertain.is_none());
         assert_eq!(active.status.as_ref().unwrap().id, "job-a");
@@ -552,6 +686,12 @@ mod tests {
             .unwrap_err()
             .contains("2 matching")
         );
+        assert!(active.uncertain.is_some());
+        assert!(active.status.is_none());
+        // A job listed before the POST (an earlier cancelled try at the same
+        // revision) is never adopted: nothing new is listed yet.
+        active.known = vec!["job-a".into()];
+        assert!(!recover(&mut active, vec![status(ComponentJobState::Cancelled)]).unwrap());
         assert!(active.uncertain.is_some());
         assert!(active.status.is_none());
     }

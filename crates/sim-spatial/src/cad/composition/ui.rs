@@ -364,6 +364,28 @@ pub(crate) fn draw(
         ));
     }
     if let Some(snapshot) = &st.snapshot {
+        // A graph read at an earlier revision stays shown, labelled, while
+        // the current one is read (its source edits are refused by
+        // commit_refusal at its revision).
+        let current = (doc.generation, doc.shown_revision());
+        if st.snapshot_key != Some(current) {
+            let why = if st.read.is_some() {
+                "reading the current graph…"
+            } else if st.failed == Some(current) {
+                "reading it failed (named above); it is read again when the source changes"
+            } else {
+                "waiting to read the current graph"
+            };
+            p.spawn(k.text(
+                format!(
+                    "Stale graph: as read at revision {}; the document is at revision {}; {why}",
+                    snapshot.graph.revision, current.1
+                ),
+                size::DETAIL,
+                WARN,
+                2,
+            ));
+        }
         // Actual shared layout coordinates drive the graph; routes are hyperedge
         // branches, never fabricated physical pair connections.
         if let Some(presented) = &snapshot.presentation {

@@ -23,15 +23,19 @@ linked system file, Part I, section "CAD organize (2026-10-01)"). cad-mode,
 cad-select-transform, cad-modify and cad-sketch (at cc7ac194) were built
 and tested in their verification passes; cad-views-export was verified at
 bcf0c56c; cad-physical-inspect, cad-print, cad-organize and
-cad-components were written and checked only by reading. **Parts G to J
-are traced by reading, unexecuted** (cad-checklist-traces, 2026-10-02):
-every step CAD-131 to CAD-175 and CAD-187 to CAD-213 has a path:line trace
-from the control to RoboCAD's route and back to the display (the "Reading
-traces" sections at the end; CAD-176 to CAD-186 were traced in cb54e964,
-"Reading traces — annotations"), and the gaps those traces found were
-fixed in code or recorded as differences. None of it
-has been compiled, run or compared side by side, so the steps below are
-still to be done once by a person. Each
+cad-components were written and checked only by reading. **Parts A to J
+are all traced by reading, unexecuted**: every step CAD-01 to CAD-213 has
+one path:line trace from the control to RoboCAD's route and back to the
+display, written against the current code (the "Reading traces" sections
+at the end: Parts A to F in cad-parts-a-f-retrace, Parts G to J in
+cad-checklist-traces, CAD-176 to CAD-186 in "Reading traces —
+annotations", all 2026-10-02), and the gaps those traces found were fixed
+in code or recorded as differences. Each table row links to its trace.
+With these traces goal 3 of the user's current focus (the CAD editor, with
+annotations held to a high standard) is **complete by reading**. The
+earlier executed evidence (cc7ac194, bcf0c56c) predates the code traced
+here; none of the current code has been compiled, run or compared side by
+side, so the steps below are still to be done once by a person. Each
 step is done once in the native viewer and once in RoboCAD's own window,
 so you can compare them. The feature-by-feature ledger is
 [cad-parity.md](cad-parity.md); its `done-by-reading` rows are the ones
@@ -67,18 +71,18 @@ or the `.rcad` format. The viewer never writes a `.rcad` file itself.
 
 | Step | Native viewer | RoboCAD (`cad/run.sh /tmp/cad-check/turntable.rcad`) | Pass when |
 |---|---|---|---|
-| CAD-01 Open | `cargo run -p sim-spatial -- /tmp/cad-check/turntable.rcad`. The top bar shows Connecting…; the left dock shows "Connecting: starting RoboCAD's headless service on … (N s)", then "Connected · revision N", and names the self-started service (pid, URL, headless). Also: switcher **CAD**, `system_ui` `mode:cad`, or `viewer_mode {"mode":"cad","path":"/tmp/cad-check/turntable.rcad"}` from another mode | The "Opening turntable.rcad" window, then the document | Both open the same document; the window never froze while the service started |
-| CAD-02 Tree | The left dock lists every node in RoboCAD's order, indented by parent, with kind, name, "Shown"/"Hidden"/"Hidden by parent"/"Disabled" and "locked" | The outliner | Same nodes, order, nesting and visibility |
-| CAD-03 Bodies | Every visible body is drawn (Z up, mm shown in metres); Home or **Fit** frames them; right-drag orbits, middle or Shift+right-drag pans, the wheel zooms | The viewport | Same shapes; nothing is drawn for hidden or disabled nodes |
-| CAD-04 Select | Click a tree row, or a body in the 3D view: the row and the body highlight; `cad_select {"ids":["…"]}` does the same | Click the same part | The inspector follows the selection |
-| CAD-05 Inspect | The right dock shows the node as RoboCAD returns it: kind, id, parent, material, colour, "Instance of" for instances, transform, body kind, volume mm³, area mm², mass g, centroid, bounding box, size, face and edge counts, then joint/robot/sketch/plane/… fields. A mass value RoboCAD sent as null (or as NaN) reads "null in RoboCAD's answer"; other nulls read "null" | The properties panel | Same numbers and units; nothing in the viewer is filled in that RoboCAD did not send |
-| CAD-06 Physical labels | Press **Physical** ("Fetching RoboCAD's physical model…", then the link holding the body: mass kg, centre of mass m, inertia kg·m², bounding box, and `mass_sources` for this body as a chip, e.g. a declared measurement's `source`). `cad_physical` | `GET http://127.0.0.1:<port>/physical?flex=0` on the service (port in the left dock) | The chip text is RoboCAD's label exactly; a body without a label shows no chip |
-| CAD-07 Patch | In the inspector: **Visible**, **Locked**, **Disabled**, a material chip; click the name, type, Enter. The status bar shows "Sending: …", then the tree and inspector update. `cad_patch {"id":"…","attrs":{"visible":false}}` | Same edits in the properties panel | Same result; while one edit is in flight a second is refused naming the first |
-| CAD-08 Undo / redo | **Undo {label}** / **Redo {label}**, or Cmd/Ctrl+Z and Cmd/Ctrl+Shift+Z (`cad_undo`, `cad_redo`). History in the inspector lists RoboCAD's labels | Edit ▸ Undo / Redo | Same labels; each patch from CAD-07 is one undo step |
-| CAD-09 Delete | Select a node, **Delete** or Delete/Backspace (not while typing a name). `cad_delete` | Delete | The node goes; undo brings it back |
-| CAD-10 Unsaved edits | After an edit, the top bar says "Unsaved edits". Press the switcher's **Build** | (n/a) | Refused: "… has unsaved edits in the RoboCAD service this window started …: save first"; CAD mode stays |
-| CAD-11 Save | **Save** or Cmd/Ctrl+S (`cad_save`; `{"path":"/abs/file.rcad"}` saves as: an absolute path or `~/…`, a relative one is refused naming why). The top bar returns to "Saved"; the status line says "Saved … with its thumbnail". Then `unzip -l` the file | File ▸ Save, then the same `unzip -l` | The file on disk changed (RoboCAD wrote it, through `POST /save/thumbnail`); both archives hold `thumbnail.png`; reopening it in RoboCAD shows the edits; after `cad_save {"path"}` the left dock names the new file (a self-started document follows it) |
-| CAD-12 Leave | Switcher **Build** now succeeds; the RoboCAD service process is gone (`ps` with the pid from the left dock). Switch back to **CAD**: it starts a new service on the same file | (n/a) | No `robocad.api` process is left behind |
+| CAD-01 Open | `cargo run -p sim-spatial -- /tmp/cad-check/turntable.rcad`. The top bar shows Connecting…; the left dock shows "Connecting: starting RoboCAD's headless service on … (N s)", then "Connected · revision N", and names the self-started service (pid, URL, headless). Also: switcher **CAD**, `system_ui` `mode:cad`, or `viewer_mode {"mode":"cad","path":"/tmp/cad-check/turntable.rcad"}` from another mode | The "Opening turntable.rcad" window, then the document | Both open the same document; the window never froze while the service started Trace: "Reading traces — Parts A and B › CAD-01" (by reading, unexecuted) |
+| CAD-02 Tree | The left dock lists every node in RoboCAD's order, indented by parent, with kind, name, "Shown"/"Hidden"/"Hidden by parent"/"Disabled" and "locked" | The outliner | Same nodes, order, nesting and visibility Trace: "Reading traces — Parts A and B › CAD-02" (by reading, unexecuted) |
+| CAD-03 Bodies | Every visible body is drawn (Z up, mm shown in metres); Home or **Fit** frames them; right-drag orbits, middle or Shift+right-drag pans, the wheel zooms | The viewport | Same shapes; nothing is drawn for hidden or disabled nodes Trace: "Reading traces — Parts A and B › CAD-03" (by reading, unexecuted) |
+| CAD-04 Select | Click a tree row, or a body in the 3D view: the row and the body highlight; `cad_select {"ids":["…"]}` does the same | Click the same part | The inspector follows the selection Trace: "Reading traces — Parts A and B › CAD-04" (by reading, unexecuted) |
+| CAD-05 Inspect | The right dock shows the node as RoboCAD returns it: kind, id, parent, material, colour, "Instance of" for instances, transform, body kind, volume mm³, area mm², mass g, centroid, bounding box, size, face and edge counts, then joint/robot/sketch/plane/… fields. A mass value RoboCAD sent as null (or as NaN) reads "null in RoboCAD's answer"; other nulls read "null" | The properties panel | Same numbers and units; nothing in the viewer is filled in that RoboCAD did not send Trace: "Reading traces — Parts A and B › CAD-05" (by reading, unexecuted) |
+| CAD-06 Physical labels | Press **Physical** ("Fetching RoboCAD's physical model…", then the link holding the body: mass kg, centre of mass m, inertia kg·m², bounding box, and `mass_sources` for this body as a chip, e.g. a declared measurement's `source`). `cad_physical` | `GET http://127.0.0.1:<port>/physical?flex=0` on the service (port in the left dock) | The chip text is RoboCAD's label exactly; a body without a label shows no chip Trace: "Reading traces — Parts A and B › CAD-06" (by reading, unexecuted) |
+| CAD-07 Patch | In the inspector: **Visible**, **Locked**, **Disabled**, a material chip; click the name, type, Enter. The status bar shows "Sending: …", then the tree and inspector update. `cad_patch {"id":"…","attrs":{"visible":false}}` | Same edits in the properties panel | Same result; while one edit is in flight a second is refused naming the first Trace: "Reading traces — Parts A and B › CAD-07" (by reading, unexecuted) |
+| CAD-08 Undo / redo | **Undo {label}** / **Redo {label}**, or Cmd/Ctrl+Z and Cmd/Ctrl+Shift+Z (`cad_undo`, `cad_redo`). History in the inspector lists RoboCAD's labels | Edit ▸ Undo / Redo | Same labels; each patch from CAD-07 is one undo step Trace: "Reading traces — Parts A and B › CAD-08" (by reading, unexecuted) |
+| CAD-09 Delete | Select a node, **Delete** or Delete/Backspace (not while typing a name). `cad_delete` | Delete | The node goes; undo brings it back Trace: "Reading traces — Parts A and B › CAD-09" (by reading, unexecuted) |
+| CAD-10 Unsaved edits | After an edit, the top bar says "Unsaved edits". Press the switcher's **Build** | (n/a) | Refused: "… has unsaved edits in the RoboCAD service this window started …: save first"; CAD mode stays Trace: "Reading traces — Parts A and B › CAD-10" (by reading, unexecuted) |
+| CAD-11 Save | **Save** or Cmd/Ctrl+S (`cad_save`; `{"path":"/abs/file.rcad"}` saves as: an absolute path or `~/…`, a relative one is refused naming why). The top bar returns to "Saved"; the status line says "Saved … with its thumbnail". Then `unzip -l` the file | File ▸ Save, then the same `unzip -l` | The file on disk changed (RoboCAD wrote it, through `POST /save/thumbnail`); both archives hold `thumbnail.png`; reopening it in RoboCAD shows the edits; after `cad_save {"path"}` the left dock names the new file (a self-started document follows it) Trace: "Reading traces — Parts A and B › CAD-11" (by reading, unexecuted) |
+| CAD-12 Leave | Switcher **Build** now succeeds; the RoboCAD service process is gone (`ps` with the pid from the left dock). Switch back to **CAD**: it starts a new service on the same file | (n/a) | No `robocad.api` process is left behind Trace: "Reading traces — Parts A and B › CAD-12" (by reading, unexecuted) |
 
 ## Part B: attached to RoboCAD's window
 
@@ -89,12 +93,12 @@ status bar names its REST port, 8420 unless that was taken), then
 
 | Step | Native viewer | RoboCAD | Pass when |
 |---|---|---|---|
-| CAD-13 Shared selection | Click a row or body | Click a different part in RoboCAD | Each window shows the other's selection within about a second |
-| CAD-14 Edits both ways | Hide a node, rename one | Move a part, change a material | Both windows show all four changes; RoboCAD's undo history lists all of them in order |
-| CAD-15 Commands | The inspector's Commands section lists RoboCAD's registry by category with its keys; run one, e.g. **Fit view** (`cad_command {"id":"view.fit"}`) | The same command from its menu or palette | The command runs in RoboCAD's window |
-| CAD-16 Autosave | The left dock shows RoboCAD's autosave (running, saved revision, path) | RoboCAD autosaves as usual | The same state |
-| CAD-17 Leaving keeps edits | With unsaved edits, switch to **Build** | (n/a) | The switch succeeds and its message says RoboCAD keeps the unsaved edits; RoboCAD's window still has them; RoboCAD is not stopped |
-| CAD-18 Service loss | Back in CAD mode, quit RoboCAD | Quit (save or discard as you like) | The top bar says Lost and the left dock "Not connected: …" with the error; the tree stays on screen; edits are refused naming the lost connection; after reopening RoboCAD on the same port the viewer reconnects within a second (**Refresh** forces it) |
+| CAD-13 Shared selection | Click a row or body | Click a different part in RoboCAD | Each window shows the other's selection within about a second Trace: "Reading traces — Parts A and B › CAD-13" (by reading, unexecuted) |
+| CAD-14 Edits both ways | Hide a node, rename one | Move a part, change a material | Both windows show all four changes; RoboCAD's undo history lists all of them in order Trace: "Reading traces — Parts A and B › CAD-14" (by reading, unexecuted) |
+| CAD-15 Commands | The inspector's Commands section lists RoboCAD's registry by category with its keys; run one, e.g. **Fit view** (`cad_command {"id":"view.fit"}`) | The same command from its menu or palette | The command runs in RoboCAD's window Trace: "Reading traces — Parts A and B › CAD-15" (by reading, unexecuted) |
+| CAD-16 Autosave | The left dock shows RoboCAD's autosave (running, saved revision, path) | RoboCAD autosaves as usual | The same state Trace: "Reading traces — Parts A and B › CAD-16" (by reading, unexecuted) |
+| CAD-17 Leaving keeps edits | With unsaved edits, switch to **Build** | (n/a) | The switch succeeds and its message says RoboCAD keeps the unsaved edits; RoboCAD's window still has them; RoboCAD is not stopped Trace: "Reading traces — Parts A and B › CAD-17" (by reading, unexecuted) |
+| CAD-18 Service loss | Back in CAD mode, quit RoboCAD | Quit (save or discard as you like) | The top bar says Lost and the left dock "Not connected: …" with the error; the tree stays on screen; edits are refused naming the lost connection; after reopening RoboCAD on the same port the viewer reconnects within a second (**Refresh** forces it) Trace: "Reading traces — Parts A and B › CAD-18" (by reading, unexecuted) |
 
 ## Part C: sub-body selection and the direct tools (cad-select-transform)
 
@@ -114,22 +118,22 @@ selection steps also show up live in RoboCAD's window.
 
 | Step | Native viewer | RoboCAD | Pass when |
 |---|---|---|---|
-| CAD-19 Selection modes | The strip at the top left of the 3D view: **Bodies**, **Faces**, **Edges**, **Vertices**, **Points**, or the keys B, Shift+B, E, V, P (`cad_select_mode {"mode":"face"}`). The status reads "Selection mode: face" and the tool bar "Select  ·  Face"; edge mode draws every edge faintly, vertex mode marks every vertex | Select ▸ the same modes, same keys | Same modes and keys; a switch clears the selection in both; B, E, V and P do nothing while a text field has the keyboard |
-| CAD-20 Click, Shift, Ctrl | In each mode click a face, an edge, a vertex, a point; Shift+click adds, Ctrl/Cmd+click toggles, a click on empty space clears (not with Shift or Ctrl). The status reads "n selected", or "Ready" when empty. `cad_select {"items":[["<id>","face",3]],"toggle":true}` | The same clicks | The same items `[node, kind, index]` in both; locked and hidden nodes are never picked and don't hide what is behind them |
-| CAD-21 Hover | Move the pointer over the model in each mode: the face outline, edge, vertex mark (or, in body mode, the body's box) under it lights in the accent colour | The same | The same item lights; the selection, inspector and status never change from a hover; the view never stutters while hovering edges on a large model |
-| CAD-22 Box select | Drag more than 6 px: a rubber band; on release, in body (and face, point) mode the bodies whose bounding box lies inside, in edge mode the edges wholly inside, in vertex mode the vertices inside; Shift or Ctrl extends. `cad_box_select {"rect":[x0,y0,x1,y1]}` | The same drag | The same items; locked nodes are taken by the box in both |
-| CAD-23 Alt menu | In face mode, Alt+click where two faces meet: a list "name: face #i" (nearest first; `system_ui` `cad:candidate:<n>`). Choose one; Escape or a click elsewhere closes it. `cad_candidates` | Alt+click at the same spot | The same entries; the chosen one is selected with the Shift/Ctrl rule of the click |
-| CAD-24 Select All, Invert, Same Material | Ctrl/Cmd+A, Ctrl/Cmd+Shift+I, Ctrl/Cmd+Shift+M, or the strip's **Select All**, **Invert**, **Same Material** (`cad_select_all`, `cad_invert_selection`, `cad_select_same_material`) | Edit ▸ Select All, Invert Selection, Select Same Material | The same body sets (visible bodies, sheets, curves, instances, meshes). Same Material with nothing selected, or with a body that has no material, is refused naming why (RoboCAD does nothing, or selects every body without a material) |
-| CAD-25 Edges → faces | In edge mode select two edges, then **Edges → Faces** (`cad_edges_to_faces`) | Edit ▸ "Selection: edges → bounding faces" | The same face indices; the mode becomes Face in both. Before the topology has loaded it is refused naming the node, never guessed |
-| CAD-26 Inspector: sub-body | Select a face, an edge, a vertex, a point: the right dock opens with "Face 3" / "Edge 7" / "Vertex 2" / "Point on face 4" (kind, area mm², centroid, normal, radius, as RoboCAD returns them; "fetching…" while loading), then the node | `GET /nodes/<id>/faces`, `/edges`, `/vertices` on RoboCAD's port | Every value is RoboCAD's exactly; nothing is filled in |
-| CAD-27 Move | Select a body, G (`cad_tool {"tool":"move"}`): the gizmo at its pivot. Drag an axis: the body follows, the readout shows "Δ = (dx, dy, dz)  \|d mm\|"; hold Ctrl/Cmd: 10 mm steps; drag the centre handle: moves in the screen plane. Release: one commit. Press Escape during another drag: the body returns and the tool goes back to Select. `cad_transform {"translation":[10,0,0]}` | G, the same drags | The same final placement (`GET /nodes/<id>` transform); the body never jumps back while RoboCAD answers; the cancelled drag sent nothing |
-| CAD-28 Rotate and scale | R: drag a ring (Ctrl/Cmd: 15° steps). S: drag an axis handle (uniform; Ctrl/Cmd: steps of 0.1). `cad_transform {"axis":[0,0,1],"angle_deg":30}`, `{"scale":1.5}` | R and S, the same drags | The same result for one selected node (pivot: the node's pivot, else its mass centroid). With several nodes selected the pivot is the centre of their drawn bounds, not RoboCAD's mass-weighted centroid (recorded difference) |
-| CAD-29 Push/pull and offset | D (the mode becomes Face): press a planar face and drag along its normal (Ctrl/Cmd: 10 mm steps); the outline previews it. Release: `push_pull`. Hold Shift at release, or use Shift+D, or pick a cylindrical face: `offset_faces`. `cad_push_pull {"node":"<id>","face":3,"distance":5}`, `cad_offset_faces` | D and Shift+D, the same drags | The same solid (volume and face count in the inspector); a curved face is offset, never pushed |
-| CAD-30 Numeric bar | During Move, press Tab: fields dx, dy, dz open on the first. Type `20mm + 0.3`: it reads "= 20.3 mm". Type `20mx`: a red border and the error naming the token and its position; Enter is refused. Tab cycles fields; Enter commits once; Escape cancels. Also for Rotate (angle, `45deg`), Scale (factor) and Push/Pull (distance). `cad_numeric {"values":["20mm + 0.3","0","0"]}` | Tab in the same tool, the same text | The same evaluations (also `1in`, `pi*10`) and the same result; RoboCAD also refuses the bad text |
-| CAD-31 Live dimensions | Select tool, face mode: select a cylindrical face: "Ø name" in the bar; two parallel planar faces: "Distance" (the second moves); two other planar faces: "Angle"; a circular edge: "Ø edge i"; a sphere: "R …" read-only with "use Scale about the centre". Double-click a face (face mode): its diameter, or its distance to the opposite face, focused. Enter commits. `cad_set_dimension {"node":"<id>","dimension":"diameter","faces":[4],"value":8}` | The same selections; double-click the face | The same fields, values and result. RoboCAD also takes the double-click in body mode; the viewer takes it in face mode only (reported, not yet changed) |
-| CAD-32 Snapping and measure | M: hovering shows the snap marker and "vertex  (x, y, z)" (also midpoint, center, grid, free); hold Alt: always free. Click two points: the tool bar and status show "12.000 mm" (or "R 3.000 mm  (Ø 6.000)", "90.00°"). Shift on the second click keeps it: a measure node appears in the tree. `cad_measure {"a":…,"b":…,"keep":true}` | M, the same clicks; Shift+click | The same snaps and value. RoboCAD also copies the value to the clipboard; the viewer does not (recorded difference). The same circular edge twice gives its radius in the viewer, 0 mm in RoboCAD (a RoboCAD bug) |
-| CAD-33 One undo step per commit | After CAD-27 to CAD-32, read the inspector's History; Cmd/Ctrl+Z through them | Edit ▸ Undo through the same edits | Each commit (drag release, numeric Enter, dimension Enter, kept measurement) is exactly one step in RoboCAD's history, and each undo reverses exactly one; no preview stays on screen after an undo |
-| CAD-34 Refused while an edit is in flight | Release a drag, then at once release another (or send `cad_transform` while the first is pending). In Part B, edit in RoboCAD's window during a drag, then release | (n/a) | The second is refused "another CAD edit is in flight: …" and the stale one "the document changed since the preview began (revision …); nothing was sent"; RoboCAD's history shows only the edits that were sent |
+| CAD-19 Selection modes | The strip at the top left of the 3D view: **Bodies**, **Faces**, **Edges**, **Vertices**, **Points**, or the keys B, Shift+B, E, V, P (`cad_select_mode {"mode":"face"}`). The status reads "Selection mode: face" and the tool bar "Select  ·  Face"; edge mode draws every edge faintly, vertex mode marks every vertex | Select ▸ the same modes, same keys | Same modes and keys; a switch clears the selection in both; B, E, V and P do nothing while a text field has the keyboard Trace: "Reading traces — Part C › CAD-19" (by reading, unexecuted) |
+| CAD-20 Click, Shift, Ctrl | In each mode click a face, an edge, a vertex, a point; Shift+click adds, Ctrl/Cmd+click toggles, a click on empty space clears (not with Shift or Ctrl). The status reads "n selected", or "Ready" when empty. `cad_select {"items":[["<id>","face",3]],"toggle":true}` | The same clicks | The same items `[node, kind, index]` in both; locked and hidden nodes are never picked and don't hide what is behind them Trace: "Reading traces — Part C › CAD-20" (by reading, unexecuted) |
+| CAD-21 Hover | Move the pointer over the model in each mode: the face outline, edge, vertex mark (or, in body mode, the body's box) under it lights in the accent colour | The same | The same item lights; the selection, inspector and status never change from a hover; the view never stutters while hovering edges on a large model Trace: "Reading traces — Part C › CAD-21" (by reading, unexecuted) |
+| CAD-22 Box select | Drag more than 6 px: a rubber band; on release, in body (and face, point) mode the bodies whose bounding box lies inside, in edge mode the edges wholly inside, in vertex mode the vertices inside; Shift or Ctrl extends. `cad_box_select {"rect":[x0,y0,x1,y1]}` | The same drag | The same items; locked nodes are taken by the box in both Trace: "Reading traces — Part C › CAD-22" (by reading, unexecuted) |
+| CAD-23 Alt menu | In face mode, Alt+click where two faces meet: a list "name: face #i" (nearest first; `system_ui` `cad:candidate:<n>`). Choose one; Escape or a click elsewhere closes it. `cad_candidates` | Alt+click at the same spot | The same entries; the chosen one is selected with the Shift/Ctrl rule of the click Trace: "Reading traces — Part C › CAD-23" (by reading, unexecuted) |
+| CAD-24 Select All, Invert, Same Material | Ctrl/Cmd+A, Ctrl/Cmd+Shift+I, Ctrl/Cmd+Shift+M, or the strip's **Select All**, **Invert**, **Same Material** (`cad_select_all`, `cad_invert_selection`, `cad_select_same_material`) | Edit ▸ Select All, Invert Selection, Select Same Material | The same body sets (visible bodies, sheets, curves, instances, meshes). Same Material with nothing selected, or with a body that has no material, is refused naming why (RoboCAD does nothing, or selects every body without a material) Trace: "Reading traces — Part C › CAD-24" (by reading, unexecuted) |
+| CAD-25 Edges → faces | In edge mode select two edges, then **Edges → Faces** (`cad_edges_to_faces`) | Edit ▸ "Selection: edges → bounding faces" | The same face indices; the mode becomes Face in both. Before the topology has loaded it is refused naming the node, never guessed Trace: "Reading traces — Part C › CAD-25" (by reading, unexecuted) |
+| CAD-26 Inspector: sub-body | Select a face, an edge, a vertex, a point: the right dock opens with "Face 3" / "Edge 7" / "Vertex 2" / "Point on face 4" (kind, area mm², centroid, normal, radius, as RoboCAD returns them; "fetching…" while loading), then the node | `GET /nodes/<id>/faces`, `/edges`, `/vertices` on RoboCAD's port | Every value is RoboCAD's exactly; nothing is filled in Trace: "Reading traces — Part C › CAD-26" (by reading, unexecuted) |
+| CAD-27 Move | Select a body, G (`cad_tool {"tool":"move"}`): the gizmo at its pivot. Drag an axis: the body follows, the readout shows "Δ = (dx, dy, dz)  \|d mm\|"; hold Ctrl/Cmd: 10 mm steps; drag the centre handle: moves in the screen plane. Release: one commit. Press Escape during another drag: the body returns and the tool goes back to Select. `cad_transform {"translation":[10,0,0]}` | G, the same drags | The same final placement (`GET /nodes/<id>` transform); the body never jumps back while RoboCAD answers; the cancelled drag sent nothing Trace: "Reading traces — Part C › CAD-27" (by reading, unexecuted) |
+| CAD-28 Rotate and scale | R: drag a ring (Ctrl/Cmd: 15° steps). S: drag an axis handle (uniform; Ctrl/Cmd: steps of 0.1). `cad_transform {"axis":[0,0,1],"angle_deg":30}`, `{"scale":1.5}` | R and S, the same drags | The same result for one selected node (pivot: the node's pivot, else its mass centroid). With several nodes selected the pivot is the centre of their drawn bounds, not RoboCAD's mass-weighted centroid (recorded difference) Trace: "Reading traces — Part C › CAD-28" (by reading, unexecuted) |
+| CAD-29 Push/pull and offset | D (the mode becomes Face): press a planar face and drag along its normal (Ctrl/Cmd: 10 mm steps); the outline previews it. Release: `push_pull`. Hold Shift at release, or use Shift+D, or pick a cylindrical face: `offset_faces`. `cad_push_pull {"node":"<id>","face":3,"distance":5}`, `cad_offset_faces` | D and Shift+D, the same drags | The same solid (volume and face count in the inspector); a curved face is offset, never pushed Trace: "Reading traces — Part C › CAD-29" (by reading, unexecuted) |
+| CAD-30 Numeric bar | During Move, press Tab: fields dx, dy, dz open on the first. Type `20mm + 0.3`: it reads "= 20.3 mm". Type `20mx`: a red border and the error naming the token and its position; Enter is refused. Tab cycles fields; Enter commits once; Escape cancels. Also for Rotate (angle, `45deg`), Scale (factor) and Push/Pull (distance). `cad_numeric {"values":["20mm + 0.3","0","0"]}` | Tab in the same tool, the same text | The same evaluations (also `1in`, `pi*10`) and the same result; RoboCAD also refuses the bad text Trace: "Reading traces — Part C › CAD-30" (by reading, unexecuted) |
+| CAD-31 Live dimensions | Select tool, face mode: select a cylindrical face: "Ø name" in the bar; two parallel planar faces: "Distance" (the second moves); two other planar faces: "Angle"; a circular edge: "Ø edge i"; a sphere: "R …" read-only with "use Scale about the centre". Double-click a face (face mode): its diameter, or its distance to the opposite face, focused. Enter commits. `cad_set_dimension {"node":"<id>","dimension":"diameter","faces":[4],"value":8}` | The same selections; double-click the face | The same fields, values and result. RoboCAD also takes the double-click in body mode; the viewer takes it in face mode only (reported, not yet changed) Trace: "Reading traces — Part C › CAD-31" (by reading, unexecuted) |
+| CAD-32 Snapping and measure | M: hovering shows the snap marker and "vertex  (x, y, z)" (also midpoint, center, grid, free); hold Alt: always free. Click two points: the tool bar and status show "12.000 mm" (or "R 3.000 mm  (Ø 6.000)", "90.00°"). Shift on the second click keeps it: a measure node appears in the tree. `cad_measure {"a":…,"b":…,"keep":true}` | M, the same clicks; Shift+click | The same snaps and value. RoboCAD also copies the value to the clipboard; the viewer does not (recorded difference). The same circular edge twice gives its radius in the viewer, 0 mm in RoboCAD (a RoboCAD bug) Trace: "Reading traces — Part C › CAD-32" (by reading, unexecuted) |
+| CAD-33 One undo step per commit | After CAD-27 to CAD-32, read the inspector's History; Cmd/Ctrl+Z through them | Edit ▸ Undo through the same edits | Each commit (drag release, numeric Enter, dimension Enter, kept measurement) is exactly one step in RoboCAD's history, and each undo reverses exactly one; no preview stays on screen after an undo Trace: "Reading traces — Part C › CAD-33" (by reading, unexecuted) |
+| CAD-34 Refused while an edit is in flight | Release a drag, then at once release another (or send `cad_transform` while the first is pending). In Part B, edit in RoboCAD's window during a drag, then release | (n/a) | The second is refused "another CAD edit is in flight: …" and the stale one "the document changed since these values were taken (revision r, now n); nothing was sent: redo the drag, the entry or the form" (a drag the document changed during: "The document changed during the drag …; nothing was sent: drag again"); RoboCAD's history shows only the edits that were sent Trace: "Reading traces — Part C › CAD-34" (by reading, unexecuted) |
 
 ## Part D: the modify tools and command surfaces (cad-modify)
 
@@ -149,48 +153,48 @@ plane-dependent ones with a plane active.
 
 | Step | Native viewer | RoboCAD | Pass when |
 |---|---|---|---|
-| CAD-35 Box (corner) | Toolbar **Box**, Create ▸ Box (corner), or Shift+A then B. Press on the ground, drag the base, release, move to drag the height, click. The preview shows the base and top in light blue and the readout "20 mm × 20 mm × 10 mm". Again, but press Tab during the drag: the form's corner takes the press point; type width 30, depth 15, height 5 and press Enter. `cad_run {"id":"tool.box","params":{"corner":[0,0,0],"width":30,"depth":15,"height":5}}` | The toolbar's Box, the same drag; Tab, the same sizes, Enter | The same box (corner, size). The undo label is "Box" in the viewer and "Extrude" in RoboCAD (recorded difference: the viewer sends one `Ops.box`); the node is named "Box" in both. Snapping to a vertex starts the base there in both |
-| CAD-36 Box (centre) | Create ▸ Box (centre) (palette "centre"): the same drag from the centre; Tab sizes | Create ▸ Box (centre) | The base is centred on the press point and sits on the plane (not centred in height) in both |
-| CAD-37 Cylinder | Toolbar **Cylinder** or Shift+A, C: drag the radius, then the height (a downward drag builds down); Tab: diameter, height | The same | The same base, axis direction, diameter and height; the readout "Ø 10 mm × 10 mm" |
-| CAD-38 Sphere | Toolbar **Sphere** or Shift+A, S: press the centre, drag the radius, release (it finishes on release); Tab: diameter | The same | The same centre and radius; S as the chord's second key does not also pick the Scale tool |
-| CAD-39 Fillet | Ctrl/Cmd+F (toolbar **Fillet**): the mode becomes Edge, the form opens at the 3D view's top right with "radius 1.0" and the hint "fillet: select edges (click adds) then type the size • Enter applies". Click two edges of one body and one of another (a second click on an edge removes it); Tab, type `2`, Enter. `cad_run {"id":"tool.fillet","params":{"radius":"2 mm"},"items":[["<id>","edge",3]]}` | Ctrl+F, the same edges, Tab, 2, Enter | The same fillets. History shows one "Fillet" step per body in both; the selection clears and the tool stays active in both. With no edge picked, Enter is refused "Select one or more edges first" in both |
-| CAD-40 Variable and chordal fillet | Modify ▸ Variable fillet (start radius, end radius) and Modify ▸ Chordal fillet (chord) on the same edges | The same menu entries | The same results and one step per body |
-| CAD-41 Chamfer | Ctrl/Cmd+Shift+F: pick edges; distance 1.5, angle 45 → Enter; again with angle 30 | The same | The same chamfers. At 45° only the distance is sent (`cad_state` edit label "Chamfer …: distance 1.5 mm"), at 30° the angle too, as RoboCAD |
-| CAD-42 Fillet all | Select a body, Modify ▸ Fillet all edges…: a modal form "Radius (mm):" 1.0 (0.01 to 100); type 0.5, OK. With nothing selected the entry is disabled and says "Select the bodies to fillet" | Modify ▸ Fillet all edges…, 0.5 | The same result, one "Fillet all" per selected body. RoboCAD opens its dialog even with nothing selected and then does nothing (recorded difference) |
-| CAD-43 Full round | Edge mode: select two opposite edges of one face, Modify ▸ Full round (two edges); then try one edge, and edges of two bodies | The same | The same full round; the bad selections are refused "Select two edges of the same body" in both |
-| CAD-44 Remove fillets | Face mode: select fillet faces (on two bodies), Modify ▸ Remove fillets (selected faces) | The same | The same faces removed, one step per body; with no face selected the viewer refuses "Select the fillet faces to remove" (RoboCAD silent) |
-| CAD-45 Shell | Ctrl/Cmd+Shift+H (toolbar **Shell**): the mode becomes Face; click the top face (it toggles), type wall 2, Enter. Also with no face (a closed shell) | Ctrl+Shift+H, then select the face with the Select tool first, wall 2, Enter | The same hollow body. In RoboCAD a face click while the shell tool is active selects nothing (its `ShellTool.press` only toggles edges), so pre-select the face there; the viewer toggles faces (recorded difference) |
-| CAD-46 Thicken | Select a sheet (and a body: it is ignored), Modify ▸ Thicken sheet…: "Thickness (mm):" 2.0 | The same | The same solid; with no sheet selected both refuse "Select a sheet" |
-| CAD-47 Draft | Face mode: select side faces, Modify ▸ Draft faces…: "Angle (degrees):" 2.0 (−45 to 45) and a neutral plane ("active": XY with no plane active) | The same, no active plane | The same draft, pull +Z about XY. The viewer's form also offers XY, XZ and YZ by name; with a plane active both use it (CAD-95) |
-| CAD-48 Delete faces | Face mode: select faces, Modify ▸ Delete faces (heal) | The same | The same healed body, one step per body; the selection clears in both |
-| CAD-49 Mirror and live mirror | Select bodies, Ctrl/Cmd+M; then Modify ▸ Mirror as live instance. REST `cad_run {"id":"tool.mirror","params":{"plane":"xz"}}` mirrors about XZ | Ctrl+M with no active plane; Mirror as live instance | The same mirrored copies about YZ; the live one follows its source in both (move the source to check) |
-| CAD-50 Array | Ctrl/Cmd+Shift+A: the modal Array form (Kind rectangular: Count X/Y/Z, Mode "count + spacing" or "count + total extent", Spacing or extent X / Y / Z; As live instances; Merge into one body). 3 × 2 × 1 at 10, 10, 10, OK; again with extent; again Kind radial (count 6, total 360, axis plane XY) | Ctrl+Shift+A, the same dialog values | The same copies and positions; the rows switch with the kind in both. The viewer's radial axis is the chosen plane's normal through the origin (RoboCAD: the active plane's) |
-| CAD-51 Instance | Select two bodies, Modify ▸ Instance selected | The same | One instance per body, each offset +20 mm in X, one step each; nothing selected: the viewer refuses "Select the bodies to instance" (RoboCAD silent) |
-| CAD-52 Make unique | Select an instance: Modify ▸ Make instance unique, or right-click in the 3D view ▸ Make unique (bake instance) | The outliner's right-click ▸ Make unique (bake instance), or Modify ▸ Make instance unique | The instance becomes a body in both; a selection without an instance is refused "Select an instance to make unique" in the viewer (RoboCAD skips it silently); the viewer offers the entry in the 3D view's menu, RoboCAD in the outliner's |
-| CAD-53 Set pivot at cursor snap | Select a body, point at a vertex of another body (the snap marker shows it), then the palette ▸ "Set pivot at cursor snap" (Help menu, as RoboCAD's "Tools" category). `cad_run {"id":"tool.set_pivot","params":{"point":[0,0,10]}}` | Help ▸ Set pivot at cursor snap with the cursor on the same vertex (use its palette with the pointer there) | The inspector's pivot reads the vertex in both. Over a face with no snap point the viewer takes the point on the face (RoboCAD takes the grid or plane point; recorded difference) |
-| CAD-54 Inspector pivot and transform | Select a node: the inspector's pivot field; press it, type `10, 0, 5mm + 1`, Enter; **Clear pivot**. Select an instance: its translation, axis, angle and scale fields; change the angle to `30deg`. A bad value (`10, x, 0`) keeps the field open with the error naming the token | `PATCH /nodes/<id> {"pivot": [10,0,6]}` and `{"transform": …}` on RoboCAD's port, or its properties panel | One undo step each with RoboCAD's result; a component member's pivot and an occurrence's transform show RoboCAD's refusal instead of the field |
-| CAD-55 Delete as one step | Select three bodies, Delete (or Backspace, the **Delete** button, Edit ▸ Delete) | Delete with the same selection | All three go in one undo step "Delete" in both; Undo brings all three back |
-| CAD-56 Union, subtract, intersect | Select the target, then Shift-select the tools; Ctrl/Cmd+U, Ctrl/Cmd+Shift+U, Ctrl/Cmd+Alt+U (toolbar **Union**, **Subtract**). With one body selected: the status reads "Union: Select the target body first, then the tools" | The same selections and keys | The same result on the first selected body; the tools are removed and the selection clears in both; RoboCAD's message is the same |
-| CAD-57 Region | Two overlapping bodies, Modify ▸ Region (overlap as new body); then with three | The same | A new "Region" body in both; three are refused "Select exactly two bodies" in both |
-| CAD-58 Join and unjoin | Two bodies, J; then select the result, Shift+J | The same | The same joined body and the same parts after unjoin; J with one body is refused in the viewer ("Select two or more bodies to join"), RoboCAD calls join anyway |
-| CAD-59 Dissolve | A body with redundant edges (after a union), Modify ▸ Dissolve redundant topology | The same | The same face count after, one step per body |
-| CAD-60 Cut | Select a body, Modify ▸ Cut with active plane (with no plane active both cut with XY; `cad_run {"id":"tool.cut_plane","params":{"plane":"yz"}}` names another); then select a body and a sheet, Modify ▸ Cut with selected sheet/curve | The same, no active plane; the same body and sheet | The same pieces. The sheet cut works headless only since this epic's `ArgConverter` fix (`cad/tests/test_api_cut_cutter.py`) |
-| CAD-61 Split faces | Select a body crossing z = 0, Modify ▸ Split faces with active plane | The same | The same faces split along XY |
-| CAD-62 Imprint | A body, then a curve or body touching it, Modify ▸ Imprint selected curve/body | The same | The same imprinted edges; one node refused "Select the body, then the tool" in both |
-| CAD-63 Project curve | A curve or sketch, then a body; orbit to look along −Z; Modify ▸ Project curve onto body | The same, from the same direction | The same projected curve; the direction is the view's in both (`cad_state` edit label), or REST's `direction` |
-| CAD-64 Silhouette | Select a body, Modify ▸ Silhouette onto active plane | The same | The same silhouette curve on XY |
-| CAD-65 Control points | Face mode: a curved face, Advanced ▸ Show/edit control points (advanced) | The same | The same points and rows in RoboCAD's pink, and the status "N control points (edit via Ops.set_control_points; …)"; nothing is written. Changing the document clears the overlay in both |
-| CAD-66 Raise degree | The same face, Advanced ▸ Raise face degree | The same | One "Raise degree" step in both; the face is 4 × 4 after (`tool.control_points` again) |
-| CAD-67 Rebuild face | Advanced ▸ Rebuild face…: "Spans per direction:" 4 (1 to 64) | The same | The same rebuilt face |
-| CAD-68 Dependent offset | Select a face, then Shift-select another body; Modify ▸ Dependent offset (face to body)…: "Clearance (mm):" 0.2 (−10 to 10) | The same | The same offset face; a face alone is refused "Select a face, then the body to offset it to" in both |
-| CAD-69 Copy and paste with placement | Select two bodies, Ctrl/Cmd+C: "Copied 2 item(s) with placement"; Ctrl/Cmd+V: two new bodies in place, one undo step "Paste". `cad_state.ops.clipboard` shows the copy. Copy in the viewer, then paste in RoboCAD's window | Ctrl+C, Ctrl+V | The same new nodes at the same placement, one step each time. The viewer's clip stays in the viewer: it does not reach RoboCAD's window or the OS clipboard (recorded difference) |
-| CAD-70 Curvature comb | Select a curve, Inspect ▸ Curvature comb on selected curve | The same | The same comb lines (scale 5, 48 samples) in RoboCAD's violet; a sketch shows none in both; with a curve then a sketch selected the viewer shows none, RoboCAD the curve's (recorded difference) |
-| CAD-71 Continuity | Select a filleted body, Inspect ▸ Continuity check (G0/G1/G2) | The same | The same edge colours (G0 red, G1 amber, G2 green, boundary grey) and the status "Continuity: {'G0': …, 'G1': …, 'G2': …, 'boundary': …}" |
-| CAD-72 Toolbar | Under CAD mode's header: the menu tabs, then RoboCAD's 25 tools in order. Hover each: the hint names its keys and, when disabled, why ("Annotate belongs to the cad-organize epic; …"). Activate Move, then Fillet: their buttons light. Scroll the row with the wheel on a narrow window | RoboCAD's toolbar | The same buttons in the same order; the native ones run as in RoboCAD; later-epic buttons are disabled naming their epic; Qt folds the overflow behind "»" where the viewer scrolls (recorded difference) |
-| CAD-73 Right-click menu | Right-click (without dragging) on the 3D view: Annotate, Comments panel, Push/Pull face, Fillet, Chamfer, Hollow / shell, Union, Subtract, Mirror, Array…, Measure, Isolate, Hide, Delete; with an instance selected also Make unique (bake instance). `cad_surface {"surface":{"kind":"context"}}` | Right-click in RoboCAD's viewport | The same entries in order; each enabled by the selection; Annotate, Comments panel, Isolate and Hide disabled naming their epic; a right drag still orbits |
-| CAD-74 Radial menus | Space: the view pie at the pointer (Front, Top, Right, Iso, Ortho, Grid, Mode, Fit): hover highlights, release on Fit frames the model, the others say "… belongs to the cad-views-export epic". Q: Body, Face, Edge, Vertex, Point; release on Edge switches the mode. Escape or the dead centre closes; a press outside closes | Space and Q in RoboCAD's viewport | The same entries and layout (first at the top, then clockwise); the viewer's pills are rounded rectangles where RoboCAD's are ellipses (recorded difference); Space types a space while a text field has the keyboard |
-| CAD-75 Palette | Control+Space (Command+Space is Spotlight on macOS) or Shift+F: "Type a command… (Ctrl+Space)". Type `fil`: "Fill / patch selected curve" (runnable since cad-sketch), then Fillet and Fillet all edges… (sorted by score, then label, as RoboCAD); Up/Down; Enter runs the highlighted row. Type `same`: "Edit: Select Same Material    [Ctrl+Shift+M]  ⚠ conflicts with Robot: add motor from library…". Rows of later epics read "(cad-views-export)" etc. and are disabled; GUI-only rows read "(GUI-only)" | Ctrl+Space, the same queries | The same ranking and the same conflict warning; the viewer also lists commands it cannot run yet, marked and disabled |
-| CAD-76 Menus by category | Click each tab: File, Edit, View, Select, Create, Sketch, Modify, Planes, Inspect, Print, Advanced, Outliner, Robot, Bridge, Simulation, Help; each lists its commands with keys; "General", "Window" and "Tools" commands (Command palette, Numeric entry, Select tool, Move, Set pivot at cursor snap, …) are in Help. `cad_surface {"surface":{"kind":"menu","category":"Modify"}}` | RoboCAD's menu bar | The same menus, entries, order and keys; a click runs the command and closes the menu |
+| CAD-35 Box (corner) | Toolbar **Box**, Create ▸ Box (corner), or Shift+A then B. Press on the ground, drag the base, release, move to drag the height, click. The preview shows the base and top in light blue and the readout "20 mm × 20 mm × 10 mm". Again, but press Tab during the drag: the form's corner takes the press point; type width 30, depth 15, height 5 and press Enter. `cad_run {"id":"tool.box","params":{"corner":[0,0,0],"width":30,"depth":15,"height":5}}` | The toolbar's Box, the same drag; Tab, the same sizes, Enter | The same box (corner, size). The undo label is "Box" in the viewer and "Extrude" in RoboCAD (recorded difference: the viewer sends one `Ops.box`); the node is named "Box" in both. Snapping to a vertex starts the base there in both Trace: "Reading traces — Part D › CAD-35" (by reading, unexecuted) |
+| CAD-36 Box (centre) | Create ▸ Box (centre) (palette "centre"): the same drag from the centre; Tab sizes | Create ▸ Box (centre) | The base is centred on the press point and sits on the plane (not centred in height) in both Trace: "Reading traces — Part D › CAD-36" (by reading, unexecuted) |
+| CAD-37 Cylinder | Toolbar **Cylinder** or Shift+A, C: drag the radius, then the height (a downward drag builds down); Tab: diameter, height | The same | The same base, axis direction, diameter and height; the readout "Ø 10 mm × 10 mm" Trace: "Reading traces — Part D › CAD-37" (by reading, unexecuted) |
+| CAD-38 Sphere | Toolbar **Sphere** or Shift+A, S: press the centre, drag the radius, release (it finishes on release); Tab: diameter | The same | The same centre and radius; S as the chord's second key does not also pick the Scale tool Trace: "Reading traces — Part D › CAD-38" (by reading, unexecuted) |
+| CAD-39 Fillet | Ctrl/Cmd+F (toolbar **Fillet**): the mode becomes Edge, the form opens at the 3D view's top right with "radius 1.0" and the hint "fillet: select edges (click adds) then type the size • Enter applies". Click two edges of one body and one of another (a second click on an edge removes it); Tab, type `2`, Enter. `cad_run {"id":"tool.fillet","params":{"radius":"2 mm"},"items":[["<id>","edge",3]],"revision":<the revision read>}` (items naming faces or edges need `revision`) | Ctrl+F, the same edges, Tab, 2, Enter | The same fillets. History shows one "Fillet" step per body in both; the selection clears and the tool stays active in both. With no edge picked, Enter is refused "Select one or more edges first" in both Trace: "Reading traces — Part D › CAD-39" (by reading, unexecuted) |
+| CAD-40 Variable and chordal fillet | Modify ▸ Variable fillet (start radius, end radius) and Modify ▸ Chordal fillet (chord) on the same edges | The same menu entries | The same results and one step per body Trace: "Reading traces — Part D › CAD-40" (by reading, unexecuted) |
+| CAD-41 Chamfer | Ctrl/Cmd+Shift+F: pick edges; distance 1.5, angle 45 → Enter; again with angle 30 | The same | The same chamfers. At 45° only the distance is sent (`cad_state` edit label "Chamfer …: distance 1.5 mm"), at 30° the angle too, as RoboCAD Trace: "Reading traces — Part D › CAD-41" (by reading, unexecuted) |
+| CAD-42 Fillet all | Select a body, Modify ▸ Fillet all edges…: a modal form "Radius (mm):" 1.0 (0.01 to 100); type 0.5, OK. With nothing selected the entry is disabled and says "Select the bodies to fillet" | Modify ▸ Fillet all edges…, 0.5 | The same result, one "Fillet all" per selected body. RoboCAD opens its dialog even with nothing selected and then does nothing (recorded difference) Trace: "Reading traces — Part D › CAD-42" (by reading, unexecuted) |
+| CAD-43 Full round | Edge mode: select two opposite edges of one face, Modify ▸ Full round (two edges); then try one edge, and edges of two bodies | The same | The same full round; the bad selections are refused "Select two edges of the same body" in both Trace: "Reading traces — Part D › CAD-43" (by reading, unexecuted) |
+| CAD-44 Remove fillets | Face mode: select fillet faces (on two bodies), Modify ▸ Remove fillets (selected faces) | The same | The same faces removed, one step per body; with no face selected the viewer refuses "Select the fillet faces to remove" (RoboCAD silent) Trace: "Reading traces — Part D › CAD-44" (by reading, unexecuted) |
+| CAD-45 Shell | Ctrl/Cmd+Shift+H (toolbar **Shell**): the mode becomes Face; click the top face (it toggles), type wall 2, Enter. Also with no face (a closed shell) | Ctrl+Shift+H, then select the face with the Select tool first, wall 2, Enter | The same hollow body. In RoboCAD a face click while the shell tool is active selects nothing (its `ShellTool.press` only toggles edges), so pre-select the face there; the viewer toggles faces (recorded difference) Trace: "Reading traces — Part D › CAD-45" (by reading, unexecuted) |
+| CAD-46 Thicken | Select a sheet (and a body: it is ignored), Modify ▸ Thicken sheet…: "Thickness (mm):" 2.0 | The same | The same solid; with no sheet selected both refuse "Select a sheet" Trace: "Reading traces — Part D › CAD-46" (by reading, unexecuted) |
+| CAD-47 Draft | Face mode: select side faces, Modify ▸ Draft faces…: "Angle (degrees):" 2.0 (−45 to 45) and a neutral plane ("active": XY with no plane active) | The same, no active plane | The same draft, pull +Z about XY. The viewer's form also offers XY, XZ and YZ by name; with a plane active both use it (CAD-95) Trace: "Reading traces — Part D › CAD-47" (by reading, unexecuted) |
+| CAD-48 Delete faces | Face mode: select faces, Modify ▸ Delete faces (heal) | The same | The same healed body, one step per body; the selection clears in both Trace: "Reading traces — Part D › CAD-48" (by reading, unexecuted) |
+| CAD-49 Mirror and live mirror | Select bodies, Ctrl/Cmd+M; then Modify ▸ Mirror as live instance. REST `cad_run {"id":"tool.mirror","params":{"plane":"xz"}}` mirrors about XZ | Ctrl+M with no active plane; Mirror as live instance | The same mirrored copies about YZ; the live one follows its source in both (move the source to check) Trace: "Reading traces — Part D › CAD-49" (by reading, unexecuted) |
+| CAD-50 Array | Ctrl/Cmd+Shift+A: the modal Array form (Kind rectangular: Count X/Y/Z, Mode "count + spacing" or "count + total extent", Spacing or extent X / Y / Z; As live instances; Merge into one body). 3 × 2 × 1 at 10, 10, 10, OK; again with extent; again Kind radial (count 6, total 360, axis plane XY) | Ctrl+Shift+A, the same dialog values | The same copies and positions; the rows switch with the kind in both. The viewer's radial axis is the chosen plane's normal through the origin (RoboCAD: the active plane's) Trace: "Reading traces — Part D › CAD-50" (by reading, unexecuted) |
+| CAD-51 Instance | Select two bodies, Modify ▸ Instance selected | The same | One instance per body, each offset +20 mm in X, one step each; nothing selected: the viewer refuses "Select the bodies to instance" (RoboCAD silent) Trace: "Reading traces — Part D › CAD-51" (by reading, unexecuted) |
+| CAD-52 Make unique | Select an instance: Modify ▸ Make instance unique, or right-click in the 3D view ▸ Make unique (bake instance) | The outliner's right-click ▸ Make unique (bake instance), or Modify ▸ Make instance unique | The instance becomes a body in both; a selection without an instance is refused "Select an instance to make unique" in the viewer (RoboCAD skips it silently); the viewer offers the entry in the 3D view's menu, RoboCAD in the outliner's Trace: "Reading traces — Part D › CAD-52" (by reading, unexecuted) |
+| CAD-53 Set pivot at cursor snap | Select a body, point at a vertex of another body (the snap marker shows it), then the palette ▸ "Set pivot at cursor snap" (Help menu, as RoboCAD's "Tools" category). `cad_run {"id":"tool.set_pivot","params":{"point":[0,0,10]}}` | Help ▸ Set pivot at cursor snap with the cursor on the same vertex (use its palette with the pointer there) | The inspector's pivot reads the vertex in both. Over a face with no snap point the viewer takes the point on the face (RoboCAD takes the grid or plane point; recorded difference) Trace: "Reading traces — Part D › CAD-53" (by reading, unexecuted) |
+| CAD-54 Inspector pivot and transform | Select a node: the inspector's pivot field; press it, type `10, 0, 5mm + 1`, Enter; **Clear pivot**. Select an instance: its translation, axis, angle and scale fields; change the angle to `30deg`. A bad value (`10, x, 0`) keeps the field open with the error naming the token | `PATCH /nodes/<id> {"pivot": [10,0,6]}` and `{"transform": …}` on RoboCAD's port, or its properties panel | One undo step each with RoboCAD's result; a component member's pivot and an occurrence's transform show RoboCAD's refusal instead of the field Trace: "Reading traces — Part D › CAD-54" (by reading, unexecuted) |
+| CAD-55 Delete as one step | Select three bodies, Delete (or Backspace, the **Delete** button, Edit ▸ Delete) | Delete with the same selection | All three go in one undo step "Delete" in both; Undo brings all three back Trace: "Reading traces — Part D › CAD-55" (by reading, unexecuted) |
+| CAD-56 Union, subtract, intersect | Select the target, then Shift-select the tools; Ctrl/Cmd+U, Ctrl/Cmd+Shift+U, Ctrl/Cmd+Alt+U (toolbar **Union**, **Subtract**). With one body selected: the status reads "Union: Select the target body first, then the tools" | The same selections and keys | The same result on the first selected body; the tools are removed and the selection clears in both; RoboCAD's message is the same Trace: "Reading traces — Part D › CAD-56" (by reading, unexecuted) |
+| CAD-57 Region | Two overlapping bodies, Modify ▸ Region (overlap as new body); then with three | The same | A new "Region" body in both; three are refused "Select exactly two bodies" in both Trace: "Reading traces — Part D › CAD-57" (by reading, unexecuted) |
+| CAD-58 Join and unjoin | Two bodies, J; then select the result, Shift+J | The same | The same joined body and the same parts after unjoin; J with one body is refused in the viewer ("Select two or more bodies to join"), RoboCAD calls join anyway Trace: "Reading traces — Part D › CAD-58" (by reading, unexecuted) |
+| CAD-59 Dissolve | A body with redundant edges (after a union), Modify ▸ Dissolve redundant topology | The same | The same face count after, one step per body Trace: "Reading traces — Part D › CAD-59" (by reading, unexecuted) |
+| CAD-60 Cut | Select a body, Modify ▸ Cut with active plane (with no plane active both cut with XY; `cad_run {"id":"tool.cut_plane","params":{"plane":"yz"}}` names another); then select a body and a sheet, Modify ▸ Cut with selected sheet/curve | The same, no active plane; the same body and sheet | The same pieces. The sheet cut works headless only since this epic's `ArgConverter` fix (`cad/tests/test_api_cut_cutter.py`) Trace: "Reading traces — Part D › CAD-60" (by reading, unexecuted) |
+| CAD-61 Split faces | Select a body crossing z = 0, Modify ▸ Split faces with active plane | The same | The same faces split along XY Trace: "Reading traces — Part D › CAD-61" (by reading, unexecuted) |
+| CAD-62 Imprint | A body, then a curve or body touching it, Modify ▸ Imprint selected curve/body | The same | The same imprinted edges; one node refused "Select the body, then the tool" in both Trace: "Reading traces — Part D › CAD-62" (by reading, unexecuted) |
+| CAD-63 Project curve | A curve or sketch, then a body; orbit to look along −Z; Modify ▸ Project curve onto body | The same, from the same direction | The same projected curve; the direction is the view's in both (`cad_state` edit label), or REST's `direction` Trace: "Reading traces — Part D › CAD-63" (by reading, unexecuted) |
+| CAD-64 Silhouette | Select a body, Modify ▸ Silhouette onto active plane | The same | The same silhouette curve on XY Trace: "Reading traces — Part D › CAD-64" (by reading, unexecuted) |
+| CAD-65 Control points | Face mode: a curved face, Advanced ▸ Show/edit control points (advanced) | The same | The same points and rows in RoboCAD's pink, and the status "N control points (edit via Ops.set_control_points; …)"; nothing is written. Changing the document clears the overlay in both Trace: "Reading traces — Part D › CAD-65" (by reading, unexecuted) |
+| CAD-66 Raise degree | The same face, Advanced ▸ Raise face degree | The same | One "Raise degree" step in both; the face is 4 × 4 after (`tool.control_points` again) Trace: "Reading traces — Part D › CAD-66" (by reading, unexecuted) |
+| CAD-67 Rebuild face | Advanced ▸ Rebuild face…: "Spans per direction:" 4 (1 to 64) | The same | The same rebuilt face Trace: "Reading traces — Part D › CAD-67" (by reading, unexecuted) |
+| CAD-68 Dependent offset | Select a face, then Shift-select another body; Modify ▸ Dependent offset (face to body)…: "Clearance (mm):" 0.2 (−10 to 10) | The same | The same offset face; a face alone is refused "Select a face, then the body to offset it to" in both Trace: "Reading traces — Part D › CAD-68" (by reading, unexecuted) |
+| CAD-69 Copy and paste with placement | Select two bodies, Ctrl/Cmd+C: "Copied 2 item(s) with placement"; Ctrl/Cmd+V: two new bodies in place, one undo step "Paste". `cad_state.ops.clipboard` shows the copy. Copy in the viewer, then paste in RoboCAD's window | Ctrl+C, Ctrl+V | The same new nodes at the same placement, one step each time. The viewer's clip stays in the viewer: it does not reach RoboCAD's window or the OS clipboard (recorded difference) Trace: "Reading traces — Part D › CAD-69" (by reading, unexecuted) |
+| CAD-70 Curvature comb | Select a curve, Inspect ▸ Curvature comb on selected curve | The same | The same comb lines (scale 5, 48 samples) in RoboCAD's violet; a sketch shows none in both; with a curve then a sketch selected both draw the curve's Trace: "Reading traces — Part D › CAD-70" (by reading, unexecuted) |
+| CAD-71 Continuity | Select a filleted body, Inspect ▸ Continuity check (G0/G1/G2) | The same | The same edge colours (G0 red, G1 amber, G2 green, boundary grey) and the status "Continuity: {'G0': …, 'G1': …, 'G2': …, 'boundary': …}" Trace: "Reading traces — Part D › CAD-71" (by reading, unexecuted) |
+| CAD-72 Toolbar | Under CAD mode's header: the menu tabs, then RoboCAD's 25 tools in order. Hover each: the hint names its keys and, when disabled, why. Activate Move, then Fillet: their buttons light. Scroll the row with the wheel on a narrow window | RoboCAD's toolbar | The same buttons in the same order; all 25 run natively as in RoboCAD (none is disabled for a later epic); Qt folds the overflow behind "»" where the viewer scrolls (recorded difference) Trace: "Reading traces — Part D › CAD-72" (by reading, unexecuted) |
+| CAD-73 Right-click menu | Right-click (without dragging) on the 3D view: Annotate, Comments panel, Push/Pull face, Fillet, Chamfer, Hollow / shell, Union, Subtract, Mirror, Array…, Measure, Isolate, Hide, Delete; with an instance selected also Make unique (bake instance). `cad_surface {"surface":{"kind":"context"}}` | Right-click in RoboCAD's viewport | The same entries in order; each enabled by the selection (Annotate, Comments panel, Isolate and Hide run natively); a right drag still orbits Trace: "Reading traces — Part D › CAD-73" (by reading, unexecuted) |
+| CAD-74 Radial menus | Space: the view pie at the pointer (Front, Top, Right, Iso, Ortho, Grid, Mode, Fit): hover highlights, release on Fit frames the model; every view entry runs. Q: Body, Face, Edge, Vertex, Point; release on Edge switches the mode. Escape or the dead centre closes; a press outside closes | Space and Q in RoboCAD's viewport | The same entries and layout (first at the top, then clockwise); the viewer's pills are rounded rectangles where RoboCAD's are ellipses (recorded difference); Space types a space while a text field has the keyboard Trace: "Reading traces — Part D › CAD-74" (by reading, unexecuted) |
+| CAD-75 Palette | Control+Space (Command+Space is Spotlight on macOS) or Shift+F: "Type a command… (Ctrl+Space)". Type `fil`: "Fill / patch selected curve" (runnable since cad-sketch), then Fillet and Fillet all edges… (sorted by score, then label, as RoboCAD); Up/Down; Enter runs the highlighted row. Type `same`: "Edit: Select Same Material    [Ctrl+Shift+M]  ⚠ conflicts with Robot: add motor from library…". Rows RoboCAD's viewer does not port are marked and disabled; GUI-only rows read "(GUI-only)" | Ctrl+Space, the same queries | The same ranking and the same conflict warning; the viewer also lists the commands it does not port, marked and disabled Trace: "Reading traces — Part D › CAD-75" (by reading, unexecuted) |
+| CAD-76 Menus by category | Click each tab: File, Edit, View, Select, Create, Sketch, Modify, Planes, Inspect, Print, Advanced, Outliner, Robot, Bridge, Simulation, Help; each lists its commands with keys; "General", "Window" and "Tools" commands (Command palette, Numeric entry, Select tool, Move, Set pivot at cursor snap, …) are in Help. `cad_surface {"surface":{"kind":"menu","category":"Modify"}}` | RoboCAD's menu bar | The same menus, entries, order and keys; a click runs the command and closes the menu Trace: "Reading traces — Part D › CAD-76" (by reading, unexecuted) |
 
 ## Part E: the active plane, sketches and solids from sketches (cad-sketch)
 
@@ -209,28 +213,28 @@ label.
 
 | Step | Native viewer | RoboCAD | Pass when |
 |---|---|---|---|
-| CAD-77 Active plane XY / XZ / YZ | Planes ▸ Active plane: XZ (or the palette, or `cad_invoke {"id":"tool.plane_xz"}`): the status reads "Active plane set", a translucent ±60 mm square is drawn in XZ, `cad_state.plane` reads XZ. Then YZ, then XY | Planes ▸ Active plane: XZ, YZ, XY | The same status line; a later sketch or primitive lands on the same plane in both. RoboCAD draws no square for a named plane (the viewer does; recorded) |
-| CAD-78 2D snapping | Planes ▸ Toggle 2D snapping to the active plane: "2D snapping on". With XZ active, M (measure) and hover a vertex off the plane: the marker sits projected onto XZ; away from geometry the readout says "grid" or "plane". Toggle again: "2D snapping off" | Planes ▸ Toggle 2D snapping to the active plane; M, the same hover | The same status lines and the same snapped points |
-| CAD-79 Plane from face | Ctrl/Cmd+P (Planes ▸ Plane from face): the mode becomes Face and the hint "Click a face". Click a body's top face: a plane node appears in the tree, "Active plane set", its square is brighter than the other planes'; the tool stays active, Escape ends it. `cad_run {"id":"tool.plane","items":[["<id>","face",3]],"revision":N}` | Ctrl+P, click the same face | The same plane origin and normal, one undo step each, the new plane active in both |
-| CAD-80 Plane from three points, two points and midplane | Planes ▸ Plane from three points: the mode becomes Vertex; click three vertices (the status counts "(1 of 3)", "(2 of 3)"). Planes ▸ Plane from two points (camera): two vertices, the view's direction. Planes ▸ Midplane between two faces: two parallel faces | The same menu entries and clicks, the same camera direction | The same planes, each active after it is made |
-| CAD-81 Selecting a plane node | Click a plane node in the tree (one node selected): it becomes the active plane ("Active plane set") and its square brightens; a sketch drawn next goes on it | RoboCAD has no such gesture: make the same plane active by re-running its plane tool on the same picks | The same active plane (the viewer's gesture is a recorded native addition) |
-| CAD-82 Line, chaining | L (Sketch ▸ Sketch: Line): click three points on the plane; the preview follows the cursor in light blue and the readout reads "length L  angle A"; two connected lines. Escape ends the chain. Then L, one click, Tab: length 20, angle 30, Enter | L, the same clicks; Tab 20, 30, Enter | The same curves in the same sketch. The first shape created the sketch in the viewer (undo steps "Sketch", then the shape); RoboCAD created it when the tool started |
-| CAD-83 Rectangle, centre rectangle, circles, arc | Shift+L (two corners), Sketch: Rectangle (centre), C (centre, rim; Tab diameter), Sketch: Circle (two points), Sketch: Circle (three points), A (Sketch: Arc (three points)). Three collinear points for the arc are refused "the three points are collinear" | The same tools and clicks (RoboCAD has no key for the arc: use Sketch ▸ Sketch: Arc (three points); its A does nothing) | The same curves; the collinear arc is refused in both (RoboCAD after its kernel call); OK on a tool with no Tab values is refused by name in the viewer (RoboCAD records an empty step) |
-| CAD-84 Polygon sides memory | Shift+P: Tab, radius 10, sides 8, Enter (an octagon at the plane origin). Shift+P again: the sides field opens at 8; click centre and corner: an octagon turned toward the second click | Shift+P, Tab 10, 8, Enter; Shift+P again | The same octagons; both remember 8 sides |
-| CAD-85 Slot, ellipse, spiral | Shift+S: two clicks for the axis, a third for the width; Sketch: Ellipse: centre, x radius, y radius; Sketch: Spiral: centre and radius (3 turns); each again with Tab values | The same tools and clicks | The same curves from `GET /nodes/<id>/sketch`. The slot's caps are drawn bulging outward in the viewer and inward in RoboCAD's viewport; extrude both (CAD-91) and compare the solids, which match |
-| CAD-86 Spline | Shift+C: click four points, Enter: one spline. Again, finishing with a double-click (within 400 ms and 5 px). Enter with one point does nothing; the form's OK is refused by name | Shift+C, the same clicks, Enter; then a double-click | The same splines in both |
-| CAD-87 Text | T (Sketch ▸ Sketch: Text): the form's "Text to sketch:" field has the keyboard; type `RC`, Enter, click on the plane: outlines 10 mm high. Again with Tab height 5, Enter. With the field empty a click is refused "type the text to sketch first …" | T: the "Text to sketch:" dialog, `RC`, OK, click; then Tab height 5 | The same outlines. The viewer's preview is a placeholder box (recorded) |
-| CAD-88 Tab, Enter and Escape in a sketch tool | During a rectangle, after the first click: Tab focuses the first field, Enter commits the typed values at the first click; Enter outside the fields does nothing; Escape drops the shape (nothing sent) and ends the tool | The same keys | The same results; no edit after Escape in either |
-| CAD-89 Offset, fillet corners, join | Select the sketch with the rectangle: Sketch ▸ Sketch: offset selected curve… "Distance (mm):" 1.0; Sketch ▸ Sketch: fillet corner… "Radius (mm):" 2.0 (four corners rounded); again with 50 (refused: no corner takes it); two lines end to end, Sketch ▸ Sketch: join curves; join on a sketch of one curve is refused | The same Sketch menu entries and values | The same curves (labels "Offset curves", "Fillet corners", "Join curves" in RoboCAD's history for its own edits). RoboCAD records an empty step for the radius 50 and the one-curve join where the viewer refuses by name |
-| CAD-90 `cad_sketch` (REST) | `cad_sketch {"node":"<sketch>","calls":[["join",[[0,1]]]],"revision":N}`; `[["trim",[0,[1],[5.0,2.5]]]]`; a call naming curve 9 of 3 is refused naming the call and argument; without `node`, `{"plane":"xz","calls":[["circle",[[0,0],5]]]}` goes to the XZ sketch RoboCAD's tools would pick, or a new one | `POST http://127.0.0.1:<RoboCAD port>/nodes/<id>/sketch {"calls": …}` with the same calls | The same curves and one "Sketch (API)" step per call list in both; a join of two curves and a two-curve trim work through REST in both (since the api.py fix; `cd cad && .venv/bin/pytest -q tests/test_api_sketch_calls.py`) |
-| CAD-91 Extrude, taper, Shift/Ctrl/Alt | A sketch on a body's top face, selected; X: the hint names the modifiers. Drag up: the profile's outline at the base and the top, the readout "extrude h"; release: a new body. Again holding Ctrl at the release: unites with the body under the selection; Shift: subtracts; Alt: intersects. Tab: distance 5, taper 10, Enter. `cad_run {"id":"tool.extrude","params":{"distance":"5","taper":"0","boolean":"union"}}` | X, the same drags and modifiers; Tab 5, 10, Enter | The same volumes and face counts. Both drags send taper 0 (only Tab sends the taper). RoboCAD previews a shaded body (the viewer draws outlines without the taper) |
-| CAD-92 Revolve | A sketch off the axis, Shift+R: Tab, angle 180, Enter: a half revolution about the sketch plane's x axis. Press and release in the view: a full 360° revolution (the readout says so) | Shift+R, Tab 180, Enter; then press and release in the view | The same solids: both revolve 360° on a click whatever the angle field says |
-| CAD-93 Sweep, pipe, loft, fill | Create ▸ Sweep (profile + path from selection): select the profile, then the path; "Twist (degrees):" 0. Create ▸ Pipe along selected curve… "Diameter (mm):" 4.0. Create ▸ Loft selected sketches with two sketches on parallel planes. Create ▸ Fill / patch selected curve on a closed curve. Each with too few selected | The same Create entries, selections and values | The same solids; the same refusals ("Select the profile sketch, then the path sketch", "Select a curve or sketch", "Select two or more sketches to loft", "Select a closed curve") |
-| CAD-94 Primitives on the active plane | Active plane XZ: Box (corner), Box (centre), Cylinder, Sphere drags (CAD-35 to CAD-38) | The same with XZ active | The same solids on XZ (box volumes and positions match); the box's undo label is "Box" in the viewer and "Extrude" in RoboCAD (recorded) |
-| CAD-95 Plane-dependent operations | With the CAD-79 plane active: Ctrl/Cmd+M (mirror), Modify ▸ Cut with active plane, Split faces with active plane, Silhouette onto active plane, Draft faces… (neutral "active"), Array… radial | The same with the same plane active | The same results about that plane in both |
-| CAD-96 Toolbar and right-click menu | The toolbar's Rectangle, Circle, Slot and Extrude are enabled; Rectangle lights while its tool is active. Right-click the 3D view: RoboCAD's 14 entries, then a "Sketch" section with the 13 sketch tools; each starts its tool | RoboCAD's toolbar and right-click menu | The same tools start from the same buttons; RoboCAD's sketch buttons never light and its menu has no Sketch section (both recorded native additions) |
-| CAD-97 A shape in progress blocks leaving | Click two points of a slot, then the switcher's **Build**: refused "a sketch slot is in progress (2 point(s) clicked): finish it or press Escape". After a line the chained point counts too. Escape, then **Build** succeeds (with no unsaved edits, or after saving) | (n/a: RoboCAD has one window; changing tool drops the points) | Refused while points are clicked; nothing sent |
-| CAD-98 Undo through the epic | Ctrl/Cmd+Z through CAD-79 to CAD-93 | Edit ▸ Undo through the same edits | Each plane, shape, sketch edit and solid is one step in RoboCAD's history (a new sketch adds its "Sketch" step), and each undo reverses exactly one |
+| CAD-77 Active plane XY / XZ / YZ | Planes ▸ Active plane: XZ (or the palette, or `cad_invoke {"id":"tool.plane_xz"}`): the status reads "Active plane set", a translucent ±60 mm square is drawn in XZ, `cad_state.plane` reads XZ. Then YZ, then XY | Planes ▸ Active plane: XZ, YZ, XY | The same status line; a later sketch or primitive lands on the same plane in both. RoboCAD draws no square for a named plane (the viewer does; recorded) Trace: "Reading traces — Part E › CAD-77" (by reading, unexecuted) |
+| CAD-78 2D snapping | Planes ▸ Toggle 2D snapping to the active plane: "2D snapping on". With XZ active, M (measure) and hover a vertex off the plane: the marker sits projected onto XZ; away from geometry the readout says "grid" or "plane". Toggle again: "2D snapping off" | Planes ▸ Toggle 2D snapping to the active plane; M, the same hover | The same status lines and the same snapped points Trace: "Reading traces — Part E › CAD-78" (by reading, unexecuted) |
+| CAD-79 Plane from face | Ctrl/Cmd+P (Planes ▸ Plane from face): the mode becomes Face and the hint "Click a face". Click a body's top face: a plane node appears in the tree, "Active plane set", its square is brighter than the other planes'; the tool stays active, Escape ends it. `cad_run {"id":"tool.plane","items":[["<id>","face",3]],"revision":N}` | Ctrl+P, click the same face | The same plane origin and normal, one undo step each, the new plane active in both Trace: "Reading traces — Part E › CAD-79" (by reading, unexecuted) |
+| CAD-80 Plane from three points, two points and midplane | Planes ▸ Plane from three points: the mode becomes Vertex; click three vertices (the status counts "(1 of 3)", "(2 of 3)"). Planes ▸ Plane from two points (camera): two vertices, the view's direction. Planes ▸ Midplane between two faces: two parallel faces | The same menu entries and clicks, the same camera direction | The same planes, each active after it is made Trace: "Reading traces — Part E › CAD-80" (by reading, unexecuted) |
+| CAD-81 Selecting a plane node | Click a plane node in the tree (one node selected): it becomes the active plane ("Active plane set") and its square brightens; a sketch drawn next goes on it | RoboCAD has no such gesture: make the same plane active by re-running its plane tool on the same picks | The same active plane (the viewer's gesture is a recorded native addition) Trace: "Reading traces — Part E › CAD-81" (by reading, unexecuted) |
+| CAD-82 Line, chaining | L (Sketch ▸ Sketch: Line): click three points on the plane; the preview follows the cursor in light blue and the readout reads "length L  angle A"; two connected lines. Escape ends the chain. Then L, one click, Tab: length 20, angle 30, Enter | L, the same clicks; Tab 20, 30, Enter | The same curves in the same sketch. The first shape created the sketch in the viewer (undo steps "Sketch", then the shape); RoboCAD created it when the tool started Trace: "Reading traces — Part E › CAD-82" (by reading, unexecuted) |
+| CAD-83 Rectangle, centre rectangle, circles, arc | Shift+L (two corners), Sketch: Rectangle (centre), C (centre, rim; Tab diameter), Sketch: Circle (two points), Sketch: Circle (three points), A (Sketch: Arc (three points)). Three collinear points for the arc are refused "the three points are collinear" | The same tools and clicks (RoboCAD has no key for the arc: use Sketch ▸ Sketch: Arc (three points); its A does nothing) | The same curves; the collinear arc is refused in both (RoboCAD after its kernel call); OK on a tool with no Tab values is refused by name in the viewer (RoboCAD records an empty step) Trace: "Reading traces — Part E › CAD-83" (by reading, unexecuted) |
+| CAD-84 Polygon sides memory | Shift+P: Tab, radius 10, sides 8, Enter (an octagon at the plane origin). Shift+P again: the sides field opens at 8; click centre and corner: an octagon turned toward the second click | Shift+P, Tab 10, 8, Enter; Shift+P again | The same octagons; both remember 8 sides Trace: "Reading traces — Part E › CAD-84" (by reading, unexecuted) |
+| CAD-85 Slot, ellipse, spiral | Shift+S: two clicks for the axis, a third for the width; Sketch: Ellipse: centre, x radius, y radius; Sketch: Spiral: centre and radius (3 turns); each again with Tab values | The same tools and clicks | The same curves from `GET /nodes/<id>/sketch`. The slot's caps are drawn bulging outward in the viewer and inward in RoboCAD's viewport; extrude both (CAD-91) and compare the solids, which match Trace: "Reading traces — Part E › CAD-85" (by reading, unexecuted) |
+| CAD-86 Spline | Shift+C: click four points, Enter: one spline. Again, finishing with a double-click (within 400 ms and 5 px). Enter with one point does nothing; the form's OK is refused by name | Shift+C, the same clicks, Enter; then a double-click | The same splines in both Trace: "Reading traces — Part E › CAD-86" (by reading, unexecuted) |
+| CAD-87 Text | T (Sketch ▸ Sketch: Text): the form's "Text to sketch:" field has the keyboard; type `RC`, Enter, click on the plane: outlines 10 mm high. Again with Tab height 5, Enter. With the field empty a click is refused "type the text to sketch first …" | T: the "Text to sketch:" dialog, `RC`, OK, click; then Tab height 5 | The same outlines. The viewer's preview is a placeholder box (recorded) Trace: "Reading traces — Part E › CAD-87" (by reading, unexecuted) |
+| CAD-88 Tab, Enter and Escape in a sketch tool | During a rectangle, after the first click: Tab focuses the first field, Enter commits the typed values at the first click; Enter outside the fields does nothing; Escape drops the shape (nothing sent) and ends the tool | The same keys | The same results; no edit after Escape in either Trace: "Reading traces — Part E › CAD-88" (by reading, unexecuted) |
+| CAD-89 Offset, fillet corners, join | Select the sketch with the rectangle: Sketch ▸ Sketch: offset selected curve… "Distance (mm):" 1.0; Sketch ▸ Sketch: fillet corner… "Radius (mm):" 2.0 (four corners rounded); again with 50 (refused: no corner takes it); two lines end to end, Sketch ▸ Sketch: join curves; join on a sketch of one curve is refused | The same Sketch menu entries and values | The same curves (labels "Offset curves", "Fillet corners", "Join curves" in RoboCAD's history for its own edits). RoboCAD records an empty step for the radius 50 and the one-curve join where the viewer refuses by name Trace: "Reading traces — Part E › CAD-89" (by reading, unexecuted) |
+| CAD-90 `cad_sketch` (REST) | `cad_sketch {"node":"<sketch>","calls":[["join",[[0,1]]]],"revision":N}`; `[["trim",[0,[1],[5.0,2.5]]]]`; a call naming curve 9 of 3 is refused naming the call and argument; without `node`, `{"plane":"xz","calls":[["circle",[[0,0],5]]]}` goes to the XZ sketch RoboCAD's tools would pick, or a new one | `POST http://127.0.0.1:<RoboCAD port>/nodes/<id>/sketch {"calls": …}` with the same calls | The same curves and one "Sketch (API)" step per call list in both; a join of two curves and a two-curve trim work through REST in both (since the api.py fix; `cd cad && .venv/bin/pytest -q tests/test_api_sketch_calls.py`) Trace: "Reading traces — Part E › CAD-90" (by reading, unexecuted) |
+| CAD-91 Extrude, taper, Shift/Ctrl/Alt | A sketch on a body's top face, selected; X: the hint names the modifiers. Drag up: the profile's outline at the base and the top, the readout "extrude h"; release: a new body. Again holding Ctrl at the release: unites with the body under the selection; Shift: subtracts; Alt: intersects. Tab: distance 5, taper 10, Enter. `cad_run {"id":"tool.extrude","params":{"distance":"5","taper":"0","boolean":"union"}}` | X, the same drags and modifiers; Tab 5, 10, Enter | The same volumes and face counts. Both drags send taper 0 (only Tab sends the taper). RoboCAD previews a shaded body (the viewer draws outlines without the taper) Trace: "Reading traces — Part E › CAD-91" (by reading, unexecuted) |
+| CAD-92 Revolve | A sketch off the axis, Shift+R: Tab, angle 180, Enter: a half revolution about the sketch plane's x axis. Press and release in the view: a full 360° revolution (the readout says so) | Shift+R, Tab 180, Enter; then press and release in the view | The same solids: both revolve 360° on a click whatever the angle field says Trace: "Reading traces — Part E › CAD-92" (by reading, unexecuted) |
+| CAD-93 Sweep, pipe, loft, fill | Create ▸ Sweep (profile + path from selection): select the profile, then the path; "Twist (degrees):" 0. Create ▸ Pipe along selected curve… "Diameter (mm):" 4.0. Create ▸ Loft selected sketches with two sketches on parallel planes. Create ▸ Fill / patch selected curve on a closed curve. Each with too few selected | The same Create entries, selections and values | The same solids; the same refusals ("Select the profile sketch, then the path sketch", "Select a curve or sketch", "Select two or more sketches to loft", "Select a closed curve") Trace: "Reading traces — Part E › CAD-93" (by reading, unexecuted) |
+| CAD-94 Primitives on the active plane | Active plane XZ: Box (corner), Box (centre), Cylinder, Sphere drags (CAD-35 to CAD-38) | The same with XZ active | The same solids on XZ (box volumes and positions match); the box's undo label is "Box" in the viewer and "Extrude" in RoboCAD (recorded) Trace: "Reading traces — Part E › CAD-94" (by reading, unexecuted) |
+| CAD-95 Plane-dependent operations | With the CAD-79 plane active: Ctrl/Cmd+M (mirror), Modify ▸ Cut with active plane, Split faces with active plane, Silhouette onto active plane, Draft faces… (neutral "active"), Array… radial | The same with the same plane active | The same results about that plane in both Trace: "Reading traces — Part E › CAD-95" (by reading, unexecuted) |
+| CAD-96 Toolbar and right-click menu | The toolbar's Rectangle, Circle, Slot and Extrude are enabled; Rectangle lights while its tool is active. Right-click the 3D view: RoboCAD's 14 entries, then a "Sketch" section with the 13 sketch tools; each starts its tool | RoboCAD's toolbar and right-click menu | The same tools start from the same buttons; RoboCAD's sketch buttons never light and its menu has no Sketch section (both recorded native additions) Trace: "Reading traces — Part E › CAD-96" (by reading, unexecuted) |
+| CAD-97 A shape in progress blocks leaving | Click two points of a slot, then the switcher's **Build**: refused "a sketch slot is in progress (2 point(s) clicked): finish it or press Escape". After a line the chained point counts too. Escape, then **Build** succeeds (with no unsaved edits, or after saving) | (n/a: RoboCAD has one window; changing tool drops the points) | Refused while points are clicked; nothing sent Trace: "Reading traces — Part E › CAD-97" (by reading, unexecuted) |
+| CAD-98 Undo through the epic | Ctrl/Cmd+Z through CAD-79 to CAD-93 | Edit ▸ Undo through the same edits | Each plane, shape, sketch edit and solid is one step in RoboCAD's history (a new sketch adds its "Sketch" step), and each undo reverses exactly one Trace: "Reading traces — Part E › CAD-98" (by reading, unexecuted) |
 
 ## Part F: views, display, saved views and files (cad-views-export)
 
@@ -254,38 +258,38 @@ file commands take an absolute path (or `~/…`) typed into its path form.
 
 | Step | Native viewer | RoboCAD | Pass when |
 |---|---|---|---|
-| CAD-99 Orbit, pan, zoom to the cursor | Right-drag orbits (turntable; the view stops short of straight down, 89.5°); middle-drag or Shift+right-drag pans; the wheel zooms toward the point under the cursor: put the cursor on a corner of a part and roll in. REST `camera_orbit {"dx":100,"dy":0}`, `camera_pan`, `camera_zoom {"factor":0.8,"at":[x,y]}` | The same drags and wheel over the same corner | The model turns, slides and zooms the same way and at a similar rate; the corner under the cursor stays under it while zooming in both. RoboCAD's other gestures are CAD-129 |
-| CAD-100 Named views | 1 front, 3 right, 7 top, 0 iso; Ctrl/Cmd+1 back, Ctrl/Cmd+3 left, Ctrl/Cmd+7 bottom (the keypad's digits too); also View ▸ View front … View iso, and Space's view radial (Front, Top, Right, Iso). `camera_view {"view":"front"}` | The same keys and View menu entries | Each key shows the same side of the model in both, at the same distance and focus (RoboCAD's yaw and pitch table); the Ctrl views are the opposite sides |
-| CAD-101 Focus selection | Select one part, press F (View ▸ Focus Selection); select a group: F frames it and its children; select nothing: F frames everything (as Home) | The same selections and F | The same part (or group) fills the view in both |
-| CAD-102 Orthographic and field of view | 5 (View ▸ Orthographic, the radial's Ortho) toggles orthographic; View ▸ Set field of view… opens "Field of view" at the lower right: type 30, Enter (5–120, one decimal; out-of-range is refused under the field). `camera_projection`, `camera_fov {"degrees":30}` | 5; View ▸ Set field of view… (Degrees: 30) | Orthographic has no perspective in both and keeps the model's size on screen; at 30° both show the same narrower perspective |
-| CAD-103 Trackball | View ▸ Toggle orbit: turntable / trackball, then right-drag across the top of the model; toggle back. `camera_orbit_mode`, `camera_state` (`mode`) | The same command (status "Orbit: trackball") and drag | The model tumbles freely (it can roll past upside down) in both; back in turntable the view returns to the nearest upright heading |
-| CAD-104 View cube | The cube net at the top right of the 3D view (Top; Left, Front, Right; Iso, Bottom, Back; the face you look at is lit): click Front, then Front again; click Iso. The **Cube** chip hides and shows it | Click the cube's front face, then again; click a corner | The first click shows the front, the second the back (RoboCAD's opposite), in both. The native cube is a net of buttons, not a shaded 3D cube (recorded) |
-| CAD-105 Display modes | Z cycles Shaded → Shaded + edges → Wireframe → X-ray → Matcap → Render → Shaded; View ▸ Display: shaded … Display: render and the display panel's six buttons choose one. `cad_display {"mode":"wireframe"}`, `{"next":true}` | Z; View ▸ Display: … | Same order and the same look for shaded, shaded with edges (dark B-rep edges), wireframe and xray (translucent with edges). Matcap is approximated (clay tint, no sphere image) and Render has no ground shadow (both recorded); Inspect ▸ Normal-direction shading switches both to xray |
-| CAD-106 Grid | Ctrl/Cmd+G (View ▸ Grid, the **Grid** chip, the radial's Grid). `cad_display {"toggle":"grid"}` | Ctrl+G | The same 10 mm grid on the model's XY plane, ±200 mm, every 5th line darker, red X, green Y and blue Z axes, shown and hidden together |
-| CAD-107 Build plate and overhangs | Ctrl/Cmd+Shift+B (Print ▸ Build Plate Preview, the **Plate** chip) | Ctrl+Shift+B | The same 220 × 220 mm plate; the same downward faces are shaded red as overhangs (45°) in both; off again in both |
-| CAD-108 High contrast | View ▸ High-Contrast Theme (the **Contrast** chip) | View ▸ High-Contrast Theme | The 3D view turns light with a lighter grid and black edges in both. Only the viewer's 3D view changes (its panels keep their colours) and the setting is not kept after a restart (both recorded) |
-| CAD-109 Section preview | Ctrl/Cmd+Shift+X (Inspect ▸ Section Analysis, the **Section** chip) | Ctrl+Shift+X | Both start on XZ through the middle of the model (in Y); the same side of the plane is cut away in both and the cut is outlined in red; hovering and picking never select the removed part; the same key turns it off |
-| CAD-110 Section plane | With the section on: the panel's **X**, **Y** and **Z** chips (planes through the model's centre), then **Rotate**; click the toolbar's offset field ("offset, e.g. 5 or 2 cm"), type 5, Enter: the plane moves 5 mm along its normal; then `0.5 cm`, Enter; `abc` is refused under the field. `cad_section {"offset":5}`; `cad_section {"axis":"z","offset":10}` | Tab, type 5, Enter; drag the plane; R | The same cuts for the same planes and offsets in both; Rotate and R turn the plane 90° about Z the same way. In the viewer R stays the Rotate tool, Tab the numeric bar, and a left drag on the plane box-selects (or Alt-orbits) rather than moving it (recorded) |
-| CAD-111 Exact section | Section on Z at offset 0 (`cad_section {"axis":"z","offset":0}`), select a body, run `system_ui` `cad:section:exact` ("Exact section of …") or `cad_section {"exact":"<id>"}` | `curl 'http://127.0.0.1:<RoboCAD port>/nodes/<id>/section?plane=xy'` | A yellow exact outline appears over the red preview outline and follows the B-rep; on any plane other than xy, xz, yz through the origin or a plane node it is refused, naming why (RoboCAD's route takes only those); after an edit to the body it is re-read |
-| CAD-112 Isolate | Select one part, press `/` (View ▸ Isolate, right-click ▸ Isolate); then Ctrl/Cmd+Z | `/`; Edit ▸ Undo | Everything but the part, its children and parents is hidden in both; one undo step "Isolate" brings it back. With nothing selected the viewer refuses "Select the nodes to isolate" (RoboCAD hides everything; recorded) |
-| CAD-113 Hide and Show All | Select two parts, press H (View ▸ Hide, right-click ▸ Hide); then Alt/Option+H (View ▸ Show All); undo both | H; Alt+H; Edit ▸ Undo twice | H hides the selection as one step ("Hide"); Show All shows every node ("Show all"); the tree shows the same visibility; each undo reverses one. With nothing selected the viewer refuses "Select the nodes to hide" (recorded) |
-| CAD-114 Save a view | View ▸ Saved Views opens the panel at the lower right: set a view (front, ortho, section on, grid off, wireframe), type "Front cutaway" in "View name, e.g. Worm drive cutaway", **Save current view**. `cad_views {"op":"save","name":"Front cutaway"}` | View ▸ Saved Views: the same view, the same name, Save current view | Both list "Front cutaway / Orthographic · Cutaway"; "Saved inside this CAD file · edits support Undo"; a blank or 121-character name is refused before anything is sent; one undo step in RoboCAD's history ("Save view") |
-| CAD-115 Rename, replace, delete | On the row: **Rename…** (type "Front A-A", Enter), turn the camera, **Replace with current**, then **Delete**; Ctrl/Cmd+Z after each. `cad_views {"op":"rename","id":"…","name":"…"}`, `"replace"`, `"delete"` | Rename…, Replace with current, Delete; Edit ▸ Undo | Each is one undo step with RoboCAD's label ("Update saved view", "Delete saved view") and each undo restores the list as it was, in both |
-| CAD-116 Restore, across both | Save a view in the viewer and Save the file; open that copy in RoboCAD and Restore it there. Save a view in RoboCAD, save, open that copy in the viewer: **Restore view**. Compare `unzip -p <file>.rcad manifest.json` (`saved_views`) | Restore view (or double-click the row) | A view saved in either one restores in the other with the same direction, distance, orthographic or perspective, field of view, display mode, grid and section; the `saved_views` entries have the same keys. The viewer restores with a button, not a double-click (recorded) |
-| CAD-117 Tessellation tolerance | Select a curved body; in the inspector type 0.5 in "Tessellation tolerance (mm)", Enter; then 0.01; then Ctrl/Cmd+Z | The properties panel's "Tessellation tolerance (mm)" spin box, 0.5, then 0.01 | At 0.5 both draw the same visible facets; at 0.01 both are smooth; the viewer's change is one undo step ("Set attributes"), RoboCAD's panel records none, and the viewer's field opens empty (RoboCAD reports no current value; recorded) |
-| CAD-118 File ▸ New | File ▸ New (Ctrl/Cmd+N): the path form proposes `untitled.rcad` in the document's folder; type `/tmp/cad-check/new.rcad`, OK. Try again with the same path | File ▸ New | The viewer writes the empty file, then opens it (the progress strip and status line say so); an existing path is refused ("exists: choose a new file name") and left untouched. With unsaved edits in a service this window started, New is refused before any file is written (CAD-127). REST `cad_file {"op":"new","path":"/tmp/cad-check/new2.rcad"}` answers only once the new file is open (its answer names `created` and `opened`). RoboCAD opens an untitled window instead (recorded) |
-| CAD-119 File ▸ Open | File ▸ Open… (Ctrl/Cmd+O): the form lists the folder's `.rcad` files; click `turntable.rcad`, OK | File ▸ Open… | The same document opens in both; `..` and folder rows move through folders; a relative path is refused, naming why |
-| CAD-120 File ▸ Save As | File ▸ Save As… (Ctrl/Cmd+Shift+S): `/tmp/cad-check/copy` (no extension), OK. Then `unzip -l /tmp/cad-check/copy.rcad` | File ▸ Save As… `/tmp/cad-check/copy-rc`, then the same `unzip -l` | Both append `.rcad`; both archives hold `thumbnail.png` (a headless service draws the viewer's with RoboCAD's snapshot renderer); the left dock names the new file, and leaving and re-entering CAD mode reopens `copy.rcad`. Plain Save writes the thumbnail too (CAD-11) |
-| CAD-121 Import STEP | File ▸ Import… (Ctrl/Cmd+I): `/tmp/cad-check/print-kit.step`, OK; then undo | File ▸ Import… the same file; Edit ▸ Undo | The same new nodes, volumes and face counts; one undo step removes them in both. (An SVG or an image lands on XY in the viewer, on the active plane in RoboCAD: recorded) |
-| CAD-122 Import a mesh with units | File ▸ Import… and type `/tmp/cad-check/cap.stl`: as soon as the path names the mesh, the form adds "Units of the mesh file" (empty), says "Asking RoboCAD for its guess…", then "RoboCAD's guess: … (largest extent …)" and fills the unit; OK is disabled, saying why, until then. OK. Then repeat, choosing `in` before the guess lands (the guess no longer replaces it); **Guess unit** asks again | File ▸ Import…: "Units of the file" / "This format carries no unit. What are the numbers in?" with its guess preselected | The guess is the same unit in both; the imported mesh has the same size for the same unit in both (inches 25.4× millimetres); no mesh is imported in a unit nobody picked or RoboCAD guessed. The viewer's unit is a row of its path form, not a second dialog (recorded) |
-| CAD-123 Export STL, 3MF, OBJ with settings | File ▸ Export… (Ctrl/Cmd+E): Format `stl`, File `/tmp/cad-check/v.stl`, Format binary, Unit mm, Chord tolerance (mm) 0.05, Angular tolerance (°) 20; OK. Then `3mf` (Write colours, Write names) and `obj` (Scale, Up axis, Quads, N-gons, Write MTL, Write UVs) | File ▸ Export… the same files (`r.stl`, …) with the same values in its dialog | Each file is written (status "Exported … to …"); the viewer's and RoboCAD's files of each format import back into RoboCAD with the same triangles and size; a value outside a field's range is refused naming the setting; reopening the form starts from the last values sent for that format during the session (RoboCAD remembers them across launches; recorded) |
-| CAD-124 Export STEP, IGES, sketch SVG | Format `step` (Schema AP214, Write names, Write colours), `iges`, and `svg` with a sketch selected (Sketch (node id) is filled; draw one as in Part E if the model has none) | The same three exports | The STEP and IGES files import back into RoboCAD with the same bodies and volumes; the SVGs show the same curves; an export RoboCAD blocks names its reason |
-| CAD-125 Export drawing | File ▸ Export drawing (SVG)… (Ctrl/Cmd+Shift+D) with the section on: Front, Top, Right and Isometric view checked, Title, "Section A-A (the section tool's plane)" checked; OK | File ▸ Export drawing (SVG)… with the section on | The same four views and a "Section A-A" view, titled with the document's file name by default, in both SVGs |
-| CAD-126 Render | `system_ui` `cad:file:render` ("Render (PNG)…") or `cad_render {"path":"/tmp/cad-check/v.png","view":"iso","w":1200,"h":900}` | `curl -o /tmp/cad-check/r.png 'http://127.0.0.1:<RoboCAD port>/render?view=iso&w=1200&h=900'` | Both PNGs show the same view of the model; a size outside 16–8192 px or a path without `.png` is refused before anything is sent; the window never stalls while it renders |
-| CAD-127 Unsaved edits | In Part A (a service this window started) make an edit, then File ▸ Open… or New: the form says in red "Not now: … has unsaved edits …: save first", and OK is refused naming the reason; New writes no file. There is no discard button. Save (Ctrl/Cmd+S), then OK opens. Attached to RoboCAD's window (Part B), with an edit unsaved there: the form notes in amber that RoboCAD keeps its edits and this window then shows the other file; OK opens it. `cad_open` and `cad_file {"op":"open"}` follow the same rule | File ▸ Open… or New with unsaved edits: another window opens and the edits stay; close the window: "Unsaved changes" / "Save before closing?" with Save, Discard, Cancel | Nothing is lost in either: the viewer refuses rather than replace a self-started service's unsaved edits, and an attached RoboCAD keeps its own; the refusals name the document and what to do |
-| CAD-128 The camera in the other modes | Switch to **Robot**, **Phenomena**, **Build** and a lesson with a 3D card (`--lessons DIR`). In each: right-drag orbits, middle or Shift+right-drag pans, the wheel zooms toward the focus (in a lesson card only with Ctrl/Cmd held, so the page scrolls); the numpad's 1/3/7 (Ctrl: opposite), 9, 5, 0 and `.`; Home returns to the mode's home view; a lesson's spinning card keeps spinning; `camera_spin {"rate":0.5}` then `{"rate":0}` | (n/a: compare with a build of 1b00d789, before the shared camera) | The orbit rate, pitch limits, zoom limits, home view, glide (or cut) to home and spin of each mode feel as they did before; a drag that starts on a side dock never moves the camera; RoboCAD's gestures (CAD-129) are CAD's only: Shift+middle still pans and the arrow keys are not camera keys in these modes |
-| CAD-129 RoboCAD's camera gestures | In CAD mode with the Select tool: Shift+middle-drag orbits (a plain middle-drag still pans); Alt+right-drag orbits and snaps to the nearest axis view at every step (pitch level or ±89.5°, yaw a multiple of 90°); Alt/Option+left-drag orbits once it moves more than about 6 px, while an Alt+click on overlapping parts still opens the candidates menu and an Alt drag never box-selects; the arrow keys orbit 10° (Ctrl/Cmd: 90°), Shift+arrows pan; with a text field focused (the numeric bar, the inspector, the offset field) the arrows leave the camera alone. `camera_orbit {"degrees":[10,0]}` | The same drags and keys in RoboCAD's viewport | The same turns, snaps and pans in both, at the same steps. RoboCAD's own Alt+left-drag does not orbit (its tool takes the press, ui/app.py:542; recorded in the ledger's notes), so compare the viewer's with right-drag |
-| CAD-130 Curve nodes | Select a body and run Modify ▸ Silhouette onto active plane (CAD-95): a "Silhouette" curve node appears in the tree. Toggle its visibility; select it in the tree; switch display modes (Z); turn the section on across it | The same silhouette in RoboCAD's window | The curve is drawn in both, 2 px, light blue (or the node's colour), orange while selected, in every display mode, cut by the section plane, gone while hidden. Clicking the curve in the viewer's 3D view does not select it (RoboCAD's 8 px curve pick is not ported; select it in the tree; recorded) |
+| CAD-99 Orbit, pan, zoom to the cursor | Right-drag orbits (turntable; the view stops short of straight down, 89.5°); middle-drag or Shift+right-drag pans; the wheel zooms toward the point under the cursor: put the cursor on a corner of a part and roll in. REST `camera_orbit {"dx":100,"dy":0}`, `camera_pan`, `camera_zoom {"factor":0.8,"at":[x,y]}` | The same drags and wheel over the same corner | The model turns, slides and zooms the same way and at a similar rate; the corner under the cursor stays under it while zooming in both. RoboCAD's other gestures are CAD-129 Trace: "Reading traces — Part F › CAD-99" (by reading, unexecuted) |
+| CAD-100 Named views | 1 front, 3 right, 7 top, 0 iso; Ctrl/Cmd+1 back, Ctrl/Cmd+3 left, Ctrl/Cmd+7 bottom (the keypad's digits too); also View ▸ View front … View iso, and Space's view radial (Front, Top, Right, Iso). `camera_view {"view":"front"}` | The same keys and View menu entries | Each key shows the same side of the model in both, at the same distance and focus (RoboCAD's yaw and pitch table); the Ctrl views are the opposite sides Trace: "Reading traces — Part F › CAD-100" (by reading, unexecuted) |
+| CAD-101 Focus selection | Select one part, press F (View ▸ Focus Selection); select a group: F frames it and its children; select nothing: F frames everything (as Home) | The same selections and F | The same part (or group) fills the view in both Trace: "Reading traces — Part F › CAD-101" (by reading, unexecuted) |
+| CAD-102 Orthographic and field of view | 5 (View ▸ Orthographic, the radial's Ortho) toggles orthographic; View ▸ Set field of view… opens "Field of view" at the lower right: type 30, Enter (5–120, one decimal; out-of-range is refused under the field). `camera_projection`, `camera_fov {"degrees":30}` | 5; View ▸ Set field of view… (Degrees: 30) | Orthographic has no perspective in both and keeps the model's size on screen; at 30° both show the same narrower perspective Trace: "Reading traces — Part F › CAD-102" (by reading, unexecuted) |
+| CAD-103 Trackball | View ▸ Toggle orbit: turntable / trackball, then right-drag across the top of the model; toggle back. `camera_orbit_mode`, `camera_state` (`mode`) | The same command (status "Orbit: trackball") and drag | The model tumbles freely (it can roll past upside down) in both; back in turntable the view returns to the nearest upright heading Trace: "Reading traces — Part F › CAD-103" (by reading, unexecuted) |
+| CAD-104 View cube | The cube net at the top right of the 3D view (Top; Left, Front, Right; Iso, Bottom, Back; the face you look at is lit): click Front, then Front again; click Iso. The **Cube** chip hides and shows it | Click the cube's front face, then again; click a corner | The first click shows the front, the second the back (RoboCAD's opposite), in both. The native cube is a net of buttons, not a shaded 3D cube (recorded) Trace: "Reading traces — Part F › CAD-104" (by reading, unexecuted) |
+| CAD-105 Display modes | Z cycles Shaded → Shaded + edges → Wireframe → X-ray → Matcap → Render → Shaded; View ▸ Display: shaded … Display: render and the display panel's six buttons choose one. `cad_display {"mode":"wireframe"}`, `{"next":true}` | Z; View ▸ Display: … | Same order and the same look for shaded, shaded with edges (dark B-rep edges), wireframe and xray (translucent with edges). Matcap is approximated (clay tint, no sphere image) and Render has no ground shadow (both recorded); Inspect ▸ Normal-direction shading switches both to xray Trace: "Reading traces — Part F › CAD-105" (by reading, unexecuted) |
+| CAD-106 Grid | Ctrl/Cmd+G (View ▸ Grid, the **Grid** chip, the radial's Grid). `cad_display {"toggle":"grid"}` | Ctrl+G | The same 10 mm grid on the model's XY plane, ±200 mm, every 5th line darker, red X, green Y and blue Z axes, shown and hidden together Trace: "Reading traces — Part F › CAD-106" (by reading, unexecuted) |
+| CAD-107 Build plate and overhangs | Ctrl/Cmd+Shift+B (Print ▸ Build Plate Preview, the **Plate** chip) | Ctrl+Shift+B | The same 220 × 220 mm plate; the same downward faces are shaded red as overhangs (45°) in both; off again in both Trace: "Reading traces — Part F › CAD-107" (by reading, unexecuted) |
+| CAD-108 High contrast | View ▸ High-Contrast Theme (the **Contrast** chip) | View ▸ High-Contrast Theme | The 3D view turns light with a lighter grid and black edges in both. Only the viewer's 3D view changes (its panels keep their colours) and the setting is not kept after a restart (both recorded) Trace: "Reading traces — Part F › CAD-108" (by reading, unexecuted) |
+| CAD-109 Section preview | Ctrl/Cmd+Shift+X (Inspect ▸ Section Analysis, the **Section** chip) | Ctrl+Shift+X | Both start on XZ through the middle of the model (in Y); the same side of the plane is cut away in both and the cut is outlined in red; hovering and picking never select the removed part; the same key turns it off Trace: "Reading traces — Part F › CAD-109" (by reading, unexecuted) |
+| CAD-110 Section plane | With the section on: the panel's **X**, **Y** and **Z** chips (planes through the model's centre), then **Rotate**; click the toolbar's offset field ("offset, e.g. 5 or 2 cm"), type 5, Enter: the plane moves 5 mm along its normal; then `0.5 cm`, Enter; `abc` is refused under the field. `cad_section {"offset":5}`; `cad_section {"axis":"z","offset":10}` | Tab, type 5, Enter; drag the plane; R | The same cuts for the same planes and offsets in both; Rotate and R turn the plane 90° about Z the same way. In the viewer R stays the Rotate tool, Tab the numeric bar, and a left drag on the plane box-selects (or Alt-orbits) rather than moving it (recorded) Trace: "Reading traces — Part F › CAD-110" (by reading, unexecuted) |
+| CAD-111 Exact section | Section on Z at offset 0 (`cad_section {"axis":"z","offset":0}`), select a body, run `system_ui` `cad:section:exact` ("Exact section of …") or `cad_section {"exact":"<id>"}` | `curl 'http://127.0.0.1:<RoboCAD port>/nodes/<id>/section?plane=xy'` | A yellow exact outline appears over the red preview outline and follows the B-rep; on any plane other than xy, xz, yz through the origin or a plane node it is refused, naming why (RoboCAD's route takes only those); after an edit to the body it is re-read Trace: "Reading traces — Part F › CAD-111" (by reading, unexecuted) |
+| CAD-112 Isolate | Select one part, press `/` (View ▸ Isolate, right-click ▸ Isolate); then Ctrl/Cmd+Z | `/`; Edit ▸ Undo | Everything but the part, its children and parents is hidden in both; one undo step "Isolate" brings it back. With nothing selected the viewer refuses "Select the nodes to isolate" (RoboCAD hides everything; recorded) Trace: "Reading traces — Part F › CAD-112" (by reading, unexecuted) |
+| CAD-113 Hide and Show All | Select two parts, press H (View ▸ Hide, right-click ▸ Hide); then Alt/Option+H (View ▸ Show All); undo both | H; Alt+H; Edit ▸ Undo twice | H hides the selection as one step ("Hide"); Show All shows every node ("Show all"); the tree shows the same visibility; each undo reverses one. With nothing selected the viewer refuses "Select the nodes to hide" (recorded) Trace: "Reading traces — Part F › CAD-113" (by reading, unexecuted) |
+| CAD-114 Save a view | View ▸ Saved Views opens the panel at the lower right: set a view (front, ortho, section on, grid off, wireframe), type "Front cutaway" in "View name, e.g. Worm drive cutaway", **Save current view**. `cad_views {"op":"save","name":"Front cutaway"}` | View ▸ Saved Views: the same view, the same name, Save current view | Both list "Front cutaway / Orthographic · Cutaway"; "Saved inside this CAD file · edits support Undo"; a blank or 121-character name is refused before anything is sent; one undo step in RoboCAD's history ("Save view") Trace: "Reading traces — Part F › CAD-114" (by reading, unexecuted) |
+| CAD-115 Rename, replace, delete | On the row: **Rename…** (type "Front A-A", Enter), turn the camera, **Replace with current**, then **Delete**; Ctrl/Cmd+Z after each. `cad_views {"op":"rename","id":"…","name":"…"}`, `"replace"`, `"delete"` | Rename…, Replace with current, Delete; Edit ▸ Undo | Each is one undo step with RoboCAD's label ("Update saved view", "Delete saved view") and each undo restores the list as it was, in both Trace: "Reading traces — Part F › CAD-115" (by reading, unexecuted) |
+| CAD-116 Restore, across both | Save a view in the viewer and Save the file; open that copy in RoboCAD and Restore it there. Save a view in RoboCAD, save, open that copy in the viewer: **Restore view**. Compare `unzip -p <file>.rcad manifest.json` (`saved_views`) | Restore view (or double-click the row) | A view saved in either one restores in the other with the same direction, distance, orthographic or perspective, field of view, display mode, grid and section; the `saved_views` entries have the same keys. The viewer restores with a button, not a double-click (recorded) Trace: "Reading traces — Part F › CAD-116" (by reading, unexecuted) |
+| CAD-117 Tessellation tolerance | Select a curved body; in the inspector type 0.5 in "Tessellation tolerance (mm)", Enter; then 0.01; then Ctrl/Cmd+Z | The properties panel's "Tessellation tolerance (mm)" spin box, 0.5, then 0.01 | At 0.5 both draw the same visible facets; at 0.01 both are smooth; the viewer's change is one undo step ("Set attributes"), RoboCAD's panel records none, and the viewer's field opens empty (RoboCAD reports no current value; recorded) Trace: "Reading traces — Part F › CAD-117" (by reading, unexecuted) |
+| CAD-118 File ▸ New | File ▸ New (Ctrl/Cmd+N): the path form proposes `untitled.rcad` in the document's folder; type `/tmp/cad-check/new.rcad`, OK. Try again with the same path | File ▸ New | The viewer writes the empty file, then opens it (the progress strip and status line say so); an existing path is refused ("exists: choose a new file name") and left untouched. With unsaved edits in a service this window started, New is refused before any file is written (CAD-127). REST `cad_file {"op":"new","path":"/tmp/cad-check/new2.rcad"}` answers only once the new file is open (its answer names `created` and `opened`). RoboCAD opens an untitled window instead (recorded) Trace: "Reading traces — Part F › CAD-118" (by reading, unexecuted) |
+| CAD-119 File ▸ Open | File ▸ Open… (Ctrl/Cmd+O): the form lists the folder's `.rcad` files; click `turntable.rcad`, OK | File ▸ Open… | The same document opens in both; `..` and folder rows move through folders; a relative path is refused, naming why Trace: "Reading traces — Part F › CAD-119" (by reading, unexecuted) |
+| CAD-120 File ▸ Save As | File ▸ Save As… (Ctrl/Cmd+Shift+S): `/tmp/cad-check/copy` (no extension), OK. Then `unzip -l /tmp/cad-check/copy.rcad` | File ▸ Save As… `/tmp/cad-check/copy-rc`, then the same `unzip -l` | Both append `.rcad`; both archives hold `thumbnail.png` (a headless service draws the viewer's with RoboCAD's snapshot renderer); the left dock names the new file, and leaving and re-entering CAD mode reopens `copy.rcad`. Plain Save writes the thumbnail too (CAD-11) Trace: "Reading traces — Part F › CAD-120" (by reading, unexecuted) |
+| CAD-121 Import STEP | File ▸ Import… (Ctrl/Cmd+I): `/tmp/cad-check/print-kit.step`, OK; then undo | File ▸ Import… the same file; Edit ▸ Undo | The same new nodes, volumes and face counts; one undo step removes them in both. (An SVG or an image lands on XY in the viewer, on the active plane in RoboCAD: recorded) Trace: "Reading traces — Part F › CAD-121" (by reading, unexecuted) |
+| CAD-122 Import a mesh with units | File ▸ Import… and type `/tmp/cad-check/cap.stl`: as soon as the path names the mesh, the form adds "Units of the mesh file" (empty), says "Asking RoboCAD for its guess…", then "RoboCAD's guess: … (largest extent …)" and fills the unit; OK is disabled, saying why, until then. OK. Then repeat, choosing `in` before the guess lands (the guess no longer replaces it); **Guess unit** asks again | File ▸ Import…: "Units of the file" / "This format carries no unit. What are the numbers in?" with its guess preselected | The guess is the same unit in both; the imported mesh has the same size for the same unit in both (inches 25.4× millimetres); no mesh is imported in a unit nobody picked or RoboCAD guessed. The viewer's unit is a row of its path form, not a second dialog (recorded) Trace: "Reading traces — Part F › CAD-122" (by reading, unexecuted) |
+| CAD-123 Export STL, 3MF, OBJ with settings | File ▸ Export… (Ctrl/Cmd+E): Format `stl`, File `/tmp/cad-check/v.stl`, Format binary, Unit mm, Chord tolerance (mm) 0.05, Angular tolerance (°) 20; OK. Then `3mf` (Write colours, Write names) and `obj` (Scale, Up axis, Quads, N-gons, Write MTL, Write UVs) | File ▸ Export… the same files (`r.stl`, …) with the same values in its dialog | Each file is written (status "Exported … to …"); the viewer's and RoboCAD's files of each format import back into RoboCAD with the same triangles and size; a value outside a field's range is refused naming the setting; reopening the form starts from the last values sent for that format during the session (RoboCAD remembers them across launches; recorded) Trace: "Reading traces — Part F › CAD-123" (by reading, unexecuted) |
+| CAD-124 Export STEP, IGES, sketch SVG | Format `step` (Schema AP214, Write names, Write colours), `iges`, and `svg` with a sketch selected (Sketch (node id) is filled; draw one as in Part E if the model has none) | The same three exports | The STEP and IGES files import back into RoboCAD with the same bodies and volumes; the SVGs show the same curves; an export RoboCAD blocks names its reason Trace: "Reading traces — Part F › CAD-124" (by reading, unexecuted) |
+| CAD-125 Export drawing | File ▸ Export drawing (SVG)… (Ctrl/Cmd+Shift+D) with the section on: Front, Top, Right and Isometric view checked, Title, "Section A-A (the section tool's plane)" checked; OK | File ▸ Export drawing (SVG)… with the section on | The same four views and a "Section A-A" view, titled with the document's file name by default, in both SVGs Trace: "Reading traces — Part F › CAD-125" (by reading, unexecuted) |
+| CAD-126 Render | `system_ui` `cad:file:render` ("Render (PNG)…") or `cad_render {"path":"/tmp/cad-check/v.png","view":"iso","w":1200,"h":900}` | `curl -o /tmp/cad-check/r.png 'http://127.0.0.1:<RoboCAD port>/render?view=iso&w=1200&h=900'` | Both PNGs show the same view of the model; a size outside 16–8192 px or a path without `.png` is refused before anything is sent; the window never stalls while it renders Trace: "Reading traces — Part F › CAD-126" (by reading, unexecuted) |
+| CAD-127 Unsaved edits | In Part A (a service this window started) make an edit, then File ▸ Open… or New: the form says in red "Not now: … has unsaved edits …: save first", and OK is refused naming the reason; New writes no file. There is no discard button. Save (Ctrl/Cmd+S), then OK opens. Attached to RoboCAD's window (Part B), with an edit unsaved there: the form notes in amber that RoboCAD keeps its edits and this window then shows the other file; OK opens it. `cad_open` and `cad_file {"op":"open"}` follow the same rule | File ▸ Open… or New with unsaved edits: another window opens and the edits stay; close the window: "Unsaved changes" / "Save before closing?" with Save, Discard, Cancel | Nothing is lost in either: the viewer refuses rather than replace a self-started service's unsaved edits, and an attached RoboCAD keeps its own; the refusals name the document and what to do Trace: "Reading traces — Part F › CAD-127" (by reading, unexecuted) |
+| CAD-128 The camera in the other modes | Switch to **Robot**, **Phenomena**, **Build** and a lesson with a 3D card (`--lessons DIR`). In each: right-drag orbits, middle or Shift+right-drag pans, the wheel zooms toward the focus (in a lesson card only with Ctrl/Cmd held, so the page scrolls); the numpad's 1/3/7 (Ctrl: opposite), 9, 5, 0 and `.`; Home returns to the mode's home view; a lesson's spinning card keeps spinning; `camera_spin {"rate":0.5}` then `{"rate":0}` | (n/a: compare with a build of 1b00d789, before the shared camera) | The orbit rate, pitch limits, zoom limits, home view, glide (or cut) to home and spin of each mode feel as they did before; a drag that starts on a side dock never moves the camera; RoboCAD's gestures (CAD-129) are CAD's only: Shift+middle still pans and the arrow keys are not camera keys in these modes Trace: "Reading traces — Part F › CAD-128" (by reading, unexecuted) |
+| CAD-129 RoboCAD's camera gestures | In CAD mode with the Select tool: Shift+middle-drag orbits (a plain middle-drag still pans); Alt+right-drag orbits and snaps to the nearest axis view at every step (pitch level or ±89.5°, yaw a multiple of 90°); Alt/Option+left-drag orbits once it moves more than about 6 px, while an Alt+click on overlapping parts still opens the candidates menu and an Alt drag never box-selects; the arrow keys orbit 10° (Ctrl/Cmd: 90°), Shift+arrows pan; with a text field focused (the numeric bar, the inspector, the offset field) the arrows leave the camera alone. `camera_orbit {"degrees":[10,0]}` | The same drags and keys in RoboCAD's viewport | The same turns, snaps and pans in both, at the same steps. RoboCAD's own Alt+left-drag does not orbit (its tool takes the press, ui/app.py:542; recorded in the ledger's notes), so compare the viewer's with right-drag Trace: "Reading traces — Part F › CAD-129" (by reading, unexecuted) |
+| CAD-130 Curve nodes | Select a body and run Modify ▸ Silhouette onto active plane (CAD-95): a "Silhouette" curve node appears in the tree. Toggle its visibility; select it in the tree; switch display modes (Z); turn the section on across it | The same silhouette in RoboCAD's window | The curve is drawn in both, 2 px, light blue (or the node's colour), orange while selected, in every display mode, cut by the section plane, gone while hidden. Clicking the curve in the viewer's 3D view does not select it (RoboCAD's 8 px curve pick is not ported; select it in the tree; recorded) Trace: "Reading traces — Part F › CAD-130" (by reading, unexecuted) |
 
 ## Part G: materials, physical inspection, the Robot panel and simulation (cad-physical-inspect)
 
@@ -487,8 +491,8 @@ are deliberate presentation differences, so this sequence cannot claim exact par
   refuse by name when there is none; the selection is cleared only when
   the edit succeeds (as RoboCAD); the pie entries are
   rounded rectangles; Make unique is in the 3D view's right-click menu;
-  the toolbar, menus, palette and radials list later epics' and unported
-  commands disabled, naming why; Command+Space is Spotlight's on macOS, so
+  the toolbar, menus, palette and radials list the unported commands
+  disabled, naming why (no command belongs to a later epic any more); Command+Space is Spotlight's on macOS, so
   the palette opens with Control+Space or Shift+F.
 - cad-sketch (each recorded in cad-parity.md with its reason): every
   sketch shape and edit is one REST sketch edit, which RoboCAD's history
@@ -607,6 +611,56 @@ are deliberate presentation differences, so this sequence cannot claim exact par
   30 s for RoboCAD to list it, then ends without retrying; a component
   draft that RoboCAD's revision has moved past can be copied onto the
   current revision with consent (Copy draft).
+- cad-parts-a-f-retrace (2026-10-02; found while tracing Parts A to F by
+  reading, unexecuted; each also named in its trace and in cad-parity.md):
+  - **Server-side revision check (needs RoboCAD).** A stale drag, numeric
+    entry, form, explicit-item run, kept measurement or window patch is
+    refused by the viewer against RoboCAD's revision as last polled
+    (`CadDocument::commit_refusal`), but `Service.op` (api.py:1011-1028)
+    honours `expected_revision` only for component jobs, so an edit made in
+    RoboCAD's own window between the poll and the send is not caught.
+    Closing it needs `Service.op` to check `expected_revision` for every op.
+  - **Port race with another headless RoboCAD (needs RoboCAD).** A headless
+    RoboCAD on the same file, started by another process, that takes the
+    port the viewer just chose is accepted as this window's service,
+    because `GET /` names no process id; the viewer's child then exits on
+    the taken port and the connection shows Lost. The other service keeps
+    its edits and is never stopped here. A desktop RoboCAD there is refused
+    (`cad/sync/launch.rs:accept_served`). Refusing the headless case needs
+    a `pid` in RoboCAD's health answer.
+  - Undo and redo say "Undid {label}" / "Redid {label}" on the status line,
+    as every viewer mode's undo does (RoboCAD: "Undo {label}" /
+    "Redo {label}"); the buttons and history are RoboCAD's labels.
+  - The sub-body inspector shows the face, edge or vertex at the item's
+    index at the shown revision even when it was picked at an older one,
+    and its "Ø" rows are 2 × RoboCAD's radius, derived here; topology
+    reads carry no revision (`GET /nodes/{id}/faces|edges|vertices`), so a
+    late answer is labelled with the revision it was asked at until the
+    next revision clears it. Commits stay guarded.
+  - The Array form shows only the chosen kind's rows and adds an axis-plane
+    choice (RoboCAD's `ArrayDialog` shows every row and uses the active
+    plane). A typed negative cylinder height builds down along −normal, as
+    the drag does (RoboCAD passes the signed height unchanged).
+  - `cad_sketch` refusals for what RoboCAD would answer with a Python
+    exception (a missing, non-finite or mistyped argument, a polygon of
+    fewer than three sides, a join naming a curve twice, a negative curve
+    index) name the call and the argument; where RoboCAD has its own words
+    (collinear points, a curve index out of range, an unknown method, an
+    unknown plane) the refusal uses them verbatim. A REST `cad_sketch`
+    naming curves by index must pass `revision`. RoboCAD's
+    `Service.edit_sketch` answers 500 for an `IndexError` (not changed;
+    the viewer never sends one).
+  - Views: the wheel zoom anchors on the plane through the focus with an
+    exp(−0.12 × lines) step (RoboCAD: the active plane, 0.9 or 1.1 per
+    event); leaving the trackball takes the nearest upright heading; an import leaves the camera where
+    it is (RoboCAD frames everything); saving a view does not mark its row
+    current.
+  - A sent export runs to its end in RoboCAD (no cancel route): the job
+    strip's Cancel says so and the outcome says the file was written
+    anyway; a cancelled render is drawn by RoboCAD but its PNG is not
+    written. `cad_open` (and File ▸ Open, New's open) stats the `.rcad` on
+    the UI thread, a documented known cost shared with the switch's
+    `prepare`; RoboCAD's service reads the file.
 
 ## Sign-off
 
@@ -655,6 +709,3476 @@ Button/CadButton/Enabled entities rather than catalogue registration alone.
 Python/OCCT, registry/experiment executables and local ffmpeg remain required;
 no assigned step requires a Qt window. Exact parity and physical qualification
 remain open. No fixture, build, launch, screenshot, capture or export ran.
+
+## Reading traces — Parts A and B
+
+Each trace follows one Part A or Part B step (CAD-01 to CAD-18) from the
+native control to RoboCAD and back to what the top bar, the left dock (tree,
+service and connection lines, autosave), the inspector, the status line, the
+3D view or the file shows, and compares it with RoboCAD's own window.
+Everything here is **by reading, unexecuted**: nothing was built, run or
+captured, and no step was compared side by side. Native paths are under
+`crates/sim-spatial/src/` unless they start with `crates/`; RoboCAD paths are
+under `cad/robocad/`. Gaps found while tracing were fixed in this batch
+(each named in its entry) unless an entry says it is recorded. The common
+legs are written out once:
+
+- **Click leg** (every toolbar button, chip and the inspector's buttons): a
+  kit button carries `CadButton(action)` (`cad/panel.rs:55`), which
+  `cad/panel/name.rs:buttons` (71) writes as `Act::ui(action)`; the one
+  apply system `cad/actions.rs:apply` (354) drains `Act<CadAction>` into
+  `handle` (459); a refusal from a click is written to the status line there
+  (408). `system_ui` lists the same controls (`cad/panel.rs:own_controls`,
+  191-245: `cad:undo`, `cad:redo`, `cad:save`, `cad:refresh`, `cad:fit`,
+  `cad:physical`, `cad:delete`, `cad:locked:<id>`, `cad:disabled:<id>`,
+  `cad:material:<id>:<m>`, `cad:node:<id>`, `cad:visible:<id>`).
+- **Key leg** (a RoboCAD shortcut): `cad/keys.rs:keys` (352) in
+  `CadKeySet::Keys`, after `keys::gate` (293, `CadKeySet::Gate`, registered
+  `cad/surfaces/mod.rs:327`) by `cad/mod.rs:configure_sets` (177-184:
+  `Gate.before(Keys)`, `Focus.before(Keys)`, `EscapeTool.before(Keys)`);
+  it returns while a kit text field has the keyboard (`typing.get()`, 366),
+  reads Control or Super as Ctrl (`combo_now`, 233-240), and writes
+  `CadInvoke { id }` for a bound registry command when
+  `surfaces/registry.rs:ready` (573) allows it (else the refusal on the
+  status line, 413). `CadInvoke` → `cad/ops/mod.rs:handle` (491, 493) →
+  `cad/ops/invoke.rs:invoke` (12): a catalogue entry runs there, any other
+  registry command goes to `cad/surfaces/registry.rs:invoke` (619), whose
+  `Resolved::Action` re-enters `actions::handle` (624).
+- **Edit leg** (patch, delete, undo, redo, save, command):
+  `cad/edit.rs:edit` (12) → `cad/sync/mod.rs:start_edit` (686): refused
+  with nothing sent when `CadDocument::edit_refusal_for`
+  (`cad/document/state.rs:182`) names an unknown outcome, a preview, a
+  component rebuild, "another CAD edit is in flight: {label}" (193) or "not
+  connected to RoboCAD: …" (196); else one `Job::spawn(Pool::Dedicated, …,
+  "RoboCAD edit: …")` (693) off the UI thread with `EDIT_TIMEOUT`. The
+  answer lands in `finish_edit` (565; an older generation's is dropped,
+  573), which writes the outcome to the status line (601) and asks the poll
+  for `/doc` (`refresh`, 641, called at 630; `dirty_known_at` makes the
+  saved state "being refetched" until a `GET /` sent after the answer is
+  read, 442-445). The status bar shows "Sending: {label}…" while it runs
+  (`cad/panel.rs:status`, 635-638). REST callers wait on
+  `cad/actions.rs:wait_edit` (602).
+- **Poll leg** (what keeps the window current): `cad/sync/mod.rs:spawn_poll`
+  (140) starts a `RunThread` "cad-poll" (jobs module) running `poll_loop`
+  (163): every `POLL_PERIOD` 0.5 s (56) `GET /` (189), `GET /selection`
+  (194), from a desktop window `GET /autosave` (205), and `GET /doc` and
+  `GET /commands` when (document id, revision) moved or on Refresh
+  (219-234). `receive` (285, `CadSet::Results` in `ViewerSet::JobResults`,
+  `cad/mod.rs:214`) takes each snapshot once (`take_snapshot`, 413).
+- **RoboCAD's route table**: `api.py:_route` (1540) → `run_on_main` → the
+  `Service` method; `GET /` (1551) → `health` (459-460), `GET /doc` (1614) →
+  `doc_state` (473: `doc.walk()` order, `history`, `selection`).
+
+### CAD-01 Open
+
+1. **Launch**: `main.rs:459-461` → `cad_mode` (250): the target is
+   `CadTarget::File(path)` (`--cad-url` is the Part B path, 462-463); the
+   document registry gets CAD's entry (`documents.open(Cad,
+   cad_source(&target))`, 271) and the window opens with `CadDocument::new`
+   (273; no I/O, `cad/document/mod.rs:179`). **Switch**: the switcher's
+   **CAD**, `system_ui mode:cad` or `viewer_mode {"mode":"cad","path"}`
+   (`app/switch/mod.rs:126-147`, `from_args`) → `handle` (373) → `start`
+   (502): `leaving_blockers` (517) of the current mode, then `prepare`
+   (`app/switch/prepare.rs:273-293`: a `.rcad` path, one stat named as a
+   known cost at 283-287) → `Prepared::Now` with `CadDocument::new(target)`.
+   The reveal hunk of `start` (`app/switch/mod.rs:553-561`) runs only for an
+   accepted switch to CAD; a switcher, `system_ui` or `viewer_mode` request
+   carries `reveal: None` (147, 201), so it sets `RevealThread(None)` with
+   `set_if_neq` (no change when already None) and touches nothing Part A or
+   B reads. `enter` (`app/switch/arrival.rs:22-36`) sets the state;
+   `install` (155-165) opens CAD's registry entry (`sources::open`,
+   `app/switch/sources.rs:106`) and inserts the document.
+2. OnEnter(ModeScope::Cad): `cad/sync/mod.rs:enter` (264, registered
+   `cad/mod.rs:201-209`) → `start` (76): a new generation (84), the
+   connection "Connecting: starting RoboCAD's headless service on {path}"
+   (127, 133; the line `connection_line`, `cad/document/state.rs:81`, adds
+   "({N} s)"), and one `Job::spawn(Pool::Dedicated, …, "cad-start")` (127)
+   running `cad/sync/launch.rs:self_start` (47). The top bar's state word is
+   "Connecting…" (`cad/panel.rs:517`).
+3. **The job** (off the UI thread): the interpreter
+   (`crates/sim-runtime/src/cad_client/service.rs:interpreter`, 33: never
+   creates the venv), the absolute path and its `is_file` (launch.rs:50-53),
+   a free port (`service::free_port`, service.rs:51: bind 127.0.0.1:0, read,
+   release), the command (`service_command`, 69: `python -m robocad.api
+   DOC --port N --host 127.0.0.1`, stderr to `log_path`, 59), spawned as a
+   `jobs::ChildProcess` (launch.rs:58; `jobs/child.rs:41`) and put in the
+   document's `ChildSlot` at once (60; a slot closed meanwhile hands it back
+   to be stopped, 60-63). Progress "started RoboCAD's headless service (pid
+   P) at URL; waiting for it to load …" (64), which `finish_connect`
+   (`cad/sync/mod.rs:331`) copies into the Connecting line (335-345).
+   `service::wait_until_live` (service.rs:128) polls `GET /` every 150 ms
+   up to `START_TIMEOUT` 120 s, ending early on the child's exit
+   (`slot.exited`) or a cancel/closed slot (launch.rs:66-75).
+4. **Port race** (the port was free when chosen but released before the
+   child bound it): `accept_served` (launch.rs:24) accepts the first answer
+   only from a headless RoboCAD serving this file (`serves`, 13: `app ==
+   "robocad"` and the canonical path, run on the job thread); anything else
+   is refused naming what answered ("… another service took the port"), the
+   child is taken out of the slot and stopped (84-87), and the error carries
+   the child's log tail (91). If instead the other process holds the port
+   and our child fails to bind, the child exits, `wait_until_live`'s
+   `alive` sees it and the job errs with the exit and log tail. Either way
+   the connection is Lost with the error (`finish_connect`, 367), nothing
+   but `GET /` was sent to the other process, and no edit exists yet in our
+   child (it never answered). Gap found and fixed: a **desktop** RoboCAD
+   window on the same file that took the port was accepted as this window's
+   self-started service (`serves` checks only app and path); now `gui:
+   true` is refused too (`cad/sync/launch.rs:24-37`, test
+   `cad/lifecycle_tests.rs:302-305`), since the child `robocad.api` has no
+   window (`api.py:1934-1945`: `ApiServer(doc)`, `app` None, so `health`
+   answers `gui: false`, api.py:460). Recorded (needs RoboCAD): a
+   **headless** RoboCAD on the same file started by someone else cannot be
+   told apart, because `GET /` names no process id; it is accepted, our
+   child then exits on the taken port, `watch_child` (377-391) marks the
+   connection Lost naming that exit, and the other service, never stopped
+   by this window, keeps its edits.
+5. **Connected**: `finish_connect` (356-366): the URL, the log path, the
+   poll worker (`spawn_poll`, 362), the client and health;
+   `Connection::Connected`. The registry's selection entry for the target
+   is made on the first `receive` (`ensure_registered`, 288-290).
+6. Shown: the left dock's head (`cad/panel.rs:document`, 613-632): the
+   path (`path_line`, 578), the service line "Self-started RoboCAD (pid P)
+   at URL · headless · RoboCAD {version}" (`CadDocument::service_line`,
+   `cad/document/state.rs:60-76`; "Starting RoboCAD's headless service (pid
+   P) on {path}" while connecting, 63), the connection line "Connected ·
+   revision N" (82-86), the autosave line "Autosave: not applicable
+   (headless service; …)" (`cad/panel.rs:autosave_line`, 590-592). The UI
+   thread never waits: the switch returns at once (`prepare.rs:269-272`)
+   and every request is a job. RoboCAD's counterpart: its nonmodal
+   "Opening name" window (`ui/model_loading.py:279-345`) then the document.
+
+Deliberate difference (recorded, `cad-parity.md` "Load progress and
+cancel"): the headless service loads before it binds, so the viewer shows
+elapsed seconds, not RoboCAD's stage counts. By reading, unexecuted.
+
+### CAD-02 Tree
+
+1. No control: the left dock's tree part (`cad/panel.rs:450`,
+   `Part::Tree`) → `cad/tree/rows.rs:draw` (148).
+2. No action: the rows are `cad/tree/state.rs:shown` (181) over
+   `CadDocument::rows` (`cad/document/state.rs:12-41`): `/doc`'s nodes in
+   RoboCAD's walk order, each with its depth from the parent chain (bounded
+   by the node count, 22), kind, name, `visible`, `effective_visible`,
+   `locked`, `disabled`.
+3. No RoboCAD call of its own: the poll leg's `GET /doc` (`cad/sync/mod.rs:222`,
+   `crates/sim-runtime/src/cad_client/mod.rs:doc`, 271) → `api.py:1614` →
+   `doc_state` (473: `nodes` = `node_summary` of `doc.walk()`, `document.py:420`;
+   `effective_visible` = `doc.is_visible`, api.py:111, document.py:433).
+4. Shown: each row indented `depth × INDENT` (rows.rs:186), the kind tag
+   (214), the name grey when not effectively visible (`name_colour`, 137-145),
+   "locked" (228-230), and the visibility chip `eye` (126-133): "Disabled"
+   for a disabled node, "Shown" when effectively visible, "Hidden by parent"
+   when the node's own flag is on but an ancestor hides or disables it,
+   "Hidden" when its own flag is off. RoboCAD's counterpart `Outliner.refresh`
+   (`ui/widgets.py:271-314`): the same walk from `doc.roots` (309-311) and
+   children (304-305), the 👁/◌ column for its own `visible`, 🔒, ⏸, grey
+   for `not doc.is_visible` (301-302).
+
+Deliberate difference (cosmetic): words and an indent instead of Qt's icon
+columns and disclosure tree; the chip names the effective state where
+RoboCAD's 👁/◌ shows the node's own flag. By reading, unexecuted.
+
+### CAD-03 Bodies
+
+1. Display only (no control): `cad/mesh.rs:sync` (351, `CadSet::Mesh`,
+   `cad/mod.rs:260`). **Home** (`view.fit`, `surfaces/registry.rs:317`, key
+   leg → `Do::Fit` → `CadAction::CadFit`) or **Fit** (`cad:fit`,
+   `cad/panel.rs:210`) → `cad/actions.rs:578` → `fit` (691) →
+   `CadMeshes::frame` (`cad/mesh.rs:176`). Right-drag orbit, middle or
+   Shift+right-drag pan and the wheel are the shared camera's
+   (`camera/input.rs:78-117`).
+2. Which bodies: `wanted` (mesh.rs:383) is every `effective_visible` node of
+   a `BODY_KINDS` kind (40); hidden, disabled or deleted ones are despawned
+   (385-394). Each missing mesh is fetched on one `Pool::Dedicated` job
+   (468, at most `MAX_FETCHES`) and built on `Pool::Compute` (409).
+3. `crates/sim-runtime/src/cad_client/mod.rs:mesh` (304) with
+   `NODE_TOLERANCE` (the node's own tolerance) → `api.py:1648` → `mesh`
+   (819: `doc.mesh_of`).
+4. Frame: the root's transform is −90° about X and ×0.001
+   (`root_transform`, mesh.rs:258-261; `display`, 253-255: (x, y, z) mm →
+   (x, z, −y) m), so RoboCAD's Z-up millimetres show Z up in metres. RoboCAD's
+   counterpart `Viewport.rebuild_item` (`ui/viewport.py:397-402`, the same
+   `mesh_of`) and its Z-up world.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-04 Select
+
+1. **Tree row**: a press → `cad/tree/input.rs:rows` (221) writes
+   `CadTree {op: select}` (262, `select`, 209) → `cad/tree/handle.rs:handle`
+   (214-224) → `select_action` (174: Shift range, Ctrl/Cmd toggle) →
+   `CadSelect`. **3D click**: `cad/pick.rs` writes `CadSelect { items,
+   extend: shift, toggle: ctrl, picked_at }` (467; empty space clears, 469).
+   REST `cad_select {"ids":[…]}`; `system_ui cad:node:<id>`
+   (`cad/panel.rs:231`).
+2. `cad/actions.rs:489` → `cad/selection/mod.rs:handle` (104-108) →
+   `select` (216): validated, applied to the **one shared Selection**
+   (`shared.apply`, 225), status "n selected" (`selection_status`, 196-199),
+   then `publish` (132).
+3. `publish` → `cad/sync/selection.rs:push_selection` (108): one push at a
+   time (a newer one waits, `selection_again`), one `Pool::Dedicated` job.
+4. `crates/sim-runtime/src/cad_client/mod.rs:set_selection` (403) →
+   `api.py:1681-1684` → `set_selection` (1062: headless, the items only).
+5. Shown: the row highlight (`cad/tree/rows.rs:highlight`, 106), the body in
+   the selection material (`cad/mesh.rs:highlight`, 551), and the inspector
+   follows the first selected node (CAD-05: `sync/selection.rs:detail`,
+   123-155). RoboCAD's counterparts: `Outliner._select` (`ui/widgets.py:331-339`,
+   body items for every row) and `SelectTool` (`ui/tools.py:111`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-05 Inspect
+
+1. No control: selecting (CAD-04) → the right dock's `Part::Inspector`
+   (`cad/panel.rs:460`) → `cad/inspector/node.rs:inspector` (202).
+2. No action: `cad/sync/selection.rs:detail` (123), run by `receive`
+   (`cad/sync/mod.rs:318`): one `GET /nodes/{id}` job per (first selected
+   node, shown revision) on `Pool::Dedicated` (150-152); a result for
+   another node or revision is dropped (131).
+3. `crates/sim-runtime/src/cad_client/mod.rs:node` (288); bare
+   `NaN`/`Infinity` tokens are read as null before decoding
+   (`null_non_finite`, 476).
+4. `api.py:1628-1629` (GET `/nodes/{id}`) → `node_detail` (114-135:
+   `node_summary` plus `body_kind`, `mass` = `kernel.mass_properties`,
+   `face_count`, `edge_count`, then `sketch`, `plane`, `measure`,
+   `mirror_plane`, `joint`, `robot`).
+5. Shown, from the shown tree's summary: Kind, Id, Parent ("null (a root)"),
+   Children, Effective visibility, Material, Colour, "Instance of"
+   (node.rs:207-218); Pivot and Transform (`cad/inspector/editors.rs:editors`,
+   360-385: read-only `lines` of the transform for kinds RoboCAD does not
+   place); then the detail (226-264): Body kind, Volume mm³, Area mm², Mass
+   g, Centroid, Bounding box min/max, Size (mm), Faces, Edges, then each
+   present block flattened. A mass value RoboCAD sent as null (or NaN) reads
+   "null in RoboCAD's answer" without a unit (`mass_field`, `mass_vector`,
+   `cad/inspector/mod.rs:195-212`); other JSON nulls read "null" (`scalar`,
+   94). Nothing is computed or filled in (module doc, mod.rs:1-11). RoboCAD's
+   counterpart `PropertiesPanel.refresh` (`ui/widgets.py:480-500`).
+
+Deliberate difference (recorded in cad-parity.md "Inspector"): the native
+inspector lists `node_detail` as returned where RoboCAD's panel shows a
+display-size preview and exact measurements on request. By reading,
+unexecuted.
+
+### CAD-06 Physical labels
+
+1. **Physical** (`cad:physical`, `cad/panel.rs:211-212`, enabled only while
+   connected) → click leg → `cad/actions.rs:579` →
+   `cad/sync/mod.rs:fetch_physical` (661): one `Pool::Dedicated` job stamped
+   with the shown revision (663-664). REST `cad_physical`.
+2. `crates/sim-runtime/src/cad_client/mod.rs:physical` (430, `flex=0`).
+3. `api.py:1765-1778`: headless, `Ops.physical` under the lock; desktop, a
+   snapshot derived by `export_worker.export_snapshot`. Each link carries
+   `mass_sources` = {body id: `mass_source`} (`physical.py:766`), the
+   `source` of a declared `mass_properties` block or RoboCAD's default label
+   (`body_mass_properties`, `physical.py:134-154`).
+4. `finish_physical` (669) stores (revision, result).
+5. Shown: `cad/inspector/sections.rs:link` (33-79): "Fetching RoboCAD's
+   physical model…" (37) while the job runs; for another revision the
+   refetch hint (45-47); the link holding the body: Mass kg, Centre of mass
+   m, Inertia kg·m², Bounding box m (62-69), then `mass_sources[id]` as a
+   kit chip with RoboCAD's text verbatim (`provenance`,
+   `cad/inspector/mod.rs:158-168`; sections.rs:73-78). A link without the
+   key shows no chip; RoboCAD sends a label for every body
+   (physical.py:139, 151, 154), so a member body always shows one.
+   RoboCAD's counterpart: the same `GET /physical?flex=0` answer.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-07 Patch
+
+1. **Visible**, **Locked**, **Disabled**, a material chip
+   (`cad/inspector/sections.rs:attributes`, 96-130; their actions are
+   `cad/panel.rs:own_controls`' `patch(id, key, value)`, 140-145, 219-233),
+   the tree row's visibility chip (`cad/tree/rows.rs:231`), or the name
+   field (`cad/inspector/node.rs:name`, 20-45, the kit field; Enter →
+   `cad/panel/name.rs:119-135` writes `patch(id, "name", text)`). REST
+   `cad_patch`.
+2. `cad/actions.rs:506-521`: refused for a node not in the shown tree;
+   label "Patch {name}: {keys}". A window control (a click, or its
+   `system_ui` activation: not `call.rest()`) passes the shown revision
+   (519) to `cad/edit.rs:edit_at` (48), so `commit_refusal`
+   (`cad/document/state.rs:138-153`) refuses it with nothing sent while
+   the shown tree is behind RoboCAD's ("the shown document is behind
+   RoboCAD's (…); nothing was sent") or RoboCAD's revision moved since; a
+   REST `cad_patch` names its own values and goes straight to the edit
+   leg. A second edit while one is in
+   flight is refused "another CAD edit is in flight: Patch {name}: {keys}"
+   (`cad/document/state.rs:192-193`), and the chips are disabled meanwhile
+   (`edit_blocked`, `cad/panel.rs:131`).
+3. `crates/sim-runtime/src/cad_client/mod.rs:patch` (294) → `api.py:1630`
+   → `patch` (748-786): `name` → `ops.rename` (`commands.py:333`),
+   `visible`/`locked`/`disabled`/`material` → `Ops.set_visible`,
+   `set_locked`, `set_disabled`, `set_material` (336-347), one undo step
+   each.
+4. Shown: "Sending: Patch …" then "Patched {name}: {keys}"; the refetched
+   `/doc` redraws the tree and inspector. RoboCAD's counterpart: its
+   properties panel and outliner columns call the same `Ops` methods
+   (`ui/widgets.py:359-364`).
+
+Matches RoboCAD. Gap found and fixed (this batch): a chip's value is the
+opposite of the shown tree's flag, and it used to be sent while the shown
+tree was behind RoboCAD's; now a window patch is sent only at the shown
+revision (`cad/actions.rs:513-520`), where RoboCAD's panel always reads its
+live document. By reading, unexecuted.
+
+### CAD-08 Undo / redo
+
+1. **Undo {label}** / **Redo {label}** (`cad:undo`, `cad:redo`,
+   `cad/panel.rs:197-201`: the label is the last entry of `/doc`'s
+   `history.undo`/`redo`; disabled when empty or edits are blocked), or
+   Cmd/Ctrl+Z and Cmd/Ctrl+Shift+Z: key leg (`edit.undo`/`edit.redo`,
+   `cad/surfaces/registry.rs:307-308`, `Native::Action(Do::Undo/Redo)`,
+   `Do::action`, 111-112) in `CadKeySet::Keys` after the Gate, never while
+   a text field types (`cad/keys.rs:366`); `ready` takes the button's
+   readiness (`registry.rs:579`). REST `cad_undo`, `cad_redo`.
+2. `cad/actions.rs:531-536` → edit leg ("Undo", "Redo").
+3. `crates/sim-runtime/src/cad_client/mod.rs:undo` (390), `redo` (394) →
+   `api.py:1677-1680` → `undo`/`redo` (1046-1054) → `Ops.undo`/`redo`
+   (`commands.py:305-309`) on the one command stack.
+4. Shown: status "Undid {label}" / "Redid {label}" ("Nothing to undo"); the
+   inspector's History (`cad/inspector/sections.rs:history`, 131-146) lists
+   RoboCAD's labels most recent first. RoboCAD's counterpart:
+   `ui/app.py:291-292` (status "Undo {label}").
+
+Matches RoboCAD: the labels are RoboCAD's and each CAD-07 patch is one step.
+Deliberate difference (cosmetic): the status line says "Undid"/"Redid", as
+every viewer mode's undo does, where RoboCAD's says "Undo"/"Redo". By
+reading, unexecuted.
+
+### CAD-09 Delete
+
+1. **Delete** in the inspector (`cad/inspector/sections.rs:123-127`, the
+   control `cad:delete` = `CadInvoke { edit.delete }`, `cad/panel.rs:214-216`)
+   or Delete/Backspace: key leg (`edit.delete`, `registry.rs:309`), not
+   while a text field (the name) types (`keys.rs:366`), silent on an empty
+   selection (411-412). REST `cad_delete {id}` (one node).
+2. `CadInvoke` → `cad/ops/invoke.rs:invoke` (15, `Flow::Immediate`) →
+   `ops::run` (`cad/ops/mod.rs:528`) → `prepare` (543: `commit_refusal`, so
+   also refused while the shown tree is stale) → `start` → edit leg; the
+   entry (`cad/ops/catalogue/edit_create.rs:8-20`) clears the selection on
+   success. `cad_delete` → `cad/actions.rs:522-529` → edit leg.
+3. `crates/sim-runtime/src/cad_client/mod.rs:op` (374, `POST /ops/delete`,
+   every selected node) or `delete` (298, `DELETE /nodes/{id}`) →
+   `api.py:1668`/`1632` → `Ops.delete` (`commands.py:312`, one
+   `RemoveNodes("Delete")` step) / `delete` (api.py:789-793).
+4. Shown: the node leaves the refetched tree and the 3D view (mesh.rs:385-394);
+   Undo (CAD-08) restores it. RoboCAD's counterpart `delete_selection`
+   (`ui/app.py:1458-1463`).
+
+Deliberate difference (recorded, cad-parity.md "Delete"): a menu or REST
+delete with nothing selected is refused by name. By reading, unexecuted.
+
+### CAD-10 Unsaved edits
+
+1. After an edit, the top bar shows "Checking saved state…" until the poll
+   reads a `GET /` sent after the answer, then "Unsaved edits"
+   (`cad/panel.rs:top`, 545-552, from `CadDocument::unsaved`,
+   `cad/document/state.rs:165-170`: `health.dirty`, `api.py:460`).
+2. **Build** in the switcher → `app/switch/mod.rs:handle` (373) → `start`
+   (502) → `leaving_blockers` (517; `app/switch/prepare.rs:30-86`) → for CAD
+   `CadDocument::switch_blockers` (prepare.rs:79-80;
+   `cad/document/state.rs:206-238`).
+3. **Unsaved edits, mode leave refused** (the table's text): with the
+   self-started child running and answered (`child_may_hold_edits`, 174-176)
+   and `unsaved() == Some(true)`, the blocker is "{name} has unsaved edits in
+   the RoboCAD service this window started (pid P), which stops when CAD
+   mode closes: save first (the Save button)" (229); not connected, or an
+   edit just finished, gives the "may have unsaved edits …" variants
+   (230-234); an edit in flight is its own blocker (212-214). `start`
+   returns `refusal` (`app/switch/mod.rs:483-485`): "Not switching to Build
+   mode: … save first (the Save button). CAD mode stays." Nothing is
+   stopped and CAD mode stays.
+4. **Race between the check and OnExit** (edits begun after
+   `leaving_blockers` ran, e.g. an `Act<CadAction>` applied later in the
+   same `ViewerSet::Actions` frame): OnExit(Cad) → `app/switch/leave.rs:leave_cad`
+   (93) → `release_child("leaving CAD mode")` (`cad/document/state.rs:276-294`):
+   an answered, running child whose `unsaved()` is not `Some(false)` (an
+   edit in flight makes it None, 166) is detached (`ChildProcess::detach`,
+   `jobs/child.rs:94`), left running, its URL logged, and the URL returned;
+   `leave_cad` records `CadTarget::Service(url)` as CAD's source
+   (leave.rs:104, 109; `sources::left`, `app/switch/sources.rs:133`), so the
+   next visit attaches to it (`prepare.rs:290`) instead of starting a new
+   service. Gap found and fixed: the switch's message said only "Switched to
+   Build mode." while the service was left running (the URL was only in the
+   log); `leave_cad` now appends "the RoboCAD service this window started
+   for {name} may hold unsaved edits and is left running at {url}; CAD mode
+   reattaches to it (save there, or stop it)" to the switch's `entering`
+   summary, which `handle` shows once the mode is entered
+   (`app/switch/leave.rs:96-105`).
+
+Deliberate difference (recorded, cad-parity.md "Closing with unsaved
+changes"): RoboCAD's window prompts Save/Discard/Cancel
+(`ui/app.py:1920-1934`); the viewer never saves for the user, so it refuses
+to leave or keeps the service running. By reading, unexecuted.
+
+### CAD-11 Save
+
+1. **Save** (`cad:save`, `cad/panel.rs:202`) or Cmd/Ctrl+S (key leg,
+   `file.save`, `registry.rs:301`, `Do::Save` → `CadSave { path: None }`,
+   113); REST `cad_save` or `cad_save {"path"}`.
+2. `cad/actions.rs:540-543`: a path goes through `cad/files/mod.rs:absolute`
+   (247-263: `~/` expanded; a relative path is refused "cad_save: {p} is not
+   an absolute path (RoboCAD would resolve it against its own working
+   directory)", 256-258; a trailing `/` is refused, 259-261) → `files::save`
+   (406): `.rcad` appended (409), label "Save" / "Save as {p}", edit leg with
+   `FILE_TIMEOUT`; a save to a path marks its own edit `retarget` (419-425).
+3. `crates/sim-runtime/src/cad_client/files.rs:save_with_thumbnail` (152,
+   `POST /save/thumbnail {path?}`) → `api.py:1736-1737` →
+   `save_with_thumbnail` (1296-1319): headless, a 256×192 snapshot render
+   as the thumbnail, then `Document.save(p, thumbnail=…)` (RoboCAD writes
+   the archive; the viewer never writes the `.rcad`).
+4. Shown: "Saved {p} with its thumbnail" (or "without a thumbnail: RoboCAD
+   could not draw one", files/mod.rs:415); the refetched `GET /` clears
+   `dirty`, so the top bar says "Saved" (`cad/panel.rs:550`). After a save
+   to a path, `finish_edit` retargets a self-started document to the saved
+   file (`cad/sync/mod.rs:605-610`) and `receive` points CAD's registry
+   entry at it (312-314); the left dock's path line is RoboCAD's new path
+   (`path_line`, `cad/panel.rs:578-585`). RoboCAD's counterparts
+   `MainWindow.save`/`save_as` (`ui/app.py:1337-1350`: `doc.save(…,
+   thumbnail=self.thumbnail())`).
+5. **Save-then-leave**: once the refetch reads `dirty: false`, CAD-10's
+   blocker is gone and CAD-12 stops the service (`release_child` keeps it
+   only when `unsaved() != Some(false)`, `cad/document/state.rs:277`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-12 Leave
+
+1. **Build** in the switcher (as CAD-10, now with no blocker) → `start` →
+   `prepare` → `enter` (`app/switch/arrival.rs:22-36`; `leaving_note` is
+   None for a self-started document, `cad/document/state.rs:243-245`).
+2. OnExit(Cad) → `leave_cad` (`app/switch/leave.rs:93`) →
+   `release_child` (`cad/document/state.rs:276`): the slot is closed and,
+   the saved state being `Some(false)`, the child is stopped
+   (`ChildProcess::stop`, `jobs/child.rs:88-115`: kill, reaped on a reaper
+   thread, never blocking); the document (its poll worker) is dropped off
+   the UI thread (leave.rs:108); CAD's registry entry keeps the file
+   (`sources::left`, 109) and `cad::clear` drops the caches
+   (`cad/mod.rs:317`).
+3. No RoboCAD call: the process ends. Switching back to **CAD** → `prepare`
+   finds the remembered `CadTarget::File` (`app/switch/prepare.rs:290`,
+   `sources::cad_target`, `app/switch/sources.rs:63`) → a new
+   `CadDocument` → `sync::enter` → CAD-01's start, a new service on the same
+   file (a new pid in the left dock).
+4. RoboCAD's counterpart: closing its window stops its API
+   (`ui/app.py:1920-1959`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-13 Shared selection
+
+1. **Attach** (Part B): `main.rs:462-463` (`--cad-url`, refused unless a
+   loopback URL, 266-269) or `viewer_mode {"mode":"cad","url"}`
+   (`app/switch/mod.rs:126-147`, `Document::Url`) → `prepare.rs:275-278` →
+   `CadTarget::Service(url)`; or the left dock's attach field while not
+   connected (`cad/attach.rs:74`, `CadOpen {url}`). `sync::start`'s Service
+   branch (`cad/sync/mod.rs:114-124`): one `GET /`, refused unless `ok:
+   true`; `self_started: false`, the slot stays empty.
+2. Viewer → RoboCAD: CAD-04's `CadSelect` → `publish` →
+   `push_selection` (`cad/sync/selection.rs:108`) → `set_selection` (403)
+   with the mode (`selection_body`, 100-102) → `api.py:1684` →
+   `set_selection` (1062-1072): a desktop window sets its viewport's items
+   and mode and calls `selection_changed(None)` (`ui/app.py:587-595`:
+   properties, outliner `sync_selection`, viewport).
+3. RoboCAD → viewer: the poll's `GET /selection` every 0.5 s
+   (`cad/sync/mod.rs:194`; `api.py:1057-1060`, items and mode) →
+   `take_snapshot` (547-552) → `adopt_selection` (`sync/selection.rs:25`):
+   adopted unless our push is in flight or the read predates its answer
+   (26-29), the desktop window's mode adopted when it changed (32-40),
+   items of nodes absent from a current tree dropped (46-49), set in the
+   shared selection and recorded as published so it is never pushed back
+   (51-60).
+4. Shown: each window highlights the other's pick within one poll period
+   (0.5 s plus the request).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-14 Edits both ways
+
+1. Viewer: hide (the eye chip or **Visible**, CAD-07) and rename (CAD-07's
+   name field or the tree's double-click, `cad/tree/handle.rs`); RoboCAD:
+   move a part and change a material in its window.
+2. Viewer edits: `CadPatch` / `CadTree {rename}` → edit leg → `PATCH
+   /nodes/{id}` (`api.py:748-786`) on the same `Ops` stack RoboCAD's
+   window uses (`commands.py:333-340`).
+3. RoboCAD's edits move `doc.revision`; the poll's `GET /` sees the new
+   (document id, revision) and fetches `/doc` (`cad/sync/mod.rs:219-234`),
+   `take_snapshot` adopts the tree (488-492) and the meshes refetch for the
+   new revision (`cad/mesh.rs:383-394`, 468).
+4. Shown: both windows show all four changes; the inspector's History
+   (CAD-08) lists RoboCAD's one stack in order; RoboCAD's Edit menu shows
+   the same.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-15 Commands
+
+1. The inspector's commands section (`cad/inspector/sections.rs:commands`,
+   153-199): `/commands` grouped by category (187-190), each a button
+   labelled with its keys (`command_label`, `cad/panel.rs:156`) carrying
+   `CadCommand { id }` (197); a headless service shows
+   `HEADLESS_COMMANDS` (170, 174; `cad/panel.rs:162`). `system_ui cad:command:<id>`
+   (`cad/panel.rs:270`); REST `cad_command {"id":"view.fit"}`.
+2. `cad/actions.rs:544-550`: an id the outliner, threads, references,
+   components, experiments or motion own natively runs here
+   (`registry::organize_action`, 105-107); any other → edit leg "Command
+   {id}".
+3. `crates/sim-runtime/src/cad_client/mod.rs:run_command` (382) →
+   `api.py:1818-1820` → `run_command` (1497-1503): the window's registry
+   entry's `run()` (409 "no GUI" headless).
+4. Shown: "Ran RoboCAD command view.fit"; the command runs in RoboCAD's
+   window. RoboCAD's counterpart: its menus and palette run the same
+   registry (`ui/widgets.py:52-136`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-16 Autosave
+
+1. No control: the poll reads `GET /autosave` every tick from a desktop
+   window (`cad/sync/mod.rs:198-214`; one failed read after an Ok keeps the
+   shown state, 206-210); `take_snapshot` adopts a changed value (497-500).
+2. `crates/sim-runtime/src/cad_client/mod.rs:autosave` (425) →
+   `api.py:1618-1619` → `autosave` (462-471): `running`, `revision` being
+   written, `saved_revision`, `path` (`doc.autosave_path()`).
+3. Shown: the left dock's line (`cad/panel.rs:autosave_line`, 588-610):
+   "Autosave: running / not running · saved revision N · writing revision M
+   · path"; an error verbatim in red. RoboCAD's counterpart: its timer
+   (`ui/app.py:103-112`, `_autosave` 135-147, `_finish_autosave` 149-160).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-17 Leaving keeps edits
+
+1. **Build** with unsaved edits in the attached RoboCAD → `start` →
+   `leaving_blockers` → `switch_blockers`: no blocker, the slot being empty
+   (`child_may_hold_edits` false, `cad/document/state.rs:174-176, 224`).
+2. `enter` (`app/switch/arrival.rs:23-26`) adds `leaving_note`
+   (`app/switch/prepare.rs:90-92` → `cad/document/state.rs:242-253`):
+   "Switched to Build mode; RoboCAD at {url} keeps the unsaved edits to
+   {name}." (or "had unsaved edits … when last read" when unconfirmed).
+3. OnExit: `release_child` finds no child (`self.child.close()?`, 278) and
+   returns None; the target stays the URL (`leave.rs:106`); RoboCAD is
+   never stopped.
+
+Matches RoboCAD (its window keeps the edits). By reading, unexecuted.
+
+### CAD-18 Service loss
+
+1. Quit RoboCAD: the poll's `GET /` fails (`cad/sync/mod.rs:189`,
+   `POLL_TIMEOUT` 5 s, connection refused at once) → `take_snapshot`
+   (464-470): `Connection::Lost { error }` verbatim; the tree, meshes and
+   inspector stay (only the connection changes).
+2. Shown: the top bar's "Lost" (`cad/panel.rs:519`), the left dock "Not
+   connected: {error}" (`cad/document/state.rs:100`) and the attach field
+   (`cad/panel.rs:629-631`). Every edit is refused "not connected to
+   RoboCAD: Not connected: {error}" (`edit_refusal_for`, 195-196); the
+   inspector's detail says so (`cad/inspector/node.rs:waiting`, 189-199).
+3. Reconnect: the poll keeps asking; the first `GET /` that answers turns
+   Lost into Connected (`take_snapshot`, 452-461; meshes and a failed detail
+   retried), and the new (document id, revision) refetches `/doc`.
+   **Refresh** (`cad:refresh`, always enabled, `cad/panel.rs:203-205`) →
+   `cad/actions.rs:refresh` (675-688): an attached client is kept and the
+   poll asked to fetch now (`sync::refresh`, 641).
+4. RoboCAD's counterpart: its own quit prompt (`ui/app.py:1920-1934`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### Unsaved edits: window close, mode leave, port race, document close
+
+1. **Window close with a self-started service holding unsaved edits.**
+   `AppExit` → `cad/sync/mod.rs:on_exit` (707-714; `Last`, after
+   `bevy::window::ExitSystems`, `cad/mod.rs:236`, so the message is read in
+   the frame it is written) → `release_child("the window closed")`
+   (`cad/document/state.rs:276-294`): the child answered, runs and is dirty
+   or unconfirmable, so it is detached (`jobs/child.rs:94-100`), left
+   running and logged: "the window closed: the RoboCAD service this window
+   started (pid P) holds unsaved edits to {name}; it is left running at URL
+   so they are not lost: open it there (sim-spatial --cad-url URL) and save,
+   or stop it" (281-287). The slot is then empty, so dropping the World
+   cannot kill it (`ChildProcess`'s `Drop`, `jobs/child.rs:120-124`, acts
+   only on a held child). A clean one is stopped.
+2. **Mode leave refused**: CAD-10 point 3 (`leaving_blockers` →
+   `CadDocument::switch_blockers`, `cad/document/state.rs:224-236`).
+   **Edits between the check and OnExit**: CAD-10 point 4 (`leave_cad`
+   detaches, records the URL, reattaches next visit, and now says so in the
+   switch's message, `app/switch/leave.rs:96-105`).
+3. **Port race at service start**: CAD-01 point 4 (`accept_served`,
+   `cad/sync/launch.rs:24-37`; nothing but `GET /` reaches another process,
+   and our child holds no edits before it answers).
+4. **Closing or replacing a document** (`cad_open`, File > Open…, File >
+   New, the attach field): `cad/actions.rs:open` (624) checks
+   `switch_blockers` (644-647) and refuses "Not opening {target}: {name}
+   has unsaved edits in the RoboCAD service this window started …: save
+   first"; File > New checks the same rule before RoboCAD writes the file
+   (`cad/files/mod.rs:341-344`) and opens the created file through the same
+   `CadOpen` (`cad/files/jobs.rs:188, 204-205, 250-251`), so the rule is
+   checked again when it lands. Accepted, the old document's child is
+   released (`release_child("opening another CAD document")`, actions.rs:651:
+   left running if edits appeared since the check, and the message names
+   its URL, 666-668), the new document starts (`sync::start`, 654) and the
+   old one is dropped off the UI thread. The guard in
+   `app/switch/arrival.rs:159-163` releases a replaced document the same
+   way.
+
+Deliberate difference (recorded in Known differences): RoboCAD asks
+Save/Discard/Cancel on close; the viewer never saves for you and never
+discards, it refuses or leaves the service running, so no edit is lost in
+any of the four cases. By reading, unexecuted.
+
+## Reading traces — Part C
+
+Each trace follows one Part C step (CAD-19 to CAD-34: sub-body selection
+and the direct tools) from the native control to RoboCAD and back to what
+the 3D view, the selection strip, the tool bar and numeric bar, the
+inspector and the status line show. Everything here is by reading,
+unexecuted: nothing was built, run or captured, and no step was compared
+side by side. Native paths are under `crates/sim-spatial/src/` unless they
+start with `crates/`; RoboCAD paths are under `cad/robocad/`. Gaps found
+while tracing were fixed in this batch (each named in its entry), unless an
+entry says it is recorded.
+The common legs are written out once:
+
+- **Key leg** (B, Shift+B, E, V, P, Ctrl/Cmd+A, Ctrl/Cmd+Shift+I,
+  Ctrl/Cmd+Shift+M): `cad/keys.rs:keys` (344; `CadKeySet::Keys`) returns
+  while a kit text field has the keyboard (358) and matches RoboCAD's
+  keymap (`keymap.json:5,7` → `cad/surfaces/registry.rs:312-314,344-348`),
+  then writes `CadInvoke { id }`; `cad/actions.rs:handle` (561) →
+  `cad/ops/mod.rs:493` → `cad/ops/invoke.rs:invoke` (12; not a catalogue
+  entry) → `cad/surfaces/mod.rs:invoke_command` (246) →
+  `cad/surfaces/registry.rs:invoke` (619) → `Resolved::Action` (624) →
+  the native action (`Do::action`, 109-120) back into `actions::handle`.
+  The tool keys G, R, S, D, Shift+D, M and Escape are not in that map
+  (`cad/keys.rs:25-27`): they are `cad/transform/input.rs:keys` (67;
+  `CadKeySet::ToolKeys`, `keys::free`, registered `transform/mod.rs:271`),
+  which writes the matching `panel::controls` action (93-99).
+- **Click leg** (the strip's mode segments and buttons, the Alt menu's
+  entries, the tool strip): a kit button carries `CadButton(action)`
+  (`cad/panel.rs:55`), written as `Act::ui` by `cad/panel/name.rs:buttons`
+  (71); the controls are `cad/panel.rs:240-265` (`cad:mode:*`,
+  `cad:select_all`, `cad:invert_selection`, `cad:select_same_material`,
+  `cad:edges_to_faces`, `cad:candidate:<n>`, `cad:tool:*`, `cad:cancel`),
+  also listed by `system_ui`.
+- **Apply leg**: `cad/actions.rs:apply` (354) drains `Act<CadAction>` into
+  `handle` (459): the selection arms (489-497) go to
+  `cad/selection/mod.rs:handle` (104), the tool arms (498-505) to
+  `cad/transform/mod.rs:handle` (363). A refusal of a UI action is written
+  to the status line (`actions.rs:407-409`); a REST caller gets it.
+- **Selection leg**: every selection arm changes the one shared selection
+  through `Shared::apply` (`cad/selection/shared.rs:165` →
+  `selection/mod.rs:Selection::apply`, 257, which refuses an item picked
+  at another revision by name, 264), sets RoboCAD's status
+  ("n selected" or empty → "Ready", `cad/selection/mod.rs:170-173`,
+  `cad/panel.rs:647`) and `publish`es (132): the panels are touched and,
+  when connected and different, the items and mode go to `PUT /selection`
+  (`cad/sync/selection.rs:push_selection`, 108; one `Pool::Dedicated` job,
+  115) → `crates/sim-runtime/src/cad_client/mod.rs:set_selection` (403) →
+  `api.py:_route` (1540) `/selection` (1681-1684) → `api.py:set_selection`
+  (1062: a desktop window's `viewport.selection` and mode, then
+  `selection_changed`; headless, `_headless_selection` without the mode).
+- **Edit leg** (every commit): `cad/transform/commit.rs:commit` (264)
+  refuses with nothing sent when `CadDocument::commit_refusal`
+  (`cad/document/state.rs:138`) names a reason (an edit in flight, 193:
+  "another CAD edit is in flight: …"; not connected; the shown document
+  behind RoboCAD's, 146; RoboCAD's revision moved since `began`, 149-151)
+  → `op_for` (202) → `send` (246) → `cad/edit.rs:edit` (12) →
+  `cad/sync/mod.rs:start_edit` (686): one `Job::spawn(Pool::Dedicated, …,
+  "RoboCAD edit: …")` (693) → `crates/sim-runtime/src/cad_client/mod.rs:op`
+  (374, `POST /ops/{name}`) → `api.py:1668-1671` → `api.py:op` (1011) →
+  the `Ops` method pushing one command on RoboCAD's stack
+  (`commands.py:212`) → `cad/sync/mod.rs:finish_edit` (565: status 601,
+  refetch `refresh` 630/641).
+- **Topology leg** (sub-body indices, polylines, inspector values):
+  `cad/topology.rs:sync` (139) fetches, per wanted node (`wanted`, 113:
+  the selected nodes, and every drawn body in a sub-body mode or a tool),
+  `GET /nodes/{id}/faces`, `/edges?samples=24`, `/vertices` on one
+  `Pool::Dedicated` job each (183) → `cad_client/mod.rs:faces` (316),
+  `edges` (323), `vertices` (332) → `api.py:1642-1647` →
+  `api.py:faces` / `edges` / `vertices` (796-817: `face_json`,
+  `edge_json` plus `kernel.sample_edges` points). `CadTopology::get` (69)
+  answers only at the shown revision.
+
+### CAD-19 Selection modes
+1. The strip's segments (`cad/overlay.rs:strip`, 266; `cad:mode:<m>`,
+   `cad/panel.rs:240`, click leg), the keys B, Shift+B, E, V, P (key leg,
+   `registry.rs:344-348`), the selection radial (Q, `registry.rs:284,349`)
+   or REST `cad_select_mode`.
+2. `CadSelectMode { mode }` → `cad/selection/mod.rs:set_mode` (239): the
+   mode set, the shared selection cleared (242), hover and Alt menu
+   dropped, status "Selection mode: face" (245), `publish` (selection leg;
+   the mode travels with the items).
+3. RoboCAD: `PUT /selection {"items": [], "mode"}` → `api.py:set_selection`
+   (1062-1072). Its own window: `ui/app.py:set_selection_mode` (597-602:
+   mode, `selection.clear()`, the same status text).
+4. Shown: the tool bar head "Select  ·  Face" (`cad/transform/mod.rs:
+   mode_label`, 352, drawn by `cad/numeric.rs:head`, 335); edge mode
+   draws every drawn body's sampled edges faintly (`cad/overlay.rs:
+   edge_lines`, 89-134, one retained gizmo), vertex mode marks every vertex
+   (`highlights`, 240-253); the topology leg starts for every drawn body
+   (`topology.rs:116`). B, E, V, P do nothing while a field types
+   (`cad/keys.rs:358`; the kit also consumes the key,
+   `ui_kit/text/input.rs:248`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-20 Click, Shift, Ctrl
+1. A left press and release within 6 px (Manhattan, `cad/pick.rs:431`) in
+   the Select tool, not over UI, no field typing (`usable`, 404) →
+   `candidates_at` (343): body mode or a mesh node `[id, "body", 0]`;
+   face and point modes the nearest unlocked ray hit mapped by
+   `CadMeshes::face_at` at the shown revision (`surface_item`, 208-215);
+   edge and vertex modes `search` (264: within 6 px, not behind the first
+   surface). REST `cad_select {items, toggle}`.
+2. `CadSelect { items, extend: Shift, toggle: Ctrl/Cmd, picked_at: shown
+   revision }` (467); empty space without Shift or Ctrl writes an empty
+   `CadSelect` (469) → `cad/selection/mod.rs:select` (216): `validate`
+   (177), the op (`op`, 196: Ctrl toggles, Shift adds, else set), items
+   stamped with `picked_at` (222-225), selection leg.
+3. RoboCAD `PUT /selection` (selection leg). Its window:
+   `ui/tools.py:SelectTool.release` (131-149) → `_apply` (151-169), the same
+   rule; `selection_changed` status `ui/app.py:594-595`.
+4. Shown: the status "n selected" / "Ready"; the selected faces, edges,
+   vertices and points outlined (`cad/overlay.rs:highlights`, 254-256),
+   bodies by material; locked nodes are left out of the ray cast
+   (`pick.rs:189,193`) and the edge/vertex search (`search_for`, 240) and
+   so do not hide what is behind them; hidden bodies are not drawn and the
+   cast takes only visible ones (`RayCastVisibility::Visible`, 188), as
+   RoboCAD's pick pass (`ui/viewport.py:1262`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-21 Hover
+1. Pointer motion over the 3D view in the Select tool (`cad/pick.rs:
+   pointer`, 476-533), searched at most once per 33 ms (`HOVER_PERIOD`,
+   489-494).
+2. Body, face and point modes: the cursor ray's nearest hit, inline
+   (496-502). Edge and vertex modes: `search` on a `Pool::Compute` job
+   (`start_hover`, 544-548), one in flight, a newer search replaces a
+   waiting one (503-513, 517-533). Only a changed item writes
+   `Act::quiet(CadHover)` (`set_hover`, 537) →
+   `cad/selection/mod.rs:hover` (251): `doc.hover` set, no `touch`, no
+   push.
+3. No RoboCAD call. RoboCAD's counterpart: `ui/tools.py:SelectTool.hover`
+   (171-183) over `request_hover` (`ui/viewport.py:1226-1247`, a 33 ms
+   timer).
+4. Shown: `cad/overlay.rs:highlights` (257-259) draws the hovered face
+   outline, edge polyline, vertex mark or, for a body, its bounding box
+   (`draw`, 181-226) in the accent colour; the selection, inspector and
+   status are unchanged (no `touch`, no `publish`); the edge search never
+   runs on the UI thread.
+
+Matches RoboCAD. Deliberate difference (already recorded in `pick.rs`
+module doc): a body hover is drawn as its box, not RoboCAD's tint. By
+reading, unexecuted.
+
+### CAD-22 Box select
+1. A left drag past 6 px (`cad/pick.rs:431-436`) draws the rubber band
+   (`cad/overlay.rs:band`, 377); the release writes `CadBoxSelect { rect,
+   extend: Shift || Ctrl }` (446). REST `cad_box_select {rect}`.
+2. `cad/selection/mod.rs:handle` (111-114) → `box_select` (555) →
+   `box_items` (513): visible nodes (520); body, face and point modes the
+   nodes whose 8 bounding-box corners project inside (542-546); edge mode
+   the edges whose every sampled point is inside (535-539); vertex mode
+   the vertices inside (528-533); edges and vertices stamped with their
+   topology's revision; `Op::Add` with extend, else set (564); a node whose
+   topology is still loading is named (`not_loaded`, 572-576).
+3. RoboCAD `PUT /selection` (selection leg). Its window:
+   `ui/tools.py:SelectTool._box_select` (198-232), the same three rules,
+   no lock test (locked nodes are taken in both).
+4. Shown: the status "n selected", the outlines; the answer's `found`.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-23 Alt menu
+1. Alt+click with more than one candidate (`cad/pick.rs:463-466`):
+   `candidates_at` (343) collects the nearest visible hit of nine rays
+   (the cursor and 3 px around it, `ring`, 219), nearest ray first, or the
+   edges/vertices nearest first; `CadCandidates { items, extend: Shift,
+   toggle: Ctrl }`. REST `cad_candidates`.
+2. `cad/selection/mod.rs:candidates` (259): the menu stored with the shown
+   revision (268-269). Its entries are `cad:candidate:<n>` (`cad/panel.rs:
+   249-257`, label "name: face #i", no "#i" for a body), drawn by
+   `cad/overlay.rs:menu` (323-374) at the click. A choice writes
+   `CadSelect` (picked_at None) → `select` (216) takes the menu's revision
+   (`menu_revision`, 277-281) and its Shift/Ctrl rule; a stale menu closes
+   with the refusal (226-230).
+3. Escape → `cad/transform/input.rs:keys` (76-77) → `CadCancel` →
+   `cad/transform/mod.rs:cancel` (438-443) closes the menu first; a press
+   elsewhere in the view writes `CadCandidates {items: []}`
+   (`pick.rs:419-421`) → closed (`selection/mod.rs:260-265`).
+4. RoboCAD: `ui/tools.py:SelectTool.release` (143-147) →
+   `ui/app.py:disambiguate` (583) → `ui/widgets.py:disambiguation_menu`
+   (888-894), the same label, `_apply` with the click's modifiers; then
+   `PUT /selection` (selection leg).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-24 Select All, Invert, Same Material
+1. Ctrl/Cmd+A, Ctrl/Cmd+Shift+I, Ctrl/Cmd+Shift+M (key leg,
+   `registry.rs:312-314`), the strip's buttons (`cad/overlay.rs:263`,
+   click leg), REST `cad_select_all`, `cad_invert_selection`,
+   `cad_select_same_material`.
+2. `cad/selection/mod.rs:select_all` (296) and `invert` (305) over
+   `visible_bodies` (285: kinds body, sheet, curve, instance, mesh
+   (`SELECTABLE_KINDS`, 86), `effective_visible`, walk order);
+   `same_material` (315): refused with nothing selected (317) or a first
+   node without material (323-325), else every body or instance with that
+   material (`MATERIAL_KINDS`, 88; 326-331). Selection leg.
+3. RoboCAD `PUT /selection`. Its window: `ui/app.py:select_all`
+   (604-610), `invert_selection` (612-619), `select_same_material`
+   (621-629) over `document.py:same_material` (448-450).
+4. Shown: the status "n selected", the bodies highlighted.
+
+Matches RoboCAD for the sets. Deliberate difference (recorded):
+Same Material refuses by name where RoboCAD does nothing or selects every
+body without a material. By reading, unexecuted.
+
+### CAD-25 Edges → faces
+1. The strip's **Edges → Faces** (`cad:edges_to_faces`, `cad/panel.rs:
+   246-247`, ready only with an edge selected), Edit ▸ "Selection: edges →
+   bounding faces" (`registry.rs:315`), REST `cad_edges_to_faces`.
+2. `cad/selection/mod.rs:edges_to_faces` (344): refused without edges
+   (346-348), without a 3D view (349-351), while the node's topology is
+   loading or failed, naming the node (357-361), while its mesh is not
+   drawn (363-365) or drawn at another revision than its topology
+   (366-369), or when an edge was picked at another revision (370-377);
+   the faces come from `faces_of_edge` (404) → `faces_along` (464: the
+   drawn tessellation's triangle sides along the sampled polyline), stamped
+   with the topology's revision, `Op::Set` (390), the mode becomes Face
+   (391), status "Selection: n edges → m faces" (394). Selection leg.
+3. Topology leg for the polylines; the mesh from `GET /nodes/{id}/mesh`
+   (`triangle_face`). RoboCAD's window: `ui/app.py:convert_edges_to_faces`
+   (631-645) through its kernel's `faces_of_edge`, which has no REST route.
+4. Shown: the faces outlined, Face mode in the strip and tool bar.
+
+Deliberate difference (recorded): the faces come from RoboCAD's drawn
+tessellation, not its kernel; refused by name, never guessed, until both
+are loaded at one revision. By reading, unexecuted.
+
+### CAD-26 Inspector: sub-body
+1. Selecting a face, edge, vertex or point (CAD-20) makes it the first
+   item; the right dock's inspector draws `cad/inspector/node.rs:sub_body`
+   (109) for it (`sub_item`, 55), keyed by `sub_key` (61-75).
+2. No action: the inspector reads `CadTopology` (topology leg) at the
+   shown revision.
+3. RoboCAD `GET /nodes/<id>/faces`, `/edges`, `/vertices` → `api.py:
+   faces`, `edges`, `vertices` (796-817; `face_json`, 147-150;
+   `edge_json`, 153-154).
+4. Shown: the title "Face 3" / "Edge 7" / "Vertex 2" / "Point on face 4"
+   (`node.rs:111-117`), "Of" the node; while loading "fetching…" (134),
+   a failed fetch's error verbatim (131); then the note "RoboCAD's
+   topology of name at revision r (mm)" (139) and the rows as returned
+   (face: `face_rows`, 93-106; edge 143-155; vertex 161-162), "null in
+   RoboCAD's answer" for a missing value, "RoboCAD listed no face i …"
+   for an index RoboCAD does not have (140, 158, 164, 175).
+
+Deliberate difference: RoboCAD's window has no per-item section (its
+Properties panel shows only facts and live dimensions,
+`ui/widgets.py:443-509`); the viewer shows the routes' values. Recorded,
+not fixed (the inspector is outside this part's files): the "Ø" rows
+(`node.rs:100,148`) are 2 × RoboCAD's radius, derived in the viewer; and
+an item picked at an older revision (its stamp kept by `follow_tree`,
+`cad/selection/shared.rs:190-194`) is shown with the face of that index at
+the new revision, not refused. By reading, unexecuted.
+
+### CAD-27 Move
+1. G (tool keys, `cad/transform/input.rs:80-81`), the tool strip
+   (`cad/numeric.rs:339-344`) or REST `cad_tool {"tool":"move"}` →
+   `CadTool` → `cad/transform/mod.rs:activate` (388): the pivot
+   (`geometry.rs:pivot`, 34: the node's pivot, else the one node's mass
+   centroid at the shown revision, else the drawn bounds' centre); with
+   nothing selected "Select something to transform" (412-414).
+2. `cad/transform/gizmo.rs:drag` (211; SimSync, `transform/mod.rs:278`):
+   a press on a handle (`hit_test`, 80: centre within 10 px, axes within
+   14 px) starts a `Drag` at the shown revision when it is RoboCAD's
+   (285-289) over the unlocked selected nodes (292-298); each frame
+   `drag_point` (124) on the drag plane, `drag_delta` (170: Ctrl 10 mm
+   grid steps, `move_delta`, 131; the centre handle on the screen plane)
+   and the readout "Δ = (dx, dy, dz)  \|d mm\|" (175); the preview is
+   display only (`Preview`, 248; `preview.rs:previews`, 50). Release:
+   `drag_action` (192-207) writes one `CadTransform { ids, translation,
+   revision: Some(began) }` (258-262). A revision change during the drag
+   cancels it, nothing sent (235-239).
+3. Edit leg: `commit.rs:commit` (264) → `commit_refusal(Some(began))`
+   (270; the revision guard on release) → `op_for` (202) →
+   `transform_call` (64) → `POST /ops/transform {"args": [ids],
+   "kwargs": {"translation"}}` → `commands.py:transform` (648-692: one
+   `Composite("Transform")`).
+4. Shown: the body keeps the preview until its new mesh (newer than
+   `began`) is drawn (`preview.rs:settle`, 20-45: dropped at once on a
+   refused commit, `commit.rs:284-285`, or a failed edit), so it never
+   jumps back; the gizmo hides while the commit waits (`gizmo.rs:314-316`).
+   Escape during a drag: `CadCancel` → `cancel` (`transform/mod.rs:447-451`)
+   → `activate(Select)` → `end_live` (375-384) drops the drag and its
+   live preview; nothing is written (the release finds no transform tool,
+   `gizmo.rs:224`). RoboCAD's window: `ui/tools.py:TransformTool`
+   (234-385; `_apply`, 352-372), `ui/app.py:487-497`.
+
+Matches RoboCAD. Gap found and fixed: a REST `cad_transform` or a typed
+move over nodes that are all locked was sent and reported "Move … by …"
+though RoboCAD's `Ops.transform` skips locked nodes (`commands.py:
+661-662`) and pushes no step; it is now refused by name with nothing sent,
+and locked nodes are left out of a partly locked transform so its label
+names only what moves (`cad/transform/commit.rs:209-218`). With a
+component member or occurrence among the ids nothing is left out
+(`component`, 212): RoboCAD's component checks (`commands.py:650-655`)
+see every id and give their own refusal. By reading, unexecuted.
+
+### CAD-28 Rotate and scale
+1. R or S (`cad/transform/input.rs:82-85`, not with Shift or Ctrl/Cmd),
+   REST `cad_transform {"axis","angle_deg"}`, `{"scale"}`.
+2. `cad/transform/gizmo.rs:drag` (211): a ring (`ring_point`, 68, 48
+   samples) or axis handle; `rotate_angle` (143: Ctrl 15° steps,
+   `round_ties_even` as Python's `round`), `scale_factor` (159: uniform,
+   Ctrl 0.1 steps, at least 0.01); readouts "angle = …" / "scale = ×…"
+   (180, 184); release → `drag_action` (196-204: axis, angle_deg and
+   center, or scale and center, rounded to 1e-6).
+3. Edit leg → `transform_call` (`commit.rs:86-105`) → `POST
+   /ops/transform` → `commands.py:transform` (648: `center` given, so the
+   same pivot in both).
+4. Shown as CAD-27. RoboCAD's window: `ui/tools.py:311-330, 360-364`; its
+   pivot `_place_gizmo` (253-270: the node's pivot, else
+   `selection_properties` centroid).
+
+Deliberate difference (recorded): with several nodes selected the pivot is
+the centre of their drawn bounds, not RoboCAD's mass-weighted centroid
+(`cad/transform/mod.rs:64-72`); a typed angle after dragging the X ring
+turns about X (`mod.rs:75-79`). By reading, unexecuted.
+
+### CAD-29 Push/pull and offset
+1. D or Shift+D (`cad/transform/input.rs:86-87`) → `activate`
+   (`transform/mod.rs:417-425`: Face mode, published; the first selected
+   face as target). REST `cad_push_pull {"node","face","distance"}`,
+   `cad_offset_faces`.
+2. `cad/transform/push_pull.rs:tool` (141): a press on a face (the first
+   unlocked ray hit, `geometry.rs:ray_hit`, 118; refused while the mesh
+   lags, 215-219) selects it (`CadSelect`, 223, as RoboCAD) and starts a
+   `PushDrag` at the shown revision when it is RoboCAD's (234-238); the
+   drag `push_distance` (108: Ctrl 10 mm steps), readout "push/pull …"
+   (178), the outline shifted along the normal (`draw`, 246-258); a
+   revision change cancels it, nothing sent (168-171); release
+   `release_action` (122-133): Shift, the offset tool or a non-planar face
+   → `CadOffsetFaces`, else `CadPushPull`, with `revision: Some(began)`.
+3. Edit leg → `push_pull_call` / `offset_call` (`commit.rs:111-139`) →
+   `POST /ops/push_pull` / `offset_faces` → `commands.py:push_pull`,
+   `offset_faces` (515-519, `_edit`, 281-291: one `EditBodies`).
+4. Shown: the refetched mesh and topology (volume and face count in the
+   inspector). RoboCAD's window: `ui/tools.py:PushPullTool` (547-632;
+   `_apply`, 618-627: the same offset rule).
+
+Matches RoboCAD. Gap found and fixed: a push/pull, offset or dimension of
+a locked node (a face selected by the tree or the box, which take locked
+nodes) was sent for RoboCAD to refuse; it is now refused by name with
+nothing sent, in RoboCAD's words "… is locked" (`cad/transform/commit.rs:
+184-188`, used at 224, 230, 236). By reading, unexecuted.
+
+### CAD-30 Numeric bar
+1. Tab (`cad/numeric.rs:entry`, 187, in `CadKeySet::NumericEntry` inside
+   `Focus`, `transform/mod.rs:269`; `cad/mod.rs:184`) opens the entry on
+   the first field when no field types and no two-step key owns the frame
+   (271-278), the field being the one kit text field (`NUMERIC`, 47,
+   `TextField::select_on_focus`, 51-53); the shown revision is recorded
+   (`began`, 276). Each keystroke (`FieldEvent::Changed`, 208-213) is
+   evaluated (`numeric_fields.rs:FieldKind::evaluate`, 24-31, over
+   `sim_runtime::units::evaluate`): "= 20.3 mm" (`numeric.rs:375-378`), or
+   the evaluator's error naming the token in the danger colour with a red
+   border (369-372, 379-381). Tab cycles (236-242). REST `cad_numeric
+   {"values"}`.
+2. Enter (`Submit`, 214-228): only when every field evaluates, one
+   `CadNumeric { values }` (222), the entry closed; else it stays open
+   (RoboCAD's `values()`). `cad/transform/commit.rs:numeric` (301):
+   `evaluate_fields` (292), the revision the entry gained focus (321;
+   REST: the shown one), then one commit per tool (Move, Rotate about
+   `numeric_axis`, Scale, Push/Pull with RoboCAD's offset rule).
+3. Escape: the kit field's Escape is `Outcome::Cancel`
+   (`ui_kit/text/input.rs:93`), which takes the keyboard away and consumes
+   the key (228-232, 248), so the later CAD readers (`CadKeySet::Gate` →
+   `EscapeTool` → `Escape` → `ToolKeys`, `cad/mod.rs:182`) never see it:
+   `numeric.rs:229-234` ends the entry (and its `began`) and nothing else
+   happens. A second Escape, the field no longer typing, reaches
+   `transform::keys` (ToolKeys) → `CadCancel` (a drag or the tool ends).
+   One Escape cancels one thing.
+4. Edit leg as CAD-27/29. RoboCAD's window: `ui/widgets.py:NumericBar`
+   (142-216: Enter commits only when `values()` evaluates, Escape
+   `cancelled`, Tab cycles), Tab routed in `ui/app.py:483-486`, cancel
+   `_numeric_cancel` (572-574).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-31 Live dimensions
+1. Select tool, face mode: the numeric bar's fields are
+   `numeric_fields.rs:fields` (89) → `dimensions.rs:live` (55, only when
+   the selection's indices are of the shown revision, 58): "Ø name"
+   (66-69), "R name" read-only with RoboCAD's message (70-74,
+   `ROUND_READ_ONLY`, 36), "Distance" for two parallel planar faces of one
+   node (the second moves, 82-85), else "Angle" (86-88), "Ø edge i"
+   (90-99, the cylinder from `selection::faces_of_edge`). A double-click
+   on a face (`double_click`, 142: within 400 ms and 5 px, face mode
+   only) selects the face and puts `edit_at` (105) in the bar, focused
+   (`focus_request`, 190 → `numeric.rs:sync`, 167-175, `began` 172).
+   REST `cad_set_dimension`.
+2. Enter → `commit.rs:numeric` (351-363: one changed field per Enter) →
+   `CadSetDimension { revision }` → `dimension_call` (142-173).
+3. Edit leg → `POST /ops/set_diameter` / `set_distance` / `set_angle` →
+   `commands.py:534-552`.
+4. Shown: the refetched geometry and the new field values. RoboCAD's
+   window: `ui/app.py:live_dimensions` (654-691), `edit_dimension_at`
+   (693-713), `ui/tools.py:SelectTool.double` (185-196).
+
+Matches RoboCAD. Deliberate difference (recorded): the double-click is
+taken in face mode only (RoboCAD switches to face picks for it in body
+mode). By reading, unexecuted.
+
+### CAD-32 Snapping and measure
+1. M (`cad/transform/input.rs:88-89`) → `CadTool { Measure }`.
+   `cad/measure.rs:tool` (187): every frame over the view the snap
+   (`snap::snap_on`, `cad/snap.rs:221`; Alt suppresses, `snap.rs:223`, from `measure.rs:218`) with the
+   readout "vertex  (x, y, z)" (`Snap::readout`, 99) or, with a first
+   pick, "12.000 mm  (vertex)" (`measure.rs:223-226`). A press picks the item in the
+   mode (face by ray cast at the shown revision; edge and vertex by
+   `pick::candidates_at`, 256-261) and the point (the snap point, or the
+   surface hit when the snap is free or on the plane, 265-268); the second
+   press writes `CadMeasure { a, b, keep: Shift }` (274). REST
+   `cad_measure`.
+2. `cad/transform/commit.rs:measure` (372) → `measure::between` (149:
+   RoboCAD's rules and labels "12.000 mm", "R 3.000 mm  (Ø 6.000)",
+   "90.00°"); not kept: the status line and the tool bar (383-386). Kept:
+   one `add_measurement` call (393-394).
+3. Edit leg → `POST /ops/add_measurement` → `commands.py:add_measurement`
+   (897-900: one `AddNodes("Measurement")`).
+4. Shown: the measure node in the tree after the refetch. RoboCAD's
+   window: `ui/tools.py:MeasureTool` (1027-1062), `ui/app.py:
+   measure_between` (715-740), `ui/viewport.py:snap` (1369).
+
+Deliberate differences (recorded): no clipboard copy (the value shows in
+the status line and the tool bar); the same circular edge twice gives its
+radius (RoboCAD's branch at `ui/app.py:730` is unreachable after 726, so
+it reports 0 mm). Gaps found and fixed: (a) the edge and vertex picks took
+the nearest polyline or vertex within 12 px of any drawn body, locked
+ones and ones behind a surface included, though RoboCAD's
+`MeasureTool.press` reads its pick pass (`ui/viewport.py:1249-1345`: no
+locked nodes, 7 px lines, occluded, clipped by the section); they now use
+the select click's search (`cad/measure.rs:256-261` →
+`cad/pick.rs:candidates_at`, 343), and the old 12 px helpers are gone;
+(b) a kept measurement checked only for an edit in flight and the
+connection, so one measured on a shown tree RoboCAD had moved past (or a
+stale tree) was recorded with points of gone geometry; it is now refused
+by `commit_refusal(Some(shown revision))` (`cad/transform/commit.rs:
+387-392`). By reading, unexecuted.
+
+### CAD-33 One undo step per commit
+1. Cmd/Ctrl+Z (key leg, `edit.undo`) → `CadUndo`.
+2. `cad/actions.rs:531-533` → edit leg (`edit`, refused while another
+   edit is in flight) → `cad_client/mod.rs:undo` (`POST /undo`) →
+   `api.py:undo` → `commands.py:undo` (221-228: one command popped).
+3. Each commit traced above is exactly one Ops call through one
+   `start_edit` (`commit.rs:send`, 246-258): a drag release (CAD-27/28/29),
+   numeric Enter (CAD-30), dimension Enter (CAD-31), a kept measurement
+   (CAD-32); each pushes exactly one command (`Composite("Transform")`,
+   `EditBodies`, `AddNodes`; `commands.py:212-219`). A refused commit sends
+   nothing (`commit.rs:270-276`).
+4. Shown: the History list (`/doc` `history`, refetched by `refresh`); a
+   waiting preview is dropped once the bodies are drawn at a newer revision
+   (`preview.rs:settle`, 30-39), which an undo also produces, and a live
+   drag is cancelled by the revision change (`gizmo.rs:235-239`), so no
+   preview outlives an undo. RoboCAD: Edit ▸ Undo (`ui/app.py:291`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-34 Refused while an edit is in flight
+1. A second release while the first edit is pending: the gizmo cannot
+   start a second drag while a preview waits (`gizmo.rs:270,278`, the
+   handles hidden, 314-316), so the second commit comes from push/pull
+   (whose press does not wait) or REST `cad_transform`.
+2. `commit.rs:commit` (264) → `commit_refusal` (`state.rs:138`) →
+   `edit_refusal_for` (182) → "another CAD edit is in flight: {label}"
+   (193); nothing is sent; a released drag's preview is dropped
+   (`commit.rs:284-285`). An edit in RoboCAD's window during a drag: the
+   poll moves `health.revision`; the live drag is cancelled with "The
+   document changed during the drag (another edit, or RoboCAD's own
+   window); nothing was sent: drag again" (`gizmo.rs:235-239`,
+   `push_pull.rs:168-171`); a release already written is refused by
+   `commit_refusal(Some(began))` with "the document changed since these
+   values were taken (revision {began}, now {now}); nothing was sent: redo
+   the drag, the entry or the form" (`state.rs:149-151`). The numeric
+   entry carries the revision it gained focus at (`numeric.rs:276`,
+   `commit.rs:321`).
+3. No RoboCAD call for a refused commit; RoboCAD's history holds only the
+   edits sent.
+4. Shown: the refusal on the status line (`actions.rs:407-409`); the body
+   back where it was.
+
+Matches RoboCAD for edits sent in turn (RoboCAD's own window applies one
+at a time). The table's refusal text is updated to the code's (since
+db272924). Deliberate difference (recorded, needs a RoboCAD change): the
+revision guard is the viewer's (`health.revision` as last polled);
+`POST /ops/{name}` checks `expected_revision` only for component-job
+operations (`api.py:1011-1023`), so an edit in RoboCAD's window between
+the viewer's last poll and the POST is not caught. By reading, unexecuted.
+
+## Reading traces — Part D
+
+Each trace follows one Part D step (CAD-35 to CAD-76: the modify tools and
+the command surfaces) from the native control to RoboCAD and back to what
+the tree, the inspector's History, the status line, the 3D view, the
+overlay or the form shows, with RoboCAD's own window code beside it.
+Everything here is by reading, unexecuted: nothing was built, run or
+captured, and no step was compared side by side. Native paths are under
+`crates/sim-spatial/src/` unless they start with `crates/`; RoboCAD paths
+are under `cad/robocad/` (`api.py`, `commands.py`, `ui/app.py`,
+`ui/tools.py`, `ui/widgets.py`). Gaps found while tracing were fixed in
+this batch's working tree (named in the entry), unless an entry says it is
+recorded. The common legs are written out once:
+
+- **Surface leg** (how a person reaches a command). Every surface lists
+  RoboCAD's command table `cad/surfaces/registry.rs:COMMANDS` (287) and
+  writes `CadAction::CadInvoke { id }`: the toolbar chip carries
+  `CadButton(CadInvoke)` (`cad/surfaces/toolbar.rs:refresh`, 159-196),
+  written by `cad/panel/name.rs:buttons` (71) as a guarded `Act::ui`; a
+  menu, context-menu row is a `SurfaceEntry` whose click
+  `cad/surfaces/mod.rs:input` (364-376) writes the action and then
+  `CadSurface { closed }`, both stamped by `cad/activation.rs:guard` (98;
+  refused at apply when the document was replaced, `cad/actions.rs:474-476`);
+  a disabled row's press shows its refusal (366-370). The palette's Enter
+  is `cad/surfaces/palette.rs:input` (167-184); the radials'
+  press/release `cad/surfaces/radial.rs:input` (56-101); a key
+  `cad/keys.rs:keys` (352: exact key and modifier match against the
+  table's keymap keys, two-step "Shift+A, B" chords 379-392, standing
+  aside while a kit text field types (366), while a surface is open or a
+  modal form is open (374); ready → `CadInvoke`, or `CadSurface` for the
+  palette and radials at the pointer (404-409); not ready → the status
+  line `registry::status_line` (413)). Readiness is
+  `registry.rs:ready` (573: a catalogue op first needs
+  `CadDocument::edit_refusal`, then `readiness` 540, the op's `Needs`; a
+  pick, place, sketch or plane tool is always ready). REST sends the same
+  `cad_invoke {id}` / `cad_run {id, params, items, revision}` /
+  `cad_surface {surface}`, and `system_ui` lists `cad:op:<id>`
+  (`cad/surfaces/mod.rs:controls`, 256).
+- **Invoke leg**: `cad/actions.rs:apply` (354) → `handle` (459; arm 561)
+  → `cad/ops/mod.rs:handle` (491) → `cad/ops/invoke.rs:invoke` (12) by the
+  entry's `Flow`: `Immediate`/`AtCursorSnap` run at once (15);
+  `Form` checks the selection first (`resolve::resolve`, 62) then opens the
+  modal form (77); `PickThenForm` sets the selection mode and keeps the
+  selection (84-87), opens the form beside the view (89) with the hint on
+  the status line (90); `Place` makes the placement active with its form
+  (93-99). A command that is not in the catalogue goes to
+  `cad/surfaces/registry.rs:invoke` (619; via `cad/surfaces/mod.rs:invoke_command`, 246).
+  A refusal from a click is written to the status line at
+  `cad/actions.rs:408`.
+- **Run leg** (every catalogue run): `cad/ops/mod.rs:run` (528) →
+  `prepare` (543): `CadDocument::commit_refusal(revision)`
+  (`cad/document/state.rs:138`: an edit in flight, not connected, the shown
+  document stale, RoboCAD's revision not the given one; 549); explicit
+  REST items naming faces or edges without `revision` are refused "pass
+  revision: …" (554-560); `resolve::resolve` (569; `cad/ops/resolve.rs:51`:
+  nodes in the shown tree, a selection first seen at an older revision
+  refused "reselect" (74-79), indices checked against the topology
+  (81-96), the entry's `Needs` else its refusal (98-143)); `values` (366;
+  unknown or gated-off parameters refused by name); `args::build`
+  (`cad/ops/args.rs:562`) → `start` (584) → `actions::edit` (589) →
+  `cad/edit.rs:edit` (12) → `cad/sync/mod.rs:start_edit` (686): one
+  `Job::spawn(Pool::Dedicated, …, "RoboCAD edit: …")` (693) runs each call
+  `c.op` (`cad/ops/mod.rs:592`) →
+  `crates/sim-runtime/src/cad_client/mod.rs:op` (374, `POST /ops/{name}`)
+  → RoboCAD `api.py:_route` (1540; ops 1668-1671) → `Service.op` (1011:
+  `ArgConverter.convert`, 173-287, turns `{node, edge}`, `{node, face}`,
+  plane names into kernel refs; the `Ops` method pushes one command on
+  RoboCAD's stack; `_refresh`) → the answer lands in
+  `cad/sync/mod.rs:finish_edit` (565; status line 601; the selection is
+  cleared where RoboCAD's handler clears it, noted by
+  `cad/ops/mod.rs:started` 663-667 and applied at 615 only on success) →
+  `refresh` (641, called at 630) refetches `/doc`, so the tree, inspector
+  and History redraw. A `Fan::PerNode` entry sends one call per node in
+  RoboCAD's order inside that one job, each its own RoboCAD undo step,
+  the first error naming how many ran (`cad/ops/mod.rs:590-601`). The
+  edit's label (and status message) is RoboCAD's history label
+  (`cad/ops/args.rs:history`, 53) with the subject and parameters
+  (`plain`, 348-434).
+- **Form leg** (`Flow::Form` dialogs and the tools' numeric fields): 
+  `cad/ops/form.rs:open_form_with` (75; RoboCAD's defaults, the first
+  number field focused for a modal form 89-92, `began` = the shown
+  revision 93) → drawn by `cad/surfaces/form.rs:draw` (367; modal and
+  dimmed when no interaction is active 402-404, else beside the view) on
+  the kit form (`ui_kit/form.rs:Kit::form`, 213), whose fields are the one
+  kit text field (`ui_kit/form.rs:284`, 291 → `ui_kit/widgets.rs:input_selectable`,
+  244, tagged `KitInput` 259; the field `FORM` registered at
+  `cad/surfaces/mod.rs:321`, `ui_kit/text/mod.rs` "One text entry") →
+  `cad/surfaces/form.rs:input` (167; Enter in the field → `CadFormSubmit`
+  241, Escape → `CadFormCancel` 245, Tab cycles 249, Tab with no field
+  focused takes the first 314, Enter with none focused submits 322) →
+  `cad/ops/form.rs:submit` (15): a modal form runs with
+  `revision = Some(began)` (41), so a form whose document moved is refused
+  by name with nothing sent; a pick tool's form passes none and its picks
+  carry the selection's revision (resolve); a refusal stays in the form
+  (52-56).
+- **Escape leg**: a kit field that types consumes its own Escape (its
+  owner gets `FieldEvent::Cancel`: the palette closes, the form
+  cancels). Otherwise `cad/surfaces/mod.rs:input` (396-421, before the key
+  gate in the surfaces' chain, 327-332): it stands aside while a file
+  form, a results path form or the outliner menu is open (396); an open
+  surface closes, else an open form or active interaction is cancelled
+  (`CadFormCancel` → `cad/ops/form.rs:form_cancel`, 128: "Cancelled
+  {label}"), and the key is consumed when it acted (415), a pending
+  two-step key dropped (`cad/keys.rs:Chord::abandon`, 283). After the gate,
+  calibrate's (`CadKeySet::EscapeTool`), the threads' (`CadKeySet::Escape`)
+  and the Select tool's Escape (`cad/transform/input.rs:keys`, 67, which
+  also skips while a form, surface or interaction exists, 70) see only a
+  press nobody before them used. So a form opened over an active tool
+  (a `Flow::Form` dialog leaves a transform tool active, as RoboCAD's
+  modal dialog leaves its tool) ends first, the tool on the next press.
+  **Gap found and fixed (whole leg)**: `surfaces::input` did not consume
+  the Escape it acted on, and stood aside only for the file form. The
+  threads' Escape checks `ops.form` but not a form-less `ops.active` (a
+  plane tool, the joint tool), so one press could cancel the op and
+  Annotate together; and `results::forms::input` and `tree::popup::input`
+  run in the same pre-gate band unordered against it, so with a results
+  form or the outliner menu open one press could also cancel the op. Now
+  `cad/surfaces/mod.rs:396` stands aside for those, and 415-419 consume
+  the key and drop the chord when it acts (Bevy 0.19.1
+  `ButtonInput::clear_just_pressed`, bevy_input `button_input.rs:200`).
+- **Read leg** (copy and the analysis overlays): `Built::Read` →
+  `cad/ops/mod.rs:start` (614-621) → `cad/analysis_overlay.rs:start`
+  (142: not connected, a read pending, a stale document or a revision
+  other than the picks' refused by name; one `Job::spawn(Pool::Dedicated,
+  …)` 162) → `crates/sim-runtime/src/cad_client/mod.rs` reads (344-369) →
+  `analysis_overlay.rs:receive` (254; an answer for another generation is
+  dropped 275, a result read at a revision no longer shown is dropped with
+  a status 291-293; an overlay of an older revision is cleared 256-261).
+
+### CAD-35 Box (corner)
+1. Toolbar **Box** (`cad/surfaces/registry.rs:TOOLBAR`, 258; row 356
+   "Shift+A, B"), Create ▸ Box (corner), or Shift+A then B (the chord,
+   `cad/keys.rs:379-392`); REST `cad_run {"id":"tool.box", …}`.
+2. `CadInvoke {tool.box}` → invoke leg, `Flow::Place(BoxCorner)`
+   (`cad/ops/catalogue/edit_create.rs:46-57`) → `cad/ops/invoke.rs:93-99`:
+   the active op, its form (width 20, depth 20, height 10, corner;
+   `cad/ops/kinds.rs:75-78`), the hint `HINT_CORNER` (`kinds.rs:72`).
+3. `cad/ops/interact.rs:pointer` (305; SimSync): the press snaps on the
+   active plane or XY (408-418, Alt suppresses), the drag moves the second
+   corner (420-426), the release starts stage 2 (430-432), the height
+   follows `height_at` (439-442, Ctrl snaps to 10 mm half-to-even), the
+   next press finishes (436-438) with `CadRun {params:
+   finish_params, revision: Some(press revision)}` (455; `finish_params`
+   182-216: the lower corner, absolute sizes, signed height). The preview
+   (`draw`, 478) is overlay lines in (0.4, 0.9, 1.0) and the readout
+   "20 mm × 20 mm × 10 mm" (`readout`, 219-232). Tab during the drag writes
+   the press point into the form's `corner` (445-453) and the form's Tab
+   takes width (`cad/surfaces/form.rs:314`); Enter → submit → run.
+4. Run leg → `args.rs:place` (499): on XY one `POST /ops/box {"args":
+   [corner, size]}` (514-522; label "Box 30 mm × 15 mm × 5 mm at (…)"),
+   else `box_three_point` (523-531) → `client.op`.
+5. `api.py:1011` → `commands.py:box` (419-420: `_new("Box", …)`).
+6. The new "Box" node in the tree; History "Box". RoboCAD's window:
+   `ui/tools.py:PrimitiveTool` (391-536: the same stages, readout, colour;
+   `_make_box` 517-520 extrudes a sketch rectangle, so its History reads
+   "Extrude" via `commands.py:487`, the node named "Box"). Snapping to a
+   vertex: `snap::snap_on` here, `ctx.snap` there.
+
+Deliberate difference (recorded in cad-parity.md): the undo label is
+"Box" (one `Ops.box`), RoboCAD's "Extrude". Gap found and fixed: the doc
+comment on `args.rs:place` said `_make_box`'s extrude is labelled "Box";
+it now says RoboCAD records "Extrude" (`cad/ops/args.rs:495-498`). Note:
+the table's REST example passes no `revision`; that is accepted here (a
+placement names no geometry indices). By reading, unexecuted.
+
+### CAD-36 Box (centre)
+1. Create ▸ Box (centre) (`registry.rs:357`, no key, as RoboCAD), or the
+   palette row "Create: Box (centre)".
+2. `CadInvoke {tool.box_center}` → `Flow::Place(BoxCentre)`
+   (`edit_create.rs:59-69`) → `invoke.rs:93-99`.
+3. `interact.rs:pointer` as CAD-35; `base_rect` (153-160) draws twice each
+   half-size about the press; `finish_params` (198-204) sends `center` and
+   2× sizes.
+4. `args.rs:place` (514: `x0 = u − w/2, y0 = v − d/2`; 518: `z0 = 0` for
+   h ≥ 0) → `POST /ops/box`.
+5. `commands.py:box` (419).
+6. A box centred on the press in the plane, its base on the plane.
+   RoboCAD: `PrimitiveTool(center_mode=True)._finish` (`ui/tools.py:491-500`)
+   and `_make_box`: the same footprint, base on the plane.
+
+Deliberate difference (recorded): `Ops.box` (label "Box") where RoboCAD
+extrudes (label "Extrude"). By reading, unexecuted.
+
+### CAD-37 Cylinder
+1. Toolbar **Cylinder** (`registry.rs:358`, "Shift+A, C") or Shift+A, C.
+2. `Flow::Place(Cylinder)` (`edit_create.rs:71-82`; form diameter 10,
+   height 10, base).
+3. `interact.rs:pointer`: the radius drag, then the height (a downward
+   drag gives a negative height, `height_at` 272-284); readout
+   "Ø 10 mm × 10 mm" (226-230); `finish_params` (205-209).
+4. `args.rs:place` (533-542): base on the plane, axis the normal or its
+   reverse by the height's sign (538), radius ≥ 1e-3 → `POST /ops/cylinder`.
+5. `commands.py:cylinder` (437-438, label "Cylinder").
+6. A "Cylinder" node; RoboCAD `_finish` (`ui/tools.py:501-505`): the same
+   base, axis flip and radius floor.
+
+Matches RoboCAD for the drag. Recorded difference (KNOWN): for Tab values
+RoboCAD's `commit` (`ui/tools.py:532-534`) sends the typed height signed
+along the plane normal with no radius floor, where the viewer applies the
+drag's rule (`args.rs:538`, |h| along ± the normal) to both. By reading,
+unexecuted.
+
+### CAD-38 Sphere
+1. Toolbar **Sphere** (`registry.rs:359`, "Shift+A, S") or Shift+A, S.
+2. `Flow::Place(Sphere)` (`edit_create.rs:84-95`; diameter 10, centre).
+3. `interact.rs:pointer`: the press is the centre, the release finishes
+   at once (427-429); `finish_params` sends the unprojected `p0` and the
+   diameter (210-213).
+4. `args.rs:place` (543-548) → `POST /ops/sphere {center, radius}`.
+5. `commands.py:sphere` (440-441).
+6. A "Sphere" node. RoboCAD: `release` finishes a sphere (`ui/tools.py:435-442`).
+   S as the chord's second key: `keys::gate` marks the frame the chord's
+   (`cad/keys.rs:293-312`), and the Select tool's keys run under
+   `keys::free` (`cad/transform/mod.rs:271`), so S completes the sphere and
+   does not pick Scale.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-39 Fillet
+1. Ctrl/Cmd+F (`registry.rs:366`; keymap.json `tool.fillet`), toolbar
+   **Fillet**; REST `cad_invoke {tool.fillet}`, `cad_run`.
+2. `Flow::PickThenForm(Edge)` (`cad/ops/catalogue/modify.rs:10-25`) →
+   `invoke.rs:79-92`: mode Edge (published to the one Selection), the form
+   "radius 1.0" at the view's top right, the hint "fillet: select edges
+   (click adds) then type the size • Enter applies" on the status line.
+3. A click on an edge toggles it: `cad/pick.rs:450-459` (`CadSelect
+   {toggle: true, picked_at: shown revision}`); Tab, `2`, Enter → form
+   leg → `submit` with no revision (the picks carry theirs) → run leg:
+   `resolve` refuses picks made at an older revision; `groups` one call per
+   owning node (`args.rs:139-148`) → `POST /ops/fillet {"args": [node,
+   [{node, edge}…], 2.0]}` per body.
+4. `client.op` (`crates/sim-runtime/src/cad_client/mod.rs:374`).
+5. `commands.py:fillet` (630-631, `_edit("Fillet", …)`) per node; edges
+   resolved by `ArgConverter.edge` (`api.py:193-203`).
+6. One "Fillet" History step per body; the selection clears on success
+   (`started` 663-667 → `finish_edit` 615); the form stays and the tool
+   stays active (`started` 680-686). No edge: `resolve` refuses with
+   `NO_EDGES` "Select one or more edges first" (`kinds.rs:80`), shown in
+   the form and on the status line. RoboCAD: `EdgeTool.commit`
+   (`ui/tools.py:967-989`), the same message and clear.
+
+Matches RoboCAD. Note: the table's REST example now passes `revision`; without it a run
+is refused by name, "pass revision: the RoboCAD revision
+the face and edge indices in items were read at", with nothing sent
+(`cad/ops/mod.rs:554-560`). By
+reading, unexecuted.
+
+### CAD-40 Variable and chordal fillet
+1. Modify ▸ Variable fillet / Chordal fillet (`registry.rs:367`, 368).
+2. `modify.rs:26-40` (start radius 1.0, end radius 2.0, both sent:
+   `Arg::Param("radius"), Arg::Param("radius_end")`) and 41-55 (chord 1.0,
+   route `fillet_chordal`), both `PickThenForm(Edge)`, `Fan::PerNode`.
+3. As CAD-39.
+4. `client.op` per node.
+5. `commands.py:fillet` (630, `radius_end`) and `fillet_chordal` (633).
+6. One step per body ("Fillet" / "Chordal fillet"). RoboCAD `EdgeTool`
+   kinds "variable" and "chordal" (`ui/tools.py:948`, 980-983).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-41 Chamfer
+1. Ctrl/Cmd+Shift+F (`registry.rs:372`).
+2. `modify.rs:90-106`: `Shape::Chamfer`, distance 1.0, angle 45.0.
+3. As CAD-39; `args.rs:plain` builds the spec (354-366): the angle only
+   when it is not 45° (360); the label adds "distance 1.5 mm" and the angle
+   only then (368-373).
+4. `POST /ops/chamfer {"args": [node, edges, {"distance"[, "angle_deg"]}]}`.
+5. `commands.py:chamfer` (645).
+6. "Chamfer …: distance 1.5 mm" in `cad_state` (the edit label), the angle
+   added at 30°. RoboCAD `EdgeTool.commit` (`ui/tools.py:984-985`):
+   `ChamferSpec(d, angle_deg=None at 45°)`.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-42 Fillet all
+1. Modify ▸ Fillet all edges… (`registry.rs:369`).
+2. `modify.rs:56-68` `Flow::Form`: "Radius (mm):" 1.0, 0.01–100, 3
+   decimals → `invoke.rs:59-78`: the selection checked first (62), so with
+   nothing selected the menu row is disabled with "Select the bodies to
+   fillet" (`registry.rs:readiness`, 549-565) and a key or REST call is
+   refused with it.
+3. Form leg (modal, the field focused) → OK → run with `Some(began)`.
+4. `POST /ops/fillet_all` per node.
+5. `commands.py:fillet_all` (636-637, "Fillet all").
+6. One "Fillet all" per body; the form closes (`started` 681-682).
+   RoboCAD `fillet_all` (`ui/app.py:832-837`) opens its dialog even with
+   nothing selected and then does nothing.
+
+Deliberate difference (recorded): the empty selection is refused before
+the form. By reading, unexecuted.
+
+### CAD-43 Full round
+1. Modify ▸ Full round (two edges) (`registry.rs:370`).
+2. `modify.rs:69-78`: `Needs::Edges {2, 2, same_node}`, `Flow::Immediate`.
+3. Run leg; `resolve.rs:114-119` refuses one edge or edges of two bodies
+   with "Select two edges of the same body".
+4. `POST /ops/full_round {"args": [node, {node, edge}, {node, edge}]}`
+   (`Arg::EdgeA`, `EdgeB`, `args.rs:308-309`).
+5. `commands.py:full_round` (639).
+6. One "Full round" step. RoboCAD `full_round` (`ui/app.py:839-846`):
+   the same check and message.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-44 Remove fillets
+1. Face mode, Modify ▸ Remove fillets (selected faces) (`registry.rs:371`).
+2. `modify.rs:79-89`: `FACES`, `Fan::PerNode`.
+3. Run leg; faces grouped by owning node (`args.rs:owners`, 111, `groups` 144).
+4. `POST /ops/remove_fillets {"args": [node, [{node, face}…]]}` per body.
+5. `commands.py:remove_fillets` (642).
+6. One "Remove fillets" step per body. No face: refused "Select the
+   fillet faces to remove". RoboCAD `remove_fillets` (`ui/app.py:848-855`)
+   is silent.
+
+Deliberate difference (recorded): the refusal is ours. By reading,
+unexecuted.
+
+### CAD-45 Shell
+1. Ctrl/Cmd+Shift+H (`registry.rs:373`), toolbar **Shell**.
+2. `modify.rs:107-122`: `PickThenForm(Face)`, wall 2.0,
+   `Needs::NodesWithFaces` → `invoke.rs:79-92` (mode Face).
+3. A face click toggles the face (`cad/pick.rs:450-459`); Enter → run leg;
+   one call per selected node with its faces (`args.rs:groups`, 145).
+4. `POST /ops/shell {"args": [node, 2.0, [{node, face}…]]}` (no faces: a
+   closed shell).
+5. `commands.py:shell` (624).
+6. "Shell" per body; the selection clears. RoboCAD `ShellTool`
+   (`ui/tools.py:992-1017`): `press` reuses `EdgeTool.press`, which toggles
+   only edges, so a face click there selects nothing.
+
+Deliberate difference (recorded): the viewer toggles faces. By reading,
+unexecuted.
+
+### CAD-46 Thicken
+1. Modify ▸ Thicken sheet… (`registry.rs:374`).
+2. `modify.rs:123-135`: `nodes(1, None, ["sheet"])` (bodies ignored,
+   `resolve.rs:102-104`), `Flow::Form` "Thickness (mm):" 2.0.
+3. `invoke.rs:62` refuses "Select a sheet" before the form; form leg.
+4. `POST /ops/thicken` per sheet.
+5. `commands.py:thicken` (627).
+6. A solid per sheet ("Thicken"). RoboCAD `thicken` (`ui/app.py:857-864`):
+   the same filter, message and dialog.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-47 Draft
+1. Face mode, Modify ▸ Draft faces… (`registry.rs:375`).
+2. `modify.rs:136-148`: "Angle (degrees):" 2.0 (−45 to 45, 2 decimals),
+   `neutral` ("active", xy, xz, yz; `kinds.rs:17`); pull `[0, 0, 1]`.
+3. Form leg; `Arg::Plane("neutral", Xy)` → `args.rs:plane_arg` (263-269):
+   the active plane, else XY.
+4. `POST /ops/draft {"args": [node, faces, [0,0,1], 2.0, "xy"]}` per node.
+5. `commands.py:draft` (553); `ArgConverter.plane` (`api.py:205`).
+6. "Draft" per body. RoboCAD `draft_faces` (`ui/app.py:866-878`): pull
+   (0, 0, 1), `active_plane or Plane.xy()`.
+
+Matches RoboCAD (the plane names are a native addition, recorded). By
+reading, unexecuted.
+
+### CAD-48 Delete faces
+1. Face mode, Modify ▸ Delete faces (heal) (`registry.rs:376`).
+2. `modify.rs:149-160`: `FACES`, `PerNode`, `clears_selection`.
+3. Run leg.
+4. `POST /ops/delete_faces` per body.
+5. `commands.py:delete_faces` (556-557, "Delete face").
+6. One step per body; the selection clears on success. RoboCAD
+   `delete_faces` (`ui/app.py:880-887`) clears it too (silent on none;
+   the viewer refuses "Select the faces to delete", recorded).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-49 Mirror and live mirror
+1. Ctrl/Cmd+M (`registry.rs:388`), Modify ▸ Mirror as live instance (389);
+   REST `cad_run {"id":"tool.mirror","params":{"plane":"xz"}}`.
+2. `cad/ops/catalogue/arrange.rs:10-34`: `Arg::Plane("plane", Yz)`,
+   `live` false / true; `Flow::Immediate`.
+3. Run leg; `plane_arg` sends the active plane, else "yz", or the named one.
+4. One `POST /ops/mirror {"args": [ids, plane], "kwargs": {"live": …}}`.
+5. `commands.py:mirror` (694).
+6. Mirrored copies about YZ; the live one is an instance that follows its
+   source. RoboCAD `mirror` (`ui/app.py:910-914`): `active_plane or
+   Plane.yz()`, "Select bodies to mirror".
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-50 Array
+1. Ctrl/Cmd+Shift+A (`registry.rs:393`).
+2. `arrange.rs:46-70`: `Flow::Form`, `Shape::Array`; Kind, Count X/Y/Z,
+   Mode, Spacing or extent X / Y / Z (rectangular), Radial count, total
+   angle and axis plane (radial), As live instances, Merge.
+3. `invoke.rs:62` ("Select bodies to array") → form leg; the rows whose
+   `when` holds are shown (`cad/surfaces/form.rs:shown`, 78) → submit →
+   `args.rs:array` (441-477): `array_rect` with `spacing` or `extent` by the
+   mode (466), or `array_radial` about the plane's normal through its
+   origin (450-460).
+4. One `POST /ops/array_rect` / `array_radial`.
+5. `commands.py:array_rect` (728), `array_radial` (738).
+6. The copies; History "Rectangular array" / "Radial array". RoboCAD's
+   `array` (`ui/app.py:920-941`) and `ArrayDialog` (`ui/widgets.py:1024-1053`).
+
+Deliberate difference (recorded below in KNOWN): RoboCAD's dialog shows
+every row at once (Count X / Y / Z on one row, the radial rows always
+visible) and takes the radial axis from the active plane only; the
+viewer shows only the chosen kind's rows (the table's "the rows switch
+with the kind in both" holds only here) and adds an axis-plane choice.
+By reading, unexecuted.
+
+### CAD-51 Instance
+1. Modify ▸ Instance selected (`registry.rs:392`).
+2. `arrange.rs:35-45`: `Arg::Const({"translation": [20, 0, 0]})`, `PerNode`.
+3. Run leg; nothing selected → "Select the bodies to instance".
+4. `POST /ops/instance` per node.
+5. `commands.py:instance` (712); `ArgConverter` makes the `Transform`.
+6. One instance per body, +20 mm X, one step each. RoboCAD
+   `instance_selection` (`ui/app.py:916-918`) is silent on none.
+
+Deliberate difference (recorded): the refusal is ours. By reading,
+unexecuted.
+
+### CAD-52 Make unique
+1. Modify ▸ Make instance unique (`registry.rs:431`), or the 3D view's
+   right-click ▸ Make unique (bake instance) (`registry.rs:MAKE_UNIQUE`,
+   278, added while an instance is selected:
+   `cad/surfaces/context_menu.rs:instance_selected`, 41;
+   `cad/surfaces/mod.rs:192-195`).
+2. `cad/ops/catalogue/boolean.rs:88-98`: `nodes(1, None, ["instance"])`.
+3. Run leg; no instance → "Select an instance to make unique".
+4. `POST /ops/make_unique` per instance.
+5. `commands.py:make_unique` (719).
+6. The instance becomes a body ("Make unique"). RoboCAD
+   (`ui/app.py:389`) skips non-instances silently; its entry is in the
+   outliner's menu (`ui/widgets.py:431`).
+
+Deliberate difference (recorded). By reading, unexecuted.
+
+### CAD-53 Set pivot at cursor snap
+1. The palette row "Tools: Set pivot at cursor snap", Help menu
+   (`registry.rs:404`, category Tools → Help, `menu_of` 252); REST
+   `cad_run {"id":"tool.set_pivot","params":{"point":[0,0,10]}}`.
+2. `arrange.rs:187-199`: `Flow::AtCursorSnap` → `invoke.rs:15` runs at once.
+3. `cad/ops/interact.rs:pointer` keeps `ops.cursor_snap` with its shown
+   revision (343-370; cleared off-window or when the revision moves);
+   `resolve.rs:56` uses it only at the shown revision; `Arg::CursorSnap`
+   (`args.rs:338-342`): the `point` parameter, else the snap, else refused
+   by name.
+4. `POST /ops/set_pivot {"args": [first node, point]}`.
+5. `commands.py:set_pivot` (351-352, "Pivot").
+6. The inspector's pivot reads the point. RoboCAD `set_pivot`
+   (`ui/app.py:1015-1020`): `viewport.snap` at the cursor.
+
+Deliberate difference (recorded): over a face with no snap point the
+viewer's snap takes the grid or plane point as RoboCAD's does
+(`interact.rs:48-54`), but `snap_on` falls back to the first surface under
+the pointer where RoboCAD has none (cad-parity.md row). By reading,
+unexecuted.
+
+### CAD-54 Inspector pivot and transform
+1. The inspector's pivot field and **Clear pivot**
+   (`cad/inspector/editors.rs:368`), the instance's translation, axis,
+   angle and scale fields; the one kit text field (`editors.rs:9-19`).
+2. Enter → `editors.rs:enter` (395-408) → `patch_for` (296-302: a vector
+   of unit expressions, an error naming the component and token keeps the
+   field open) → `CadAction::CadPatch` (`cad/actions.rs:506-521`); a
+   transform draft is refused once RoboCAD's revision moved since it
+   opened (`commit_refusal(Some(began))`, 402).
+3. `actions::edit` → `start_edit` (Dedicated job).
+4. `crates/sim-runtime/src/cad_client/mod.rs:patch` (294, `PATCH /nodes/{id}`).
+5. `api.py:1631` → `Service.patch` (748-775: a component member's pivot
+   and an occurrence's transform refused 750-753; `set_pivot`, 768).
+6. One undo step each with RoboCAD's result; the refusal text is shown
+   instead of the field (`editors.rs:refusal`, 185). RoboCAD's properties
+   panel writes the same `PATCH`.
+
+Matches RoboCAD. Stale citations fixed (this batch): `cad/inspector/editors.rs:2`
+and 25 now cite `api.py:748-787` (`Service.patch`) and `750-753` (its
+component refusals). By reading, unexecuted.
+
+### CAD-55 Delete as one step
+1. Delete or Backspace (`registry.rs:309`; silent on an empty selection,
+   `cad/keys.rs:412`), the **Delete** button (`cad/panel.rs:216`,
+   `CadInvoke {edit.delete}`), Edit ▸ Delete.
+2. `edit_create.rs:8-20`: `Arg::Nodes`, `Fan::Once`, `clears_selection`.
+3. Run leg: one job, one call.
+4. `POST /ops/delete {"args": [[ids]]}`.
+5. `commands.py:delete` (312, `RemoveNodes("Delete")` 331).
+6. All three go in one "Delete" step; Undo (`CadUndo`,
+   `cad/actions.rs:531`) brings them back. RoboCAD `delete_selection`
+   (`ui/app.py:1458-1463`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-56 Union, subtract, intersect
+1. Ctrl/Cmd+U, Ctrl/Cmd+Shift+U, Ctrl/Cmd+Alt+U (`registry.rs:424-426`),
+   toolbar **Union**, **Subtract**.
+2. `boolean.rs:8-43`: `Needs::TargetThenTools`, `Arg::Target, Tools,
+   Const("union"|…)`, `clears_selection`.
+3. With one body the key is not ready: the status line reads "Union:
+   Select the target body first, then the tools"
+   (`registry.rs:status_line`, 591; `cad/keys.rs:413`). Else run leg; the
+   history label is the op capitalised (`args.rs:387-393`).
+4. `POST /ops/boolean {"args": [target, [tools], "union"]}`.
+5. `commands.py:boolean` (573-585).
+6. The result on the first body; tools removed; selection cleared on
+   success. RoboCAD `boolean` (`ui/app.py:787-793`): the same message;
+   it clears the selection after the call.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-57 Region
+1. Modify ▸ Region (overlap as new body) (`registry.rs:427`).
+2. `boolean.rs:44-53`: `nodes(2, Some(2))`.
+3. Run leg; three → "Select exactly two bodies".
+4. `POST /ops/region {"args": [a, b]}`.
+5. `commands.py:region` (588-589).
+6. A new "Region" node. RoboCAD `region` (`ui/app.py:795-799`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-58 Join and unjoin
+1. J, Shift+J (`registry.rs:428-429`).
+2. `boolean.rs:54-76`: join `nodes(2, None)` once; unjoin `PerNode`.
+3. Run leg; J with one body is not ready ("Select two or more bodies to
+   join").
+4. `POST /ops/join {"args": [[ids]]}`; `POST /ops/unjoin` per node.
+5. `commands.py:join` (806), `unjoin` (814).
+6. The same joined body and parts. RoboCAD (`ui/app.py:386-387`) calls
+   join with any selection.
+
+Deliberate difference (recorded). By reading, unexecuted.
+
+### CAD-59 Dissolve
+1. Modify ▸ Dissolve redundant topology (`registry.rs:430`).
+2. `boolean.rs:77-87`: `PerNode`.
+3. Run leg.
+4. `POST /ops/dissolve` per node.
+5. `commands.py:dissolve` (823).
+6. One "Dissolve" step per body. RoboCAD `ui/app.py:388`.
+
+Matches RoboCAD (an empty selection refused by name, recorded). By
+reading, unexecuted.
+
+### CAD-60 Cut
+1. Modify ▸ Cut with active plane (`registry.rs:394`), Cut with selected
+   sheet/curve (395); REST `cad_run {"id":"tool.cut_plane","params":{"plane":"yz"}}`.
+2. `arrange.rs:72-93`: `Arg::Plane("plane", Xy)` per node; `Target, Second`.
+3. Run leg.
+4. `POST /ops/cut {"args": [node, "xy"]}` per node; `{"args": [body, cutter]}`.
+5. `commands.py:cut` (591); `ArgConverter` turns a cutter id or plane
+   name into the kernel argument (the `ArgConverter` fix the table names).
+6. The pieces. RoboCAD `cut_with_plane` / `cut_with_selection`
+   (`ui/app.py:943-951`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-61 Split faces
+1. Modify ▸ Split faces with active plane (`registry.rs:396`).
+2. `arrange.rs:94-105`: plane fallback XY, `PerNode`.
+3. Run leg.
+4. `POST /ops/split_face` per node.
+5. `commands.py:split_face` (566).
+6. The faces split along XY. RoboCAD `split_face` (`ui/app.py:953-955`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-62 Imprint
+1. Modify ▸ Imprint selected curve/body (`registry.rs:397`).
+2. `arrange.rs:106-115`: `nodes(2, None)`.
+3. Run leg; one node → "Select the body, then the tool".
+4. `POST /ops/imprint {"args": [body, tool]}`.
+5. `commands.py:imprint` (562).
+6. Imprinted edges. RoboCAD `imprint` (`ui/app.py:957-961`): the same
+   message.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-63 Project curve
+1. Modify ▸ Project curve onto body (`registry.rs:398`).
+2. `arrange.rs:116-126`: `Arg::ViewDir`.
+3. Run leg; `resolve.rs:56`: `view_dir = −view_back(view)` in RoboCAD's
+   frame; `args.rs:333-337`: REST `direction`, else the view's, else
+   refused by name.
+4. `POST /ops/project_curve {"args": [curve, body, dir]}`.
+5. `commands.py:project_curve` (856).
+6. The projected curve; the direction is in the edit label. RoboCAD
+   `project_curve` (`ui/app.py:963-968`): `-camera.basis()[2]`.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-64 Silhouette
+1. Modify ▸ Silhouette onto active plane (`registry.rs:399`).
+2. `arrange.rs:127-138`: plane fallback XY, `PerNode`.
+3. Run leg.
+4. `POST /ops/silhouette` per node.
+5. `commands.py:silhouette` (860).
+6. The silhouette curve on XY. RoboCAD `silhouette` (`ui/app.py:970-972`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-65 Control points
+1. Face mode, Advanced ▸ Show/edit control points (advanced) (`registry.rs:400`).
+2. `arrange.rs:140-150`: `Shape::ControlPoints` → `args.rs:584-587`
+   (`Read::ControlPoints {node, face}`).
+3. Read leg (`cad/analysis_overlay.rs:start`, 142).
+4. `crates/sim-runtime/src/cad_client/mod.rs:control_points` (356, `GET
+   /nodes/{id}/control_points?face=i`).
+5. `api.py:1656` → `Service.control_points` (895).
+6. Points and rows in RoboCAD's pink; the status "N control points (edit
+   via Ops.set_control_points; proportional falloff in scripting)"
+   (`analysis_overlay.rs:235`); nothing written; cleared when the shown
+   revision changes (256-261). RoboCAD `control_points`
+   (`ui/app.py:974-984`), `temp_shapes` cleared on refresh.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-66 Raise degree
+1. Advanced ▸ Raise face degree (`registry.rs:401`).
+2. `arrange.rs:151-161`: `Arg::Face, Const(4), Const(4)`.
+3. Run leg.
+4. `POST /ops/raise_degree`.
+5. `commands.py:raise_degree` (867-868, "Raise degree").
+6. One step. RoboCAD `raise_degree` (`ui/app.py:986-991`; silent without
+   a face, refused by name here).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-67 Rebuild face
+1. Advanced ▸ Rebuild face… (`registry.rs:402`).
+2. `arrange.rs:162-174`: `Flow::Form` "Spans per direction:" 4 (1–64, a
+   count).
+3. `invoke.rs:62` (no face → "Select a face to rebuild") → form leg.
+4. `POST /ops/rebuild_face {"args": [node, face, n, n]}`.
+5. `commands.py:rebuild_face` (870).
+6. The rebuilt face. RoboCAD `rebuild_face` (`ui/app.py:993-1001`):
+   `getInt(4, 1, 64)`.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-68 Dependent offset
+1. Modify ▸ Dependent offset (face to body)… (`registry.rs:403`).
+2. `arrange.rs:175-186`: `Needs::FaceThenNode`, "Clearance (mm):" 0.2
+   (−10 to 10).
+3. `resolve.rs:130-135` (the first node owning no selected face);
+   a face alone → "Select a face, then the body to offset it to"; form leg.
+4. `POST /ops/offset_face_to {"args": [node, face, target, 0.2]}`.
+5. `commands.py:offset_face_to` (521).
+6. The offset face ("Dependent offset"). RoboCAD `dependent_offset`
+   (`ui/app.py:1003-1013`): the same rule and message.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-69 Copy and paste with placement
+1. Ctrl/Cmd+C, Ctrl/Cmd+V (`registry.rs:310-311`).
+2. `edit_create.rs:21-43`: `Shape::Copy` → `args.rs:573-578`
+   (`Read::Copy`); `Shape::Paste` → 579-583 (`Built::Paste`).
+3. Copy: read leg; `receive` keeps `OpsState::clipboard` with the revision
+   (`analysis_overlay.rs:285-289`, "Copied 2 item(s) with placement").
+   Paste: `cad/ops/mod.rs:606-608` → `actions::edit` (Dedicated job).
+4. `crates/sim-runtime/src/cad_client/mod.rs:copy_nodes` (344),
+   `paste` (351).
+5. `api.py:1672-1676` → `Service.copy` (848, `Document.copy_nodes`) and
+   `Service.paste` (856-891: one `AddNodes("Paste", …)`).
+6. "Pasted 2 item(s)"; one "Paste" step; `cad_state.ops.clipboard`
+   (`cad/ops/state.rs:41-44`). RoboCAD `copy_with_placement` /
+   `paste_with_placement` (`ui/app.py:1465-1484`) use the OS clipboard.
+
+Deliberate difference (recorded): the clip stays in the viewer. By
+reading, unexecuted.
+
+### CAD-70 Curvature comb
+1. Inspect ▸ Curvature comb on selected curve (`registry.rs:443`).
+2. `boolean.rs:100-110` → `args.rs:590-593`: the last selected curve
+   (`last_of`, 556).
+3. Read leg.
+4. `crates/sim-runtime/src/cad_client/mod.rs:curvature_comb` (361).
+5. `api.py:1658` → `Service.curvature_comb` (912; scale 5, 48 samples).
+6. The comb in RoboCAD's violet. RoboCAD `curvature_comb`
+   (`ui/app.py:1277-1284`): each curve or sketch with a body; a sketch has
+   none.
+
+Matches RoboCAD, including a curve then a sketch: both draw the curve's
+comb (RoboCAD's loop skips the bodiless sketch, leaving the curve's drawn;
+`last_of` picks the last curve). The table's "the viewer shows none"
+recorded difference no longer holds (the table row is updated in this batch); the refusal for no curve stays ours.
+By reading, unexecuted.
+
+### CAD-71 Continuity
+1. Inspect ▸ Continuity check (G0/G1/G2) (`registry.rs:444`).
+2. `boolean.rs:111-121` → `args.rs:596-599`: the last selected node with
+   a body.
+3. Read leg.
+4. `crates/sim-runtime/src/cad_client/mod.rs:continuity` (366).
+5. `api.py:1660` → `Service.continuity` (945).
+6. Edges in G0 red, G1 amber, G2 green, boundary grey
+   (`analysis_overlay.rs:grade_colour`, 203) and "Continuity: {'G0': …,
+   'G1': …, 'G2': …, 'boundary': …}" (`counts_text`, 214, 243). RoboCAD
+   `continuity` (`ui/app.py:1286-1302`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-72 Toolbar
+1. The command bar under the header (`cad/surfaces/toolbar.rs:spawn`,
+   69): the menu tabs, then `TOOLBAR` (`registry.rs:258-261`, RoboCAD's 25
+   in order) as kit chips (`refresh`, 159-196).
+2. Each chip → `CadInvoke {id}` (surface leg); `Enabled` from
+   `registry::ready`; lit while that tool or op is active (`lit`, 131-137,
+   `checkable` 126).
+3. The hint (`describe`, 140-148; `hint`, 201-218) names the keys and, when
+   disabled, why. The wheel scrolls the row (`scroll`, 223-242).
+4. –5. No RoboCAD call of its own (each command's own route).
+6. RoboCAD's `QToolBar` (`ui/app.py:440-446`): the same ids, `tool.*`
+   checkable, tooltips the labels; overflow behind "»".
+
+Deliberate difference (recorded): the row scrolls; the sketch buttons
+light. The table's "later-epic buttons are disabled naming their epic"
+no longer applies (the table row is updated in this batch): all 25 resolve natively (Annotate, References, Pose
+and Experiments to `Do::Organize`, `registry.rs:288-294`; Fastener and
+Validate are catalogue ops, 386, 433), so none is disabled for an epic.
+Gap found and fixed: the module doc still said later-epic entries are
+disabled (`cad/surfaces/toolbar.rs:11-18` now says why a button can be
+disabled and that none belongs to a later epic). By reading, unexecuted.
+
+### CAD-73 Right-click menu
+1. A right press and release within 4 px over the 3D view
+   (`cad/surfaces/context_menu.rs:input`, 48-72; a drag stays the orbit) →
+   `CadSurface {context {at}}`; REST `cad_surface {"surface":{"kind":"context"}}`.
+2. `cad/surfaces/mod.rs:handle` (215) → `entries` (189-197): `CONTEXT`
+   (`registry.rs:264`, RoboCAD's 14 in order), the Sketch section
+   (`SKETCH_CONTEXT`, 271), Make unique when an instance is selected.
+3. Drawn by `draw` (494-498, `popup_list`); a click → surface leg.
+4. –5. Each entry's own route.
+6. RoboCAD `_context_menu` (`ui/app.py:1103-1107`).
+
+Deliberate difference (recorded): the Sketch section and Make unique.
+The table's "Annotate, Comments panel, Isolate and Hide disabled naming
+their epic" no longer applies (the table row is updated in this batch): Annotate and Comments run through
+`Do::Organize` (`registry.rs:294-295`), Isolate and Hide are catalogue
+ops (`cad/ops/catalogue/view.rs`). By reading, unexecuted.
+
+### CAD-74 Radial menus
+1. Space, Q (`registry.rs:343`, 349) → `cad/keys.rs:404-409`:
+   `CadSurface {view_radial|select_radial {at: pointer}}`; Space is typed
+   while a kit field has the keyboard (`keys.rs:366`).
+2. `cad/surfaces/mod.rs:handle`; `entries` (198-199): `VIEW_RADIAL`
+   (Front, Top, Right, Iso, Ortho, Grid, Mode, Fit) and `SELECT_RADIAL`
+   (`registry.rs:281`, 284).
+3. `radial::spawn` (45) → `ui_kit/pie.rs:Kit::pie` (60; first entry up,
+   clockwise, `slot` 51); `radial::input` (56-101): hover by
+   `ui_kit/pie.rs:index_at` (38, 18 px dead centre), a press inside or a
+   release runs the entry under the pointer then closes; a press outside
+   closes (89-91); Escape closes (Escape leg).
+4. –5. Fit → `Do::Fit` → `CadFit`; the views and Ortho → camera intents
+   (`registry.rs:camera`, 635); Edge → `CadSelectMode`. No RoboCAD call.
+6. RoboCAD `RadialMenu` (`ui/widgets.py:821-882`) opened by `view_radial`
+   / `selection_radial` (`ui/app.py:1095-1101`).
+
+Deliberate difference (recorded): rounded-rectangle pills. The table's
+"the others say … belongs to the cad-views-export epic" no longer
+applies: every view entry runs (`radial.rs:3-8`). By reading, unexecuted.
+
+### CAD-75 Palette
+1. Control+Space or Shift+F (`registry.rs:298`) → `CadSurface {palette}`.
+2. `cad/surfaces/palette.rs:spawn` (105) → `ui_kit/palette.rs:Kit::palette`
+   (138): the search field is the one kit text field (`PALETTE`,
+   `cad/surfaces/mod.rs:322`; `ui_kit/palette.rs:167` → `Kit::input`,
+   `ui_kit/widgets.rs:237`), focused when the palette opens
+   (`palette.rs:150-156`); placeholder "Type a command… (Ctrl+Space)"
+   (`placeholder`, 95).
+3. Typing re-ranks (`ui_kit/palette.rs:rank`, 96-128: score 0, 1 + the
+   label position, or 50; sorted by (score, label); 60 shown); Up/Down
+   (`palette.rs:199-200`); Enter runs the highlighted row (167-184);
+   Escape closes (188). Conflicts (`conflicts`, 60) give "Edit: Select Same
+   Material    [Ctrl+Shift+M]  ⚠ conflicts with Robot: add motor from
+   library…".
+4. –5. The row's command (surface leg).
+6. RoboCAD `CommandPalette.refresh` (`ui/widgets.py:79-108`): the same
+   score, sort and text.
+
+Deliberate difference (recorded): rows that cannot run are noted and
+disabled; today only the "not ported" ones (`registry.rs:306-473`,
+`Native::Different`), as no command maps to a later epic. Gap found and
+fixed: the palette's Enter wrote its action unstamped while a row's click
+is stamped with its source; it now goes through `cad::activation::guard`
+(`cad/surfaces/palette.rs:171-179`). By reading, unexecuted.
+
+### CAD-76 Menus by category
+1. The tabs (`cad/surfaces/menus.rs:tabs`, 44-50; lit in place, `light`
+   55-67) → `CadSurface {menu {category}}`; REST
+   `cad_surface {"surface":{"kind":"menu","category":"Modify"}}` (an
+   unknown category is refused naming the 16, `cad/surfaces/mod.rs:220-224`).
+2. `entries` (188): the category's commands in registry order, "General",
+   "Window" and "Tools" in Help (`registry.rs:menu_of`, 252), each with its
+   keymap keys (`shortcut_keys`, 176).
+3. `draw` (484-492) places it under its tab; a click runs the command and
+   closes the menu (`cad/surfaces/mod.rs:364-376`); the wheel scrolls it
+   (`popup_scroll`, 426).
+4. –5. Each command's own route.
+6. RoboCAD `_build_menus` (`ui/app.py:433-438`): the same 16 menus, the
+   same fallback to Help.
+
+Matches RoboCAD. By reading, unexecuted.
+
+## Reading traces — Part E
+
+Each trace follows one Part E step (CAD-77 to CAD-98: the active plane,
+the plane tools, the sketch tools, the sketch edits and `cad_sketch`, the
+solids made from sketches, the primitives and plane-dependent operations
+on the active plane, the surfaces, the leaving guard and undo) from the
+native control to RoboCAD and back to what the tree, the status line, the
+plane quads, the sketch curves, the readout and `cad_state` show.
+Everything here is by reading, unexecuted: nothing was built, run or
+captured, and no step was compared side by side. Native paths are under
+`crates/sim-spatial/src/` unless they start with `crates/`; RoboCAD paths
+are under `cad/robocad/`. The gaps found while tracing were fixed in this
+batch (each named in its entry) unless an entry says it is recorded.
+The common legs are written out once:
+
+- **Invoke leg** (a menu entry, palette row, toolbar button, context-menu
+  row or key): a registry command with `Native::Op`
+  (`cad/surfaces/registry.rs:378-385` the Planes, :405-423 the Sketch
+  menu, :360-365 Create) is written as `CadInvoke { id }` (keys:
+  `cad/keys.rs:keys`, 352, `registry::ready` then `CadInvoke` at 403-407;
+  menus, palette, toolbar and context menu write the same action from
+  their entry) → `cad/actions.rs:apply` (354) → `handle` (459) → the
+  catalogue arm (561) → `cad/ops/mod.rs:handle` (491) →
+  `cad/ops/invoke.rs:invoke` (12): `Flow::View` applies viewer state at
+  once (17); `Flow::Sketch`, `Flow::Extrude` and `Flow::PlanePick` (18-58)
+  end a transform tool (`end_tool`, 150), clear every other interaction
+  (`clear_interactions`, 138), open the tool's form beside the view (30;
+  none for a plane tool, 26-28), start the interaction
+  (`sketch::interact::begin`, `sketch::extrude::begin`,
+  `sketch::plane::begin`, 36-38) and show the tool's hint (49). A
+  refusal from a click is written to the status line in `apply`
+  (`actions.rs:408`). REST `cad_invoke {"id"}` sends the same action.
+- **Run leg** (`CadRun`: a plane tool's picks, an extrude release, a
+  form's OK, REST `cad_run`): `ops/mod.rs:handle` → `run` (528) →
+  `prepare` (543): viewer state returns before any refusal (545); else
+  `CadDocument::commit_refusal(revision)` (549;
+  `cad/document/state.rs:138-154`: an edit in flight, not connected, the
+  shown document stale, or RoboCAD's revision moved since `revision`),
+  `resolve::resolve` (569; `cad/ops/resolve.rs:51`), `values`, then
+  `args::build` (`cad/ops/args.rs:562`, keyed by shape: `Plain` 564,
+  `Place` 566, `Sketch` 567, `SketchEdit` 568, `Extrude` 569,
+  `View` 570) → `start` (584): `Built::Edit` → `actions::edit` →
+  `cad/edit.rs:edit` (12) → `cad/sync/mod.rs:start_edit` (686: one
+  `Job::spawn(Pool::Dedicated, …, "RoboCAD edit: …")`, 693, off the UI
+  thread) → `CadClient::op` (`crates/sim-runtime/src/cad_client/mod.rs:374`,
+  `POST /ops/{name}`) → `api.py:1668-1671` → `Service.op` (1011; a
+  `KernelError` answers 422 with its text, 1025-1026) → the `Ops` method,
+  one command on RoboCAD's stack → `sync::finish_edit` (565): the edit's
+  message or RoboCAD's error on the status line (601), a plane tool's new
+  node noted (595-600), `/doc` refetched (`refresh`, 630).
+- **Sketch leg** (`CadSketch`: every finished shape, REST `cad_sketch`)
+  and the **sketch-edit leg** (`Built::Sketch`: a form's OK or the Tab
+  values, the offset, fillet and join edits): `ops/mod.rs:handle` arm
+  (499) → `cad/sketch/edits.rs:sketch_action` (322: `commit_refusal`,
+  then `prepare`, 276: each call read by `SketchCall::from_json` and
+  checked by `check_calls`, 303; the target by `shape_target`, 257), or
+  `start` (`ops/mod.rs:609`) → `ops/mod.rs:send_sketch` (634, the one
+  path) → `actions::edit` → `start_edit` (as above) →
+  `CadClient::edit_sketch`
+  (`crates/sim-runtime/src/cad_client/sketch/mod.rs:430`, `POST
+  /nodes/{id}/sketch {"calls"}`) → `api.py:1664-1666` →
+  `Service.edit_sketch` (962: an index past the curves is RoboCAD's 400
+  "curve index {i} out of range ({n} curves)", 970; an unknown name "no
+  sketch method {m}", 977; the calls run on a copy inside
+  `Ops.edit_sketch(…, label="Sketch (API)")`, 996, a `KernelError`,
+  `ValueError` or `TypeError` answers 422 with its text, 997-998) →
+  `commands.py:edit_sketch` (449-454: `fn` runs on a copy and ONE
+  `SetAttributes` is pushed only after it returned, so a refused call
+  leaves no partial geometry); or, for a new sketch,
+  `CadClient::create_sketch` (sketch/mod.rs:438, `POST /nodes {"kind":
+  "sketch", "plane", "calls"}`) → `api.py:1625` → `Service.create` (702;
+  sketch 715-731: `Ops.new_sketch`, `commands.py:444-447`, one "Sketch"
+  step, then `edit_sketch`; a refused call undoes that "Sketch" step and
+  drops it from the redo stack, 721-728, then raises its error: no empty
+  sketch is left behind). The answer lands in `finish_edit` as above
+  (the polygon's side count follows a successful polygon,
+  `sketch::specs::polygon_edit_done`, sync/mod.rs:592).
+- **Error text**: a RoboCAD refusal reaches the status line as
+  `CadError`'s Display (`crates/sim-runtime/src/cad_client/mod.rs:191-201`):
+  "RoboCAD POST /nodes/…/sketch: " then RoboCAD's `error` verbatim, then
+  " (HTTP n)". The viewer's own refusals before sending use RoboCAD's
+  words where RoboCAD has them (the collinear points, the curve index,
+  the unknown method and the unknown plane; see CAD-83 and CAD-90).
+- **Plane reads**: `cad/sketch/cache.rs:sync` (195; SimSync) reads every
+  sketch and plane node of the shown tree with `GET /nodes/{id}` on
+  `Pool::Dedicated` jobs (246; at most two at once), keyed by (node,
+  revision); `CadSketches::plane` and `::sketch` answer only at the shown
+  revision. `cad/sketch/plane.rs:sync` (96, `CadSet::Plane`, chained
+  after the cache, `cad/mod.rs:219`) → `follow` (104) keeps
+  `CadActivePlane` (`cad/sketch/mod.rs:88`) to the document generation
+  (105-108), adopts a plane tool's new node (110-117), follows a selected
+  plane node (118-130), drops a node gone from the shown tree with a
+  status naming it (142-151), and refreshes the node's frame to the shown
+  revision's only (154-157). While a plane node's frame is not read,
+  `CadActivePlane::frame` (mod.rs:107) refuses naming it ("the active
+  plane (node …) is still being read from RoboCAD; try again in a
+  moment", 114), and every press that needs the plane shows that refusal
+  with nothing picked or sent.
+
+### CAD-77 Active plane XY / XZ / YZ
+1. Planes ▸ Active plane: XZ (registry `tool.plane_xz`,
+   `cad/surfaces/registry.rs:383`), the palette row, or REST `cad_invoke
+   {"id":"tool.plane_xz"}`; invoke leg → `ops/invoke.rs:17`.
+2. `CadInvoke` → catalogue entry `tool.plane_xz`
+   (`cad/ops/catalogue/plane.rs:82-91`, `Flow::View(ViewAct::Plane(Xz))`)
+   → `cad/sketch/plane.rs:view_act` (172): the active plane becomes
+   `ActivePlane::Base(Xz)` (179) and the status is RoboCAD's "Active plane
+   set" (`SET`, 64; 180). REST `cad_run` of the same id returns before
+   any refusal (`ops/mod.rs:545`, `run` 533): viewer state, never an edit.
+3. No job, no RoboCAD call: RoboCAD's `viewport.active_plane` is its GUI
+   state too.
+4. No `cad_client` function.
+5. RoboCAD's counterpart: `ui/app.py:355` → `set_active_plane(None,
+   Plane.xz())` (`ui/app.py:1022-1027`, status "Active plane set");
+   `Plane.xz()` is `PlaneFrame::XZ`
+   (`crates/sim-runtime/src/cad_client/sketch/mod.rs:70`).
+6. Shown: the ±60 mm square (`cad/sketch/plane_draw.rs:36`) filled at
+   alpha 0.18 and outlined at 0.8 (38-39): `wanted` (77) adds the active
+   plane when no visible plane node is it (89-93), `quads` (118) rebuilds
+   the fill under the CAD root, `outlines` (164) draws the edges;
+   `cad_state.plane` reads "XZ" (`plane.rs:state_json`, 209). A later
+   sketch (`specs::calls`, `specs.rs:259`; `interact::pointer`) or
+   primitive (`ops/args.rs:place`) uses the frame (`frame_or_xy`,
+   mod.rs:123). RoboCAD draws quads for plane nodes only
+   (`ui/viewport.py:635-657`).
+
+Deliberate difference (recorded): the viewer draws the square for a named
+plane. By reading, unexecuted.
+
+### CAD-78 2D snapping
+1. Planes ▸ Toggle 2D snapping to the active plane (`tool.plane_2d_snap`,
+   registry.rs:385; `cad_invoke`).
+2. `CadInvoke` → `plane.rs:view_act` (172), `ViewAct::Snap2d` (183-186):
+   `snap_2d` flips, status "2D snapping on" / "2D snapping off".
+3. No job, no RoboCAD call.
+4. No `cad_client` function.
+5. RoboCAD: `ui/app.py:357` → `toggle_plane_snapping`
+   (`ui/app.py:1029-1031`, the same status lines); its snap projects onto
+   the active plane when `plane_snapping` is on (`ui/viewport.py:1369-1374`,
+   `want_plane or (self.active_plane if self.plane_snapping else None)`).
+6. Shown: the measure tool's hover projects onto the plane
+   (`cad/measure.rs:221`, `snap::snap_plane`, `cad/snap.rs:214`) and a
+   press refuses by name while the active plane node is being read
+   (`measure.rs:238`, `snap::press_snap_plane`, `snap.rs:205-209`: "2D
+   snapping is on and the active plane (node …) is still being read …;
+   nothing was picked"); `cad_state.plane.snap_2d`.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-79 Plane from face
+1. Ctrl/Cmd+P or Planes ▸ Plane from face (`tool.plane`, registry.rs:378);
+   invoke leg → `ops/invoke.rs:18-58`; `cad/sketch/plane.rs:begin` (193):
+   picks cleared, selection mode Face (195-202), pushed with the items
+   (`invoke.rs:54-56`); status "Click a face" (catalogue `plane.rs:27`).
+2. A left press over the view: `cad/sketch/plane.rs:picks` (279; SimSync
+   after `CadSet::View`, `CadSet::Mesh` and `sync`, 72): the face under the
+   cursor (`ray_hit`, then `CadMeshes::face_at` at the shown revision,
+   306-315; a body being redrawn refuses by name, 309-312). With its one
+   pick `run_for` (243) builds `CadRun {tool.plane, items [[node, "face",
+   i]], revision: the pick's}`; `commit_refusal` is checked first and a
+   refused run keeps the picks (348-353); else the picks clear (the tool
+   stays active, 355) and the run is written (356). REST `cad_run
+   {"id":"tool.plane","items":[…],"revision":N}` sends the same.
+3. Run leg: `Arg::Node`, `Arg::Face` (`ops/args.rs:314`) →
+   `start` → `started` (`ops/mod.rs:662`) marks the edit `activates_plane`
+   (668-672).
+4. `CadClient::op("plane_from_face", [node, {node, face}])`
+   (`cad_client/mod.rs:374`).
+5. `api.py:1668-1671` → `Service.op` (1011) → `commands.py:plane_from_face`
+   (874-876) → `_add_plane` (892-895): one `AddNodes("Plane")` step.
+6. `finish_edit` notes the answer's `result` id as `ops.plane_created`
+   (`sync/mod.rs:595-600`); `plane::follow` makes it the active plane and
+   says "Active plane set" (`plane.rs:110-117`), keeps it while the
+   refetched tree has not shown it yet (`seen.unseen`, 137-151); its frame
+   arrives through the plane reads; `plane_draw::wanted` draws the active
+   node's square brighter (`plane_draw.rs:84-86`). Escape ends the tool
+   (CAD-88's Escape leg; "Cancelled Plane from face", `ops/form.rs:145`).
+   RoboCAD: `PlaneTool.press` (`ui/tools.py:1081-1095`): the clicked face,
+   `plane_from_face`, `set_active_plane(pid)`, `self.picks = []`.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-80 Plane from three points, two points and midplane
+1. Planes ▸ Plane from three points / two points (camera) / Midplane
+   between two faces (registry.rs:379-381); invoke leg; `plane::begin`
+   (`plane.rs:193`): Vertex mode for three and camera, Face for midplane
+   (195-198).
+2. `plane.rs:picks` (279): point modes take the snap (`snap::snap_on`
+   over the drawn candidates, on the active plane only with 2D snapping
+   on; refused by name while that plane node is being read, 326-334) as
+   `PlanePick::Point(s.exact)` (337); face modes as in CAD-79. Short of
+   the count the picks are kept and the status counts them ("Click three
+   points (1 of 3)", 358-362; `needed`, 229-235); complete, `run_for`
+   (243) writes one `CadRun`: points as the "x, y, z" parameters a, b, c
+   (260-263), faces as items with their revision.
+3. Run leg; `plane_camera`'s direction is `Arg::ViewDir`
+   (`ops/args.rs:333`: the view's direction at the run, or the
+   `direction` parameter); `activates_plane` as CAD-79.
+4. `CadClient::op` with `plane_three_points`, `plane_two_points_camera` or
+   `plane_midplane`.
+5. `Service.op` → `commands.py:878-890` (`Plane.from_three_points`; the
+   camera plane's normal facing the camera, 881-885; the midplane of the
+   two face planes, 887-890) → `_add_plane` (892).
+6. The new plane becomes active as in CAD-79. RoboCAD: `PlaneTool.press`
+   (`ui/tools.py:1096-1111`), `set_active_plane(pid)` after each.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-81 Selecting a plane node
+1. A click on a plane node in the tree: the one Selection changes
+   (`cad/selection`, the tree's click).
+2. No action: `cad/sketch/plane.rs:follow` (104) sees the selection change
+   (119-120) to exactly one node of kind "plane" (121-124) and makes it
+   the active plane with "Active plane set" (126-128).
+3. No job; its frame comes from the plane reads (`cache.rs:sync`, 195).
+4. `CadClient::node` (`cad_client/mod.rs:288`) on the cache's job, read
+   by `plane_of` (`cad_client/sketch/mod.rs:401`).
+5. RoboCAD has no such gesture; `set_active_plane(node_id)`
+   (`ui/app.py:1022-1025`) is reached only from a plane tool.
+6. Shown: the node's square brightens (`plane_draw.rs:84-86`), the next
+   sketch goes on it (`specs::target`, `specs.rs:198`, with the node's
+   frame); while its frame is being read the header says "(reading)"
+   (`mod.rs:146`) and presses are refused by name (`mod.rs:114`).
+
+Deliberate difference (recorded native addition). By reading, unexecuted.
+
+### CAD-82 Line, chaining
+1. L or Sketch ▸ Sketch: Line (registry.rs:405); invoke leg;
+   `cad/sketch/interact.rs:begin` (118) sets `ops.sketch`.
+2. `interact.rs:pointer` (280; SimSync, after `CadSet::View`,
+   `CadSet::Mesh` and `CadSet::Plane`): the cursor snapped on the active
+   plane, else XY (`frame_or_xy`, 314; `snap_on` with the plane, 328);
+   a left press → `press` (241): the first records `began` (243-244) and
+   a completing press is checked first (`refusal`, 218: `commit_refusal`,
+   then `edits::shape_target`) so a shape that would be refused is not
+   taken (the points kept, "Sketch line not sent: …; click again when
+   RoboCAD has caught up"); complete → `finish_action` (172) builds
+   `CadSketch { node: None, plane, calls, revision: Some(began) }` (181)
+   from `specs::from_points` (`specs.rs:104`), written at 380; the line
+   keeps its last point (`reset_after_finish`, 186; `chained`). Tab,
+   length 20, angle 30, Enter → `CadFormSubmit` → `ops/form.rs:submit`
+   (15): the first clicked point as `anchor` with its click's revision
+   (31-41) → run leg → `specs::calls` (`specs.rs:259`) →
+   `from_values` (156: `Line` from length and angle).
+3. Sketch leg; `specs::target` (`specs.rs:198`) picks RoboCAD's
+   `_ensure_sketch` target: a selected sketch on the plane, else the first
+   visible one, else `SketchTarget::New` on the plane argument.
+4. `CadClient::create_sketch` for the first shape, then
+   `CadClient::edit_sketch`.
+5. `Service.create` (two steps "Sketch" then "Sketch (API)") and then
+   `Service.edit_sketch` per line.
+6. The readout "length L  angle A" (`interact.rs:readout`, 153),
+   `cad_state.ops.sketch`; the preview in (0.4, 0.9, 1.0)
+   (`cad/sketch/preview.rs:26`, `PREVIEW`, drawn by `draw` 158); the curves drawn from the cache
+   (`cad/sketch/display.rs:74`). Escape ends the chain and the tool
+   (CAD-88). RoboCAD: `SketchTool` (`ui/tools.py:638-817`): `activate`
+   creates the sketch (`_ensure_sketch`, 675-686), `press` (692-697),
+   `_finish` (762-770, lines chain at 768), `commit` (784-794).
+
+Deliberate differences (recorded): the sketch is created with the first
+shape; the history label of a REST edit is "Sketch (API)". By reading,
+unexecuted.
+
+### CAD-83 Rectangle, centre rectangle, circles, arc
+1. Shift+L, Sketch: Rectangle (centre), C, Sketch: Circle (two points),
+   Sketch: Circle (three points), A (`sketch.arc_3pt`, registry.rs:406-414);
+   invoke leg.
+2. One interaction for all (`interact.rs:pointer`, 280), each shape's
+   row in `specs.rs:55-69` (`needed` 2 or 3); `from_points`
+   (`specs.rs:104`) builds RoboCAD's `_build` calls; three collinear
+   points are refused by the kernel's words "the three points are
+   collinear" (`collinear`, specs.rs:93-96; shown at `interact.rs:395`)
+   with nothing sent. Tab values: `from_values` (156); OK on circle_2pt,
+   circle_3pt or arc_3pt is refused "sketch.circle_2pt has no exact
+   values: click its points on the plane …" (183).
+3. Sketch leg.
+4. `CadClient::edit_sketch` / `create_sketch`; over REST a collinear
+   `circle_three_point` or `arc_three_point` is refused before sending by
+   `SketchCall::check` (`crates/sim-runtime/src/cad_client/sketch/calls.rs:497`).
+5. `Service.edit_sketch` → `kernel/sketch.py:circumcircle` (613-616:
+   `KernelError("the three points are collinear")`, answered 422).
+6. The curves in the tree's sketch and `GET /nodes/<id>/sketch`; the
+   refusal on the status line. RoboCAD: `_build` (`ui/tools.py:728-744`),
+   `_finish`'s `self.ctx.error(str(e))` (762-767).
+   Gap found and fixed: `cad_sketch`'s pre-send refusal said "arguments
+   a, b and c are collinear (no circle passes through …)" where RoboCAD's
+   answer is "the three points are collinear"; it now reads
+   "circle_three_point: the three points are collinear (arguments a […],
+   b […] and c […])", RoboCAD's words then the arguments
+   (`crates/sim-runtime/src/cad_client/sketch/calls.rs:503`).
+
+Deliberate differences (recorded): the collinear points are refused before
+the kernel call; OK on a tool with no Tab values is refused by name.
+By reading, unexecuted.
+
+### CAD-84 Polygon sides memory
+1. Shift+P (`sketch.polygon`, registry.rs:415); invoke leg;
+   `interact.rs:begin` (118) opens the `sides` draft at the remembered
+   count (`ops.polygon_sides`, 6 at first, 120-125).
+2. Tab, radius 10, sides 8, Enter → `ops/form.rs:submit` (15) → run leg
+   → `specs::calls` (`specs.rs:259`) → `from_values` (156: sides truncated
+   and at least 3, 167-176) at the plane origin; a clicked polygon is
+   `from_points` (104) with the remembered count and the rotation toward
+   the second click (119).
+3. Sketch leg; `send_sketch` notes the side count
+   (`specs::note_polygon_sides`, `specs.rs:236`, from `ops/mod.rs:647-650`)
+   and `finish_edit` makes it the remembered one when the edit succeeded
+   (`polygon_edit_done`, `specs.rs:244`; `sync/mod.rs:592`).
+4. `CadClient::edit_sketch` / `create_sketch` (`polygon` with sides).
+5. `Service.edit_sketch` → `kernel/sketch.py:polygon` (261-263: `sides or
+   last_polygon_sides`, then `last_polygon_sides = sides`).
+6. The octagon's curve; the next Shift+P opens with 8. RoboCAD: `_fields`
+   (`ui/tools.py:668`, `Sketch.last_polygon_sides`), `commit` (799-800).
+
+Matches RoboCAD; deliberate difference (recorded): a clicked polygon
+sends its side count. By reading, unexecuted.
+
+### CAD-85 Slot, ellipse, spiral
+1. Shift+S, Sketch: Ellipse, Sketch: Spiral (registry.rs:416-419).
+2. `interact.rs:pointer`/`press` with the rows `specs.rs:64`, :66, :67;
+   `from_points` (`specs.rs:120-139`: the slot's width from the third
+   click, at least 0.5; the ellipse's radii and rotation; the spiral 0.15 r
+   to r, 3 turns); Tab values `from_values` (178-180).
+3. Sketch leg.
+4. `CadClient::edit_sketch` / `create_sketch` (`slot`, `ellipse`,
+   `spiral`).
+5. `Service.edit_sketch` → `kernel/sketch.py` constructors.
+6. The curves from the cache, sampled by `SketchCurve::sample`
+   (`crates/sim-runtime/src/cad_client/sketch/mod.rs:229`; the slot's caps
+   bulge outward, `slot_points`, 282). RoboCAD: `_build`
+   (`ui/tools.py:747-758`), `commit` (801-806); its viewport draws the
+   slot through `_slot_points` with the caps inward.
+
+Deliberate difference (recorded): the slot's drawn caps. By reading,
+unexecuted.
+
+### CAD-86 Spline
+1. Shift+C (`sketch.spline`, registry.rs:417).
+2. `interact.rs:pointer`: each press adds a point (`Finish::EnterOrDouble`,
+   `specs.rs:65`); Enter with no field typing and no surface open (339) or
+   a second press within 400 ms and 5 px (`DOUBLE_CLICK`,
+   `DOUBLE_DISTANCE`; 341) finishes when there are two or more points
+   (366: `finish_check`, 258, the completing checks). Enter with one point
+   does nothing (366). The form's OK refuses "sketch.spline has no exact
+   values …" (`specs.rs:183`). The form's own Enter stands aside for a
+   sketch tool (`cad/surfaces/form.rs:322`).
+3. Sketch leg.
+4. `CadClient::edit_sketch` / `create_sketch` (`spline`).
+5. `Service.edit_sketch` → `kernel/sketch.py:spline`.
+6. One spline curve. RoboCAD: `double` and `key` (`ui/tools.py:772-781`).
+
+Matches RoboCAD; the OK refusal is recorded. By reading, unexecuted.
+
+### CAD-87 Text
+1. T (`sketch.text`, registry.rs:420); invoke leg; `interact.rs:begin`
+   (118) focuses the form's "Text to sketch:" field (126-131).
+2. Typing edits the draft; Enter in that field blurs it instead of OK
+   (`cad/surfaces/form.rs:235-238`: RoboCAD's `getText` dialog's OK starts
+   the clicks); one click finishes (`Finish::Points(1)`, `specs.rs:68`) →
+   `finish_action` (`interact.rs:172`): empty text is refused "type the
+   text to sketch first (the form's "Text to sketch:" field), then click
+   where it starts" (174-175); else `Text { height 10 }`
+   (`CLICKED_TEXT_HEIGHT`, `specs.rs:79`). Tab height 5, Enter →
+   `specs::calls` (259; empty text refused, 273-275) → `from_values` (181).
+3. Sketch leg.
+4. `CadClient::edit_sketch` / `create_sketch` (`text`).
+5. `Service.edit_sketch` → `kernel/sketch.py:text` (font outlines).
+6. The outlines; the preview is a placeholder box (`preview.rs` module
+   doc). RoboCAD: `start_sketch` (`ui/app.py:743-750`), `_build`
+   (`ui/tools.py:759-760`: `text_height` never set, so 10), `commit`
+   (807-808).
+
+Deliberate differences (recorded): the dialog is the form's first field;
+the empty text is refused; the preview box. By reading, unexecuted.
+
+### CAD-88 Tab, Enter and Escape in a sketch tool
+1. During a rectangle after one click: Tab → the form's first field takes
+   the keyboard (`cad/surfaces/form.rs`, the module doc's keys; RoboCAD's
+   "Numeric entry (Tab)"); Enter in the field → `CadFormSubmit`; Enter
+   with no field focused does nothing for a sketch tool (322); Escape:
+   a typing field's Escape is the kit's `Cancel` → `CadFormCancel`
+   (form.rs:245-248); else `cad/surfaces/mod.rs:input` (InputSet::Window,
+   chained before `keys::gate` in `CadKeySet::Gate`) writes
+   `CadFormCancel` while a form or interaction is active and consumes the
+   key (`surfaces/mod.rs:396-415`), so calibrate's
+   (`CadKeySet::EscapeTool`), the threads' (`CadKeySet::Escape`) and the
+   Select tool's (`CadKeySet::ToolKeys`, `transform/input.rs`, which also
+   stands aside while `ops.form` or `ops.active` is set) Escape never act
+   on the same press (`cad/mod.rs:182`: Gate → EscapeTool → Escape →
+   ToolKeys).
+2. `CadFormSubmit` → `ops/form.rs:submit` (15): the anchor is the first
+   clicked point and the run carries that click's revision (33-41); the
+   points clear after a sent run (44-51). `CadFormCancel` →
+   `ops::form_cancel` (`ops/form.rs:128`): the form, the active op and
+   the shape go with nothing sent (`unsent`, 134; `SketchState::unsent`,
+   `cad/sketch/mod.rs:304`), "Cancelled Sketch: Rectangle" (145).
+   `CadCancel` (REST `cad_cancel`) does the same while an op is active
+   (`transform/mod.rs:366`, `cancel` 438).
+3. Submit: run leg then sketch leg; Escape: no job.
+4. `CadClient::edit_sketch` / `create_sketch` for the submit only.
+5. RoboCAD: `commit` (`ui/tools.py:784-818`, the anchor `points[0]`);
+   Escape → `self.tool.cancel()` then Select (`ui/app.py:487-497`).
+6. The readout clears when the tool ends (`interact.rs:pointer`'s first
+   branch); `cad_state.ops.sketch` null.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-89 Offset, fillet corners, join
+1. Sketch ▸ Sketch: offset selected curve… / fillet corner… / join curves
+   (registry.rs:421-423; catalogue `ops/catalogue/sketch.rs:173-196`:
+   forms "Distance (mm):" 1.0 and "Radius (mm):" 2.0, join immediate).
+2. Run leg (`Shape::SketchEdit`, `ops/args.rs:568`) →
+   `cad/sketch/edits.rs:calls` (185): the sketch by `selected_sketch`
+   (51; none: "Select a sketch"), read at the shown revision, curves the
+   read dropped refused naming them (`dropped_refusal`, 59); offset: one
+   `offset` per curve; fillet: `fillet_plan` (167) runs the kernel's
+   `fillet_corner` in plane space and sends only the corners RoboCAD would
+   round, refusing "No corner of … takes a 50 fillet: …" (210) when there
+   are none; join: refused "Nothing to join: … has 1 curve(s)" (218).
+3. Sketch-edit leg (one `POST /nodes/{id}/sketch`).
+4. `CadClient::edit_sketch`.
+5. `Service.edit_sketch` → `kernel/sketch.py:fillet_corner` (389-420),
+   `offset` (422), `join` (430).
+6. The curves; one "Sketch (API)" step. RoboCAD: `ui/app.py:758-785`
+   (`_selected_sketch` 752-756; the fillet swallows each corner's
+   `KernelError`; join only with two or more curves).
+   Gap found and fixed: a sketch read with curves dropped (no kind) was
+   refused with a count only; the refusal now names RoboCAD's curve
+   indices ("… could not be read (no kind: RoboCAD's curve 2) …";
+   `SketchGeometry::from_value` keeps the indices,
+   `crates/sim-runtime/src/cad_client/sketch/mod.rs:377-389`;
+   `CadSketches::dropped`, `cad/sketch/cache.rs:113`;
+   `edits.rs:59-70`).
+
+Deliberate differences (recorded): the empty-step cases are refused by
+name. By reading, unexecuted.
+
+### CAD-90 `cad_sketch` (REST)
+1. REST `cad_sketch {"node", "calls", "revision"}` (`cad/rest_form.rs:60`,
+   `cad/specs.rs:86`) → `CadAction::CadSketch` (`cad/actions.rs:251`).
+2. `ops/mod.rs:handle` (499) → `edits.rs:sketch_action` (322):
+   `commit_refusal(revision)`; `prepare` (276): each call read by
+   `SketchCall::from_json`
+   (`crates/sim-runtime/src/cad_client/sketch/calls.rs:352`, a refusal
+   names the call and the argument; a non-finite number "must be a finite
+   number (got null)"), the node must be a sketch of the shown tree, the
+   target without `node` by `shape_target` (257: the plane given, else
+   the active plane, else XY; RoboCAD's sketch tools' rule), dropped
+   curves refused by name, `check_calls` (`calls.rs:560`) against the
+   curve count. A call naming curve 9 of 3 is refused "cad_sketch: call 1
+   (join): argument curves[2]: curve index 9 out of range (3 curves)".
+3. Sketch leg.
+4. `CadClient::edit_sketch` (sketch/mod.rs:430) or `create_sketch` (438).
+5. `api.py:1664-1666` → `Service.edit_sketch` (962-999: curve indices
+   become curves before two-number lists become points, 979-991).
+6. The `cad_sketch` answer is the edit's (`edit.rs:34-37`, pending until
+   `finish_edit`).
+   Gaps found and fixed: (a) the pre-send refusals' words now are
+   RoboCAD's where it has its own: "curve index {i} out of range ({n}
+   curves)" (`calls.rs:521`, api.py:970), "no sketch method {m}"
+   (`calls.rs:355`, api.py:977) and "unknown plane '{v}' (xy/xz/yz or a
+   plane node id)" (`edits.rs:246-248`, api.py:213); (b) a stale revision
+   was accepted: a REST `cad_sketch` naming curves by index without
+   `revision` could apply indices read before another edit to the curves
+   after it; it is now refused "cad_sketch call n (name): pass revision:
+   the RoboCAD revision the curve indices in calls were read at"
+   (`edits.rs:332-342`), as `cad_run` items naming faces need theirs.
+
+Matches RoboCAD (one "Sketch (API)" step per call list). By reading,
+unexecuted.
+
+### CAD-91 Extrude, taper, Shift/Ctrl/Alt
+1. X (`tool.extrude`, registry.rs:360; catalogue
+   `ops/catalogue/solid.rs:21-33`, hint `HINT_EXTRUDE`, 8); invoke leg;
+   `cad/sketch/extrude.rs:begin` (240): the source by `source` (161:
+   the last selected sketch, curve or sheet, else the first visible sketch
+   with curves; an unread sketch is `Reading` and refused by name).
+2. `extrude.rs:pointer` (334; after `CadSet::Plane`, 136): a press starts
+   the drag on the source's plane (`source_plane`, 229; a plane not read
+   is shown as the refusal, 415) and records its boolean in the form;
+   moving sets the height ("extrude h"); the release writes one `CadRun
+   {tool.extrude, {distance, taper 0, boolean}, revision: the press's}`
+   (456) with the release's modifiers (`boolean_for`, 207: Shift
+   subtract, Ctrl/Command union, Alt intersect). Tab 5, 10, Enter →
+   `ops/form.rs:submit`. REST `cad_run {"id":"tool.extrude",…}`.
+3. Run leg → `extrude::calls` (263): `extrude(source, distance, None,
+   taper, false, op, target)`, the target `body_under_selection` (192),
+   "new" without one.
+4. `CadClient::op("extrude", …)`.
+5. `Service.op` → `commands.py:extrude` (480-487: `_profile`, 457-476,
+   the outer loop and holes; `_apply_boolean`).
+6. A new body or the united/subtracted/intersected target; the preview
+   lines (`preview_lines`, 483) without the taper. RoboCAD: `ExtrudeTool`
+   (`ui/tools.py:822-931`: press 855-857, drag 859-875, release 877-880
+   with `self.taper` 0.0, `_boolean_for` 882-890, `_apply` 910-924,
+   commit 926-931).
+
+Deliberate differences (recorded): the source follows the selection; the
+preview is outlines. By reading, unexecuted.
+
+### CAD-92 Revolve
+1. Shift+R (`tool.revolve`, registry.rs:361; `solid.rs:34-46`); invoke
+   leg; `extrude::begin` (240, `revolve: true`).
+2. Tab, angle 180, Enter → submit → run leg. A press and release in the
+   view: `extrude.rs:pointer` writes `CadRun {tool.revolve, {angle "360",
+   boolean}}` (447-456) with the readout `REVOLVE_READOUT` (320).
+3. Run leg → `extrude::calls` (263): `revolve(source, plane.origin,
+   plane.x_axis, angle or 360, op, target)` (283: RoboCAD's `angle or
+   360.0`), the plane the source sketch's own.
+4. `CadClient::op("revolve", …)`.
+5. `Service.op` → `commands.py:revolve` (489-491).
+6. A solid of revolution. RoboCAD: `_apply` (`ui/tools.py:916-918`),
+   release with `angle=None` (877-880), commit (926-929).
+
+Matches RoboCAD (both revolve 360° on a click). By reading, unexecuted.
+
+### CAD-93 Sweep, pipe, loft, fill
+1. Create ▸ Sweep / Pipe along selected curve… / Loft selected sketches /
+   Fill / patch selected curve (registry.rs:362-365; catalogue
+   `solid.rs:47-97`).
+2. `Flow::Form` (sweep "Twist (degrees):", pipe "Diameter (mm):") or
+   immediate (loft, fill): `invoke.rs:59-78` checks the selection first
+   (`resolve::resolve`, `Needs::Nodes` of kinds sketch and curve,
+   `resolve.rs:101`), refusing with RoboCAD's messages (`solid.rs:58`,
+   :72, :83, :94).
+3. Run leg; pipe fans out one call per node (`Fan::PerNode`, `solid.rs:71`).
+4. `CadClient::op` (`sweep` with `{"twist_deg"}`, `pipe`, `loft`, `fill`).
+5. `Service.op` → `commands.py:sweep` (493), `pipe` (498), `loft` (502),
+   `fill` (507).
+6. The solids. RoboCAD: `ui/app.py:801-830` (the same refusals and
+   dialogs).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-94 Primitives on the active plane
+1. With XZ active, Box (corner), Box (centre), Cylinder, Sphere
+   (registry.rs:356-359); invoke leg (`Flow::Place`, `invoke.rs:93-100`).
+2. `cad/ops/interact.rs:pointer` (305): the plane is
+   `CadActivePlane::frame_or_xy` (384; a node not read refuses the press by
+   name); a change of the active plane ends the placement with nothing sent
+   (397-402); the release writes `CadRun` with the press's revision (455).
+3. Run leg → `ops/args.rs:place` (499): on XY `Ops.box`, else
+   `Ops.box_three_point` with a, b, c so z is the plane's normal; the
+   cylinder on the plane with its normal; without an anchor the plane's
+   origin.
+4. `CadClient::op` (`box`, `box_three_point`, `cylinder`, `sphere`).
+5. `Service.op` → `commands.py:box` (419), `box_three_point` (426),
+   `cylinder` (437), `sphere` (440).
+6. The solids on XZ. RoboCAD: `PrimitiveTool` (`ui/tools.py:391-532`,
+   `_make_box` 517: a sketch rectangle extruded, labelled "Extrude").
+
+Deliberate difference (recorded): the box's undo label. By reading,
+unexecuted.
+
+### CAD-95 Plane-dependent operations
+1. With the CAD-79 plane active: Ctrl/Cmd+M, Modify ▸ Cut with active
+   plane, Split faces with active plane, Silhouette onto active plane,
+   Draft faces…, Array… radial (registry.rs:388, :394, :396, :399).
+2. Run leg; each entry's plane parameter defaults to "active"
+   (`ops/catalogue/arrange.rs:15`, :60, :76, :98, :131;
+   `modify.rs:140`), sent by `Arg::Plane` (`ops/args.rs:329`) as the
+   active plane's argument (its node id, `CadActivePlane::arg_or`,
+   `sketch/mod.rs:129`), else RoboCAD's fallback (YZ for mirror, XY for
+   the rest); the radial array reads the frame (`plane_frame`, args.rs:275,
+   refusing by name while the node is being read).
+3. Run leg (one job).
+4. `CadClient::op` (`mirror`, `cut`, `split_face`, `silhouette`, `draft`,
+   `array_radial`).
+5. `api.py:205-212` (`ArgConverter.plane`: a plane node id is the node's
+   plane) → `commands.py:mirror` (694), `cut` (591), `split_face` (566),
+   `silhouette` (860), `draft` (553), `array_radial` (738).
+6. The results about that plane. RoboCAD: `ui/app.py:866-878`, 910-914,
+   920-945, 953-955, 970-972 (`active_plane or Plane.xy()` / `.yz()`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-96 Toolbar and right-click menu
+1. The toolbar (`registry::TOOLBAR`, registry.rs:258-261: Rectangle,
+   Circle, Slot, Extrude among RoboCAD's) and the right-click menu
+   (`CONTEXT` then `SKETCH_CONTEXT`, 264, 271-273; listed by
+   `cad/surfaces/mod.rs:191`, the "Sketch" heading 496).
+2. A click writes `CadInvoke` (invoke leg); the toolbar lights a sketch
+   button while its tool is the active op or open form
+   (`cad/surfaces/toolbar.rs:126-136`, `checkable` includes `sketch.`).
+3. No job until a shape is finished.
+4. —
+5. RoboCAD: `_build_menus` toolbar (`ui/app.py:442`), `_context_menu`
+   (`ui/app.py:1103-1107`): no sketch section, sketch buttons never lit.
+6. The tool's hint on the status line (`invoke.rs:49`).
+
+Deliberate differences (recorded native additions). By reading,
+unexecuted.
+
+### CAD-97 A shape in progress blocks leaving
+1. The switcher's **Build** → the mode switch (`app/switch/mod.rs:517`).
+2. `app/switch/prepare.rs:leaving_blockers` (30) adds
+   `cad::sketch_blocker` (82; `cad/mod.rs:111`) →
+   `cad/sketch/mod.rs:blocker` (331): clicked points not sent (`unsent`,
+   304: a lone chained point was sent with its line) refuse "a sketch slot
+   is in progress (2 point(s) clicked): finish it or press Escape"; the
+   switch joins the blockers (`app/switch/mod.rs:518-520`; also at
+   arrival, `app/switch/arrival.rs:64-66`).
+3. No job; nothing sent.
+4. —
+5. RoboCAD has one window: changing tool drops the points.
+6. The refusal on the switcher's status. Escape (`form_cancel`, CAD-88)
+   drops the shape; Build then proceeds (or is refused by the unsaved-edit
+   guard, `CadDocument::switch_blockers`, `cad/document/state.rs:206`).
+
+Deliberate difference (native addition). By reading, unexecuted.
+
+### CAD-98 Undo through the epic
+1. Ctrl/Cmd+Z (`edit.undo`, registry.rs:307, `Do::Undo`) or REST
+   `cad_undo`.
+2. `CadAction::CadUndo` → `actions.rs:handle` (531) → `edit`.
+3. `start_edit` (one job) → `finish_edit` ("Undid <label>").
+4. `CadClient::undo` (`cad_client/mod.rs:390`, `POST /undo`).
+5. `api.py:1677` → `Service.undo` (1046) → `Ops.undo`
+   (`commands.py:305`): one command off the stack.
+6. Each plane (`AddNodes("Plane")`, `commands.py:892-895`), shape
+   ("Sketch (API)", one `SetAttributes` per call list, `commands.py:449-454`;
+   a new sketch adds its "Sketch" step, `api.py:715-719`), sketch edit and
+   solid (one `Ops` call, `extrude`/`revolve`/…) is one step, each undo
+   reverses exactly one; a refused call left no step (`Service.create`
+   undoes its "Sketch", api.py:721-728). RoboCAD: Edit ▸ Undo
+   (`ui/app.py:291`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+## Reading traces — Part F
+
+Each trace follows one Part F step (CAD-99 to CAD-130: the shared camera,
+display modes, grid, build plate, section, isolate and hide, saved views,
+the tessellation tolerance, and new, open, save as, import, export and
+render) from the native control to RoboCAD and back to what the 3D view,
+the display panel, the Saved Views panel, the path form, the job strip,
+the status line or the written file shows. Everything here is by reading,
+unexecuted: nothing was built, run or captured, and no step was compared
+side by side. Native paths are under `crates/sim-spatial/src/` unless they
+start with `crates/`; RoboCAD paths are under `cad/robocad/`
+(`ui/viewport.py`, `ui/app.py`, `ui/saved_views.py`, `api.py`, …). Steps
+that only move the camera or change the display make no RoboCAD call and
+are compared with RoboCAD's window code instead. Gaps found while tracing
+were fixed in this batch (each named in its entry), unless an entry says it
+is recorded. The common legs are written out once:
+
+- **Key and menu leg** (every bound key, menu entry, palette row and
+  radial slice): `cad/keys.rs:keys` (352) matches the press exactly against
+  RoboCAD's command table (`cad/surfaces/registry.rs:COMMANDS`; the keypad's
+  digits and `/` are the digits, `normalise` 210), refuses by name on the
+  status line when `registry::ready` (573) says why, else writes
+  `Act::ui(CadAction::CadInvoke { id })` (409); a menu entry, palette row or
+  radial slice writes the same `CadInvoke`. The one apply system
+  `cad/actions.rs:apply` (354) drains it into `handle` (459) → arm 561 →
+  `cad/ops/mod.rs:handle` (491) → `ops/invoke.rs:invoke` (12): a catalogue
+  entry runs (`ops/mod.rs:run` 528), anything else goes to
+  `cad/surfaces/mod.rs:invoke_command` (246) → `registry::invoke` (619) →
+  `registry::resolve` (495): `Resolved::Action` re-enters
+  `actions::handle` with `Do::action` (109: `Do::Fit` 114, `Do::Display`
+  121 → `DisplayCmd::action` 150, `Do::SavedViews` 123, `Do::File` 125 →
+  `files::command_action`), `Resolved::Camera` → `registry::camera` (635),
+  which pushes the camera intent (`CameraCmd::action`, 179) on
+  `Cx::camera`; after the handler, `actions::apply` writes those as
+  `Act<CameraAction>` (415-418). A click's refusal is the status line
+  (actions.rs:408).
+- **Camera leg** (every camera intent): `camera/apply.rs:apply` (175,
+  `ViewerSet::Actions`) takes the active orbit camera (186) and runs
+  `handle` (59); `camera/orbit.rs:place` (411, `CameraSet::Place` in
+  SimSync) writes the camera's `Transform` and `Projection` only on a
+  change; `cad/view.rs:update` (134, after Place) refreshes the CAD view
+  snapshot picks and overlays project through; `cad/views/mod.rs:snapshot`
+  (466) copies the `Orbit` for saved views. REST `camera_*` and
+  `system_ui` `camera:*` parse to the same `CameraAction`
+  (`camera/mod.rs:334`, `Action::parse` 417). No RoboCAD call: the native
+  camera is this window's, RoboCAD's is its own (`api.py` `/view` is not
+  used).
+- **Display leg** (`cad_display`, `cad_section`): `actions.rs:handle` arm
+  580 → `cad/display/mod.rs:handle` (493) → `apply_display` (338) or
+  `apply_section` (384) on `CadDisplay`; display only, never an edit.
+  Drawing: `display/draw.rs:materials` (138) and `section::preview` (367)
+  in SimSync after `CadSet::Highlight`, `draw::lines` (333), `quads` (572),
+  `lights` (632) and `ui::toolbar` (128) in Present
+  (`display/mod.rs:build` 526-556).
+- **Edit leg** (every document change, as Part G's): `cad/edit.rs:edit`
+  (12) → `cad/sync/mod.rs:start_edit` (686): refused by name by
+  `CadDocument::edit_refusal`, else one `Job::spawn(Pool::Dedicated, …,
+  "RoboCAD edit: …")` (693) → the `sim_runtime::cad_client` call → RoboCAD
+  `api.py:_route` (1540; `run = s.run_on_main` 1546) → `Ops` / `commands.py`
+  (one undo step) → `sync::finish_edit` (565): an answer of an older
+  generation is dropped, the edit's message or RoboCAD's error is the
+  status line (601), a Save As retargets the window's file (609), then
+  `refresh` (641, called at 630) refetches `/doc`; the tree, inspector and
+  3D view follow the new revision. `edit_at` (48) adds
+  `CadDocument::commit_refusal` (`cad/document/state.rs:138`) for values
+  read at a revision.
+- **File job leg** (new, export, render, the unit guess):
+  `cad/files/jobs.rs:start` (143) spawns one `Pool::Dedicated` job, marked
+  `complete_on_drop` for the writes (148: leaving CAD mode does not stop a
+  sent request; its outcome is logged, `logged` 126), shows "label…" on the
+  status line (155) and in the progress strip (`strip` 277, bottom left of
+  the 3D view, each export and render with its **Cancel**), and makes a REST
+  caller wait (`file_job` in its continuation; `wait` 181).
+  `jobs::receive` (228; JobResults, before `CadSet::Results`,
+  `files/mod.rs:build` 622, registered at 632) polls each job: its answer to a waiting REST
+  caller, `cad_state.files.last`, the status line (262: an error stays an
+  error, a job is never shown as done unless it succeeded), and what follows
+  it (a new file's open, a unit guess into the form). RoboCAD's 4xx text is
+  named through `jobs::named` (118).
+- **Path form** (every file command without a path): `files/mod.rs:open_form`
+  (459) → `files/form.rs:FileForm::new` (117), drawn modal over a kit
+  backdrop that also covers the switcher strip (`form::draw` 613), typed in
+  the one kit text field `form::FILES` (54; `form::input` 446 in
+  `CadKeySet::Focus`, before `EscapeTool`, so its Escape closes the form
+  and is consumed, 547), listing the path's directory through the kit path
+  field's job (`ui_kit/path_field.rs:request` 130 on `Pool::Io`,
+  `receive` 136, drawn by `Kit::path_listing` 227); OK writes the one
+  action REST takes (`FileForm::action` 342, captured with the form's
+  sequence by `activation::guard_files`), and a refusal comes back into the
+  form (`files/mod.rs:handle` 286-291).
+
+### CAD-99 Orbit, pan, zoom to the cursor
+1. Right-drag, middle-drag (Shift+right-drag), the wheel over the 3D view:
+   `camera/input.rs:navigate` (123, `CameraSet::Navigate` in SimSync); a
+   drag latches its camera when a button goes down inside the view area and
+   not over a panel (`accepts` 56: CAD's rules `yield_to_ui`,
+   `cad/scene.rs:rules` 40-54) and keeps going until both buttons are up
+   (149-154). REST `camera_orbit {"dx":100,"dy":0}`, `camera_pan`,
+   `camera_zoom {"factor":0.8,"at":[x,y]}` → `camera/apply.rs:handle` arms
+   93, 88, 110.
+2. `drag_kind` (82) with CAD's `robocad_gestures`: right without Shift
+   orbits → `Orbit::rotate` (`orbit.rs:245`: 0.007 rad/px, a drag right
+   lowers the yaw, a drag down raises the pitch, clamped to CAD's 89.5°,
+   `scene.rs:44`); middle or Shift+right pans → `Orbit::pan` (238:
+   0.0015 × radius per pixel along the view's right and up). The wheel
+   (`wheel_lines` 45) zooms by `exp(−0.12 × lines)` toward
+   `camera/input.rs:cursor_anchor` (217: the point under the cursor on the plane through
+   the focus facing the view, `focus_plane_hit` 323) → `Orbit::zoom` (287:
+   the focus moves toward the anchor by the applied ratio, so the anchor
+   keeps its pixel; the radius clamps to 0.05–40 × the drawn bodies'
+   extent, `scene.rs:45`). Any gesture stops a glide or spin (`interrupt`
+   129).
+3. No job, no document leg: display only. `orbit::place` (411) places the
+   camera; `cad/view.rs:update` (134) keeps picks on what is drawn.
+4. No `cad_client` call.
+5. No RoboCAD call. RoboCAD's counterpart: `ui/viewport.py:mouseMoveEvent`
+   (1480-1512: right-drag orbits at 0.4°/px, `Camera.orbit` 79-86, pitch
+   within ±89.5°; middle or Shift+right pans by its world-per-pixel,
+   `Camera.pan` 88-91) and `wheelEvent` (1553-1566: one step of 0.9 or
+   1.1 per event toward `snap(…, suppress=True)`'s point, `Camera.zoom`
+   97-103).
+6. Shown: the 3D view turns, slides and zooms; `camera_state` (apply.rs:62,
+   `camera/mod.rs:state_json` 437) reports the RoboCAD yaw and pitch too.
+   Both keep the point under the cursor on its pixel while zooming (any
+   anchor on the cursor's ray stays put when the eye scales about it). RoboCAD
+   anchors on the active plane or the model's XY plane under the cursor
+   (`viewport.py:1415-1435`), the viewer on the plane through the focus.
+
+Deliberate difference (recorded): the zoom anchor's depth (the focus plane,
+not RoboCAD's ground or active plane) and the wheel step
+(`exp(−0.12 × lines)`, about 0.89 a line, where RoboCAD takes 0.9 per event
+whatever its size), so the focus drifts differently while the point under
+the cursor stays put in both; 0.007 rad/px is RoboCAD's 0.4°/px. By
+reading, unexecuted.
+
+### CAD-100 Named views
+1. 1, 3, 7, 0 and Ctrl/Cmd+1, 3, 7 (the keypad's digits too, `normalise`
+   210-221): key leg → `registry.rs` rows 319-325
+   (`Native::Camera(CameraCmd::Preset(…))`); View ▸ View front … View iso
+   (the same rows), and Space's view radial (`VIEW_RADIAL` 281: Front,
+   Top, Right, Iso). REST `camera_view {"view":"front"}`. The shared
+   numpad keys are off in CAD (`scene.rs:50`, `keys: false`), so a digit is
+   read once.
+2. `registry::camera` (635) pushes `CameraAction::View` → camera leg →
+   `apply.rs:63-67` → `Orbit::preset` (`orbit.rs:169`: RoboCAD's yaw and
+   pitch from `ViewPreset::robocad_degrees`, `camera/mod.rs:260-270`,
+   through `robocad_to_display` 283, pitch within the rules' limit; focus
+   and distance kept; a cut, and back to the turntable, `glide_to` 61-63).
+3. No job: display only.
+4. No `cad_client` call.
+5. No RoboCAD call. RoboCAD: `ui/app.py:303-304` (`camera.set_view(n)`),
+   `ui/viewport.py:Camera.set_view` (110-114: the same table, turntable).
+6. Shown: the same side at the same distance and focus; Ctrl's views are
+   the opposite sides. Gap found and fixed: the CAD camera opened with
+   Bevy's 45° field of view and an arbitrary heading, where RoboCAD's
+   camera starts at 40° and its iso heading (`ui/viewport.py:44-46`), so
+   the same distance drew the model about 12 % smaller than RoboCAD's
+   window; `cad/scene.rs:setup` now starts at RoboCAD's iso view and 40°
+   (`ROBOCAD_FOV_DEG`, `scene.rs:56-57`, 62-77; the projection and the
+   orbit agree from the first frame).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-101 Focus selection
+1. F (View ▸ Focus Selection, `registry.rs:318`,
+   `Native::Camera(CameraCmd::Focus)`) → key leg → `registry::camera` (635)
+   → `focus` (656).
+2. No `CameraAction`: `focus` takes the shared selection's nodes
+   (`cx.shared.items().nodes()`), adds every node under them (walk order
+   lists parents first), and asks `CadMeshes::bounds` (`cad/mesh.rs:149`)
+   of them; `CadMeshes::frame` (176) sets the framing request. With nothing
+   selected it is `CadFit { id: None }` (Fit All, `actions.rs:578` →
+   `fit` 691). Nothing drawn: refused by name ("nothing to frame: no body
+   of … is drawn").
+3. `cad/scene.rs:fit` (125, SimSync before Place) takes the request and
+   `Orbit::frame_bounds` (`orbit.rs:231`): the bounds' centre at 3.2 × their
+   half diagonal from the current heading, keeping a trackball.
+4. No `cad_client` call.
+5. No RoboCAD call. RoboCAD: `ui/viewport.py:focus_selection` (449-453) →
+   `focus_nodes` (455-474: the nodes and every descendant's bbox) →
+   `Camera.focus` (105-108: distance = half diagonal / sin(fov/2) × 1.1,
+   which at RoboCAD's 40° is 3.22 × the half diagonal).
+6. Shown: the part, or the group with its children, fills the view;
+   everything with nothing selected.
+
+Matches RoboCAD (3.2 × against 3.22 × at RoboCAD's default 40°). By
+reading, unexecuted.
+
+### CAD-102 Orthographic and field of view
+1. 5 (View ▸ Orthographic, the radial's Ortho; `registry.rs:326`) → key
+   leg → `CameraAction::Projection { orthographic: None }`. View ▸ Set field
+   of view… (`registry.rs:336`, `CameraCmd::Fov`) → `registry::camera` →
+   `cad/views/mod.rs:open_fov` (392): the Saved Views panel's "Field of
+   view" entry opens filled with the camera's degrees (`panel::fov_text`),
+   on the one kit field `views/panel.rs:VIEWS` (39). REST
+   `camera_projection`, `camera_fov {"degrees":30}`.
+2. Projection: `apply.rs:69-72` toggles `Orbit::orthographic`. The field's
+   Enter: `views/panel.rs:input` (113) → `submit` (74): `evaluate(&FOV, …)`
+   (94; `FOV` 48: 5–120, one decimal), refused under the field naming the
+   range; else `Act<CameraAction>::Fov` → `apply.rs:73-77` (`fov` 23 refuses
+   outside 5–120 by name).
+3. `Orbit::projection` (`orbit.rs:336`): perspective keeps the mode's near
+   plane; orthographic is `2 × radius × tan(fov/2)` high, so the model keeps
+   its size on screen; `place` writes it (433-435).
+4. No `cad_client` call.
+5. No RoboCAD call. RoboCAD: `ui/app.py:toggle_ortho` (1034-1036),
+   `set_fov` (1059-1063: `QInputDialog.getDouble(…, 5, 120, 1)`),
+   `ui/viewport.py:Camera.projection` (128-131: half height
+   `distance × tan(fov/2)`).
+6. Shown: no perspective in orthographic, the same size; 30° narrows it.
+   The entry sits in the floating panel at the lower right instead of a
+   dialog (recorded with the Saved Views dock).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-103 Trackball
+1. View ▸ Toggle orbit: turntable / trackball (`registry.rs:335`,
+   `CameraCmd::OrbitMode`) → key leg (menu) → `CameraAction::OrbitMode {
+   mode: None }`; REST `camera_orbit_mode`, `camera_state` (`mode` is
+   `trackball` non-null).
+2. `apply.rs:133-141` → `Orbit::set_trackball` (`orbit.rs:302`): on, the
+   trackball starts from the current rotation; off, `sync_turntable` (310)
+   takes the turntable heading nearest the current view.
+3. A right-drag then rotates the trackball (`rotate_by` 251-262: about the
+   view's own up and right axes), so the model can roll past upside down.
+4. No `cad_client` call.
+5. No RoboCAD call. RoboCAD: `ui/app.py:toggle_orbit_mode` (1050-1057:
+   `sync_trackball`, mode "trackball"; back, mode "turntable"; either
+   way status "Orbit: {mode}"), `Camera.orbit`'s trackball branch
+   (`ui/viewport.py:80-84`).
+6. Shown: the model tumbles freely in both. Back in turntable RoboCAD
+   returns to the yaw and pitch it had before the trackball (they were
+   never changed), the viewer to the nearest upright heading of the view as
+   it is. The status line says "Orbit: trackball" / "Orbit: turntable", the
+   mode switched to (`cad/surfaces/registry.rs:camera`, 638-645 → 644: the
+   opposite of this frame's camera snapshot, `CadViews::camera`), as
+   RoboCAD's `self.status(f"Orbit: {cam.mode}")` (`ui/app.py:1057`).
+
+Deliberate difference (recorded): leaving the trackball keeps the view's
+direction (nearest upright heading) rather than jumping back to the
+heading from before it. Gap found and fixed (this batch): the viewer wrote
+no "Orbit: …" status line. By reading, unexecuted.
+
+### CAD-104 View cube
+1. The cube net at the top right of the 3D view (`cad/display/ui.rs:cube`
+   224-242: Top; Left, Front, Right; Iso, Bottom, Back as kit segment
+   buttons carrying `CubeButton`), lit on the face the camera looks at
+   (`facing` 77 = RoboCAD's `view_cube_hit` at the cube's centre, through
+   `cube_face` 63). The **Cube** chip (`toolbar` 200,
+   `DisplaySetting::ViewCube`) hides and shows it.
+2. `ui.rs:cube_press` (99, `ViewerSet::Input`) → `cube_action` (91):
+   `CameraAction::View`, or `CameraAction::Opposite` when the turntable
+   heading already is that face's (within 1e-3 rad, pitch clamped as the
+   camera clamps it; never for Iso) → camera leg → `apply.rs:63-68`
+   (`Orbit::opposite`, `orbit.rs:177`: yaw + 180°, pitch negated).
+3. No job: display only.
+4. No `cad_client` call.
+5. No RoboCAD call. RoboCAD: `ui/viewport.py:mousePressEvent` (1458-1468:
+   a cube hit sets the view, or `camera.opposite()` when the camera is
+   exactly at that face), `view_cube_hit` (1183-1196), `_draw_view_cube`
+   (1134).
+6. Shown: Front then the back (RoboCAD's opposite); Iso; the lit face
+   follows the view; `cad_state.display.view_cube`.
+
+Deliberate difference (recorded): the cube is a net of buttons, not a
+shaded 3D cube; a click picks a face by its button, not by the pixel's
+direction. By reading, unexecuted.
+
+### CAD-105 Display modes
+1. Z (`registry.rs:328`, `DisplayCmd::Next`), View ▸ Display: shaded …
+   Display: render (329-334), the display panel's six segment buttons
+   (`ui.rs:toolbar` 187-192, `CadButton(CadDisplay { mode })`), Inspect ▸
+   Normal-direction shading (446: xray). REST `cad_display
+   {"mode":"wireframe"}`, `{"next":true}`; `system_ui`
+   `cad:display:mode_*`, `cad:display:next` (`display/mod.rs:controls_of`
+   579-582).
+2. Display leg: `apply_display` (338): `DisplayMode::next` (94, RoboCAD's
+   `MODES` order, wrapping) or the mode given.
+3. `draw::materials` (138): each body's material swapped for the mode's
+   derived copy (`derive_material` 101: xray 0.35 alpha blended, wireframe
+   fully transparent and still pickable, matcap the clay tint), back to the
+   body's own in shaded, shaded_edges and render; `edges_sync` (215) and
+   `lines` (333, `Layer::Edges`) draw RoboCAD's sampled B-rep edges in
+   0.08, 0.08, 0.1 while `DisplayMode::edges` (99); `lights` (632) adds
+   render's fill and back lights.
+4. Edges not held by `CadTopology`: `GET /nodes/{id}/edges?samples=24`
+   (`crates/sim-runtime/src/cad_client/mod.rs:edges` 323) on
+   `Pool::Dedicated` jobs (`draw.rs:fetch_edges` 199), at most 2 at once,
+   dropped on a new revision.
+5. RoboCAD: `api.py:1644-1645` (edges). Its window: `ui/app.py:1042-1048`
+   (`next_display_mode`, `set_display_mode`), `ui/viewport.py:MODES` (260)
+   and its draw passes (761-786 edges, 879-904 render).
+6. Shown: the same order and look for shaded, shaded with edges, wireframe
+   and xray; `cad_state.display.mode`.
+
+Deliberate difference (recorded): matcap is approximated (clay tint, no
+sphere image) and render has no ground shadow. By reading, unexecuted.
+
+### CAD-106 Grid
+1. Ctrl/Cmd+G (`registry.rs:327`, `DisplayCmd::Grid`), View ▸ Grid, the
+   **Grid** chip (`ui.rs:195`), the radial's Grid. REST `cad_display
+   {"toggle":"grid"}`.
+2. Display leg: `apply_display` (338-378) flips `CadDisplay::grid`.
+3. `draw::lines` (333) rebuilds `Layer::Grid` and `Layer::Axes` (retained
+   gizmos under the Z-up root, only when their inputs change): `draw_grid`
+   (471-486: ±20 steps of `GRID_STEP_MM` 10 mm on z = 0, every 5th line
+   major, minor ones 0.7 ×, high contrast's colours), the axes (red X and
+   green Y 200 mm, blue Z 100 mm), all cut by the section plane when it is
+   on (`strips`).
+4. No `cad_client` call.
+5. No RoboCAD call. RoboCAD: `ui/app.py:toggle_grid` (1038-1040),
+   `ui/viewport.py:_draw_grid` (590-618: the same step, count, major rule,
+   colours and axes).
+6. Shown and hidden together; `cad_state.display.grid`.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-107 Build plate and overhangs
+1. Ctrl/Cmd+Shift+B (Print ▸ Build Plate Preview, `registry.rs:341`), the
+   **Plate** chip (`ui.rs:196`). REST `cad_display {"toggle":"build_plate"}`.
+2. Display leg: `apply_display` (372-377): toggling the plate sets
+   `overhangs` to the plate's new state, as RoboCAD's.
+3. `draw::quads` (572): the 220 × 220 mm plate (`BUILD_PLATE_MM`,
+   `display/mod.rs:181`) at z = −0.05; `section::preview` (367) builds the
+   overhang tint on `Pool::Compute` (`derive_preview` 283 → `overhangs`
+   225: triangles facing down more than 45° from horizontal, RoboCAD's
+   0.9, 0.35, 0.3), never changing the body's mesh.
+4. No `cad_client` call.
+5. No RoboCAD call. RoboCAD: `ui/app.py:toggle_build_plate` (1072-1077:
+   `show_overhangs = build_plate is not None`), `ui/viewport.py:_draw_build_plate`
+   (622), `overhang_threshold` 45 (293).
+6. Shown: the plate and the same downward faces in red; off again.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-108 High contrast
+1. View ▸ High-Contrast Theme (`registry.rs:342`), the **Contrast** chip
+   (`ui.rs:199`). REST `cad_display {"toggle":"high_contrast"}`.
+2. Display leg flips `CadDisplay::high_contrast`.
+3. `draw::lights` (632): the 3D view's clear colour becomes RoboCAD's
+   0.98, 0.98, 0.99; `lines` redraws the grid in high contrast's colours
+   and the edges black (`EDGE_CONTRAST`).
+4. No `cad_client` call.
+5. No RoboCAD call. RoboCAD: `ui/app.py:toggle_high_contrast` (1085-1093:
+   kept in QSettings, its stylesheet swapped too), `ui/viewport.py:533`,
+   599-600, 764.
+6. Shown: the 3D view turns light with a lighter grid and black edges.
+
+Deliberate difference (recorded): only the 3D view changes (the kit's
+panels keep their colours) and the setting is not kept after a restart. By
+reading, unexecuted.
+
+### CAD-109 Section preview
+1. Ctrl/Cmd+Shift+X (Inspect ▸ Section Analysis, `registry.rs:340`,
+   `DisplayCmd::Section`), the **Section** chip (`ui.rs:198`). REST
+   `cad_section {}`; `system_ui` `cad:section:toggle`.
+2. Display leg: `apply_section` (384) with nothing given toggles (392-400);
+   turned on without a plane it starts on `default_plane` (463: XZ, normal
+   −Y, through the drawn bodies' bounds centre in Y, 0 with nothing drawn).
+3. `section::preview` (367, SimSync): each drawn body shows a clipped copy
+   of RoboCAD's tessellation built on `Pool::Compute` (`clip` 146: kept
+   where `distance ≤ 0`, the side the normal points to removed, as
+   RoboCAD's clip plane), with its cut outline (`segments` 199) drawn in
+   RoboCAD's red by `lines` (`Layer::Outline`); picks go through the shown
+   copy and skip the removed side (`cad/pick.rs:375`, `candidates_at` 343,
+   `search_for` 266).
+4. No `cad_client` call.
+5. No RoboCAD call. RoboCAD: `ui/app.py:toggle_section` (1065-1070) →
+   `ui/tools.py:SectionTool.activate` (1162-1170: `Plane.xz` through the
+   bounds centre in Y), `ui/viewport.py:538-541` (`glClipPlane` with the
+   negated normal), `_draw_section_outline` (941).
+6. Shown: the same side cut away and outlined in red; hovering and picking
+   never select the removed part; the same key turns it off.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-110 Section plane
+1. With the section on, the toolbar's **X**, **Y**, **Z** chips
+   (`ui.rs:202-209`: `CadSection { axis, offset }` through the drawn bodies'
+   centre) and **Rotate** (210); the offset field ("offset, e.g. 5 or 2
+   cm", `ui.rs:215`) on the one kit field `display/entry.rs:SECTION` (28):
+   a press focuses it at "0" selected (`entry::input` 70, `CadKeySet::Focus`),
+   Enter → `offset_action` (59: a unit expression in mm; `abc` refused under
+   the field "Offset: …"; 0 sends nothing). REST `cad_section {"offset":5}`,
+   `{"axis":"z","offset":10}`.
+2. Display leg: `apply_section` (401-419): `SectionPlane::on_axis`
+   (`section.rs:89`), `moved` (105: along the unit normal), `rotated` (110:
+   90° about Z, `Plane.from_normal`'s x axis).
+3. The preview rebuilds for the new plane (`preview`'s `Key` includes the
+   plane); the plane quad (`quads`, `plane_transform` 561).
+4. No `cad_client` call.
+5. No RoboCAD call. RoboCAD: `ui/tools.py:SectionTool` (1158-1200: Tab's
+   `NumericField("offset")` commit, the drag along the normal 1177-1187, R
+   1195-1198).
+6. Shown: the same cuts for the same planes and offsets; Rotate turns the
+   plane as R does.
+
+Deliberate difference (recorded): R stays the Rotate tool, Tab the numeric
+bar, and a left drag on the plane box-selects (or Alt-orbits) rather than
+moving it (`entry.rs` module doc 11-18). By reading, unexecuted.
+
+### CAD-111 Exact section
+1. `system_ui` `cad:section:exact` ("Exact section of …",
+   `display/mod.rs:controls_of` 599-618; ready only with the section on, a
+   node selected, connected and a plane RoboCAD's route takes) or REST
+   `cad_section {"exact":"<id>"}`.
+2. Display leg: `apply_section` (420-443): the node must be in the shown
+   tree; `exact_query` (449): a named plane through the origin
+   (`SectionQuery::named`) or the active plane node when it is the same
+   set, else refused naming why; the request is keyed by (node, RoboCAD's
+   revision, plane, query).
+3. `section::exact_jobs` (510, JobResults): one `jobs::Latest` read on
+   `Pool::Dedicated` (549); an answer for a superseded request is dropped
+   (`accept` 503); a document change cancels it (512-521); while the
+   section stays on the request's plane a new revision re-reads it
+   (530-536).
+4. `crates/sim-runtime/src/cad_client/section.rs:CadClient::section` (103:
+   `GET /nodes/{id}/section?plane=xy|xz|yz|<plane id>`, read tolerantly,
+   `section_from_value` 78).
+5. RoboCAD: `api.py:1652-1653` → `Service.section` (830) →
+   `analysis.section_outline` (95: OCCT's section, each edge sampled).
+6. Shown: the yellow exact outline over the red preview outline
+   (`draw.rs:lines`, `Layer::Exact`, only `ExactSection::drawn`:
+   `display/mod.rs:144-148`, for the request at the shown revision on the
+   current plane); `cad_state.display.section.exact` (pending, then the
+   result or RoboCAD's error).
+
+Matches RoboCAD's route (its window has no exact section to compare). By
+reading, unexecuted.
+
+### CAD-112 Isolate
+1. `/` (View ▸ Isolate, `registry.rs:337`; the viewport's right-click menu,
+   `CONTEXT` 264; the outliner's context menu, `cad/tree/controls.rs:123`)
+   → key leg → the catalogue entry `view.isolate`
+   (`cad/ops/catalogue/view.rs:10-21`: `ANY_NODES`, refusal "Select the
+   nodes to isolate").
+2. `ops/mod.rs:run` (528) → `prepare` (543: `commit_refusal`, the
+   selection against the entry's needs) → `start` (584) → edit leg with
+   one call.
+3. Edit leg: one `RoboCAD edit: Isolate` job.
+4. `crates/sim-runtime/src/cad_client/mod.rs:op` (374: `POST /ops/isolate
+   {"args": [ids]}`).
+5. RoboCAD: `api.py:1668-1671` → `Service.op` (1011) →
+   `commands.py:isolate` (402-412: every node but the selected, their
+   descendants and ancestors hidden, one `SetAttributes("Isolate")`).
+   Its window: `ui/app.py:312` (`ops.isolate(selection.nodes())`).
+6. Shown: the refetched tree's visibility, the hidden bodies gone from the
+   3D view; Ctrl/Cmd+Z → `CadUndo` (`actions.rs`) undoes the one step.
+
+Deliberate difference (recorded): with nothing selected the viewer refuses
+"Select the nodes to isolate" where RoboCAD hides everything. By reading,
+unexecuted.
+
+### CAD-113 Hide and Show All
+1. H (View ▸ Hide, `registry.rs:339`, right-click ▸ Hide) and Alt/Option+H
+   (View ▸ Show All, 338: the physical key with Alt held, `keys.rs`
+   module doc) → key leg → catalogue entries `view.hide`
+   (`catalogue/view.rs:31-41`: `set_visible(ids, false)`) and
+   `view.show_all` (22-29).
+2. `ops::run` → `prepare` → `start` → edit leg, one call each.
+3. Edit leg: one job each.
+4. `CadClient::op` (`crates/sim-runtime/src/cad_client/mod.rs:374`):
+   `POST /ops/set_visible`, `POST /ops/show_all`.
+5. RoboCAD: `api.py:1668-1671` → `Service.op` (1011) →
+   `commands.py:set_visible` (336-337: one `SetAttributes("Hide")`) and
+   `show_all` (415-416: `SetAttributes("Show all")` over every node). Its
+   window: `ui/app.py:313-314`.
+6. Shown: the tree's eye column and the 3D view follow the refetched
+   revision; each undo reverses one step.
+
+Deliberate difference (recorded): Hide with nothing selected is refused
+"Select the nodes to hide" (RoboCAD pushes an empty step). By reading,
+unexecuted.
+
+### CAD-114 Save a view
+1. View ▸ Saved Views (`registry.rs:296`, `Do::SavedViews` 123:
+   `CadViews { op: panel, open: true }`) opens the floating panel
+   (`cad/views/panel.rs:draw` 229, `body` 294). The name field ("View name,
+   e.g. Worm drive cutaway", 310) is the one kit field `VIEWS` (39);
+   **Save current view** (311) is the `cad:view:save` control's
+   `CadButton`, enabled only for a 1–120 character name, an edit that can
+   be sent and a placed camera (`views/mod.rs:controls_of` 511); Enter in
+   the field submits through `panel::submit` (74-83). REST `cad_views
+   {"op":"save","name":"Front cutaway"}`.
+2. `views/mod.rs:handle` (`ViewsOp::Save` 301): `check_view_name` (302;
+   `crates/sim-runtime/src/cad_client/views.rs:222`, RoboCAD's
+   `_view_name`), `CadViews::capture` (171) of the native camera
+   (`snapshot` 466) and display through `convert::capture`
+   (`convert.rs:115`), checked as RoboCAD checks it (`ViewState::check`,
+   `cad_client/views.rs:159`), all before anything is sent; the typed name
+   stays until RoboCAD answers (`saving` 314, `settle_save` 406).
+3. Edit leg: one job.
+4. `CadClient::save_view` (`cad_client/views.rs:267`: `POST /views {name,
+   state}` with exactly the schema's twelve keys).
+5. RoboCAD: `api.py:1727-1729` → `saved_view_request` (1126-1133) →
+   `saved_views.py:SavedViewOps.save_view` (107-114: `validate_state`, one
+   `ChangeSavedViews('Save view')`). Its window: `ui/saved_views.py:save_current`
+   (85-90).
+6. Shown: the list refetched at the new revision (`views::sync` 437, one
+   `GET /views` job per (generation, revision)): "Front cutaway /
+   Orthographic · Cutaway" (`convert::details` 190); the feedback line
+   "Saved: Front cutaway" (`settle_save`), else the panel's
+   "Saved inside this CAD file · edits support Undo" (339).
+
+Matches RoboCAD. Deliberate difference (cosmetic, recorded): RoboCAD
+selects the saved row; the viewer marks a row current only on restore. By
+reading, unexecuted.
+
+### CAD-115 Rename, replace, delete
+1. On a row (`panel.rs:322-337`): **Rename…** (334) opens the row's own
+   field on the kit field `VIEWS` (`ViewField::Rename`), Enter → `submit`
+   (84-92: unchanged names send nothing); **Replace with current** (333,
+   `cad:view:replace-<id>`) and **Delete** (335, `cad:view:delete-<id>`)
+   are `CadButton`s. REST `cad_views {"op":"rename"|"replace"|"delete",
+   "id":…}`.
+2. `views/mod.rs:handle` arms `Rename` (319), `Replace` (332: the camera
+   and display captured as for a save), `Delete` (344); edit leg.
+3. Edit leg: one job each.
+4. `CadClient::update_view` (`cad_client/views.rs:273`: `PATCH /views/{id}`
+   with only `name` or only `state`), `delete_view` (282: `DELETE
+   /views/{id}`).
+5. RoboCAD: `api.py:1727-1729` → `saved_view_request` (1144-1152) →
+   `SavedViewOps.update_saved_view` (`saved_views.py:116-122`, "Update
+   saved view") and `delete_saved_view` (124-127, "Delete saved view").
+   Its window: `ui/saved_views.py:replace_current` (101-105), `rename`
+   (107-112), `delete` (114-118).
+6. Shown: the list at the new revision; the status line "Renamed saved
+   view …", "Updated: … · Undo to revert", "Deleted saved view … · Undo to
+   restore"; Ctrl/Cmd+Z undoes each.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-116 Restore, across both
+1. **Restore view** on a row (`panel.rs:332`, `cad:view:<id>`); REST
+   `cad_views {"op":"restore","id":…}` (waits for the list at the current
+   revision, `views/mod.rs:wait` 202).
+2. `handle` (`ViewsOp::Restore` 282) → `restore` (357): the state checked
+   whole first (`convert::camera_of` 142, `apply_display` 168), then
+   `CameraAction::Set` (a cut, 362) and the display's grid, mode, comment
+   pins and section; `views.selected` and the feedback "Showing: …", status
+   "Restored view: …".
+3. Camera leg (`apply.rs:155-165`: pitch clamped to the rules, the
+   trackball's rotation from `rot` when the view's mode is trackball).
+4. The list is `CadClient::views` (`cad_client/views.rs:254`: `GET /views`),
+   read by `views::sync` (434); no call at restore (RoboCAD's
+   `POST /views/{id}/restore` is GUI-only and moves its own camera).
+5. RoboCAD: `api.py:1137-1143` (restore, GUI only),
+   `ui/saved_views.py:restore` (92-99: `comments.end_inspection()` first),
+   `saved_views.py:restore_view` (65-80: clears `inspection_ids`).
+6. Shown: the same direction, distance, projection, field of view, display
+   mode, grid and section; a view saved in either restores in the other
+   (the same twelve keys, `VIEW_STATE_KEYS`, `cad_client/views.rs:28`).
+   Gap found and fixed: RoboCAD's restore first ends a comment thread's part
+   view (the parts shown alone come back, the selection from before
+   returns); the viewer's restore left cad-organize's "Show only linked
+   parts" isolation on, so the other parts stayed hidden after the saved
+   view was applied. `views/mod.rs:end_part_view` (375-388, called from the
+   restore arm at 295-298) now ends it after a successful restore (the
+   selection from before, without parts deleted since, through the one
+   Selection and `selection::publish`), leaving the camera and display to
+   the saved view as RoboCAD's `restore_view` after `end_inspection` does;
+   the answer says `returned_to_assembly`.
+
+Deliberate difference (recorded): restore is a button per row, not a
+double-click. By reading, unexecuted.
+
+### CAD-117 Tessellation tolerance
+1. Select a curved body; the inspector's "Tessellation tolerance (mm)"
+   row (`cad/inspector/editors.rs:373`, `EditKey::Tessellation`), typed on
+   the inspector's kit field; Enter → `enter` (395-398) → `patch_for` (296,
+   304-306) → `evaluate` (279-289: 0.005–2 mm, three decimals, refused by
+   name outside) → `CadAction::CadPatch { "tessellation_tolerance": mm }`.
+2. `actions.rs:handle` arm 506 → edit leg (`Patch …: tessellation_tolerance`).
+3. Edit leg: one job.
+4. `CadClient::patch` (`crates/sim-runtime/src/cad_client/mod.rs:294`:
+   `PATCH /nodes/{id}`).
+5. RoboCAD: `api.py:1630-1631` → `Service.patch` (748: 774-775 sets it,
+   785 pushes one `SetAttributes("Set attributes")`). The new revision
+   refetches the body's mesh at the node's own tolerance
+   (`cad/mesh.rs:468`, `NODE_TOLERANCE` 0 =
+   `crates/sim-runtime/src/cad_client/mod.rs:130`; `api.py:1648-1649` →
+   `document.py:mesh_of` 471-475). RoboCAD's panel: `ui/widgets.py:469-476`
+   (the spin box, 0.005–2, three decimals), `_tol_changed` (730-735: sets
+   every selected node directly, no undo).
+6. Shown: coarse facets at 0.5, smooth at 0.01; one undo step "Set
+   attributes"; the field opens empty (RoboCAD's `node_summary`,
+   `api.py:110-111`, has no `tessellation_tolerance`).
+
+Deliberate difference (recorded): the viewer's change is one undo step on
+the inspected node, RoboCAD's panel records none; the field opens empty. A
+stale citation was fixed (this batch): `cad/inspector/editors.rs:42` now
+cites `api.py:774-775 and 782-785` for the patch. By reading, unexecuted.
+
+### CAD-118 File ▸ New
+1. File ▸ New (Ctrl/Cmd+N, `registry.rs:299`, `Do::File("file.new")` →
+   `files::command_action` 605) → `files/mod.rs:handle` (275) → `file`
+   (300) without a path → path form proposing `{dir}untitled.rcad`
+   (`form.rs:123`, `start_dir` 237: the document's folder). The form shows
+   `cad_open`'s rule as it stands (`open_rule` 649: `switch_blockers` in red,
+   an attached RoboCAD's `leaving_note` in amber) and "… exists: RoboCAD
+   refuses to replace it" when the listing has that name (`footer` 693-694).
+   REST `cad_file {"op":"new","path":…}`; `system_ui` `cad:file:new`.
+2. `file` arm `FileOp::New` (335): an absolute `.rcad`; the rule checked
+   before RoboCAD writes anything (341-344: "Not creating …: …"); file job
+   leg (`jobs::start` with `Then::Open`).
+3. File job leg; on success `receive` writes `CadFile { op: open }` for a
+   click (`jobs.rs:250-252`), or a REST caller's `wait` opens it itself
+   (`open_created` 204), so its answer names `created` and `opened`.
+4. `crates/sim-runtime/src/cad_client/files.rs:CadClient::new_file` (158:
+   `POST /new {path}`).
+5. RoboCAD: `api.py:1738-1740` → `Service.new_file` (1321-1348: creates the
+   file exclusively, 409 "… exists: choose a new file name"). Its window:
+   `ui/app.py:283` (`MainWindow().show()`: an untitled window).
+6. Shown: "Create …" in the strip and status line, then "Created …;
+   opening it" and the open's "Opening …" (CAD-119); an existing path is
+   RoboCAD's 409 named ("Create …: RoboCAD answered 409: … exists: choose a
+   new file name"), the file untouched.
+
+Deliberate difference (recorded): New names its file first and opens it in
+this window under the open rule; RoboCAD opens an untitled window. A gap is
+recorded for the lead: the open that follows stats the file on the UI
+thread (`actions.rs:633`, `p.is_file()`, see CAD-119). By reading,
+unexecuted.
+
+### CAD-119 File ▸ Open
+1. File ▸ Open… (Ctrl/Cmd+O, `registry.rs:300`) → `file` without a path →
+   the path form on the document's folder; its listing shows the folder's
+   `.rcad` files and subfolders (`form.rs:extensions` 306,
+   `path_field::listing_key` 119 → `request` 130 on `Pool::Io`, `list`
+   94); a folder row descends, `..` goes up (`FileForm::pick` 329, `up`
+   335, `path_field::pick` 147, `up` 160), a file row fills the path. OK →
+   `CadFile { op: open, path }`. REST `cad_open`, `cad_file {"op":"open"}`.
+2. `file` arm `FileOp::Open` (325-333): `absolute` (247: `~/` expanded; a
+   relative path refused "… is not an absolute path (RoboCAD would resolve
+   it against its own working directory)") → `CadOpen` →
+   `actions.rs:handle` arm 481 → `open` (624): a `.rcad`, the file exists
+   (633), `switch_blockers` (644), the old document's service released, a
+   new `CadDocument` started (`sync::start`), the registry's CAD entry
+   follows.
+3. The new document's connect job (`sync/mod.rs:116-127`: a self-started
+   headless service on the file).
+4. `CadClient` health and `/doc` polls of the new service.
+5. RoboCAD: the headless service started on the file (no `POST /open`,
+   which opens another window, `api.py:1746`, `Service.open`). Its window:
+   `ui/app.py:open_file` (1332-1335) → `open_path` (1326) → the loader.
+6. Shown: the left dock names the new document; the form closes
+   (`close_unless_refused` 431); a refusal stays in the form.
+
+Matches RoboCAD (the same document opens). Gap recorded, not fixed (a
+shared file): `cad/actions.rs:open` stats the path on the UI thread
+(`p.is_file()`, 633; its comment calls it a known cost); the existence check
+belongs in the connect job (`sync::start`'s self-start already fails on a
+missing file) or a `Pool::Io` read before the switch. By reading,
+unexecuted.
+
+### CAD-120 File ▸ Save As
+1. File ▸ Save As… (Ctrl/Cmd+Shift+S, `registry.rs:302`) → the path form
+   on `{dir}{stem}.rcad` (`form.rs:124`); OK → `CadFile { op: save_as }`.
+   REST `cad_file {"op":"save_as"}` (and `cad_save {path}`, `actions.rs:540`).
+2. `file` arm `FileOp::SaveAs` (356-364): absolute, `.rcad` appended →
+   `files::save` (406): edit leg, the edit marked to retarget the window
+   (423).
+3. Edit leg: one job with `FILE_TIMEOUT` (414); `finish_edit` retargets a
+   self-started document's file on success (`sync/mod.rs:604-610`).
+4. `CadClient::save_with_thumbnail` (`cad_client/files.rs:152`: `POST
+   /save/thumbnail {path}`).
+5. RoboCAD: `api.py:1736-1737` → `Service.save_with_thumbnail` (1296-1319:
+   headless, the snapshot renderer's 256 × 192 PNG; with a window,
+   `MainWindow.thumbnail`). Its window: `ui/app.py:save_as` (1344-1350:
+   `.rcad` appended, `doc.save(p, thumbnail=…)`), `thumbnail` (1352-1362).
+6. Shown: "Saved … with its thumbnail" (or "without a thumbnail: RoboCAD
+   could not draw one"); the left dock names the new file; leaving CAD mode
+   reopens it (`app/switch/leave.rs:leave_cad` 93-109 uses `doc.target`).
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-121 Import STEP
+1. File ▸ Import… (Ctrl/Cmd+I, `registry.rs:303`) → the path form (the
+   folder listing filtered to `IMPORT_EXTENSIONS`, `form.rs:308`); OK →
+   `CadFile { op: import, path }`. REST `cad_file {"op":"import"}`.
+2. `file` arm `FileOp::Import` (366-379): `import_args` (442: an extension
+   RoboCAD imports; no unit for STEP) → edit leg.
+3. Edit leg: one job with `FILE_TIMEOUT` (377).
+4. `CadClient::import` (`cad_client/files.rs:147`: `POST /import {path}`).
+5. RoboCAD: `api.py:1752-1753` → `Service.import_file` (1424-1438:
+   `importers.import_step`, `io/importers.py:27`). Its window:
+   `ui/app.py:import_path` (1369-1390, the same importers, then
+   `viewport.focus_all()`).
+6. Shown: "Imported print-kit.step: n new node(s)"; the new nodes in the
+   refetched tree; one undo removes them.
+
+Deliberate differences (recorded): an SVG or image lands on XY (RoboCAD's
+window uses the active plane, images as references); RoboCAD frames
+everything after an import (`focus_all`, `ui/app.py:1390`), the viewer
+leaves the camera where it is (Home or F frames it). By reading,
+unexecuted.
+
+### CAD-122 Import a mesh with units
+1. The import form, path `…/cap.stl`: the "Units of the mesh file" row
+   appears (`form.rs:rows` 201-203, empty) and `form::input` asks RoboCAD's
+   guess once per path (`ask_guess` 275, 590-594: `CadFile { op:
+   guess_unit }`); OK is disabled saying why until a unit is guessed or
+   chosen (`unit_missing` 287, `ok_ready` 395); **Guess unit** (685) asks
+   again; a unit chosen by hand is kept over a later guess (`set` 256-258,
+   `guessed` 296).
+2. `file` arm `FileOp::GuessUnit` (381-394: a mesh path) → file job leg
+   (a read, not `complete_on_drop`, `Then::Guess`); `receive` fills the form
+   (`jobs.rs` `Then::Guess` arm). OK → `FileOp::Import` with the unit →
+   edit leg.
+3. Guess: file job leg; import: edit leg.
+4. `CadClient::mesh_units` (`cad_client/files.rs:164`: `GET
+   /import/units?path=`), then `CadClient::import` (147: `{path, unit}`).
+5. RoboCAD: `api.py:1741-1743` → `Service.mesh_units` (1350-1366:
+   `importers.load_mesh_file`, `mesh_units_guess`, `io/importers.py:135`),
+   then `api.py:1752-1753` → `import_file` → `importers.import_mesh` (162).
+   Its window: `ui/app.py:import_path` (1377-1384) → `UnitsDialog`
+   (`ui/widgets.py:897`) with the guess preselected.
+6. Shown: "Asking RoboCAD for its guess…", then "RoboCAD's guess: …
+   (largest extent …)" (`footer` 674-686); the mesh imported at the unit
+   picked; never in a unit nobody chose or RoboCAD guessed.
+
+Deliberate difference (recorded): the unit is a row of the path form, not
+a second dialog. By reading, unexecuted.
+
+### CAD-123 Export STL, 3MF, OBJ with settings
+1. File ▸ Export… (Ctrl/Cmd+E, `registry.rs:304`) → `export` (473) without
+   format or path → `open_form` (459) → the export form
+   (`FileForm::new` 131-157: format STL first, every format's settings from
+   the values last sent this session, else RoboCAD's defaults); OK →
+   `CadExport { format, path, settings }` (`action` 361-378). REST
+   `cad_export`.
+2. `export` (473-503): the format, the path's extension
+   (`formats::extension_fits` 234), `formats::settings` (212: each value
+   checked with the desktop dialog's ranges, refused naming the setting,
+   `check` 151); remembered per format (`export_settings`); file job leg
+   (`complete_on_drop`).
+3. File job leg; the strip's **Cancel** (or `cad_file {"op":"cancel",
+   "job":n}`) → `jobs::cancel` (90).
+4. `CadClient::export` (`crates/sim-runtime/src/cad_client/mod.rs:435`:
+   `POST /export {format, path, settings, ids}` with `FILE_TIMEOUT`).
+5. RoboCAD: `api.py:1750-1751` → `Service.export` (1390-1422:
+   `exporters.export_stl`/`export_3mf`/`export_obj` with their settings
+   dataclasses; 422 for an `ExportError`). Its window:
+   `ui/app.py:export_path` (1399-1444, `ExportDialog` `ui/widgets.py:917`).
+6. Shown: "Exported STL to … (n warning(s): …)"; `cad_state.files.last`;
+   the reopened form starts from the last values sent.
+   Gap found and fixed: an export could not be cancelled and the strip said
+   only "runs to the end once sent". A sent export still runs to its end
+   (api.py has no cancel route), so the strip now has a Cancel per export
+   and render (`files/jobs.rs:strip` 283-347, its seconds updated in place
+   on `StripLine` 272-276 so a press is never lost to a rebuild,
+   `cad:file:cancel-<job>`,
+   `files/mod.rs:control_list` 683-687, `FileOp::Cancel` 126-128 (`FileArgs::job` 167-169),
+   `file` 306-317), `jobs::cancel` (90-107) says at once that RoboCAD
+   writes the file anyway, and the outcome says so too ("…; the cancel did
+   not stop it", `files/mod.rs:511-514`, `cancel_asked` in the answer); a
+   job cancelled before its thread started sends nothing (`jobs/mod.rs`
+   `Job::streaming`'s start check).
+
+Deliberate difference (recorded): export settings are remembered for the
+session, not across launches. By reading, unexecuted.
+
+### CAD-124 Export STEP, IGES, sketch SVG
+1. The export form with format `step` (Schema, Write names, Write
+   colours), `iges` (no settings) or `svg` (Sketch (node id), filled with
+   the first selected sketch, `export_context` 266-271); REST
+   `cad_export`.
+2. `export` (473): as CAD-123; the sketch SVG without a sketch is refused
+   ("the sketch SVG needs settings.sketch …", `formats.rs:204`).
+3. File job leg.
+4. `CadClient::export` (`cad_client/mod.rs:435`).
+5. RoboCAD: `api.py:1750-1751` → `Service.export` (1400-1410: STEP, IGES,
+   sketch SVG); an `ExportError` is RoboCAD's 422, named
+   ("Export STEP to …: RoboCAD answered 422: …", `jobs::named` 118). Its
+   window: `ui/app.py:export_path` (1417-1438).
+6. Shown: the status line and `cad_state.files.last`; the files RoboCAD
+   wrote.
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-125 Export drawing
+1. File ▸ Export drawing (SVG)… (Ctrl/Cmd+Shift+D, `registry.rs:305`,
+   `files::command_action` 605: the export form on `drawing`): the four
+   views checked, Title the document's file name, "Section A-A (the section
+   tool's plane)" checked while the section is on (`form.rs:141-153`,
+   `section_available`).
+2. `export` (473) → `formats::settings` (212-231: views as a list, the
+   section as the section tool's plane, refused when it is off).
+3. File job leg.
+4. `CadClient::export` (`cad_client/mod.rs:435`, format `drawing`).
+5. RoboCAD: `api.py:1750-1751` → `Service.export` (1411-1416:
+   `STANDARD_VIEWS`, `View("Section A-A", pl.normal, section=pl)`,
+   `export_drawing_svg`). Its window: `ui/app.py:export_drawing`
+   (1446-1456: the same four views, Section A-A while the section is on,
+   the title `basename(doc.path or "untitled")`).
+6. Shown: "Exported Drawing (SVG) to …".
+
+Matches RoboCAD. By reading, unexecuted.
+
+### CAD-126 Render
+1. `system_ui` `cad:file:render` ("Render (PNG)…",
+   `files/mod.rs:control_list` 678) → the render form (`form.rs:159-164`:
+   view iso, 1200 × 900, shaded, edges on); REST `cad_render
+   {"path":…,"view":"iso","w":1200,"h":900}`.
+2. `render` (567-602): an absolute `.png` path, `render_request` (521: the
+   view, mode, 16–8192 px, section and tolerance checked before anything is
+   sent) → file job leg (`complete_on_drop`).
+3. File job leg: the job asks RoboCAD, then writes the PNG itself (591), so
+   the window never stalls; the strip's **Cancel** (`jobs::cancel` 90).
+4. `CadClient::render` (`cad_client/files.rs:169`: `GET /render?…`,
+   `RenderRequest::route` 106; an answer that is not a PNG is an error).
+5. RoboCAD: `api.py:1730-1731` → `Service.render_request` (1157-1172:
+   headless the snapshot renderer `render` 1189-1221; with a window the GPU
+   viewport for a plain shaded view).
+6. Shown: "Rendered … (n KB)"; a size outside 16–8192 px or a path without
+   `.png` is refused first. Gap found and fixed: a render could not be
+   cancelled. The PNG is this window's to write, so the job now checks the
+   cancel before writing (`files/mod.rs:587-590`: "…: cancelled; RoboCAD
+   drew the image … but nothing was written to …", an error, never shown as
+   done) and says when the cancel came too late to stop the write (591-595); the
+   strip's Cancel and `cad:file:cancel-<job>` ask it (CAD-123).
+
+Matches RoboCAD's route (its window has no render command). By reading,
+unexecuted.
+
+### CAD-127 Unsaved edits
+1. File ▸ Open… or New in a self-started service with an unsaved edit: the
+   form's red line "Not now: … has unsaved edits in the RoboCAD service this
+   window started …: save first" (`form.rs:open_rule` 649-658, drawn by
+   `footer` 667-673); OK writes the action and is refused by name in the
+   form; New is refused before RoboCAD writes anything
+   (`files/mod.rs:341-344`). Attached to RoboCAD's window: the amber note
+   "RoboCAD at … keeps the unsaved edits to …; this window then shows the
+   other file" (`leaving_note`). REST `cad_open`, `cad_file {op: open|new}`
+   follow the same rule.
+2. Open → `actions.rs:open` (624: `switch_blockers` 644, "Not opening …");
+   New → `file` 341.
+3. `CadDocument::switch_blockers` (`cad/document/state.rs:206`): an edit in
+   flight, a component rebuild, model exports and print jobs, and a
+   self-started service's unsaved or unconfirmable edits (`unsaved`, from
+   `health.dirty` after a fresh `GET /`); `leaving_note` (242).
+4. `GET /` (`health.dirty`) through the poll worker.
+5. RoboCAD: `ui/app.py:283-284` (New and Open open another window);
+   closing: `closeEvent` (1920-1934: "Unsaved changes" / "Save before
+   closing?").
+6. Shown: the refusal names the document and what to do (save first); no
+   discard button; after Save (Ctrl/Cmd+S) OK opens.
+
+Deliberate difference (recorded): the viewer refuses rather than replace a
+self-started service's unsaved edits; there is no discard answer. By
+reading, unexecuted.
+
+### CAD-128 The camera in the other modes
+1. Robot (`robot/ui.rs:126-136`), Phenomena (`phenomena/scene.rs:59-69`),
+   Build, Inspect and Lessons (`inspect_view/camera.rs:spatial_rules`
+   16-29) spawn the shared camera with their own `OrbitRules`; right-drag,
+   middle or Shift+right-drag and the wheel go through the same
+   `camera/input.rs:navigate` (123); the numpad's 1/3/7 (Ctrl opposite), 9,
+   5, 0, `.` and Home are `camera/input.rs:keys` (245-275, `keys: true` in
+   these modes, never while a kit field types: `camera/mod.rs:485`). REST
+   `camera_spin {"rate":0.5}`.
+2. `drag_kind` (82-95) without `robocad_gestures`: middle or Shift pans,
+   right orbits (Shift+middle still pans); arrows are not camera keys
+   (`keys` 249: only with `robocad_gestures`). The wheel zooms toward the
+   focus (`zoom_to_cursor` false), in a lesson card only with Ctrl/Cmd
+   (`inspect_view/camera.rs:sync_camera` 46-66, `zoom_modifier`).
+3. `orbit::place` (411): a home request frames with the mode's framing
+   (the spatial view's overview glides, `glide_home`; Phenomena's fixed
+   pose; Robot frames from the heading); spin (`step` 118-120) keeps going
+   until a gesture (`interrupt`).
+4. No `cad_client` call.
+5. No RoboCAD call (compare with a build before the shared camera).
+6. Shown: each mode's rate, pitch limit, zoom limits, home and spin as its
+   rules state; a drag that starts on a side dock never moves the camera
+   (`accepts` 56 with the mode's `ViewArea::Docks`).
+
+No RoboCAD counterpart (the shared camera's other modes); matches the
+modes' former feel by reading of the rules (not compared with a 1b00d789
+build). By reading, unexecuted.
+
+### CAD-129 RoboCAD's camera gestures
+1. CAD with the Select tool: Shift+middle-drag, Alt+right-drag,
+   Alt/Option+left-drag past 6 px, the arrow keys (Ctrl/Cmd: 90°,
+   Shift: pan). REST `camera_orbit {"degrees":[10,0]}`.
+2. `camera/input.rs:drag_kind` (82-95 with `robocad_gestures`):
+   Shift+middle orbits, plain middle pans, Alt with a right orbit snaps
+   (`Orbit::snap_to_axis`, `orbit.rs:268-282`, after every step as RoboCAD
+   does, 181-185). Alt+left: noted at the press when CAD's gate allows it
+   (`alt_left`, written by `cad/scene.rs:fit` 133-136 from `gate` 110-112:
+   the Select tool, no catalogue interaction or command surface), an orbit
+   once past `ALT_DRAG_SLOP` (65, 156-169, 187-195); `cad/pick.rs` (418-431)
+   makes the same press never a box select (`alt_drag`) and keeps a shorter
+   Alt+click the candidates menu (462-465). Arrows: `keys` (245) →
+   `arrow_action` (226-236) → `apply.rs:93-109` (`rotate_by`) or `Pan`;
+   not while a kit field has the keyboard (`camera/mod.rs:485`).
+3. No job: display only.
+4. No `cad_client` call.
+5. No RoboCAD call. RoboCAD: `ui/viewport.py:mouseMoveEvent` (1480-1512:
+   orbit on right without Shift, Alt+left, or Shift+middle; Alt with right
+   snaps, `snap_orthographic` 116-120), `keyPressEvent` (1535-1551: 10°,
+   Ctrl 90°, Shift pans `pan(-dx × 4, dy × 4)`).
+6. Shown: the same turns, snaps and pans at the same steps
+   (`orbit(-dx/0.4, dy/0.4)` is dx degrees of yaw, as `rotate_by`'s).
+
+Deliberate difference (recorded in the ledger): RoboCAD's own Alt+left-drag
+does not orbit (its tool takes the press, `ui/app.py:542`); the viewer's is
+compared with right-drag. By reading, unexecuted.
+
+### CAD-130 Curve nodes
+1. Select a body, Modify ▸ Silhouette onto active plane (catalogue
+   `tool.silhouette`, `cad/ops/catalogue/arrange.rs:128-136`) → key leg →
+   `ops::run` → edit leg; the "Silhouette" curve node appears in the
+   refetched tree. Visibility, selection in the tree, Z and the section as
+   in CAD-105, CAD-109 and Part I.
+2. `CadClient::op` (`POST /ops/silhouette`), edit leg.
+3. `cad/display/draw.rs:edges_sync` (215-265): every visible `curve` node
+   (`curve_nodes` 209: `effective_visible`) has its sampled edges fetched
+   once per revision on `Pool::Dedicated` in every display mode
+   (`fetch_edges` 199, 32 samples, `CURVE_SAMPLES` 79).
+4. `CadClient::edges` (`crates/sim-runtime/src/cad_client/mod.rs:323`:
+   `GET /nodes/{id}/edges?samples=32`).
+5. RoboCAD: `api.py:1668-1671` → `commands.py:silhouette` (860); edges
+   `api.py:1644-1645`. Its window: `ui/viewport.py:_curve_item` (1660-1672:
+   colour `node.color or (0.35, 0.8, 1.0)`), `_draw_curve_item` (906-911: 2
+   px, 1.0, 0.65, 0.2 while selected), its 8 px curve pick pass
+   (1269-1278).
+6. Shown: `draw::lines` `Layer::Curves` (440-449): 2 px, the node's colour
+   or RoboCAD's light blue, orange while any item of the node is selected
+   (`curve_color` 317), cut by the section plane (`strips`), gone while
+   hidden; in every display mode.
+
+Deliberate difference (recorded): clicking the curve in the 3D view does
+not select it (RoboCAD's 8 px curve pick is not ported; select it in the
+tree). By reading, unexecuted.
 
 ## Reading traces — annotations
 
@@ -786,7 +4310,7 @@ are under `cad/robocad/`. The common legs are written out once:
 
 1. The link in the message → `dock.rs:CadHost::link` (70; only for a node
    in the shown tree) → `ThreadsOp::PartLink` → `ops.rs:341` →
-   `cad/threads/isolation.rs:part_link` (308).
+   `cad/threads/isolation.rs:part_link` (316).
 2. `isolation.rs:view_parts` (215; called with highlight off, 316) captures
    the camera, the selection and the display once (229-232), frames the
    part and its descendants, shows them alone (display only:
@@ -854,9 +4378,10 @@ are under `cad/robocad/`. The common legs are written out once:
 4. Return to assembly (`controls.rs:99`) or Escape (`input.rs:escape`,
    212, `ThreadsOp::Return`, 221) → `isolation.rs:end` (270): the camera
    pushed back (273), the display restored, the selection from before
-   (without parts deleted since) set on the one `Selection` (285) and
-   published to RoboCAD (286); status "Returned to the assembly view"
-   (288).
+   (without parts deleted since) set on the one `Selection` and published
+   to RoboCAD by `restore_selection` (282 → 290-298: `set` 294, `publish`
+   295; shared with a saved view's restore, `views/mod.rs:end_part_view`);
+   status "Returned to the assembly view" (283).
 5. No `PATCH visible` and no `Ops.isolate` anywhere in `isolation.rs`:
    `GET /doc` visibility is unchanged; RoboCAD's window is not isolated.
 
@@ -2782,7 +6307,7 @@ recorded):
    `RevealThread` with `set_if_neq`. None clears a reveal an earlier visit
    left. `RevealThread`'s writers are this install, CAD mode's read that
    takes it (`cad/threads/read.rs:243-277`, called from `sync` at 281) and
-   `leave_cad` (`app/switch/leave.rs:104-106`).
+   `leave_cad` (`app/switch/leave.rs:113-117`).
 4. Two Open in CAD requests during entry: the first is accepted, installs
    reveal A (560) and `enter` sets `switch.entering` and
    `NextState(Cad)` (`app/switch/arrival.rs:33-35`). The second, in the
@@ -2823,12 +6348,13 @@ recorded):
      `calibrate.rs:290`, `threads/input.rs:216`);
    - the references' fields (distance Escape is the kit's Cancel):
      `cad/references/input.rs:303`, `before(Gate)` in `Focus`;
-   - the command surfaces and catalogue form (`cad/surfaces/mod.rs:384-397`,
-     not consumed): their chain ends in `keys::gate` (322), so it runs
-     before `Gate`, and before `CadKeySet::NumericEntry` (326); it is not
-     ordered against the file form, so it stands aside by state while a
-     file form is open (`CadFiles::form`, 342, 390), as calibrate and the
-     threads do;
+   - the command surfaces and catalogue form (`cad/surfaces/mod.rs:389-421`,
+     consumed since cad-parts-a-f-retrace: the key is cleared at 415 and a
+     pending two-step key dropped, `keys.rs:Chord::abandon`, 416-418): their
+     chain ends in `keys::gate` (327), so it runs before `Gate`, and before
+     `CadKeySet::NumericEntry` (331); it is not ordered against the file
+     form, the results form or the outliner menu, so it stands aside by
+     state while one is open (396), as calibrate and the threads do;
    - the file form: `cad/files/mod.rs:591`, in `Focus` and
      `before(CadKeySet::EscapeTool)`; its Escape closes the form and is
      consumed (`cad/files/form.rs:544-548`), so the Select tool's
@@ -2851,8 +6377,13 @@ recorded):
    83ebb812).
 4. One press ends at most one thing: each reader clears the key when it
    acts (tree menu, file form, results form since b75846ff, calibrate,
-   threads), and the reader that does not (the surfaces) is stood aside
-   for by state; the surfaces in turn stand aside for an open file form.
+   threads, and the surfaces since cad-parts-a-f-retrace); the surfaces
+   also stand aside by state for an open file form, results form or
+   outliner menu. Gap found and fixed (cad-parts-a-f-retrace, Part D): the
+   surfaces' Escape cancelled a form-less active tool (a plane tool, the
+   joint tool) without consuming the key, and the threads' Escape checks
+   the form but not a form-less tool, so one press could end the tool and
+   Annotate together; it is consumed now.
    Gap found and fixed (b75846ff): the results form's Escape closed it
    without clearing the key, and `transform::keys` stands aside only for
    `doc.ops`, so the same press also fired the Select tool's `cad:cancel`
@@ -2862,7 +6393,7 @@ recorded):
    active interaction even while a file form was open, and, being
    unordered against `files::form::input`, could see the same press before
    the file form consumed it: one Escape closed the file form and
-   cancelled the tool (`cad/surfaces/mod.rs:390-391`).
+   cancelled the tool (`cad/surfaces/mod.rs:396` now).
 
 ### Autosave line follows autosave state
 

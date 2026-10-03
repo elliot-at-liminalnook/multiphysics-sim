@@ -49,17 +49,28 @@ pub(super) struct RobotDrive {
     /// loading | running | paused | failed | ended.
     pub phase: &'static str,
     pub seed: u64,
+    /// The run's start number ([`ROBOT_RUNS`]): a new run of unchanged
+    /// content (Stop and Run, the file reopened) is still a new drive target.
+    pub run: u64,
 }
+
+/// Robot system runs started in this process: each [`LiveRun::spawn_robot`]
+/// takes the next number, which its run thread publishes as `RobotDrive::run`
+/// and [`Builder::drive_target`] puts into the target's run identity. The
+/// content hash, revision and per-thread generation alone repeat when a run
+/// of the same file is replaced by a new one.
+static ROBOT_RUNS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 impl LiveRun {
     /// A robot system's run: `robot_thread` on the "builder-run" `RunThread`.
     pub(super) fn spawn_robot(document: SystemDocument, path: PathBuf, registry: BehaviorRegistry, description_id: String) -> Self {
         let initial = RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new(), reset_pending: false, drive: None };
         let (simulated, source_id) = (document.clone(), description_id.clone());
+        let run = ROBOT_RUNS.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
         // Join bound zero: dropping the run never waits on the thread, which may be inside
         // `DriveHost::new` (starting python3, up to EXTERNAL_REPLY_TIMEOUT) or a period; it
         // exits at its next command check and its drop closes the controller process.
-        let worker = crate::jobs::RunThread::spawn("builder-run", initial, move |commands, shared| robot_thread(simulated, path, registry, source_id, commands, shared)).join_bound(std::time::Duration::ZERO);
+        let worker = crate::jobs::RunThread::spawn("builder-run", initial, move |commands, shared| robot_thread(simulated, path, registry, source_id, run, commands, shared)).join_bound(std::time::Duration::ZERO);
         Self { worker, description_id, fidelity: Fidelity::Detailed, document, edited: false, robot: true, requested_running: true, drive_requested: None, drive_refusal: None }
     }
 }
@@ -119,21 +130,25 @@ impl Builder {
     /// runs (`drag`: its X/Y/Z axis constraints would also be drive keys,
     /// X the default stop). A target that goes away while the devices drive
     /// gets one stop from the poller (`drive_input::input::devices`).
-    /// The run identity is the system file and the run thread's run id
-    /// (content hash and revision): a run rebuilt from an edited file is a
-    /// new target, so held inputs are disarmed.
+    /// The run identity is the system file, the run thread's run id
+    /// (content hash and revision), the run's start number
+    /// (`RobotDrive::run`) and the run thread's generation (bumped by each
+    /// build, so a Reset): a run rebuilt from an edited file, a new run of
+    /// unchanged content and a Reset are each a new target, so the poller
+    /// disarms inputs held across them.
     pub(super) fn drive_target(&self) -> DriveTarget {
         if self.input.is_some() || self.drag.is_some() {
             return DriveTarget::default();
         }
         let Some(run) = self.run.as_ref().filter(|r| r.robot) else { return DriveTarget::default() };
         let Ok(s) = run.worker.shared().lock() else { return DriveTarget::default() };
-        let Some(system) = s.drive.as_ref().and_then(|d| d.system.as_ref()) else { return DriveTarget::default() };
-        let run_id = s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map_or("", |st| st.run_id.as_str());
+        let Some((drive, system)) = s.drive.as_ref().and_then(|d| Some((d, d.system.as_ref()?))) else { return DriveTarget::default() };
+        let status = s.snapshot.as_ref().and_then(|x| x.status.as_ref());
+        let (run_id, generation) = status.map_or(("", 0), |st| (st.run_id.as_str(), st.generation));
         let live = LiveTarget {
             mode: ViewerMode::Build,
             supported: system.controlled.resolved.limits.supported,
-            run: format!("{} {run_id}", self.path().display()),
+            run: format!("{} {run_id} (run {}, generation {generation})", self.path().display(), drive.run),
         };
         DriveTarget { live: Some(live), owned_keys: super::actions::OWNED_KEYS.to_vec() }
     }
@@ -230,6 +245,8 @@ struct Worker {
     path: PathBuf,
     registry: BehaviorRegistry,
     source_id: String,
+    /// The run's start number (`RobotDrive::run`).
+    run: u64,
     run_id: String,
     generation: u64,
     seed: u64,
@@ -361,12 +378,12 @@ impl Worker {
             if let Some(speed) = speed {
                 s.speed = speed;
             }
-            s.drive = Some(RobotDrive { system: self.system.clone(), status: self.host.as_ref().map(|h| h.status()), twist_error: self.twist_error.clone(), phase: self.phase(), seed: self.seed });
+            s.drive = Some(RobotDrive { system: self.system.clone(), status: self.host.as_ref().map(|h| h.status()), twist_error: self.twist_error.clone(), phase: self.phase(), seed: self.seed, run: self.run });
         }
     }
 }
 
-fn robot_thread(document: SystemDocument, path: PathBuf, registry: BehaviorRegistry, source_id: String, commands: mpsc::Receiver<RunControl>, shared: Arc<Mutex<RunShared>>) {
+fn robot_thread(document: SystemDocument, path: PathBuf, registry: BehaviorRegistry, source_id: String, run: u64, commands: mpsc::Receiver<RunControl>, shared: Arc<Mutex<RunShared>>) {
     // The document the next Reset rebuilds from: every edit while running arrives as a Swap.
     let mut document = document;
     let mut w = Worker {
@@ -374,6 +391,7 @@ fn robot_thread(document: SystemDocument, path: PathBuf, registry: BehaviorRegis
         path,
         registry,
         source_id,
+        run,
         run_id: String::new(),
         generation: 0,
         seed: 0,

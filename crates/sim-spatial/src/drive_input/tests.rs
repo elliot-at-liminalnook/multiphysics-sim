@@ -251,6 +251,95 @@ fn a_pause_disarms_without_a_stop() {
     }
 }
 
+/// A held W across a change of the target's run identity (Robot: a reload or
+/// Reset bumps the generation, a replay start bumps it and adds
+/// ", replaying", a replay end drops that; Build: a new run or Reset): the
+/// devices were driving, so one quiet Stop, and W is disarmed until it is
+/// released and pressed again.
+#[test]
+fn a_held_key_across_a_run_change_is_disarmed_until_released() {
+    let mut app = poller(ViewerMode::Robot);
+    let set_run = |app: &mut App, run: &str| app.world_mut().resource_mut::<DriveTarget>().live.as_mut().unwrap().run = run.into();
+    for run in ["rover.simrobot.json (run generation 1)", "rover.simrobot.json (run generation 2, replaying)", "rover.simrobot.json (run generation 2)"] {
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::KeyW);
+        assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)]);
+        assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)], "held: repeated every frame");
+        set_run(&mut app, run);
+        assert_eq!(frame(&mut app), [(DriveRequest::Stop, Origin::Quiet)], "{run}: the old run's drive is stopped");
+        assert_eq!(app.world().resource::<DriveInput>().last_action.as_deref(), Some("stop (the drive target changed)"));
+        assert!(frame(&mut app).is_empty(), "{run}: W is still held but disarmed");
+        assert!(frame(&mut app).is_empty());
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().release(KeyCode::KeyW);
+        assert!(frame(&mut app).is_empty());
+    }
+    app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::KeyW);
+    assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)], "a fresh press drives the new run");
+}
+
+/// A Disarm is read one frame after its apply accepted the stop, so it
+/// disarms only what was held then: W, held since an earlier frame, is
+/// blocked, while D, first pressed in the frame the Disarm is read, drives
+/// (after the owed Stop). And a device's own stop key (X), echoed back as a
+/// Disarm by the mode's apply, does not swallow a key pressed after it.
+#[test]
+fn a_disarm_blocks_only_keys_held_when_the_stop_was_applied() {
+    let yaw_right = DriveRequest::Axes { forward: 0.0, lateral: 0.0, yaw: -1.0 };
+    for mode in [ViewerMode::Robot, ViewerMode::Build] {
+        let mut app = poller(mode);
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::KeyW);
+        assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)]);
+        app.world_mut().write_message(Disarm { mode, reason: "Stop".into(), stop: true });
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::KeyD);
+        assert_eq!(frame(&mut app), [(DriveRequest::Stop, Origin::Quiet), (yaw_right.clone(), Origin::Quiet)], "W blocked, the fresh D drives");
+        assert_eq!(app.world().resource::<DriveInput>().last_action.as_deref(), Some("stop (Stop)"));
+        assert_eq!(frame(&mut app), [(yaw_right.clone(), Origin::Quiet)], "D keeps driving, W stays blocked");
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().release(KeyCode::KeyW);
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().release(KeyCode::KeyD);
+        assert_eq!(frame(&mut app), [(axes_zero(), Origin::Quiet)], "released: one zero request");
+
+        // The device stop key, then its echo with a key pressed after it.
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::KeyX);
+        assert_eq!(frame(&mut app), [(DriveRequest::Action { name: "stop".into() }, Origin::Ui)]);
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().release(KeyCode::KeyX);
+        app.world_mut().write_message(Disarm { mode, reason: "action stop".into(), stop: true });
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::KeyW);
+        assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)], "the echo does not swallow W pressed after the stop");
+        assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)]);
+    }
+}
+
+/// The gamepad is blocked by a Disarm only if it was held in the frame the
+/// stop was applied (the frame before the Disarm is read): a stick first
+/// pushed in the Disarm's frame drives; one held since before is blocked
+/// until it returns to its deadzone.
+#[test]
+fn a_disarm_blocks_the_gamepad_only_if_it_was_held_at_the_stop() {
+    let mut app = poller(ViewerMode::Build);
+    app.world_mut().spawn(bevy::window::Window { focused: true, ..default() });
+    let pad = app.world_mut().spawn(Gamepad::default()).id();
+    let stick = |app: &mut App, y: f32| {
+        app.world_mut().get_mut::<Gamepad>(pad).unwrap().analog_mut().set(GamepadAxis::LeftStickY, y);
+    };
+    assert!(frame(&mut app).is_empty(), "at rest");
+    // Pushed in the frame the Disarm is read: not held at the stop.
+    app.world_mut().write_message(Disarm { mode: ViewerMode::Build, reason: "Stop".into(), stop: true });
+    stick(&mut app, 1.0);
+    assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)], "a stick pushed after the stop drives");
+    assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)]);
+    // Held since before: blocked, after the owed Stop.
+    app.world_mut().write_message(Disarm { mode: ViewerMode::Build, reason: "Stop".into(), stop: true });
+    assert_eq!(frame(&mut app), [(DriveRequest::Stop, Origin::Quiet)]);
+    assert!(frame(&mut app).is_empty(), "still held: blocked");
+    stick(&mut app, 0.0);
+    assert!(frame(&mut app).is_empty(), "back in the deadzone: released");
+    stick(&mut app, 1.0);
+    assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)], "pushed again: drives");
+}
+
+fn axes_zero() -> DriveRequest {
+    DriveRequest::Axes { forward: 0.0, lateral: 0.0, yaw: 0.0 }
+}
+
 /// A Disarm written for another mode (a request still buffered across a
 /// mode switch) is drained and ignored: the held key keeps driving.
 #[test]

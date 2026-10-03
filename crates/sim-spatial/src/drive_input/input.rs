@@ -22,8 +22,8 @@ use sim_runtime::drive_host::DriveRequest;
 /// - `last_error`: in Robot mode robot mode's apply (`robot::actions::apply`:
 ///   the last drive request's refusal from any origin, cleared by the next
 ///   accepted one) and robot mode's target writer (`robot::controls::drive_target`:
-///   cleared when the run's file or generation changes: Reset, a replay, a
-///   reload, another file); in Build mode the builder's device drain
+///   cleared when the target's run identity changes: Reset, a replay start
+///   or end, a reload, another file); in Build mode the builder's device drain
 ///   (`builder::actions::drive_devices`: it mirrors
 ///   `system_state.live_run.drive.last_refusal`, `Builder::drive_request`'s record
 ///   of the last refusal from any origin).
@@ -76,6 +76,11 @@ pub(crate) struct Latch {
     /// app focused, every bound stick is inside its deadzone and every bound
     /// button is released.
     pad_blocked: bool,
+    /// A bound stick was outside its deadzone or a bound button pressed on
+    /// any pad last frame (raw, focused or not; updated every frame before
+    /// any early return): a [`Disarm`] blocks the gamepad only if it was held
+    /// then, when the mode's apply accepted the stop.
+    pad_held: bool,
     /// The live target last frame (mode, run): a new one disarms held inputs.
     target: Option<(ViewerMode, String)>,
 }
@@ -114,9 +119,11 @@ pub fn live_target(target: &DriveTarget, mode: Option<ViewerMode>) -> Option<&su
 /// config. A run is one or the other, so the two never both read W/A/S/D.
 ///
 /// - Nothing is read while no target is live for the current mode; a target
-///   that becomes live, or changes (mode or run), disarms every held input
-///   first, so a key held across a load or a mode switch never starts
-///   driving by itself. A target that goes away or changes while the
+///   that becomes live, or changes (mode or run: `LiveTarget::run` carries
+///   the run's identity, so another file, a reload, a replay start and a
+///   replay end in Robot mode, or a new run or Reset in Build mode, are
+///   changes), disarms every held input first, so a key held across a load,
+///   a replay or a mode switch never starts driving by itself. A target that goes away or changes while the
 ///   devices drive gets one quiet Stop, stamped with its own mode, when that
 ///   mode is still current (Build's Reset or Stop, a draft or drag opened,
 ///   another Robot file); a left mode stops its own run on exit.
@@ -151,14 +158,23 @@ pub fn live_target(target: &DriveTarget, mode: Option<ViewerMode>) -> Option<&su
 ///   (`Disarm::stop`), one quiet Stop first (the held axes this poller sent
 ///   in the click's frame were applied after the click, so without it the
 ///   last request would be those axes; a Pause or Reset sends none, so the
-///   paused request's on-loss rule is not replaced by a fresh zero), then every held key, the gamepad and the
-///   sending latch are disarmed until released. `last_action` names it
-///   ("stop (<reason>)" when a Stop was sent, "disarmed (<reason>)" when an
-///   input was held but not sending, unchanged when nothing was held, so a
-///   device's own stop, echoed back by Robot's apply, keeps its reason). A
-///   message for another mode is ignored. Escape, focus loss and a text
-///   field taking the keyboard in the same frame take precedence (they
-///   disarm too).
+///   paused request's on-loss rule is not replaced by a fresh zero; a Reset's
+///   rebuilt run is a new target, though, so devices still sending get the
+///   target change's one Stop), then the
+///   inputs held when the stop was applied (last frame) and the sending
+///   latch are disarmed until released: a key held since before this frame
+///   (pressed, not just pressed) and the gamepad if it was held last frame.
+///   A key or pad first pressed after the stop (this frame) was not held at
+///   it and drives at once: the frame continues with the normal read after
+///   the disarm, so a fresh press is never swallowed by the echo of an
+///   earlier stop (e.g. Robot's apply echoing a device-sent Stop).
+///   `last_action` names it ("stop (<reason>)" when a Stop was sent,
+///   "disarmed (<reason>)" when an input held at the stop was not sending,
+///   unchanged when nothing was held, so a device's own stop, echoed back by
+///   Robot's apply, keeps its reason; a fresh action press this frame
+///   replaces it). A message for another mode is ignored. Escape, focus loss
+///   and a text field taking the keyboard in the same frame take precedence
+///   (they disarm everything held now).
 /// - A bound action key or button press sends `Action { name }`, preceded by
 ///   a zero request while driving (so an action name the profile refuses
 ///   still stops the robot).
@@ -196,6 +212,10 @@ pub(crate) fn devices(
     let typing_started = !std::mem::replace(&mut latch.was_typing, typing) && typing;
     let last_error = input.last_error.clone();
     let current = mode.map(|m| *m.get());
+    // Whether a bound pad input is held now (raw, focused or not), and was last frame:
+    // a Disarm read now was applied last frame, so only a pad held then was held at the stop.
+    let pad_now = pads.iter().any(|g| bindings.buttons().any(|b| g.pressed(b)) || bindings.gamepad_axes(|axis| g.get(axis), |b| g.pressed(b)) != Axes::ZERO);
+    let pad_was = std::mem::replace(&mut latch.pad_held, pad_now);
     // The zero a vanished or replaced target is owed: one Stop, stamped with
     // the previous target's mode, only while that mode is still current (a
     // Build Reset, the run stopped, a draft or drag opened, another file
@@ -215,7 +235,7 @@ pub(crate) fn devices(
         // No target in this mode: nothing is read; a refusal stays visible
         // until its mode's writer clears it.
         let last_action = if owed_stop(&latch, &mut out) { Some("stop (the drive target went away)".to_string()) } else { None };
-        *latch = Latch { was_typing: typing, ..default() };
+        *latch = Latch { was_typing: typing, pad_held: pad_now, ..default() };
         input.set_if_neq(DriveInput { last_error, last_action, ..default() });
         return;
     };
@@ -273,21 +293,24 @@ pub(crate) fn devices(
     }
     // A stop, halt, action, Pause or Reset the mode applied last frame (DISARM_RULE); the newest
     // reason is shown, and a Stop is owed if any of them was a drive stop or action (`Disarm::stop`).
+    // It was applied after last frame's Input, so it disarms what was held then: a key pressed
+    // before this frame (not just pressed) and the pad if it was held last frame. A fresh press
+    // this frame was not held at the stop; the frame continues below and reads it.
+    let mut last_action = input.last_action.clone();
     if let Some(applied) = disarmed.iter().rev().find(|d| d.mode == mode) {
         let owed_stop = disarmed.iter().any(|d| d.mode == mode && d.stop);
-        let held_keys = bindings.keys().any(|k| keys.pressed(k) && !latch.blocked_keys.contains(&k));
-        let held_pad = !latch.pad_blocked && pads.iter().any(|g| bindings.buttons().any(|b| g.pressed(b)) || bindings.gamepad_axes(|axis| g.get(axis), |b| g.pressed(b)) != Axes::ZERO);
-        let last_action = if latch.sending && owed_stop {
+        let held_at_stop: Vec<KeyCode> = bindings.keys().filter(|k| keys.pressed(*k) && !keys.just_pressed(*k) && !latch.blocked_keys.contains(k)).collect();
+        let held_pad = !latch.pad_blocked && pad_was;
+        if latch.sending && owed_stop {
             send(&mut out, DriveRequest::Stop, false);
-            Some(format!("stop ({})", applied.reason))
-        } else if held_keys || held_pad {
-            Some(format!("disarmed ({})", applied.reason))
-        } else {
-            input.last_action.clone()
-        };
-        disarm(&mut *latch);
-        input.set_if_neq(DriveInput { active: true, axes: Axes::ZERO, source: None, ignored: Vec::new(), last_action, last_error });
-        return;
+            last_action = Some(format!("stop ({})", applied.reason));
+        } else if !held_at_stop.is_empty() || held_pad {
+            last_action = Some(format!("disarmed ({})", applied.reason));
+        }
+        latch.blocked_keys.extend(held_at_stop);
+        latch.pad_blocked |= held_pad;
+        latch.sending = false;
+        latch.keyboard_sending = false;
     }
     let readable = |k: &KeyCode, latch: &Latch| !typing && !chord && !latch.blocked_keys.contains(k);
     let keyboard = bindings.keyboard_axes(|k| keys.pressed(k) && readable(&k, &*latch));
@@ -346,6 +369,5 @@ pub(crate) fn devices(
         latch.sending = false;
         latch.keyboard_sending = false;
     }
-    let last_action = input.last_action.clone();
     input.set_if_neq(DriveInput { active: true, axes, source, ignored, last_action, last_error });
 }

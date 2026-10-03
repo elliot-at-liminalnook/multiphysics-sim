@@ -414,32 +414,32 @@ fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, 
 /// `system_drive` and `system_run` pause / reset. Every non-device origin of
 /// Build's drive and run actions passes through [`apply`], so this is their
 /// one place; the devices' own requests go to `actions::drive_devices`.
-/// Returns (reason, dispatched, stop): `dispatched` when the action goes
-/// through `dispatch` (its refusal is `action_error`), `stop` for a drive
-/// stop or action (`Disarm::stop`; Pause and Reset send no Stop).
-fn disarm_reason(builder: &Builder, action: &SystemAction) -> Option<(String, bool, bool)> {
-    fn what(action: &BuildAction) -> Option<(String, bool)> {
+/// See [`Disarming`] for what it returns.
+fn disarm_reason(builder: &Builder, action: &SystemAction) -> Option<Disarming> {
+    // (what, stop, pause)
+    fn what(action: &BuildAction) -> Option<(String, bool, bool)> {
         use sim_runtime::drive_host::DriveRequest;
         match action {
-            BuildAction::Drive { request: DriveRequest::Stop } => Some(("Stop".into(), true)),
-            BuildAction::Drive { request: DriveRequest::Action { name } } => Some((format!("action {name}"), true)),
-            BuildAction::Pause => Some(("Pause".into(), false)),
-            BuildAction::Reset => Some(("Reset".into(), false)),
+            BuildAction::Drive { request: DriveRequest::Stop } => Some(("Stop".into(), true, false)),
+            BuildAction::Drive { request: DriveRequest::Action { name } } => Some((format!("action {name}"), true, false)),
+            BuildAction::Pause => Some(("Pause".into(), false, true)),
+            BuildAction::Reset => Some(("Reset".into(), false, false)),
             _ => None,
         }
     }
+    let disarming = |reason: String, dispatched: bool, stop: bool, pause: bool| Disarming { reason, dispatched, stop, pause };
     match action {
-        SystemAction::Ui(a) | SystemAction::RenderedUi { action: a, .. } => what(a).map(|(w, stop)| (w, true, stop)),
-        SystemAction::SystemUi { action: UiAction::Activate { id, .. }, .. } => builder.listed_action(id).as_ref().and_then(what).map(|(w, stop)| (format!("{w} from system_ui"), false, stop)),
+        SystemAction::Ui(a) | SystemAction::RenderedUi { action: a, .. } => what(a).map(|(w, stop, pause)| disarming(w, true, stop, pause)),
+        SystemAction::SystemUi { action: UiAction::Activate { id, .. }, .. } => builder.listed_action(id).as_ref().and_then(what).map(|(w, stop, pause)| disarming(format!("{w} from system_ui"), false, stop, pause)),
         SystemAction::SystemRun { action } => match action.as_str() {
-            "pause" => Some(("Pause from REST".into(), false, false)),
-            "reset" => Some(("Reset from REST".into(), false, false)),
+            "pause" => Some(disarming("Pause from REST".into(), false, false, true)),
+            "reset" => Some(disarming("Reset from REST".into(), false, false, false)),
             _ => None,
         },
         SystemAction::SystemDrive { forward, lateral, yaw, action, stop } => {
             match sim_runtime::drive_host::DriveRequest::from_fields(*forward, *lateral, *yaw, action.clone(), *stop, "system_drive").ok()? {
-                sim_runtime::drive_host::DriveRequest::Stop => Some(("Stop from REST".into(), false, true)),
-                sim_runtime::drive_host::DriveRequest::Action { name } => Some((format!("action {name} from REST"), false, true)),
+                sim_runtime::drive_host::DriveRequest::Stop => Some(disarming("Stop from REST".into(), false, true, false)),
+                sim_runtime::drive_host::DriveRequest::Action { name } => Some(disarming(format!("action {name} from REST"), false, true, false)),
                 sim_runtime::drive_host::DriveRequest::Axes { .. } => None,
             }
         }
@@ -447,11 +447,37 @@ fn disarm_reason(builder: &Builder, action: &SystemAction) -> Option<(String, bo
     }
 }
 
+/// An action that disarms held drive inputs once accepted ([`disarm_reason`]).
+#[derive(Clone, Debug, PartialEq)]
+struct Disarming {
+    /// `Disarm::reason`.
+    reason: String,
+    /// The action goes through `dispatch`: its refusal is `Builder::action_error`, not the answer.
+    dispatched: bool,
+    /// A drive stop or action (`Disarm::stop`; Pause and Reset send no Stop through it).
+    stop: bool,
+    /// A Pause: it disarms only when it paused a running run.
+    pause: bool,
+}
+
+impl Disarming {
+    /// Whether the applied action writes `Disarm`: it was accepted (`refused`:
+    /// a dispatched action recorded an `action_error`), and a Pause only when
+    /// it paused a run (`running_before`: a run was requested running before
+    /// the action; `paused_after`: a run is requested paused after it). A
+    /// Pause with no run, or of a run already paused, is a no-op (`pause_run`
+    /// accepts it silently) and disarms nothing.
+    fn writes(&self, refused: bool, running_before: bool, paused_after: bool) -> bool {
+        (!self.dispatched || !refused) && (!self.pause || (running_before && paused_after))
+    }
+}
+
 /// Actions: the builder's one apply system (build and lessons). Buttons,
 /// keys and markers go to `dispatch` (a refusal is the status line); REST
 /// commands answer their caller. Build mode's one writer of
 /// `crate::drive_input::Disarm` ([`disarm_reason`]: an accepted drive stop or
-/// action, Pause or Reset from any non-device origin), and every answer
+/// action, Pause or Reset from any non-device origin; a Pause only when it
+/// paused a running run, [`Disarming::writes`]), and every answer
 /// that carries `system_state` (`live_run` at its top or under `state`)
 /// gets the device layer's `bindings` and `drive_input`
 /// (`Builder::with_drive_input`, the serializer Robot's `robot_state` uses).
@@ -505,17 +531,21 @@ pub(super) fn apply(
                 return Outcome::Done(Err(format!("system_open refused: {reason}")));
             }
         }
-        // Resolved before the action runs (a `system_ui` activation by the control list it was made from).
+        // Resolved before the action runs (a `system_ui` activation by the control list it was made from),
+        // with whether a run was running then (a Pause disarms only when it paused one).
         let disarms = disarm_reason(&builder, action);
+        let running_before = builder.run.as_ref().is_some_and(|r| r.requested_running);
         let mut outcome = execute(&mut builder, &mut scene, &mut orbit, &mut pick, lessons, &mut switch, action, call);
         // An edit re-checks the selection at once (a later action in this frame sees it).
         pick.sync(&builder);
         if let Outcome::Done(Ok(answer)) = &mut outcome {
-            // DISARM_RULE: accepted (a dispatched action records its refusal in `action_error`).
-            if let Some((reason, dispatched, stop)) = disarms
-                && (!dispatched || builder.action_error.is_none())
+            // DISARM_RULE: accepted (a dispatched action records its refusal in `action_error`);
+            // a Pause only when it paused a running run.
+            let paused_after = builder.run.as_ref().is_some_and(|r| !r.requested_running);
+            if let Some(d) = disarms
+                && d.writes(builder.action_error.is_some(), running_before, paused_after)
             {
-                disarm.write(crate::drive_input::Disarm { mode: ViewerMode::Build, reason, stop });
+                disarm.write(crate::drive_input::Disarm { mode: ViewerMode::Build, reason: d.reason, stop: d.stop });
             }
             // `system_state`, at the top of the answer or as its `state`: the device layer too.
             if answer.get("live_run").is_some() {
@@ -526,4 +556,54 @@ pub(super) fn apply(
         }
         outcome
     });
+}
+
+#[cfg(test)]
+mod disarm_tests {
+    //! Written fixtures (not executed by their author): when Build's apply
+    //! writes `drive_input::Disarm` for a Pause.
+    use super::*;
+
+    /// A builder on a system without a run (the winch example, copied).
+    fn builder() -> Builder {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let dir = std::env::temp_dir().join(format!("builder-disarm-pause-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("winch.system.json");
+        std::fs::copy(root.join("examples/systems-builder/worm-drive/winch.system.json"), &path).unwrap();
+        let registry = sim_runtime::registry_with_parts(&root.join("library/parts")).0;
+        Builder::open(path, root.join("library/systems"), registry).unwrap()
+    }
+
+    /// A Pause disarms only when it paused a running run: REST system_run
+    /// pause, the panel's Pause and its system_ui activation are all marked
+    /// as a Pause, and with no run (or a run already paused) none writes a
+    /// Disarm. Reset and a drive stop disarm whenever accepted; a dispatched
+    /// action's refusal (`action_error`) writes none.
+    #[test]
+    fn a_no_op_pause_writes_no_disarm() {
+        let mut b = builder();
+        let pause = disarm_reason(&b, &SystemAction::SystemRun { action: "pause".into() }).unwrap();
+        assert_eq!((pause.reason.as_str(), pause.dispatched, pause.stop, pause.pause), ("Pause from REST", false, false, true));
+        let panel = disarm_reason(&b, &SystemAction::Ui(BuildAction::Pause)).unwrap();
+        assert!(panel.pause && panel.dispatched && !panel.stop);
+        // Nothing running: the Pause is accepted (`run_pause`) but changes nothing.
+        let running_before = b.run.as_ref().is_some_and(|r| r.requested_running);
+        b.run_pause();
+        let paused_after = b.run.as_ref().is_some_and(|r| !r.requested_running);
+        assert!(!running_before && !paused_after);
+        assert!(!pause.writes(false, running_before, paused_after), "a Pause with no run writes no Disarm");
+        assert!(!panel.writes(false, running_before, paused_after));
+        // An already-paused run: not running before.
+        assert!(!pause.writes(false, false, true), "a Pause of a paused run writes no Disarm");
+        // A running run that the Pause paused.
+        assert!(pause.writes(false, true, true));
+        assert!(!panel.writes(true, true, true), "a refused dispatched Pause writes none");
+        // Reset and a drive stop are not gated on the run's state.
+        let reset = disarm_reason(&b, &SystemAction::SystemRun { action: "reset".into() }).unwrap();
+        assert!(!reset.pause && reset.writes(false, false, false));
+        let stop = disarm_reason(&b, &SystemAction::SystemDrive { forward: None, lateral: None, yaw: None, action: None, stop: Some(true) }).unwrap();
+        assert!(stop.stop && !stop.pause && stop.writes(false, false, false));
+    }
 }

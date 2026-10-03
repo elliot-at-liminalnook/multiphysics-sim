@@ -85,7 +85,7 @@ pub(crate) enum RobotAction {
     Threads { act: crate::robot::threads::ThreadsAct },
     /// A drive request for a controlled robot (a controller binding with a
     /// `sim.drive/1` profile): the bound keys and gamepad
-    /// (`crate::drive_input::input::devices`, forwarded by [`forward_devices`]),
+    /// (`crate::drive_input::input::devices`, read by [`apply`] through [`device_action`]),
     /// `system_ui` drive:* and REST `robot_drive`.
     /// Applied by [`drive_request`] then `RunController::drive`.
     Drive { request: DriveRequest },
@@ -613,8 +613,19 @@ fn handle(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, re
 /// `ui_revision`. Link selection goes through the shared selection
 /// (`picked`), applied here as its adapter. Robot mode's one writer of
 /// `crate::drive_input::Disarm` (`DISARM_RULE`): every drive stop or named
-/// action, Pause and Reset accepted here, from any origin ([`disarm_reason`]),
-/// disarms the held drive inputs from the next frame's poll.
+/// action, Pause and Reset accepted here, from any origin ([`disarm_reason`])
+/// but the devices themselves, disarms the held drive inputs from the next
+/// frame's poll.
+///
+/// The one device poller's requests for Robot mode (`crate::drive_input`)
+/// are read here too, after this frame's other actions (where the old
+/// forwarding system's `RobotAction::Drive` messages were queued), and
+/// handled by the same handler as the Drive block's buttons, `system_ui`
+/// drive:* and REST `robot_drive` (`drive_request` → `RunController::drive`,
+/// a refusal in `DriveInput::last_error`), but with no `Disarm`: the poller
+/// disarmed what was held when it sent a stop or action itself, and an echo
+/// read in the next frame would block a key first pressed after it (one the
+/// poller let drive in the frame it sent a Stop it owed).
 #[allow(clippy::too_many_arguments)]
 pub(super) fn apply(
     mut messages: ResMut<Messages<Act<RobotAction>>>,
@@ -628,8 +639,10 @@ pub(super) fn apply(
     mut registry: ResMut<DocumentRegistry>,
     closing: Option<Res<crate::app::close::CloseOwner>>,
     (mut threads, reveal, mut window): (ResMut<crate::robot::threads::RobotThreads>, Option<Res<crate::cad::threads::RevealThread>>, MessageWriter<Act<crate::app::switch::WindowAction>>),
-    (mut drive_input, bindings, mut disarm): (Option<ResMut<crate::drive_input::DriveInput>>, Option<Res<crate::drive_input::DriveBindings>>, MessageWriter<crate::drive_input::Disarm>),
+    (mut drive_input, bindings, mut disarm, mut devices): (Option<ResMut<crate::drive_input::DriveInput>>, Option<Res<crate::drive_input::DriveBindings>>, MessageWriter<crate::drive_input::Disarm>, MessageReader<Act<crate::drive_input::DriveDevice>>),
 ) {
+    // Read every frame this runs, before any return: a device request is for this frame only.
+    let from_devices: Vec<Act<RobotAction>> = devices.read().filter_map(device_action).collect();
     let (Some(mut view), Some(mut orbit)) = (view, orbit) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
             // A forwarded hardware activation's own reply is no longer waited for.
@@ -640,7 +653,9 @@ pub(super) fn apply(
         });
         return;
     };
-    actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
+    // Whether the call being handled is a device request (no `Disarm` echo).
+    let device = std::cell::Cell::new(false);
+    let mut on_action = handler(|action, call| {
         // RoboCAD's comment threads: their own handler, outcome and REST wait.
         if let RobotAction::Threads { act } = action {
             return crate::robot::threads::handle(act, call, &mut threads, &view, &registry, &mut selection, reveal.is_some(), &mut window);
@@ -702,9 +717,10 @@ pub(super) fn apply(
             }),
             _ => handle(&mut view, &mut orbit, &mut selection, &mut registry, action),
         };
-        // DISARM_RULE: an accepted stop, halt, action, Pause or Reset (any origin) disarms
-        // held drive inputs; the poller reads it next frame (`drive_input::input::devices`).
-        if let (Ok(_), Some((reason, stop))) = (&result, disarms) {
+        // DISARM_RULE: an accepted stop, halt, action, Pause or Reset (any origin but the
+        // devices, which disarmed themselves) disarms held drive inputs; the poller reads it
+        // next frame (`drive_input::input::devices`).
+        if let (Ok(_), Some((reason, stop)), false) = (&result, disarms, device.get()) {
             disarm.write(crate::drive_input::Disarm { mode: ViewerMode::Robot, reason, stop });
         }
         // The inspector's drive line: the last drive request's refusal (any
@@ -749,6 +765,19 @@ pub(super) fn apply(
             Origin::Quiet | Origin::SystemUi => Outcome::Done(Ok(Value::Null)),
         }
     });
+    actions::apply(&mut messages, &mut in_flight, &mut replies, &mut on_action);
+    // The devices' requests, after the frame's other actions; never REST, so nothing waits on them.
+    device.set(true);
+    for act in from_devices {
+        let mut continuation = Value::Null;
+        let _ = on_action(&act.action, &mut actions::Call { origin: act.origin, continuation: &mut continuation, cancelled: false, replies: &mut replies });
+    }
+}
+
+/// [`apply`]'s handler, typed as `actions::apply` takes it (a closure bound
+/// to a local needs the signature to take any `Call` lifetime).
+fn handler<F: FnMut(&RobotAction, &mut actions::Call) -> Outcome>(f: F) -> F {
+    f
 }
 
 /// Why `action`, once accepted, disarms held drive inputs
@@ -783,20 +812,6 @@ fn disarm_reason(view: &RobotView, link: Option<usize>, action: &RobotAction, or
 /// repeated axes), or None for a request the poller made for another mode.
 pub(super) fn device_action(device: &Act<crate::drive_input::DriveDevice>) -> Option<Act<RobotAction>> {
     (device.action.mode == ViewerMode::Robot).then(|| Act { action: RobotAction::Drive { request: device.action.request.clone() }, origin: device.origin })
-}
-
-/// Actions, before [`apply`] (`RobotSet::Actions`; Robot mode only): the
-/// one device poller's requests for Robot mode (`crate::drive_input`)
-/// written as `RobotAction::Drive`, so [`apply`] drains them with this
-/// frame's other actions and handles them exactly as the Drive block's
-/// buttons, `system_ui` drive:* and REST `robot_drive` (`drive_request` →
-/// `RunController::drive`), recording a refusal in `DriveInput::last_error`.
-pub(super) fn forward_devices(mut devices: MessageReader<Act<crate::drive_input::DriveDevice>>, mut out: MessageWriter<Act<RobotAction>>) {
-    for device in devices.read() {
-        if let Some(act) = device_action(device) {
-            out.write(act);
-        }
-    }
 }
 
 /// A `system_ui` activation of a Leg calibration control (`hardware:<name>`).

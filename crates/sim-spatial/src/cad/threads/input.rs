@@ -16,9 +16,10 @@
 //!   dialog: Enter is OK, Escape Cancel).
 //! - **Escape** ([`escape`]): with Annotate or Reattach active it ends the
 //!   tool; with linked parts shown alone it is Return to assembly. It runs
-//!   after the two-step key gate and the reference calibrate tool's Escape
-//!   (`references::calibrate::escape`, which consumes the key while that tool
-//!   is on), before the Select tool's Escape (`transform::keys`), and consumes the
+//!   in the public `CadKeySet::Escape`, after the two-step key gate and
+//!   after `CadKeySet::EscapeTool` (the reference calibrate tool's Escape,
+//!   which consumes the key while that tool is on), before the Select tool's
+//!   Escape (`CadKeySet::ToolKeys`, `transform::keys`), and consumes the
 //!   key then, and stands aside while a command surface or form is open (its
 //!   own Escape) or the keyboard is held (`keys::free`).
 //!
@@ -237,15 +238,9 @@ pub(super) fn build(app: &mut App) {
             (
                 // Before CAD's keys: a field given the keyboard this frame holds the frame's keys.
                 input.in_set(crate::cad::CadKeySet::Focus),
-                // After the reference calibrate tool's Escape (which ends that tool first) and
-                // before the Select tool's (`transform::keys`); it consumes the key when it acts.
-                escape
-                    .run_if(crate::cad::keys::free)
-                    .in_set(crate::app::InputSet::Window)
-                    .after(crate::cad::CadKeySet::Gate)
-                    .after(crate::cad::references::calibrate::escape)
-                    .before(crate::cad::CadKeySet::ToolKeys)
-                    ,
+                // The public Escape step: after `EscapeTool` (the calibrate tool ends first) and
+                // before the Select tool's (`ToolKeys`); it consumes the key when it acts.
+                escape.run_if(crate::cad::keys::free).in_set(crate::cad::CadKeySet::Escape),
             )
                 .run_if(in_state(ViewerMode::Cad)),
         );

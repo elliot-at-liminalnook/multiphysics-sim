@@ -275,12 +275,13 @@ fn click(
     out.write(Act::ui(ReferencesArgs { point: Some(point), picked_at: Some(doc.shown_revision()), ..ReferencesArgs::of(ReferencesOp::CalibratePick) }.action()));
 }
 
-/// Input, after the key gate and only with the keys free (no field typing,
-/// no pending chord: `keys::free`), before the Select tool's keys: Escape
-/// ends the active tool and is consumed. Other Escape readers that must yield
-/// to it (the threads' isolation) order themselves after this system.
+/// Input, in `CadKeySet::EscapeTool` (after the key gate, before RoboCAD's
+/// shortcuts, the later `CadKeySet::Escape` readers and the Select tool's
+/// keys) and only with the keys free (no field typing, no pending chord:
+/// `keys::free`): Escape ends the active tool and is consumed, so the
+/// threads' Escape (`CadKeySet::Escape`) never sees the same press.
 /// An open file form (`files::form`) takes Escape first: it closes itself.
-pub(in crate::cad) fn escape(doc: Option<Res<CadDocument>>, keys: Option<ResMut<ButtonInput<KeyCode>>>, files: Option<Res<crate::cad::files::CadFiles>>, mut out: MessageWriter<Act<CadAction>>) {
+fn escape(doc: Option<Res<CadDocument>>, keys: Option<ResMut<ButtonInput<KeyCode>>>, files: Option<Res<crate::cad::files::CadFiles>>, mut out: MessageWriter<Act<CadAction>>) {
     let (Some(doc), Some(mut keys)) = (doc, keys) else { return };
     if doc.references.calibrate.is_none() || !keys.just_pressed(KeyCode::Escape) || files.as_ref().is_some_and(|f| f.form.is_some()) {
         return;
@@ -307,7 +308,7 @@ pub(super) fn build(app: &mut App) {
         Update,
         (
             click.in_set(crate::app::InputSet::Window),
-            escape.after(crate::cad::CadKeySet::Gate).run_if(crate::cad::keys::free).in_set(crate::cad::CadKeySet::Focus).before(crate::cad::CadKeySet::ToolKeys),
+            escape.run_if(crate::cad::keys::free).in_set(crate::cad::CadKeySet::EscapeTool),
             markers.in_set(ViewerSet::Present),
         )
             .run_if(in_state(ViewerMode::Cad)),

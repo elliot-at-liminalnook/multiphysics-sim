@@ -6,7 +6,10 @@
 //! `ArgConverter` reads them (cad/robocad/api.py:150-240: a face is
 //! `{"node": id, "face": i}`, vectors are `[x, y, z]`, a measurement is
 //! `{"kind", "points", "value", "label"}`), and the label its header and
-//! RoboCAD's history show.
+//! RoboCAD's history show. Locked nodes: a transform leaves them out (as
+//! RoboCAD's `Ops.transform` skips them) and is refused by name when every
+//! node is locked; a face edit of a locked node is refused by name, as
+//! RoboCAD's `Ops._edit` refuses it.
 use super::push_pull::resolve;
 use super::{Field, FieldCommit, Phase, PushTarget, fa, face_target, fields, fl, mm, num, numeric_axis, pivot};
 use crate::app::actions::Call;
@@ -173,6 +176,17 @@ fn check_node(doc: &CadDocument, node: &str) -> Result<(), String> {
     if doc.has_node(node) { Ok(()) } else { Err(format!("no node {node} in the shown tree")) }
 }
 
+/// Whether node `id` is locked in the shown tree.
+fn locked(doc: &CadDocument, id: &str) -> bool {
+    doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == id)).is_some_and(|n| n.locked)
+}
+
+/// A face edit of a locked node is refused by name with nothing sent, in
+/// RoboCAD's words (`Ops._edit`, commands.py:285-286, raises "{name} is locked").
+fn check_unlocked(doc: &CadDocument, node: &str) -> Result<(), String> {
+    if locked(doc, node) { Err(format!("{} is locked (unlock it first); nothing was sent", doc.node_name(node))) } else { Ok(()) }
+}
+
 /// With the node's topology loaded, every face must exist at the shown
 /// revision (else RoboCAD checks the index itself).
 fn check_faces(doc: &CadDocument, topology: Option<&CadTopology>, node: &str, faces: &[i64]) -> Result<(), String> {
@@ -192,21 +206,34 @@ pub(super) fn op_for(doc: &CadDocument, selection: &[SelectionItem], topology: O
             for id in &ids {
                 check_node(doc, id)?;
             }
+            // RoboCAD's `Ops.transform` skips locked nodes (commands.py:661-662)
+            // after its component checks (650-655), which see every id, so with a
+            // component all are sent. Else left out here: the label names only what moves, and all locked is refused.
+            let component = ids.iter().any(|id| doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == *id)).is_some_and(|n| n.component_member.is_some() || n.component_instance.is_some()));
+            let (held, ids): (Vec<String>, Vec<String>) = ids.into_iter().partition(|id| !component && locked(doc, id));
+            if ids.is_empty() && !held.is_empty() {
+                let names: Vec<String> = held.iter().map(|id| doc.node_name(id)).collect();
+                let verb = if names.len() == 1 { "is" } else { "are" };
+                return Err(format!("{} {verb} locked; RoboCAD's transform skips locked nodes, so nothing was sent (unlock first)", names.join(", ")));
+            }
             let names: Vec<String> = ids.iter().map(|id| doc.node_name(id)).collect();
             transform_call(&ids, &names, *translation, *axis, *angle_deg, *center, *scale)
         }
         CadAction::CadPushPull { node, face, distance, .. } => {
             check_node(doc, node)?;
+            check_unlocked(doc, node)?;
             check_faces(doc, topology, node, &[*face])?;
             push_pull_call(node, &doc.node_name(node), *face, *distance)
         }
         CadAction::CadOffsetFaces { node, faces, distance, .. } => {
             check_node(doc, node)?;
+            check_unlocked(doc, node)?;
             check_faces(doc, topology, node, faces)?;
             offset_call(node, &doc.node_name(node), faces, *distance)
         }
         CadAction::CadSetDimension { node, dimension, faces, value, .. } => {
             check_node(doc, node)?;
+            check_unlocked(doc, node)?;
             check_faces(doc, topology, node, faces)?;
             dimension_call(node, &doc.node_name(node), *dimension, faces, *value)
         }
@@ -357,7 +384,10 @@ pub(super) fn measure(cx: &mut Cx, call: &mut Call, a: &MeasurePick, b: &Measure
         doc.show(Ok(m.label.clone()));
         return Outcome::Done(Ok(json!({"measurement": m.json(), "kept": false})));
     }
-    if let Some(why) = doc.edit_refusal() {
+    // Measured over the shown revision's topology and snaps: kept only while
+    // that is RoboCAD's current revision (a stale tree or a document moved on
+    // since would record points of geometry that is gone).
+    if let Some(why) = doc.commit_refusal(Some(doc.shown_revision())) {
         return Outcome::Done(Err(format!("measured {}, but it was not kept: {why}", m.label)));
     }
     let op = OpCall { name: "add_measurement", args: vec![m.json()], kwargs: Map::new(), label: format!("Add measurement {}", m.label) };

@@ -7,8 +7,10 @@
 //!   plane node's frame is being read); hovering shows
 //!   the snap marker and the readout ("vertex  (x, y, z)"; with a first pick
 //!   held, "12.5 mm  (vertex)"). A press picks: the item under the cursor in
-//!   the selection mode (a face or body by ray cast, an edge or vertex
-//!   within 12 px) and the point (the snap point, or the surface hit when
+//!   the selection mode (a face or body by ray cast; an edge or vertex by
+//!   the select click's search, `pick::candidates_at`: within 6 px, not
+//!   behind a surface, cut by the section, locked or hidden, as RoboCAD's
+//!   pick pass) and the point (the snap point, or the surface hit when
 //!   the snap is free or on the plane, as `MeasureTool.press`). The second press writes
 //!   `CadMeasure {a, b, keep: Shift}`; `transform::handle` computes it with
 //!   [`between`], shows it and, when kept, adds it as one
@@ -31,10 +33,11 @@
 //! - The label is drawn in the tool bar, not as 3D text at the midpoint
 //!   (Bevy's stroke-text gizmo has ASCII only: no "°" or "Ø").
 use super::actions::{CadAction, MeasurePick};
+use super::display::CadDisplay;
 use super::document::{CadDocument, CadTool, SelectMode};
 use super::mesh::{CadBody, CadMeshes};
 use super::sketch::{CadActivePlane, CadSketches};
-use super::snap::{self, Candidate, SNAP_PIXELS, SnapKind};
+use super::snap::{self, Candidate, SnapKind};
 use super::topology::{CadTopology, NodeTopology};
 use super::transform::{HOT, SNAP_COLOUR, ToolGizmos, cursor_in_view, fl, marker, ray_hit};
 use super::view::CadView;
@@ -171,45 +174,6 @@ pub fn between<'t>(a: &MeasurePick, b: &MeasurePick, topology: impl Fn(&str) -> 
     }
 }
 
-/// The edge whose projected polyline passes within [`SNAP_PIXELS`] of
-/// `cursor` (the nearest), as RoboCAD's edge pick.
-pub fn nearest_edge<'a>(view: &CadView, cursor: Vec2, nodes: impl IntoIterator<Item = (&'a str, &'a NodeTopology)>) -> Option<(String, i64)> {
-    let mut best: Option<(String, i64)> = None;
-    let mut best_d = SNAP_PIXELS;
-    for (id, t) in nodes {
-        for e in &t.edges {
-            let projected: Vec<Option<Vec2>> = e.points.iter().map(|p| view.project(Vec3::new(p[0] as f32, p[1] as f32, p[2] as f32))).collect();
-            for pair in projected.windows(2) {
-                let (Some(a), Some(b)) = (pair[0], pair[1]) else { continue };
-                let d = segment_distance(cursor, a, b);
-                if d < best_d {
-                    best_d = d;
-                    best = Some((id.to_string(), e.index));
-                }
-            }
-        }
-    }
-    best
-}
-
-/// The vertex within [`SNAP_PIXELS`] of `cursor` (the nearest).
-pub fn nearest_vertex<'a>(view: &CadView, cursor: Vec2, nodes: impl IntoIterator<Item = (&'a str, &'a NodeTopology)>) -> Option<(String, i64)> {
-    let mut best: Option<(String, i64)> = None;
-    let mut best_d = SNAP_PIXELS;
-    for (id, t) in nodes {
-        for v in &t.vertices {
-            let Some(p) = v.point else { continue };
-            let Some(sp) = view.project(Vec3::new(p[0] as f32, p[1] as f32, p[2] as f32)) else { continue };
-            let d = (sp - cursor).length();
-            if d < best_d {
-                best_d = d;
-                best = Some((id.to_string(), v.index));
-            }
-        }
-    }
-    best
-}
-
 /// Distance from `p` to the segment `a`–`b` (pixels).
 pub fn segment_distance(p: Vec2, a: Vec2, b: Vec2) -> f32 {
     let ab = b - a;
@@ -233,7 +197,7 @@ pub(super) fn tool(
     mut cast: MeshRayCast,
     bodies: Query<&CadBody>,
     mut out: MessageWriter<Act<CadAction>>,
-    (plane, sketches): (Option<Res<CadActivePlane>>, Option<Res<CadSketches>>),
+    (plane, sketches, display): (Option<Res<CadActivePlane>>, Option<Res<CadSketches>>, Option<Res<CadDisplay>>),
     mut cache: Local<Option<((u64, u64, u64), Vec<Candidate>)>>,
 ) {
     let (Some(mut doc), Some(view), Some(topology), Some(meshes)) = (doc, view, topology, meshes) else { return };
@@ -285,12 +249,16 @@ pub(super) fn tool(
         doc.show(Err(format!("{name} is being redrawn for revision {shown}; press again in a moment")));
         return;
     }
-    let drawn = || topology.ready().filter(|(id, _)| meshes.shown(id)).map(|(id, t)| (id.as_str(), &**t));
     let item = match doc.select_mode {
         SelectMode::Body => hit.as_ref().map(|h| SelectionItem(h.node.clone(), "body".into(), 0)),
         SelectMode::Face => hit.as_ref().and_then(|h| Some(SelectionItem(h.node.clone(), "face".into(), meshes.face_at(&h.node, h.triangle?, shown)?))),
-        SelectMode::Edge => nearest_edge(&view, cursor, drawn()).map(|(n, i)| SelectionItem(n, "edge".into(), i)),
-        SelectMode::Vertex => nearest_vertex(&view, cursor, drawn()).map(|(n, i)| SelectionItem(n, "vertex".into(), i)),
+        // RoboCAD's pick pass (`MeasureTool.press` → `request_pick`): the
+        // select click's search, so locked and hidden nodes, edges and
+        // vertices behind a surface or cut by the section are not taken.
+        SelectMode::Edge | SelectMode::Vertex => {
+            let clip = display.as_deref().filter(|d| d.section.enabled).and_then(|d| d.section.plane);
+            super::pick::candidates_at(&doc, &meshes, Some(&*topology), &view, cursor, &mut cast, &bodies, clip).into_iter().find(|i| i.1 == doc.select_mode.name())
+        }
         SelectMode::Point => None,
     };
     // As `MeasureTool.press`: the snap point unless the snap is free or on the plane, then the surface hit.
@@ -399,22 +367,11 @@ mod tests {
         assert!(e.contains("Bracket has no face 7"), "{e}");
     }
 
+    /// The screen distance the gizmo's hit test uses. (The measure tool's
+    /// edge and vertex picks are the select click's search, tested in `pick`.)
     #[test]
-    fn edges_and_vertices_are_picked_within_twelve_pixels() {
-        let view = super::super::snap::tests::top_view(200.0);
-        let t = NodeTopology {
-            revision: 1,
-            faces: Vec::new(),
-            edges: vec![EdgeInfo { index: 4, kind: "line".into(), points: vec![[-50.0, 10.0, 0.0], [50.0, 10.0, 0.0]], ..Default::default() }],
-            vertices: vec![sim_runtime::cad_client::VertexInfo { index: 2, point: Some([20.0, 20.0, 0.0]) }],
-        };
-        // 10 mm is about 6 px at this zoom: within reach of the line.
-        let centre = view.project(Vec3::ZERO).unwrap();
-        assert_eq!(nearest_edge(&view, centre, [("b1", &t)]), Some(("b1".to_string(), 4)));
-        let far = view.project(Vec3::new(0.0, -40.0, 0.0)).unwrap();
-        assert_eq!(nearest_edge(&view, far, [("b1", &t)]), None);
-        let near_vertex = view.project(Vec3::new(21.0, 21.0, 0.0)).unwrap();
-        assert_eq!(nearest_vertex(&view, near_vertex, [("b1", &t)]), Some(("b1".to_string(), 2)));
+    fn segment_distance_is_to_the_nearest_point_of_the_segment() {
         assert_eq!(segment_distance(Vec2::new(0.0, 1.0), Vec2::ZERO, Vec2::new(2.0, 0.0)), 1.0);
+        assert_eq!(segment_distance(Vec2::new(5.0, 0.0), Vec2::ZERO, Vec2::new(2.0, 0.0)), 3.0);
     }
 }

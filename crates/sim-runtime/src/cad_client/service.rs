@@ -44,7 +44,10 @@ pub fn interpreter(cad_dir: &Path) -> Result<PathBuf, String> {
 
 /// A port nothing listens on now: binds `127.0.0.1:0`, reads the port the
 /// system chose and releases it. Another process could take it before the
-/// service binds; the service then fails to start and says so in its log.
+/// service binds; the service then fails to start and says so in its log,
+/// and the caller must not take that other process's answer for its own
+/// (sim-spatial's connect job accepts only a headless RoboCAD serving the
+/// file it started, `cad::sync::launch::accept_served`).
 pub fn free_port() -> Result<u16, String> {
     let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).map_err(|e| format!("could not find a free port on 127.0.0.1: {e}"))?;
     let port = listener.local_addr().map_err(|e| format!("could not find a free port on 127.0.0.1: {e}"))?.port();

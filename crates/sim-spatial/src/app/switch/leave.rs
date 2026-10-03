@@ -86,12 +86,23 @@ pub(super) fn leave_robot(world: &mut World) {
 /// with a self-started document's unsaved edits, or edits whose saved state
 /// can't be confirmed, is refused (`leaving_blockers`); if edits appear
 /// between that check and this exit, the service is left running instead
-/// and CAD mode reattaches to its URL next time, so they are not lost. A
-/// pending thread reveal (`cad::threads::RevealThread`) is dropped.
+/// and CAD mode reattaches to its URL next time, so they are not lost; the
+/// switch's message (its `entering` summary, shown once the mode is
+/// entered) then says so, besides the log line. A pending thread reveal
+/// (`cad::threads::RevealThread`) is dropped.
 pub(super) fn leave_cad(world: &mut World) {
     if let Some(mut doc) = world.remove_resource::<CadDocument>() {
         let target = match doc.release_child("leaving CAD mode") {
-            Some(url) => CadTarget::Service(url),
+            Some(url) => {
+                let note = format!("the RoboCAD service this window started for {} may hold unsaved edits and is left running at {url}; CAD mode reattaches to it (save there, or stop it)", doc.document_name());
+                if let Some(mut switch) = world.get_resource_mut::<super::Switcher>()
+                    && let Some((_, _, summary, _)) = switch.entering.as_mut()
+                {
+                    let message = summary["message"].as_str().unwrap_or("Switched mode.").trim_end_matches('.').to_string();
+                    summary["message"] = serde_json::Value::String(format!("{message}; {note}."));
+                }
+                CadTarget::Service(url)
+            }
             None => doc.target.clone(),
         };
         crate::jobs::drop_off_thread(doc, "the CAD document");

@@ -97,6 +97,64 @@ All five `leg-in-process:outcome-1` through `outcome-5`, and tasks
 `leg-in-process:task-LIP1`, `task-LIP2`, `task-LIP3`, are implemented and reviewed
 by reading. Compilation, executed parity and physical acceptance remain unverified.
 
+## Acquisition source identity repair (LIP1 / LIP3)
+
+The extraction in `b6b907e1` narrowed `source_blake3` to `acquisition.rs`,
+although that file previously contained motion behavior now in `motion.rs.inc`.
+That commit's identities and HTTP-era identities are historical, with their
+original scope; no stored data is rewritten or promoted to comprehensive proof.
+
+New runs use `sim-runtime-acquisition-source-v1`. The common provenance owner
+builds a deterministic, name-sorted list of compile-time production source bytes.
+Its composite BLAKE3 is length-framed over the scheme, constituent names and exact
+contents. `source_identity` records the schema, composite hash and each named
+constituent's hash, byte length and relative artifact path. Tests and example
+wrappers are not substitutes for the production implementation. The conservative
+shared set covers motion and specialized helpers, serial/safety/virtual transport,
+application cancellation/ownership, controller plans, the shared Rhai controller engine, its registered control
+primitives and acquisition dependencies.
+Changing any included production constituent changes all acquisition identities,
+even if a particular run does not execute that constituent.
+
+Before effects, exact bytes are published under `sources/<repository-path>` and
+`source-manifest.json` using shared immutable publication and file/directory sync.
+An existing artifact is accepted only if its bytes match and durability can be
+confirmed; mismatches or publication uncertainty refuse acquisition. Companion
+artifacts extend the retained historical `transport-source.rs.txt` filename;
+that compatibility file alone no longer represents the split implementation.
+The source manifest describes implementation identity, not build flags, dependencies
+outside its declared set, physical timing qualification or stationary readback.
+
+Specialized controller/device/FPGA recordings retain their existing schema and
+individual host/RTL/bitstream identities, add the shared composite source identity,
+and carry its manifest with the initial evidence. Sweep checkpoints identify the
+new scheme and runner composite. Old checkpoints remain readable; continuing one
+under a different identity is refused by the existing runner-mismatch gate.
+Recording consumers retain flexible source hash maps and JSON initial evidence;
+bench application results preserve the acquisition record, and sweep review reads
+JSON without converting historical identities to the new scheme.
+
+Reference/replacement evidence and publication/consumer traces are recorded below
+as source review only. No retained artifact was produced by executing acquisition
+in this repair, and no physical acceptance or parity is claimed.
+
+| Producer / consumer | Reference before repair (`b6b907e1`) | Replacement reading evidence |
+|---|---|---|
+| Generic acquisition | `hardware/bench/acquisition.rs:204` hashed only acquisition.rs; original `a4037f4e` characterize example contained the moved motion implementation | `acquisition.rs:204` retains sources, `:205` attaches composite/schema manifest, `:206` publishes initial record before `open()`; `provenance.rs:466` hashes all 112 unique named constituents, including motion, `:484` verifies/publishes exact bytes, `:500` publishes manifest last. |
+| Specialized device / FPGA | `hx_device.rs.inc:45`, `hx_fpga.rs.inc:31` retained only acquisition.rs transport snapshot | `hx_device.rs.inc:40`, `hx_fpga.rs.inc:26` retain full companion set before supervisor effects. Device `:348`, `:358` and FPGA `:57`, `:60`, `:109`, `:298` preserve manifest/composite through initial metadata and terminal capture/results. |
+| Controller and sweep | controller used only its own host source; sweep runner concatenated three partial sources | `hx_controller.rs.inc:57`, `:75`, `:115`, `:273` preserve source manifest/composite through preflight and final result. `hx_sweep_support.rs.inc:142` uses composite runner identity; `:182` retains before STOP; `:467` records scheme/manifest in checkpoint and `:564` in terminal result. Resume mismatch gate remains `:154`. |
+| Safety-probe / sweep run identities | generic branch hashed individual extracted helpers | `acquisition.rs:367`, `:391` explicitly record the new scheme with composite hashes; outer source_identity stays attached through terminal updates. |
+| Virtual bench | no comprehensive source companion manifest | `virtual_run.rs:31` retains full sources, `:34` attaches composite, `:36` durably publishes initial record before Bench construction; virtual fidelity remains host Bench, not physical proof. |
+| Application and readers | flexible historical recording structures | `bench/mod.rs:295` reads run.json into Value and preserves it in application-result/status; `controller_refinement/fpga.rs:132` uses sources map and initial Value; `recording.rs:27` uses source_hashes map and initial_registers Value. `electrical_measurements.rs:70` accepts hex hashes, including the composite. `sweep_review.rs:63` reads historical run/checkpoint Values without requiring the new source scheme. |
+
+All runtime paths above are relative to `crates/sim-runtime/src/`. Retention
+publication uses `publication.rs:87` (ImmutableNew) and `:129` (confirm-existing),
+whose failures preserve visible artifacts and propagate uncertainty. Subsequent
+legacy run/record updates still use their existing filesystem writers: a crash
+can lose terminal metadata. The independently synchronized source manifest and
+companions retain the exact implementation even then; this repair does not claim
+new terminal-publication or hardware-release guarantees.
+
 ## Operator run sheets (not executed)
 
 Do these only after a separately authorized fresh-binary verification pass.

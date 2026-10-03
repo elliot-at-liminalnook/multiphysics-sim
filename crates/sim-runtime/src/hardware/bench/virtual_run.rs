@@ -26,9 +26,18 @@ pub(super) fn run(
 ) -> Result<(), String> {
     let out = dir.join("capture");
     fs::create_dir(&out).map_err(|e| e.to_string())?;
+    // Fail before constructing or advancing a bench if exact implementation sources
+    // cannot be retained durably. The identity describes host simulation, not FPGA proof.
+    let source_identity = super::provenance::retain(&out).map_err(|e| e.to_string())?;
     let command = value(dir.join("plan.json"));
     let mut manifest = json!({"completed":false,"mode":"virtual_host_bench","kind":"virtual","bench_instance":config.bench_instance,"fidelity":"Existing Bench dynamics with host feedback loop; FPGA device timing and protocol not emulated or qualified","ids":ids,"axis_mapping":"Configured IDs in order map to virtual Bench axes 1..3","physical_stop_verified":false});
-    write_json(out.join("run.json"), &manifest)?;
+    manifest["source_blake3"] = source_identity["composite_blake3"].clone();
+    manifest["source_identity"] = source_identity;
+    crate::publication::publish(
+        &out.join("run.json"),
+        &serde_json::to_vec_pretty(&manifest).map_err(|e| e.to_string())?,
+        crate::publication::Policy::ImmutableNew,
+    ).into_result()?;
     write_json(out.join("virtual-configuration.json"), config)?;
     let mut bench = Bench::new(config.start, config.models.clone());
     let mut log = fs::File::create(out.join("live-telemetry.jsonl")).map_err(|e| e.to_string())?;

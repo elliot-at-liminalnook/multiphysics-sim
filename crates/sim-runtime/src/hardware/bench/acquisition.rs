@@ -201,8 +201,14 @@ fn run_args(
     }
     let out = PathBuf::from(&args[4]);
     fs::create_dir(&out)?;
-    let mut manifest = json!({"completed":false,"mode":"read_only","ids":ids,"port":args[1],"baud":baud,"seconds":secs,"started_unix_s":SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs_f64(),"timing":"Host monotonic request/reply windows include USB/FPGA buffering; not device clock or simultaneous sensor samples.","source_blake3":blake3::hash(include_bytes!("acquisition.rs")).to_hex().to_string(),"voltage":"0x3e single byte, 0.1 V/count; temperature is separate byte 0x3f","current":"0.001 A/count uncalibrated internal current; not measured total supply current"});
-    fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
+    let source_identity = super::provenance::retain(&out)?;
+    let mut manifest = json!({"completed":false,"mode":"read_only","ids":ids,"port":args[1],"baud":baud,"seconds":secs,"started_unix_s":SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs_f64(),"timing":"Host monotonic request/reply windows include USB/FPGA buffering; not device clock or simultaneous sensor samples.","source_blake3":super::provenance::fingerprint(),"source_identity":source_identity,"voltage":"0x3e single byte, 0.1 V/count; temperature is separate byte 0x3f","current":"0.001 A/count uncalibrated internal current; not measured total supply current"});
+    crate::publication::publish(
+        &out.join("run.json"),
+        &serde_json::to_vec_pretty(&manifest)?,
+        crate::publication::Policy::ImmutableNew,
+    )
+    .into_result()?;
     let serial = open()?;
     let mut bus = Bus {
         serial,
@@ -358,10 +364,9 @@ fn run_args(
         if value["control"] == "safety_probe" {
             manifest["mode"] = json!("low_drive_hardware_watchdog_commissioning");
             manifest["plan"] = value.clone();
+            manifest["probe_source_schema"] = json!(super::provenance::SCHEMA);
             manifest["probe_source_blake3"] = json!(
-                blake3::hash(include_bytes!("hx_safety_probe.rs.inc"))
-                    .to_hex()
-                    .to_string()
+                super::provenance::fingerprint()
             );
             fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
             match run_safety_probe(&mut bus, &out, &ids, value["physical_s2"] == true) {
@@ -383,10 +388,9 @@ fn run_args(
             plan.validate(&ids)?;
             manifest["mode"] = json!("fpga_supervised_pwm_sweep");
             manifest["plan"] = serde_json::to_value(&plan)?;
+            manifest["sweep_source_schema"] = json!(super::provenance::SCHEMA);
             manifest["sweep_source_blake3"] = json!(
-                blake3::hash(include_bytes!("hx_sweep_support.rs.inc"))
-                    .to_hex()
-                    .to_string()
+                super::provenance::fingerprint()
             );
             fs::write(out.join("run.json"), serde_json::to_vec_pretty(&manifest)?)?;
             let result = run_sweep(&mut bus, &out, &ids, &plan);

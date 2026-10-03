@@ -140,11 +140,7 @@ fn sweep_feedback(t: &Telemetry, home: u16, plan: &SweepPlan) -> Result<(), E> {
     Ok(())
 }
 fn sweep_runner_identity() -> String {
-    let mut hash = blake3::Hasher::new();
-    hash.update(include_bytes!("hx_sweep_support.rs.inc"));
-    hash.update(include_bytes!("acquisition.rs"));
-    hash.update(include_bytes!("../../acquisition/actuator_sweep.rs"));
-    hash.finalize().to_hex().to_string()
+    super::provenance::fingerprint()
 }
 fn stationary_history(v: &std::collections::VecDeque<(Instant, u16)>, start: Instant) -> bool {
     let samples: Vec<_> = v
@@ -183,6 +179,7 @@ fn run_sweep(
         let saved: serde_json::Value = serde_json::from_slice(&fs::read(path)?)?;
         completed = completed_from_checkpoint(&saved, &identity, &trials)?;
     }
+    let acquisition_source = super::provenance::retain(out)?;
     let initial_status = supervisor(bus, servo_safety::Command::Stop)?;
     fs::write(
         out.join("fpga-preflight.json"),
@@ -241,7 +238,7 @@ fn run_sweep(
         fs::write(
             out.join("preflight.json"),
             serde_json::to_vec_pretty(
-                &json!({"servos":snapshots,"homes":homes,"plan":plan,"plan_identity":identity}),
+                &json!({"servos":snapshots,"homes":homes,"plan":plan,"plan_identity":identity,"acquisition_source":acquisition_source}),
             )?,
         )?;
         for trial in trials.iter().skip(completed.len()) {
@@ -467,7 +464,7 @@ fn run_sweep(
             }
             outcomes.push(json!({"trial":trial,"peak_observed_speed_rad_s":peak,"displacement_counts":displacements,"elapsed_s":start.elapsed().as_secs_f64(),"stationary_verified":true,"drive_request_s":command_request_s,"zero_request_s":zero_request_s,"zero_bridge_receipt_s":zero_receipt_s,"segment_events":segment_events}));
             completed.push(trial.clone());
-            let checkpoint = json!({"schema_version":2,"runner_identity":sweep_runner_identity(),"plan_identity":identity,"completed_trials":completed,"outcomes_this_run":outcomes});
+            let checkpoint = json!({"schema_version":2,"runner_identity":sweep_runner_identity(),"runner_identity_schema":super::provenance::SCHEMA,"plan_identity":identity,"completed_trials":completed,"outcomes_this_run":outcomes,"acquisition_source":acquisition_source});
             // Atomic replacement makes a partial write resumable at the last
             // fully completed trial; output directories are never overwritten.
             fs::write(
@@ -564,7 +561,7 @@ fn run_sweep(
     }
     Ok(
         json!({"completed":execution.is_ok() && final_ok && stop.is_ok(),"failure":execution.err().map(|e|e.to_string()),
-        "completed_trials":completed.len(),"total_trials":trials.len(),"fpga_stop":stop,"recovery":recovery,"settling_extension_limit_ms":500,"stop_observations":stop_observations,"stop_observation_limit_s":2,
+        "completed_trials":completed.len(),"total_trials":trials.len(),"acquisition_source":acquisition_source,"fpga_stop":stop,"recovery":recovery,"settling_extension_limit_ms":500,"stop_observations":stop_observations,"stop_observation_limit_s":2,
         "limitation":"Observed pulse peaks are not steady-state speed; no load, torque, current calibration, or thermal-fit claims."}),
     )
 }

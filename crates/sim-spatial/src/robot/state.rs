@@ -130,11 +130,11 @@ impl RobotView {
         out
     }
     /// `robot_state.bindings` and `robot_state.drive_input` (the device
-    /// layer, `drive_input::DriveBindings` / `DriveInput`, which are
+    /// layer, `crate::drive_input::DriveBindings` / `DriveInput`, which are
     /// resources rather than view state) added to a `robot_state` answer:
     /// set only while the run is controlled, null otherwise. Every caller
     /// that answers or publishes `robot_state` passes them.
-    pub(crate) fn with_drive_input(&self, mut state: Value, bindings: Option<&crate::robot::drive_input::DriveBindings>, input: Option<&crate::robot::drive_input::DriveInput>) -> Value {
+    pub(crate) fn with_drive_input(&self, mut state: Value, bindings: Option<&crate::drive_input::DriveBindings>, input: Option<&crate::drive_input::DriveInput>) -> Value {
         let controlled = self.run.as_ref().is_some_and(|r| r.controlled().is_some());
         let bindings = bindings.filter(|_| controlled).map_or(Value::Null, |b| Value::Array(b.describe().into_iter().map(|(input, action)| json!({"input": input, "action": action})).collect()));
         let input = input.filter(|_| controlled).map_or(Value::Null, |i| {

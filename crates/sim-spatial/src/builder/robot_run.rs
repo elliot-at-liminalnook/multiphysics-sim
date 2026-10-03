@@ -12,20 +12,24 @@
 //! the file reads) and builds the host (the controller program starts) on
 //! the run thread, then keeps the generic run's Start/Pause/Step/Reset
 //! semantics and wall-clock pacing, one `DriveHost::step` per seam period.
-//! Twist requests come from the one apply, [`Builder::drive`]
-//! (`BuildAction::Drive`, REST `system_drive`), as `RunControl::Twist`;
+//! Twist requests come from the one apply, [`Builder::drive_request`]
+//! (through [`Builder::drive`] for `BuildAction::Drive` and REST
+//! `system_drive`; directly for the bound keys and gamepad, whose one
+//! poller, `crate::drive_input`, Build mode drains in
+//! `actions::drive_devices`), as `RunControl::Twist`;
 //! the run thread applies every queued command in order before the next
 //! period. The run thread is the one writer of `RunShared::drive`.
 use super::*;
 use sim_domain_control::drive::kinematics::BodyTwist;
 use sim_runtime::drive_host::{DriveHost, DriveRequest, DriveStatus, twist_json};
 use sim_runtime::system_robot::{self, RobotSystem};
+use crate::drive_input::{DriveTarget, LiveTarget};
 
 pub(super) const RUNNING_STATUS: &str = "Running the robot system on the shared drive host (its linked robot, controller binding and drive profile; background thread, paced to real time at most).";
 /// Why a robot system's run is not kept as a run record.
 pub(super) const NO_RUN_RECORD: &str = "a robot system's run is not kept as a run record yet: its drive session (the scene with the controller identity, the seed and one twist per seam period) is not written from Build mode; drive the robot in Robot mode (robot_save_recording) to record it";
 /// The Build-mode drive rule (Robot mode's `run::DRIVE_RULE`, for a system run).
-pub(super) const DRIVE_RULE: &str = "requests are normalized axes, a profile action or stop, interpreted against the linked drive profile (DriveRequest::interpret: kinematics::scale) by the one apply (Builder::drive, for the run-panel drive buttons, system_ui and REST system_drive); once per seam period the run thread sends the limited twist (kinematics::step: acceleration limit, deadman on simulated time) and the heartbeat on the controller's four command channels, and the controller mixes it. A nonzero request moves the robot only while the run runs (the last Run, not Pause or Reset); a stop or halt is accepted until the run fails or ends (also while a reset is in progress: it waits in the channel behind the Reset), and one made while the system is still loading waits in the run thread's channel and is applied, in order, right after it loads. The run thread applies every queued request in order before each period";
+pub(super) const DRIVE_RULE: &str = "requests are normalized axes, a profile action or stop, interpreted against the linked drive profile (DriveRequest::interpret: kinematics::scale) by the one apply (Builder::drive_request, for the run-panel drive buttons, system_ui, REST system_drive and the bound keys and gamepad); once per seam period the run thread sends the limited twist (kinematics::step: acceleration limit, deadman on simulated time) and the heartbeat on the controller's four command channels, and the controller mixes it. A nonzero request moves the robot only while the run runs (the last Run, not Pause or Reset); a stop or halt is accepted until the run fails or ends (also while a reset is in progress: it waits in the channel behind the Reset), and one made while the system is still loading waits in the run thread's channel and is applied, in order, right after it loads. The run thread applies every queued request in order before each period";
 /// The status after stopping a robot run whose controller was still starting.
 pub(super) const STOPPED_WHILE_STARTING: &str = "The robot system's run was stopped while its controller was still starting; the starting controller is still shutting down (its run thread closes it as soon as the start returns, within the controller reply timeout).";
 /// Why a system run is not a robot system.
@@ -61,28 +65,77 @@ impl LiveRun {
 }
 
 impl Builder {
-    /// The one drive apply (`BuildAction::Drive` from the run-panel buttons
-    /// and `system_ui`, REST `system_drive`): interprets `request` against the
-    /// loaded system's profile (`DriveRequest::interpret`), checks the run
-    /// rule ([`DRIVE_RULE`]) and sends `RunControl::Twist`. A refusal is kept
-    /// for `system_state.live_run.drive.last_refusal`. Answers that drive block.
+    /// The one drive apply, answering the drive block (`BuildAction::Drive`
+    /// from the run-panel buttons and `system_ui`, REST `system_drive`):
+    /// [`Builder::drive_request`], then `system_state.live_run.drive`.
     pub fn drive(&mut self, request: DriveRequest) -> Result<serde_json::Value, String> {
+        self.drive_request(request)?;
+        Ok(self.drive_json())
+    }
+
+    /// The one drive apply without the answer (the bound keys and gamepad
+    /// in Build mode, `actions::drive_devices`, call it every frame while
+    /// they drive): interprets `request` against the loaded system's profile
+    /// (`DriveRequest::interpret`), checks the run rule ([`DRIVE_RULE`]) and
+    /// sends `RunControl::Twist`. A refusal is kept for
+    /// `system_state.live_run.drive.last_refusal` (and `DriveInput::last_error`,
+    /// which mirrors it); an accepted request clears it. The panel is marked
+    /// for a rebuild only when the refusal text changes, so held keys and
+    /// sticks rebuild nothing (the 4 Hz live-run refresh shows the twist).
+    pub fn drive_request(&mut self, request: DriveRequest) -> Result<(), String> {
         let checked = self.check_drive(&request);
         let run = self.run.as_mut().ok_or("nothing is running: start the robot system's run first (the Run button, or REST system_run start)")?;
-        match checked {
-            Err(e) => {
+        let refuse = |run: &mut LiveRun, panel_dirty: &mut bool, e: String| -> Result<(), String> {
+            if run.drive_refusal.as_ref() != Some(&e) {
                 run.drive_refusal = Some(e.clone());
-                self.panel_dirty = true;
-                Err(e)
+                *panel_dirty = true;
             }
+            Err(e)
+        };
+        match checked {
+            Err(e) => refuse(run, &mut self.panel_dirty, e),
             Ok((request, halt)) => {
-                run.worker.send(RunControl::Twist { request, halt }).map_err(|_| "the run has ended; start a new run".to_string())?;
+                if run.worker.send(RunControl::Twist { request, halt }).is_err() {
+                    return refuse(run, &mut self.panel_dirty, "the run has ended; start a new run".to_string());
+                }
+                // Only a refusal's text changing rebuilds the panel at once; the
+                // requested twist (an analog stick changes it every frame) reaches
+                // the drive strip with the 4 Hz live-run refresh (`sync_run`).
+                if run.drive_refusal.is_some() {
+                    self.panel_dirty = true;
+                }
                 run.drive_requested = Some((request, halt));
                 run.drive_refusal = None;
-                self.panel_dirty = true;
-                Ok(self.drive_json())
+                Ok(())
             }
         }
+    }
+
+    /// What Build mode offers the drive device poller (`crate::drive_input`):
+    /// a robot system's run whose profile has loaded (the linked binding's
+    /// supported axes), with Build's own editing keys
+    /// (`actions::OWNED_KEYS`) never read for driving; nothing otherwise,
+    /// and nothing while a text draft is open (`input`) or a placement drag
+    /// runs (`drag`: its X/Y/Z axis constraints would also be drive keys,
+    /// X the default stop). A target that goes away while the devices drive
+    /// gets one stop from the poller (`drive_input::input::devices`).
+    /// The run identity is the system file and the run thread's run id
+    /// (content hash and revision): a run rebuilt from an edited file is a
+    /// new target, so held inputs are disarmed.
+    pub(super) fn drive_target(&self) -> DriveTarget {
+        if self.input.is_some() || self.drag.is_some() {
+            return DriveTarget::default();
+        }
+        let Some(run) = self.run.as_ref().filter(|r| r.robot) else { return DriveTarget::default() };
+        let Ok(s) = run.worker.shared().lock() else { return DriveTarget::default() };
+        let Some(system) = s.drive.as_ref().and_then(|d| d.system.as_ref()) else { return DriveTarget::default() };
+        let run_id = s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map_or("", |st| st.run_id.as_str());
+        let live = LiveTarget {
+            mode: ViewerMode::Build,
+            supported: system.controlled.resolved.limits.supported,
+            run: format!("{} {run_id}", self.path().display()),
+        };
+        DriveTarget { live: Some(live), owned_keys: super::actions::OWNED_KEYS.to_vec() }
     }
 
     /// The twist `request` asks for now, or why it is refused.
@@ -150,6 +203,14 @@ impl Builder {
             "host": "sim_runtime::drive_host::DriveHost (the shared Session: PhysicalRobot with the external controller attached on the model's control.external seam)",
         })
     }
+}
+
+/// Input, before `InputSet::Window` (Build mode): Build mode's one
+/// [`DriveTarget`] writer ([`Builder::drive_target`], `set_if_neq`), read by
+/// the one drive device poller in `InputSet::Window`.
+pub(super) fn drive_target(builder: Option<Res<Builder>>, target: Option<ResMut<DriveTarget>>) {
+    let Some(mut target) = target else { return };
+    target.set_if_neq(builder.as_deref().map_or_else(DriveTarget::default, Builder::drive_target));
 }
 
 /// The run thread's state: the resolved system, its host, and what it publishes.
@@ -395,5 +456,52 @@ fn robot_thread(document: SystemDocument, path: PathBuf, registry: BehaviorRegis
             w.publish(Some(speed));
             last_publish = std::time::Instant::now();
         }
+    }
+}
+
+#[cfg(test)]
+mod device_tests {
+    //! Written fixtures (not executed by their author): the drive device
+    //! poller's requests in Build mode.
+    use super::super::actions::{apply_device, device_action};
+    use super::*;
+    use crate::app::actions::{Act, Origin};
+    use crate::drive_input::DriveDevice;
+
+    /// A builder on a system without a run (the winch example, copied).
+    fn builder() -> Builder {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let dir = std::env::temp_dir().join(format!("builder-drive-devices-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("winch.system.json");
+        std::fs::copy(root.join("examples/systems-builder/worm-drive/winch.system.json"), &path).unwrap();
+        let registry = sim_runtime::registry_with_parts(&root.join("library/parts")).0;
+        Builder::open(path, root.join("library/systems"), registry).unwrap()
+    }
+
+    /// A device request written for Build mode becomes `BuildAction::Drive`
+    /// with its origin and reaches the one drive apply (`Builder::drive_request`):
+    /// with nothing running it is refused naming why; a quiet request's
+    /// refusal leaves the status line alone, a shown one's is the status
+    /// line. A request made for Robot mode is not Build's, and a builder
+    /// without a robot system's run offers no drive target.
+    #[test]
+    fn a_device_request_reaches_build_drive_through_the_one_apply() {
+        let axes = DriveRequest::Axes { forward: 1.0, lateral: 0.0, yaw: 0.0 };
+        let (action, origin) = device_action(&Act::quiet(DriveDevice { mode: ViewerMode::Build, request: axes.clone() })).unwrap();
+        assert!(matches!(&action, BuildAction::Drive { request } if *request == axes));
+        assert_eq!(origin, Origin::Quiet);
+        assert!(device_action(&Act::quiet(DriveDevice { mode: ViewerMode::Robot, request: axes.clone() })).is_none());
+        let mut b = builder();
+        let status = b.status.clone();
+        let e = apply_device(&mut b, action, origin).unwrap_err();
+        assert!(e.starts_with("nothing is running"), "{e}");
+        assert_eq!(b.status, status, "a quiet device request's refusal is not the status line");
+        let (stop, shown) = device_action(&Act::ui(DriveDevice { mode: ViewerMode::Build, request: DriveRequest::Stop })).unwrap();
+        assert_eq!(shown, Origin::Ui);
+        let e = apply_device(&mut b, stop, shown).unwrap_err();
+        assert_eq!(b.status, e);
+        assert_eq!(b.drive_target(), DriveTarget::default());
     }
 }

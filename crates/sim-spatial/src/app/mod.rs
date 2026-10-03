@@ -255,6 +255,8 @@ pub fn run(launch: Launch) {
         // The one orbit/fly camera every mode's 3D view uses.
         crate::camera::CameraPlugin,
         crate::SpatialViewerPlugin,
+        // Drive device input for every mode: the one poller; Robot and Build drain its requests.
+        crate::drive_input::DriveInputPlugin,
         crate::builder::BuilderPlugin,
         crate::lesson::LearnPlugin,
         crate::robot::RobotPlugin,

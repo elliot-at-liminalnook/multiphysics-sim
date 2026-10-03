@@ -520,11 +520,11 @@ fn duplicate_coordinates_consume_rows_once_and_archive_removed_later_metadata() 
     );
 }
 
-/// Drive bindings (`robot::drive_input`): absent means the defaults; set
+/// Drive bindings (`drive_input`): absent means the defaults; set
 /// bindings round-trip whole; a reset removes the group again.
 #[test]
 fn drive_bindings_round_trip_and_reset_removes_the_group() {
-    use crate::robot::drive_input::BindingsFile;
+    use crate::drive_input::BindingsFile;
     let p = paths("drive-bindings");
     let loaded = jobs::load(&p).unwrap();
     assert_eq!(loaded.drive_bindings, None);
@@ -544,7 +544,7 @@ fn drive_bindings_round_trip_and_reset_removes_the_group() {
 /// A stored binding that fails validation protects the whole file, naming the field.
 #[test]
 fn malformed_drive_bindings_block_loading_naming_the_field() {
-    use crate::robot::drive_input::BindingsFile;
+    use crate::drive_input::BindingsFile;
     let p = paths("drive-bindings-bad");
     let loaded = jobs::load(&p).unwrap();
     let mut next = jobs::snapshot(&loaded.raw, &loaded.recents, &loaded.hardware, &loaded.cad).unwrap();
@@ -560,7 +560,7 @@ fn malformed_drive_bindings_block_loading_naming_the_field() {
 /// owner is dirty so they are written.
 #[test]
 fn drive_bindings_set_before_the_load_survive_it() {
-    use crate::robot::drive_input::BindingsFile;
+    use crate::drive_input::BindingsFile;
     let p = paths("drive-bindings-claim");
     let mut owner = SettingsOwner::default();
     let mut b = BindingsFile::default();

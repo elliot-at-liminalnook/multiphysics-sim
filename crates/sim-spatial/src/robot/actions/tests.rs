@@ -161,3 +161,18 @@ fn drive_is_refused_without_a_drive_profile() {
     assert!(moves_synced_motors(&view, None, &RobotAction::Drive { request: DriveRequest::Axes { forward: 1.0, lateral: 0.0, yaw: 0.0 } }));
     assert!(!moves_synced_motors(&view, None, &RobotAction::Drive { request: DriveRequest::Stop }));
 }
+
+/// The device poller's requests reach robot mode as `RobotAction::Drive`
+/// with their origin (quiet axes stay quiet, a shown stop stays shown), and
+/// a request made for Build mode is not Robot mode's.
+#[test]
+fn device_requests_become_robot_drive_actions_for_robot_mode_only() {
+    use crate::drive_input::DriveDevice;
+    let axes = DriveRequest::Axes { forward: 1.0, lateral: 0.0, yaw: 0.0 };
+    let act = device_action(&Act::quiet(DriveDevice { mode: ViewerMode::Robot, request: axes.clone() })).unwrap();
+    assert_eq!(act.action, RobotAction::Drive { request: axes.clone() });
+    assert_eq!(act.origin, Origin::Quiet);
+    let stop = device_action(&Act::ui(DriveDevice { mode: ViewerMode::Robot, request: DriveRequest::Stop })).unwrap();
+    assert_eq!((stop.action, stop.origin), (RobotAction::Drive { request: DriveRequest::Stop }, Origin::Ui));
+    assert!(device_action(&Act::quiet(DriveDevice { mode: ViewerMode::Build, request: axes })).is_none());
+}

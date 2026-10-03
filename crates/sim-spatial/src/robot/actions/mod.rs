@@ -85,7 +85,8 @@ pub(crate) enum RobotAction {
     Threads { act: crate::robot::threads::ThreadsAct },
     /// A drive request for a controlled robot (a controller binding with a
     /// `sim.drive/1` profile): the bound keys and gamepad
-    /// (`drive_input::devices`), `system_ui` drive:* and REST `robot_drive`.
+    /// (`crate::drive_input::input::devices`, forwarded by [`forward_devices`]),
+    /// `system_ui` drive:* and REST `robot_drive`.
     /// Applied by [`drive_request`] then `RunController::drive`.
     Drive { request: DriveRequest },
 }
@@ -624,7 +625,7 @@ pub(super) fn apply(
     mut registry: ResMut<DocumentRegistry>,
     closing: Option<Res<crate::app::close::CloseOwner>>,
     (mut threads, reveal, mut window): (ResMut<crate::robot::threads::RobotThreads>, Option<Res<crate::cad::threads::RevealThread>>, MessageWriter<Act<crate::app::switch::WindowAction>>),
-    (mut drive_input, bindings): (Option<ResMut<crate::robot::drive_input::DriveInput>>, Option<Res<crate::robot::drive_input::DriveBindings>>),
+    (mut drive_input, bindings): (Option<ResMut<crate::drive_input::DriveInput>>, Option<Res<crate::drive_input::DriveBindings>>),
 ) {
     let (Some(mut view), Some(mut orbit)) = (view, orbit) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
@@ -740,6 +741,27 @@ pub(super) fn apply(
     });
 }
 
+/// A device request as robot mode's action: `RobotAction::Drive` with the
+/// poller's origin (`Act::ui` for a shown stop or action, `Act::quiet` for
+/// repeated axes), or None for a request the poller made for another mode.
+pub(super) fn device_action(device: &Act<crate::drive_input::DriveDevice>) -> Option<Act<RobotAction>> {
+    (device.action.mode == ViewerMode::Robot).then(|| Act { action: RobotAction::Drive { request: device.action.request.clone() }, origin: device.origin })
+}
+
+/// Actions, before [`apply`] (`RobotSet::Actions`; Robot mode only): the
+/// one device poller's requests for Robot mode (`crate::drive_input`)
+/// written as `RobotAction::Drive`, so [`apply`] drains them with this
+/// frame's other actions and handles them exactly as the Drive block's
+/// buttons, `system_ui` drive:* and REST `robot_drive` (`drive_request` →
+/// `RunController::drive`), recording a refusal in `DriveInput::last_error`.
+pub(super) fn forward_devices(mut devices: MessageReader<Act<crate::drive_input::DriveDevice>>, mut out: MessageWriter<Act<RobotAction>>) {
+    for device in devices.read() {
+        if let Some(act) = device_action(device) {
+            out.write(act);
+        }
+    }
+}
+
 /// A `system_ui` activation of a Leg calibration control (`hardware:<name>`).
 fn is_hardware_activation(action: &RobotAction) -> bool {
     matches!(action, RobotAction::Activate { id, .. } if id.starts_with("hardware:"))
@@ -802,8 +824,8 @@ pub(super) fn publish(
     selection: Res<Selection>,
     registry: Res<DocumentRegistry>,
     threads: Res<crate::robot::threads::RobotThreads>,
-    bindings: Option<Res<crate::robot::drive_input::DriveBindings>>,
-    drive_input: Option<Res<crate::robot::drive_input::DriveInput>>,
+    bindings: Option<Res<crate::drive_input::DriveBindings>>,
+    drive_input: Option<Res<crate::drive_input::DriveInput>>,
 ) {
     let Some(mut rest) = rest else { return };
     if rest.0.snapshot_due() {

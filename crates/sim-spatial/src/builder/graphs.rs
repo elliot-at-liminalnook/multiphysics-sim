@@ -125,7 +125,8 @@ fn plotted(builder: &Builder, scene: &SpatialScene, only: Option<String>) -> Vec
 }
 
 pub(super) fn update(time: Res<Time>, mut builder: ResMut<Builder>, mut scene: ResMut<SpatialScene>, mut images: ResMut<Assets<Image>>, selection: Res<Selection>, registry: Res<DocumentRegistry>) {
-    let dock = if builder.graphs.visible { DOCK } else { 0. };
+    // The graph dock, and the drive strip above it while a robot system's run is live (`ui::drive_strip`).
+    let dock = (if builder.graphs.visible { DOCK } else { 0. }) + (if super::ui::drive_strip_shown(&builder) { super::ui::DRIVE_STRIP } else { 0. });
     if scene.builder_dock != dock {
         scene.builder_dock = dock;
         builder.panel_dirty = true;

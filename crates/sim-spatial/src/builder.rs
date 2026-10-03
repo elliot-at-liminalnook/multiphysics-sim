@@ -546,6 +546,11 @@ impl Plugin for BuilderPlugin {
         // applied them); its one handler applies them and REST's in Actions.
         app.add_systems(Update, (actions::buttons, actions::keys.run_if(building.clone()).run_if(not(crate::ui_kit::text::typing))).chain().in_set(crate::app::InputSet::Window).run_if(in_state(ModeScope::Builder)))
             .add_systems(Update, system_actions::apply.in_set(ViewerSet::Actions).run_if(in_state(ModeScope::Builder)));
+        // Drive devices (`crate::drive_input`'s one poller, InputSet::Window): Build mode's target
+        // is written before it, and its requests for Build mode go through the one drive apply
+        // after the builder's apply; nothing is offered once Build mode is left.
+        app.add_systems(Update, (robot_run::drive_target.in_set(ViewerSet::Input).before(crate::app::InputSet::Window), actions::drive_devices.in_set(ViewerSet::Actions).after(system_actions::apply)).run_if(building.clone()))
+            .add_systems(OnExit(ViewerMode::Build), actions::leave_drive);
         app.add_systems(
             Update,
             (frame_timing, watch, agent::tick, reference::tick, sync_field.run_if(building.clone()), drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, picked::track, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), clear_for_learn.run_if(in_state(ViewerMode::Lessons)))

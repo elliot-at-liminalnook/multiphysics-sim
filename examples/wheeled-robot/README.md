@@ -94,6 +94,31 @@ frame it mixes the twist into joint rates (rad/s) and integrates them,
 targets start at 0.0, the seam's initial value. The CAD motor firmware tracks
 these position references.
 
+### The embedded adapter (browser) and Build mode
+
+The binding also names an embedded program (`"embedded"`):
+`drive-adapter.rhai` with its session recipe `drive-adapter.config.json`.
+It is the same kinematic adapter for hosts that cannot start a process,
+the browser above all. It reads the same four command channels, applies the
+same controller-side deadman (`drive_update`, the Rust
+`kinematics::HeartbeatDeadman`), mixes through the Rust functions
+`sim-script` registers (`drive_differential_mix`; the geometry comes from
+its `drive` parameter, the profile resolved against this model, never
+literals) and integrates the same targets, rolling back a re-sampled time
+as the Python program does. `sim_runtime::embedded_drive::build` builds the
+embedded scene from `robot.simrobot.json`, the binding and these files. It
+refuses a config whose servo supply voltage or temperature disagree with
+the model, or whose wheel target envelope (±12000 rad) is too narrow for the
+600 s session at the profile's top wheel rate (about 17.3 rad/s ×
+600 s = 10 360 rad). The browser preset `rover-drive` (`web/README.md`)
+runs it in the shared embedded session; the limiter and deadman are the
+shared `kinematics::step` on simulation time, in Rust. This is a
+compatibility path: the Python program stays the reference controller.
+
+In Build mode, a system file that hosts this robot (`system_drive`) is now
+also driven by the bound keys and gamepad, through the same one device
+poller as Robot mode (`docs/rover-checklist.md` RV-41 to RV-43).
+
 All of this was verified by reading the code only. Nothing here has been run
 or calibrated against hardware. The Python kinematics are checked against
 the Rust golden vectors by

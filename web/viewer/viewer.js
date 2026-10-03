@@ -5,6 +5,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { installLeaderboard } from './leaderboard.js';
 import { installVideoExport } from './video-export.js';
 import { decodeWorkerResult } from './worker-message.mjs';
+import { createDriveInput, loadDriveBindings, isTextField, isTextEntry, isChord, gamepadSnapshot, drivePeriodsPerChunk, errorText } from './drive-input.mjs';
+import { createDrivePanel } from './drive-panel.mjs';
 const $ = id => document.getElementById(id);
 const viewport = $('viewport');
 const scene = new THREE.Scene();
@@ -34,6 +36,12 @@ let grid, selectionBox, meshes = new Map(), current, frame, playback, worker, ep
 let abort, playing = false, busy = false, inputs = [], values = [], tick = 0, replaySaved;
 let lastDraw = performance.now(), simulatedWork = 0, wallWork = 0, selectedName;
 let liveTimer, liveStartWall = 0, liveStartSim = 0;
+// Drive-profile presets (mode "drive"): {input, panel, periods, replaying, replayPending}, set once loaded.
+// replayPending is set and cleared only by replayDrive, so a live chunk that
+// resolves after a replay started cannot re-enable device input.
+// Other presets keep the motion-commands WASD path below unchanged.
+let drive = null, driveWasmReady = null;
+const DRIVE_REPLAY_CHUNK_PERIODS = 200;
 const videoCapture = installVideoExport(renderer.domElement, $('video'), () => current?.id || 'robot');
 let drawNeeded = true;
 // While a calibration mirror is active, measured geometry replaces simulated frames.
@@ -94,6 +102,7 @@ function scheduleLive() {
 }
 function setPlaying(value) { if(value&&mirrorActive)return; if(!value)hardwareSync.stop('Simulation paused'); playing = value; clearTimeout(liveTimer);
   if (!playing && driveKeys.size) {driveKeys.clear();applyDriveKeys();}
+  if (!playing && drive) sendDrive(drive.input.stop());
   if (playing) { liveStartWall = performance.now(); liveStartSim = tick; scheduleLive(); }
   $('play').textContent = playing ? 'Pause' : 'Play';
   $('execution-state').textContent = playing ? (playback ? 'Playing recorded physics' : 'Running physics in background…') : (busy ? 'Pausing after the current physics chunk…' : 'Paused'); }
@@ -236,7 +245,7 @@ function showFrame(next) {
     arrow.setLength(Math.min(.10,magnitude*.004),.009,.005);arrow.setColor(c.other==null?0x8cf1ce:0xffa785);
   }
   for(let i=activeArrows;i<arrows.children.length;i++)arrows.children[i].visible=false;
-  const readings = next.servo_targets_rad?.map((target, i) => ({ name: current.data.coordinate_names[i].replace('joint.', ''), reference: next.reference_targets_rad?.[i], target, actual: next.joint_positions[current.data.joint_indices[i]] })) ||
+  const readings = next.servo_targets_rad?.map((target, i) => ({ name: (current.data.coordinate_names?.[i] ?? `Coordinate ${i + 1}`).replace('joint.', ''), reference: next.reference_targets_rad?.[i], target, actual: next.joint_positions[current.data.joint_indices[i]] })) ||
     next.joint_positions?.map((actual, i) => ({ name: `Joint ${i + 1}`, actual, target: next.telemetry?.actuators?.[i] }));
   $('readings-label').textContent = next.reference_targets_rad ? 'Plan → motor target → actual' : 'Requested → actual';
   const readingPanel=$('joint-readings');let readingIndex=0;
@@ -308,17 +317,107 @@ function makeInputs(channels) {
     $('inputs').append(details);
   }
 }
+// A second Rust/WASM instance on the page thread runs only the pure binding and
+// device functions, so stops and action edges are decided synchronously and are
+// never queued behind a physics chunk in the worker.
+function driveWasm() {
+  driveWasmReady ??= import('./sim_web.js').then(async wasm => { await wasm.default(); return wasm; })
+    .catch(error => { driveWasmReady = null; throw error; });
+  return driveWasmReady;
+}
+async function fetchText(url, signal) {
+  const response = await fetch(url, { signal }); if (!response.ok) throw new Error(`Could not load ${url.pathname} (${response.status})`);
+  return response.text();
+}
+// Drive-profile preset: the page fetches text, Rust parses and builds everything.
+async function loadDrive(preset, data, token) {
+  if (data.kind !== 'drive_files' || !data.model?.url || !data.binding?.url) throw new Error(`${preset.path}: not a packaged drive preset; rebuild with web/build-viewer.mjs`);
+  const signal = abort.signal, modelUrl = new URL(data.model.url, location.href), bindingUrl = new URL(data.binding.url, location.href);
+  status('Loading the model, binding and Rust input functions…');
+  const [modelText, bindingText, wasm] = await Promise.all([fetchText(modelUrl, signal), fetchText(bindingUrl, signal), driveWasm()]);
+  if (token !== epoch) return false;
+  worker = workerClient();
+  const listed = await worker.request('drive_files', { binding_path: data.binding.path, binding_text: bindingText }); if (token !== epoch) return false;
+  const files = {};
+  for (const rel of listed) { files[rel] = await fetchText(new URL(rel, bindingUrl), signal); if (token !== epoch) return false; }
+  status('Building the drive scene in Rust…');
+  const driveJson = await worker.request('drive_build', { model_path: data.model.path, model_text: modelText, binding_path: data.binding.path, binding_text: bindingText, files }); if (token !== epoch) return false;
+  const built = JSON.parse(driveJson);
+  const loaded = await worker.request('drive_load', { drive_json: driveJson, seed: data.seed ?? 0 }); if (token !== epoch) return false;
+  const metadata = loaded.metadata;
+  if (!Array.isArray(metadata?.limits?.supported) || metadata.limits.supported.length !== 3) throw new Error('DriveSimulation metadata: limits.supported must list the three axes (forward, lateral, yaw)');
+  Object.assign(current.data, { scene: built.scene, coordinate_names: metadata.coordinate_names ?? [], joint_indices: metadata.joint_indices ?? [],
+    follow_link: preset.follow_link, view_grid_size_m: preset.view_grid_size_m });
+  buildModel(built.scene.robot); makeInputs([]);
+  const bindings = loadDriveBindings({ defaultBindings: wasm.default_drive_bindings, validateBindings: wasm.validate_drive_bindings,
+    storage: { getItem: key => localStorage.getItem(key) } });
+  const input = createDriveInput({ driveDeviceAxes: wasm.drive_device_axes, bindings: bindings.bindings, supported: metadata.limits.supported });
+  // The panel's buttons go through the input state machine (zero first, then disarm), like a bound action.
+  const panel = createDrivePanel($('teleop'), { drive: built, metadata, bindings,
+    onAction: name => { if (drive) sendDrive(name === 'stop' ? drive.input.stop() : drive.input.action(name)); } });
+  drive = { input, panel, periods: drivePeriodsPerChunk(metadata.period_s), replaying: false, replayPending: false };
+  showFrame(loaded.frame); panel.status(loaded.frame.drive);
+  $('timeline').max = built.scene.duration_s;
+  $('mode').textContent = 'LIVE · Rust / WASM · browser compatibility path (unexecuted)';
+  $('actuation-profile').hidden = true; $('replay').title = 'Choose a saved drive run (JSON) to re-execute through Rust';
+  $('input-help').textContent = 'Press Play, then drive with the bindings listed above: keys by physical position, standard-layout gamepads. The page sends requests only; Rust applies the profile\'s limits, mixing and deadman on simulation time. Releasing every input sends one zero request; Esc, leaving the window or hiding the page requests stop and disarms held inputs until they are released.';
+  $('performance').textContent = 'Waiting for physics'; $('speed').disabled = true;
+  return true;
+}
+// Send DriveRequest values in order; the worker queue keeps that order. Nothing
+// is sent while Rust replays a recording.
+function sendDrive(requests) {
+  if (!drive || !worker || drive.replaying || drive.replayPending || !requests?.length) return;
+  const token = epoch;
+  for (const request of requests) worker.request('drive_request', { request }).then(
+    next => { if (token === epoch && drive) drive.panel.status(next); },
+    error => { if (token === epoch) status(`Drive request refused: ${error.message}`, true); });
+}
+// Once per animation frame: poll devices through Rust while running; refresh the panel.
+function driveTick(now) {
+  if (!drive || !worker) return;
+  try {
+    if ($('leaderboard-dialog').open) sendDrive(drive.input.textFocus());
+    if (playing && !drive.replaying && !drive.replayPending) {
+      let pads = [];
+      try { pads = gamepadSnapshot(navigator.getGamepads?.() ?? []); } catch { pads = []; }
+      sendDrive(drive.input.poll(pads, now));
+    }
+    drive.panel.input(drive.input.state()); drive.panel.render(now);
+  } catch (error) { setPlaying(false); status(`Drive input failed: ${errorText(error)}`, true); }
+}
+const driveReplayFile = Object.assign(document.createElement('input'), { type: 'file', accept: 'application/json,.json', hidden: true });
+driveReplayFile.id = 'drive-replay-file'; driveReplayFile.setAttribute('aria-label', 'Saved drive run to replay'); document.body.append(driveReplayFile);
+driveReplayFile.onchange = () => { const file = driveReplayFile.files[0]; driveReplayFile.value = ''; if (file && drive) replayDrive(file); };
+// Rust checks the recording's identity against the loaded drive; a refusal is shown verbatim.
+async function replayDrive(file) {
+  setPlaying(false); const token = epoch; let text;
+  try { text = await file.text(); } catch (e) { status(`Could not read ${file.name}: ${e.message}`, true); return; }
+  if (token !== epoch || !drive || !worker) return;
+  status('Checking the recording against the loaded drive…'); const replaying = drive; replaying.replayPending = true;
+  $('play').disabled = $('step').disabled = $('replay').disabled = true; $('cancel').hidden = false;
+  try {
+    // Replay runs ~200 periods per worker chunk (progress granularity); live chunks stay small.
+    const next = await worker.request('drive_replay', { recording: text, chunk_periods: DRIVE_REPLAY_CHUNK_PERIODS },
+      p => status(`Replaying recorded drive requests through Rust: ${p.completed_periods} / ${p.total_periods} periods…`));
+    if (token === epoch) { showFrame(next); drive.replaying = next.replaying === true; drive.panel.status(next.drive); status(next.error || '', Boolean(next.error)); }
+  } catch (e) { if (token === epoch) { drive.replaying = false; status(`Replay refused: ${e.message}`, true); } }
+  finally { replaying.replayPending = false; if (token === epoch) { $('play').disabled = $('step').disabled = $('replay').disabled = false; $('cancel').hidden = true; } }
+}
 async function loadPreset(id) {
   videoCapture.stop();
-  const token = ++epoch; abort?.abort(); worker?.close(); worker = null; abort = new AbortController();
+  const token = ++epoch; abort?.abort(); worker?.close(); worker = null; drive = null; abort = new AbortController();
   setPlaying(false); busy = false; replaySaved = null; simulatedWork = wallWork = 0; playback = null;
   frame = null; lastRenderedFrame = null;
   for (const id of ['play','step','reset','timeline','download','replay']) $(id).disabled = true;
+  $('replay').title = '';
   $('cancel').hidden = false; status('Loading model and controller…');
   try {
     const preset = catalog.presets.find(p => p.id === id); const data = await fetchData(preset.path, abort.signal, preset.asset_sha256); if (token !== epoch) return false;
     current = { ...preset, data }; $('description').textContent = preset.description; $('readiness').textContent = preset.readiness; $('readiness').dataset.state = preset.readiness_state || 'experimental'; $('evidence').textContent = preset.evidence;
     $('mode').textContent = preset.mode !== 'recorded' ? 'LIVE · Rust / WASM' : 'RECORDED PHYSICS'; $('view-title').textContent = preset.label;
+    if (preset.mode === 'drive') { if (!await loadDrive(preset, data, token)) return false; }
+    else {
     buildModel(data.robot || data.scene.robot); makeInputs([]);
     if (preset.mode !== 'recorded') {
       worker = workerClient(); const result = await worker.request('load', { scene: data.scene || data, config: data.config, task: data.task, seed: data.seed ?? 0 }); if (token !== epoch) return false;
@@ -339,14 +438,18 @@ async function loadPreset(id) {
       $('input-help').textContent = 'Recorded physics at simulation time. Play or scrub to inspect it; WASD and hardware control are unavailable for recordings.';
       $('performance').textContent = `${(data.simulated_s/data.stepping_wall_s).toFixed(3)}× recorded`;
     }
-    fit(); $('play').disabled = $('reset').disabled = $('download').disabled = false; $('step').disabled=Boolean(playback); status('');
+    }
+    fit(); $('play').disabled = $('reset').disabled = $('download').disabled = false; $('step').disabled=Boolean(playback); if (drive) $('replay').disabled = false; status('');
     return true;
   } catch (error) { if (token === epoch) { setPlaying(false); status(error.message, true); $('reset').disabled = false; } return false; }
   finally { if (token === epoch) $('cancel').hidden = true; }
 }
 async function advanceLive(single=false) {
   if (busy || (!playing && !single) || !worker) return; busy = true; const token = epoch, before = performance.now(), old = tick;
-  try { values=nextMotionAction(current,inputs,values);const next = await worker.request('step', { action: values, response_encoding: 'json' }); if (token !== epoch) return; showFrame(next); hardwareSync.onFrame();
+  try { let next;
+    if (drive) next = await worker.request('drive_advance', { periods: drive.periods });
+    else { values=nextMotionAction(current,inputs,values);next = await worker.request('step', { action: values, response_encoding: 'json' }); }
+    if (token !== epoch) return; showFrame(next); if (drive) { drive.replaying = next.replaying === true; drive.panel.status(next.drive); } else hardwareSync.onFrame();
     wallWork += (performance.now()-before)/1000; simulatedWork += tick-old;
     const liveRate = (tick-liveStartSim)/((performance.now()-liveStartWall)/1000);
     $('performance').textContent = single ? `${(simulatedWork/wallWork).toFixed(2)}× processing` : `${liveRate.toFixed(2)}× live`;
@@ -362,6 +465,7 @@ function replayAt(time) {
 }
 let replayClock = 0;
 renderer.setAnimationLoop(now => {
+  driveTick(now);
   const elapsed = Math.min((now-lastDraw)/1000, .1); lastDraw = now;
   if (playing && playback) { replayClock += elapsed * Number($('speed').value); replayAt(replayClock); if (replayClock >= playback.at(-1).time_s) setPlaying(false); }
   controls.update();
@@ -387,13 +491,15 @@ $('timeline').oninput = () => { setPlaying(false); replayAt(Number($('timeline')
 $('reset').onclick = () => loadPreset($('preset').value);
 $('cancel').onclick = () => { epoch++; abort?.abort(); worker?.close(); worker = null; busy = false; setPlaying(false); status('Cancelled. Choose an experiment or reset to try again.'); $('cancel').hidden = true; $('reset').disabled = false; };
 $('download').onclick = async () => {
-  const token = epoch, id = current.id, recorded = Boolean(playback);
-  try { const data = recorded ? current.data : await worker.request('recording'); if (token !== epoch) return;
-    if (!recorded) { replaySaved = data; $('replay').disabled = false; }
-    const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = `${id}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const token = epoch, id = current.id, recorded = Boolean(playback), driving = Boolean(drive);
+  try { const data = recorded ? current.data : await worker.request(driving ? 'drive_recording' : 'recording'); if (token !== epoch) return;
+    if (!recorded && !driving) { replaySaved = data; $('replay').disabled = false; }
+    // A drive recording is Rust's JSON text, saved unchanged.
+    const url = URL.createObjectURL(new Blob([driving ? data : JSON.stringify(data)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = `${id}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   } catch (e) { if (token === epoch) status(e.message, true); }
 };
-$('replay').onclick = async () => { setPlaying(false); if (!replaySaved || !worker) return; status('Re-executing recorded inputs…'); const token = epoch;
+$('replay').onclick = async () => { if (drive) { setPlaying(false); driveReplayFile.click(); return; }
+  setPlaying(false); if (!replaySaved || !worker) return; status('Re-executing recorded inputs…'); const token = epoch;
   $('play').disabled = $('step').disabled = $('replay').disabled = true; $('cancel').hidden = false;
   try { const next = await worker.request('replay', { recording: replaySaved }, p => status(`Replaying physics: ${p.completed_steps} / ${p.total_steps} steps…`)); if (token === epoch) { showFrame(next); restoreInputs(next.policy_inputs); status(next.error || '', Boolean(next.error)); } } catch (e) { if (token === epoch) status(e.message, true); }
   finally { if (token === epoch) { $('play').disabled = $('step').disabled = $('replay').disabled = false; $('cancel').hidden = true; } }
@@ -418,6 +524,16 @@ window.addEventListener('keydown', e => { if ($('leaderboard-dialog').open || /I
 window.addEventListener('keyup',e=>{const key=e.key.toLowerCase();if(driveKeys.delete(key)){e.preventDefault();applyDriveKeys();}});
 window.addEventListener('blur',()=>{driveKeys.clear();applyDriveKeys();});
 $('task-observation-details').addEventListener('toggle',()=>{if(frame)showTaskObservations(frame);});
+// Drive-profile presets only (the WASD listeners above serve the other presets).
+window.addEventListener('keydown', e => { if (!drive) return;
+  const textTarget = isTextField(e.target) || $('leaderboard-dialog').open, textEntry = isTextEntry(e.target), chord = isChord(e);
+  if (!textTarget && !chord && drive.input.isBound(e.code)) e.preventDefault();
+  sendDrive(drive.input.keyDown({ code: e.code, repeat: e.repeat, chord, textTarget, textEntry }));
+});
+window.addEventListener('keyup', e => { if (drive) drive.input.keyUp(e.code); });
+window.addEventListener('blur', () => { if (drive) sendDrive(drive.input.stop()); });
+document.addEventListener('visibilitychange', () => { if (drive && document.visibilityState === 'hidden') sendDrive(drive.input.stop()); });
+document.addEventListener('focusin', e => { if (drive && isTextField(e.target)) sendDrive(drive.input.textFocus()); });
 window.robotViewer = {
   scene: () => current?.data?.scene,
   begin(links) { setPlaying(false); mirrorActive = true; mirrorLinks = new Set(links); for (const [n, mesh] of meshes) mesh.material.emissive.set(mirrorLinks.has(n) ? 0x1d4a7a : 0x000000); drawNeeded = true; },
@@ -425,7 +541,7 @@ window.robotViewer = {
   fit() { if (mirrorActive) fit(); },
   end() { if (!mirrorActive) return; mirrorActive = false; mirrorLinks.clear(); for (const mesh of meshes.values()) mesh.material.emissive.set(0x000000); if (frame) applyPoses(frame.poses); selectPart(selectedName); drawNeeded = true; },
 };
-const hardwareSync=installHardwareSync({snapshot:()=>current&&frame?{live:!playback,source:JSON.stringify({preset:current.id,cad:current.data.scene?.robot?.source??current.data.robot?.source}),coordinates:current.data.coordinate_names,targets:frame.servo_targets_rad,time_s:frame.time_s,done:frame.done}:null,play:()=>setPlaying(true),pause:()=>setPlaying(false)});
+const hardwareSync=installHardwareSync({snapshot:()=>current&&frame&&current.mode!=='drive'?{live:!playback,source:JSON.stringify({preset:current.id,cad:current.data.scene?.robot?.source??current.data.robot?.source}),coordinates:current.data.coordinate_names,targets:frame.servo_targets_rad,time_s:frame.time_s,done:frame.done}:null,play:()=>setPlaying(true),pause:()=>setPlaying(false)});
 let catalog;
 try { catalog = await fetchData('catalog.json'); for (const p of catalog.presets) { const option = document.createElement('option'); option.value = p.id; option.textContent = p.label; $('preset').append(option); }
   $('preset').disabled = false; $('preset').onchange = () => loadPreset($('preset').value);

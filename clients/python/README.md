@@ -76,6 +76,11 @@ tolerance (not run in the batch that added it):
 
     python3 -m unittest discover -s clients/python/tests -t clients/python -p test_drive.py
 
+`DriveState` has a Rust counterpart, `kinematics::HeartbeatDeadman`, which
+the browser's embedded Rhai adapter (`examples/wheeled-robot/drive-adapter.rhai`)
+calls through `drive_update`. The two are kept consistent by hand and by
+their own tests; the golden file has no heartbeat-deadman cases yet.
+
 ## Example: the wheeled rover's teleoperation controller
 
 `examples/diff_drive_rover.py` drives `examples/wheeled-robot/baseline`.

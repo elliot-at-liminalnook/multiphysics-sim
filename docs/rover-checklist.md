@@ -20,7 +20,13 @@ Controls go through three layers that don't know about each other:
    through the registry's `control.drive_limiter` description.
 3. **A kinematic adapter in the robot's controller**: the external Python
    program `clients/python/examples/diff_drive_rover.py` turns the body twist
-   into wheel position targets.
+   into wheel position targets. In the browser, which cannot start a
+   process, the binding's `embedded` Rhai adapter
+   `examples/wheeled-robot/drive-adapter.rhai` does the same through the
+   shared Rust drive functions, in the shared embedded session
+   (`robot.controller.json:6`; [RV-38](#rv-38-browser-driving)). It is a
+   compatibility surface; the Python program on the native seam stays the
+   reference.
 
 The proof robot is `examples/wheeled-robot/baseline/robot.simrobot.json`,
 with `robot.controller.json` and `robot.drive.json` beside it.
@@ -32,16 +38,17 @@ with `robot.controller.json` and `robot.drive.json` beside it.
 - **Implemented by reading (unexecuted)** (batch rover-rest-flow, RV-01 to
   RV-05, RV-07 and RV-40): written in that batch and traced below from the
   REST command to RoboCAD or the runtime.
-- **Next epic (rover-browser-drive)**: not written yet. One line says what
-  is missing and where it will go.
+- **Implemented by reading (unexecuted)** (batch rover-browser-drive, RV-38
+  and RV-41 to RV-43): written in that batch and traced below from the
+  device (a browser key or pad; a native key or pad in Build mode) to the
+  wheel targets.
 - **Hardware (run sheet, never driven by the agent)**: needs the physical
   robot. The agent writes a run sheet and never drives hardware.
 
 **Everything here is by reading, unexecuted.** Nothing was compiled or run:
-no cargo build, check or test, no Python test, no viewer, no screenshot. The
-Rust tests (`crates/sim-domain-control/tests/drive.rs`,
+no cargo build, check or test, no Python or Node test, no viewer, no
+browser, no screenshot. The Rust tests (`crates/sim-domain-control/tests/drive.rs`,
 `crates/sim-spatial/src/robot/run/tests.rs:593-715`,
-`crates/sim-spatial/src/robot/drive_input/tests.rs`,
 `crates/sim-runtime/tests/controller_binding.rs`, and from rover-rest-flow
 `crates/sim-runtime/src/drive_host/tests.rs`,
 `crates/sim-runtime/tests/system_robot.rs`,
@@ -49,10 +56,25 @@ Rust tests (`crates/sim-domain-control/tests/drive.rs`,
 `crates/sim-spatial/src/cad/results/tests.rs:386`) and the Python test
 (`clients/python/tests/test_drive.py`) are written and have never run. The
 REST script `clients/python/examples/build_rover_over_rest.py` has never
-run either. Line numbers are from the working tree on 2026-10-02
-(rover-drive-layers) and 2026-10-03 (rover-rest-flow, and the RV-18 to
-RV-37 lines that moved when `TwistState` moved to
-`crates/sim-runtime/src/drive_host.rs`). Other batches are editing some of
+run either. From rover-browser-drive, also written and never run:
+`crates/sim-spatial/src/drive_input/tests.rs` (it replaces the deleted
+`robot/drive_input/tests.rs`), `crates/sim-runtime/src/drive_bindings/tests.rs`,
+`crates/sim-runtime/src/embedded_drive/tests.rs`,
+`crates/sim-script/src/drive/tests.rs`, the `HeartbeatDeadman` case added to
+`crates/sim-domain-control/tests/drive.rs` (471-509), the inline tests in
+`crates/sim-runtime/src/controller_binding.rs` (377 onward),
+`device_tests` in `crates/sim-spatial/src/builder/robot_run.rs` (462-506),
+the device case in `crates/sim-spatial/src/robot/actions/tests.rs` (169)
+and the Node test `web/tests/drive_input.mjs`. Line numbers are from the
+working tree on 2026-10-02 (rover-drive-layers) and 2026-10-03
+(rover-rest-flow; then rover-browser-drive, which moved the device input to
+`crates/sim-spatial/src/drive_input/`, the bindings format to
+`crates/sim-runtime/src/drive_bindings.rs`, added
+`DriveRequest::interpret_with` to `crates/sim-runtime/src/drive_host.rs` and
+the `embedded` field to `controller_binding.rs`; the RV-06 to RV-37 citations
+into those files were refreshed then; the rover-browser-drive review fixes
+moved lines again, and the citations into the files they touched were
+re-checked by reading on 2026-10-03). Other batches are editing some of
 these files at the same time, so a cited line can drift by a few lines.
 
 ## Steps
@@ -96,9 +118,12 @@ these files at the same time, so a cited line can drift by a few lines.
 | RV-35 | Replay refused by identity | Implemented by reading | [RV-35](#rv-35-replay-refused-by-identity) |
 | RV-36 | A controller crash is an error naming it | Implemented by reading | [RV-36](#rv-36-controller-crash) |
 | RV-37 | Preset motion keys and drive input coexist | Implemented by reading | [RV-37](#rv-37-preset-coexistence) |
-| RV-38 | Browser driving | Next epic (rover-browser-drive) | [RV-38](#rv-38-browser-driving-next-epic) |
+| RV-38 | Browser driving (keyboard and gamepad, embedded Rhai adapter) | Implemented by reading (unexecuted) | [RV-38](#rv-38-browser-driving) |
 | RV-39 | Hardware twist path | Hardware (documentation only) | [RV-39](#rv-39-hardware-twist-path-run-sheet) |
 | RV-40 | The committed example script that runs the flow over REST | Implemented by reading (unexecuted) | [RV-40](#rv-40-the-committed-example-script) |
+| RV-41 | Build mode: the keyboard drives the live robot-system run | Implemented by reading (unexecuted) | [RV-41](#rv-41-build-mode-keyboard) |
+| RV-42 | Build mode: a gamepad drives the live robot-system run | Implemented by reading (unexecuted) | [RV-42](#rv-42-build-mode-gamepad) |
+| RV-43 | Build mode: stops, and the drive strip's bound keys and twist | Implemented by reading (unexecuted) | [RV-43](#rv-43-build-mode-stops-and-the-drive-strip) |
 
 ## Before you start (for the person who runs it later)
 
@@ -110,6 +135,15 @@ these files at the same time, so a cited line can drift by a few lines.
   `cargo run -p sim-spatial -- examples/wheeled-robot/baseline/robot.rcad`,
   then run `clients/python/examples/build_rover_over_rest.py --out DIR`
   ([RV-40](#rv-40-the-committed-example-script)).
+- For the browser (RV-38), package the `rover-drive` preset
+  (`web/viewer/presets.json:527-541`) with
+  `node web/build-viewer.mjs runs/interactive/viewer --preset=rover-drive`
+  (the output directory must come first: it is `process.argv[2]`,
+  `web/build-viewer.mjs:9`; `packageDrive`, 44-67, copies the source files
+  only) over a current
+  sim-web WASM build, then open it in the viewer page and press Play.
+- For Build mode (RV-41 to RV-43), wire and run the rover system as in RV-05
+  and RV-07, then press Run.
 - `python3` must be on `PATH`: `sim_couple::python` runs `python3 -u script
   args…` (`crates/sim-couple/src/native.rs:168-178`).
 - The physics is uncalibrated, and the limits are estimates (see
@@ -122,14 +156,19 @@ these files at the same time, so a cited line can drift by a few lines.
 1. **The binding file** `examples/wheeled-robot/baseline/robot.controller.json`
    names the language `python`, the script
    `../../../clients/python/examples/diff_drive_rover.py`, empty `args`, and
-   the drive profile `robot.drive.json`. It carries no physical value.
+   the drive profile `robot.drive.json`. It carries no physical value. Its
+   optional `embedded` program (`drive-adapter.rhai` with
+   `drive-adapter.config.json`, `robot.controller.json:6`) is the browser's
+   adapter (RV-38); the native viewer never runs it.
 2. **Parsing**: `ControllerBinding::from_json`
-   (`crates/sim-runtime/src/controller_binding.rs:59-82`). The schema comes
-   first; a newer `sim.controller-binding/N` is named as newer (67-77). Then
+   (`crates/sim-runtime/src/controller_binding.rs:87-110`). The schema comes
+   first; a newer `sim.controller-binding/N` is named as newer (95-105). Then
    serde, with unknown fields refused (`deny_unknown_fields`, 33). Then
-   `validate` (84-103): only `python`, a non-empty script, no
-   `--drive-json` in `args` (the host adds it, 96-98), a non-empty
-   `drive_profile`.
+   `validate` (112-149): only `python` (114-120), a non-empty script, no
+   `--drive-json` in `args` (the host adds it, 124-126), a non-empty
+   `drive_profile`, and for an `embedded` program only `rhai` with a
+   non-empty entry, files and config (130-147). A binding without
+   `embedded` reads unchanged (`EmbeddedController`, 41-69).
 3. **The program**: `diff_drive_rover.py` parses `--drive-json` into
    `ResolvedDrive` (`clients/python/examples/diff_drive_rover.py:62-73`,
    `clients/python/simloop/drive.py:349`). It builds the mixer (74,
@@ -153,22 +192,32 @@ By reading, unexecuted.
 1. **Control**: hold W (forward +1), S (−1), A (yaw +1, turn left), D
    (yaw −1), Q/E (lateral; ignored on the rover).
 2. Defaults: `BindingsFile::default`
-   (`crates/sim-spatial/src/robot/drive_input/bindings.rs:121-156`).
-3. Input system: `drive_input::devices`
-   (`crates/sim-spatial/src/robot/drive_input/input.rs:135-267`),
-   registered in robot mode's input chain
-   (`crates/sim-spatial/src/robot/mod.rs:232`, `InputSet::Window`). It runs
-   only for a controlled run (160-166). Physical keys come from
-   `ButtonInput<KeyCode>`, not text; Cmd/Ctrl/Alt chords are skipped (167,
-   208).
-4. `DriveBindings::keyboard_axes` (`bindings.rs:377-385`) sums the held keys
-   per axis and clamps each axis to −1..1 (input.rs:209).
-5. `supported_only` (input.rs:49-61, used at 245-247) zeroes the axes the
-   profile lacks and names them in `DriveInput.ignored`. On the rover, Q
-   held with W drives forward and lists `lateral`.
-6. Nonzero axes are sent every frame as quiet `Act<RobotAction::Drive {
-   Axes }>`, with a redraw request (255-259). Release:
-   [RV-20](#rv-20-stop-on-release). From here the path is RV-19 step 3.
+   (`crates/sim-runtime/src/drive_bindings.rs:190-224`), the one parser and
+   set of defaults shared with the browser. The native viewer maps the names
+   to Bevy keys (`crates/sim-spatial/src/drive_input/bindings.rs:20-32`).
+3. Input system: the one device poller `drive_input::input::devices`
+   (`crates/sim-spatial/src/drive_input/input.rs:155-308`), registered by
+   `DriveInputPlugin` in `InputSet::Window` for every mode
+   (`crates/sim-spatial/src/drive_input/plugin.rs:22`). It reads nothing
+   unless the current mode's `DriveTarget` is live (`live_target`, 91-93,
+   checked at 189-196). Robot mode writes that target before the poller
+   (`robot::controls::drive_target`, `crates/sim-spatial/src/robot/controls.rs:639-659`,
+   registered at `robot/mod.rs:236`): live only for a controlled run
+   (`robot_target`, 625-632). Physical keys come from
+   `ButtonInput<KeyCode>` (input.rs:156), not text; Cmd/Ctrl/Alt chords are
+   skipped (`chord`, 202, read at 231 and 249).
+4. `DriveBindings::keyboard_axes` (`drive_input/bindings.rs:132-134`, called
+   at input.rs:250) asks the shared `Resolved::keyboard_axes`
+   (`drive_bindings.rs:396-405`), which sums the held keys per axis and
+   clamps each axis to −1..1 (403).
+5. `supported_only` (`drive_bindings.rs:444-456`, used at input.rs:286-287)
+   zeroes the axes the profile lacks and names them in `DriveInput.ignored`.
+   On the rover, Q held with W drives forward and lists `lateral`.
+6. Nonzero axes are sent every frame as a quiet `Act<DriveDevice { mode:
+   Robot, Axes }>`, with a redraw request (input.rs:296-300; `send`,
+   198-201). Robot mode forwards it as `RobotAction::Drive` (RV-19 step 2).
+   Release: [RV-20](#rv-20-stop-on-release). From here the path is RV-19
+   step 3.
 
 By reading, unexecuted.
 
@@ -176,18 +225,21 @@ By reading, unexecuted.
 
 1. **Control**: left stick Y forward, right stick X yaw (inverted, so stick
    left is +yaw), left stick X lateral (inverted), South `stop`, East `halt`,
-   deadzone 0.15 (`bindings.rs:142-153`; sign rule in the module notes,
-   14-20).
-2. `devices` reads every `Gamepad` component (input.rs:214-217), but only
-   while a window of this app has focus (211, 218-223).
-3. `DriveBindings::gamepad_axes` (`bindings.rs:388-400`) passes each stick
-   through `shape` (421-427): zero inside the deadzone, the rest of the
-   travel rescaled to 0..1. NaN reads as zero.
+   deadzone 0.15 (`crates/sim-runtime/src/drive_bindings.rs:210-221`; sign
+   rule in the module notes, 20-28).
+2. `devices` reads every `Gamepad` component
+   (`crates/sim-spatial/src/drive_input/input.rs:256-258`), but drives from
+   them and reads their buttons only while a window of this app has focus
+   (252, 259-264).
+3. `DriveBindings::gamepad_axes` (`drive_input/bindings.rs:139-141`) asks
+   the shared `Resolved::gamepad_axes` (`drive_bindings.rs:408-420`), which
+   passes each stick through `shape` (433-438): zero inside the deadzone,
+   the rest of the travel rescaled to 0..1. NaN reads as zero (434).
 4. After a stop, the pad stays blocked until it is focused, neutral and has
-   no bound button held (input.rs:224-232).
-5. Keyboard and pad are added and clamped per axis (`add`, 88-91, at 248),
+   no bound button held (input.rs:265-273).
+5. Keyboard and pad are added and clamped per axis (`add`, 79-82, at 289),
    and the source is named (`keyboard`, `gamepad` or `keyboard+gamepad`,
-   249-254). From here it is the same as RV-08 step 6.
+   290-295). From here it is the same as RV-08 step 6.
 
 By reading, unexecuted.
 
@@ -196,13 +248,16 @@ By reading, unexecuted.
 1. **Control**: REST `drive_bindings` with no arguments (read),
    `{"bindings": {…}}` (set) or `{"reset": true}`. Spec:
    `crates/sim-spatial/src/app/settings/actions.rs:34-44`.
-2. `apply` → `drive_bindings` (actions.rs:59, 65-75). Setting a value runs
-   `BindingsFile::from_value` (`bindings.rs:254-262`): schema first, then
-   serde (unknown fields refused), then `validate`/`compile` (264-323).
+2. `apply` → `drive_bindings` (actions.rs:59, 65-76). Setting a value runs
+   the shared `BindingsFile::from_value`
+   (`crates/sim-runtime/src/drive_bindings.rs:284-292`): schema first, then
+   serde (unknown fields refused), then `validate` → `resolve` (294-362).
    Every refusal names its field, for example
    `drive_bindings.keyboard.axes[2].key`. Reserved keys G/C/J/F/H, Space,
-   Enter, Tab and Escape are refused with the reason (37-47). A key or button
-   bound twice is refused (272-279).
+   Enter, Tab and Escape are refused with the reason (`RESERVED`, 46-56;
+   checked at 312-314). A key or button bound twice is refused (302-310).
+   The browser validates a stored override with the same function
+   (RV-38 (d)).
 3. `SettingsOwner::set_drive_bindings`
    (`crates/sim-spatial/src/app/settings/mod.rs:238-252`) validates again and
    raises the revision. The snapshot written through the preferences
@@ -210,17 +265,19 @@ By reading, unexecuted.
    `app/settings/jobs.rs:394`; also on shutdown, `mod.rs:336-351`). On load,
    the group is read and refused by name if invalid (`jobs.rs:159-168`), and
    it reaches the owner at `app/settings/plugin.rs:202`.
-4. `drive_input::sync_bindings`
-   (`crates/sim-spatial/src/robot/drive_input/plugin.rs:23-37`, JobResults
-   after `SettingsSet::Publish`) rebuilds `DriveBindings` with
-   `set_if_neq`.
+4. `drive_input::plugin::sync_bindings`
+   (`crates/sim-spatial/src/drive_input/plugin.rs:34-48`, registered at 25
+   in JobResults after `SettingsSet::Publish`, every mode) rebuilds
+   `DriveBindings` (`DriveBindings::new`, `drive_input/bindings.rs:112-124`)
+   with `set_if_neq`.
 5. The defaults are data in code and are stored only once the user sets
-   bindings (`bindings.rs:8-11`). `reset` stores None, so a later change to
-   the defaults reaches the user.
-6. Shown: the answer `{schema, stored, bindings, describe}`
-   (`bindings.rs:431-436`) plus `settings` status (actions.rs:73-74). The
-   inspector's DEVICE BINDINGS block (RV-31) and `robot_state.bindings`
-   (RV-32) show the same table.
+   bindings (`drive_bindings.rs:14-16`). `reset` stores None, so a later
+   change to the defaults reaches the user.
+6. Shown: the answer `{schema, stored, bindings, describe,
+   w3c_standard_gamepad}` (`drive_bindings::json`, `drive_bindings.rs:462-471`)
+   plus `settings` status (actions.rs:73-74). The inspector's DEVICE
+   BINDINGS block (RV-31), `robot_state.bindings` (RV-32) and Build mode's
+   drive strip (RV-43) show the same bindings.
 
 By reading, unexecuted.
 
@@ -245,7 +302,7 @@ By reading, unexecuted.
    (407-431).
 4. Every error is `DriveProfileError { file, field, message }`, shown as
    `{file}: {field}: {message}`. The binding loader passes it on verbatim
-   (`controller_binding.rs:271`).
+   (`controller_binding.rs:328`).
 
 By reading, unexecuted.
 
@@ -273,9 +330,11 @@ By reading, unexecuted.
 ### RV-13 Geometry derivation with provenance
 
 1. `sim_domain_robot::drive_geometry::resolve`
-   (`crates/sim-domain-robot/src/drive_geometry.rs:229-244`), called by the
-   binding loader (`controller_binding.rs:272-273`). Model geometry goes to
-   `derive` (173-227).
+   (`crates/sim-domain-robot/src/drive_geometry.rs:229-244`), called through
+   `controller_binding::resolve_drive` (`controller_binding.rs:273-277`) by
+   the binding loader (329) and by the browser's scene builder
+   (`embedded_drive.rs:237`, RV-38 (g)). Model geometry goes to `derive`
+   (173-227).
 2. `derive` refuses a mecanum drive from the model (175-182) and requires
    gravity along −z (184-187). Per wheel (`wheel`, 63-117): the sign comes
    from the joint axis's +y component (94), and the radius from the wheel
@@ -289,7 +348,7 @@ By reading, unexecuted.
 4. For the rover (design numbers, not run): track 0.12 m from the axle
    origins y = ±0.06 m, radius 0.03 m, both signs +1 (axis [0,1,0]).
 5. Shown with provenance in the inspector's Drive profile block
-   (`crates/sim-spatial/src/robot/controls.rs:743-772`) and in
+   (`drive_detail`, `crates/sim-spatial/src/robot/controls.rs:786-816`) and in
    `robot_state.drive.geometry` (`run/controlled.rs:202`).
 
 By reading, unexecuted.
@@ -361,16 +420,16 @@ By reading, unexecuted.
 3. On the worker, `check_controlled` (131-160) calls `load_controller`
    (`robot/loader.rs:121-133`). No binding file means `None` and the hold
    run; any other error is `Some(Err)` naming the binding.
-4. `controller_binding::load` (`controller_binding.rs:240-304`): parse
-   (243-244), canonical script and its sha256 (247-254), `clients_root` = the
-   nearest `clients` ancestor (256-264), the simloop library hash (265-266),
-   the profile (268-271), geometry and checks (272-273, RV-13/RV-14), the
-   resolved drive (274), `--drive-json` appended (278-280), the
-   `ExternalProgram` with `profile_sha256` and `library_sha256` (285-293),
-   and the `ControllerIdentity` (295-302).
+4. `controller_binding::load` (`controller_binding.rs:297-359`): parse
+   (300-301), canonical script and its sha256 (304-311), `clients_root` = the
+   nearest `clients` ancestor (313-321), the simloop library hash (322-323),
+   the profile (325-328), geometry, checks and the resolved drive
+   (`resolve_drive`, 329; 273-277; RV-13/RV-14), `--drive-json` appended
+   (333-335), the `ExternalProgram` with `profile_sha256` and
+   `library_sha256` (336-349), and the `ControllerIdentity` (350-357).
 5. `ControlledRun::new` (`robot/run/controlled.rs:52-56`) builds the scene
-   (`controller_binding::scene`, 308-319: period = the model's
-   `control.period_s`, duration `DRIVE_DURATION_S` 600 s, 23).
+   (`controller_binding::scene`, 363-365 → `scene_with`, 372-375: period =
+   the model's `control.period_s`, duration `DRIVE_DURATION_S` 600 s, 23).
 6. Back on the UI thread, `receive` (`robot/scene.rs:172-181`) calls
    `RunController::spawn_file` (`run/controller.rs:168-179`) or
    `replace_file` (451). A loaded binding becomes `Source::Controlled`; a
@@ -394,7 +453,7 @@ By reading, unexecuted.
    recorded ones. A change is refused naming both hashes.
 3. The plant is built, the seam is taken and its `<joint>.target` bounds come
    from joint limits (359-381). The inputs are the binding's four command
-   channels (`drive_inputs`, `controller_binding.rs:120-138`), checked at
+   channels (`drive_inputs`, `controller_binding.rs:166-184`), checked at
    402-421.
 4. `spawn_external` (431-433 → 682-688) → `sim_couple::python`
    (`crates/sim-couple/src/native.rs:168-178`) with a 3 s reply timeout
@@ -406,8 +465,8 @@ By reading, unexecuted.
    (native.rs:107-116) sends hello and waits for ready. A failed handshake
    (RV-06 step 4) is reported right away (session.rs:464-471).
 6. `Sim::build` calls `DriveHost::new` (`run/sim.rs:59`;
-   `crates/sim-runtime/src/drive_host.rs:235-239`), which builds the
-   session (step 2) and runs `check_inputs` (`drive_host.rs:86-92`) to
+   `crates/sim-runtime/src/drive_host.rs:241-245`), which builds the
+   session (step 2) and runs `check_inputs` (`drive_host.rs:92-98`) to
    confirm the four channels in order, with a default `TwistState`. The run
    is `Sim::Controlled { host, run }` (`run/sim.rs:60`).
 
@@ -415,18 +474,25 @@ By reading, unexecuted.
 
 ### RV-19 Twist path: held W to the motor targets
 
-1. **Control**: hold W → `devices` writes `Act::quiet(Drive { Axes {
-   forward: 1, lateral: 0, yaw: 0 } })` every frame
-   (`drive_input/input.rs:255-259`).
-2. `actions::apply` (`robot/actions/mod.rs:615`, `RobotSet::Actions`,
-   `robot/mod.rs:235`) → `handle` (551-597, catch-all at 596) → `dispatch`
-   (294). Drive takes its own branch (306-316).
-3. `drive_request` (`actions/mod.rs:110-116`): with no binding, refused
-   naming the reason (111-114). Then the shared interpretation
-   `DriveRequest::interpret` (`crates/sim-runtime/src/drive_host.rs:68-81`,
-   the one Build mode uses too): `Axes` → `kinematics::scale(axes,
-   &resolved.limits())` (71-72): 1.0 × 0.26 = 0.26 m/s forward. Actions:
-   `profile.action(name)` → Stop/Halt (75-78).
+1. **Control**: hold W → the one poller `devices` writes
+   `Act::quiet(DriveDevice { mode: Robot, request: Axes { forward: 1,
+   lateral: 0, yaw: 0 } })` every frame
+   (`crates/sim-spatial/src/drive_input/input.rs:296-300`), for the target
+   Robot mode's writer offers (`robot/controls.rs:625-659`).
+2. `actions::forward_devices` (`robot/actions/mod.rs:757-763`, registered
+   in `ViewerSet::Actions` before `RobotSet::Actions` at `robot/mod.rs:238`)
+   turns each Robot-mode request into `Act<RobotAction::Drive>` with the
+   poller's origin (`device_action`, 747-749; a request stamped for another
+   mode is skipped). `actions::apply` (616, `RobotSet::Actions`,
+   `robot/mod.rs:239`) → `handle` (552-599, catch-all at 597) → `dispatch`
+   (295). Drive takes its own branch (307-317).
+3. `drive_request` (`actions/mod.rs:111-117`): with no binding, refused
+   naming the reason (112-115). Then the shared interpretation
+   `DriveRequest::interpret` (`crates/sim-runtime/src/drive_host.rs:68-70`)
+   → `interpret_with` (74-87, the one Build mode and the browser use too):
+   `Axes` → `kinematics::scale(axes, &resolved.limits())` (77-78): 1.0 ×
+   0.26 = 0.26 m/s forward. Actions: `profile.action(name)` → Stop/Halt
+   (81-84).
 4. `RunController::drive` (`run/controlled.rs:171-181`) →
    `check_drive_request` (157-167): `check_drive` (134-151: recorded
    preset, no binding, replay, failed or ended), `check_twist` (160), and a
@@ -435,17 +501,17 @@ By reading, unexecuted.
    `run/protocol.rs:126`).
 5. Run thread: `drain` (`run/worker.rs:39-51`) applies every queued command
    in order (140). `Command::Twist` (318-328) → `Sim::twist`
-   (`run/sim.rs:97-105`) → `DriveHost::request` (`drive_host.rs:255-258`,
-   at the host's sim time) → `TwistState::request` (121-139):
-   `check_twist`, heartbeat + 1 (129), and `last_request_s` = sim now (130).
+   (`run/sim.rs:97-105`) → `DriveHost::request` (`drive_host.rs:261-264`,
+   at the host's sim time) → `TwistState::request` (127-145):
+   `check_twist`, heartbeat + 1 (135), and `last_request_s` = sim now (136).
    The status is published at once (worker.rs:325).
 6. Each pass while running: `s.advance()` (worker.rs:385) → `Sim::advance`
-   for Controlled (`sim.rs:93`) → `DriveHost::step` (`drive_host.rs:267-274`)
-   → `TwistState::advance` (145-155) → `kinematics::step(commanded,
-   request, period, now − last_request_s, …)` (147), clamped to
-   ±max_speed (149). The action is `[f, l, y, heartbeat]` (152) →
-   `Session::step` (`drive_host.rs:271`; the twist state is committed only
-   when the step ran, 272; `session.rs:489-518`): bounds checked
+   for Controlled (`sim.rs:93`) → `DriveHost::step` (`drive_host.rs:273-280`)
+   → `TwistState::advance` (151-161) → `kinematics::step(commanded,
+   request, period, now − last_request_s, …)` (153), clamped to
+   ±max_speed (155). The action is `[f, l, y, heartbeat]` (158) →
+   `Session::step` (`drive_host.rs:277`; the twist state is committed only
+   when the step ran, 278; `session.rs:489-518`): bounds checked
    (503-510), the values stored (511), the action recorded (512), and `robot.advance(period_s)` (513).
 7. In `PhysicalRobot::advance` (`crates/sim-runtime/src/physical.rs:654-690`),
    the seam's scheduled event fires `External::jump` (external.rs:141-156)
@@ -473,7 +539,9 @@ By reading, unexecuted.
 
 1. **Control**: release every driving key and centre the stick.
 2. `devices`: axes are zero and `latch.sending` was true, so it writes one
-   quiet `Drive { Axes 0,0,0 }` (`input.rs:260-264`).
+   quiet `DriveDevice { Axes 0,0,0 }`
+   (`crates/sim-spatial/src/drive_input/input.rs:301-305`), forwarded as
+   `RobotAction::Drive` (RV-19 step 2).
 3. RV-19 steps 2-5 with a zero twist. Zero is accepted in any phase that
    can take a twist (`controlled.rs:161`). On the run thread the request
    is ZERO with a fresh heartbeat, and `kinematics::step` ramps the
@@ -487,27 +555,30 @@ By reading, unexecuted.
 ### RV-21 Stop on focus loss
 
 1. **Control**: click another application while W is held.
-2. `devices` reads `WindowFocused { focused: false }` (`input.rs:139,
-   149`) → stop reason "the window lost focus" (180-181). It is sent only
-   if the devices were driving (`latch.sending`), so a REST client's
-   requests are left to the deadman (177-179).
-3. It writes `Act::ui(Drive { Stop })` (196-200) → `drive_request` →
-   `DriveRequest::interpret`: `Stop` → `(ZERO, false)` (`drive_host.rs:79`)
-   → RV-19 steps 4-5. Then
-   `disarm` (189-195): held keys are blocked until released and the pad is
-   blocked until neutral (224-232).
+2. `devices` reads `WindowFocused { focused: false }`
+   (`crates/sim-spatial/src/drive_input/input.rs:169`) → stop reason "the
+   window lost focus" (229-230). It is sent only if the devices were
+   driving (`latch.sending`), so a REST client's requests are left to the
+   deadman (comment 226-228).
+3. It writes `Act::ui(DriveDevice { Stop })` (238-241; `send`, 198-201) →
+   forwarded (RV-19 step 2) → `drive_request` → `interpret_with`: `Stop` →
+   `(ZERO, false)` (`drive_host.rs:85`) → RV-19 steps 4-5. Then `disarm`
+   (204-210, called at 245): held keys are blocked until released and the
+   pad is blocked until neutral (265-273).
 4. Bevy also releases every key on focus loss, and the pad is not read
-   without focus (211, 218).
+   without focus (252, 259).
 
 By reading, unexecuted.
 
 ### RV-22 Stop on Escape
 
-1. **Control**: Escape (not bindable: `bindings.rs:46`).
-2. `devices` (`input.rs:182-183`): Escape sends Stop whenever no text field
-   has the keyboard and no chord is held. It is shown in the header only
-   when the devices were driving; otherwise it goes quietly (199). The Leg
-   calibration panel's own Escape STOP still runs (doc at 119-122).
+1. **Control**: Escape (not bindable:
+   `crates/sim-runtime/src/drive_bindings.rs:55`).
+2. `devices` (`crates/sim-spatial/src/drive_input/input.rs:231-232`):
+   Escape sends Stop whenever no text field has the keyboard and no chord is
+   held. It is shown in the header only when the devices were driving;
+   otherwise it goes quietly (`shown` = `latch.sending`, 232; sent at 240).
+   The Leg calibration panel's own Escape STOP still runs (doc at 129-134).
 3. As RV-21 step 3: `Stop` → zero twist, approached under `max_accel`,
    then disarm.
 
@@ -516,31 +587,36 @@ By reading, unexecuted.
 ### RV-23 Stop button and the stop action
 
 1. **Controls**: the Drive block's **Stop** button
-   (`robot/controls.rs:672`, a kit button carrying `RobotAction::Drive {
-   Stop }`); **X** (key action `stop`, `bindings.rs:140`); gamepad
-   **South** (150); REST `robot_drive {"stop": true}` or
-   `{"action":"stop"}`; `system_ui drive:stop` / `drive:action:stop`.
+   (`robot/controls.rs:715`, a kit button carrying `RobotAction::Drive {
+   Stop }`); **X** (key action `stop`,
+   `crates/sim-runtime/src/drive_bindings.rs:209`); gamepad **South**
+   (219); REST `robot_drive {"stop": true}` or `{"action":"stop"}`;
+   `system_ui drive:stop` / `drive:action:stop`.
 2. Button: `actions::buttons` (`actions/keys.rs:8-12`) writes `Act::ui`.
    Key or button action: `devices` sends a zero request first if driving,
-   then `Drive { Action { name } }` (`input.rs:233-242`), then disarms.
-3. `drive_request` → `DriveRequest::interpret`: `Stop` → `(ZERO, false)`
-   (`drive_host.rs:79`); `Action "stop"` → `profile.action` →
-   `ActionRequest::Stop` → `(ZERO, false)` (75-76). An unknown name is refused listing the
-   profile's actions (`profile.rs:494`).
+   then `DriveDevice { Action { name } }`, then disarms
+   (`crates/sim-spatial/src/drive_input/input.rs:274-283`; the action names
+   are collected at 251 and 262); forwarded as
+   `RobotAction::Drive` (RV-19 step 2).
+3. `drive_request` → `interpret_with`: `Stop` → `(ZERO, false)`
+   (`drive_host.rs:85`); `Action "stop"` → `profile.action` →
+   `ActionRequest::Stop` → `(ZERO, false)` (81-82). An unknown name is
+   refused listing the profile's actions (`profile.rs:494`).
 4. RV-19 steps 4-5. The run thread ramps to zero under `max_accel`.
 
 By reading, unexecuted.
 
 ### RV-24 Halt
 
-1. **Controls**: **B** (`bindings.rs:140`), gamepad **East** (151), the Drive
-   block's **halt** button (`controls.rs:673-675`), REST
+1. **Controls**: **B** (`crates/sim-runtime/src/drive_bindings.rs:209`),
+   gamepad **East** (220), the Drive block's **halt** button (one per
+   profile action, `robot/controls.rs:716-718`; halt at 717), REST
    `{"action":"halt"}`, `system_ui drive:action:halt`.
-2. `DriveRequest::interpret`: `ActionRequest::Halt` → `(ZERO, true)`
-   (`drive_host.rs:77`). A halt passes `check_drive_request` in any phase
+2. `interpret_with`: `ActionRequest::Halt` → `(ZERO, true)`
+   (`drive_host.rs:83`). A halt passes `check_drive_request` in any phase
    (`controlled.rs:161`).
 3. Run thread: `TwistState::request` with `halt` sets both the request and
-   the commanded twist to ZERO at once (`drive_host.rs:132-134`). The next
+   the commanded twist to ZERO at once (`drive_host.rs:138-141`). The next
    period sends 0. The Python `DriveState` passes it through unlimited
    (`drive.py:506-508`), so the targets stop advancing in that period and
    the firmware holds them.
@@ -553,15 +629,16 @@ By reading, unexecuted.
    for example a REST client that stops sending, or a single `system_ui`
    `drive:forward`.
 2. Run thread: `TwistState::advance` computes age = now −
-   `last_request_s` (`drive_host.rs:146`) → `kinematics::step` →
+   `last_request_s` (`drive_host.rs:152`) → `kinematics::step` (153) →
    `deadman_expired` (`kinematics.rs:220-222, 241-246`) → ramp at
-   `stop_decel` (rover `ramp`) or zero. `expired` is recorded (151).
+   `stop_decel` (rover `ramp`) or zero. `expired` is recorded
+   (`drive_host.rs:157`).
 3. Controller: the heartbeat stops rising, and `DriveState.update`
    (`drive.py:503-505`) applies the stop rule from its last output once its
    own age passes `timeout_s`. It is the guard if the run thread's
    channels stop changing.
 4. Shown: "deadman EXPIRED (on loss: ramp)" in the Drive block
-   (`controls.rs:693`) and `robot_state.drive.deadman.expired`
+   (`robot/controls.rs:736`) and `robot_state.drive.deadman.expired`
    (`controlled.rs:204-205`). The rule text is `DEADMAN_RULE`
    (`controlled.rs:31`).
 
@@ -571,10 +648,11 @@ By reading, unexecuted.
 
 1. **Control**: hold W, then click a kit text field (for example the gait
    path field or the comment composer).
-2. `Typing::get` (`crates/sim-spatial/src/ui_kit/text/mod.rs:161-167`) turns
-   true. `devices` sees `typing_started` while the keyboard was driving
-   (`input.rs:150-151, 184-185`) and sends one Stop, then disarms. While
-   typing, no key is readable (208).
+2. `Typing::get` (`crates/sim-spatial/src/ui_kit/text/mod.rs:161-169`) turns
+   true. `devices` sees `typing_started`
+   (`crates/sim-spatial/src/drive_input/input.rs:170-171`) while the
+   keyboard was driving (233-234) and sends one Stop, then disarms
+   (238-245). While typing, no key is readable (249).
 
 By reading, unexecuted.
 
@@ -606,9 +684,14 @@ By reading, unexecuted.
    queued, then returns (`worker.rs:111, 366-368`). Dropping the `Session`
    drops the `FrameCoupler`, whose `close` sends `close`, closes stdin and
    reaps or kills `python3` within 250 ms (`native.rs:132-160`).
-4. Robot mode's input chain stops running outside Robot mode
-   (`robot/mod.rs:243`), so no drive request outlives the mode. A carried
-   REST call is abandoned (`robot/mod.rs:217-224`).
+4. On leaving, `drive_input::leave_mode` (`robot/mod.rs:216`;
+   `crates/sim-spatial/src/drive_input/mod.rs:78-81`) clears the drive
+   target and the device status, so the poller reads nothing more for
+   Robot mode. Robot mode's systems, `forward_devices` among them, stop
+   running outside Robot mode (`robot/mod.rs:247`), and a request still
+   buffered for Robot mode is never applied by another mode, whose reader
+   skips it (`DriveDevice`, `drive_input/mod.rs:61-70`). A carried REST
+   call is abandoned (`robot/mod.rs:217-224`).
 
 By reading, unexecuted.
 
@@ -617,7 +700,7 @@ By reading, unexecuted.
 1. **Control**: `POST robot_drive {"forward":0.5,"lateral":0,"yaw":0}`,
    `{"action":"halt"}` or `{"stop":true}`. Spec:
    `robot/actions/commands.rs:22`.
-2. `wire::Command::RobotDrive` (`actions/mod.rs:840`) →
+2. `wire::Command::RobotDrive` (`actions/mod.rs:862`) →
    `TryFrom` (`commands.rs:85`) → `DriveRequest::from_fields`
    (`crates/sim-runtime/src/drive_host.rs:47-60`, shared with Build's
    `system_drive`). It needs exactly one of axes, action or `stop: true`,
@@ -627,11 +710,12 @@ By reading, unexecuted.
    refused by `scale` naming `lateral` (`kinematics.rs:170-173`), where the
    device layer would zero it.
 4. While live motor sync streams, axes requests from REST are refused
-   (`actions/mod.rs:646, 773, 783`); stop and actions still pass.
+   (`actions/mod.rs:647`; `moves_synced_motors`, 801-810, axes only at
+   805); stop and actions still pass.
 5. A refusal is kept in `robot_state.drive.last_refusal`
    (`controlled.rs:174, 210`) and in `drive_input.last_error`
-   (`actions/mod.rs:699-712`). The answer is `robot_state` with `bindings`
-   and `drive_input` (713-733).
+   (`actions/mod.rs:700-713`). The answer is `robot_state` with `bindings`
+   and `drive_input` (714-734).
 6. A REST client must repeat its request faster than `timeout_s`; the
    deadman stops it otherwise (RV-25).
 
@@ -641,30 +725,31 @@ By reading, unexecuted.
 
 1. **Control**: `system_ui {"action":{"operation":"controls"}}` then
    `activate` with the id and `ui_revision`.
-2. `controls` (`actions/mod.rs:387-459`) adds `drive_controls` for a
-   controlled run (431-434). `drive_controls` (463-477) provides
+2. `controls` (`actions/mod.rs:388-460`) adds `drive_controls` for a
+   controlled run (432-435). `drive_controls` (464-478) provides
    `drive:forward|back|left|right`, each one full-axis request labelled
    momentary with the deadman, plus `drive:stop` and
    `drive:action:<name>` per profile action. Ids are listed at
    `commands.rs:41-42`.
-3. `Activate` (`actions/mod.rs:577`) → `dispatch` → RV-19 steps 3-6. A
-   `drive:*` refusal updates `drive_input.last_error` (699-712).
+3. `Activate` (`actions/mod.rs:578`) → `dispatch` → RV-19 steps 3-6. A
+   `drive:*` refusal updates `drive_input.last_error` (700-713).
 
 By reading, unexecuted.
 
 ### RV-31 Inspector Drive panel
 
-1. `controls::drive_panel` (`robot/controls.rs:630-739`), registered in
-   Present (`robot/mod.rs:241`). It is built only for a controlled run
-   (641-648) and rebuilt when the run, roots or actions change (656-685).
-2. Buttons: Stop and each profile action (666-675), enabled by `check`
-   (669, 735-737).
-3. Live lines (686-733): requested/commanded twist with fixed decimals, the
-   deadman, age, heartbeat and sim time (689-702); device input axes,
-   source, ignored axes and last refusal (704-718); RUN FAILED (719); the
-   DEVICE BINDINGS table (720-730). A text is rewritten only when its value
-   changes (731-733).
-4. Static detail (`drive_detail`, 743-772): script and sha256, binding,
+1. `controls::drive_panel` (`robot/controls.rs:673-782`), registered in
+   Present (`robot/mod.rs:245`). It is built only for a controlled run
+   (685-692) and rebuilt when the run, roots or actions change (696-728).
+2. Buttons: Stop and each profile action (709-718), enabled by `check`
+   (711, 779-781).
+3. Live lines (729-778): requested/commanded twist with fixed decimals, the
+   deadman, age, heartbeat and sim time (732-746); device input axes,
+   source, ignored axes and last refusal from `DriveInput`
+   (`crates/sim-spatial/src/drive_input/input.rs:31-49`; 747-761); RUN
+   FAILED (762); the DEVICE BINDINGS table (763-773). A text is rewritten
+   only when its value changes (775-777).
+4. Static detail (`drive_detail`, 786-816): script and sha256, binding,
    profile and sha256, description, kinematics, geometry with provenance,
    resolved limits per axis with units, and the deadman.
 
@@ -681,9 +766,10 @@ By reading, unexecuted.
    duration, channels), requested, status, `accepts_motion`,
    `last_refusal`, `last_apply_error` and error. An unbound run reports
    `bound: false` with the binding error (191-193).
-3. `with_drive_input` (`state.rs:137-149`) adds `bindings` and
-   `drive_input` (null unless controlled). Every answer and the 100 ms
-   publication pass through it (`actions/mod.rs:718, 812`).
+3. `with_drive_input` (`state.rs:137-150`) adds `bindings` and
+   `drive_input` (null unless controlled), read from the resources
+   `crate::drive_input::DriveBindings` and `DriveInput`. Every answer and
+   the 100 ms publication pass through it (`actions/mod.rs:719, 834`).
 
 By reading, unexecuted.
 
@@ -719,12 +805,12 @@ By reading, unexecuted.
    re-verifies the script and library hashes (`session.rs:586-607`).
 4. Each chunk: `Sim::advance_replay` (`run/sim.rs:189-195`) steps one
    recorded action through `DriveHost::step_recorded`
-   (`drive_host.rs:277-282`: `Session::step`, then `TwistState::replayed`,
-   161-171). Live twists are refused during it (`worker.rs:263`;
+   (`drive_host.rs:283-288`: `Session::step`, then `TwistState::replayed`,
+   167-177). Live twists are refused during it (`worker.rs:263`;
    `controlled.rs:143-145`).
 5. End: `finish_replay` → `end_drive_replay` (`replay.rs:213-214`;
-   `sim.rs:108-112` → `DriveHost::replay_ended`, `drive_host.rs:284-287` →
-   `TwistState::replay_ended`, 180-185), so nothing keeps driving. Verdict
+   `sim.rs:108-112` → `DriveHost::replay_ended`, `drive_host.rs:290-293` →
+   `TwistState::replay_ended`, 186-191), so nothing keeps driving. Verdict
    done/failed at `replay.rs:223-225` (`DRIVE_VERDICT_RULE`, `recording.rs:347`). States
    are not compared.
 
@@ -735,7 +821,7 @@ By reading, unexecuted.
 1. Edit `diff_drive_rover.py`, `simloop/*.py` or `robot.drive.json`, or the
    model, then Replay an older recording.
 2. `differences` (`run/controlled.rs:85-122`) compares through
-   `ControllerIdentity::differences` (`controller_binding.rs:166-181`:
+   `ControllerIdentity::differences` (`controller_binding.rs:212-227`:
    script, `script_sha256`, `library_sha256`, args, profile and
    `profile_sha256`). It also compares the language (99-101), the resolved
    drive members (102-111), the robot fingerprint (112-115) and the seam
@@ -762,7 +848,7 @@ By reading, unexecuted.
 3. `Session::step` stores the error (`session.rs:513-516`), and later steps
    are refused (490-492). `Sim::advance` errors, and the worker sets the
    phase to Failed with "advance failed at t = … s: …" (`worker.rs:433-448`).
-4. Shown: RUN FAILED in the Drive block (`controls.rs:719`),
+4. Shown: RUN FAILED in the Drive block (`robot/controls.rs:762`),
    `robot_state.drive.error` (`controlled.rs:212`). Further drive requests
    are refused (`controlled.rs:147`). Reset rebuilds.
 
@@ -772,13 +858,19 @@ By reading, unexecuted.
 
 1. Preset motion keys act only while `motion_keys_active()`
    (`run/preset_ops.rs:28-30`, checked at `actions/keys.rs:50`). Drive input
-   acts only while `controlled()` is Some (`input.rs:160`). A run is one or
-   the other (`controlled.rs:126-128`; `check_drive` refuses a preset by
-   name, 139).
+   acts only while Robot mode's drive target is live, which needs
+   `controlled()` to be Some (`robot/controls.rs:627`; the poller's
+   `live_target`, `crates/sim-spatial/src/drive_input/input.rs:91-93`,
+   checked at 189). A run is one or the other (`controlled.rs:126-128`;
+   `check_drive` refuses a preset by name, 139; the rule is the poller's
+   doc, input.rs:106-110).
 2. On a controlled run, motion requests and held inputs are refused naming
    the controller (`run/sim.rs:126, 156`; `preset_ops.rs:44`), and so are
    jogs (`run/controller.rs:228-229`).
-3. Both systems sit in the same chain (`robot/mod.rs:232`).
+3. Both run in `InputSet::Window`: the motion keys in Robot mode's chain
+   (`robot/mod.rs:232`), the device poller from `DriveInputPlugin`
+   (`drive_input/plugin.rs:22`), after Robot mode writes its target
+   (`robot/mod.rs:236`).
 
 By reading, unexecuted.
 
@@ -1034,7 +1126,7 @@ By reading, unexecuted.
    (148-156: refused, and a stale `<stem>.live.json` removed), which the
    egui viewer's compile uses (`crates/sim-viewer/src/system_ui.rs:61-62`),
    Build's generic run thread (`builder/live_run.rs:299-301`), the browser
-   (`crates/sim-web/src/lib.rs:351`) and lessons
+   (`crates/sim-web/src/lib.rs:487`) and lessons
    (`crates/sim-runtime/src/lesson.rs:308`).
 7. **Tests** (written, never run): `crates/sim-runtime/tests/system_robot.rs`
    (links without parameters 49, rename and remove 73, refusals 91, the
@@ -1048,12 +1140,12 @@ By reading, unexecuted.
    552) → `Builder::start_run` (`builder/live_run.rs:64-81`). A document
    with links is a robot system (65). The same kind of run resumes
    (66-73); otherwise `LiveRun::spawn_robot` (78;
-   `builder/robot_run.rs:52-60`), a "builder-run" `RunThread` with join
-   bound zero (58), so dropping the run never waits on a controller that is
+   `builder/robot_run.rs:56-64`), a "builder-run" `RunThread` with join
+   bound zero (62), so dropping the run never waits on a controller that is
    still starting.
-2. **Build on the run thread**: `robot_thread` (`robot_run.rs:297-399`) →
-   `Worker::build` (203-232) → `sim_system::flatten` →
-   `system_robot::resolve` (215; `crates/sim-runtime/src/system_robot.rs:66-148`):
+2. **Build on the run thread**: `robot_thread` (`robot_run.rs:358-460`) →
+   `Worker::build` (264-293) → `sim_system::flatten` →
+   `system_robot::resolve` (276; `crates/sim-runtime/src/system_robot.rs:66-148`):
    - nothing compiled beside the hosted instances (73-76);
    - exactly one robot and one controller, at most one limiter (86-96);
    - hosted parameters only the controller's `sense.command.<axis>`
@@ -1067,46 +1159,51 @@ By reading, unexecuted.
      (133-145);
    - the scene (146).
 
-   Then `RobotSystem::host` (`robot_run.rs:221`; `system_robot.rs:179-181`)
-   → `DriveHost::new` (`crates/sim-runtime/src/drive_host.rs:235-239`) →
+   Then `RobotSystem::host` (`robot_run.rs:282`; `system_robot.rs:179-181`)
+   → `DriveHost::new` (`crates/sim-runtime/src/drive_host.rs:241-245`) →
    `Session::new` (`crates/sim-runtime/src/session.rs:326`) →
    `spawn_external` (431-432 → 682-688; `sim_couple::python` at 684) and
    the seam attach with the command channels (446-450). `check_inputs`
-   (`drive_host.rs:86-92`) confirms the four channels.
+   (`drive_host.rs:92-98`) confirms the four channels.
 3. **Drive**: `system_drive {"forward":0.5}` (script 557, re-sent at 10 Hz
    by `drive_steadily`, 539-547) → `SystemAction::SystemDrive`
-   (`builder/system_actions.rs:85-96`) → `DriveRequest::from_fields`
+   (`builder/system_actions.rs:84-96`) → `DriveRequest::from_fields`
    (360-361; `drive_host.rs:47-60`) → `Builder::drive`
-   (`robot_run.rs:69-86`). The run panel's Forward, Back, Left, Right and
-   Stop buttons (`builder/ui.rs:207-214`) write `BuildAction::Drive` →
-   `dispatch` (`builder/actions.rs:199-202`) → the same `Builder::drive`.
-   `check_drive` (`robot_run.rs:89-125`) refuses a run that is not a robot
-   system (91-93), anything but a stop or halt while a reset is in
-   progress (98-107), and a failed or ended run (110-114); it interprets
-   the request against the loaded profile (`DriveRequest::interpret`, 116;
-   `drive_host.rs:68-81`), accepts only stop before the system has loaded
-   (117-119), and a nonzero request only after Run (121-123). Accepted → `RunControl::Twist` (79).
+   (`robot_run.rs:71-74`) → the one drive apply `Builder::drive_request`
+   (85-112). The run panel's Forward, Back, Left, Right and Stop buttons
+   (`builder/ui.rs:211-217`) write `BuildAction::Drive` → `dispatch`
+   (`builder/actions.rs:200-203`) → the same `Builder::drive`; the bound
+   keys and gamepad reach `Builder::drive_request` directly (RV-41).
+   `check_drive` (`robot_run.rs:142-178`) refuses a run that is not a robot
+   system (144-146), anything but a stop or halt while a reset is in
+   progress (151-160), and a failed or ended run (163-167); it interprets
+   the request against the loaded profile (`DriveRequest::interpret`, 169;
+   `drive_host.rs:68-87`), accepts only stop before the system has loaded
+   (171-172), and a nonzero request only after Run (174-176). Accepted →
+   `RunControl::Twist` (98); a refusal is kept as `drive_refusal` (88-96),
+   and the panel is marked dirty only when the refusal text changes (89-92,
+   104-106), so held keys and sticks rebuild nothing.
 4. **Run thread**: every queued command, in order, before the next period
-   (`robot_run.rs:325-377`). `Twist` (375) → `Worker::twist` (235-249) →
-   `DriveHost::request` (248; `drive_host.rs:255-258`) →
-   `TwistState::request` (121-139). Each period while running, never
-   faster than real time (`robot_run.rs:381-388`) → `Worker::period`
-   (252-270) → `DriveHost::step` (255; `drive_host.rs:267-274`):
-   `TwistState::advance` (270; 145-155), then `Session::step` (271;
+   (`robot_run.rs:385-438`). `Twist` (436) → `Worker::twist` (296-310) →
+   `DriveHost::request` (309; `drive_host.rs:261-264`) →
+   `TwistState::request` (127-145). Each period while running, never
+   faster than real time (`robot_run.rs:442-449`) → `Worker::period`
+   (313-331) → `DriveHost::step` (316; `drive_host.rs:273-280`):
+   `TwistState::advance` (276; 151-161), then `Session::step` (277;
    `session.rs:489`, values stored 511, `robot.advance(period_s)` 513).
    This is the same host Robot mode steps (RV-19 step 6).
 5. **Shown**: `system_state.live_run.drive` (`builder/live_run.rs:263,
-   276`; `builder.rs:514`) = `Builder::drive_json` (`robot_run.rs:131-152`):
+   276`; `builder.rs:514`) = `Builder::drive_json` (`robot_run.rs:184-205`):
    the phase, the system (instances, files, limits with units, deadman,
    period, channels, wiring: `RobotSystem::json`,
    `system_robot.rs:205-228`), the status, the last request sent and
    refused, the last apply error and the run's error. The script reads it
    after its stop (559) and pauses (560).
 6. **Failure**: a step error ends the run, named by the system's instances
-   (`robot_run.rs:260-264`; `RobotSystem::name_error`,
+   (`robot_run.rs:321-325`; `RobotSystem::name_error`,
    `system_robot.rs:187-200`: "`controller` (external controller (python)
-   <script> on <element>): …") → `publish` (`robot_run.rs:272-294`; drive
-   at 292) → `live_run.error` (`builder/live_run.rs:273`). The script fails
+   <script> on <element>): …") → `publish` (`robot_run.rs:333-355`; drive
+   at 353) → `live_run.error` (`builder/live_run.rs:273`). The script fails
    the step on `live_run.error` (554-556).
 7. **Decisions**:
    - Build's robot run hosts `DriveHost` (`Session` → `PhysicalRobot::advance`),
@@ -1118,23 +1215,250 @@ By reading, unexecuted.
    - A robot system holds only the linked robot, controller and limiter
      (73-76).
    - `link_file` must come before `connect` (step 4 of RV-05).
-   - No keyboard or gamepad in Build mode yet: the device layer writes
-     `RobotAction::Drive` for `RobotView` only (RV-19 step 1). REST
-     `system_drive` and the run panel's buttons are the inputs.
-   - A Build robot run keeps no run record (`robot_run.rs:26`;
-     `Save run` hidden, `builder/ui.rs:198-201`) and draws no robot or
-     graphs (`RunControl::Observe` is ignored, `robot_run.rs:373-374`;
-     the snapshot has no frame, 287).
+   - The keyboard and gamepad drive a Build robot run through the same
+     one poller as Robot mode (rover-browser-drive): RV-41 to RV-43.
+   - A Build robot run keeps no run record (`NO_RUN_RECORD`,
+     `robot_run.rs:30`; `Save run` hidden, `builder/ui.rs:201-204`) and
+     draws no robot or graphs (`RunControl::Observe` is ignored,
+     `robot_run.rs:434-435`; the snapshot has no frame, 348).
 
 By reading, unexecuted.
 
-### RV-38 Browser driving (next epic)
+### RV-38 Browser driving
 
-Missing; it is the next epic (rover-browser-drive). The browser cannot host
-Python: `EmbeddedSession` refuses an external controller by name
-(`crates/sim-runtime/src/embedded.rs:239-241`), and wasm32 refuses it
-(`session.rs:663-666, 689-692`). Browser driving needs a Rhai (or
-wasm-ported) adapter on the same twist channels, plus browser bindings.
+**Compatibility status.** The browser path is a compatibility surface. The
+browser cannot start Python (`EmbeddedSession` refuses an external
+controller by name, `crates/sim-runtime/src/embedded.rs:239-241`), so it runs
+the binding's `embedded` Rhai adapter instead. The Python external
+controller on the native seam stays the reference, and no parity run between
+the two exists. Realtime is not measured, the physics is uncalibrated, and
+nothing here has run in a browser. The page says so: the mode label
+(`web/viewer/viewer.js:361`), the panel's scope line
+(`web/viewer/drive-panel.mjs:29`), the fidelity text built in Rust
+(`crates/sim-runtime/src/embedded_drive.rs:408-416`) and the preset's
+readiness (`web/viewer/presets.json:539`).
+
+The page reads devices and sends requests only. Rust maps the devices
+through the shared bindings, interprets the request against the profile,
+limits it, runs the deadman on simulation time and mixes it
+(`web/viewer/drive-input.mjs:1-9`).
+
+**(a) A held key to the wheel targets.**
+
+1. **Control**: the `rover-drive` preset is loaded, Play is pressed, and W
+   is held.
+2. `keydown` (`web/viewer/viewer.js:528-532`, drive presets only): the
+   default is prevented for a bound key outside a text field or chord
+   (530), then `drive.input.keyDown` (`drive-input.mjs:136-143`) adds the
+   physical `KeyboardEvent.code` to the `held` set (141). A fresh keydown
+   re-arms a key a stop disarmed (140); an auto-repeat keydown of a key
+   whose press was never seen (held before focus or load) is held but
+   disarmed (139), so it never drives. A `keyup` removes it
+   (`viewer.js:533`; `drive-input.mjs:144`).
+3. Each animation frame (`renderer.setAnimationLoop`, `viewer.js:467-468`)
+   → `driveTick` (377-388): while playing, not replaying and with no replay
+   pending (381), it polls (384) → `poll` (`drive-input.mjs:159-190`) →
+   `evaluate` (126) → the
+   wasm export `drive_device_axes` (`crates/sim-web/src/lib.rs:240-245`) →
+   `drive_bindings::browser_axes`
+   (`crates/sim-runtime/src/drive_bindings.rs:543-605`) →
+   `Resolved::keyboard_axes` (550; 396-405, the function the native viewer
+   uses) and `supported_only` per device (591-592; 444-456), so Q on the
+   rover is zeroed and listed in `ignored`.
+4. Send cadence (`drive-input.mjs:178-188`): nonzero axes are sent when they
+   change and at least every `AXES_RESEND_MS` = 50 ms of wall time (14,
+   181), as `{axes}` (182). This is a resend cadence, not a timer that
+   stops anything.
+5. `sendDrive` (`viewer.js:369-375`; nothing is sent while replaying or
+   while a replay is pending, 370) → the worker's `drive_request`
+   (`web/worker.js:178-182`) → `DriveSimulation::request`
+   (`crates/sim-web/src/lib.rs:307-311`) → `DriveSession::request`
+   (`embedded_drive.rs:499-508`), which refuses while replaying (500-502)
+   and, through `check_running` (503; 566-574), once the session has
+   latched a failure or reached its horizon, naming which →
+   `DriveRequest::interpret_with` (504; `crates/sim-runtime/src/drive_host.rs:74-87`,
+   `kinematics::scale` at 77) → `TwistState::request` (506;
+   `drive_host.rs:127-145`, heartbeat + 1 at 135, stamped at the session's
+   simulation time).
+6. Live work chunks: `advanceLive` (`viewer.js:447-460`) asks the worker for
+   `drive_advance` (450; `worker.js:183-188`) with
+   `drivePeriodsPerChunk` periods (`drive-input.mjs:81-84`, 0.05 s of
+   simulated time) → `DriveSimulation::advance` (`lib.rs:316-327`) →
+   `DriveSession::advance` (`embedded_drive.rs:514-564`). Each live period
+   (533-541): `TwistState::advance` (537; `drive_host.rs:151-161`, which is
+   `kinematics::step` on simulation time at 153) on a copy →
+   `EmbeddedSession::set_inputs` (`embedded_drive.rs:538`;
+   `embedded.rs:837-865`): the four values `[forward, lateral, yaw,
+   heartbeat]` (`drive_host.rs:158`) are validated and, when they changed,
+   kept as an input event at the committed step (845-857), so they are
+   recorded → `EmbeddedSession::advance` for one period
+   (`embedded_drive.rs:539`); the copy is committed after it (540).
+7. In the session, the `SampledPolicy` is sampled each control period
+   (`embedded.rs:1069-1070`): the held inputs are appended to the sensors
+   (`embedded_policy.rs:433`) and the Rhai program is sampled (438-440).
+8. The adapter (`examples/wheeled-robot/drive-adapter.rhai`) reads
+   `command.forward`, `command.lateral`, `command.yaw` (76) and
+   `command.heartbeat` (77) → `drive_update` (77; registered at
+   `crates/sim-script/src/drive.rs:169-171` → `update`, 130-145 →
+   `HeartbeatDeadman::update`,
+   `crates/sim-domain-control/src/drive/kinematics.rs:388-414`) →
+   `drive_differential_mix` (`drive-adapter.rhai:87`; registered at
+   `drive.rs:149-153` → `DifferentialDrive::mix`, `kinematics.rs:281`) →
+   `targets[i] += period * rates[i]` and `commands[<joint>.target]`
+   (`drive-adapter.rhai:91-94`). The functions are on every controller
+   engine (`crates/sim-script/src/lib.rs:249`). The script has no literal
+   geometry: track, radius and signs come from `parameters().drive`
+   (44-48).
+9. The policy's targets (`embedded_policy.rs:520`) drive the CAD servo
+   firmware (`embedded.rs:1164`; servos and target coordinates from
+   `examples/wheeled-robot/drive-adapter.config.json:11-15`). The frame comes
+   back with the drive status (`DriveSession::frame`,
+   `embedded_drive.rs:616-622`) and is drawn (`viewer.js:452`).
+
+**(b) A gamepad stick.** `driveTick` reads `navigator.getGamepads()` through
+`gamepadSnapshot` (`viewer.js:383`; `drive-input.mjs:71-78`: mapping, id,
+axes, button values and pressed; a non-finite axis or button value is sent
+as 0, never NaN, 68-69) → `browser_axes` reads only `standard`
+pads (`drive_bindings.rs:559-563`, others named in `ignored_pads`), takes
+each bound stick from its W3C source and converts its sign (`STICKS`,
+85-92, applied at 564-573: Standard Gamepad Y is +1 down), then the shared
+`Resolved::gamepad_axes` (577; 408-420) with `shape`'s deadzone (433-438).
+A pad starts disarmed and is ignored until Rust reports zero pad axes and
+no held button action (`drive-input.mjs:123-124, 163-167`). From there it
+is the same as (a) steps 4-9.
+
+**(c) Stops.** Every stop is a request; the page decides no motion.
+
+- Window blur (`viewer.js:534`) and the page hidden (`visibilitychange`,
+  535) → `input.stop()` (`drive-input.mjs:145`): `"stop"`, then every held
+  input is disarmed until released.
+- Escape (`drive-input.mjs:137`): stop, ignored only while a text-entry
+  element has focus (`isTextEntry`, 58-63: a text-like `<input>`, a
+  textarea or contenteditable; passed as `textEntry`, `viewer.js:529,
+  531`). With a select, checkbox, slider or button focused, Escape still
+  stops.
+- Release of every input: one zero request (`drive-input.mjs:185-188`).
+- A bound `stop` or `halt` key or button (X, B, South, East): on its rising
+  edge a zero request first if axes were being sent, then the action, then
+  disarm (`drive-input.mjs:170-177`). The panel's buttons (one per profile
+  action, `drive-panel.mjs:35-41`, `onAction` at 39) go through the same
+  state machine (`viewer.js:355-357`): `stop` → `input.stop()`, any other
+  action → `input.action(name)` (`drive-input.mjs:146-150`: a zero request
+  first if axes were being sent, then the action, then disarm).
+  `interpret_with` maps them as RV-23/RV-24 (`drive_host.rs:81-85`).
+- A text field taking focus (`viewer.js:536`, and while the leaderboard
+  dialog is open, 380 and 529) → `textFocus` (`drive-input.mjs:151-157`):
+  held keys are disarmed, and one stop is sent if the keyboard was
+  driving. A keydown in a text field or a chord is held and disarmed
+  (139), and a chord also disarms the keys already held (138).
+- Pause sends stop (`setPlaying`, `viewer.js:105`).
+- The deadman: when requests stop arriving, nothing in JavaScript times
+  out. Simulation time advances only in `drive_advance`, and
+  `TwistState::advance` computes the request's age on that time
+  (`drive_host.rs:152`) → `kinematics::step` → `deadman_expired`
+  (`kinematics.rs:220-222`) → the profile's stop rule. The adapter's own
+  `HeartbeatDeadman` (`kinematics.rs:403-405`) stops it again if the
+  heartbeat stops rising.
+
+**(d) Bindings.** `loadDriveBindings` (`drive-input.mjs:35-46`, called at
+`viewer.js:352-353`) uses the defaults from `default_drive_bindings`
+(`crates/sim-web/src/lib.rs:216-218` → `drive_bindings::json(None)`) unless
+`localStorage["sim.drive-bindings/1"]` holds an override. The override is
+checked by `validate_drive_bindings` (224-227 → `BindingsFile::from_value`,
+`drive_bindings.rs:284-292`, the parser the native viewer uses). A refusal
+falls back to the defaults and is shown verbatim in a notice
+(`drive-input.mjs:43-45`; `drive-panel.mjs:65`), with the bindings
+table (66-68).
+
+**(e) Recording and replay.** Save run (`viewer.js:493-500`) asks the
+worker for `drive_recording` (`worker.js:196-200`) → `DriveSimulation::recording`
+(`lib.rs:334-336`) → `DriveSession::recording` (`embedded_drive.rs:610-612`)
+→ `EmbeddedSession::recording` (`embedded.rs:1457-1474`): scene (with the
+identity parameter), config, seed, committed steps and the input events,
+each `[f, l, y, heartbeat]`. It is saved as Rust's text unchanged
+(`viewer.js:498`). Replay (`viewer.js:501`, file chooser 389-391) →
+`replayDrive` (393-406), which sets `replayPending` before the identity
+check and clears it only in its `finally` (397, 405; the flag's rule,
+39-41), so `sendDrive` (370) and `driveTick` (381) send no device input
+from the moment the replay is asked for, even if a live chunk resolves
+meanwhile. The page then asks the worker for `drive_replay`
+(`worker.js:201-217`) with `chunk_periods` = `DRIVE_REPLAY_CHUNK_PERIODS`
+= 200 (`viewer.js:44`, passed at 401; checked 1..1000 at
+`worker.js:204-205`). The worker calls `DriveSimulation::prepare_replay`
+(206; `lib.rs:339-346`), then advances 200 periods per call with progress
+after each (208-215). `prepare_replay` →
+`DriveSession::prepare_replay` (`embedded_drive.rs:660-696`): the recorded
+`EmbeddedIdentity` is compared (`EmbeddedIdentity::differences`, 78-93:
+the entry and the script, config, profile, model and CAD hashes; the
+binding and profile paths are recorded, not compared, because they differ
+between hosts and URL layouts for the same bytes, 73-77) and a difference
+is refused naming each field (668-671). Then the scene, with those paths
+set aside (673-681), and the config must match (682-686), and
+`EmbeddedSession::prepare_replay` (`embedded.rs:1478-1517`) re-checks the
+events. A refusal is shown verbatim as "Replay refused: …"
+(`viewer.js:404`). The replay steps the recorded inputs
+(`embedded_drive.rs:542-560`, `TwistState::replayed`), live requests are
+refused meanwhile (500-502), and the end leaves nothing driving
+(`end_replay`, 578-582).
+
+**(f) The preset WASD path is unchanged.** Presets with motion commands
+keep their own WASD listeners (`viewer.js:512-525`) and
+`motion-commands.mjs` (`motionCommandConfig` 8-19, `nextMotionAction`
+31-35, `driveMotionValues` 39-52). A drive preset has no policy inputs on
+the page (`makeInputs([])`, `viewer.js:351`) and no `motion_commands`
+(`presets.json:527-541`), so `motionCommandConfig` returns null for it
+(`motion-commands.mjs:11-12`). The drive listeners act only when a drive
+preset is loaded (`viewer.js:527-536`).
+
+**(g) The scene.** `loadDrive` (`viewer.js:333-366`) fetches the packaged
+model and binding text (`packageDrive`, `web/build-viewer.mjs:44-67`), asks
+Rust which files the binding names (`drive_files` →
+`embedded_drive::files_to_read`, `embedded_drive.rs:143-149`: the profile,
+entry, further files and config), fetches them and asks the worker to build
+(`drive_build` → `build_drive_scene`, `crates/sim-web/src/lib.rs:262-274`)
+→ `embedded_drive::build` (`embedded_drive.rs:220-421`):
+
+- the profile resolved against the model by `resolve_drive` (237;
+  `controller_binding.rs:273-277`), geometry derived from CAD with its
+  provenance (RV-13) and limits checked against the motors (RV-14);
+- the adapter's sources captured (240-265) and the config's step checked
+  against the model's control period (268-282), the CAD hash checked
+  (283-294), and the motor joints, servos and target bounds matched to the
+  drive's wheels (298-329);
+- the policy's target envelope checked against a whole session at full
+  speed (330-347): each wheel's `target_bounds_rad` must cover the initial
+  target ± `max_wheel_rate` × the session duration, where `max_wheel_rate`
+  (172-195) is the largest wheel joint rate the drive's own mixer gives at
+  every corner of the profile's speed envelope; a narrower envelope is
+  refused naming the bound and the travel. For the rover (design numbers,
+  not run): full forward plus full yaw gives (0.26 + 0.06 × 4.3) / 0.03 ≈
+  17.3 rad/s on the outer wheel, × 600 s ≈ 10 400 rad from a 0 rad start,
+  inside the config's ±12000 rad
+  (`examples/wheeled-robot/drive-adapter.config.json:19`);
+- each servo's `supply_voltage_v` and `winding_temperature_k` checked
+  against the model (348-382): the motor's `electrical.supply_voltage`,
+  and its `thermal.ambient_c` (else `world.ambient_c`) + 273.15; a
+  disagreement is refused naming both values, and a value the model does
+  not state is kept and named in the fidelity label as an imposed boundary
+  (383-387). The rover's config states 6 V and 298.15 K (`drive-adapter.config.json:12-13`);
+- the command inputs from `drive_inputs` (405; `controller_binding.rs:166-184`):
+  twist bounds ± the profile's max speed and the heartbeat channel
+  0..2^53 (176-182);
+- the `EmbeddedIdentity` (390-399) and the resolved drive as scene
+  parameters (400-404), the fidelity label (408-416), and the scene through
+  `scene_with` (419; `controller_binding.rs:372-375`).
+
+`drive_load` (`worker.js:169-177`) takes only the drive JSON text that
+`build_drive_scene` returned and refuses a parsed object (171: re-serializing
+it would turn 0.0 into 0, which `DriveSession::new` refuses) →
+`DriveSimulation::new` (`lib.rs:298-304`) → `DriveSession::new`
+(`embedded_drive.rs:478-496`), which checks the schema, that the scene's
+parameters carry this drive and identity (482-489), and the four command
+inputs (`check_inputs`, 493). The panel (`createDrivePanel`,
+`drive-panel.mjs:25-94`) shows the identity, limits with units, deadman,
+bindings and the live status from Rust.
+
+By reading, unexecuted.
 
 ### RV-40 The committed example script
 
@@ -1193,6 +1517,128 @@ viewer's REST API"). It has never run, and its log records that
 
 By reading, unexecuted.
 
+### RV-41 Build mode: keyboard
+
+1. **Control**: the rover system is wired and running in Build mode (RV-05,
+   RV-07: Run pressed, the system loaded); hold W.
+2. **Target**: `robot_run::drive_target`
+   (`crates/sim-spatial/src/builder/robot_run.rs:211-214`, registered in
+   `ViewerSet::Input` before `InputSet::Window` while in Build mode,
+   `crates/sim-spatial/src/builder.rs:552`) writes `Builder::drive_target`
+   (`robot_run.rs:125-139`) with `set_if_neq`: no target while a text draft
+   is open or a placement drag runs (126-128; the drag's X/Y/Z axis keys
+   would also be drive keys, X the default stop); otherwise live only for
+   a robot system's run whose profile has loaded (129-131), with the linked
+   binding's supported axes (135), a run identity from the system file and
+   the run id (132, 136; a rebuilt run is a new target, which disarms held
+   inputs, `crates/sim-spatial/src/drive_input/input.rs:211-220`), and
+   Build's own keys as owned keys (138).
+3. **Poller**: the same one poller as Robot mode
+   (`drive_input::input::devices`, `input.rs:155-308`; RV-08 steps 3-6),
+   reading W through the shared bindings. Build's own keys
+   (`OWNED_KEYS`: arrows, N, G, U, R, `builder/actions.rs:619-623`) are
+   never read for driving (`input.rs:221-225`). It writes
+   `Act::quiet(DriveDevice { mode: Build, Axes })` every frame
+   (296-300).
+4. **Drain**: `actions::drive_devices` (`builder/actions.rs:656-669`,
+   registered in `ViewerSet::Actions` after the builder's one apply,
+   `builder.rs:552`) → `device_action` (628-630: only Build-mode
+   requests, as `BuildAction::Drive` with the poller's origin) →
+   `apply_device` (638-647) → `Builder::drive_request`
+   (`robot_run.rs:85-112`), the one apply the run panel's buttons and REST
+   `system_drive` use (RV-07 step 3). A quiet request's refusal is kept as
+   the run's `drive_refusal` only; a shown one's is also the status line
+   (`builder/actions.rs:643-645`). `DriveInput::last_error` mirrors the
+   refusal (663-668).
+5. `check_drive` (`robot_run.rs:142-178`) → `interpret_with`
+   (`drive_host.rs:74-87`; `kinematics::scale` at 77) → `RunControl::Twist`
+   (`robot_run.rs:98`) → run thread `Worker::twist` (dispatched at 436;
+   296-310) →
+   `DriveHost::request` (309; `drive_host.rs:261-264`, heartbeat + 1 at
+   135) → each period `Worker::period` → `DriveHost::step` (316;
+   `drive_host.rs:273-280`) → `TwistState::advance` (276) → `Session::step`
+   with `[f, l, y, heartbeat]` on `COMMAND_CHANNELS`
+   (`controller_binding.rs:27`) → the Python controller (RV-19 steps 7-9).
+6. A nonzero request before Run, or while paused, is refused
+   (`robot_run.rs:174-176`) and shown in the drive strip (RV-43). A held
+   key repeats that refusal every frame, but the panel is marked dirty
+   only when the refusal text changes (`robot_run.rs:88-94`; an accepted
+   request after a refusal, 104-106), so held keys and sticks rebuild
+   nothing; the strip's twist follows the 4 Hz live-run refresh.
+
+By reading, unexecuted.
+
+### RV-42 Build mode: gamepad
+
+1. **Control**: the same running system; push the left stick forward, or
+   press South (`stop`) or East (`halt`).
+2. The poller reads every `Gamepad` (`input.rs:256-258`), drives from them
+   and their buttons only while a window of this app has focus (252,
+   259-264), through the shared `Resolved::gamepad_axes` and deadzone
+   (RV-09 step 3). A pad held at a stop, or when the target became live,
+   stays blocked until focused, neutral and released (265-273).
+3. Axes: as RV-41 steps 3-5. Buttons: a zero request first while driving,
+   then `DriveDevice { Action { name } }`, then disarm (`input.rs:274-283`)
+   → `drive_devices` → `Builder::drive_request` → `interpret_with`: `stop`
+   → `(ZERO, false)`, `halt` → `(ZERO, true)` (`drive_host.rs:81-84`). A
+   stop or halt is accepted even during a reset
+   (`robot_run.rs:151-160`), and a halt zeroes the request and the
+   commanded twist at once (`drive_host.rs:138-141`).
+
+By reading, unexecuted.
+
+### RV-43 Build mode: stops and the drive strip
+
+1. **Release**: one zero request (`input.rs:301-305`), then the run thread
+   ramps to zero under `max_accel` (RV-20 step 3).
+2. **Focus loss**: a stop when the devices were driving (`input.rs:169,
+   229-230`, sent at 238-241), then disarm (245).
+3. **Escape**: a stop (`input.rs:231-232`), not while a text field has the
+   keyboard or in a chord. Build's own Escape (back to Select,
+   `builder/actions.rs:718-719`) still runs.
+4. **Text focus**: a kit field taking the keyboard while keys drive sends
+   one stop (`input.rs:170-171, 233-234`); while typing no key is read
+   (249), and Build's own keys do not run (`builder.rs:547`).
+5. **Bound actions**: X/B and South/East (RV-42 step 3).
+6. **Deadman**: if requests stop, the run thread's `TwistState::advance`
+   expires the request on simulation time (`drive_host.rs:152-153`), and the
+   Python controller's `DriveState` is the second guard (RV-25 steps 2-3).
+7. **The target goes away or changes while the devices drive** (Reset or
+   Stop of the run, a draft field or a placement drag opened, a run
+   rebuilt from an edited file): the poller owes the zero it would have
+   sent on release. `owed_stop` (`input.rs:174-188`) writes one quiet
+   `Stop` stamped with the previous target's mode, only while that mode is
+   still current; it runs when no target is live (189-196) and when the
+   target's identity changed (211-220), and `DriveInput::last_action`
+   names why.
+8. **Leaving Build mode**: `actions::leave_drive`, registered on
+   `OnExit(ViewerMode::Build)` (`builder.rs:553`;
+   `builder/actions.rs:671-685`), first sends the owed stop through the one
+   drive apply when the devices were driving (`DriveInput::axes` nonzero,
+   679-683): the builder and its run are kept, paused, and a pause does not
+   zero the requested twist, so the zero would otherwise never come. It
+   then calls `drive_input::leave_mode` as a function (684;
+   `crates/sim-spatial/src/drive_input/mod.rs:78-81`), which clears the
+   target and the status; the drain and the target writer run only in
+   Build mode (`builder.rs:552`).
+9. **Shown**: the drive strip under the viewport (`drive_strip`,
+   `builder/ui.rs:401-414`, called at 141) while a robot system's run is
+   live (`drive_strip_shown`, 349-351). Its height is part of
+   `SpatialScene::builder_dock` (`builder/graphs.rs:128-132`), so the camera
+   viewport and picks stop above it. `drive_lines` (359-396): the bound
+   keys generated from the bindings (`DriveBindings::key_summary`,
+   `crates/sim-spatial/src/drive_input/bindings.rs:162-187`: an axis the
+   profile lacks marked "(not in profile)", Build's own keys marked "(mode
+   key, ignored)", then the action keys and "Esc stop"; ui.rs:363-367),
+   then the device input (normalized), the requested and commanded twist
+   with units (368-385), the ignored axes and the last refusal (386-394),
+   rounded to fixed decimals. The run panel's Forward, Back, Left, Right
+   and Stop buttons stay in the toolbar (`builder/ui.rs:211-217`). REST
+   `system_drive`'s description names the bound keys and stops
+   (`builder/system_actions.rs:239`).
+
+By reading, unexecuted.
+
 ### Recorded gaps (rover-rest-flow)
 
 - **`benchmark_assumptions` is not in the REST-built export.** Robot mode
@@ -1210,8 +1656,8 @@ By reading, unexecuted.
   add it). It is not fixed here.
 - **CAD mode needs an existing `.rcad` to start** (RV-01): the seed is a
   prerequisite of the script.
-- **No keyboard or gamepad in Build mode** (RV-07 step 7): REST
-  `system_drive` and the run panel's buttons only.
+- **No keyboard or gamepad in Build mode**: closed by rover-browser-drive
+  (RV-41 to RV-43).
 - **A Build robot run keeps no run record and draws no robot or graphs**
   (RV-07 step 7). Robot mode records the drive session.
 - **A `.rcad` changed on disk outside RoboCAD is not detected.** RoboCAD's
@@ -1252,9 +1698,10 @@ the shared limiter and deadman.
 - **Rhai controllers share the slice-retry re-sample exposure.**
   `PhysicalRobot::advance` restores a snapshot and re-runs a failed slice
   (`physical.rs:663-681`), so the seam can sample the same time again. The
-  Python rover rolls back its state (`diff_drive_rover.py:99-106`); Rhai
-  controllers such as `velocity-controller.rhai` don't, and can integrate
-  twice.
+  Python rover rolls back its state (`diff_drive_rover.py:99-106`), and so
+  does the browser's `drive-adapter.rhai` (its notes 31-36, rollback 61-74);
+  other Rhai controllers such as `velocity-controller.rhai` don't, and can
+  integrate twice.
 - **A paused live request keeps its age.** No sim time passes while paused,
   so on resume a request that was live keeps driving for up to `timeout_s`
   (0.5 s) of simulated motion with no new input (`DEADMAN_RULE`,
@@ -1262,7 +1709,34 @@ the shared limiter and deadman.
 - **The deadman can expire between frames.** Below fps = scale / timeout_s
   (2 fps at ×1, 16 fps at ×8 with 0.5 s), a held input is refreshed less
   often than the deadman, and the robot stutters (`controlled.rs:31`).
-- **The browser can't host Python** (RV-38).
+- **The browser runs a different controller program** (RV-38). It cannot
+  host Python, so it runs the binding's embedded Rhai adapter through the
+  same Rust drive functions. No run compares it with the Python reference,
+  and realtime in the browser is not measured. Its results are labelled
+  as the compatibility path (`embedded_drive.rs:408-416`).
+- **A native Stop or action button does not disarm held inputs.** In
+  Robot mode the Drive block's buttons go through `actions::apply`, and in
+  Build mode the run panel's Stop goes through `dispatch`, not the device
+  poller, so its latch is untouched. A key still held after the click
+  drives again on the next frame. Escape, the bound X/B keys and the pad
+  buttons do disarm. The browser panel's buttons do disarm: they go
+  through the input state machine (`input.stop()` / `input.action(name)`,
+  `web/viewer/viewer.js:355-357`; RV-38 (c)).
+- **The browser session's motors run at a different ambient temperature
+  than the model states** (pre-existing, outside rover-browser-drive;
+  reported, not fixed). The embedded session builds each CAD motor unit
+  with the ambient temperature `world.ambient_c` + 273.15
+  (`crates/sim-runtime/src/embedded.rs:487`), and the rover's model has no
+  `world.ambient_c`, so it takes the parser's default 20 °C
+  (`crates/sim-domain-robot/src/model.rs:88-89`, `default_ambient`
+  110-112). The
+  model's motors state 25 °C in `motors[i].thermal.ambient_c`, a field the
+  parser drops; only the embedded drive's build reads it from the model
+  document, to check the servos' `winding_temperature_k` 298.15 K
+  (`embedded_drive.rs:366-381`; `drive-adapter.config.json:12-13`). So the
+  build check passes at 25 °C while the session's motors run at 20 °C.
+  The fix belongs in the model parser or the CAD export (one stated
+  ambient), not in the viewer.
 - **Mecanum geometry must be declared**: `derive` refuses it from the model
   (`drive_geometry.rs:175-182`), because the model does not describe the
   rollers.

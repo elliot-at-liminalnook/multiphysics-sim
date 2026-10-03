@@ -100,6 +100,56 @@ for physical provenance, and the original CAD archive remains unchanged.
   keys or using Stop sends a zero motion request through the controller. Earlier
   lift/servo presets have no walking command interface.
 
+### Driving the rover with a drive profile (compatibility path, unexecuted)
+
+The **Two-wheel rover (drive profile)** preset (`rover-drive`) drives
+`examples/wheeled-robot/baseline/` through the same three layers as the
+native viewer: device bindings (`sim.drive-bindings/1`), the robot's drive
+profile (`robot.drive.json`) and the kinematic adapter in its controller. The
+browser cannot start the binding's Python program, so it runs the binding's
+embedded Rhai adapter (`examples/wheeled-robot/drive-adapter.rhai`), which
+mixes only through Rust drive functions, in the shared embedded session in
+the worker (`DriveSimulation`). Rust builds the scene from the model, the
+binding and the files it names (`build_drive_scene`); the page only fetches
+them.
+
+    node web/build-viewer.mjs runs/interactive/viewer --fixture-only
+    node web/serve-viewer.mjs runs/interactive/viewer 4173
+
+then open `?preset=rover-drive` (or `--preset=rover-drive` after the output
+directory to package only it) and press Play.
+
+- Bindings: the defaults come from Rust (`default_drive_bindings`: W/S
+  forward, A/D turn, X stop, B halt; left stick Y forward, right stick X
+  turn, South stop, East halt). An override stored in localStorage under
+  `sim.drive-bindings/1` is checked by the same Rust parser
+  (`validate_drive_bindings`); a refusal names the field and the page falls
+  back to the defaults, saying so.
+- Keys are read by physical position (`event.code`); gamepads with the
+  standard layout are polled each frame. Rust turns them into normalized
+  axes (deadzone, inversion and the Standard Gamepad's stick-Y sign) and the
+  session scales them by the profile. The page sends requests only: every
+  request raises the heartbeat in Rust, and the profile's acceleration limit
+  and deadman run in Rust on simulation time. Nothing is mixed, scaled or
+  limited in JavaScript.
+- Stops: releasing every input sends one zero request; leaving the window,
+  hiding the page, Escape (except while typing in a text box) and the stop
+  and halt bindings or buttons request a stop and disarm held inputs until
+  they are released; a text field taking focus disarms the keys. If requests
+  stop arriving, the deadman (0.5 s of simulated time) ramps the rover down.
+- The panel shows the requested and commanded twist with units, the profile
+  limits, the deadman state, the heartbeat and the fidelity label with the
+  drive's identity hashes. Save run downloads the embedded session's
+  recording; Replay re-executes it and is refused, naming each difference,
+  when the adapter, config, profile, model or CAD hashes differ.
+
+Status: written and checked by reading only. Nothing was built or run (no
+wasm build, browser or test); `node web/tests/drive_input.mjs` (the stop
+rules and bindings fallback) is written but not run and not in CI. Realtime
+performance is not measured. The Python controller on the native seam stays
+the reference; this is a compatibility surface. Presets without a drive
+profile keep their own WASD path unchanged.
+
 The displayed simulation/wall ratio is recorded stepping cost or measured live
 worker request cost, as labeled. It is not rendering FPS or a training benchmark.
 Collision surfaces are a decimated physical export, not the full CAD B-rep.

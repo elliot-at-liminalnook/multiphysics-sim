@@ -27,10 +27,15 @@
 //!   action is applied before the surface closes.
 //! - **Escape order**: a typing kit field's Escape is that field's alone
 //!   (the kit consumes it; the palette's closes the palette, the form's
-//!   cancels the form); else an open file form's (`files::form`: [`input`]
-//!   stands aside while one is open); else an open surface closes; else an open form or
-//!   active interaction is cancelled (`CadFormCancel`); else transform's
-//!   keys take it (they skip Escape while either exists).
+//!   cancels the form); else an open file form's, results path form's or
+//!   outliner menu's (`files::form`, `results::forms`, `tree::popup`:
+//!   [`input`] stands aside while one is open); else an open surface
+//!   closes; else an open form or active interaction is cancelled
+//!   (`CadFormCancel`), and [`input`] consumes the key when it did either
+//!   (a pending two-step key is dropped too), so calibrate's, the threads'
+//!   and the Select tool's Escape (`CadKeySet::EscapeTool`, `Escape`,
+//!   `ToolKeys`, after the gate) never also act on that press; else those
+//!   take it.
 //! - **Wheel**: over a menu or context-menu popup it scrolls the popup's
 //!   rows ([`popup_scroll`]); the menus outgrow their 560 px.
 //! - **Present**: [`draw`] rebuilds the open popup (palette, menu, context
@@ -339,7 +344,7 @@ fn input(
     roots: Query<(&ComputedNode, &UiGlobalTransform), With<SurfaceRoot>>,
     bar: Query<(&ComputedNode, &UiGlobalTransform), With<menus::MenuRow>>,
     buttons: Option<Res<ButtonInput<MouseButton>>>,
-    (keys, files): (Option<Res<ButtonInput<KeyCode>>>, Option<Res<crate::cad::files::CadFiles>>),
+    (mut keys, files, mut chord): (Option<ResMut<ButtonInput<KeyCode>>>, Option<Res<crate::cad::files::CadFiles>>, Option<ResMut<super::keys::Chord>>),
     windows: Query<&Window, With<PrimaryWindow>>,
     mut out: MessageWriter<Act<CadAction>>,
     (mut text, mut popup_was_open): (crate::ui_kit::text::TextFocus, Local<bool>),
@@ -383,16 +388,35 @@ fn input(
     }
     // A typing field's Escape is its own (the kit consumes it: the palette's
     // and the form's fields close or cancel on their `Cancel`). An open file
-    // form's Escape is its own (`files::form::input` closes it and consumes
-    // the key, but this chain is not ordered against it): stand aside, as
-    // the threads' and calibrate's Escape do, so one press never both closes
-    // the file form and cancels the tool.
-    let file_form = files.as_ref().is_some_and(|f| f.form.is_some());
-    if !file_form && keys.is_some_and(|k| k.just_pressed(KeyCode::Escape)) {
-        if open.is_some() {
-            out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadSurface { surface: Surface::Closed })));
+    // form's, results path form's or outliner menu's Escape is its own
+    // (`files::form::input`, `results::forms::input`, `tree::popup::input`
+    // close them and consume the key, but this chain is not ordered against
+    // them): stand aside, as the threads' and calibrate's Escape do, so one
+    // press never both closes that and cancels the tool.
+    let other = files.as_ref().is_some_and(|f| f.form.is_some()) || doc.results.form.is_some() || doc.tree.menu.is_some();
+    if !other
+        && let Some(keys) = keys.as_mut()
+        && keys.just_pressed(KeyCode::Escape)
+    {
+        let action = if open.is_some() {
+            Some(CadAction::CadSurface { surface: Surface::Closed })
         } else if doc.ops.form.is_some() || doc.ops.active.is_some() {
-            out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadFormCancel)));
+            Some(CadAction::CadFormCancel)
+        } else {
+            None
+        };
+        // Consumed when it acted, so the topmost thing ends once: the later
+        // Escape readers (calibrate's in `CadKeySet::EscapeTool`, the
+        // threads' in `CadKeySet::Escape`, which checks the form but not a
+        // form-less active op, and the Select tool's in `ToolKeys`) never
+        // see this press; a pending two-step key is dropped, as
+        // `keys::keys` drops it on Escape.
+        if let Some(action) = action {
+            keys.clear_just_pressed(KeyCode::Escape);
+            if let Some(chord) = chord.as_mut() {
+                chord.abandon();
+            }
+            out.write(Act::ui(crate::cad::activation::guard(&doc, action)));
         }
     }
 }

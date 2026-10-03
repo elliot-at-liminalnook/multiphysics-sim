@@ -636,6 +636,13 @@ fn camera(c: CameraCmd, call: &mut Call, cx: &mut Cx) -> Outcome {
     match (c, c.action()) {
         (CameraCmd::Fov, _) => crate::cad::views::open_fov(cx),
         (_, Some(action)) => {
+            // RoboCAD's `toggle_orbit_mode` says the mode it switched to
+            // (ui/app.py:1057): the opposite of this frame's camera snapshot.
+            if c == CameraCmd::OrbitMode
+                && let Some(was) = cx.views.as_deref().and_then(|v| v.camera).map(|v| v.trackball)
+            {
+                cx.doc.show(Ok(format!("Orbit: {}", if was { "turntable" } else { "trackball" })));
+            }
             cx.camera.push(action.clone());
             Outcome::Done(Ok(json!({"camera": action, "note": "display only: RoboCAD's own camera is unchanged"})))
         }

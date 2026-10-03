@@ -1,7 +1,7 @@
 //! The argument builders, keyed by route shape (`Shape`), never by operation.
 //!
 //! Each call's arguments are what RoboCAD's `ArgConverter` reads
-//! (cad/robocad/api.py:146-244): node ids as strings, a face
+//! (cad/robocad/api.py:173-287): node ids as strings, a face
 //! `{"node", "face"}`, an edge `{"node", "edge"}`, vectors `[x, y, z]`, a
 //! plane by name ("xy" | "xz" | "yz"), a boolean op by its value
 //! ("union"), a chamfer spec `{"distance"[, "angle_deg"]}`, a transform
@@ -43,7 +43,7 @@ pub(crate) enum Built {
     Print(crate::cad::print::Plan),
 }
 
-/// An edge as RoboCAD's `ArgConverter.edge` takes it (api.py:166-176).
+/// An edge as RoboCAD's `ArgConverter.edge` takes it (api.py:193-203).
 pub(crate) fn edge_ref(node: &str, edge: i64) -> Value {
     json!({"node": node, "edge": edge})
 }
@@ -492,8 +492,10 @@ fn array(entry: &OpEntry, r: &Resolved, values: &Map<String, Value>, doc: &CadDo
 /// `Ops.box_three_point(a, b, c, height)` (commands.py:426-435: x =
 /// unit(b − a), y the in-plane direction towards c, z = x × y) with a, b, c
 /// chosen so z is the plane's normal (h ≥ 0) or its reverse (h < 0): the
-/// same solid. Deliberately different: the history label is
-/// `box_three_point`'s "Box", as `_make_box`'s extrude names it "Box".
+/// same solid. Deliberately different: the history label is `Ops.box`'s
+/// and `box_three_point`'s "Box" (commands.py:420, :435), where RoboCAD's
+/// `_make_box` extrude records "Extrude" (`_apply_boolean`'s label,
+/// commands.py:487); the node is named "Box" in both.
 fn place(entry: &OpEntry, primitive: Primitive, values: &Map<String, Value>, env: &Env) -> Result<Built, String> {
     let frame = env.plane.map_or(Ok(PlaneFrame::XY), |p| p.frame_or_xy())?;
     let on_xy = frame.same(&PlaneFrame::XY, 1e-9);

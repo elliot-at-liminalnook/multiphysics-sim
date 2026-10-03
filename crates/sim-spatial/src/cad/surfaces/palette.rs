@@ -169,10 +169,13 @@ pub(super) fn input(
                 if let Some((cmd, _)) = rows.get(at.min(rows.len().saturating_sub(1))) {
                     let entry = row_entry(cmd, &doc, &selection, &own);
                     match entry.refusal {
+                        // Stamped with the source it was ranked against, as a
+                        // row's click is (`surfaces::input`): refused if the
+                        // document is replaced before it applies.
                         None => {
-                            out.write(Act::ui(entry.action));
+                            out.write(Act::ui(crate::cad::activation::guard(&doc, entry.action)));
                             if entry.closes {
-                                out.write(Act::ui(CadAction::CadSurface { surface: Surface::Closed }));
+                                out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadSurface { surface: Surface::Closed })));
                             }
                         }
                         Some(why) => doc.show(Err(why)),

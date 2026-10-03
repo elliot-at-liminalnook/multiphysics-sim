@@ -9,8 +9,12 @@
 //! (`panel::buttons` writes it, as every CAD button) with `Enabled` from
 //! `registry::ready`; RoboCAD's checkable `tool.*` entries are lit while
 //! that tool is the active one (`CadDocument::tool`) or that operation is
-//! the active interaction or open form (`ops.active`, `ops.form`). Entries
-//! owned by a later epic are disabled, the hint naming the epic.
+//! the active interaction or open form (`ops.active`, `ops.form`). A button
+//! that cannot run now is disabled with the hint saying why (no edit can be
+//! sent, the selection does not fit); all 25 run natively now (catalogue
+//! operations or CAD actions: Annotate, References, Pose and Experiments
+//! since cad-organize and cad-experiments-motion, Fastener and Validate
+//! since cad-print), so none is disabled for belonging to a later epic.
 //!
 //! Rectangle, Circle, Slot and Extrude (`sketch.rectangle`,
 //! `sketch.circle`, `sketch.slot`, `tool.extrude`) are catalogue

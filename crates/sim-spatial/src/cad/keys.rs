@@ -89,7 +89,7 @@
 //! | Space | `view.radial` | typed as a space while a text field has the keyboard |
 //! | Tab | `numeric.entry` | an open form with a text field takes it (`surfaces::form::input`: its first field, then the next); during a placement drag `ops::interact` also reads it to copy the base point into the form's anchor field; else the numeric bar's (`numeric::entry`) |
 //! | J, Q, X, T, L, C, A, N, Home | join, selection radial, extrude, sketch text/line/circle/arc, annotate (cad-organize: `CadInvoke tool.annotate`, the face-click tool of `threads::annotate`), fit | no other reader in CAD mode; while the Comments dock's composer has the keyboard (the kit's `typing`), N is typed |
-//! | Escape (cad-organize readers) | the outliner's context menu or name dialog closes (`tree::popup::input`); the calibrate tool ends (`references::calibrate::escape`); Annotate or Reattach is cancelled, else "Return to assembly" ends the linked parts shown alone (`threads::input::escape`, `threads::isolation::end`) | one consumer per press, in this order: the tree popup's reader runs before `keys::gate`; calibrate's in the public `CadKeySet::EscapeTool` (after the gate, `keys::free`, before `keys::keys`); the threads' in `CadKeySet::Escape` (after `EscapeTool`, before `CadKeySet::ToolKeys`, `transform::keys`). Each consumes the key only when it acted, so with none of them active Escape reaches the Select tool (`transform::input::keys`) |
+//! | Escape (cad-organize readers) | the outliner's context menu or name dialog closes (`tree::popup::input`); the calibrate tool ends (`references::calibrate::escape`); Annotate or Reattach is cancelled, else "Return to assembly" ends the linked parts shown alone (`threads::input::escape`, `threads::isolation::end`) | one consumer per press, in this order: the tree popup's reader runs before `keys::gate`, as does `surfaces::input` (an open command surface closes, else an open catalogue form or interaction is cancelled; it stands aside while the tree popup, a file form or a results form is open, and consumes the key when it acts); calibrate's in the public `CadKeySet::EscapeTool` (after the gate, `keys::free`, before `keys::keys`); the threads' in `CadKeySet::Escape` (after `EscapeTool`, before `CadKeySet::ToolKeys`, `transform::keys`). Each consumes the key only when it acted, so with none of them active Escape reaches the Select tool (`transform::input::keys`) |
 //! | Left press in the 3D view with a robot click tool active | the motor and joint tools (`robot::tools`'s click system) | Ctrl (Command) on the joint tool's first click is the world (`JointTool`); Alt+left is the orbit, not a pick |
 //! | Left press in the 3D view with the fastener tool active (cad-print) | one fastener hole on the face under the pointer (`print::fastener_tool`) | the selection's click stands aside (`pick`'s `robot_tool` includes `Flow::PrintPick`); Alt+left is the orbit |
 //!
@@ -276,6 +276,14 @@ impl Chord {
     /// This frame's keys are the pending chord's (`gate`).
     pub(super) fn gated(&self) -> bool {
         self.gated
+    }
+    /// Drop a pending two-step key, as [`keys`] drops it on Escape: for an
+    /// Escape another reader consumed (`surfaces::input`, closing a surface
+    /// or cancelling an operation), before [`gate`] reads the chord.
+    pub(super) fn abandon(&mut self) {
+        if self.first.is_some() {
+            self.first = None;
+        }
     }
 }
 

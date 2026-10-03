@@ -1,6 +1,11 @@
 //! Inspector control blocks: overlay, jog, motion, recording/replay,
-//! recorded-timeline and gait-preview controls and their status lines.
+//! recorded-timeline, gait-preview and drive (a controlled run's
+//! teleoperation) controls and their status lines.
 use super::*;
+use super::ui::{DriveButton, DriveDetailRoot, DriveRoot, DriveText};
+use crate::robot::DriveRequest;
+use crate::robot::drive_input::{DriveBindings, DriveInput};
+use sim_domain_control::drive::kinematics;
 
 /// The overlays: (system_ui id suffix, label, key). H (hotspots) for stress: S is the WASD jog key.
 pub(super) const OVERLAYS: [(&str, &str, KeyCode); 4] =
@@ -30,8 +35,10 @@ pub(super) fn jog_joints(view: &RobotView, link: Option<usize>) -> Vec<(String, 
         // A planar file: every simulated joint (planar models are small), by built order.
         return p.joint_names().iter().map(|j| (j.clone(), JOG_STEP_RAD)).collect();
     }
-    if view.preset.is_some() {
-        // A preset's joints are driven by its declared controller: no servo-target jog.
+    if view.preset.is_some() || view.run.as_ref().is_some_and(|r| r.controlled().is_some()) {
+        // A preset's joints are driven by its declared controller, a
+        // controlled run's wheels by its external controller (which writes the
+        // servo targets every period): no servo-target jog, which would be refused.
         return Vec::new();
     }
     let (Some(m), Some(i)) = (view.model.as_ref(), link) else { return Vec::new() };
@@ -80,14 +87,15 @@ pub(super) fn jog_panel(
     registry: Res<DocumentRegistry>,
     fonts: Res<UiFonts>,
     root: Single<Entity, With<JogRoot>>,
-    mut shown: Local<Option<Vec<String>>>,
+    // Keyed by the root too: re-entering robot mode spawns a new, empty root.
+    mut shown: Local<Option<(Entity, Vec<String>)>>,
     mut texts: Query<(&JogText, &mut Text)>,
     mut buttons: Query<(&RobotAction, &mut Enabled), With<JogButton>>,
 ) {
     let k = Kit { f: &fonts };
     let joints = jog_joints(&view, picked::link(&selection, &registry));
-    let names: Vec<String> = joints.iter().map(|(j, _)| j.clone()).collect();
-    if shown.as_ref() != Some(&names) {
+    let key = (*root, joints.iter().map(|(j, _)| j.clone()).collect::<Vec<String>>());
+    if shown.as_ref() != Some(&key) {
         commands.entity(*root).despawn_related::<Children>();
         let mut rows = Vec::new();
         if !joints.is_empty() {
@@ -111,7 +119,7 @@ pub(super) fn jog_panel(
             );
         }
         commands.entity(*root).add_children(&rows);
-        *shown = Some(names);
+        *shown = Some(key);
     }
     if let Some(p) = &view.planar {
         let f = p.run.frame().filter(|f| f.built);
@@ -141,15 +149,21 @@ pub(super) fn jog_panel(
 }
 
 /// W/A/S/D/Stop buttons and the requested values for a preset (the same
-/// `RobotAction::Motion` as `system_ui` motion:*), enabled per the handler's check.
+/// `RobotAction::Motion` as `system_ui` motion:*), then the Save recording
+/// and Replay block, which a controlled `--robot FILE` run (its drive
+/// Session) shows on its own; every button enabled per the handler's check.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn motion_panel(
     mut commands: Commands,
     view: Res<RobotView>,
     fonts: Res<UiFonts>,
     root: Single<Entity, With<MotionRoot>>,
-    mut shown: Local<bool>,
+    // The root each block was built in and whether it has the Motion part (a
+    // preset) or not (a controlled run): re-entering robot mode spawns new,
+    // empty roots, and a reload can bind or unbind a controller.
+    mut shown: Local<Option<(Entity, bool)>>,
     ui: Res<RobotPanelUi>,
-    mut listed: Local<Option<(Vec<String>, bool)>>,
+    mut listed: Local<Option<(Entity, Vec<String>, bool)>>,
     replay_list: Query<Entity, With<ReplayList>>,
     mut text: Query<(&mut Text, Has<RecordingText>, Has<ReplayText>), Or<(With<MotionText>, With<RecordingText>, With<ReplayText>)>>,
     mut buttons: Query<(&RobotAction, &mut Enabled), With<MotionButton>>,
@@ -159,15 +173,36 @@ pub(super) fn motion_panel(
         let enabled = check(&view, &action).is_ok();
         commands.spawn((k.button(text, action, Look::Secondary, enabled), MotionButton)).id()
     };
-    if view.preset.as_ref().is_some_and(|p| !p.is_recorded()) && !*shown {
-        let header = commands.spawn(k.section("Motion")).id();
-        let label = commands.spawn(k.text(motion::LABEL, size::CAPTION, SUBTLE, 0)).id();
-        let row = commands.spawn(wrap()).id();
-        for (_, text, request) in motion_buttons() {
-            let b = button(&mut commands, RobotAction::Motion { request }, text);
-            commands.entity(row).add_child(b);
+    let controlled = view.run.as_ref().is_some_and(|r| r.controlled().is_some());
+    // Some(true): a simulated preset (Motion + recording); Some(false): a controlled run (recording only).
+    let want = if view.preset.as_ref().is_some_and(|p| !p.is_recorded()) { Some(true) } else if controlled && view.preset.is_none() { Some(false) } else { None };
+    let Some(with_motion) = want else {
+        // Another run (or none): a previous block goes (a reload that removed the binding).
+        if shown.take().is_some() {
+            commands.entity(*root).despawn_related::<Children>();
+            *listed = None;
         }
-        let line = commands.spawn((k.text("", size::CAPTION, TEXT, 0), MotionText)).id();
+        return;
+    };
+    // Built this frame: the old list (if any) is despawned with the commands, so it is not filled now.
+    let rebuilt = *shown != Some((*root, with_motion));
+    if rebuilt {
+        commands.entity(*root).despawn_related::<Children>();
+        let mut children = Vec::new();
+        if with_motion {
+            children.push(commands.spawn(k.section("Motion")).id());
+            children.push(commands.spawn(k.text(motion::LABEL, size::CAPTION, SUBTLE, 0)).id());
+            let row = commands.spawn(wrap()).id();
+            for (_, text, request) in motion_buttons() {
+                let b = button(&mut commands, RobotAction::Motion { request }, text);
+                commands.entity(row).add_child(b);
+            }
+            children.push(row);
+            children.push(commands.spawn((k.text("", size::CAPTION, TEXT, 0), MotionText)).id());
+        } else {
+            children.push(commands.spawn(k.section("Recording")).id());
+            children.push(commands.spawn(k.text("the drive Session's recording (sim_runtime::session::Session::recording(): scene with the controller identity, seed, one twist + heartbeat action per seam period)", size::CAPTION, SUBTLE, 0)).id());
+        }
         // Save recording: the same RobotAction::SaveRecording as system_ui recording:save and REST robot_save_recording.
         let save_row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(6.0), align_items: AlignItems::Center, ..default() }).id();
         let save = button(&mut commands, RobotAction::SaveRecording { path: None, note: None }, "Save recording");
@@ -175,22 +210,25 @@ pub(super) fn motion_panel(
         commands.entity(save_row).add_children(&[save, saved]);
         // Replay: the same RobotAction::Replay / CancelReplay as system_ui replay:<file> / replay:cancel and REST robot_replay.
         let replay_header = commands.spawn(k.section("Replay")).id();
-        let replay_label = commands.spawn(k.text("re-executed through the shared prepare_replay on the run thread", size::CAPTION, SUBTLE, 0)).id();
+        let how = if with_motion { "re-executed through the shared prepare_replay on the run thread" } else { "re-executed on the run thread: Session::new(recorded scene, recorded seed) restarts the recorded controller; refused when its identity differs from the loaded binding's" };
+        let replay_label = commands.spawn(k.text(how, size::CAPTION, SUBTLE, 0)).id();
         let list = commands.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), ..default() }, ReplayList)).id();
         let replay_row = commands.spawn(Node { flex_direction: FlexDirection::Row, column_gap: Val::Px(6.0), align_items: AlignItems::Center, ..default() }).id();
         let cancel = button(&mut commands, RobotAction::CancelReplay, "Cancel replay");
         let refresh = button(&mut commands, RobotAction::RefreshRecordings, "Refresh list");
         let replay_line = commands.spawn((k.text("", size::CAPTION, TEXT, 0), ReplayText, Node { flex_shrink: 1.0, ..default() })).id();
         commands.entity(replay_row).add_children(&[cancel, refresh]);
-        commands.entity(*root).add_children(&[header, label, row, line, save_row, replay_header, replay_label, list, replay_row, replay_line]);
-        *shown = true;
+        children.extend([save_row, replay_header, replay_label, list, replay_row, replay_line]);
+        commands.entity(*root).add_children(&children);
+        *shown = Some((*root, with_motion));
+        *listed = None;
     }
-    if let (Some(r), Ok(list)) = (view.run.as_ref(), replay_list.single()) {
+    if let (false, Some(r), Ok(list)) = (rebuilt, view.run.as_ref(), replay_list.single()) {
         // The most recent recordings first (all of them when expanded); rebuilt only when the listed files change.
         let expanded = ui.recordings_expanded;
         let count = if expanded { r.recordings().len() } else { REPLAY_BUTTONS };
         let files: Vec<String> = r.recordings().iter().rev().take(count).map(|l| l.file.clone()).collect();
-        let key = (files, expanded);
+        let key = (list, files, expanded);
         if listed.as_ref() != Some(&key) {
             commands.entity(list).despawn_related::<Children>();
             let mut rows = Vec::new();
@@ -204,7 +242,8 @@ pub(super) fn motion_panel(
             }
             let more = r.recordings().len().saturating_sub(REPLAY_BUTTONS);
             if r.recordings().is_empty() {
-                rows.push(commands.spawn(k.text("no saved recordings for this preset yet", size::DETAIL, SUBTLE, 0)).id());
+                let none = if with_motion { "no saved recordings for this preset yet" } else { "no saved drive recordings for this robot yet" };
+                rows.push(commands.spawn(k.text(none, size::DETAIL, SUBTLE, 0)).id());
             } else if more > 0 {
                 // Every recording is replayable from the window: the toggle lists the older ones too.
                 let label = if expanded { format!("Fewer recordings (the {REPLAY_BUTTONS} most recent)") } else { format!("More recordings… ({more} older)") };
@@ -238,7 +277,8 @@ pub(super) fn recorded_panel(
     view: Res<RobotView>,
     fonts: Res<UiFonts>,
     root: Single<Entity, With<RecordedRoot>>,
-    mut shown: Local<bool>,
+    // The root the block was built in: re-entering robot mode spawns a new, empty one.
+    mut shown: Local<Option<Entity>>,
     mut text: Query<&mut Text, With<RecordedText>>,
     mut buttons: Query<(&RobotAction, &mut Enabled), With<RecordedButton>>,
     seek: Query<(Entity, &bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &Interaction), With<RecordedSeek>>,
@@ -247,13 +287,12 @@ pub(super) fn recorded_panel(
     let Some(p) = view.run.as_ref().and_then(|r| r.playback()) else {
         // Switched to a view without a recorded timeline (an embedded preset):
         // the old block would otherwise stay, frozen at the last recorded frame.
-        if *shown {
+        if shown.take().is_some() {
             commands.entity(*root).despawn_children();
-            *shown = false;
         }
         return;
     };
-    if !*shown {
+    if *shown != Some(*root) {
         let k = Kit { f: &fonts };
         let header = commands.spawn(k.section("Recorded")).id();
         let label = commands.spawn(k.text(format!("{} · speed: header −/×/+ · seek: press or drag the timeline", crate::robot::preset::RECORDED_LABEL), size::CAPTION, SUBTLE, 0)).id();
@@ -277,7 +316,7 @@ pub(super) fn recorded_panel(
             .id();
         let line = commands.spawn((k.text("", size::CAPTION, TEXT, 0), RecordedText)).id();
         commands.entity(*root).add_children(&[header, label, row, bar, line]);
-        *shown = true;
+        *shown = Some(*root);
     }
     // The slider follows the shown time unless it is held (then it is the pointer's).
     // `SliderValue` is an immutable component: replace it, don't mutate it.
@@ -316,8 +355,9 @@ pub(super) fn gait_panel(
     view: Res<RobotView>,
     fonts: Res<UiFonts>,
     root: Single<Entity, With<GaitRoot>>,
-    mut shown: Local<bool>,
-    mut listed: Local<Option<(Vec<String>, Vec<String>, Option<String>)>>,
+    // The root and list the block was built in: re-entering robot mode spawns new, empty ones.
+    mut shown: Local<Option<Entity>>,
+    mut listed: Local<Option<(Entity, Vec<String>, Vec<String>, Option<String>)>>,
     list: Query<Entity, With<GaitList>>,
     mut text: Query<(&mut Text, Has<GaitError>), Or<(With<GaitText>, With<GaitError>)>>,
     mut buttons: Query<(&mut RobotAction, &mut Enabled, Option<&GaitSeekButton>), With<GaitButton>>,
@@ -329,7 +369,7 @@ pub(super) fn gait_panel(
         let enabled = check(&view, &action).is_ok();
         commands.spawn((k.button(text, action, Look::Secondary, enabled), GaitButton)).id()
     };
-    if !*shown {
+    if *shown != Some(*root) {
         let header = commands.spawn(k.section("Gait preview")).id();
         let label = commands.spawn(k.text(gait::LABEL, size::CAPTION, SUBTLE, 0)).id();
         let row = |commands: &mut Commands| commands.spawn(wrap()).id();
@@ -358,14 +398,14 @@ pub(super) fn gait_panel(
         // Filled by `panel_ui::gait_path_draw`.
         let path = commands.spawn((Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(4.0), margin: UiRect::top(Val::Px(6.0)), ..default() }, GaitPathRoot)).id();
         commands.entity(*root).add_children(&[header, label, status, error, transport, speed, list_header, reports, path]);
-        *shown = true;
+        *shown = Some(*root);
     }
     if let Ok(list) = list.single() {
         // Rebuilt only when the offered reports (or, with none offered, the
         // reasons) or the listing error change; compared without allocating.
         let offered = g.reports();
         let skipped: &[String] = if offered.is_empty() { g.skipped() } else { &[] };
-        let same = listed.as_ref().is_some_and(|(n, s, e)| n.len() == offered.len() && n.iter().zip(offered).all(|(n, r)| *n == r.name) && s.as_slice() == skipped && e.as_deref() == g.list_error());
+        let same = listed.as_ref().is_some_and(|(l, n, s, e)| *l == list && n.len() == offered.len() && n.iter().zip(offered).all(|(n, r)| *n == r.name) && s.as_slice() == skipped && e.as_deref() == g.list_error());
         if !same {
             commands.entity(list).despawn_related::<Children>();
             let mut rows = Vec::new();
@@ -393,7 +433,7 @@ pub(super) fn gait_panel(
                 rows.push(commands.spawn(k.text(note, size::DETAIL, SUBTLE, 0)).id());
             }
             commands.entity(list).add_children(&rows);
-            *listed = Some((offered.iter().map(|r| r.name.clone()).collect(), skipped.to_vec(), g.list_error().map(str::to_string)));
+            *listed = Some((list, offered.iter().map(|r| r.name.clone()).collect(), skipped.to_vec(), g.list_error().map(str::to_string)));
         }
     }
     let r = view.run.as_ref().expect("gait preview implies a run");
@@ -465,7 +505,9 @@ fn motion_line(r: &RunController) -> String {
 
 /// The line beside Save recording: pending, the last pair written (path, steps, kind, replayable) or the last error.
 fn recording_line(r: &RunController) -> String {
-    let path = |p: &std::path::Path| p.strip_prefix(r.preset().map(|p| p.root.as_path()).unwrap_or(std::path::Path::new(""))).unwrap_or(p).display().to_string();
+    // Shown relative to the workspace root the save resolved against (the preset's, or the controlled run's).
+    let root = r.preset().map(|p| p.root.as_path()).or_else(|| r.controlled().and_then(|c| c.root.as_deref().ok()));
+    let path = |p: &std::path::Path| p.strip_prefix(root.unwrap_or(std::path::Path::new(""))).unwrap_or(p).display().to_string();
     if let Some(p) = r.save_pending() {
         return format!("saving {}…", path(p));
     }
@@ -526,5 +568,206 @@ pub(super) fn motion_text(r: &RunController) -> String {
         }
     }
     t.push_str(&format!("{}\n{}\n\n", motion::KEY_SEMANTICS, motion::CLAMP_RULE));
+    t
+}
+
+/// The controller a controlled `--robot FILE` run is driven by (header, Drive block, robot_state).
+pub(super) const DRIVE_CONTROLLER: &str = crate::robot::run::CONTROLLER_LABEL;
+/// What a controlled run simulates, in short beside its results (robot_state's
+/// `drive.fidelity` carries the full `run::DRIVE_FIDELITY`).
+pub(super) const DRIVE_FIDELITY: &str = "the same PhysicalRobot physics as a hold run, with the external controller in place of the hold coupler: it writes the wheel servo targets the model's motor firmware tracks. The twist requested here is limited by the drive profile (acceleration, deadman) before the controller mixes it.";
+
+/// Decimals of a twist value in the Drive block: fixed, so a line changes only with its value.
+const TWIST_DECIMALS: usize = 3;
+/// A normalized device axis (−1…1).
+const AXIS_DECIMALS: usize = 2;
+
+/// `x` at `decimals` places with a sign, never "−0.000" (a value that
+/// rounds to zero shows as +0.000, so a resting twist does not flicker).
+fn fixed(x: f64, decimals: usize) -> String {
+    let scale = 10f64.powi(decimals as i32);
+    // −0.0 + 0.0 is +0.0.
+    let r = (x * scale).round() / scale + 0.0;
+    format!("{r:+.decimals$}")
+}
+
+/// A drive geometry value (`Valued`, serialized as the resolved JSON has it)
+/// with its unit and provenance kind and basis (`from` or `source`).
+fn valued_text(v: &impl Serialize, unit: &str) -> String {
+    let v = serde_json::to_value(v).unwrap_or(Value::Null);
+    if v.is_null() {
+        return "none".into();
+    }
+    let p = &v["provenance"];
+    let basis = p["from"].as_str().or_else(|| p["source"].as_str()).map_or(String::new(), |b| format!(" ({})", clip(b, 90)));
+    format!("{} {unit} — {}{basis}", v["value"].as_f64().map_or("—".into(), |x| format!("{x:?}")), p["kind"].as_str().unwrap_or("no provenance"))
+}
+
+/// The first 12 hex digits of a sha256 (the full hash is in robot_state.drive).
+fn short_sha(sha: &str) -> &str {
+    sha.get(..12).unwrap_or(sha)
+}
+
+/// A twist's supported axes with units at fixed decimals.
+fn twist_text(t: kinematics::BodyTwist, supported: [bool; 3]) -> String {
+    let values = t.to_array();
+    let parts: Vec<String> = (0..3).filter(|i| supported[*i]).map(|i| format!("{} {} {}", kinematics::AXIS_NAMES[i], fixed(values[i], TWIST_DECIMALS), kinematics::SPEED_UNITS[i])).collect();
+    if parts.is_empty() { "no supported axis".into() } else { parts.join(" · ") }
+}
+
+/// The inspector's Drive block for a controlled `--robot FILE` run
+/// (`RunController::controlled`): Stop and the profile's named actions (the
+/// same `RobotAction::Drive` as the device bindings, `system_ui` and REST,
+/// enabled per the handler's check), the requested and commanded twist, the
+/// deadman, the heartbeat and the device input above the inspector scroll;
+/// the controller, profile, kinematics, geometry with provenance, limits and
+/// bindings inside it. Rebuilt when the controlled run (a reload builds a
+/// new one: script, profile, binding path and model-derived geometry may all
+/// change) or a root changes; its static detail is written then, and its live lines
+/// are rewritten only when their rounded text changes. Nothing is shown for
+/// any other run.
+#[allow(clippy::too_many_arguments)]
+pub(super) fn drive_panel(
+    mut commands: Commands,
+    view: Res<RobotView>,
+    fonts: Res<UiFonts>,
+    roots: (Single<Entity, With<DriveRoot>>, Single<Entity, With<DriveDetailRoot>>),
+    (bindings, input): (Option<Res<DriveBindings>>, Option<Res<DriveInput>>),
+    mut shown: Local<Option<(Entity, Entity, usize, Vec<String>)>>,
+    mut texts: Query<(&DriveText, &mut Text)>,
+    mut buttons: Query<(&RobotAction, &mut Enabled), With<DriveButton>>,
+) {
+    let (root, detail) = (*roots.0, *roots.1);
+    let run = view.run.as_ref();
+    let Some((r, c)) = run.and_then(|r| Some((r, r.controlled()?))) else {
+        // Another run (or none): the block of a previous controlled run goes.
+        if shown.take().is_some() {
+            commands.entity(root).despawn_related::<Children>();
+            commands.entity(detail).despawn_related::<Children>();
+        }
+        return;
+    };
+    let robot = &c.controlled;
+    let resolved = &robot.resolved;
+    let actions: Vec<String> = robot.profile.actions.iter().map(|a| a.name.clone()).collect();
+    // Keyed by the roots too: re-entering robot mode spawns new, empty roots.
+    // The run's address stands for the static detail: every reload loads a new
+    // `ControlledRun` (its geometry derived from the reloaded model, its
+    // binding path and hashes), so moved wheel joints with the same profile
+    // and script still rebuild the block.
+    let key = (root, detail, std::sync::Arc::as_ptr(c) as usize, actions.clone());
+    if shown.as_ref() != Some(&key) {
+        let k = Kit { f: &fonts };
+        commands.entity(root).despawn_related::<Children>();
+        commands.entity(detail).despawn_related::<Children>();
+        let header = commands.spawn(k.section("Drive")).id();
+        let label = commands.spawn(k.text(format!("{DRIVE_CONTROLLER} · {DRIVE_FIDELITY}"), size::CAPTION, SUBTLE, 0)).id();
+        let row = commands.spawn(wrap()).id();
+        let mut spawn_button = |request: DriveRequest, text: &str, look: Look| {
+            let action = RobotAction::Drive { request };
+            let enabled = check(&view, &action).is_ok();
+            let b = commands.spawn((k.button(text, action, look, enabled), DriveButton)).id();
+            commands.entity(row).add_child(b);
+        };
+        spawn_button(DriveRequest::Stop, "Stop", Look::Danger);
+        for name in &actions {
+            spawn_button(DriveRequest::Action { name: name.clone() }, name.as_str(), Look::Secondary);
+        }
+        let live = commands.spawn((k.text("", size::CAPTION, TEXT, 0), DriveText::Live)).id();
+        let device = commands.spawn((k.text("", size::CAPTION, TEXT, 0), DriveText::Input)).id();
+        let error = commands.spawn((k.text("", size::CAPTION, DANGER, 0), DriveText::Error)).id();
+        commands.entity(root).add_children(&[header, label, row, live, device, error]);
+        let detail_header = commands.spawn(k.section("Drive profile")).id();
+        let detail_text = commands.spawn(k.text(drive_detail(robot), size::CAPTION, TEXT, 0)).id();
+        let bindings_text = commands.spawn((k.text("", size::CAPTION, TEXT, 0), DriveText::Bindings)).id();
+        commands.entity(detail).add_children(&[detail_header, detail_text, bindings_text]);
+        *shown = Some(key);
+    }
+    let supported = resolved.limits.supported;
+    for (which, mut text) in &mut texts {
+        let line = match which {
+            DriveText::Live => match r.drive_state() {
+                None => "no drive status yet: Run or Step starts the controller".to_string(),
+                Some(s) => {
+                    let age = if s.age_s.is_finite() { format!("{:.1} s", s.age_s) } else { "— (no request yet)".into() };
+                    let deadman = if s.expired { format!("EXPIRED (on loss: {})", resolved.deadman.on_loss) } else { "live".into() };
+                    format!(
+                        "requested  {}\ncommanded  {} (limited; what the controller receives)\ndeadman {deadman} · request age {age} of {:?} s · heartbeat {} · sim t {:.1} s",
+                        twist_text(s.request, supported),
+                        twist_text(s.commanded, supported),
+                        resolved.deadman.timeout_s,
+                        s.heartbeat,
+                        s.time_s
+                    )
+                }
+            },
+            DriveText::Input => match input.as_deref() {
+                None => "device input: not available".to_string(),
+                Some(i) => {
+                    let axes = i.axes.to_array();
+                    let values: Vec<String> = (0..3).filter(|a| supported[*a]).map(|a| format!("{} {}", kinematics::AXIS_NAMES[a], fixed(axes[a], AXIS_DECIMALS))).collect();
+                    let mut t = format!("input ({}): {} (normalized −1…1) · last action {}", i.source.unwrap_or("idle"), values.join(" · "), i.last_action.as_deref().unwrap_or("none"));
+                    if !i.ignored.is_empty() {
+                        t += &format!("\nignored: {} (not in this robot's drive profile)", i.ignored.join(", "));
+                    }
+                    if let Some(e) = &i.last_error {
+                        t += &format!("\nlast input refused: {}", clip(e, 160));
+                    }
+                    t
+                }
+            },
+            DriveText::Error => r.error().map_or(String::new(), |e| format!("RUN FAILED: {e}")),
+            DriveText::Bindings => match bindings.as_deref() {
+                None => "DEVICE BINDINGS: not available".to_string(),
+                Some(b) => {
+                    let rows = b.describe();
+                    let mut t = format!("DEVICE BINDINGS ({}; viewer settings, shared across robots)\n", rows.len());
+                    for (input, does) in rows {
+                        t += &format!("• {input}: {does}\n");
+                    }
+                    t
+                }
+            },
+        };
+        if text.0 != line {
+            text.0 = line;
+        }
+    }
+    for (action, enabled) in &mut buttons {
+        enable(enabled, check(&view, action).is_ok());
+    }
+}
+
+/// The Drive block's static lines: controller identity, profile, kinematics,
+/// geometry with provenance, limits per supported axis and the deadman rule.
+fn drive_detail(robot: &sim_runtime::controller_binding::ControlledRobot) -> String {
+    let (resolved, identity) = (&robot.resolved, &robot.identity);
+    let args = if identity.args.is_empty() { "none".to_string() } else { identity.args.join(" ") };
+    let mut t = format!("controller: {DRIVE_CONTROLLER}\nscript: {}\n  sha256 {} · args {args} (plus --drive-json, the resolved profile)\n", identity.script.display(), short_sha(&identity.script_sha256));
+    t += &format!("binding: {}\n", robot.binding_path.display());
+    t += &format!("profile: {}\n  sha256 {}\n", identity.profile.display(), short_sha(&identity.profile_sha256));
+    if let Some(d) = &robot.profile.description {
+        t += &format!("  description (file's text): \"{d}\"\n");
+    }
+    let geometry = serde_json::to_value(&resolved.geometry).unwrap_or(Value::Null);
+    t += &format!("\nkinematics: {}\n", resolved.kinematics);
+    t += &format!("track width: {}\nwheel radius: {}\n", valued_text(&resolved.geometry.track_width_m, "m"), valued_text(&resolved.geometry.wheel_radius_m, "m"));
+    if !geometry["wheelbase_m"].is_null() {
+        t += &format!("wheelbase: {}\n", valued_text(&geometry["wheelbase_m"], "m"));
+    }
+    for w in geometry["wheels"].as_array().into_iter().flatten() {
+        t += &format!("wheel {} · joint sign {} — {}\n", w["joint"].as_str().unwrap_or(""), w["sign"].as_f64().map_or("—".into(), |s| format!("{s:+}")), w["provenance"]["kind"].as_str().unwrap_or("no provenance"));
+    }
+    let l = &resolved.limits;
+    t += "\nLIMITS (resolved profile)\n";
+    for i in 0..3 {
+        let axis = kinematics::AXIS_NAMES[i];
+        if l.supported[i] {
+            t += &format!("{axis}: max speed {:?} {} · max accel {:?} {} · stop decel {:?} {}\n", l.max_speed[i], kinematics::SPEED_UNITS[i], l.max_accel[i], kinematics::ACCEL_UNITS[i], l.stop_decel[i], kinematics::ACCEL_UNITS[i]);
+        } else {
+            t += &format!("{axis}: not supported (the profile declares no {axis} axis)\n");
+        }
+    }
+    t += &format!("deadman: timeout {:?} s · on loss {}\n", resolved.deadman.timeout_s, resolved.deadman.on_loss);
     t
 }

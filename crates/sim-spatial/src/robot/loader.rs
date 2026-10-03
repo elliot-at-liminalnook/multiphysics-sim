@@ -20,6 +20,12 @@ pub struct Loaded {
     pub notes: FileNotes,
     /// The export's `source` block compared with the CAD file on disk.
     pub cad_link: CadLinkStatus,
+    /// `--robot FILE` only (set by the reload worker, `robot::source::check`):
+    /// the controller binding beside the file (`controller_binding::binding_path_for`):
+    /// None when there is none, `Err("controller binding <path>: …")` when it
+    /// did not load (the run then fails with it, never falling back to the hold
+    /// run), else the drive session to run. Always None for presets.
+    pub controlled: Option<Result<std::sync::Arc<crate::robot::run::ControlledRun>, String>>,
 }
 /// Free text the file carries that `PhysicalModel` does not keep, read from
 /// the same bytes. Shown verbatim; never mapped to a provenance label.
@@ -106,7 +112,24 @@ pub fn loaded(model: PhysicalModel, raw: &Value, path: &Path) -> Loaded {
             (!g.positions.is_empty()).then_some(g)
         })
         .collect();
-    Loaded { model, geometry, notes, cad_link }
+    Loaded { model, geometry, notes, cad_link, controlled: None }
+}
+
+/// The controller binding beside a physical `--robot FILE` (`path`), loaded
+/// for `model` (reads the binding, its drive profile and hashes the script:
+/// call off the UI thread). None when no binding file exists.
+pub fn load_controller(path: &Path, model: &PhysicalModel) -> Option<Result<std::sync::Arc<crate::robot::run::ControlledRun>, String>> {
+    let binding = sim_runtime::controller_binding::binding_path_for(path);
+    match std::fs::metadata(&binding) {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return None,
+        Err(e) => return Some(Err(format!("controller binding {}: {e}", binding.display()))),
+        Ok(_) => {}
+    }
+    Some(
+        sim_runtime::controller_binding::load(&binding, model)
+            .map(|c| std::sync::Arc::new(crate::robot::run::ControlledRun::new(path, model.clone(), c)))
+            .map_err(|e| format!("controller binding {}: {e}", binding.display())),
+    )
 }
 
 /// A preset opened on the loader thread: its parsed inputs (`robot_preset`)

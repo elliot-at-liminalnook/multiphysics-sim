@@ -63,6 +63,29 @@ pub(super) struct GaitButton;
 /// A relative seek button: its action is re-resolved from the latest pose each frame.
 #[derive(Component)]
 pub(super) struct GaitSeekButton(pub(super) i8);
+/// The inspector's Drive block for a controlled `--robot FILE` run (filled
+/// by `controls::drive_panel`): the fixed part above the inspector scroll
+/// (Stop, the profile's actions and the live request/commanded/deadman
+/// lines) and the detail part inside it (controller, profile, geometry,
+/// limits, bindings).
+#[derive(Component)]
+pub(super) struct DriveRoot;
+#[derive(Component)]
+pub(super) struct DriveDetailRoot;
+/// Which Drive line a text is (rewritten by `drive_panel` only when it changes).
+#[derive(Component, Clone, Copy, PartialEq, Eq, Debug)]
+pub(super) enum DriveText {
+    /// Requested and commanded twist, deadman state, heartbeat.
+    Live,
+    /// The current device input (axes, source, last action, last error).
+    Input,
+    /// The run's failure (the controller's error), in the danger colour.
+    Error,
+    /// The active device bindings.
+    Bindings,
+}
+#[derive(Component)]
+pub(super) struct DriveButton;
 #[derive(Component)]
 pub(super) struct GraphDock;
 /// The inspector's overlay block (`--robot FILE`): toggle buttons and the frame's counts.
@@ -203,7 +226,10 @@ pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<Standar
         .spawn((
             k.dock(Dock::Right { top: TOP, bottom: 0.0, width: RIGHT }, Node { padding: UiRect::all(Val::Px(16.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(6.0), ..default() }),
             children![
-                // Motion request buttons for a preset (spawned by `motion_panel`).
+                // Teleoperation of a controlled `--robot FILE` run (spawned by `controls::drive_panel`).
+                (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, DriveRoot),
+                // Motion request buttons for a preset, then Save recording and Replay (a preset's or a
+                // controlled run's drive Session; spawned by `motion_panel`).
                 (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, MotionRoot),
                 // The recorded timeline for a recorded preset (spawned by `recorded_panel`).
                 (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, RecordedRoot),
@@ -213,6 +239,8 @@ pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<Standar
                     k.scroll_area(Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, ..default() }, 0.0),
                     InspectorScroll,
                     children![
+                        // The Drive block's details (controller, profile, geometry, limits, bindings).
+                        (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, DriveDetailRoot),
                         (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, GaitRoot),
                         (k.text("Select a link in the list or the 3D view.", size::BODY, TEXT, 0), Inspector),
                         // The Comments section (`threads::draw`; empty in the other sections).

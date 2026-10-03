@@ -7,9 +7,16 @@
 //! types are `deny_unknown_fields`). The viewer's metadata (preset, time,
 //! seed, note, viewer version, replayability) goes into a sidecar
 //! `<stem>.meta.json`. Files are created, never overwritten.
+//!
+//! A `--robot FILE` drive session (`run::ControlledRun`) saves the shared
+//! `sim_runtime::session::Session::recording()` (scene with the external
+//! program's identity, seed and one `[forward, lateral, yaw, heartbeat]`
+//! action per seam period) the same way, under `runs/robot-drive/<model
+//! stem>/<stamp>.recording.json`, with a sidecar naming the controller.
 use serde_json::{Value, json};
 use sim_runtime::embedded::EmbeddedRecording;
 use sim_runtime::environment::EnvironmentRecording;
+use sim_runtime::session::Recording;
 use std::io::Write;
 use std::path::{Component, Path, PathBuf};
 
@@ -28,34 +35,45 @@ pub const PROTECTED: [&str; 3] = ["examples", "cad", "web"];
 pub enum Snapshot {
     Environment(EnvironmentRecording),
     Session(EmbeddedRecording),
+    /// A drive session's `Session::recording()`; `failure` is the session's
+    /// latched error (the recording itself has no failure field).
+    Drive { recording: Recording, failure: Option<String> },
 }
 impl Snapshot {
     pub fn kind(&self) -> &str {
         match self {
             Snapshot::Environment(r) => &r.kind,
             Snapshot::Session(r) => &r.kind,
+            Snapshot::Drive { .. } => DRIVE_KIND,
         }
     }
     pub fn version(&self) -> u32 {
         match self {
             Snapshot::Environment(r) => r.version,
             Snapshot::Session(r) => r.version,
+            Snapshot::Drive { recording, .. } => recording.version,
         }
     }
-    fn runtime(&self) -> &EmbeddedRecording {
+    fn runtime(&self) -> Option<&EmbeddedRecording> {
         match self {
-            Snapshot::Environment(r) => &r.runtime,
-            Snapshot::Session(r) => r,
+            Snapshot::Environment(r) => Some(&r.runtime),
+            Snapshot::Session(r) => Some(r),
+            Snapshot::Drive { .. } => None,
         }
     }
+    /// Nominal steps (presets) or seam periods (one action each, a drive session).
     pub fn completed_steps(&self) -> usize {
-        self.runtime().completed_steps
+        match self {
+            Snapshot::Drive { recording, .. } => recording.actions.len(),
+            _ => self.runtime().map_or(0, |r| r.completed_steps),
+        }
     }
     /// The recorded error or failure, if any.
     pub fn failure(&self) -> Option<&str> {
         match self {
             Snapshot::Environment(r) => r.error.as_deref().or(r.runtime.failure.as_deref()),
             Snapshot::Session(r) => r.failure.as_deref(),
+            Snapshot::Drive { failure, .. } => failure.as_deref(),
         }
     }
     /// `Err(reason)` when the runtime's prepare_replay refuses this kind of record (REPLAYABLE_RULE).
@@ -67,6 +85,8 @@ impl Snapshot {
             },
             Snapshot::Session(r) if r.version != 3 && r.failure.is_some() => Err(format!("recording version {} with a failure: EmbeddedSession::prepare_replay replays failures only from version 3", r.version)),
             Snapshot::Session(_) => Ok(()),
+            Snapshot::Drive { failure: Some(e), .. } => Err(format!("the drive session had failed ({e}): its last recorded period ended in that error, so a replay re-executes to it and reports it as an error (Session has no expected-failure mode)")),
+            Snapshot::Drive { .. } => Ok(()),
         }
     }
     /// The shared recording JSON, compact.
@@ -74,6 +94,7 @@ impl Snapshot {
         match self {
             Snapshot::Environment(r) => serde_json::to_string(r),
             Snapshot::Session(r) => serde_json::to_string(r),
+            Snapshot::Drive { recording, .. } => serde_json::to_string(recording),
         }
         .map_err(|e| format!("serialising the {} recording: {e}", self.kind()))
     }
@@ -126,7 +147,7 @@ fn protected(root: &Path, path: &Path) -> Result<(), String> {
     let root = lexical(root, Path::new(""));
     for dir in PROTECTED {
         if path.starts_with(root.join(dir)) {
-            return Err(format!("refused: {} is under {dir}/ ({}); recordings are run outputs and are never written under examples/, cad/ or web/ (default {DIR}/<preset-id>/)", path.display(), root.join(dir).display()));
+            return Err(format!("refused: {} is under {dir}/ ({}); recordings are run outputs and are never written under examples/, cad/ or web/ (default {DIR}/<preset-id>/, or {DRIVE_DIR}/<model stem>/ for a drive session)", path.display(), root.join(dir).display()));
         }
     }
     Ok(())
@@ -138,8 +159,15 @@ pub fn meta_path(path: &Path) -> PathBuf {
 
 /// Where a save goes (LOCATION_RULE), refused naming the reason. No file-system access: safe on the UI thread.
 pub fn target(root: &Path, preset_id: &str, explicit: Option<&str>, unix_ms: u128) -> Result<PathBuf, String> {
+    target_in(root, &Path::new(DIR).join(preset_id), ".json", explicit, unix_ms)
+}
+/// A drive session's save target (DRIVE_LOCATION_RULE): `<root>/runs/robot-drive/<stem>/<stamp>.recording.json`, or an explicit path under the same rules as a preset's.
+pub fn drive_target(root: &Path, model_stem: &str, explicit: Option<&str>, unix_ms: u128) -> Result<PathBuf, String> {
+    target_in(root, &Path::new(DRIVE_DIR).join(model_stem), DRIVE_SUFFIX, explicit, unix_ms)
+}
+fn target_in(root: &Path, dir: &Path, suffix: &str, explicit: Option<&str>, unix_ms: u128) -> Result<PathBuf, String> {
     let path = match explicit {
-        None => root.join(DIR).join(preset_id).join(format!("{}.json", stamp(unix_ms))),
+        None => root.join(dir).join(format!("{}{suffix}", stamp(unix_ms))),
         Some(p) if p.trim().is_empty() => return Err("refused: an explicit recording path is empty".into()),
         Some(p) => lexical(root, Path::new(p)),
     };
@@ -193,7 +221,7 @@ pub fn write(root: &Path, path: &Path, snapshot: &Snapshot, meta: Value) -> Resu
 pub fn meta(snapshot: &Snapshot, run: &crate::robot::preset::PresetRun, recording_file: &Path, note: Option<&str>, unix_ms: u128, generation: u64, chunks: u64, final_frame: Option<Value>) -> Value {
     let p = &run.preset;
     let replayable = snapshot.replayable();
-    let identity = snapshot.runtime().runtime_identity.as_ref();
+    let identity = snapshot.runtime().and_then(|r| r.runtime_identity.as_ref());
     json!({"schema": META_SCHEMA, "schema_version": META_VERSION,
         "recording_file": recording_file.file_name().map(|n| n.to_string_lossy()), "recording_kind": snapshot.kind(), "recording_version": snapshot.version(),
         "recording_rule": FILE_RULE,
@@ -225,7 +253,14 @@ pub struct Listed {
 
 /// The recordings in `<root>/runs/robot-presets/<preset-id>/` (`*.json` but not `*.meta.json`), by file name (oldest first). Blocking: call off the UI thread.
 pub fn list(root: &Path, preset_id: &str) -> Result<Vec<Listed>, String> {
-    let dir = root.join(DIR).join(preset_id);
+    list_in(&root.join(DIR).join(preset_id))
+}
+/// A drive session's recordings: `<root>/runs/robot-drive/<model stem>/`, as [`list`]. Blocking: call off the UI thread.
+pub fn list_drive(root: &Path, model_stem: &str) -> Result<Vec<Listed>, String> {
+    list_in(&root.join(DRIVE_DIR).join(model_stem))
+}
+fn list_in(dir: &Path) -> Result<Vec<Listed>, String> {
+    let dir = dir.to_path_buf();
     let entries = match std::fs::read_dir(&dir) {
         Ok(e) => e,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
@@ -243,7 +278,7 @@ pub fn list(root: &Path, preset_id: &str) -> Result<Vec<Listed>, String> {
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => (None, Some("no sidecar".into())),
             Err(e) => (None, Some(format!("{}: {e}", meta_path(&path).display()))),
             Ok(text) => match serde_json::from_str::<Value>(&text) {
-                Ok(m) => (Some(json!({"kind": m["recording_kind"], "completed_steps": m["completed_steps"], "replayable": m["replayable"], "saved_utc": m["saved_utc"], "note": m["note"], "preset_id": m["preset"]["id"]})), None),
+                Ok(m) => (Some(json!({"kind": m["recording_kind"], "completed_steps": m["completed_steps"], "replayable": m["replayable"], "saved_utc": m["saved_utc"], "note": m["note"], "preset_id": m["preset"]["id"], "model_stem": m["model"]["stem"]})), None),
                 Err(e) => (None, Some(format!("{}: {e}", meta_path(&path).display()))),
             },
         };
@@ -255,15 +290,22 @@ pub fn list(root: &Path, preset_id: &str) -> Result<Vec<Listed>, String> {
 
 /// The recording a replay request names: `file` in the preset's directory (a bare file name) or an explicit `path` (relative to the root or absolute; reading is allowed anywhere). No file-system access.
 pub fn replay_source(root: &Path, preset_id: &str, file: Option<&str>, path: Option<&str>) -> Result<PathBuf, String> {
+    replay_source_in(root, &Path::new(DIR).join(preset_id), file, path)
+}
+/// A drive session's recording to replay: `file` in `runs/robot-drive/<model stem>/`, or an explicit `path` (as [`replay_source`]).
+pub fn drive_replay_source(root: &Path, model_stem: &str, file: Option<&str>, path: Option<&str>) -> Result<PathBuf, String> {
+    replay_source_in(root, &Path::new(DRIVE_DIR).join(model_stem), file, path)
+}
+fn replay_source_in(root: &Path, dir: &Path, file: Option<&str>, path: Option<&str>) -> Result<PathBuf, String> {
     let p = match (file, path) {
         (Some(f), None) => {
             if f.is_empty() || f.contains(['/', '\\']) || f == "." || f == ".." {
-                return Err(format!("replay file `{f}` must be a bare file name in {DIR}/{preset_id}/ (use path for another location)"));
+                return Err(format!("replay file `{f}` must be a bare file name in {}/ (use path for another location)", dir.display()));
             }
-            root.join(DIR).join(preset_id).join(f)
+            root.join(dir).join(f)
         }
         (None, Some(p)) if !p.trim().is_empty() => lexical(root, Path::new(p)),
-        _ => return Err("replay needs exactly one of file (a saved recording of this preset) or path (any readable recording .json)".into()),
+        _ => return Err("replay needs exactly one of file (a saved recording of this preset or drive session) or path (any readable recording .json)".into()),
     };
     let name = p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
     if !name.ends_with(".json") || name.ends_with(".meta.json") {
@@ -289,4 +331,46 @@ pub fn measured(recorded: &Value, replayed: &Value) -> Option<Value> {
         "max_position_diff_m": max.1, "max_link": max.0, "first_link": first.0, "first_link_position_diff_m": first.1,
         "recorded_completed_steps": recorded["completed_steps"], "replayed_completed_steps": replayed["completed_steps"],
         "per_link_m": per.iter().map(|(l, d)| json!({"link": l, "diff_m": d})).collect::<Vec<_>>()}))
+}
+
+/// Drive sessions (`run::ControlledRun`): where saves go, relative to the workspace root.
+pub const DRIVE_DIR: &str = "runs/robot-drive";
+/// A drive recording's file suffix (the sidecar is `<stamp>.recording.meta.json`).
+pub const DRIVE_SUFFIX: &str = ".recording.json";
+/// The viewer's kind name for a drive session recording (the shared `Recording` has no kind field).
+pub const DRIVE_KIND: &str = "drive_session";
+pub const DRIVE_META_SCHEMA: &str = "sim-spatial.robot-drive-recording-meta";
+pub const DRIVE_LOCATION_RULE: &str = "default runs/robot-drive/<model stem>/<UTC yyyymmddThhmmss.mmmZ>.recording.json under the workspace root (<model stem>: the opened file name without .simrobot.json); an explicit path follows the preset rules (resolved against the root, `..` removed, must end in .json and not .meta.json, never under examples/, cad/ or web/). Written on a writer thread; never overwritten.";
+pub const DRIVE_FILE_RULE: &str = "<stem>.recording.json is sim_runtime::session::Session::recording() exactly as serde_json::to_string writes it: version 1, the scene (robot, BuildOptions, period_s, duration_s and controller.external: the Python script, its sha256, args with the host's --drive-json resolved drive, clients_root, profile_sha256, library_sha256: the simloop library's hash, sim_runtime::session::library_sha256), the seed and one action per seam period [command.forward m/s, command.lateral m/s, command.yaw rad/s, command.heartbeat] (the limited twist and request sequence the run thread sent); <stem>.recording.meta.json is the viewer's sidecar (model path, binding, profile path and sha256, identity, seed, steps, label). Both created with create_new.";
+pub const DRIVE_REPLAYABLE_RULE: &str = "a drive recording replays when its controller and robot match the loaded binding's (DRIVE_IDENTITY_RULE); a session that had failed is saved labelled replayable=false: its last action ends in the failure, which the replay reports as an error";
+pub const DRIVE_REPLAY_RULE: &str = "replay of a drive session: the file is read on the run thread as sim_runtime::session::Recording (version 1), checked against the loaded binding (DRIVE_IDENTITY_RULE; any difference refuses it by name and the current run is unchanged), rebuilt with Session::new(recorded scene, recorded seed), which starts the recorded controller program again, and every recorded action is stepped through Session::step, one per chunk (one seam period), paced like a run; Cancel is checked between chunks. Live drive requests, Run, Pause, Step and Save are refused during it; Cancel and Reset always work.";
+pub const DRIVE_VERDICT_RULE: &str = "done = identity matched, Session::new accepted the recorded scene and seed, and every recorded action stepped through Session::step without error (completed seam periods equal the recording's action count); states are not compared (measured compares the final link positions with the sidecar's final_frame when present, never as a pass criterion). failed = the first error verbatim.";
+pub const DRIVE_IDENTITY_RULE: &str = "drive identity check: the recording's scene.controller.external and the loaded run's (both built by controller_binding::scene) must agree on language, script path, script sha256, simloop library sha256, args (without the host's --drive-json), drive profile path and sha256 and the resolved drive JSON, and the recorded robot (sim_runtime::physics_context::fingerprint of its JSON) and seam period must equal the loaded model's; each difference is named with both values. Session::new also re-verifies the script's and the library's sha256 on disk.";
+
+/// A drive session's sidecar (`<stem>.recording.meta.json`): what the recording does not say.
+#[allow(clippy::too_many_arguments)]
+pub fn drive_meta(snapshot: &Snapshot, run: &crate::robot::run::ControlledRun, recording_file: &Path, note: Option<&str>, unix_ms: u128, generation: u64, chunks: u64, final_frame: Option<Value>) -> Value {
+    let c = &run.controlled;
+    let replayable = snapshot.replayable();
+    let steps = snapshot.completed_steps();
+    let mut meta = json!({"schema": DRIVE_META_SCHEMA, "schema_version": META_VERSION,
+        "recording_file": recording_file.file_name().map(|n| n.to_string_lossy()), "recording_kind": snapshot.kind(), "recording_version": snapshot.version(),
+        "recording_rule": DRIVE_FILE_RULE, "label": crate::robot::run::CONTROLLER_LABEL, "fidelity": crate::robot::run::DRIVE_FIDELITY,
+        "completed_steps": steps, "period_s": run.scene.period_s, "sim_time_s": steps as f64 * run.scene.period_s, "duration_s": run.scene.duration_s,
+        "replayable": replayable.is_ok(), "not_replayable_reason": replayable.err(), "failure": snapshot.failure(), "replayable_rule": DRIVE_REPLAYABLE_RULE});
+    meta["model"] = json!({"path": run.model_path, "stem": run.stem()});
+    meta["binding"] = json!({"path": c.binding_path});
+    meta["profile"] = json!({"path": c.profile_path, "sha256": c.resolved.profile_sha256});
+    meta["identity"] = serde_json::to_value(&c.identity).unwrap_or(Value::Null);
+    meta["seed"] = json!(run.seed);
+    meta["seed_rule"] = json!(crate::robot::run::SEED_RULE);
+    meta["actions"] = json!({"channels": sim_runtime::controller_binding::COMMAND_CHANNELS, "units": ["m/s", "m/s", "rad/s", "requests"], "per": "seam period"});
+    meta["root"] = json!(run.root.as_ref().ok());
+    meta["note"] = json!(note);
+    meta["saved_utc"] = json!(iso(unix_ms));
+    meta["viewer"] = json!({"crate": env!("CARGO_PKG_NAME"), "version": env!("CARGO_PKG_VERSION")});
+    meta["run"] = json!({"generation": generation, "chunks": chunks});
+    meta["final_frame"] = json!(final_frame);
+    meta["final_frame_note"] = json!("measured at save from the drive session's PhysicalRobot frame: link frames at their com, model frame; a reference for comparison, not part of the recording or of any replay verdict");
+    meta
 }

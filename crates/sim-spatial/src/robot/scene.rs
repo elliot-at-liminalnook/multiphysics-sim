@@ -93,7 +93,7 @@ pub(super) fn receive(
     for entity in &old {
         commands.entity(entity).despawn();
     }
-    let (loaded, preset) = match result {
+    let (mut loaded, preset) = match result {
         Ok(l) => l,
         Err(e) => {
             view.status = Status::Error(e);
@@ -169,13 +169,16 @@ pub(super) fn receive(
     // is joined off the UI thread; its speed and contacts choice carry over.
     let planar = view.planar.take().map(|p| (p.run.speed_scale(), p.contacts, p.run.frame().is_some_and(|f| f.steps > 0) || p.run.phase() == planar::PlanarPhase::Running, p));
     let previous = view.run.take();
+    // A FILE's controller binding, loaded by the reload worker (`Loaded::controlled`):
+    // none runs the hold controller, a loaded one the drive session, a failed one a failed run naming it.
+    let controlled = loaded.controlled.take();
     let (mut run, mut run_reset) = match preset {
         Some(Opened::Preset(run)) => (RunController::spawn_preset(std::sync::Arc::new(run)), false),
         Some(Opened::Recorded(run)) => (RunController::spawn_recorded(std::sync::Arc::new(run)), false),
         // Replacing a planar run: the physical run continues its generation (older frames stay stale).
         None => match (planar.as_ref(), previous) {
-            (Some((_, _, _, p)), None) => (RunController::spawn_at(loaded.model.clone(), p.run.generation() + 1), false),
-            (_, previous) => RunController::replace(previous, loaded.model.clone()),
+            (Some((_, _, _, p)), None) => (RunController::spawn_file(loaded.model.clone(), controlled, p.run.generation() + 1), false),
+            (_, previous) => RunController::replace_file(previous, loaded.model.clone(), controlled),
         },
     };
     if let Some((speed, contacts, had_run, replaced)) = planar {
@@ -204,13 +207,19 @@ pub(super) fn receive(
     } };
     if let Some((trigger, _)) = reload {
         let reason = if trigger == ReloadTrigger::Watch { "file changed on disk" } else { "manual reload" };
-        let run = if run_reset { "run reset" } else { "no run to reset" };
+        let run_text = if run_reset { "run reset" } else { "no run to reset" };
         let note = match &kept {
             Some((n, true)) => format!("; selection kept: {n}"),
             Some((n, false)) => format!("; selection cleared: link `{n}` is not in the new file"),
             None => String::new(),
         };
-        view.notice = Some(format!("reloaded: {reason}; {run}; generation {generation}{note}"));
+        // Which controller the new run context uses (the binding is re-read on every reload).
+        let controller = match view.run.as_ref() {
+            Some(r) if r.controlled().is_some() => format!("; controller: {} (binding re-read)", run::CONTROLLER_LABEL),
+            Some(r) if r.binding_error().is_some() => "; controller binding failed to load: the run is failed (see the header)".to_string(),
+            _ => String::new(),
+        };
+        view.notice = Some(format!("reloaded: {reason}; {run_text}; generation {generation}{note}{controller}"));
         if let Some(s) = view.source.as_mut() {
             s.run_reset = Some(run_reset);
         }

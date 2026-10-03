@@ -65,7 +65,7 @@ impl RobotView {
         let mut blockers = Vec::new();
         if let Some(run) = &self.run {
             if let Some(path) = run.save_pending() {
-                blockers.push(format!("recording {} is being written: wait until the Save recording line in the Motion block shows it saved", path.display()));
+                blockers.push(format!("recording {} is being written: wait until the Save recording line (the Motion block for a preset, the Recording block for a controlled run) shows it saved", path.display()));
             }
             let replay = run.replay_state();
             if replay.phase == ReplayPhase::Replaying {
@@ -128,6 +128,25 @@ impl RobotView {
         let mut out = self.state_json(link);
         out["cad_threads"] = cad_threads;
         out
+    }
+    /// `robot_state.bindings` and `robot_state.drive_input` (the device
+    /// layer, `drive_input::DriveBindings` / `DriveInput`, which are
+    /// resources rather than view state) added to a `robot_state` answer:
+    /// set only while the run is controlled, null otherwise. Every caller
+    /// that answers or publishes `robot_state` passes them.
+    pub(crate) fn with_drive_input(&self, mut state: Value, bindings: Option<&crate::robot::drive_input::DriveBindings>, input: Option<&crate::robot::drive_input::DriveInput>) -> Value {
+        let controlled = self.run.as_ref().is_some_and(|r| r.controlled().is_some());
+        let bindings = bindings.filter(|_| controlled).map_or(Value::Null, |b| Value::Array(b.describe().into_iter().map(|(input, action)| json!({"input": input, "action": action})).collect()));
+        let input = input.filter(|_| controlled).map_or(Value::Null, |i| {
+            json!({"axes": {"forward": i.axes.forward, "lateral": i.axes.lateral, "yaw": i.axes.yaw}, "axes_unit": "normalized, -1..1",
+                "source": i.source, "ignored_axes": i.ignored, "ignored_rule": "device axes the robot's drive profile does not support are zeroed before sending and listed here; REST robot_drive refuses them by name",
+                "last_action": i.last_action, "last_error": i.last_error})
+        });
+        if let Some(o) = state.as_object_mut() {
+            o.insert("bindings".into(), bindings);
+            o.insert("drive_input".into(), input);
+        }
+        state
     }
     /// `robot_state`; `link` is the selected link (`picked::link`).
     pub fn state_json(&self, link: Option<usize>) -> Value {
@@ -192,7 +211,7 @@ impl RobotView {
             "source_file": self.source.as_ref().map_or_else(|| json!({"watching": false, "reason": "a preset is not watched (--robot FILE only)"}), |s| s.json(true)), "notice": self.notice,
             "provenance_rule": PROVENANCE_RULE, "unlabelled_values": UNLABELLED, "numbers": "JSON numbers as parsed by PhysicalModel (f64, shortest round-trip); SI units; a null in place of a number is non-finite",
             "section": self.section, "inspector_scroll": {"offset_px": self.scroll, "max_px": self.scroll_max},
-            "pose": if recorded.is_some() { RECORDED_POSE } else if previewing { GAIT_POSE } else if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "motion": self.run.as_ref().map(|r| r.motion_json()), "recording": self.run.as_ref().filter(|r| r.preset().is_some()).map(|r| r.recording_json()),
+            "pose": if recorded.is_some() { RECORDED_POSE } else if previewing { GAIT_POSE } else if stepped { SIMULATED_POSE } else { POSE }, "read_only": true, "stepped": stepped, "run": run, "jog": jog, "preset": preset, "motion": self.run.as_ref().map(|r| r.motion_json()), "recording": self.run.as_ref().filter(|r| r.preset().is_some() || r.controlled().is_some()).map(|r| r.recording_json()),
             "recordings": self.run.as_ref().map(|r| r.recordings_json()), "replay": self.run.as_ref().map(|r| r.replay_json()), "gait_preview": self.run.as_ref().map(|r| r.gait_json()),
             "ui_revision": self.ui_revision, "controls_ready": self.panels_ready});
         // Kept out of the literal above: serde_json's json! hits the default
@@ -201,6 +220,10 @@ impl RobotView {
         out["graphs"] = self.run.as_ref().map_or_else(|| json!({"visible": self.graphs_visible, "charts": []}), |r| r.graphs_json(link, self.graphs_visible));
         // Run-thread overlays (robot_overlay); null until loaded.
         out["overlays"] = self.run.as_ref().map_or(Value::Null, RunController::overlays_json);
+        // A controlled run's drive state (RunController::drive_json: controller, profile,
+        // limits with units, geometry with provenance, twists, deadman); null for any other run.
+        // The device layer's `bindings` and `drive_input` are resources: `with_drive_input` adds them.
+        out["drive"] = self.run.as_ref().filter(|r| r.controlled().is_some()).map_or(Value::Null, RunController::drive_json);
         // The recorded timeline (robot_recorded); absent unless a recorded preset is loaded.
         if let Some(r) = self.run.as_ref().and_then(RunController::recorded_json) {
             out["recorded"] = r;
@@ -234,7 +257,7 @@ impl RobotView {
             "ui_revision": self.ui_revision, "controls_ready": self.panels_ready});
         // The v3-only blocks, null (kept out of the literal: json! hits the default recursion limit with every key in one call).
         for key in ["link_count", "joints", "motors", "transmissions", "battery", "actuator_profiles", "uncertainty", "uncertainty_parsed", "identification", "materials", "source", "cad_link",
-            "preset", "motion", "recording", "recordings", "replay", "gait_preview"] {
+            "preset", "motion", "recording", "recordings", "replay", "gait_preview", "drive"] {
             out[key] = Value::Null;
         }
         out

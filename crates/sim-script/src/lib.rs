@@ -20,12 +20,18 @@ fn error(message: impl Into<String>) -> Box<EvalAltResult> {
 }
 
 /// Exact source contents retained by an experiment. Imports are bundle-relative.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+/// The default (no entry, no files) is the "no Rhai program" marker a scene
+/// controller uses when its program runs out of process instead.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Sources {
     pub entry: String,
     pub files: BTreeMap<String, String>,
 }
 impl Sources {
+    /// No entry and no files: nothing for a Rhai engine to run.
+    pub fn is_empty(&self) -> bool {
+        self.entry.is_empty() && self.files.is_empty()
+    }
     pub fn single(name: &str, source: &str) -> Self {
         Self {
             entry: name.into(),

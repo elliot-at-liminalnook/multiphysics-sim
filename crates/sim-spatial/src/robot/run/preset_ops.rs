@@ -1,4 +1,6 @@
-//! `RunController`'s preset-only handlers: motion requests, recordings, replay and the gait preview.
+//! `RunController`'s preset handlers: motion requests, recordings, replay and
+//! the gait preview. Recordings and replay also serve a `--robot FILE` drive
+//! session (`controlled`), whose recording is the shared Session's.
 use bevy::math::DQuat;
 use serde_json::{Value, json};
 use std::sync::Arc;
@@ -6,12 +8,20 @@ use crate::robot::gait::{GaitAction, GaitPreview};
 use crate::robot::motion::{self, Motion};
 use crate::robot::preset::PresetRun;
 use crate::robot::recording::{self, Listed, Saved};
+use super::controlled::ControlledRun;
 use super::protocol::Command;
 use super::{Drive, MotionRequest, Phase, ReplayPhase, ReplayState, RunController};
 
+/// What a save or replay is made against: a preset, or a file's drive session.
+pub enum Recorder<'a> {
+    Preset(&'a Arc<PresetRun>),
+    Drive(&'a Arc<ControlledRun>),
+}
+
 impl RunController {
     /// The built preset's typed inputs and motion config (None before a build).
-    pub fn drive(&self) -> Option<&Arc<Drive>> {
+    /// (Named `preset_drive` so `drive` is the drive-request handler, `controlled`.)
+    pub fn preset_drive(&self) -> Option<&Arc<Drive>> {
         self.drive.as_ref()
     }
     /// Whether physical motion keys are read: a built preset with a motion config.
@@ -30,6 +40,9 @@ impl RunController {
     fn check_motion(&self) -> Result<(Arc<Drive>, &Motion), String> {
         self.recorded_refusal("a motion request")?;
         let Some(p) = &self.preset else {
+            if self.controlled.is_some() {
+                return Err(format!("motion requests are refused: {}; this file's controller binding takes drive requests (robot drive)", super::sim::OWNS_TARGETS));
+            }
             return Err("motion requests are for robot presets (their declared Rust controller); `--robot FILE` has servo-target jog".into());
         };
         let id = &p.preset.id;
@@ -115,10 +128,10 @@ impl RunController {
 
     /// Why a save cannot be requested now (`Ok` when it would be sent).
     /// Refusals name the reason; the target itself is checked by `save_recording`.
-    pub fn check_save(&self) -> Result<&Arc<PresetRun>, String> {
+    pub fn check_save(&self) -> Result<Recorder<'_>, String> {
         self.recorded_refusal("save recording")?;
         let Some(p) = &self.preset else {
-            return Err("recordings are for robot presets (the shared EmbeddedSession/EmbeddedEnvironment recording); `--robot FILE` runs PhysicalRobot, which keeps no recording".into());
+            return self.check_drive_save().map(Recorder::Drive);
         };
         let id = &p.preset.id;
         if let Some(why) = self.replay_block() {
@@ -132,7 +145,32 @@ impl RunController {
         if let Some(t) = &self.saving {
             return Err(format!("preset `{id}`: a save is still being written ({}); wait for it", t.display()));
         }
-        Ok(p)
+        Ok(Recorder::Preset(p))
+    }
+    /// [`Self::check_save`] for a `--robot FILE` (only a drive session records).
+    fn check_drive_save(&self) -> Result<&Arc<ControlledRun>, String> {
+        let Some(r) = &self.controlled else {
+            return Err(match &self.unbound {
+                Some(e) => format!("save recording refused: the controller binding did not load ({e}); a `--robot FILE` records only its drive session"),
+                None => "recordings are for robot presets (the shared EmbeddedSession/EmbeddedEnvironment recording) and for a `--robot FILE` with a controller binding (its drive Session's recording); this `--robot FILE` runs PhysicalRobot, which keeps no recording".into(),
+            });
+        };
+        let who = format!("drive session of {}", r.model_path.display());
+        if let Some(why) = self.replay_block() {
+            return Err(format!("{who}: save refused: {why}"));
+        }
+        match self.status.phase {
+            Phase::Idle => return Err(format!("{who}: no built session yet; Run or Step builds the Session (and starts the controller) before a recording can be saved")),
+            Phase::Building => return Err(format!("{who}: the session is building; save once it is built")),
+            _ => {}
+        }
+        if let Err(e) = &r.root {
+            return Err(format!("{who}: drive recordings go under the workspace root, and none was found: {e}"));
+        }
+        if let Some(t) = &self.saving {
+            return Err(format!("{who}: a save is still being written ({}); wait for it", t.display()));
+        }
+        Ok(r)
     }
     /// The one save handler behind the Save recording button, `system_ui`
     /// recording:save and REST `robot_save_recording`. The target is resolved
@@ -140,9 +178,13 @@ impl RunController {
     /// thread snapshots the shared recording and a writer thread writes the
     /// pair, reported in `recording_json` once done.
     pub fn save_recording(&mut self, path: Option<&str>, note: Option<&str>) -> Result<std::path::PathBuf, String> {
-        let result = self.check_save().and_then(|p| {
+        let result = self.check_save().and_then(|r| {
             let unix_ms = recording::now_ms();
-            recording::target(&p.root, &p.preset.id, path, unix_ms).map(|t| (t, unix_ms))
+            let target = match r {
+                Recorder::Preset(p) => recording::target(&p.root, &p.preset.id, path, unix_ms),
+                Recorder::Drive(d) => recording::drive_target(d.root.as_deref().map_err(Clone::clone)?, &d.stem(), path, unix_ms),
+            };
+            target.map(|t| (t, unix_ms))
         });
         let (target, unix_ms) = match result {
             Ok(x) => x,
@@ -160,6 +202,11 @@ impl RunController {
     /// `robot_state.recording`: availability, the pending target, the last pair written and the last error, with the rules.
     pub fn recording_json(&self) -> Value {
         let available = self.check_save().map(|_| ());
+        if let Some(d) = self.controlled.as_ref().filter(|_| self.preset.is_none()) {
+            return json!({"available": available.is_ok(), "unavailable_reason": available.err(), "pending": self.saving, "last_saved": self.saved, "error": self.save_error,
+                "saves_requested": self.save_requested, "saves_finished": self.save_done, "root": d.root.as_ref().ok(), "kind": recording::DRIVE_KIND,
+                "location_rule": recording::DRIVE_LOCATION_RULE, "file_rule": recording::DRIVE_FILE_RULE, "replayable_rule": recording::DRIVE_REPLAYABLE_RULE});
+        }
         json!({"available": available.is_ok(), "unavailable_reason": available.err(), "pending": self.saving, "last_saved": self.saved, "error": self.save_error,
             "saves_requested": self.save_requested, "saves_finished": self.save_done,
             "root": self.preset.as_ref().map(|p| &p.root), "location_rule": recording::LOCATION_RULE, "file_rule": recording::FILE_RULE,
@@ -180,15 +227,24 @@ impl RunController {
     /// open, after each finished save and on request; a newer listing replaces
     /// an older one); `recordings_json` once done.
     pub fn refresh_recordings(&mut self) {
-        let Some(p) = self.preset.clone() else { return };
-        self.listing.start(crate::jobs::Pool::Io, "the recording lister", move |_| recording::list(&p.root, &p.preset.id));
+        if let Some(p) = self.preset.clone() {
+            self.listing.start(crate::jobs::Pool::Io, "the recording lister", move |_| recording::list(&p.root, &p.preset.id));
+        } else if let Some(d) = self.controlled.clone() {
+            // A drive session's recordings: runs/robot-drive/<model stem>/ under the root.
+            let Ok(root) = d.root.clone() else { return };
+            self.listing.start(crate::jobs::Pool::Io, "the drive recording lister", move |_| recording::list_drive(&root, &d.stem()));
+        }
     }
     pub fn recordings(&self) -> &[Listed] {
         &self.recordings
     }
     /// `robot_state.recordings`: the saved recordings of the loaded preset (null for `--robot FILE`).
     pub fn recordings_json(&self) -> Value {
-        let Some(p) = &self.preset else { return Value::Null };
+        let Some(p) = &self.preset else {
+            let Some(d) = &self.controlled else { return Value::Null };
+            return json!({"dir": d.root.as_ref().ok().map(|r| r.join(recording::DRIVE_DIR).join(d.stem())), "root_error": d.root.as_ref().err(), "files": self.recordings, "pending": self.listing.pending().is_some(), "error": self.list_error,
+                "rule": "*.json (not *.meta.json) in runs/robot-drive/<model stem>/ under the workspace root, by file name (UTC stamp, oldest first); meta summarises the sidecar when it exists; listed off the UI thread at open, after each save and on robot_replay {action: \"list\"}"});
+        };
         json!({"dir": p.root.join(recording::DIR).join(&p.preset.id), "files": self.recordings, "pending": self.listing.pending().is_some(), "error": self.list_error,
             "rule": "*.json (not *.meta.json) in runs/robot-presets/<preset-id>/ under the root, by file name (UTC stamp, oldest first); meta summarises the sidecar when it exists; listed off the UI thread at open, after each save and on robot_replay {action: \"list\"}"})
     }
@@ -203,10 +259,29 @@ impl RunController {
         }
     }
     /// Why a replay cannot be started now (`Ok` when it would be sent).
-    pub fn check_replay(&self) -> Result<&Arc<PresetRun>, String> {
+    pub fn check_replay(&self) -> Result<Recorder<'_>, String> {
         self.recorded_refusal("replay")?;
         let Some(p) = &self.preset else {
-            return Err("replay is for robot presets (the shared EmbeddedSession/EmbeddedEnvironment prepare_replay); `--robot FILE` runs PhysicalRobot, which has no recording or replay".into());
+            let Some(d) = &self.controlled else {
+                return Err(match &self.unbound {
+                    Some(e) => format!("replay refused: the controller binding did not load ({e}); a `--robot FILE` replays only its drive sessions"),
+                    None => "replay is for robot presets (the shared EmbeddedSession/EmbeddedEnvironment prepare_replay) and for a `--robot FILE` with a controller binding (its drive sessions); this `--robot FILE` runs PhysicalRobot, which has no recording or replay".into(),
+                });
+            };
+            let who = format!("drive session of {}", d.model_path.display());
+            if self.replay.phase == ReplayPhase::Replaying {
+                return Err(format!("{who}: a replay of {} is in progress ({}); Cancel or Reset before another replay", self.replay.file(), self.replay.progress()));
+            }
+            if self.status.phase == Phase::Building {
+                return Err(format!("{who}: the session is building; replay once it is built"));
+            }
+            if self.running {
+                return Err(format!("{who}: the run is running; Pause before replaying (a replay replaces the current run)"));
+            }
+            if let Err(e) = &d.root {
+                return Err(format!("{who}: drive recordings are found under the workspace root, and none was found: {e}"));
+            }
+            return Ok(Recorder::Drive(d));
         };
         let id = &p.preset.id;
         if self.replay.phase == ReplayPhase::Replaying {
@@ -221,15 +296,17 @@ impl RunController {
         if let Some(why) = self.gait.as_ref().and_then(GaitPreview::holds) {
             return Err(format!("preset `{id}`: {why}; Stop the gait preview before a replay"));
         }
-        Ok(p)
+        Ok(Recorder::Preset(p))
     }
     /// The one replay handler behind the inspector Replay buttons, `system_ui`
     /// replay:<file> and REST `robot_replay`. The run thread reads the file,
     /// prepares it through the shared prepare_replay and advances it in chunks
     /// (recording::REPLAY_RULE); the verdict is in `replay_json`.
     pub fn replay(&mut self, file: Option<&str>, path: Option<&str>) -> Result<std::path::PathBuf, String> {
-        let p = self.check_replay()?;
-        let source = recording::replay_source(&p.root, &p.preset.id, file, path)?;
+        let source = match self.check_replay()? {
+            Recorder::Preset(p) => recording::replay_source(&p.root, &p.preset.id, file, path)?,
+            Recorder::Drive(d) => recording::drive_replay_source(d.root.as_deref().map_err(Clone::clone)?, &d.stem(), file, path)?,
+        };
         // Frames of the replaced run are stale once the replay (or its refusal) is published.
         self.generation += 1;
         self.running = false;
@@ -238,6 +315,9 @@ impl RunController {
         self.keys_physical = false;
         self.motion_refusal = None;
         self.motion_error = None;
+        // The replay re-sends the recorded drive requests; live ones are refused until it ends.
+        self.twist_requested = None;
+        self.twist_error = None;
         self.replay = ReplayState::new(self.replay.seq + 1, self.generation, Some(source.clone()), ReplayPhase::Replaying);
         self.graphs.clear(self.generation);
         self.thread.send(Command::Replay { generation: self.generation, seq: self.replay.seq, path: source.clone() }).map_err(|_| "the run thread has stopped".to_string())?;
@@ -264,16 +344,17 @@ impl RunController {
     }
     /// `robot_state.replay`: path, phase, completed/total, verdict, error and measured, with the rules.
     pub fn replay_json(&self) -> Value {
-        if self.preset.is_none() {
+        if self.preset.is_none() && self.controlled.is_none() {
             return Value::Null;
         }
+        let drive = self.preset.is_none();
         let available = self.check_replay().map(|_| ());
         let mut v = json!(self.replay);
         v["available"] = json!(available.is_ok());
         v["unavailable_reason"] = json!(available.err());
-        v["replay_rule"] = json!(recording::REPLAY_RULE);
-        v["verdict_rule"] = json!(recording::VERDICT_RULE);
-        v["identity_rule"] = json!(recording::IDENTITY_RULE);
+        v["replay_rule"] = json!(if drive { recording::DRIVE_REPLAY_RULE } else { recording::REPLAY_RULE });
+        v["verdict_rule"] = json!(if drive { recording::DRIVE_VERDICT_RULE } else { recording::VERDICT_RULE });
+        v["identity_rule"] = json!(if drive { recording::DRIVE_IDENTITY_RULE } else { recording::IDENTITY_RULE });
         v["pause_step_rule"] = json!("Pause and Step are refused during a replay (\"replay … in progress; Cancel or Reset\"): a replay re-executes the recorded schedule to its end or to Cancel, and pausing or stepping it would add a second, unrecorded control path; Cancel stops it between chunks and Reset returns to a fresh run");
         v
     }

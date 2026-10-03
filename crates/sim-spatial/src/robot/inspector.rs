@@ -25,6 +25,8 @@ pub(super) fn panels(
         Some(p) if p.is_recorded() => format!("Robot preset — {} ({})  ·  {}", p.label, p.id, crate::robot::preset::RECORDED_LABEL),
         Some(p) => format!("Robot preset — {} ({})  ·  files read-only", p.label, p.id),
         None if view.planar.is_some() => format!("Robot — {}  ·  {}  ·  file read-only", view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default(), planar::HEADER_LABEL),
+        // A controlled run (the model's `<stem>.controller.json` binding): its controller, named.
+        None if controlled(&view) => format!("Robot — {}  ·  {}  ·  file read-only", view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default(), super::controls::DRIVE_CONTROLLER),
         None => format!("Robot — {}  ·  file read-only", view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default()),
     };
     if title.0 != heading {
@@ -74,7 +76,8 @@ pub(super) fn panels(
             let missing = if without > 0 { format!(" · {without} without collision geometry (listed, not drawn)") } else { String::new() };
             // Same pose-state rule as robot_state.pose (GAIT_POSE, SIMULATED_POSE, POSE), short form.
             let previewing = view.run.as_ref().and_then(|r| r.gait_preview()).and_then(|g| g.poses()).is_some();
-            let pose = if view.run.as_ref().is_some_and(|r| r.recorded().is_some()) { "recorded pose (not simulated here)" } else if previewing { "kinematic gait preview pose (not physics)" } else if view.run.as_ref().and_then(|r| r.frame()).is_some() { "simulated pose" } else { "exported assembly pose" };
+            let simulated = if controlled(&view) { CONTROLLED_POSE } else { "simulated pose" };
+            let pose = if view.run.as_ref().is_some_and(|r| r.recorded().is_some()) { "recorded pose (not simulated here)" } else if previewing { "kinematic gait preview pose (not physics)" } else if view.run.as_ref().and_then(|r| r.frame()).is_some() { simulated } else { "exported assembly pose" };
             match view.preset.as_ref() {
                 Some(p) => format!("{} links{missing} · loaded in {seconds:.2} s · {pose} · readiness: {}", m.links.len(), clip(p.readiness().unwrap_or("(none declared)"), 55)),
                 None => match view.source.as_ref().filter(|s| s.failing.is_some()) {
@@ -117,12 +120,21 @@ pub(super) fn panels(
     };
     let failure = view.run.as_ref().and_then(|r| r.error().map(|e| format!("RUN FAILED: {e}\n\n")));
     let ended = view.run.as_ref().and_then(|r| r.end()).map(|e| format!("RUN ENDED ({}): {}\n\n", e["kind"].as_str().unwrap_or(""), e["message"].as_str().unwrap_or("")));
-    let failure = Some(format!("{}{}{}", failure.unwrap_or_default(), ended.unwrap_or_default(), preset_text(&view)));
+    let failure = Some(format!("{}{}{}{}", failure.unwrap_or_default(), ended.unwrap_or_default(), preset_text(&view), drive_recording_text(&view)));
     let refused = view.run_message.as_ref().map(|m| format!("Refused: {m}\n\n"));
     let body = format!("{}{}{body}", failure.unwrap_or_default(), refused.unwrap_or_default());
     if inspector.0 != body {
         inspector.0 = body;
     }
+}
+
+/// The header's short pose label for a controlled run's frames (the Drive
+/// block states the fidelity in full, `controls::DRIVE_FIDELITY`).
+const CONTROLLED_POSE: &str = "simulated pose (PhysicalRobot physics; the external controller replaces the hold coupler)";
+
+/// The run is driven by an external controller (`RunController::controlled`).
+pub(super) fn controlled(view: &RobotView) -> bool {
+    view.run.as_ref().is_some_and(|r| r.controlled().is_some())
 }
 
 /// The preset's identity and readiness (verbatim) atop every inspector
@@ -170,27 +182,46 @@ fn preset_text(view: &RobotView) -> String {
     t.push('\n');
     t.push_str(&motion);
     if let Some(r) = view.run.as_ref() {
-        t += "RECORDING — the shared recording JSON, as the browser's Download, plus a .meta.json sidecar\n";
-        if let Some(s) = r.saved() {
-            t += &format!("last saved: {}\n  sidecar {}\n  {} v{} · {} steps · {}\n", s.path.display(), s.meta_path.display(), s.kind, s.version, s.completed_steps,
-                s.not_replayable_reason.as_deref().map_or("replayable".to_string(), |why| format!("not replayable: {why}")));
+        t += &recording_text(r, false);
+    }
+    t
+}
+
+/// A controlled `--robot FILE` run's recording and replay text (its drive
+/// Session's), atop every inspector section as a preset's is.
+fn drive_recording_text(view: &RobotView) -> String {
+    view.run.as_ref().filter(|r| r.controlled().is_some() && r.preset().is_none()).map_or(String::new(), |r| recording_text(r, true))
+}
+
+/// The RECORDING and REPLAY blocks: the last save, the saved recordings and
+/// the replay's progress, verdict and error with their rules (`drive`: a
+/// controlled run's drive Session, else a preset's shared session).
+fn recording_text(r: &RunController, drive: bool) -> String {
+    let mut t = String::new();
+    t += if drive { "RECORDING — the drive Session's recording (Session::recording()), plus a .meta.json sidecar\n" } else { "RECORDING — the shared recording JSON, as the browser's Download, plus a .meta.json sidecar\n" };
+    if let Some(s) = r.saved() {
+        t += &format!("last saved: {}\n  sidecar {}\n  {} v{} · {} steps · {}\n", s.path.display(), s.meta_path.display(), s.kind, s.version, s.completed_steps,
+            s.not_replayable_reason.as_deref().map_or("replayable".to_string(), |why| format!("not replayable: {why}")));
+    }
+    if let Some(e) = r.save_error() {
+        t += &format!("last save error: {e}\n");
+    }
+    t += &format!("{}\n\n", if drive { recording::DRIVE_LOCATION_RULE } else { recording::LOCATION_RULE });
+    let s = r.replay_state();
+    t += if drive { "REPLAY — Session::new(recorded scene, recorded seed) on the run thread, after the identity check\n" } else { "REPLAY — the shared prepare_replay on the run thread; the verdict is the runtime's\n" };
+    t += &format!("{} saved recording(s) for this {}\n", r.recordings().len(), if drive { "robot" } else { "preset" });
+    if s.phase != ReplayPhase::Idle {
+        t += &format!("{}\n", replay_line(r));
+        if let Some(v) = &s.verdict {
+            t += &format!("full verdict: {v}\n");
         }
-        if let Some(e) = r.save_error() {
-            t += &format!("last save error: {e}\n");
+        if let Some(e) = &s.error {
+            t += &format!("full error: {e}\n");
         }
-        t += &format!("{}\n\n", recording::LOCATION_RULE);
-        let s = r.replay_state();
-        t += "REPLAY — the shared prepare_replay on the run thread; the verdict is the runtime's\n";
-        t += &format!("{} saved recording(s) for this preset\n", r.recordings().len());
-        if s.phase != ReplayPhase::Idle {
-            t += &format!("{}\n", replay_line(r));
-            if let Some(v) = &s.verdict {
-                t += &format!("full verdict: {v}\n");
-            }
-            if let Some(e) = &s.error {
-                t += &format!("full error: {e}\n");
-            }
-        }
+    }
+    if drive {
+        t += &format!("{}\n{}\n\n", recording::DRIVE_REPLAY_RULE, recording::DRIVE_VERDICT_RULE);
+    } else {
         t += &format!("{}\n\n", recording::VERDICT_RULE);
     }
     t

@@ -6,6 +6,11 @@ use sim_core::{Channel, Contract, Coupler, CouplerError, QuantityKind};
 use sim_domain_robot::PhysicalModel;
 use sim_script::{RhaiController, Sources, parameter_map};
 use std::collections::BTreeSet;
+#[cfg(not(target_arch = "wasm32"))]
+use sim_domain_control::drive::profile::sha256_hex;
+#[cfg(not(target_arch = "wasm32"))]
+use std::path::Path;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -18,18 +23,88 @@ pub struct InputChannel {
     pub initial: f64,
 }
 
+/// A controller that runs out of process on the seam: a simloop program
+/// speaking the frame protocol of `sim_couple` over its stdin/stdout. The
+/// script is identified by the sha256 of its bytes, so a scene (and the
+/// recording that carries it) only ever runs against the code it was made
+/// with; `Session::new` refuses a changed script by name. The simloop library
+/// it imports is identified the same way ([`library_sha256`]).
+///
+/// Starting a session (`Session::new`, `Session::replay`, the `sim-session`
+/// CLI) from a scene or recording that names one runs `python3` on that
+/// script with the recorded `args`, as long as the script on disk hashes to
+/// `script_sha256`: only code already on disk can run, but a scene file is
+/// as trusted as the code it names.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ExternalProgram {
+    /// Only `python` (`sim_couple::python`: `python3 -u script args…`).
+    pub language: String,
+    /// Absolute path of the script.
+    pub script: PathBuf,
+    /// Lowercase hex sha256 of the script's bytes.
+    pub script_sha256: String,
+    /// Everything after the script on the command line, in order.
+    #[serde(default)]
+    pub args: Vec<String>,
+    /// The repository's `clients/` directory; `clients/python` goes on PYTHONPATH.
+    pub clients_root: PathBuf,
+    /// sha256 of the drive profile the args were resolved from, when there is one,
+    /// so a recording names the profile bytes as well as the code.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub profile_sha256: Option<String>,
+    /// [`library_sha256`] of `<clients_root>/python/simloop` (the deadman,
+    /// limiter and mixer the script imports), so an edit to the library is a
+    /// different controller too. Absent in scenes written before it existed;
+    /// those run unchecked and replay comparison reports the absence.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub library_sha256: Option<String>,
+}
+impl ExternalProgram {
+    /// The prefix every error from this controller carries.
+    pub fn label(&self, element: &str) -> String {
+        format!("external controller ({}) {} on {element}", self.language, self.script.display())
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ControllerProgram {
+    /// The Rhai program; empty (the default) when `external` runs instead.
+    #[serde(default)]
     pub sources: Sources,
     #[serde(default = "empty_parameters")]
     pub parameters: serde_json::Value,
     /// Additional named command inputs, appended to the controller observations.
     #[serde(default)]
     pub inputs: Vec<InputChannel>,
+    /// An out-of-process controller instead of Rhai. Absent in every scene and
+    /// recording written before it existed, which therefore parse unchanged.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub external: Option<ExternalProgram>,
 }
 fn empty_parameters() -> serde_json::Value {
     serde_json::json!({})
+}
+impl ControllerProgram {
+    /// Exactly one program: non-empty Rhai sources or an external program in a
+    /// language this build can start.
+    pub fn validate(&self) -> Result<(), String> {
+        match (&self.external, self.sources.is_empty()) {
+            (None, true) => Err("controller program has neither Rhai sources nor an external program".into()),
+            (Some(external), false) => Err(format!(
+                "controller program has both Rhai sources (`{}`) and an external program ({}); give exactly one",
+                self.sources.entry,
+                external.script.display()
+            )),
+            (Some(external), true) if external.language != "python" => Err(format!(
+                "external controller {}: language `{}` is not supported; this build starts `python` programs only",
+                external.script.display(),
+                external.language
+            )),
+            _ => Ok(()),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -108,13 +183,23 @@ struct EpisodeCoupler {
     command_values: Arc<Mutex<Vec<f64>>>,
     telemetry: Arc<Mutex<Telemetry>>,
     bounds: Vec<(Option<f64>, Option<f64>)>,
+    /// Prefix for every policy error (`external controller (python) <script>
+    /// on <element>`), so a failure names the program as well as the seam.
+    label: Option<String>,
+}
+fn relabel(label: &Option<String>, error: CouplerError) -> CouplerError {
+    match label {
+        Some(label) => CouplerError::Other(format!("{label}: {error}")),
+        None => error,
+    }
 }
 impl Coupler for EpisodeCoupler {
     fn open(&mut self, contract: &Contract) -> Result<(), CouplerError> {
+        let label = &self.label;
         if let Some(policy) = &mut self.policy {
             let mut augmented = contract.clone();
             augmented.sensors.extend(self.command_channels.clone());
-            policy.open(&augmented)?;
+            policy.open(&augmented).map_err(|e| relabel(label, e))?;
         }
         Ok(())
     }
@@ -125,10 +210,11 @@ impl Coupler for EpisodeCoupler {
         actuators: &mut [f64],
     ) -> Result<(), CouplerError> {
         let values = self.command_values.lock().unwrap().clone();
+        let label = &self.label;
         if let Some(policy) = &mut self.policy {
             let mut inputs = sensors.to_vec();
             inputs.extend(values);
-            policy.sample(t, &inputs, actuators)?;
+            policy.sample(t, &inputs, actuators).map_err(|e| relabel(label, e))?;
         } else {
             actuators.copy_from_slice(&values);
         }
@@ -137,9 +223,9 @@ impl Coupler for EpisodeCoupler {
                 || lower.is_some_and(|lo| value < lo)
                 || upper.is_some_and(|hi| value > hi)
             {
-                return Err(CouplerError::Other(format!(
+                return Err(relabel(label, CouplerError::Other(format!(
                     "actuator {k} command {value} violates its CAD limits"
-                )));
+                ))));
             }
         }
         *self.telemetry.lock().unwrap() = Telemetry {
@@ -263,6 +349,13 @@ impl Session {
                 "interactive scenes must use held targets or an explicit controller".into(),
             );
         }
+        if let Some(program) = &scene.controller {
+            program.validate()?;
+            // Before the build: a changed script is refused without compiling the plant.
+            if let Some(external) = &program.external {
+                check_external(external)?;
+            }
+        }
         let robot_input=scene.input_binding()?;
         let mut robot = PhysicalRobot::build(scene.robot.clone(), &registry(), &scene.options)?;
         robot.runtime.seed(seed);
@@ -326,10 +419,18 @@ impl Session {
                 return Err(format!("invalid limits/initial value for {}", input.name));
             }
         }
+        let label = scene
+            .controller
+            .as_ref()
+            .and_then(|p| p.external.as_ref())
+            .map(|external| external.label(&contract.element));
         let policy: Option<Box<dyn Coupler>> = scene
             .controller
             .as_ref()
             .map(|program| {
+                if let Some(external) = &program.external {
+                    return spawn_external(external, &contract.element);
+                }
                 let parameters = parameter_map(&program.parameters).map_err(|e| e.to_string())?;
                 RhaiController::with_seed_and_registry(
                     program.sources.clone(), parameters, seed, &crate::registry(),
@@ -356,9 +457,18 @@ impl Session {
                     command_values: values.clone(),
                     telemetry: telemetry.clone(),
                     bounds,
+                    label,
                 }),
             )
             .map_err(|e| e.to_string())?;
+        // `External::couple` runs the handshake (hello/ready) inside `attach`
+        // but only records a failed one, which the runtime would report at the
+        // first commit. Report it now: a controller that exits before ready or
+        // answers hello with nonsense refuses the session, not its first step.
+        // (Dropping `robot` on this path closes the coupler and reaps the child.)
+        if let Some(failure) = robot.runtime.behavior(seam).and_then(|b| b.failure()) {
+            return Err(failure);
+        }
         Ok(Self {
             robot,
             robot_input,
@@ -373,6 +483,9 @@ impl Session {
         })
     }
 
+    /// One controller period. With an external controller, a process that
+    /// exits, times out or sends a malformed `act` fails the step with an
+    /// error carrying `external controller (python) <script> on <element>`.
     pub fn step(&mut self, action: &[f64]) -> Result<EpisodeFrame, String> {
         if let Some(error) = &self.error {
             return Err(format!("episode failed: {error}; reset before continuing"));
@@ -464,4 +577,116 @@ impl Session {
         }
         Ok(session)
     }
+}
+
+/// The script on disk must be the bytes the scene names; anything else is a
+/// different controller and the scene (or recording) does not describe it.
+/// The same holds for the simloop library, when the scene records its hash.
+#[cfg(not(target_arch = "wasm32"))]
+fn check_external(external: &ExternalProgram) -> Result<(), String> {
+    let bytes = std::fs::read(&external.script)
+        .map_err(|e| format!("controller `{}` cannot be read: {e}", external.script.display()))?;
+    let on_disk = sha256_hex(&bytes);
+    if on_disk != external.script_sha256 {
+        return Err(format!(
+            "controller `{}` changed: sha256 on disk {on_disk}, recorded {}",
+            external.script.display(),
+            external.script_sha256
+        ));
+    }
+    if let Some(recorded) = &external.library_sha256 {
+        let on_disk = library_sha256(&external.clients_root)?;
+        if on_disk != *recorded {
+            return Err(format!(
+                "controller library `{}` changed: sha256 on disk {on_disk}, recorded {recorded}",
+                external.clients_root.join(SIMLOOP_LIBRARY).display()
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// The library an external Python controller imports, relative to its
+/// `clients_root` (`sim_couple::python` puts `<clients_root>/python` on PYTHONPATH).
+pub const SIMLOOP_LIBRARY: &str = "python/simloop";
+
+/// The identity of the simloop library under `clients_root`: lowercase hex
+/// sha256 of a byte stream built from every regular file (or symlink to one)
+/// whose name ends in `.py` anywhere below `<clients_root>/python/simloop/`
+/// (`__pycache__` holds no `.py` files; symlinked directories are not
+/// followed). Files are taken in ascending byte order of their path relative
+/// to that directory, components joined with `/` (UTF-8); each contributes
+/// `path bytes, one 0x00 byte, file length as u64 little-endian, file bytes`.
+/// In Python: `b"".join(p.encode() + b"\0" + len(d).to_bytes(8, "little") + d
+/// for p, d in sorted(files))`, then `hashlib.sha256(...).hexdigest()`.
+/// Errors name the directory or file; a library with no `.py` file is refused.
+/// Reads the disk: call it off the UI thread.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn library_sha256(clients_root: &Path) -> Result<String, String> {
+    let root = clients_root.join(SIMLOOP_LIBRARY);
+    let unreadable = |path: &Path, e: std::io::Error| format!("controller library `{}` cannot be read: {e}", path.display());
+    let mut files: Vec<(String, PathBuf)> = Vec::new();
+    let mut pending = vec![root.clone()];
+    while let Some(dir) = pending.pop() {
+        for entry in std::fs::read_dir(&dir).map_err(|e| unreadable(&dir, e))? {
+            let entry = entry.map_err(|e| unreadable(&dir, e))?;
+            let path = entry.path();
+            if entry.file_type().map_err(|e| unreadable(&path, e))?.is_dir() {
+                pending.push(path);
+                continue;
+            }
+            if path.extension().is_none_or(|x| x != "py") {
+                continue;
+            }
+            let relative = path.strip_prefix(&root).map_err(|e| format!("controller library `{}`: {e}", path.display()))?;
+            let parts: Option<Vec<&str>> = relative.components().map(|c| c.as_os_str().to_str()).collect();
+            let name = parts
+                .map(|p| p.join("/"))
+                .ok_or_else(|| format!("controller library file `{}`: name is not UTF-8", path.display()))?;
+            files.push((name, path));
+        }
+    }
+    if files.is_empty() {
+        return Err(format!("controller library `{}` has no .py files", root.display()));
+    }
+    files.sort();
+    let mut stream = Vec::new();
+    for (name, path) in &files {
+        let bytes = std::fs::read(path).map_err(|e| unreadable(path, e))?;
+        stream.extend_from_slice(name.as_bytes());
+        stream.push(0);
+        stream.extend_from_slice(&(bytes.len() as u64).to_le_bytes());
+        stream.extend_from_slice(&bytes);
+    }
+    Ok(sha256_hex(&stream))
+}
+#[cfg(target_arch = "wasm32")]
+fn check_external(external: &ExternalProgram) -> Result<(), String> {
+    Err(format!("external controllers need a native host: {}", external.script.display()))
+}
+
+/// How long the run thread waits for each reply from an external controller.
+/// `FrameCoupler` has one timeout for every receive: the `ready` answering
+/// `hello` (which includes the interpreter's start-up and its imports, since
+/// the clock starts once `hello` is sent right after the spawn) and each
+/// `act`. 3 s tolerates a cold `python3` start (first-run bytecode
+/// compilation, a loaded machine) yet bounds how long a wedged controller
+/// holds the run thread to 3 s per step instead of the coupler's 10 s
+/// default; a timed-out step fails the session, which then refuses further
+/// steps until reset, so the wait is paid once.
+pub const EXTERNAL_REPLY_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(3);
+
+/// Start the program; the hello/ready handshake follows in `Runtime::attach`.
+/// Dropping the coupler (with the session) closes it and reaps the process.
+#[cfg(not(target_arch = "wasm32"))]
+fn spawn_external(external: &ExternalProgram, element: &str) -> Result<Box<dyn Coupler>, String> {
+    let args: Vec<&str> = external.args.iter().map(String::as_str).collect();
+    let coupler = sim_couple::python(&external.clients_root, &external.script, &args)
+        .map_err(|e| format!("{}: cannot start python3: {e}", external.label(element)))?
+        .with_timeout(EXTERNAL_REPLY_TIMEOUT);
+    Ok(Box::new(coupler))
+}
+#[cfg(target_arch = "wasm32")]
+fn spawn_external(external: &ExternalProgram, element: &str) -> Result<Box<dyn Coupler>, String> {
+    Err(format!("{}: external controllers need a native host", external.label(element)))
 }

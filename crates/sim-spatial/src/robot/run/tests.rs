@@ -315,8 +315,8 @@ fn preset_motion_requests_validate_against_session_bounds_and_advance_the_heartb
     let e = c.motion(MotionRequest::Key('w')).unwrap_err();
     assert!(e.contains("no built session"), "{e}");
     c.act(RunAction::Step).unwrap();
-    wait(&mut c, "first step", |c| c.frame().is_some_and(|f| f.steps == 1) && c.drive().is_some());
-    let drive = c.drive().unwrap().clone();
+    wait(&mut c, "first step", |c| c.frame().is_some_and(|f| f.steps == 1) && c.preset_drive().is_some());
+    let drive = c.preset_drive().unwrap().clone();
     let m = drive.motion.as_ref().expect("400hz declares motion_commands");
     assert_eq!(m.source, motion::Source::Preset);
     let [fwd, lat, yaw] = m.channels.each_ref().map(|ch| ch.index);
@@ -443,11 +443,11 @@ fn preset_recordings_save_the_shared_type_and_refuse_protected_paths_and_overwri
 #[test]
 fn preset_replay_reaches_the_runtime_verdict_cancels_and_refuses_mismatches() {
     let dir = std::env::temp_dir().join(format!("robot-replay-{}-{}", std::process::id(), recording::now_ms()));
-    let changed = |c: &RunController| -> Vec<f64> { c.drive().unwrap().inputs.iter().map(|ch| ch.initial + 0.5 * (ch.upper - ch.initial)).collect() };
+    let changed = |c: &RunController| -> Vec<f64> { c.preset_drive().unwrap().inputs.iter().map(|ch| ch.initial + 0.5 * (ch.upper - ch.initial)).collect() };
     // Steps `n` chunks, changing every input after the first, then saves to `name`.
     let record = |c: &mut RunController, n: u64, name: &str| -> (std::path::PathBuf, u64) {
         c.act(RunAction::Step).unwrap();
-        wait(c, "step", |c| c.frame().is_some_and(|f| f.steps == 1) && c.drive().is_some());
+        wait(c, "step", |c| c.frame().is_some_and(|f| f.steps == 1) && c.preset_drive().is_some());
         let values = changed(c);
         c.set_inputs(values.clone());
         wait(c, "inputs", |c| c.frame().is_some_and(|f| f.inputs == values));
@@ -588,5 +588,218 @@ fn measure_full_robot_preset() {
         let frame_t = Instant::now();
         let f = sim.frame(&links, 0, k, OverlayFlags::default()).unwrap();
         println!("chunk {k}: advance {wall:.3} s, frame {:.3} s, sim t {:.4} s, rtf {:.4}, ended {:?}", frame_t.elapsed().as_secs_f64(), f.time, run.chunk_s() / wall, sim.ended());
+    }
+}
+
+mod drive {
+    //! The drive session's pure parts (no Python process is started here):
+    //! TwistState through Command::Twist's rules, the deadman on sim time,
+    //! halt, the drained command batch, the end of a replay, the
+    //! not-running refusal, and the replay identity refusal.
+    use super::super::controlled::{ControlledRun, TwistState, differences};
+    use super::super::replay::{ReplayPhase, ReplayState, prepare_replay};
+    use super::super::Source;
+    use sim_domain_control::drive::kinematics::{BodyTwist, Deadman, Limits, OnLoss};
+    use std::sync::Arc;
+
+    const PERIOD: f64 = 0.02;
+    fn limits() -> Limits {
+        Limits { supported: [true, false, true], max_speed: [0.3, 0.0, 3.0], max_accel: [0.6, 0.6, 6.0] }
+    }
+    fn ramp() -> Deadman {
+        Deadman { timeout_s: 0.5, on_loss: OnLoss::Ramp { decel: [1.2, 1.2, 12.0] } }
+    }
+
+    #[test]
+    fn twist_requests_raise_the_heartbeat_and_are_limited_on_sim_time() {
+        let (l, d) = (limits(), ramp());
+        let mut s = TwistState::default();
+        // Before any request: zero request at t = 0, heartbeat 0.
+        assert_eq!(s.advance(0.0, PERIOD, &l, &d).unwrap(), [0.0, 0.0, 0.0, 0.0]);
+        s.request(BodyTwist::new(0.3, 0.0, 1.0), false, PERIOD, &l).unwrap();
+        assert_eq!((s.heartbeat, s.last_request_s), (1, PERIOD));
+        // One period moves each axis by at most max_accel × period.
+        let a = s.advance(PERIOD, PERIOD, &l, &d).unwrap();
+        assert!((a[0] - 0.6 * PERIOD).abs() < 1e-12 && (a[2] - 6.0 * PERIOD).abs() < 1e-12 && a[1] == 0.0 && a[3] == 1.0, "{a:?}");
+        // Fresh requests keep the deadman alive; the twist reaches the request and never exceeds the profile.
+        let mut t = 2.0 * PERIOD;
+        for _ in 0..40 {
+            s.request(BodyTwist::new(0.3, 0.0, 1.0), false, t, &l).unwrap();
+            let a = s.advance(t, PERIOD, &l, &d).unwrap();
+            assert!(a[0] <= 0.3 && a[2] <= 3.0 && !s.expired, "{a:?}");
+            t += PERIOD;
+        }
+        assert_eq!((s.commanded.forward_m_s, s.commanded.yaw_rad_s), (0.3, 1.0));
+        assert_eq!(s.heartbeat, 41);
+        // Refused by name, with no heartbeat change: an unsupported axis and a speed beyond the profile.
+        let e = s.request(BodyTwist::new(0.0, 0.1, 0.0), false, t, &l).unwrap_err();
+        assert!(e.contains("lateral") && e.contains("not supported"), "{e}");
+        let e = s.request(BodyTwist::new(0.31, 0.0, 0.0), false, t, &l).unwrap_err();
+        assert!(e.contains("forward") && e.contains("0.3"), "{e}");
+        assert!(s.request(BodyTwist::new(f64::NAN, 0.0, 0.0), false, t, &l).unwrap_err().contains("finite"));
+        assert_eq!(s.heartbeat, 41);
+    }
+
+    #[test]
+    fn the_deadman_expires_on_sim_time_without_fresh_requests() {
+        let l = limits();
+        let mut s = TwistState { commanded: BodyTwist::new(0.3, 0.0, 0.0), request: BodyTwist::new(0.3, 0.0, 0.0), heartbeat: 7, ..TwistState::default() };
+        // Ramp: live until age 0.5 s (exclusive), then the request is ignored and the twist ramps down at stop_decel.
+        let mut t = 0.0;
+        while t < 0.5 - 1e-9 {
+            s.advance(t, PERIOD, &l, &ramp()).unwrap();
+            assert!(!s.expired && s.commanded.forward_m_s == 0.3, "t = {t}");
+            t += PERIOD;
+        }
+        let a = s.advance(0.5, PERIOD, &l, &ramp()).unwrap();
+        assert!(s.expired && (a[0] - (0.3 - 1.2 * PERIOD)).abs() < 1e-12, "{a:?}");
+        assert_eq!(a[3], 7.0, "the heartbeat does not change without a request");
+        // Pausing passes no sim time: the status age is frozen at the last period's time.
+        assert!((s.status(0.5).age_s - 0.5).abs() < 1e-12);
+        // Immediate: zero at once.
+        let mut s = TwistState { commanded: BodyTwist::new(0.3, 0.0, 0.0), request: BodyTwist::new(0.3, 0.0, 0.0), ..TwistState::default() };
+        let a = s.advance(0.6, PERIOD, &l, &Deadman { timeout_s: 0.5, on_loss: OnLoss::Immediate }).unwrap();
+        assert!(s.expired && a[..3] == [0.0, 0.0, 0.0]);
+        // A fresh request revives it.
+        s.request(BodyTwist::new(0.1, 0.0, 0.0), false, 0.62, &l).unwrap();
+        s.advance(0.62, PERIOD, &l, &ramp()).unwrap();
+        assert!(!s.expired && s.commanded.forward_m_s > 0.0);
+    }
+
+    #[test]
+    fn halt_zeroes_the_request_and_the_commanded_twist_at_once() {
+        let (l, d) = (limits(), ramp());
+        let mut s = TwistState { commanded: BodyTwist::new(0.3, 0.0, 2.0), request: BodyTwist::new(0.3, 0.0, 2.0), heartbeat: 3, ..TwistState::default() };
+        s.request(BodyTwist::ZERO, true, 1.0, &l).unwrap();
+        assert_eq!((s.request, s.commanded, s.heartbeat, s.halted), (BodyTwist::ZERO, BodyTwist::ZERO, 4, true));
+        assert_eq!(s.advance(1.0, PERIOD, &l, &d).unwrap(), [0.0, 0.0, 0.0, 4.0]);
+        // A stop (not a halt) only requests zero: the twist ramps down under max_accel.
+        let mut s = TwistState { commanded: BodyTwist::new(0.3, 0.0, 0.0), request: BodyTwist::new(0.3, 0.0, 0.0), ..TwistState::default() };
+        s.request(BodyTwist::ZERO, false, 0.0, &l).unwrap();
+        let a = s.advance(0.0, PERIOD, &l, &d).unwrap();
+        assert!((a[0] - (0.3 - 0.6 * PERIOD)).abs() < 1e-12 && !s.halted, "{a:?}");
+    }
+
+    #[test]
+    fn a_stop_queued_behind_many_requests_governs_the_next_period() {
+        use super::super::protocol::Command;
+        use super::super::worker::drain;
+        let (l, d) = (limits(), ramp());
+        // A run thread that fell behind: fifty held-axis requests, then the release (a stop) and a Pause.
+        let (tx, rx) = std::sync::mpsc::channel();
+        for _ in 0..50 {
+            tx.send(Command::Twist { request: BodyTwist::new(0.3, 0.0, 1.0), halt: false }).unwrap();
+        }
+        tx.send(Command::Twist { request: BodyTwist::ZERO, halt: false }).unwrap();
+        tx.send(Command::Pause).unwrap();
+        // One pass drains all of them, in order, without blocking.
+        let (batch, closed) = drain(&rx, false).unwrap();
+        assert_eq!((batch.len(), closed), (52, false));
+        assert!(matches!(batch[51], Command::Pause) && matches!(batch[50], Command::Twist { halt: false, .. }));
+        // Applied in order at one sim time, as the worker does: the stop wins the next period.
+        let mut s = TwistState { commanded: BodyTwist::new(0.3, 0.0, 1.0), request: BodyTwist::new(0.3, 0.0, 1.0), ..TwistState::default() };
+        for c in batch {
+            if let Command::Twist { request, halt } = c {
+                s.request(request, halt, 1.0, &l).unwrap();
+            }
+        }
+        assert_eq!((s.request, s.heartbeat), (BodyTwist::ZERO, 51));
+        let a = s.advance(1.0, PERIOD, &l, &d).unwrap();
+        assert!((a[0] - (0.3 - 0.6 * PERIOD)).abs() < 1e-12 && a[3] == 51.0 && !s.expired, "{a:?}");
+        // Nothing queued: an empty batch (running) and no wait.
+        assert!(drain(&rx, false).is_some_and(|(b, closed)| b.is_empty() && !closed));
+        // The controller gone: what was queued still comes out (closed), then nothing.
+        tx.send(Command::Step).unwrap();
+        drop(tx);
+        let (batch, closed) = drain(&rx, true).unwrap();
+        assert!(batch.len() == 1 && matches!(batch[0], Command::Step) && closed);
+        assert!(drain(&rx, true).is_none());
+        assert!(drain(&rx, false).is_some_and(|(b, closed)| b.is_empty() && closed));
+    }
+
+    #[test]
+    fn a_finished_drive_replay_leaves_no_request_driving() {
+        let (l, d) = (limits(), ramp());
+        let mut s = TwistState::default();
+        // Recorded periods starting at 0 and PERIOD; a new heartbeat is stamped at its period's start, like a live request.
+        s.replayed(&[0.3, 0.0, 1.0, 1.0], 0.0);
+        assert_eq!((s.last_request_s, s.heartbeat, s.request, s.periods), (0.0, 1, BodyTwist::new(0.3, 0.0, 1.0), 1));
+        s.replayed(&[0.3, 0.0, 1.0, 1.0], PERIOD);
+        assert_eq!(s.last_request_s, 0.0, "the same heartbeat is no fresh request");
+        // The replay ends at 2 × PERIOD: no request, the deadman counts as expired; heartbeat and periods are kept.
+        s.replay_ended(2.0 * PERIOD, &d);
+        assert!(s.request.is_zero() && s.expired && !s.halted && s.heartbeat == 1 && s.periods == 2, "{s:?}");
+        assert!(s.status(2.0 * PERIOD).age_s >= d.timeout_s);
+        // The next live period (Run after the replay) ramps down at stop_decel instead of driving the last recorded twist.
+        let a = s.advance(2.0 * PERIOD, PERIOD, &l, &d).unwrap();
+        assert!(s.expired && (a[0] - (0.3 - 1.2 * PERIOD)).abs() < 1e-12 && (a[2] - (1.0 - 12.0 * PERIOD)).abs() < 1e-12, "{a:?}");
+        // A fresh request drives again.
+        s.request(BodyTwist::new(0.3, 0.0, 0.0), false, 3.0 * PERIOD, &l).unwrap();
+        s.advance(3.0 * PERIOD, PERIOD, &l, &d).unwrap();
+        assert!(!s.expired && s.heartbeat == 2);
+    }
+
+    /// The example binding (no Python process: the binding, profile and script are only read and hashed).
+    fn wheeled() -> Arc<ControlledRun> {
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let path = root.join("examples/wheeled-robot/baseline/robot.simrobot.json");
+        let model = crate::robot::load(&path).unwrap().model;
+        let binding = sim_runtime::controller_binding::binding_path_for(&path);
+        let controlled = sim_runtime::controller_binding::load(&binding, &model).unwrap();
+        Arc::new(ControlledRun::new(&path, model, controlled))
+    }
+
+    #[test]
+    fn a_nonzero_drive_request_is_refused_unless_running_and_a_stop_is_always_accepted() {
+        use super::super::{Phase, RunController};
+        let run = wheeled();
+        // Nothing is built until Run or Step, so no Python process starts here.
+        let mut c = RunController::spawn_file(run.model.clone(), Some(Ok(run.clone())), 0);
+        // Idle: a stop and a halt are accepted (kept by the run thread for the build); a nonzero request is refused by name.
+        c.drive(BodyTwist::ZERO, false).unwrap();
+        c.drive(BodyTwist::ZERO, true).unwrap();
+        assert_eq!(c.twist_requested, Some((BodyTwist::ZERO, true)));
+        let e = c.drive(BodyTwist::new(0.1, 0.0, 0.0), false).unwrap_err();
+        assert!(e.contains("phase idle") && e.contains("press Run (the Run button"), "{e}");
+        assert_eq!(c.twist_refusal.as_deref(), Some(e.as_str()));
+        assert_eq!(c.twist_requested, Some((BodyTwist::ZERO, true)), "a refused request is not sent");
+        // Paused: the same rule (the UI's last Run/Pause decides; commands are ordered).
+        c.status.phase = Phase::Paused;
+        let e = c.drive(BodyTwist::new(0.0, 0.0, 1.0), false).unwrap_err();
+        assert!(e.contains("phase paused") && e.contains("press Run (the Run button"), "{e}");
+        assert!(c.check_drive_request(BodyTwist::ZERO, false).is_ok() && c.drive_json()["accepts_motion"] == false);
+        c.drive(BodyTwist::ZERO, false).unwrap();
+        assert!(c.twist_refusal.is_none());
+        // A nonzero request that raced a Pause reaches the run thread while it is not running: dropped there, named.
+        c.running = true;
+        c.drive(BodyTwist::new(0.1, 0.0, 0.0), false).unwrap();
+        super::wait(&mut c, "the run thread's drop of a request made while not running", |c| c.twist_error.is_some());
+        let e = c.twist_error.clone().unwrap();
+        assert!(e.contains("was not running when it arrived") && e.contains("press Run (the Run button"), "{e}");
+        c.running = false;
+    }
+
+    #[test]
+    fn a_replay_with_another_controller_is_refused_naming_each_difference() {
+        let run = wheeled();
+        assert_eq!((run.stem(), run.seed), ("robot".to_string(), 0));
+        assert!(differences(&run, &run.scene).is_empty(), "the run's own scene matches");
+        let mut scene = run.scene.clone();
+        let ext = scene.controller.as_mut().unwrap().external.as_mut().unwrap();
+        ext.script_sha256 = "0".repeat(64);
+        ext.args.insert(0, "--gain".into());
+        let diffs = differences(&run, &scene);
+        // The shared ControllerIdentity::differences wording (sim_runtime::controller_binding).
+        assert!(diffs.iter().any(|d| d.starts_with("script_sha256: recorded 0000")), "{diffs:?}");
+        assert!(diffs.iter().any(|d| d.starts_with("args: recorded [\"--gain\"], current []")), "{diffs:?}");
+        // Through the run thread's replay preparation: refused before any Session is built.
+        let file = std::env::temp_dir().join(format!("drive-identity-{}.recording.json", std::process::id()));
+        let recording = sim_runtime::session::Recording { version: 1, scene, seed: 0, actions: vec![vec![0.0, 0.0, 0.0, 0.0]] };
+        std::fs::write(&file, serde_json::to_string(&recording).unwrap()).unwrap();
+        let state = ReplayState::new(1, 1, Some(file.clone()), ReplayPhase::Replaying);
+        let Err((e, state)) = prepare_replay(&Source::Controlled(run.clone()), None, &file, state) else { panic!("a different controller replays") };
+        assert!(e.starts_with("refused by the drive identity check: ") && e.contains("script_sha256: recorded") && e.contains("args: recorded"), "{e}");
+        assert_eq!((state.kind.as_deref(), state.recorded_completed_steps), (Some(crate::robot::recording::DRIVE_KIND), Some(1)));
+        let _ = std::fs::remove_file(&file);
     }
 }

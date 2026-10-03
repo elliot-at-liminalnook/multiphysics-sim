@@ -7,6 +7,8 @@ use std::sync::Arc;
 use crate::robot::motion::{self, Motion, MotionChannel};
 use crate::robot::preset::PresetRun;
 use crate::robot::recording::Saved;
+use sim_domain_control::drive::kinematics::BodyTwist;
+use super::controlled::{ControlledRun, DriveStatus};
 use super::{CHUNK_S, Frame, OverlayFlags, ReplayState};
 
 #[derive(Clone, Copy, Serialize, Debug, PartialEq, Eq)]
@@ -24,17 +26,26 @@ pub enum Phase {
     Ended,
 }
 
-/// What the run thread builds: the loaded file, or a preset's parsed inputs.
+/// What the run thread builds: the loaded file, a preset's parsed inputs, or
+/// a file with its controller binding.
 #[derive(Clone)]
 pub enum Source {
     Robot(PhysicalModel),
     Preset(Arc<PresetRun>),
+    /// A `--robot FILE` whose controller binding loaded: a `Session` driven by its external controller.
+    Controlled(Arc<ControlledRun>),
+    /// A `--robot FILE` whose controller binding exists but did not load:
+    /// every build fails with `error` ("controller binding <path>: …"); it
+    /// never falls back to the file's hold run.
+    Unbound { model: PhysicalModel, error: String },
 }
 impl Source {
+    /// Sim time per chunk: the seam period for a drive session (one action per period).
     pub(super) fn chunk_s(&self) -> f64 {
         match self {
-            Source::Robot(_) => CHUNK_S,
+            Source::Robot(_) | Source::Unbound { .. } => CHUNK_S,
             Source::Preset(p) => p.chunk_s(),
+            Source::Controlled(r) => r.scene.period_s,
         }
     }
 }
@@ -63,6 +74,10 @@ pub(super) struct Published {
     pub(super) save: Option<(u64, Result<Saved, String>)>,
     /// The latest replay state (stamped with its request number and generation).
     pub(super) replay: Option<ReplayState>,
+    /// A drive session's latest drive status (None before a controlled build and after Reset).
+    pub(super) twist: Option<DriveStatus>,
+    /// Why the last drive request could not be applied on the run thread.
+    pub(super) twist_error: Option<String>,
 }
 
 /// A built preset's typed input channels (the session's `inputs()`), its
@@ -104,6 +119,10 @@ pub(super) enum Command {
     Jog { joint: String, target: f64 },
     /// Validated motion values for the three motion channels (in `Motion::channels` order).
     Motion { values: [f64; 3] },
+    /// A drive session's fresh twist request (checked against the profile on
+    /// the UI thread): heartbeat + 1 at the current sim time; `halt` zeroes
+    /// the request and the commanded twist at once.
+    Twist { request: BodyTwist, halt: bool },
     /// Snapshot the shared recording and write it (on a writer thread) to `target`.
     SaveRecording { seq: u64, target: std::path::PathBuf, note: Option<String>, unix_ms: u128 },
     /// Read `path`, prepare it through the shared prepare_replay and advance it in chunks under `generation`.

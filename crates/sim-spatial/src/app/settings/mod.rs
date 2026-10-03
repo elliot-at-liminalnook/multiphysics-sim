@@ -11,7 +11,7 @@ mod tests;
 #[cfg(test)]
 mod drain_tests;
 use super::{ViewerMode, recent::Recents, switch::Document};
-use crate::{jobs::Job, robot::hardware::settings::Settings};
+use crate::{jobs::Job, robot::drive_input::BindingsFile, robot::hardware::settings::Settings};
 use bevy::prelude::*;
 use bevy_settings::{ReflectSettingsGroup, SettingsGroup};
 pub use plugin::{SettingsPlugin, SettingsSet};
@@ -32,6 +32,8 @@ pub struct PreferenceGroup {
     pub recents: String,
     pub hardware: String,
     pub cad: String,
+    /// The stored drive bindings (`sim.drive-bindings/1`), empty while the defaults are in effect.
+    pub drive_bindings: String,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -114,6 +116,9 @@ pub struct SettingsOwner {
     pub recents: Recents,
     pub hardware: Settings,
     pub cad: CadDefaults,
+    /// The user's drive bindings (`robot::drive_input`); None keeps the
+    /// committed defaults, which are then not written to the file.
+    pub drive_bindings: Option<BindingsFile>,
     pub ready: bool,
     pub revision: u64,
     pub saved_revision: u64,
@@ -121,6 +126,8 @@ pub struct SettingsOwner {
     touched: [bool; 3],
     hardware_claims: Vec<String>,
     cad_claims: [bool; 3],
+    /// Drive bindings were set before the load landed: the load keeps them.
+    drive_claimed: bool,
     paths: Option<jobs::Paths>,
     raw: Value,
     blocked: bool,
@@ -142,6 +149,7 @@ impl Default for SettingsOwner {
             recents: Recents::default(),
             hardware: Settings::default(),
             cad: CadDefaults::default(),
+            drive_bindings: None,
             ready: false,
             revision: 0,
             saved_revision: 0,
@@ -149,6 +157,7 @@ impl Default for SettingsOwner {
             touched: [false; 3],
             hardware_claims: Vec::new(),
             cad_claims: [false; 3],
+            drive_claimed: false,
             paths: None,
             raw: serde_json::json!({}),
             blocked: false,
@@ -218,6 +227,24 @@ impl SettingsOwner {
         }
         if self.cad != value {
             self.cad = value;
+            self.revision += 1;
+            self.drain_epoch += 1;
+        }
+        Ok(())
+    }
+    /// Set (Some, validated first) or reset to the committed defaults (None)
+    /// the drive bindings. As a CAD default, a choice made before the load
+    /// lands owns the group against it, even an equal one.
+    pub fn set_drive_bindings(&mut self, value: Option<BindingsFile>) -> Result<(), String> {
+        if let Some(v) = &value {
+            v.validate()?;
+        }
+        if !self.ready && !self.drive_claimed {
+            self.drive_claimed = true;
+            self.drain_epoch += 1;
+        }
+        if self.drive_bindings != value {
+            self.drive_bindings = value;
             self.revision += 1;
             self.drain_epoch += 1;
         }
@@ -293,7 +320,7 @@ impl SettingsOwner {
         serde_json::json!({"ready":self.ready,"revision":self.revision,"saved_revision":self.saved_revision,"dirty":self.dirty(),"blocked":self.blocked,"diagnostic":self.diagnostic,"saving":self.save.is_some(),"pending_records":self.records.len(),"normalizing":self.canonical.is_some(),"drain":self.drain_status(),"drain_stamp":self.drain_stamp()})
     }
     fn snapshot(&self) -> Result<Value, String> {
-        jobs::snapshot(&self.raw, &self.recents, &self.hardware, &self.cad)
+        jobs::with_drive_bindings(jobs::snapshot(&self.raw, &self.recents, &self.hardware, &self.cad)?, self.drive_bindings.as_ref())
     }
 }
 impl Drop for SettingsOwner {
@@ -306,6 +333,7 @@ impl Drop for SettingsOwner {
                 let recents = self.recents.clone();
                 let hardware = self.hardware.clone();
                 let cad = self.cad.clone();
+                let drive = self.drive_bindings.clone();
                 let records = self.records.clone();
                 let revision = self.revision + 1;
                 let gate = self.gate.clone();
@@ -315,8 +343,10 @@ impl Drop for SettingsOwner {
                         revision,
                         "viewer preferences shutdown",
                         move |_| {
-                            let snapshot =
-                                jobs::shutdown_snapshot(&raw, recents, &hardware, &cad, records)?;
+                            let snapshot = jobs::with_drive_bindings(
+                                jobs::shutdown_snapshot(&raw, recents, &hardware, &cad, records)?,
+                                drive.as_ref(),
+                            )?;
                             jobs::publish_ordered(&paths, &snapshot, revision, &gate).inspect_err(
                                 |e| bevy::log::warn!("preference shutdown publication failed: {e}"),
                             )

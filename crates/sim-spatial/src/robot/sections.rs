@@ -69,7 +69,13 @@ pub(super) fn joints_text(view: &RobotView, m: &PhysicalModel, link: Option<usiz
         None => format!("All {} joints (select a link to filter)\n", m.joints.len()),
     };
     t += &format!("SI units, as stored. Values without a label: {UNLABELLED}.\n");
-    if let Some(r) = &view.run {
+    if let Some(r) = view.run.as_ref().filter(|r| r.controlled().is_some()) {
+        // The file's mode is not what drives this run: say who writes the targets.
+        t += &format!("\nSERVO TARGETS — written by the {} each control period ({:?} s), in place of the file's `{}` hold; see the Drive block\n", super::controls::DRIVE_CONTROLLER, m.control.period_s, m.control.mode);
+        if let Some(e) = r.jog_error() {
+            t += &format!("last jog not applied: {e}\n");
+        }
+    } else if let Some(r) = &view.run {
         t += &format!("\nJOG — {JOG_LABEL}\ncontrol mode (file): {}\n{}\n", m.control.mode, JOG_NOTE);
         if let Some(e) = r.jog_error() {
             t += &format!("last jog not applied: {e}\n");

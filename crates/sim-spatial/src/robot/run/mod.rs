@@ -5,9 +5,12 @@
 //! loaded model with `sim_runtime::registry()` and `BuildOptions::default()`);
 //! for a preset (`robot_preset`) it is the shared
 //! `EmbeddedEnvironment` (with a task) or `EmbeddedSession` built from the
-//! preset's files unchanged. The UI thread only sends commands and applies the
-//! published frames; it never builds, advances or locks the simulation.
+//! preset's files unchanged. A `--robot FILE` with a controller binding
+//! beside it (`controlled`) runs as the shared `sim_runtime::session::Session`
+//! driven by its external controller. The UI thread only sends commands and
+//! applies the published frames; it never builds, advances or locks the simulation.
 
+mod controlled;
 mod controller;
 mod frames;
 mod jog;
@@ -18,6 +21,7 @@ mod replay;
 mod sim;
 mod worker;
 
+pub use controlled::{CONTROLLER_LABEL, ControlledRun, DEADMAN_RULE, DRIVE_FIDELITY, DRIVE_RULE, DRIVE_SEED, DriveStatus, HEARTBEAT_MAX, NOT_RUNNING, SEED_RULE, TwistState, twist_json};
 pub use controller::RunController;
 pub use frames::{DEFLECTION_MAGNIFICATION, FORCE_SCALE_M_PER_N, Frame, JOINT_AXIS_HALF_M, MotorTargets, OVERLAY_COST_RULE, OVERLAY_SAMPLE, OverlayContact, OverlayDeflection, OverlayFlags, OverlayJoint, Overlays, accept, map_poses, overlays, recorded_frame, rotation_quat};
 pub(crate) use jog::short;

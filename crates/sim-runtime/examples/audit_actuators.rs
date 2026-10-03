@@ -15,7 +15,11 @@ fn run() -> Result<(), String> {
     let scene: Scene = serde_json::from_value(document.clone()).map_err(|e| e.to_string())?;
     let mut rows = vec![];
     for (index, motor) in scene.robot.motors.iter().enumerate() {
-        let temp = 293.15;
+        // The motor units' resistance and derating reference, the same one the
+        // runtime uses (physical.rs): the motor's stated rating ambient, else
+        // world.ambient_c, else the parser's default (labelled as such).
+        let ambient = scene.robot.motor_ambient(index).map_err(|e| format!("{}: {e}", args[0]))?;
+        let temp = ambient.kelvin();
         let parameters = cad_motor_unit_parameters(motor, 0.0, temp, false, false)
             .into_iter()
             .map(|(k, v)| (k.to_owned(), v))
@@ -30,6 +34,7 @@ fn run() -> Result<(), String> {
         )?;
         rows.push(json!({"name":motor.name,"parameters":parameters,"driver":driver,
             "supply_voltage_v":motor.electrical.supply_voltage,"winding_temperature_k":temp,
+            "reference_source":ambient.provenance(),"reference_stated":ambient.stated(),
             // Optional CAD catalog metadata, not a runtime current-limit substitute.
             "declared_stall_current_a":document["robot"]["motors"][index]["electrical"]["stall_current"],
             "declared_max_output_torque_nm":motor.gearbox.max_output_torque,
@@ -37,7 +42,7 @@ fn run() -> Result<(), String> {
             "registered_locked_shaft":stall}));
     }
     println!("{}",serde_json::to_string_pretty(&json!({"source":scene.robot.source,"actuators":rows,
-        "scope":"Locked actuator shaft, full duty at nominal supply and fixed reference temperature; registered continuous motor/driver equations, no joint friction, battery sag, thermal evolution or separate CAD transmissions. Declared ratings are comparison metadata, not calibrated acceptance gates. No CAD values changed."})).map_err(|e|e.to_string())?);
+        "scope":"Locked actuator shaft, full duty at nominal supply and the motor's reference temperature (winding = reference: the motor's stated rating ambient thermal.ambient_c, else world.ambient_c, else the parser's default, per reference_source); registered continuous motor/driver equations, no joint friction, battery sag, thermal evolution or separate CAD transmissions. Declared ratings are comparison metadata, not calibrated acceptance gates. No CAD values changed."})).map_err(|e|e.to_string())?);
     Ok(())
 }
 fn main() {

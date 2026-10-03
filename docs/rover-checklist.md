@@ -482,12 +482,14 @@ By reading, unexecuted.
    lateral: 0, yaw: 0 } })` every frame
    (`crates/sim-spatial/src/drive_input/input.rs:339-343`), for the target
    Robot mode's writer offers (`robot/controls.rs:625-659`).
-2. `actions::forward_devices` (`robot/actions/mod.rs:794-800`, registered
-   in `ViewerSet::Actions` before `RobotSet::Actions` at `robot/mod.rs:238`)
-   turns each Robot-mode request into `Act<RobotAction::Drive>` with the
-   poller's origin (`device_action`, 784-786; a request stamped for another
-   mode is skipped). `actions::apply` (619, `RobotSet::Actions`,
-   `robot/mod.rs:239`) → `handle` (552-599, catch-all at 597) → `dispatch`
+2. Robot mode's one apply, `actions::apply` (`RobotSet::Actions`,
+   `robot/mod.rs:238`), reads the poller's requests itself (its
+   `MessageReader<Act<DriveDevice>>`, drained before any return) and turns
+   each Robot-mode request into `Act<RobotAction::Drive>` with the
+   poller's origin (`device_action`; a request stamped for another mode is
+   skipped), handled after the frame's other actions (since
+   focus-final-leftovers, which replaced the separate `forward_devices`
+   system; see (h)). It goes → `handle` (552-599, catch-all at 597) → `dispatch`
    (295). Drive takes its own branch (307-317).
 3. `drive_request` (`actions/mod.rs:111-117`): with no binding, refused
    naming the reason (112-115). Then the shared interpretation
@@ -695,7 +697,8 @@ By reading, unexecuted.
 4. On leaving, `drive_input::leave_mode` (`robot/mod.rs:216`;
    `crates/sim-spatial/src/drive_input/mod.rs:140-143`) clears the drive
    target and the device status, so the poller reads nothing more for
-   Robot mode. Robot mode's systems, `forward_devices` among them, stop
+   Robot mode. Robot mode's systems, its apply (which reads the device
+   requests) among them, stop
    running outside Robot mode (`robot/mod.rs:247`), and a request still
    buffered for Robot mode is never applied by another mode, whose reader
    skips it (`DriveDevice`, `drive_input/mod.rs:66-75`). A carried REST
@@ -1688,8 +1691,10 @@ registered `plugin.rs:23`).
    REST `robot_drive {"stop": true}` and `system_ui drive:*` build the same
    `RobotAction::Drive`. Robot mode's one apply
    (`robot/actions/mod.rs` `apply`, in `ViewerSet::Actions`) resolves the
-   reason before the action runs (`disarm_reason`, 650 and 759) and, when
-   the action is accepted, writes `Disarm { mode: Robot }` (705-709). Run
+   reason before the action runs (`disarm_reason`, 665 and 788) and, when
+   the action is accepted and is not the devices' own request, writes
+   `Disarm { mode: Robot }` (723-725; line numbers as of
+   focus-final-leftovers). Run
    Pause and Reset are covered by the same `disarm_reason`.
 2. Build: the run panel's Stop (`builder/ui.rs:217`) and REST
    `system_drive {"stop": true}` (`builder/system_actions.rs:360-362`) both
@@ -1707,10 +1712,9 @@ registered `plugin.rs:23`).
    "stop (<reason>)" or "disarmed (<reason>)". A message for another mode
    is ignored. Ordering: writers in `ViewerSet::Actions`, the reader in
    the next frame's `InputSet::Window`; no edge to another feature's
-   systems. Tests (unexecuted): `drive_input/tests.rs`.
-   Known: after a device stop Robot's apply echoes a `Disarm`, so a bound
-   key first pressed in exactly the next frame is ignored until pressed
-   again (harmless).
+   systems. Tests (unexecuted): `drive_input/tests.rs`. Since
+   focus-final-leftovers the `Disarm` disarms only what was held when it
+   was applied; see (h).
 
 **(b) A request live at Pause does not drive after resume.**
 `sim_runtime::drive_host::PAUSE_RULE` (`crates/sim-runtime/src/drive_host.rs:34`):
@@ -1791,6 +1795,121 @@ through `jobs::Job` (`builder/studies.rs:44, 57`).
 **(g) CI.** `node web/tests/drive_input.mjs` is listed in
 `.github/workflows/browser.yml` (not yet run).
 
+### Final leftovers (focus-final-leftovers, 2026-10-03)
+
+By reading, unexecuted: nothing below was compiled, run or tested. Line
+numbers are from the working tree of this epic's commit. Each item closes
+a defect recorded at focus-safety-closure's review.
+
+**(h) A stop's echo no longer swallows a fresh key.** Two parts.
+
+First, Robot's apply writes no `Disarm` for the devices' own requests.
+It reads the poller's requests itself (`robot/actions/mod.rs:645`, its
+`MessageReader<Act<DriveDevice>>`, drained before any return; the separate
+`forward_devices` system is gone, `robot/mod.rs:237-238`), handles the
+frame's other actions first (`:768`), then each device request through
+the same handler with `device` set (`:770-774`), and the `Disarm` write
+requires `device.get()` false (`:723`). The poller disarmed what was held
+whenever it sent a stop or action itself, so the echo only ever blocked
+keys first pressed after it: in particular the Stop the poller owes in the
+`Disarm` branch, after which a fresh key drives in the same frame (below)
+and an echo would have blocked it in the next frame and sent a second
+Stop (found by this epic's review). `DISARM_RULE` is unchanged for every
+other origin: the panel's buttons, keys handled by the mode, `system_ui`
+and REST still write it when accepted.
+
+Second, a `Disarm` read by the poller in frame N was written by a mode's
+apply in frame N-1's `ViewerSet::Actions`, after frame N-1's Input, so it
+disarms what was held then (`drive_input/input.rs:293-312`):
+1. A bound key pressed and not just pressed this frame is blocked
+   (`:300`, `:308`); a key just pressed this frame was not held at the
+   stop and is not.
+2. The gamepad is blocked only if it was held last frame: `Latch::pad_held`
+   (`:83`) is refreshed at the top of `devices` before any early return
+   (`:214-216`, kept by the no-target reset `:236`), and the branch blocks
+   with the previous value (`:301`, `:309`).
+3. The owed Stop (`latch.sending` and a drive stop or action) is unchanged
+   (`:302-304`), and the branch no longer returns: the frame continues to
+   the normal read, so a fresh key drives in that same frame, and the
+   final write carries `last_action` (`:297`, `:370`).
+
+Trace, a device-sent Stop then a new key: frame N-1, X (bound stop action)
+is just pressed → `Action` sent and X blocked by `disarm`; Robot's apply
+accepts it with `device` true and writes no `Disarm`. Frame N, W is just
+pressed and drives at once. Trace, a panel Stop while W is held and D is
+pressed in the next frame: frame N-1, the click's `Disarm { stop: true }`
+is written (`:723-725`); frame N, the poller sends the owed quiet Stop,
+blocks W (held since before N) and lets the just-pressed D drive; Robot's
+apply handles that Stop and D's axes as device requests, with no echo, so
+D keeps driving in frame N+1. Build has no echo: its device requests go
+to `actions::drive_devices`, which writes no `Disarm`. Tests (unexecuted):
+`drive_input/tests.rs` `a_disarm_blocks_only_keys_held_when_the_stop_was_applied`
+(285) and `a_disarm_blocks_the_gamepad_only_if_it_was_held_at_the_stop`
+(316). No test runs the poller and Robot's apply together (that needs a
+loaded `RobotView`); the device-request branch is traced by reading only.
+
+**(i) No held key outlives a run boundary.** The latch compares
+`(live.mode, live.run)` and disarms every held input on a change
+(`drive_input/input.rs:256-263`, sending one quiet Stop first if the
+devices were driving). `LiveTarget::run` (`drive_input/mod.rs:61-69`) now
+carries the run's identity:
+- Robot: `robot_target` (`robot/controls.rs:627-635`) writes
+  `run_identity` (`:642-645`): the file, `RunController::generation()`
+  and ", replaying" while `replay_state().phase` is `Replaying`. A reload
+  builds a new controller at the next generation
+  (`robot/run/controller.rs:453`), a replay start bumps it
+  (`robot/run/preset_ops.rs:311`), Reset bumps it (`controller.rs:297`),
+  and a replay's end changes the phase without a bump (`controller.rs:354`),
+  which the flag catches. `drive_target` (`controls.rs:653-673`, before
+  `InputSet::Window`, `robot/mod.rs:236`) writes it with `set_if_neq` and
+  clears `last_error` on the same identity (`:664-671`), so the doc
+  comment's "Reset, a replay, a reload" is now true.
+- Build: `Builder::drive_target` (`builder/robot_run.rs:139-153`) writes
+  the file, the run id (content hash and revision), the run's start number
+  (`RobotDrive::run`, from the process-wide `ROBOT_RUNS` counter taken in
+  `spawn_robot`, `:62`, `:69`) and the run thread's generation. Before, a
+  new run of unchanged content had the same identity. Build has no drive
+  replay.
+Trace, a held W across a Robot file-watch reload: the reload replaces the
+controller (`replace_file`, generation + 1) → next frame `drive_target`
+writes a new `run` → `devices` sees `latch.target != identity` (`:257`),
+sends one quiet Stop if it was sending, and `disarm` blocks W
+(`:258-262`) → W is ignored until released; pressing it again drives the
+new run. The same holds at a replay's start (generation + 1, ", replaying")
+and end (", replaying" dropped); during the replay live requests are
+refused anyway. Tests (unexecuted): `drive_input/tests.rs`
+`a_held_key_across_a_run_change_is_disarmed_until_released` (260);
+`robot/tests.rs` `robot_run_identity_changes_with_reset_and_reload` (33).
+Note: a Reset now also changes Robot's identity, so if the devices were
+sending when Reset was applied the poller sends one quiet Stop to the
+rebuilt run (accepted while paused; harmless). At a replay start that
+Stop is refused by the replay and shows as the drive line's last error.
+
+**(j) A no-op Build Pause writes no `Disarm`.** `disarm_reason`
+(`builder/system_actions.rs:418`) returns a `Disarming` (`:452-472`) whose
+`writes` (`:470-471`) requires, for a Pause, that a run was requested
+running before the action and is paused after it. `apply` reads
+`running_before` before `execute` (`:537`) and `paused_after` after it
+(`:544`), and writes the `Disarm` only then (`:545-549`). Trace: with no
+run, `run_pause` → `pause_run` does nothing (`builder/live_run.rs:103-110`),
+`running_before` is false, no `Disarm` is written; the same for a run
+already paused. The panel Pause, the R key, `system_ui` and REST
+`system_run pause` all pass here. Robot was already gated:
+`RunController::check` refuses a Pause when not running
+(`robot/run/controller.rs:273`) and `apply` writes only on `Ok`
+(`robot/actions/mod.rs:707`). Test (unexecuted):
+`builder/system_actions.rs` `disarm_tests::a_no_op_pause_writes_no_disarm` (585).
+
+**(k) One motor reference temperature in the actuator audit.**
+`crates/sim-runtime/examples/audit_actuators.rs:18-22` reads each motor's
+reference from `PhysicalModel::motor_ambient(index)` (the scene's robot is
+a `PhysicalModel`, `sim-runtime/src/session.rs:113`), the same call the
+runtime makes (`physical.rs:343`), and reports `reference_source`
+(`MotorAmbient::provenance`) and `reference_stated` per row (`:37`); the
+`scope` text says where the reference comes from (`:45`). No bare 293.15
+remains. Gait-lab and rover requalification is still owed from the
+20 → 25 °C change in (d).
+
 ### RV-39 Hardware twist path (run sheet)
 
 The agent never drives hardware. No rover hardware client exists. The
@@ -1844,5 +1963,9 @@ the shared limiter and deadman.
   live request keeping its age; native Stop/action buttons not disarming
   held inputs; the session's motor ambient disagreeing with the model; the
   deadman bound written in two places.
+- **Fixed by focus-final-leftovers** (see "Final leftovers" above): a stop's
+  echo swallowing a key pressed in the next frame; a held key surviving a
+  reload or a replay's start or end; Build's no-op Pause disarming; the
+  actuator audit's hardcoded 293.15 K reference.
 - **Nothing here has run.** Every trace is by reading. The written tests
   have never run.

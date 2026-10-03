@@ -58,8 +58,14 @@ pub struct LiveTarget {
     /// The profile's supported axes (`resolved.limits.supported`, in
     /// `kinematics::AXIS_NAMES` order): the others are zeroed per device.
     pub supported: [bool; 3],
-    /// What is driven (Robot: the model file; Build: the system file and
-    /// its run): a change disarms held inputs. A Reset of the same run keeps it.
+    /// What is driven, with the run's identity: a change disarms held
+    /// inputs. Robot: the model file, the run controller's generation and
+    /// whether a replay is in progress (`robot::controls::robot_target`), so
+    /// another file, a reload, a Reset, a replay start and a replay end each
+    /// change it. Build: the system file, the run thread's run id (content
+    /// hash and revision), the run's start number and its generation
+    /// (`Builder::drive_target`), so an edited file, a new run (even of
+    /// unchanged content) and a Reset each change it.
     pub run: String,
 }
 
@@ -76,12 +82,15 @@ pub struct DriveDevice {
 
 /// What a stop, halt or Pause from any origin does to held drive inputs
 /// (shown as `drive_input.disarm_rule`).
-pub const DISARM_RULE: &str = "an accepted stop, halt, named profile action, Pause or Reset from any origin (a panel button, a key, system_ui, REST robot_drive / robot_run / system_drive / system_run, a device) disarms the held drive inputs, as Escape or a bound stop key does: a key, stick or button still held is ignored until it is released and pressed again (a gamepad until every bound stick is in its deadzone and every bound button released), and if the devices were driving and it was a drive stop or action they send one stop first, so a held input applied in the same frame after the click does not leave the robot driving (a Pause or Reset sends none: held axes are refused while paused, and a fresh zero would replace the paused request's on-loss stop); paths that stop a run by removing the drive target (leaving the mode, opening a lesson, a hot swap, another file) disarm through the target change instead; together with the drive host's pause rule (sim_runtime::drive_host::PAUSE_RULE) nothing requested before a Pause moves the robot after Run without fresh input";
+pub const DISARM_RULE: &str = "an accepted stop, halt, named profile action, Pause (one that paused a running run: Robot refuses a Pause when not running, Build accepts it as a no-op that disarms nothing) or Reset from any origin (a panel button, a key, system_ui, REST robot_drive / robot_run / system_drive / system_run, a device) disarms the held drive inputs, as Escape or a bound stop key does: a key, stick or button held when the stop was applied is ignored until it is released and pressed again (a gamepad until every bound stick is in its deadzone and every bound button released), while one first pressed after the stop drives (the poller reads the stop in the next frame and disarms only what was held in the frame it was applied; Robot's apply writes no disarm for the devices' own requests, which disarmed themselves), and if the devices were driving and it was a drive stop or action they send one stop first, so a held input applied in the same frame after the click does not leave the robot driving (a Pause or Reset sends none itself: held axes are refused while paused, and a fresh zero would replace the paused request's on-loss stop; a Reset rebuilds the run as a new drive target, so devices still sending then send one stop to the rebuilt run through the target change); paths that stop or replace a run by removing or changing the drive target (leaving the mode, opening a lesson, a hot swap, another file, a reload, a replay's start or end, a new Build run) disarm through the target change instead; together with the drive host's pause rule (sim_runtime::drive_host::PAUSE_RULE) nothing requested before a Pause moves the robot after Run without fresh input";
 
 /// A native stop, halt, pause or drive action applied in `mode` ([`DISARM_RULE`]):
-/// held drive inputs are disarmed, exactly as Escape or a bound stop key
-/// disarms them, so a key, stick or button still held after the click does
-/// not drive again until it is released and pressed again.
+/// the drive inputs held when it was applied are disarmed, as Escape or a
+/// bound stop key disarms them, so a key, stick or button still held after
+/// the click does not drive again until it is released and pressed again.
+/// The poller reads it one frame after it was applied, so it blocks only a
+/// key held since before that frame and the gamepad if it was held then: a
+/// key or stick first pressed after the stop drives.
 ///
 /// One public path into the poller's latch: written by each mode's one
 /// drive apply when it accepts a stop, halt, Pause or named action from any

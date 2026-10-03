@@ -7854,8 +7854,16 @@ focus-safety-closure (2026-10-03; by reading, unexecuted; traces in
   action, Pause or Reset from any origin (Robot: `robot::actions::apply`;
   Build: `builder::system_actions::apply`), in `ViewerSet::Actions`, and
   read every frame by the one poller (`drive_input::input::devices`,
-  `InputSet::Window`, no `run_if`). A held key, stick or button is ignored
-  until released; if the devices were driving they send one Stop first.
+  `InputSet::Window`, no `run_if`). A key, stick or button held when the
+  stop was applied is ignored until released, while one first pressed after
+  it drives (focus-final-leftovers: Robot's apply writes none for the
+  devices' own requests, which it reads itself, so no echo swallows a fresh
+  key); if the devices were driving they send one Stop
+  first. Build writes it for a Pause only when that Pause paused a running
+  run. `LiveTarget::run` carries the run's identity (Robot: file, run
+  generation and replay in progress; Build: file, run id, run start number
+  and generation), so a reload, a replay's start or end and a new run
+  disarm held inputs through the target change.
 - **Pause invalidates a live request.** `sim_runtime::drive_host::PAUSE_RULE`:
   `TwistState::pause` (shared with a replay's end) zeroes the request and
   expires the deadman, so on resume the profile's on-loss rule runs until a

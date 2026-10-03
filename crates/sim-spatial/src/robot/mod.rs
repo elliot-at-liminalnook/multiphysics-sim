@@ -234,8 +234,7 @@ impl Plugin for RobotPlugin {
                         .in_set(crate::app::InputSet::Window),
                     // What the one device poller (`crate::drive_input`, InputSet::Window) may drive: written before it.
                     controls::drive_target.in_set(ViewerSet::Input).before(crate::app::InputSet::Window),
-                    // Its requests for Robot mode, as `RobotAction::Drive`, before robot mode's one apply.
-                    actions::forward_devices.in_set(ViewerSet::Actions).before(RobotSet::Actions),
+                    // Robot mode's one apply; it also reads the device poller's requests for Robot mode.
                     actions::apply.in_set(RobotSet::Actions),
                     panel_ui::receive_listing.in_set(ViewerSet::JobResults),
                     // Before the shared camera (`crate::camera`): its viewport reads the

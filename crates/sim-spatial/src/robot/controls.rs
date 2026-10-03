@@ -622,32 +622,46 @@ pub(super) const PANEL_KEYS: [KeyCode; 3] = [KeyCode::KeyQ, KeyCode::KeyA, KeyCo
 /// What robot mode offers the device poller: a controlled run
 /// (`RunController::controlled`, a binding with a `sim.drive/1` profile)
 /// with its supported axes, or nothing. Robot mode's one target writer.
+/// `LiveTarget::run` is [`run_identity`]: a reload, Reset, replay start and
+/// replay end each change it, so the poller disarms inputs held across them.
 pub(super) fn robot_target(view: Option<&RobotView>, panel_open: bool) -> DriveTarget {
     let live = view.and_then(|v| {
-        let c = v.run.as_ref()?.controlled()?;
-        Some(LiveTarget { mode: ViewerMode::Robot, supported: c.controlled.resolved.limits.supported, run: v.path.display().to_string() })
+        let run = v.run.as_ref()?;
+        let c = run.controlled()?;
+        Some(LiveTarget { mode: ViewerMode::Robot, supported: c.controlled.resolved.limits.supported, run: run_identity(&v.path, run) })
     });
     let owned_keys = if live.is_some() && panel_open { PANEL_KEYS.to_vec() } else { Vec::new() };
     DriveTarget { live, owned_keys }
 }
 
+/// The identity of `path`'s run for the drive poller and the refusal it
+/// shows: the file, the run controller's generation (bumped by Reset, a
+/// reload's `RunController::replace_file` and a replay start) and whether a
+/// replay is in progress (a replay's end, to done, failed or cancelled, bumps
+/// no generation; the flag makes it a change).
+pub(super) fn run_identity(path: &std::path::Path, run: &RunController) -> String {
+    let replaying = run.replay_state().phase == crate::robot::run::ReplayPhase::Replaying;
+    format!("{} (run generation {}{})", path.display(), run.generation(), if replaying { ", replaying" } else { "" })
+}
+
 /// Input, before `InputSet::Window` (Robot mode): writes [`DriveTarget`]
 /// for the one device poller ([`robot_target`], `set_if_neq`), and clears
-/// `DriveInput::last_error` when the run it belongs to changes (the file, or
-/// its generation: Reset, a replay, a reload), as the refusal was that run's.
+/// `DriveInput::last_error` when the run it belongs to changes
+/// ([`run_identity`]: the file, its generation (Reset, a replay start, a
+/// reload) or a replay's end), as the refusal was that run's.
 /// Robot mode's apply records the refusals (`actions::apply`).
 pub(super) fn drive_target(
     view: Option<Res<RobotView>>,
     hardware: Option<Res<crate::robot::hardware::Hardware>>,
     target: Option<ResMut<DriveTarget>>,
     input: Option<ResMut<DriveInput>>,
-    mut run_key: Local<Option<(PathBuf, Option<u64>)>>,
+    mut run_key: Local<Option<(PathBuf, Option<String>)>>,
 ) {
     let view = view.as_deref();
     if let Some(mut target) = target {
         target.set_if_neq(robot_target(view, hardware.is_some_and(|h| h.open)));
     }
-    let key = view.map(|v| (v.path.clone(), v.run.as_ref().map(RunController::generation)));
+    let key = view.map(|v| (v.path.clone(), v.run.as_ref().map(|r| run_identity(&v.path, r))));
     if *run_key != key {
         *run_key = key;
         if let Some(mut input) = input

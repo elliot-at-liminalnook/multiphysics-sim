@@ -82,9 +82,20 @@ physical-source acceptance follows.
   annotations service (`annotations/`) with one thread panel
   (`ui_kit/threads.rs`); see
   [Documents, selection and annotations](#documents-selection-and-annotations-2026-10-01).
-  No REST command was added or renamed (392 `spec(`/`c("` entries before
+  Since cad-annotation-parity (2026-10-02, by reading, unexecuted), threads
+  behave the same in CAD, Build, Inspect, Lessons and Robot (the
+  [cross-mode matrix](#cross-mode-annotation-behaviour-cad-annotation-parity-2026-10-02)).
+  Inspect notes are full threads in a v1/v2 sidecar, Robot mode shows its
+  CAD source's RoboCAD threads on its links (new REST `robot_threads`), and
+  CAD-176 to CAD-186 have reading traces in `docs/cad-checklist.md`.
+  In the 2026-10-01 batch no REST command was added or renamed (392 `spec(`/`c("` entries before
   and after); sim-spatial has 399 `#[test]` functions (374 at aa34ef48,
   counted with `grep -rh '#\[test\]' crates/sim-spatial/src | wc -l`).
+- **Leg hardware, HW-10 and HW-11** (native-leg-clock-alignment,
+  2026-10-02): complete by reading. Gait playback Sim, Leg and Both, one
+  leg clock and the mirror's alignment are traced in
+  `docs/hardware-checklist.md` (traces around line 1052, run sheets around
+  1495). Nothing was executed: no test, driver run or build.
 - **Window-first** (window-first-usability, 2026-10-01, verified at
   aa34ef48: lib 369 passed, 1 ignored; bins 4/4; workspace check clean): every mode's document can be opened in the window. A mode
   chosen in the switcher with no document opens the document picker
@@ -4424,8 +4435,8 @@ added or renamed, and no argument shape or on-disk format changed.
 | `inspect_view/projection.rs` | Inspect's items shown on the scene (`SpatialScene::shown`, a display projection only) and re-checked after a reload. `inspect::select` is Inspect's one adapter, used by REST `select`/`display`, clicks, Escape, the link and notes. |
 | `lesson/selection.rs` | A lesson pick shared as the Build document's instance (`share`), and dropped when the Build selection moves elsewhere (`follow`). |
 | `annotations/` | The one thread service: `ThreadSource` (an anchor adapter over `sim_annotate::Anchor`), `ThreadOp` (create, reply, post, edit, delete comment, resolve, delete, retitle, link, pin, undo, redo), `apply`, which lowers an op to one `ThreadCommand`, validates and commits it, and the shared helpers. |
-| `ui_kit/threads.rs` | The one thread panel (replaces `annotate.rs`): `Host`, `anchors`, `list`, `messages`, `card`, `composer`. |
-| Adapters | `notes.rs` + `notes/panel.rs` (Inspect notes: `NoteAnchor`, `InspectNotes`, format `sim_inspect::annotations`), `builder/discussion.rs` (`SystemThreads`, `sim_system::display`), `lesson/threads.rs` (`LessonThreads`, lesson sidecars). Each keeps its own file format and I/O. |
+| `ui_kit/threads.rs` | The one thread panel (replaces `annotate.rs`): `Host` (with `warning`, a thread's truthfulness line), `anchors`, `list`, `messages`, `card`, `card_with` (an open card with a comment menu and the host's rows), `composer`, and the Open / All / Resolved filter (`Shown`, `filter_row`). |
+| Adapters | `notes.rs` + `notes/panel.rs` + `notes/compose.rs` (Inspect notes: `NoteAnchor`, `InspectNotes`, format `sim_inspect::annotations` v1/v2, the panel's `NotesUi` drafts), `builder/discussion.rs` (`SystemThreads`, `sim_system::display`), `lesson/threads.rs` (`LessonThreads`, lesson sidecars), `cad/threads/source.rs` (`CadThreadSource`, RoboCAD's threads over its REST routes; `request_on` is the one RoboCAD call for a command on an existing thread), `robot/threads/` (`RobotCadThreads`: the robot's CAD source's RoboCAD threads, mapped to links by CAD node id; never written by Rust, changes go through `request_on`). Each keeps its own file format and I/O. |
 
 ### Decisions
 
@@ -4476,10 +4487,25 @@ added or renamed, and no argument shape or on-disk format changed.
   `Store`'s edits onto `Pool::Io` jobs, which would need a second edit path
   for the shared crate's transactions. *Revisit if* `Store` moves into
   `jobs`.
-- **Inspect notes are shown as one-message threads.** Replies, comment
-  deletes and resolving a note are refused, naming the reason. Saved
-  views and navigation stay `notes::Command`. The note format is lossless
-  through `as_thread`/`as_note`.
+- **Inspect notes are full threads** (cad-annotation-parity, 2026-10-02,
+  replacing "Inspect notes are shown as one-message threads"). A note's
+  text is the thread's first comment (no author or time; it is edited,
+  never deleted on its own: "delete the note to remove its text"), its
+  replies are `sim_annotate::Comment<Link>` and it can be resolved. The
+  sidecar (`sim_inspect::annotations`) reads versions 1 and 2 and writes
+  version 2 only while a note, or a command on the undo/redo stacks,
+  carries replies or a resolved flag, so an untouched version-1 file is
+  written back unchanged and older viewers still read it. A newer version
+  is refused before the typed parse, naming the path and the version
+  (`Revisioned::check_raw`, called by `sim_annotate::store::read`); every
+  struct keeps `deny_unknown_fields`. Replies, reply edits and deletes and
+  resolve are `notes::Command`s applied by the Store's worker, each with a
+  whole-note undo step, submitted without a revision guard (they commute);
+  edits of the note itself keep the guard. Saved views and navigation stay
+  `notes::Command`. `as_thread`/`as_note` are lossless both ways. *Rejected:*
+  replacing the sidecar with `sim_annotate`'s thread document (a migration
+  of every existing file). *Revisit if* keeping the two formats in step
+  costs more than a one-time migration.
 - **Small visual changes:** Inspect notes render Markdown; the builder
   composer hint gains "· Esc cancels"; a missing anchor chip shows its
   label.
@@ -4488,6 +4514,37 @@ added or renamed, and no argument shape or on-disk format changed.
   and after a compile, but not in Lessons, where the lesson page draws its
   own. A discussion's exact-part highlight is kept (its `seen_selection`
   is recorded).
+
+### Cross-mode annotation behaviour (cad-annotation-parity, 2026-10-02)
+
+Every mode that shows a model takes comment threads through the one
+service (`annotations::apply`) and draws them with `ui_kit/threads.rs`.
+Phenomena and Place have no model nodes and show no threads (decision of
+this batch; revisit if comments on exhibits or scanned places are wanted).
+All of it is **by reading, unexecuted**: nothing was built, tested or run.
+Paths are under `crates/sim-spatial/src/` unless named.
+
+| Operation | CAD (RoboCAD's threads) | Build (system discussions) | Inspect (notes sidecar) | Lessons (lesson sidecar) | Robot (the CAD source's threads) |
+|---|---|---|---|---|---|
+| Create | Annotate (N), a face click, Post: `cad/threads/ops.rs:210` → `create` `:384` → `CadThreadSource::commit` `cad/threads/source.rs:423` → `POST /threads` | `builder/discussion.rs:320` (`ThreadOp::Create`) | `notes/panel.rs` "Annotate selected parts" → `notes::Command::PutNote` (a note, not a `ThreadOp`) | `lesson/threads.rs:70`, `lesson/actions.rs:560` | Refused: `request_on` (`cad/threads/source.rs:475`) says a new thread is placed in CAD mode. *Why:* a pin needs RoboCAD's faces at the shown revision, which only CAD mode reads. |
+| Reply | `ops.rs:211` → `request_on` → `POST /threads/{id}/comments` | `builder/discussion.rs:330` | `notes.rs:310-312` → `InspectNotes::commit` `notes.rs:169` → `AddReply` | `lesson/threads.rs:66` | `robot/threads/act.rs:254` → `RobotCadThreads::commit` `robot/threads/mod.rs:336` → `request_on` → a job re-checking path, document id and revision (`mod.rs:362`) → `Request::send` |
+| Edit a comment | `ops.rs:234` → `PATCH /comments/{id}` | `builder/discussion.rs:335` | `notes.rs:316` (the note's text → `PutNote`, a reply → `EditReply`) | `lesson/threads.rs:62` | `robot/threads/act.rs:259` (as Reply) |
+| Delete a comment | `ops.rs:262` → `DELETE /comments/{id}`; the last one is refused as RoboCAD refuses it | `builder/discussion.rs:337` | `notes.rs:317` → `DeleteReply`; the note's own text is refused by name | `lesson/actions.rs:564`, `lesson/handler.rs:243` | `robot/threads/act.rs:263` (as Reply, same last-comment refusal) |
+| Resolve / reopen | `ops.rs:288` → `PATCH status`; the filter `cad/threads/dock.rs:156`, the pin hidden `cad/threads/pins.rs:88` | `builder/discussion.rs:338`; "Open notes / All notes" toggle | `notes.rs:318` → `Resolve`; `notes/panel.rs:162` and the filter `notes/panel.rs:285` | `lesson/handler.rs:249`; open-only toggle `lesson/ui/margin.rs:86` | `robot/threads/act.rs:270`; the kit filter |
+| Delete a thread | `ops.rs:277` → `DELETE /threads/{id}` | `builder/discussion.rs:332` | `notes::Command::DeleteNote` (`notes.rs:169` maps `DeleteThread`) | `lesson/handler.rs:253` | Not offered. *Why:* deleting a part's comment thread is a CAD edit with RoboCAD's undo; Robot mode has no undo for it. Open in CAD. |
+| Part link | `[label](part:ID)` in a body: `ops.rs:341` (`PartLink`) selects the node | Inline links `builder/discussion.rs:330` (`inline_links`) | Note links (`notes::Link`), followed by `FollowLink` (now also a reply's) | Scene anchors `lesson/ui/margin.rs:25` | A part link or chip to a member selects the containing link: `robot/threads/panel.rs:90-95` |
+| Select from a thread | Open selects its part; Show on model `cad/threads/isolation.rs:146` | `builder/discussion.rs:260` (`Picked::set`) | `notes.rs` `SelectNote` → `inspect::select` | `lesson/selection.rs` (share) | `robot/threads/panel.rs:77` → `picked::select` (`Item::Link`); an unmapped thread selects nothing |
+| Pin / place on the model | Numbered pins, amber current / blue others: `cad/threads/pins.rs:88-99` | Markers `builder/markers.rs` | Guide boxes `notes/panel.rs:319` | None (text and scene anchors). *Why:* a lesson note is on text or a scene time. | None; the selected link is highlighted. *Why:* the pin is in RoboCAD's frame (mm), and the export carries no CAD-to-model transform for it. *Revisit* with the export's frame record. |
+| Truthful anchor | RoboCAD's `anchor_status` texts (`cad/threads/controls.rs`, `attachment`) | Missing targets marked (`Target::missing`) | `Host::warning` on a note whose parts are gone | Missing anchors marked | `Host::warning`: "Not on any link of this export: …", and on every thread when `cad_link` is not Current (`robot/threads/mod.rs:61`, `:116-127`) |
+| Persistence | RoboCAD's document (`.rcad` manifest), saved by `cad_file` save or autosave; the viewer never writes it | The system file, with the builder's save | The `*.annotations.json` sidecar through `sim_annotate::store::Store`'s worker | The lesson sidecar through the Store | RoboCAD's document only; Rust never writes a `.rcad` |
+| Undo | RoboCAD's undo (`cad_undo`, one step per thread edit); `ThreadOp::Undo` is refused with `UNDO_IS_ROBOCADS` | The system's undo | Sidecar inverse commands (`sim-inspect/src/annotations.rs:309`) | Sidecar inverse commands | Refused with `UNDO_IS_ROBOCADS`: undo in CAD mode |
+| Remote refresh | `cad/threads/read.rs:129` re-reads at each new RoboCAD revision; the draft is kept | The builder's file watch `builder/background.rs:42` | The Store's idle re-read; a draft settles only on its own result (`notes/compose.rs`) | The Store's idle re-read | A 2 s probe while shown (`robot/threads/read.rs:22`, `:174`); the draft is kept |
+| When it can't act | Refused by name when stale, in flight or disconnected | — | Refused by name (unknown note or reply, the note's text) | — | "<file> is not open in CAD mode: open it there to reply", with **Open in CAD** (`robot/threads/act.rs:125`), which keeps the thread to show in `cad::threads::RevealThread` (state, not a message) until CAD mode has read it (`cad/threads/read.rs:219-243`) |
+
+Remaining differences, each justified in its cell: Robot creates no
+threads, deletes none, has no pins and no undo of its own. CAD's undo is
+RoboCAD's. Lessons have no pins. Build and Lessons keep their own open-only
+toggles rather than the three-way kit filter (not migrated in this batch).
 
 ### Found by reading and fixed
 

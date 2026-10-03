@@ -291,6 +291,38 @@ fn cancelled_export_failure_remains_observable_and_preserves_previous_write() {
     assert!(doc.results.exports.last.as_ref().unwrap().2.as_ref().unwrap_err().contains("cancelled"));
 }
 
+/// A job cancelled before its closure ran (`crate::jobs`' own text) is a
+/// cancel too, naming that error; nothing was written.
+#[test]
+fn an_export_cancelled_before_it_started_reads_as_cancelled() {
+    let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
+    let mut running = landed(request(false, "physical model"), doc.generation);
+    let before = "RoboCAD export: physical model was cancelled before it started.";
+    running.job = crate::jobs::Job::finished(doc.generation, Err(before.into()));
+    doc.results.exports.running = Some(running);
+    export::cancel(&mut doc).unwrap();
+    assert!(export::poll(&mut doc).is_none());
+    let message = doc.results.exports.last.as_ref().unwrap().2.clone().unwrap_err();
+    assert!(message.starts_with("physical model export cancelled: nothing was written to "), "{message}");
+    assert!(message.ends_with(&format!("({before})")), "{message}");
+    assert!(doc.results.exports.written.is_none());
+}
+
+/// An export of an older connection or document lands: it is reported,
+/// but "Show in Robot mode" keeps the previous model and nothing follows it.
+#[test]
+fn an_export_of_an_older_document_is_reported_but_not_shown() {
+    let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
+    let prior = PathBuf::from("/work/previous.simrobot.json");
+    doc.results.exports.written = Some(prior.clone());
+    doc.results.exports.running = Some(landed(request(true, "live simulation model"), doc.generation));
+    doc.generation += 1;
+    assert!(export::poll(&mut doc).is_none());
+    assert_eq!(doc.results.exports.written.as_ref(), Some(&prior));
+    let message = doc.results.exports.last.as_ref().unwrap().2.clone().unwrap();
+    assert!(message.contains("Robot mode does not follow it"), "{message}");
+}
+
 #[test]
 fn profiles_read_captures_source_and_refuses_changed_generation_or_revision() {
     for change_generation in [true, false] {

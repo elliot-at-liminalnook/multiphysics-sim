@@ -6,7 +6,7 @@
 //! a local gesture and commits with one `move`.
 use super::handle::{TreeArgs, TreeOp};
 use super::rows::{TreeEnd, TreeField, TreeRowId, end_menu};
-use super::state::{Claim, DropTarget, TreeDrag, move_plan};
+use super::state::{Claim, DropTarget, TreeDrag, move_plan, with_descendants};
 use crate::app::actions::Act;
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
@@ -141,9 +141,11 @@ impl RowLookup<'_, '_> {
         self.plan(doc, ids, entity, at)?.ok()
     }
 
-    /// [`Self::target`] with the refusal: None when `entity` is not in the
-    /// tree, Err naming why RoboCAD would refuse the move (a group onto
-    /// itself or one of its descendants).
+    /// [`Self::target`] with the one refusal shown: None when `entity` is
+    /// not in the tree or `move_plan` refuses for another reason (dropped
+    /// silently, as before: a short drag ending on the dragged row itself),
+    /// Err with RoboCAD's text (commands.py `move_nodes`) when the new
+    /// parent is a moving group or one of its descendants.
     fn plan(&self, doc: &CadDocument, ids: &[String], entity: Entity, at: Vec2) -> Option<Result<DropTarget, String>> {
         let target = match self.find(entity)? {
             Hit::End => DropTarget::TopLevel,
@@ -160,7 +162,20 @@ impl RowLookup<'_, '_> {
             DropTarget::Before(id) => (None, Some(id.as_str())),
             DropTarget::TopLevel => (None, None),
         };
-        Some(move_plan(doc, ids, parent, before).map(|_| target))
+        match move_plan(doc, ids, parent, before) {
+            Ok(_) => Some(Ok(target)),
+            Err(_) => {
+                // The parent the move would land under: the group, or the
+                // `before` row's parent (top level: none).
+                let state = doc.doc.as_ref()?;
+                let into = match &target {
+                    DropTarget::Into(id) => Some(id.clone()),
+                    DropTarget::Before(id) => state.nodes.iter().find(|n| n.id == *id).and_then(|n| n.parent.clone()),
+                    DropTarget::TopLevel => None,
+                }?;
+                with_descendants(state, ids).contains(&into).then(|| Err(format!("Cannot move a group into itself or its descendants ({})", doc.node_name(&into))))
+            }
+        }
     }
 }
 
@@ -309,9 +324,10 @@ pub(super) fn rows(
             doc.touch();
         }
     }
-    // The drop: one move, as RoboCAD's `_drop` builds it; a drop RoboCAD
-    // would refuse (a group onto itself or its descendants) is refused by
-    // name in the status line, with nothing sent.
+    // The drop: one move, as RoboCAD's `_drop` builds it; a group dropped
+    // into itself or its descendants is refused by name in the status line
+    // (RoboCAD's `move_nodes` refuses it), with nothing sent. Other plans
+    // `move_plan` refuses are ignored silently (`RowLookup::plan`).
     let mut dropped = false;
     for ev in msgs.drop.read() {
         if dropped || ev.button != PointerButton::Primary || !armed {

@@ -27,7 +27,8 @@
 //!   action is applied before the surface closes.
 //! - **Escape order**: a typing kit field's Escape is that field's alone
 //!   (the kit consumes it; the palette's closes the palette, the form's
-//!   cancels the form); else an open surface closes; else an open form or
+//!   cancels the form); else an open file form's (`files::form`: [`input`]
+//!   stands aside while one is open); else an open surface closes; else an open form or
 //!   active interaction is cancelled (`CadFormCancel`); else transform's
 //!   keys take it (they skip Escape while either exists).
 //! - **Wheel**: over a menu or context-menu popup it scrolls the popup's
@@ -338,7 +339,7 @@ fn input(
     roots: Query<(&ComputedNode, &UiGlobalTransform), With<SurfaceRoot>>,
     bar: Query<(&ComputedNode, &UiGlobalTransform), With<menus::MenuRow>>,
     buttons: Option<Res<ButtonInput<MouseButton>>>,
-    keys: Option<Res<ButtonInput<KeyCode>>>,
+    (keys, files): (Option<Res<ButtonInput<KeyCode>>>, Option<Res<crate::cad::files::CadFiles>>),
     windows: Query<&Window, With<PrimaryWindow>>,
     mut out: MessageWriter<Act<CadAction>>,
     (mut text, mut popup_was_open): (crate::ui_kit::text::TextFocus, Local<bool>),
@@ -381,8 +382,13 @@ fn input(
         }
     }
     // A typing field's Escape is its own (the kit consumes it: the palette's
-    // and the form's fields close or cancel on their `Cancel`).
-    if keys.is_some_and(|k| k.just_pressed(KeyCode::Escape)) {
+    // and the form's fields close or cancel on their `Cancel`). An open file
+    // form's Escape is its own (`files::form::input` closes it and consumes
+    // the key, but this chain is not ordered against it): stand aside, as
+    // the threads' and calibrate's Escape do, so one press never both closes
+    // the file form and cancels the tool.
+    let file_form = files.as_ref().is_some_and(|f| f.form.is_some());
+    if !file_form && keys.is_some_and(|k| k.just_pressed(KeyCode::Escape)) {
         if open.is_some() {
             out.write(Act::ui(crate::cad::activation::guard(&doc, CadAction::CadSurface { surface: Surface::Closed })));
         } else if doc.ops.form.is_some() || doc.ops.active.is_some() {

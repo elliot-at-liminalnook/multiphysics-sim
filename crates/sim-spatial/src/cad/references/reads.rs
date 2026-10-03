@@ -9,11 +9,17 @@
 //!   never presented as current.
 //! - **System status**: `system_status()` per (generation, shown revision)
 //!   while the dock is open (or Open in builder asked for it): "Reading the
-//!   linked system file…" until then. Opening the dock and every link edit
-//!   read it again, and so does every [`STATUS_PERIOD`] while the dock is
-//!   open: the file can change on disk without a RoboCAD revision, and
-//!   Accept changes is ready only once the status says "changed". A re-read
-//!   that answers the same marks nothing changed.
+//!   linked system file…" until then. Opening the dock, every link edit and
+//!   Refresh (`cad_refresh`: `CadDocument::mesh_retry` moves) read it again,
+//!   as RoboCAD's own References dock reads it on each panel refresh and
+//!   link edit (ui/references.py `show_system`): the file can change on disk
+//!   without a RoboCAD revision. A desktop window is never read on a timer:
+//!   `system_status` is an op, and RoboCAD's `Service.op` refreshes the
+//!   window's outliner, properties and viewport after every op (api.py
+//!   `_refresh`), which would disturb work there. A headless service
+//!   (`health.gui` false: `_refresh` has no window) is also read every
+//!   [`STATUS_PERIOD`] while the dock is open, so CHANGED shows without a
+//!   Refresh. A re-read that answers the same marks nothing changed.
 //! - **Form**: the current image (the first image when none is current, as
 //!   RoboCAD's list) and its form, reloaded from each newer placement.
 //! - **After an import**: the align on its last image, once its placement is
@@ -37,8 +43,9 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
-/// How often the open dock reads the linked system file's status again
-/// (one `system_status()`: RoboCAD reads and hashes the file).
+/// How often the open dock reads the linked system file's status again from
+/// a headless service (one `system_status()`: RoboCAD reads and hashes the
+/// file). Never from a desktop window (the module doc).
 pub(crate) const STATUS_PERIOD: Duration = Duration::from_secs(2);
 
 /// (generation, shown revision).
@@ -62,8 +69,12 @@ pub struct Reads {
     pub(crate) placement_job: Option<((Key, u64), Job<Vec<(String, Result<ImagePlacement, String>)>>)>,
     pub(crate) status: Option<(Key, Result<SystemStatus, String>)>,
     pub(crate) status_job: Option<(Key, Job<SystemStatus>)>,
-    /// When `status` landed (the open dock reads it again after [`STATUS_PERIOD`]).
+    /// When `status` landed (the open dock reads a headless service's again
+    /// after [`STATUS_PERIOD`]).
     pub(crate) status_at: Option<Instant>,
+    /// The `CadDocument::mesh_retry` (Refresh count) the last status read
+    /// started at: a Refresh reads it again.
+    pub(crate) status_retry: u64,
     /// Open in builder, Accept changes or Unlink asked for the status with
     /// the dock closed (an atomic: the controls' readiness, which reads the
     /// document shared, asks for it too).
@@ -194,7 +205,8 @@ pub(crate) fn tick(doc: &mut CadDocument) -> bool {
     let landed = reads.status_job.as_ref().and_then(|(k, job)| job.poll().map(|r| (*k, r)));
     if let Some((k, result)) = landed {
         reads.status_job = None;
-        // The periodic re-read usually answers the same: nothing shown changes.
+        // A re-read (Refresh, a headless service's timer) usually answers the
+        // same: nothing shown changes.
         let same = reads.status.as_ref().is_some_and(|(old, was)| *old == k && *was == result);
         reads.status = Some((k, result));
         reads.status_at = Some(Instant::now());
@@ -202,13 +214,18 @@ pub(crate) fn tick(doc: &mut CadDocument) -> bool {
         changed |= !same;
     }
     let unread = reads.status.as_ref().is_none_or(|(k, _)| *k != now);
-    let aged = doc.references.open && reads.status_at.is_some_and(|at| at.elapsed() >= STATUS_PERIOD);
-    let wanted = (doc.references.open || reads.want_status.load(Ordering::Relaxed)) && reads.status_job.is_none() && (unread || aged);
+    // Refresh asked for it again (shown as read until the answer differs).
+    let refreshed = reads.status_retry != doc.mesh_retry;
+    // Only a headless service is read on a timer (the module doc).
+    let headless = doc.health.as_ref().is_some_and(|h| !h.gui);
+    let aged = headless && doc.references.open && reads.status_at.is_some_and(|at| at.elapsed() >= STATUS_PERIOD);
+    let wanted = (doc.references.open || reads.want_status.load(Ordering::Relaxed)) && reads.status_job.is_none() && (unread || refreshed || aged);
     if wanted && doc.doc.is_some()
         && let Some(c) = client
     {
+        reads.status_retry = doc.mesh_retry;
         reads.status_job = Some((now, Job::spawn(Pool::Dedicated, now.0, "cad system status", move |_| c.system_status().map_err(|e| e.to_string()))));
-        // A periodic re-read shows nothing new until it answers differently.
+        // A re-read at the same key shows nothing new until it answers differently.
         changed |= unread;
     }
     // Another tool or interaction replaced the calibrate tool.

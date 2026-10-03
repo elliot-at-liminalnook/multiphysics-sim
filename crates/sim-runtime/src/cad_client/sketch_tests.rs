@@ -76,7 +76,8 @@ fn sketch_reads_missing_and_malformed_fields_tolerantly() {
         ]
     });
     let (g, dropped) = SketchGeometry::from_value(&v).unwrap();
-    assert_eq!(dropped, 3);
+    // Named by their index in RoboCAD's list.
+    assert_eq!(dropped, vec![1, 2, 3]);
     // `Sketch.from_json`'s default name; no plane.
     assert_eq!((g.name.as_str(), g.plane), ("Sketch", None));
     assert_eq!(g.curves.len(), 3);
@@ -115,7 +116,7 @@ fn edit_sketch_request_and_answer() {
     let d = c.edit_sketch("5a5b5c5d5e5f", &calls).unwrap();
     assert_eq!((d.summary.kind.as_str(), d.summary.name.as_str()), ("sketch", "Sketch"));
     let (g, dropped) = SketchGeometry::from_value(d.sketch.as_ref().unwrap()).unwrap();
-    assert_eq!((g.curves.len(), dropped), (5, 0));
+    assert_eq!((g.curves.len(), dropped.len()), (5, 0));
     let seen = server.join().unwrap();
     assert_request(&seen[0], "POST /nodes/5a5b5c5d5e5f/sketch HTTP/1.1", port, Some(r#"{"calls":[["rectangle",[[0.0,0.0],[20.0,10.0]]],["circle",[[10.0,5.0],2.0]],["join",[[0,1]]]]}"#));
 }
@@ -223,8 +224,8 @@ fn from_json_reads_keywords_and_defaults() {
 #[test]
 fn from_json_refusals_name_the_call_and_the_argument() {
     let refuse = |v: Value| SketchCall::from_json(&v).unwrap_err();
-    assert_eq!(refuse(json!(["bogus", []])), format!("no sketch call bogus (RoboCAD's: {})", SKETCH_CALLS.join(", ")));
-    assert!(refuse(json!(["bogus", []])).starts_with("no sketch call bogus (RoboCAD's: line, polyline, spline,"));
+    assert_eq!(refuse(json!(["bogus", []])), format!("no sketch method bogus (RoboCAD's sketch calls: {})", SKETCH_CALLS.join(", ")));
+    assert!(refuse(json!(["bogus", []])).starts_with("no sketch method bogus (RoboCAD's sketch calls: line, polyline, spline,"));
     assert_eq!(refuse(json!("line")), r#"a sketch call is [name, [args…], {kwargs}?] (got "line")"#);
     assert_eq!(refuse(json!([])), "a sketch call is [name, [args…], {kwargs}?] (got [])");
     assert_eq!(refuse(json!([5, []])), "a sketch call starts with its name, a string (got 5)");
@@ -264,14 +265,14 @@ fn check_calls_tracks_curve_indices() {
     let line = |y: f64| Line { a: [0.0, y], b: [10.0, y] };
     // Two lines, joined into one: index 1 no longer exists.
     let calls = [line(0.0), line(1.0), Join { curves: vec![0, 1] }, Trim { curve: 0, cutters: vec![1], click: [5.0, 0.0] }];
-    assert_eq!(check_calls(&calls, Some(0)).unwrap_err(), "call 4 (trim): argument cutters[0] is curve 1, but the sketch has 1 curve then");
+    assert_eq!(check_calls(&calls, Some(0)).unwrap_err(), "call 4 (trim): argument cutters[0]: curve index 1 out of range (1 curves)");
     assert!(check_calls(&calls[..3], Some(0)).is_ok());
     // Unknown counts check nothing past them.
     assert!(check_calls(&calls, None).is_ok());
     assert!(check_calls(&[Text { origin: [0.0, 0.0], text: "A".into(), height: 5.0 }, Remove { curve: 99 }], Some(0)).is_ok());
     assert!(check_calls(&[Trim { curve: 0, cutters: vec![1], click: [0.0, 0.0] }, Remove { curve: 99 }], Some(2)).is_ok());
-    assert_eq!(check_calls(&[Remove { curve: 3 }], Some(3)).unwrap_err(), "call 1 (remove): argument curve is curve 3, but the sketch has 3 curves then");
-    assert_eq!(check_calls(&[line(0.0), ArcTangent { prev: 1, end: [1.0, 1.0] }], Some(0)).unwrap_err(), "call 2 (arc_tangent): argument prev is curve 1, but the sketch has 1 curve then");
+    assert_eq!(check_calls(&[Remove { curve: 3 }], Some(3)).unwrap_err(), "call 1 (remove): argument curve: curve index 3 out of range (3 curves)");
+    assert_eq!(check_calls(&[line(0.0), ArcTangent { prev: 1, end: [1.0, 1.0] }], Some(0)).unwrap_err(), "call 2 (arc_tangent): argument prev: curve index 1 out of range (1 curves)");
     assert_eq!(check_calls(&[line(0.0), Join { curves: vec![] }], Some(0)).unwrap_err(), "call 2 (join): argument curves must name at least one curve");
     // split_at and offset add a curve; remove takes one.
     assert!(check_calls(&[line(0.0), SplitAt { curve: 0, point: [5.0, 0.0] }, Offset { curve: 1, distance: 1.0 }, Remove { curve: 2 }, Reverse { curve: 1 }], Some(0)).is_ok());
@@ -309,9 +310,9 @@ fn check_refuses_collinear_three_point_circles_and_arcs() {
     use SketchCall::*;
     assert_eq!(
         CircleThreePoint { a: [0.0, 0.0], b: [1.0, 1.0], c: [2.0, 2.0] }.check(None).unwrap_err(),
-        "circle_three_point: arguments a, b and c are collinear (no circle passes through [0, 0], [1, 1] and [2, 2])"
+        "circle_three_point: the three points are collinear (arguments a [0, 0], b [1, 1] and c [2, 2])"
     );
-    assert!(ArcThreePoint { a: [0.0, 0.0], b: [5.0, 0.0], c: [10.0, 0.0] }.check(None).unwrap_err().starts_with("arc_three_point: arguments a, b and c are collinear"));
+    assert!(ArcThreePoint { a: [0.0, 0.0], b: [5.0, 0.0], c: [10.0, 0.0] }.check(None).unwrap_err().starts_with("arc_three_point: the three points are collinear"));
     // Coincident points too (d = 0).
     assert!(CircleThreePoint { a: [3.0, 3.0], b: [3.0, 3.0], c: [7.0, 1.0] }.check(None).is_err());
     // From a REST caller's JSON as well.

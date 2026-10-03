@@ -50,7 +50,7 @@ const fn row(shape: SketchShape, finish: Finish, chains: bool, readout: Readout,
 }
 
 /// One row per tool, in `SketchShape::ALL` order: `needed` (tools.py:695),
-/// the spline's Enter/double-click (:771-781), the line's chaining (:766),
+/// the spline's Enter/double-click (:771-781), the line's chaining (:768),
 /// the readout (:720-726) and the text tool's "Text to sketch:" (app.py:744-749).
 static SPECS: [SketchSpec; 13] = [
     row(SketchShape::Line, Finish::Points(2), true, Readout::LengthAngle, false),

@@ -353,8 +353,8 @@ fn a_sketch_with_dropped_curves_refuses_index_edits() {
     let mut doc = document("http://127.0.0.1:8420", vec![node("k1", "sketch", "Profile", true)]);
     let mut c = CadSketches::default();
     let g = SketchGeometry { name: "Profile".into(), plane: Some(PlaneFrame::XY), curves: vec![polyline(&SQUARE, true), line([0.0; 2], [5.0, 5.0])] };
-    c.insert_read("k1", 4, Geometry::Sketch(Arc::new(g)), 1);
-    assert_eq!((c.dropped("k1"), c.dropped("k2")), (1, 0));
+    c.insert_read("k1", 4, Geometry::Sketch(Arc::new(g)), vec![2]);
+    assert_eq!((c.dropped("k1"), c.dropped("k2")), (&[2][..], &[][..]));
     let env = Env { sketches: Some(&c), ..Default::default() };
     let r = Resolved::default();
     let run = |id: &str, edit, values: Value| edits::calls(entry(id).unwrap(), edit, &r, values.as_object().unwrap(), &doc, &env);
@@ -364,7 +364,7 @@ fn a_sketch_with_dropped_curves_refuses_index_edits() {
         ("sketch.join", SketchEdit::Join, json!({}), "Join curves"),
     ] {
         let err = run(id, edit, values).unwrap_err();
-        assert!(err.starts_with(&format!("{what} refused: 1 curve(s) of Profile could not be read")), "{err}");
+        assert!(err.starts_with(&format!("{what} refused: 1 curve(s) of Profile could not be read (no kind: RoboCAD's curve 2)")), "{err}");
     }
     let sketch = |calls: Vec<Value>| CadAction::CadSketch { node: Some("k1".into()), plane: None, calls, revision: None };
     let err = refused(apply(&mut doc, Some(&c), &sketch(vec![json!(["line", [[0, 0], [1, 1]]]), json!(["offset", [0, 1.0]])])));

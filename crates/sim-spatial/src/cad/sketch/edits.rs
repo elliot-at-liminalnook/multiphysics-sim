@@ -54,14 +54,19 @@ pub(crate) fn selected_sketch(doc: &CadDocument, selection: &[SelectionItem]) ->
     selection.nodes().into_iter().find(|id| is_sketch(id.as_str())).or_else(|| state.nodes.iter().find(|n| n.kind == "sketch" && n.effective_visible).map(|n| n.id.clone()))
 }
 
-/// Why sketch `id`'s curve indices cannot be used: its read dropped curves.
+/// Why sketch `id`'s curve indices cannot be used: its read dropped curves
+/// (named by their index in RoboCAD's list).
 pub(crate) fn dropped_refusal(env: &Env, id: &str, name: &str, what: &str) -> Result<(), String> {
-    match env.sketches.map_or(0, |c| c.dropped(id)) {
-        0 => Ok(()),
-        n => Err(format!(
-            "{what} refused: {n} curve(s) of {name} could not be read (no kind), so the viewer's curve indices are not RoboCAD's; press Refresh, or edit {name} in RoboCAD"
-        )),
+    let dropped = env.sketches.map_or(&[][..], |c| c.dropped(id));
+    if dropped.is_empty() {
+        return Ok(());
     }
+    let which: Vec<String> = dropped.iter().map(usize::to_string).collect();
+    Err(format!(
+        "{what} refused: {} curve(s) of {name} could not be read (no kind: RoboCAD's curve {}), so the viewer's curve indices are not RoboCAD's; press Refresh, or edit {name} in RoboCAD",
+        dropped.len(),
+        which.join(", ")
+    ))
 }
 
 /// A call that names curves by index (the edits and the tangent constructors).
@@ -218,10 +223,11 @@ pub(crate) fn calls(entry: &OpEntry, edit: SketchEdit, r: &Resolved, values: &Ma
     Ok(Built::Sketch { target: SketchTarget::Node(id), calls, label: label.to_string() })
 }
 
-/// A plane argument as RoboCAD's `ArgConverter.plane` reads it (api.py:199-207):
+/// A plane argument as RoboCAD's `ArgConverter.plane` reads it (api.py:205-212):
 /// "xy" | "xz" | "yz" (any case), or a plane node of the shown tree, with its
 /// frame (read at the shown revision; refused by name when it was read
-/// without a valid frame).
+/// without a valid frame). An unknown name is refused with RoboCAD's own
+/// words ("unknown plane 'p9' (xy/xz/yz or a plane node id)").
 fn named_plane(name: &str, doc: &CadDocument, env: &Env) -> Result<(Value, PlaneFrame), String> {
     let lower = name.to_ascii_lowercase();
     if let Some(b) = [BasePlane::Xy, BasePlane::Xz, BasePlane::Yz].into_iter().find(|b| b.arg() == lower) {
@@ -237,8 +243,9 @@ fn named_plane(name: &str, doc: &CadDocument, env: &Env) -> Result<(Value, Plane
                 None => format!("plane {} ({name}) is still being read from RoboCAD; try again", n.name),
             }),
         },
-        Some(n) => Err(format!("unknown plane {name:?}: {} is a {}, not a plane (xy/xz/yz or a plane node id)", n.name, n.kind)),
-        None => Err(format!("unknown plane {name:?} (xy/xz/yz or a plane node id in the shown tree)")),
+        // RoboCAD's 400 verbatim (`{v!r}`: single quotes), then what the node is.
+        Some(n) => Err(format!("unknown plane '{name}' (xy/xz/yz or a plane node id): {} is a {}, not a plane", n.name, n.kind)),
+        None => Err(format!("unknown plane '{name}' (xy/xz/yz or a plane node id)")),
     }
 }
 
@@ -304,7 +311,9 @@ fn prepare(node: Option<&str>, plane: Option<&str>, calls: &[Value], doc: &CadDo
 
 /// `CadAction::CadSketch` (`cad_sketch`, and every sketch tool's finished
 /// shape): refused by name with nothing sent while an edit is in flight,
-/// the document is stale or changed since `revision`; each call read by
+/// the document is stale or changed since `revision`, or (REST) when a
+/// call names curves by index and no `revision` says when they were read;
+/// each call read by
 /// `SketchCall::from_json` (a refusal names the call and the argument) and
 /// checked against the sketch's curve count when it is read (`check_calls`).
 /// With `node`: that sketch of the shown tree. Without: RoboCAD's sketch
@@ -320,6 +329,17 @@ pub(in crate::cad) fn sketch_action(node: Option<&str>, plane: Option<&str>, cal
         Ok(p) => p,
         Err(e) => return Outcome::Done(Err(e)),
     };
+    // Curve indices are RoboCAD's numbering at one revision: a REST caller
+    // naming curves by index names that revision too (as `cad_run` items
+    // naming faces or edges must), so indices read before an edit are never
+    // applied to the curves after it. The sketch tools' shapes carry their
+    // first click's revision; the sketch edits do not come through here.
+    if revision.is_none()
+        && call.rest()
+        && let Some((i, c)) = parsed.iter().enumerate().find(|(_, c)| names_curves(c))
+    {
+        return Outcome::Done(Err(format!("cad_sketch call {} ({}): pass revision: the RoboCAD revision the curve indices in calls were read at", i + 1, c.name())));
+    }
     // `send_sketch` records a polygon's sides (RoboCAD's `Sketch.last_polygon_sides`).
     crate::cad::ops::send_sketch(doc, call, target, parsed, label)
 }

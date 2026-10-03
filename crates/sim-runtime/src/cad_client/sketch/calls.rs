@@ -111,7 +111,7 @@ struct Bound<'a> {
 
 impl<'a> Bound<'a> {
     fn bind(call: &'static str, args: &'a [Value], kwargs: Option<&'a Map<String, Value>>) -> Result<Bound<'a>, String> {
-        let (params, required) = signature(call).ok_or_else(|| format!("no sketch call {call}"))?;
+        let (params, required) = signature(call).ok_or_else(|| format!("no sketch method {call}"))?;
         let list = params.join(", ");
         if args.len() > params.len() {
             return Err(format!("{call}: takes at most {} arguments ({list}), got {}", params.len(), args.len()));
@@ -352,7 +352,7 @@ impl SketchCall {
     pub fn from_json(v: &Value) -> Result<SketchCall, String> {
         let list = v.as_array().filter(|a| (1..=3).contains(&a.len())).ok_or_else(|| format!("a sketch call is [name, [args…], {{kwargs}}?] (got {v})"))?;
         let given = list[0].as_str().ok_or_else(|| format!("a sketch call starts with its name, a string (got {})", list[0]))?;
-        let name: &'static str = SKETCH_CALLS.iter().copied().find(|n| *n == given).ok_or_else(|| format!("no sketch call {given} (RoboCAD's: {})", SKETCH_CALLS.join(", ")))?;
+        let name: &'static str = SKETCH_CALLS.iter().copied().find(|n| *n == given).ok_or_else(|| format!("no sketch method {given} (RoboCAD's sketch calls: {})", SKETCH_CALLS.join(", ")))?;
         let args: &[Value] = match list.get(1) {
             None => &[],
             Some(Value::Array(a)) => a,
@@ -398,7 +398,7 @@ impl SketchCall {
             "remove_vertex" => RemoveVertex { curve: b.index(0)?, index: b.integer(1)? },
             "rebuild" => Rebuild { curve: b.index(0)?, degree: b.count(1)?, spans: b.count(2)? },
             // `name` is one of SKETCH_CALLS, each matched above.
-            other => return Err(format!("no sketch call {other} (RoboCAD's: {})", SKETCH_CALLS.join(", "))),
+            other => return Err(format!("no sketch method {other} (RoboCAD's sketch calls: {})", SKETCH_CALLS.join(", "))),
         };
         call.check(None)?;
         Ok(call)
@@ -484,7 +484,12 @@ impl SketchCall {
     /// of 0; a non-finite number or point coordinate (as
     /// [`SketchCall::from_json`] refuses it); `circle_three_point` and
     /// `arc_three_point` through three collinear (or coincident) points,
-    /// with kernel/sketch.py `circumcircle`'s tolerance. Stricter than
+    /// with kernel/sketch.py `circumcircle`'s tolerance. Where RoboCAD has
+    /// its own words for a refusal, the text after the call's name is them
+    /// verbatim: `circumcircle`'s "the three points are collinear"
+    /// (kernel/sketch.py:616, RoboCAD's 422) and api.py `edit_sketch`'s
+    /// "curve index {i} out of range ({n} curves)" (its 400, `n` the count
+    /// when the call runs), each followed by the argument it names. Stricter than
     /// RoboCAD, also refused: `join` naming a curve
     /// twice (RoboCAD would build a polyline that doubles back) and a
     /// polygon of fewer than three sides (0 would mean "the last sides" to
@@ -495,7 +500,7 @@ impl SketchCall {
         self.check_finite()?;
         match self {
             CircleThreePoint { a, b, c } | ArcThreePoint { a, b, c } if circumcircle_denominator(*a, *b, *c).abs() < 1e-12 => {
-                return Err(format!("{name}: arguments a, b and c are collinear (no circle passes through [{}, {}], [{}, {}] and [{}, {}])", a[0], a[1], b[0], b[1], c[0], c[1]));
+                return Err(format!("{name}: the three points are collinear (arguments a [{}, {}], b [{}, {}] and c [{}, {}])", a[0], a[1], b[0], b[1], c[0], c[1]));
             }
             Join { curves: list } | CircleTangent { curves: list, .. } if list.is_empty() => return Err(format!("{name}: argument curves must name at least one curve")),
             Join { curves: list } => {
@@ -512,8 +517,8 @@ impl SketchCall {
         if let Some(count) = curves {
             for (arg, i) in self.curve_args() {
                 if i >= count {
-                    let has = if count == 1 { "1 curve".to_string() } else { format!("{count} curves") };
-                    return Err(format!("{name}: argument {arg} is curve {i}, but the sketch has {has} then"));
+                    // api.py's words exactly ("(1 curves)" included).
+                    return Err(format!("{name}: argument {arg}: curve index {i} out of range ({count} curves)"));
                 }
             }
         }
@@ -550,8 +555,8 @@ pub fn calls_body(calls: &[SketchCall]) -> Value {
 /// The calls checked in order against a sketch of `curves` curves (None:
 /// unknown), each against the count the calls before it leave
 /// ([`SketchCall::curves_after`]): the first refusal names the call's
-/// position (1-based) and name, "call 2 (trim): argument cutters[0] is
-/// curve 4, but the sketch has 3 curves then".
+/// position (1-based) and name, "call 2 (trim): argument cutters[0]: curve
+/// index 4 out of range (3 curves)" (the count the calls before it leave).
 pub fn check_calls(calls: &[SketchCall], curves: Option<usize>) -> Result<(), String> {
     let mut count = curves;
     for (k, call) in calls.iter().enumerate() {

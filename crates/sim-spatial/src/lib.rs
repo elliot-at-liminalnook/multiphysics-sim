@@ -11,6 +11,7 @@ pub(crate) mod inspect;
 mod inspect_view;
 pub(crate) mod chart;
 pub mod document;
+pub mod drive_input;
 pub mod selection;
 pub mod builder;
 pub mod cad;

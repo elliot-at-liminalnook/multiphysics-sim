@@ -4,7 +4,7 @@
 use super::*;
 use super::ui::{DriveButton, DriveDetailRoot, DriveRoot, DriveText};
 use crate::robot::DriveRequest;
-use crate::robot::drive_input::{DriveBindings, DriveInput};
+use crate::drive_input::{DriveBindings, DriveInput, DriveTarget, LiveTarget};
 use sim_domain_control::drive::kinematics;
 
 /// The overlays: (system_ui id suffix, label, key). H (hotspots) for stress: S is the WASD jog key.
@@ -613,6 +613,49 @@ fn twist_text(t: kinematics::BodyTwist, supported: [bool; 3]) -> String {
     let values = t.to_array();
     let parts: Vec<String> = (0..3).filter(|i| supported[*i]).map(|i| format!("{} {} {}", kinematics::AXIS_NAMES[i], fixed(values[i], TWIST_DECIMALS), kinematics::SPEED_UNITS[i])).collect();
     if parts.is_empty() { "no supported axis".into() } else { parts.join(" · ") }
+}
+
+/// Keys the Leg calibration panel owns while it is shown (Q/A hold-to-move,
+/// Z STOP; `hardware::actions::input::keys`): never read for driving then.
+pub(super) const PANEL_KEYS: [KeyCode; 3] = [KeyCode::KeyQ, KeyCode::KeyA, KeyCode::KeyZ];
+
+/// What robot mode offers the device poller: a controlled run
+/// (`RunController::controlled`, a binding with a `sim.drive/1` profile)
+/// with its supported axes, or nothing. Robot mode's one target writer.
+pub(super) fn robot_target(view: Option<&RobotView>, panel_open: bool) -> DriveTarget {
+    let live = view.and_then(|v| {
+        let c = v.run.as_ref()?.controlled()?;
+        Some(LiveTarget { mode: ViewerMode::Robot, supported: c.controlled.resolved.limits.supported, run: v.path.display().to_string() })
+    });
+    let owned_keys = if live.is_some() && panel_open { PANEL_KEYS.to_vec() } else { Vec::new() };
+    DriveTarget { live, owned_keys }
+}
+
+/// Input, before `InputSet::Window` (Robot mode): writes [`DriveTarget`]
+/// for the one device poller ([`robot_target`], `set_if_neq`), and clears
+/// `DriveInput::last_error` when the run it belongs to changes (the file, or
+/// its generation: Reset, a replay, a reload), as the refusal was that run's.
+/// Robot mode's apply records the refusals (`actions::apply`).
+pub(super) fn drive_target(
+    view: Option<Res<RobotView>>,
+    hardware: Option<Res<crate::robot::hardware::Hardware>>,
+    target: Option<ResMut<DriveTarget>>,
+    input: Option<ResMut<DriveInput>>,
+    mut run_key: Local<Option<(PathBuf, Option<u64>)>>,
+) {
+    let view = view.as_deref();
+    if let Some(mut target) = target {
+        target.set_if_neq(robot_target(view, hardware.is_some_and(|h| h.open)));
+    }
+    let key = view.map(|v| (v.path.clone(), v.run.as_ref().map(RunController::generation)));
+    if *run_key != key {
+        *run_key = key;
+        if let Some(mut input) = input
+            && input.last_error.is_some()
+        {
+            input.last_error = None;
+        }
+    }
 }
 
 /// The inspector's Drive block for a controlled `--robot FILE` run

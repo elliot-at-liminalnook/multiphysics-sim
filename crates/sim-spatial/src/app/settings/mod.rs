@@ -11,7 +11,7 @@ mod tests;
 #[cfg(test)]
 mod drain_tests;
 use super::{ViewerMode, recent::Recents, switch::Document};
-use crate::{jobs::Job, robot::drive_input::BindingsFile, robot::hardware::settings::Settings};
+use crate::{drive_input::BindingsFile, jobs::Job, robot::hardware::settings::Settings};
 use bevy::prelude::*;
 use bevy_settings::{ReflectSettingsGroup, SettingsGroup};
 pub use plugin::{SettingsPlugin, SettingsSet};
@@ -116,7 +116,7 @@ pub struct SettingsOwner {
     pub recents: Recents,
     pub hardware: Settings,
     pub cad: CadDefaults,
-    /// The user's drive bindings (`robot::drive_input`); None keeps the
+    /// The user's drive bindings (`drive_input`); None keeps the
     /// committed defaults, which are then not written to the file.
     pub drive_bindings: Option<BindingsFile>,
     pub ready: bool,

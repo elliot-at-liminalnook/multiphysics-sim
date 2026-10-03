@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 pub(super) const SCHEMA: u32 = 1;
-/// The preferences group key of the drive bindings (`robot::drive_input::bindings`).
+/// The preferences group key of the drive bindings (`drive_input::bindings`, over `sim_runtime::drive_bindings`).
 pub(super) const DRIVE_BINDINGS: &str = "drive_bindings";
 #[derive(Clone)]
 pub(super) struct Paths {

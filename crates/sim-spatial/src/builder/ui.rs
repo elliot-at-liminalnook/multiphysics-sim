@@ -7,6 +7,8 @@
 //! └ status: message                                   revision · parts · nets · state ┘
 use super::*;
 use bevy::input::mouse::MouseWheel;
+use crate::drive_input::{DriveBindings, DriveInput};
+use sim_domain_control::drive::kinematics::{AXIS_NAMES, BodyTwist, SPEED_UNITS};
 use crate::ui_kit::{ACCENT, ACCENT_BG, BAR, BORDER, Corner, DANGER, Dock, FAINT, HOVER_BG, Kit, LEFT_WIDTH, Look, OK, RAISED, RIGHT_WIDTH, STATUSBAR, SUBTLE, SWITCHER_STRIP, TEXT, TOPBAR, Tint, UiFonts, WARN, WHEEL_LINE, divider, size, wheel_delta, wrap};
 
 #[derive(Component)]
@@ -111,7 +113,7 @@ fn kind_text(kind: &InstanceKind) -> String {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>, panels: Query<Entity, With<BuilderPanel>>, scene: Res<SpatialScene>, fonts: Option<Res<UiFonts>>, buttons: Res<ButtonInput<MouseButton>>, scrolls:Query<(&ScrollPosition,&Scroll)>, selection: Res<Selection>, registry: Res<DocumentRegistry>, studies: Res<calibration::study::StudyOwner>, study_ui: Res<calibration::study::forms::StudyUi>) {
+pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>, panels: Query<Entity, With<BuilderPanel>>, scene: Res<SpatialScene>, fonts: Option<Res<UiFonts>>, buttons: Res<ButtonInput<MouseButton>>, scrolls:Query<(&ScrollPosition,&Scroll)>, selection: Res<Selection>, registry: Res<DocumentRegistry>, studies: Res<calibration::study::StudyOwner>, study_ui: Res<calibration::study::forms::StudyUi>, (bindings, drive_input): (Option<Res<DriveBindings>>, Option<Res<DriveInput>>)) {
     let Some(fonts) = fonts else { return };
     if calibration::study::ui::presentation_changed(&studies,&study_ui) {
         builder.panel_dirty = true;
@@ -136,6 +138,7 @@ pub(super) fn rebuild_panel(mut commands: Commands, mut builder: ResMut<Builder>
     sidebar(&mut commands, &k, b, note_scroll, side_scroll, &selected, &studies, &study_ui);
     inspector(&mut commands, &k, b, &scene, &selected);
     graph_dock(&mut commands, &k, b);
+    drive_strip(&mut commands, &k, b, bindings.as_deref(), drive_input.as_deref());
     let started = std::time::Instant::now();
     schematic::pane(&mut commands, &k, b, &selected);
     let schematic_ms = started.elapsed().as_secs_f64() * 1e3;
@@ -203,7 +206,8 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder, selected: &BTreeSet<St
                     right.spawn(k.button("Step", BuildAction::Step, Look::Ghost, !running));
                 }
                 // A robot system's run: one full-axis drive request per press (the profile's
-                // deadman stops it unless repeated), and Stop; the same apply as REST system_drive.
+                // deadman stops it unless repeated), and Stop; the same apply as REST system_drive
+                // and the bound keys and gamepad (their lines are the drive strip, `drive_strip`).
                 if b.run.as_ref().is_some_and(|r| r.robot) {
                     right.spawn(divider());
                     let axes = |forward: f64, yaw: f64| BuildAction::Drive { request: sim_runtime::drive_host::DriveRequest::Axes { forward, lateral: 0.0, yaw } };
@@ -333,6 +337,79 @@ fn graph_dock(commands: &mut Commands, k: &Kit, b: &Builder) {
                     }
                 });
             }
+        });
+}
+
+/// Height of the drive strip (two caption lines).
+pub(super) const DRIVE_STRIP: f32 = 44.0;
+
+/// The drive strip is shown: a robot system's run (as [`drive_lines`]).
+/// `graphs::update` adds its height to `SpatialScene::builder_dock`, so the
+/// camera viewport and picks stop above it.
+pub(super) fn drive_strip_shown(b: &Builder) -> bool {
+    b.run.as_ref().is_some_and(|r| r.robot)
+}
+
+/// The drive strip's two lines for a robot system's run (None for any
+/// other run): the bound keys, generated from the drive bindings (an axis
+/// the linked profile lacks and Build's own keys marked), and the device input (normalized) with the
+/// requested and commanded twist with units, the ignored axes and the last
+/// refusal. Rounded to fixed decimals: the panel rebuilds four times a
+/// second while a run is live.
+fn drive_lines(b: &Builder, bindings: Option<&DriveBindings>, input: Option<&DriveInput>) -> Option<(String, String)> {
+    let run = b.run.as_ref().filter(|_| drive_strip_shown(b))?;
+    let drive = run.worker.shared().lock().ok().and_then(|s| s.drive.clone());
+    let supported = drive.as_ref().and_then(|d| d.system.as_ref()).map(|s| s.controlled.resolved.limits.supported);
+    let keys = match (bindings, supported) {
+        (None, _) => "Keys: the drive bindings are not available".to_string(),
+        (Some(_), None) => "Keys: the bound keys and gamepad drive once the robot system has loaded".to_string(),
+        (Some(bindings), Some(supported)) => format!("Keys: {} · gamepad: the bound sticks and buttons · after a stop, release held inputs to drive again", bindings.key_summary(supported, &actions::OWNED_KEYS)),
+    };
+    let shown = supported.unwrap_or([true; 3]);
+    let twist = |t: BodyTwist| {
+        let v = t.to_array();
+        (0..3).filter(|i| shown[*i]).map(|i| format!("{} {:+.2} {}", AXIS_NAMES[i], v[i], SPEED_UNITS[i])).collect::<Vec<_>>().join(" · ")
+    };
+    let device = match input.filter(|i| i.active) {
+        None => "Input: idle".to_string(),
+        Some(i) => {
+            let a = i.axes.to_array();
+            let axes: Vec<String> = (0..3).filter(|k| shown[*k]).map(|k| format!("{} {:+.2}", AXIS_NAMES[k], a[k])).collect();
+            format!("Input ({}): {} (normalized −1…1)", i.source.unwrap_or("idle"), axes.join(" · "))
+        }
+    };
+    let status = drive.as_ref().and_then(|d| d.status.as_ref());
+    let mut line = match status {
+        Some(s) => format!("{device} → requested {} · commanded {}", twist(s.request), twist(s.commanded)),
+        None => format!("{device} → no drive status yet"),
+    };
+    if let Some(i) = input {
+        if !i.ignored.is_empty() {
+            line += &format!(" · ignored: {} (not in the profile)", i.ignored.join(", "));
+        }
+        if let Some(e) = &i.last_error {
+            let short: String = e.chars().take(90).collect();
+            line += &format!(" · refused: {short}{}", if e.chars().count() > 90 { "…" } else { "" });
+        }
+    }
+    Some((keys, line))
+}
+
+/// The drive strip under the viewport, while a robot system's run is live:
+/// [`drive_lines`] (the run panel's drive buttons stay in the toolbar).
+/// Above the graph dock when that is shown.
+fn drive_strip(commands: &mut Commands, k: &Kit, b: &Builder, bindings: Option<&DriveBindings>, input: Option<&DriveInput>) {
+    let Some((keys, line)) = drive_lines(b, bindings, input) else { return };
+    let bottom = STATUSBAR + if b.graphs.visible { graphs::DOCK } else { 0.0 };
+    commands
+        .spawn((
+            k.dock(Dock::Under { left: LEFT_WIDTH, right: RIGHT_WIDTH, bottom, height: DRIVE_STRIP }, Node { padding: UiRect::axes(Val::Px(12.), Val::Px(5.)), row_gap: Val::Px(2.), flex_direction: FlexDirection::Column, overflow: Overflow::clip(), ..default() }),
+            BuilderPanel,
+            actions::RenderStamp::capture(b),
+        ))
+        .with_children(|strip| {
+            strip.spawn(k.text(keys, size::CAPTION, TEXT, 0));
+            strip.spawn(k.text(line, size::CAPTION, SUBTLE, 0));
         });
 }
 

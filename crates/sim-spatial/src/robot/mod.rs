@@ -139,7 +139,6 @@ impl Section {
 }
 
 mod actions;
-pub mod drive_input;
 pub mod gait;
 pub mod graphs;
 pub mod hardware;
@@ -210,10 +209,11 @@ impl Plugin for RobotPlugin {
         hardware::build(app);
         panel_ui::add_field(app);
         threads::build(app);
-        drive_input::build(app);
         app.insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
             .init_resource::<RobotPanelUi>()
             .add_systems(OnEnter(ModeScope::Robot), setup)
+            // Device driving (`crate::drive_input`) offers nothing once Robot mode is left.
+            .add_systems(OnExit(ViewerMode::Robot), crate::drive_input::leave_mode)
             .add_systems(OnExit(ModeScope::Robot), |mut commands: Commands, mut in_flight: ResMut<crate::app::actions::InFlight<RobotAction>>, mut replies: ResMut<crate::app::actions::Replies>| {
                 commands.remove_resource::<Materials>();
                 // `actions::apply` does not run outside Robot mode: a carried
@@ -228,10 +228,14 @@ impl Plugin for RobotPlugin {
                     // Keys and buttons write robot actions after REST's, as the old chain applied them.
                     // The gait path field and the comment composer first: a press that focuses one this frame already stops robot keys (`ui_kit::text::Typing`).
                     // Preset motion keys and drive input never both act: `motion_keys` needs a preset with a
-                    // motion config, `drive_input::devices` a controlled run (drive profile).
-                    (panel_ui::gait_path_input, threads::input, panel_ui::toggles, panel_ui::recorded_seek, actions::motion_keys, drive_input::devices, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons)
+                    // motion config, the drive target (`controls::drive_target`) a controlled run (drive profile).
+                    (panel_ui::gait_path_input, threads::input, panel_ui::toggles, panel_ui::recorded_seek, actions::motion_keys, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons)
                         .chain()
                         .in_set(crate::app::InputSet::Window),
+                    // What the one device poller (`crate::drive_input`, InputSet::Window) may drive: written before it.
+                    controls::drive_target.in_set(ViewerSet::Input).before(crate::app::InputSet::Window),
+                    // Its requests for Robot mode, as `RobotAction::Drive`, before robot mode's one apply.
+                    actions::forward_devices.in_set(ViewerSet::Actions).before(RobotSet::Actions),
                     actions::apply.in_set(RobotSet::Actions),
                     panel_ui::receive_listing.in_set(ViewerSet::JobResults),
                     // Before the shared camera (`crate::camera`): its viewport reads the

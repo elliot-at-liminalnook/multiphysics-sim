@@ -6,8 +6,9 @@
 //! `Builder::apply` (the validated command path and the shared undo history).
 use super::*;
 use super::system_actions::SystemAction;
-use crate::app::actions::Act;
+use crate::app::actions::{Act, Origin};
 use crate::app::switch::{ModeSwitch, WindowAction};
+use crate::drive_input::{DriveDevice, DriveInput};
 
 /// A builder button, key or marker: the chrome's actions. The serialized
 /// value names its `system_ui` control (`ui_api::collect`), so it is unchanged.
@@ -613,6 +614,74 @@ pub(super) fn buttons(
         }
         out.write(Act::ui(SystemAction::RenderedUi { stamp: source, action: action.clone() }));
     }
+}
+
+/// Build mode's own keys (`keys` below) that a drive binding may also name
+/// (`drive_bindings::KEYS`): the arrows (nudge), N (annotate), G (group), U
+/// (up) and R (run/pause). While a robot system's run is drivable they stay
+/// Build's: the drive device poller never reads them (`DriveTarget::owned_keys`).
+pub(super) const OWNED_KEYS: [KeyCode; 8] = [KeyCode::ArrowLeft, KeyCode::ArrowRight, KeyCode::ArrowUp, KeyCode::ArrowDown, KeyCode::KeyN, KeyCode::KeyG, KeyCode::KeyU, KeyCode::KeyR];
+
+/// A device request as Build mode's action: `BuildAction::Drive` with the
+/// poller's origin (`Origin::Ui` for a shown stop or action, `Origin::Quiet`
+/// for repeated axes), or None for a request made for another mode.
+pub(super) fn device_action(device: &Act<DriveDevice>) -> Option<(BuildAction, Origin)> {
+    (device.action.mode == ViewerMode::Build).then(|| (BuildAction::Drive { request: device.action.request.clone() }, device.origin))
+}
+
+/// A device's `BuildAction::Drive` through the one drive apply
+/// (`Builder::drive_request`, as `dispatch`'s `Builder::drive`, without its
+/// JSON answer and without `dispatch`'s per-action panel rebuild, which a
+/// held key would otherwise cause every frame). A shown request's refusal
+/// is the status line (`Builder::report`, as a button's); a quiet one's is
+/// only the drive block's `last_refusal` (and `DriveInput::last_error`).
+pub(super) fn apply_device(builder: &mut Builder, action: BuildAction, origin: Origin) -> Result<(), String> {
+    let BuildAction::Drive { request } = action else {
+        return Err("only drive requests come from the drive devices".into());
+    };
+    let result = builder.drive_request(request);
+    if origin == Origin::Ui {
+        builder.report(result.clone());
+    }
+    result
+}
+
+/// Actions, after the builder's one apply (Build mode): the one drive device
+/// poller's requests for Build mode (`crate::drive_input`) applied in order
+/// through [`apply_device`]; then `DriveInput::last_error` mirrors the run's
+/// `last_refusal` (`Builder::drive_request`'s record of the last refusal
+/// from any origin: the device, the run panel's buttons, `system_ui` or
+/// REST `system_drive`; cleared by an accepted request). Build mode's one
+/// writer of `last_error`.
+pub(super) fn drive_devices(builder: Option<ResMut<Builder>>, mut devices: MessageReader<Act<DriveDevice>>, input: Option<ResMut<DriveInput>>) {
+    let requests: Vec<(BuildAction, Origin)> = devices.read().filter_map(device_action).collect();
+    let Some(mut builder) = builder else { return };
+    for (action, origin) in requests {
+        // A refusal is recorded by the apply (and shown, for a shown request).
+        let _ = apply_device(&mut builder, action, origin);
+    }
+    let refusal = builder.run.as_ref().filter(|r| r.robot).and_then(|r| r.drive_refusal.clone());
+    if let Some(mut input) = input
+        && input.last_error != refusal
+    {
+        input.last_error = refusal;
+    }
+}
+
+/// OnExit(Build): Build mode's drive target goes (`drive_input::leave_mode`,
+/// called here as a function, so no cross-feature ordering edge is needed),
+/// after one stop through the one drive apply when the devices were
+/// driving (`DriveInput::axes` nonzero): the builder and its run are kept,
+/// paused, and a pause does not zero the requested twist, so the zero the
+/// devices owe on release would otherwise never come (the poller no longer
+/// sends for Build once the mode is left). A refusal is recorded as usual.
+pub(super) fn leave_drive(builder: Option<ResMut<Builder>>, target: ResMut<crate::drive_input::DriveTarget>, input: ResMut<DriveInput>) {
+    if input.axes != sim_domain_control::drive::kinematics::Axes::ZERO
+        && let Some(mut builder) = builder
+    {
+        let _ = builder.drive_request(sim_runtime::drive_host::DriveRequest::Stop);
+    }
+    crate::drive_input::leave_mode(target, input);
 }
 
 /// Input: build mode's keys, as the same actions as their buttons. Not run

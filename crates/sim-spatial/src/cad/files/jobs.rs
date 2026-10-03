@@ -9,7 +9,9 @@
 //! Writes (export, render, new) are `complete_on_drop`: leaving CAD mode
 //! drops `CadFiles` (`cad::clear`) but they run to the end and log their
 //! outcome (`logged`), so a sent export is never silently lost. The unit
-//! guess and the listing are reads, cancelled on drop.
+//! guess and the listing are reads, cancelled on drop. An export or a
+//! render is cancelled only by asking ([`cancel`]: the strip's Cancel,
+//! `cad_file {op: cancel}`), and its outcome says what was written.
 use super::{CadFiles, FileArgs, FileOp};
 use crate::app::ModeScope;
 use crate::app::actions::{Act, Call};
@@ -17,7 +19,7 @@ use crate::cad::actions::{CadAction, Cx};
 use crate::cad::document::CadDocument;
 use crate::jobs::{Ctx, Job, Pool};
 use crate::ui_kit::path_field;
-use crate::ui_kit::{BORDER, Kit, LEFT_WIDTH, STATUSBAR, SURFACE, TEXT, UiFonts, above_strip, size};
+use crate::ui_kit::{BORDER, Kit, LEFT_WIDTH, Look, STATUSBAR, SURFACE, TEXT, UiFonts, above_strip, size};
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
@@ -54,12 +56,53 @@ pub(crate) struct FileJob {
     /// A REST caller waits for its answer.
     pub waited: bool,
     pub then: Then,
+    /// A cancel was asked ([`cancel`]); the job still runs to RoboCAD's answer.
+    pub cancelled: bool,
 }
 impl FileJob {
     pub(crate) fn json(&self) -> Value {
         let p = self.job.progress();
-        json!({"seq": self.seq, "kind": self.kind, "label": self.label, "seconds": self.started.elapsed().as_secs(), "progress": p.message, "waited": self.waited})
+        json!({"seq": self.seq, "kind": self.kind, "label": self.label, "seconds": self.started.elapsed().as_secs(), "progress": p.message, "waited": self.waited, "cancellable": cancellable(self.kind), "cancel_asked": self.cancelled})
     }
+}
+
+/// The jobs a cancel applies to: the writes whose outcome a cancel can
+/// change or must name (a new's file is RoboCAD's, created at once; a unit
+/// guess is a read).
+pub(super) fn cancellable(kind: &str) -> bool {
+    matches!(kind, "export" | "render")
+}
+
+/// What a cancel of `job` can do, as the status line says it.
+fn cancel_note(job: &FileJob) -> String {
+    if job.kind == "render" {
+        format!("Cancelling {}: RoboCAD finishes drawing (api.py has no cancel route for /render), and this window does not write the PNG unless it already has; the outcome follows", job.label)
+    } else {
+        format!("Cancel asked for {}, but RoboCAD writes the file anyway (api.py has no cancel route for /export); the outcome follows when it answers", job.label)
+    }
+}
+
+/// `cad_file {op: cancel, job?}`: the export and render jobs in flight
+/// (`seq`: that one; None: every one) are asked to stop (`Job::cancel`; they
+/// stay `complete_on_drop` and report their outcome, which says what was
+/// written: see the closures in `files::export` and `files::render`). A job
+/// whose thread has not started yet sends nothing (`jobs::Job`).
+pub(super) fn cancel(files: &mut CadFiles, seq: Option<u64>) -> Result<Value, String> {
+    let mut asked = Vec::new();
+    let mut notes = Vec::new();
+    for job in files.jobs.iter_mut().filter(|j| cancellable(j.kind) && seq.is_none_or(|s| s == j.seq)) {
+        job.job.cancel();
+        job.cancelled = true;
+        asked.push(job.seq);
+        notes.push(cancel_note(job));
+    }
+    if asked.is_empty() {
+        return Err(match seq {
+            Some(s) => format!("no export or render job {s} is in flight (cad_state.files.jobs lists them)"),
+            None => "no export or render is in flight".to_string(),
+        });
+    }
+    Ok(json!({"cancelled": asked, "message": notes.join("; ")}))
 }
 
 /// The document's client with the file timeout, or why there is none.
@@ -108,7 +151,7 @@ pub(super) fn start(cx: &mut Cx, call: &mut Call, kind: &'static str, label: Str
     if !matches!(then, Then::Guess { .. }) {
         files.form = None;
     }
-    files.jobs.push(FileJob { seq, kind, label: label.clone(), job, started: Instant::now(), waited, then });
+    files.jobs.push(FileJob { seq, kind, label: label.clone(), job, started: Instant::now(), waited, then, cancelled: false });
     cx.doc.show(Ok(format!("{label}…")));
     if waited {
         *call.continuation = json!({"file_job": seq});
@@ -149,7 +192,7 @@ pub(super) fn wait(cx: &mut Cx, call: &mut Call, seq: u64) -> Outcome {
     match files.jobs.iter_mut().find(|j| j.seq == seq) {
         Some(j) if call.cancelled => {
             j.waited = false;
-            Outcome::Done(Err(format!("stopped waiting for {}: the request was already sent to RoboCAD, which runs it to the end (api.py has no cancel route); its outcome shows in cad_state.files.last", j.label)))
+            Outcome::Done(Err(format!("stopped waiting for {}: the request was already sent to RoboCAD, which runs it to the end (api.py has no cancel route); this stops only the wait (cad_file {{op: cancel, job: {}}} keeps a render's PNG unwritten); its outcome shows in cad_state.files.last", j.label, j.seq)))
         }
         Some(_) => Outcome::Pending,
         None => Outcome::Done(Err("the job ended without an answer for this request; see cad_state.files.last".into())),
@@ -205,7 +248,7 @@ pub(super) fn receive(files: Option<ResMut<CadFiles>>, mut doc: Option<ResMut<Ca
             // A waited new is opened by its caller (`wait`), which answers with the open's outcome.
             (Then::Open { .. }, Ok(_)) if job.waited => {}
             (Then::Open { path }, Ok(_)) => {
-                out.write(Act::ui(CadAction::CadFile(FileArgs { op: FileOp::Open, path: Some(path.clone()), unit: None })));
+                out.write(Act::ui(CadAction::CadFile(FileArgs { op: FileOp::Open, path: Some(path.clone()), unit: None, job: None })));
             }
             (Then::Guess { path }, _) => {
                 files.guess = Some((path.clone(), result.clone()));
@@ -226,20 +269,44 @@ pub(super) fn receive(files: Option<ResMut<CadFiles>>, mut doc: Option<ResMut<Ca
 #[derive(Component)]
 pub(super) struct StripRoot;
 
+/// One job's line in the strip (its sequence number): its seconds are
+/// updated in place, so the strip and its Cancel buttons are not rebuilt
+/// every second (a press across a rebuild would be lost).
+#[derive(Component)]
+pub(super) struct StripLine(u64);
+
 /// Present: the jobs in flight with their seconds, at the 3D view's bottom
-/// left (rebuilt when a line changes, at most once a second per job).
-pub(super) fn strip(mut commands: Commands, files: Option<Res<CadFiles>>, fonts: Res<UiFonts>, roots: Query<Entity, With<StripRoot>>, mut last: Local<Option<String>>) {
-    let lines: Vec<String> = files.as_deref().map_or_else(Vec::new, |f| f.jobs.iter().map(|j| format!("{}… {} s", j.label, j.started.elapsed().as_secs())).collect());
-    let key = lines.join("\n");
+/// left, each export and render with its Cancel ([`cancel`], a
+/// `CadButton` of `cad_file {op: cancel, job}`, the `cad:file:cancel-<job>`
+/// control). Rebuilt when the jobs, a cancel asked or the document source
+/// changes; the seconds change in place.
+pub(super) fn strip(mut commands: Commands, files: Option<Res<CadFiles>>, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, roots: Query<Entity, With<StripRoot>>, mut texts: Query<(&StripLine, &mut Text)>, mut last: Local<Option<String>>) {
+    let jobs: &[FileJob] = files.as_deref().map_or(&[][..], |f| f.jobs.as_slice());
+    let line = |j: &FileJob| {
+        let asked = if j.cancelled { " (cancel asked)" } else { "" };
+        format!("{}… {} s{asked}", j.label, j.started.elapsed().as_secs())
+    };
+    // (sequence, label, the job's Cancel while one can still be asked), and
+    // the document source the buttons are stamped for (`activation::stamp`).
+    let shape: Vec<(u64, &str, bool)> = jobs.iter().map(|j| (j.seq, j.label.as_str(), cancellable(j.kind) && !j.cancelled)).collect();
+    let key = format!("{shape:?}|source={:?}", doc.as_deref().map(crate::cad::activation::render_key));
     let shown = roots.iter().next().is_some();
-    if last.as_deref() == Some(key.as_str()) && shown == !lines.is_empty() {
+    if last.as_deref() == Some(key.as_str()) && shown == !jobs.is_empty() {
+        for (StripLine(seq), mut text) in &mut texts {
+            if let Some(j) = jobs.iter().find(|j| j.seq == *seq) {
+                let now = line(j);
+                if text.0 != now {
+                    text.0 = now;
+                }
+            }
+        }
         return;
     }
     *last = Some(key);
     for root in &roots {
         commands.entity(root).despawn();
     }
-    if lines.is_empty() {
+    if jobs.is_empty() {
         return;
     }
     let k = Kit::new(&fonts);
@@ -266,9 +333,15 @@ pub(super) fn strip(mut commands: Commands, files: Option<Res<CadFiles>>, fonts:
             DespawnOnExit(ModeScope::Cad),
         ))
         .with_children(|p| {
-            p.spawn(k.caption("RoboCAD is working (runs to the end once sent)"));
-            for line in lines {
-                p.spawn(k.text(line, size::SMALL, TEXT, 0));
+            p.spawn(k.caption("RoboCAD is working (it runs a sent request to the end)"));
+            for (j, (seq, _, cancel)) in jobs.iter().zip(&shape) {
+                p.spawn(Node { column_gap: Val::Px(8.0), align_items: AlignItems::Center, ..default() }).with_children(|row| {
+                    row.spawn((k.text(line(j), size::SMALL, TEXT, 0), StripLine(*seq)));
+                    if *cancel {
+                        let action = CadAction::CadFile(FileArgs { op: FileOp::Cancel, job: Some(*seq), ..Default::default() });
+                        row.spawn(k.button("Cancel", crate::cad::panel::CadButton(action), Look::Ghost, true));
+                    }
+                });
             }
         });
 }

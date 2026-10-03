@@ -53,11 +53,20 @@ pub(super) fn rules() -> OrbitRules {
     }
 }
 
+/// RoboCAD's default field of view (`ui/viewport.py` `Camera.fov`), degrees.
+pub(super) const ROBOCAD_FOV_DEG: f32 = 40.0;
+
 /// OnEnter(ModeScope::Cad): cameras, light, root and display materials.
 /// Every root entity is scoped to the mode by `app::scope_new_entities`.
 pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<StandardMaterial>>) {
     commands.insert_resource(CadMaterials::new(&mut materials));
-    let orbit = Orbit { focus: Vec3::ZERO, radius: 0.5, yaw: 0.7, pitch: 0.45, extent: 0.15, ..Default::default() };
+    // RoboCAD's starting camera (`ui/viewport.py` `Camera`: yaw −35°, pitch
+    // 28°, which is its iso view, and a 40° field of view; Bevy's default is
+    // 45°, which drew the model about 12 % smaller than RoboCAD's window at
+    // the same distance). The first meshes frame it from this heading.
+    let (yaw, pitch) = crate::camera::ViewPreset::Iso.yaw_pitch();
+    let fov = ROBOCAD_FOV_DEG.to_radians();
+    let orbit = Orbit { focus: Vec3::ZERO, radius: 0.5, yaw, pitch, fov, extent: 0.15, ..Default::default() };
     commands
         .spawn((
             Camera3d::default(),
@@ -65,7 +74,7 @@ pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<Standar
             // default TonyMcMapface would sample Bevy's placeholder LUT.
             bevy::core_pipeline::tonemapping::Tonemapping::None,
             // Parts are millimetres shown in metres: the default 0.1 m near plane would cut them.
-            Projection::Perspective(PerspectiveProjection { near: 0.001, near_clip_plane: Vec4::new(0.0, 0.0, -1.0, -0.001), ..default() }),
+            Projection::Perspective(PerspectiveProjection { fov, near: 0.001, near_clip_plane: Vec4::new(0.0, 0.0, -1.0, -0.001), ..default() }),
             MeshPickingCamera,
             orbit.transform(),
             orbit,

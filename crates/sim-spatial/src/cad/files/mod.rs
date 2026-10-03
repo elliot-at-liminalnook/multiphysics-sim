@@ -38,11 +38,19 @@
 //!   marked `complete_on_drop` (they finish, and log their outcome, even
 //!   after CAD mode closes); the unit guess and the listing are reads.
 //!   REST callers wait for the answer.
-//! - **No cancellation of a sent export or render**: api.py has no cancel
-//!   route for `/export` or `/render`; RoboCAD runs them to the end (under
-//!   its document lock headless, on its Qt thread with a window). A REST
-//!   caller may stop waiting; the outcome still lands in
-//!   `cad_state.files.last` and the status line.
+//! - **Cancel says what was written** (`FileOp::Cancel`: the progress
+//!   strip's Cancel, `cad:file:cancel-<job>`, REST `cad_file {op: cancel,
+//!   job?}`): api.py has no cancel route for `/export` or `/render`, so a
+//!   sent request runs to its end in RoboCAD (under its document lock
+//!   headless, on its Qt thread with a window). A cancelled render's PNG is
+//!   this window's to write, and it is not written once the cancel was seen
+//!   (`jobs::cancel`; the outcome is a refusal naming that nothing was
+//!   written, or, when the cancel came too late to stop the write, the written file
+//!   with that note); an export's file is RoboCAD's to write, so its
+//!   outcome says the cancel did not stop it. A job cancelled before its
+//!   thread started sends nothing. A REST caller may also stop waiting; the
+//!   outcome still lands in `cad_state.files.last` and the status line, and
+//!   a failed or cancelled job is never shown as done.
 //! - **Render** is `GET /render` (headless: the snapshot renderer; with a
 //!   window: the GPU viewport for plain shaded views, else a snapshot copy),
 //!   written to a PNG by the job. `/capture` and `/screenshot` need
@@ -115,6 +123,9 @@ pub enum FileOp {
     GuessUnit,
     /// Close the open path form.
     Close,
+    /// Cancel export and render jobs in flight (`job`: that one; absent:
+    /// every one); see the module doc for what a cancel can stop.
+    Cancel,
 }
 impl FileOp {
     pub fn name(self) -> &'static str {
@@ -125,6 +136,7 @@ impl FileOp {
             FileOp::Import => "import",
             FileOp::GuessUnit => "guess_unit",
             FileOp::Close => "close",
+            FileOp::Cancel => "cancel",
         }
     }
     /// RoboCAD's command label (`file.*`).
@@ -136,6 +148,7 @@ impl FileOp {
             FileOp::Import => "Import…",
             FileOp::GuessUnit => "Guess unit",
             FileOp::Close => "Close",
+            FileOp::Cancel => "Cancel",
         }
     }
 }
@@ -151,6 +164,9 @@ pub struct FileArgs {
     /// Import: a mesh's unit (mm | cm | m | in | ft).
     #[serde(default)]
     pub unit: Option<String>,
+    /// Cancel: the job's sequence number (`cad_state.files.jobs[].seq`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub job: Option<u64>,
 }
 
 /// `cad_export`'s arguments. Without `format` or `path`, the export form opens.
@@ -287,6 +303,18 @@ fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
     if args.op == FileOp::Close {
         return done(files(cx).map(|f| json!({"closed": f.form.take().map(|form| form.title())})));
     }
+    if args.op == FileOp::Cancel {
+        let result = files(cx).and_then(|f| jobs::cancel(f, args.job));
+        if let Ok(v) = &result
+            && let Some(message) = v.get("message").and_then(Value::as_str)
+        {
+            cx.doc.show(Ok(message.to_string()));
+        }
+        return done(result);
+    }
+    if args.job.is_some() {
+        return done(Err(format!("{what}: job belongs to op cancel")));
+    }
     let Some(path) = args.path.as_deref() else {
         if args.op == FileOp::GuessUnit {
             return done(Err("guess_unit needs path (a mesh file)".into()));
@@ -364,7 +392,7 @@ fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
             let (p, l) = (path.clone(), label.clone());
             jobs::start(cx, call, "guess_unit", label, false, jobs::Then::Guess { path }, move |_| client.mesh_units(&p).map(|u| value(&u)).map_err(|e| jobs::named(&l, &e)))
         }
-        FileOp::Close => unreachable!("handled above"),
+        FileOp::Close | FileOp::Cancel => unreachable!("handled above"),
     }
 }
 
@@ -473,14 +501,17 @@ fn export(args: &ExportArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
     let label = format!("{what} to {path}");
     let l = label.clone();
     let format_label = fmt.label;
-    jobs::start(cx, call, "export", label, true, jobs::Then::Nothing, move |_| {
+    jobs::start(cx, call, "export", label, true, jobs::Then::Nothing, move |ctx| {
         let answer = client.export(&request).map_err(|e| jobs::named(&l, &e)).map(|x| {
             // The status line shows the message: the warnings themselves (the first few), not a pointer elsewhere.
             let listed: Vec<String> = x.warnings.as_array().into_iter().flatten().map(|w| w.as_str().map_or_else(|| w.to_string(), str::to_string)).collect();
             let shown: Vec<&str> = listed.iter().take(3).map(String::as_str).collect();
             let more = if listed.len() > shown.len() { format!("; … {} more", listed.len() - shown.len()) } else { String::new() };
             let note = if listed.is_empty() { String::new() } else { format!(" ({} warning(s): {}{more})", listed.len(), shown.join("; ")) };
-            json!({"exported": x.exported, "format": request.format, "warnings": x.warnings, "settings": request.settings, "message": format!("Exported {format_label} to {}{note}", x.exported)})
+            // RoboCAD writes the file itself (no cancel route): a cancel asked meanwhile stopped nothing.
+            let cancelled = ctx.cancelled();
+            let late = if cancelled { "; the cancel did not stop it (api.py has no cancel route for /export)" } else { "" };
+            json!({"exported": x.exported, "format": request.format, "warnings": x.warnings, "settings": request.settings, "cancel_asked": cancelled, "message": format!("Exported {format_label} to {}{note}{late}", x.exported)})
         });
         jobs::logged(&l, answer)
     })
@@ -551,10 +582,17 @@ fn render(args: &RenderArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
     };
     let label = format!("Render to {path}");
     let l = label.clone();
-    jobs::start(cx, call, "render", label, true, jobs::Then::Nothing, move |_| {
+    jobs::start(cx, call, "render", label, true, jobs::Then::Nothing, move |ctx| {
         let answer = client.render(&request).map_err(|e| jobs::named(&l, &e)).and_then(|png| {
+            // The PNG is this window's to write: a cancel seen by now writes nothing.
+            if ctx.cancelled() {
+                return Err(format!("{l}: cancelled; RoboCAD drew the image ({} KB, it has no cancel route for /render) but nothing was written to {path}", png.len().div_ceil(1024)));
+            }
             std::fs::write(&path, &png).map_err(|e| format!("{l}: could not write {path}: {e}"))?;
-            Ok(json!({"rendered": path, "bytes": png.len(), "query": request.route(), "message": format!("Rendered {path} ({} KB)", png.len().div_ceil(1024))}))
+            // A cancel seen only now came too late to stop the write: said, not hidden.
+            let cancelled = ctx.cancelled();
+            let late = if cancelled { "; the cancel came too late to stop the write" } else { "" };
+            Ok(json!({"rendered": path, "bytes": png.len(), "query": request.route(), "cancel_asked": cancelled, "message": format!("Rendered {path} ({} KB){late}", png.len().div_ceil(1024))}))
         });
         jobs::logged(&l, answer)
     })
@@ -608,14 +646,14 @@ pub(in crate::cad) fn specs() -> Vec<Spec> {
         })
         .collect();
     vec![
-        spec("cad_file", CAD, json!({"op": "save_as", "path": "/tmp/turntable-copy.rcad"}), "CAD mode: RoboCAD's file commands. op new (an empty .rcad written at path by RoboCAD's POST /new, then opened), open (a .rcad, as cad_open), save_as (POST /save/thumbnail: RoboCAD saves to path with the desktop's thumbnail; .rcad is appended as RoboCAD's Save As does), import (POST /import; a mesh, .stl .obj .3mf .fbx .ply .glb .gltf, needs unit mm | cm | m | in | ft as RoboCAD's unit prompt asks, refused without one; STEP, IGES, SVG and images take none), guess_unit (RoboCAD's unit guess for a mesh path, GET /import/units; the form asks it as soon as its path names a mesh and fills the unit unless one was chosen), close (the path form). Without path, new, open, save_as and import open the path form (pre-filled with the document's directory, listing its matching files). Paths are absolute (~/ is expanded). New and open replace the document under cad_open's rule, so no edits are lost (RoboCAD opens another window instead): refused by name on an edit in flight or a self-started service's unsaved or unconfirmable edits (save first); an attached RoboCAD keeps its unsaved edits, and the answer's message says so. New checks that rule before RoboCAD writes the file. Open, save_as and import are one RoboCAD call each through the edit path (REST callers get RoboCAD's answer); new and guess_unit run on jobs and REST callers wait for them: new answers once the created file's open was accepted or refused ({created, opened, generation, message}; the connection then shows in cad_state, as after cad_open)."),
+        spec("cad_file", CAD, json!({"op": "save_as", "path": "/tmp/turntable-copy.rcad"}), "CAD mode: RoboCAD's file commands. op new (an empty .rcad written at path by RoboCAD's POST /new, then opened), open (a .rcad, as cad_open), save_as (POST /save/thumbnail: RoboCAD saves to path with the desktop's thumbnail; .rcad is appended as RoboCAD's Save As does), import (POST /import; a mesh, .stl .obj .3mf .fbx .ply .glb .gltf, needs unit mm | cm | m | in | ft as RoboCAD's unit prompt asks, refused without one; STEP, IGES, SVG and images take none), guess_unit (RoboCAD's unit guess for a mesh path, GET /import/units; the form asks it as soon as its path names a mesh and fills the unit unless one was chosen), close (the path form), cancel (job: a sequence number from cad_state.files.jobs, absent for every export and render in flight; RoboCAD has no cancel route, so a render's PNG is not written once the cancel is seen and an export's file is written by RoboCAD anyway, each outcome saying which). Without path, new, open, save_as and import open the path form (pre-filled with the document's directory, listing its matching files). Paths are absolute (~/ is expanded). New and open replace the document under cad_open's rule, so no edits are lost (RoboCAD opens another window instead): refused by name on an edit in flight or a self-started service's unsaved or unconfirmable edits (save first); an attached RoboCAD keeps its unsaved edits, and the answer's message says so. New checks that rule before RoboCAD writes the file. Open, save_as and import are one RoboCAD call each through the edit path (REST callers get RoboCAD's answer); new and guess_unit run on jobs and REST callers wait for them: new answers once the created file's open was accepted or refused ({created, opened, generation, message}; the connection then shows in cad_state, as after cad_open)."),
         spec(
             "cad_export",
             CAD,
             json!({"format": "step", "path": "/tmp/turntable.step", "settings": {"schema": "AP214"}}),
-            format!("CAD mode: POST /export on a job: RoboCAD writes format to path (absolute; its extension must be the format's) with settings (checked here with the desktop dialog's ranges; absent ones take RoboCAD's defaults and are sent explicitly; the sent settings are remembered per format for the form) for ids (all visible bodies when absent). Formats and settings: {}. The sketch SVG's sketch defaults to the selected sketch; the drawing's title to the document's file name and its section to the section tool's plane while it is on. Without format or path, the export form opens (file.export; file.export_drawing opens it on the drawing). A failure is a named refusal (\"Export STEP to …: RoboCAD answered 422: …\"). Not cancellable: api.py has no cancel route for /export and RoboCAD runs it to the end; REST callers wait (cancelling only stops the wait), and the job completes even if CAD mode closes. Progress: cad_state.files.jobs and the window's job strip.", formats.join(" | ")),
+            format!("CAD mode: POST /export on a job: RoboCAD writes format to path (absolute; its extension must be the format's) with settings (checked here with the desktop dialog's ranges; absent ones take RoboCAD's defaults and are sent explicitly; the sent settings are remembered per format for the form) for ids (all visible bodies when absent). Formats and settings: {}. The sketch SVG's sketch defaults to the selected sketch; the drawing's title to the document's file name and its section to the section tool's plane while it is on. Without format or path, the export form opens (file.export; file.export_drawing opens it on the drawing). A failure is a named refusal (\"Export STEP to …: RoboCAD answered 422: …\"). RoboCAD runs a sent export to the end (api.py has no cancel route for /export): cad_file {op: cancel, job} (the job strip's Cancel) cannot stop it, and the outcome then says the file was written regardless; REST callers wait (cancelling the request only stops the wait), and the job completes even if CAD mode closes. Progress: cad_state.files.jobs and the window's job strip.", formats.join(" | ")),
         ),
-        spec("cad_render", CAD, json!({"path": "/tmp/turntable-iso.png", "view": "iso", "w": 1200, "h": 900}), format!("CAD mode: GET /render on a job, the PNG written to path (absolute, .png). Query as RoboCAD's: view ({} or \"dx,dy,dz\"), w and h (16…{MAX_RENDER} px; RoboCAD's default 1200×900), mode ({}), section (\"x|y|z:value\" mm), ids, highlight, labels, edges, focus (a node to frame), tolerance (mm), title; absent ones take RoboCAD's defaults. Works headless (the snapshot renderer); with RoboCAD's window a plain shaded view (no ids, highlight, labels or other mode) is drawn by its GPU viewport at the viewport's size, and w, h, edges, tolerance and title then do not apply (api.py render_request). Without path, the render form opens. Not cancellable once sent (no cancel route); REST callers wait. /capture and /screenshot are not used: they need RoboCAD's window and capture its own viewport.", RENDER_VIEWS.join(", "), RENDER_MODES.join(", "))),
+        spec("cad_render", CAD, json!({"path": "/tmp/turntable-iso.png", "view": "iso", "w": 1200, "h": 900}), format!("CAD mode: GET /render on a job, the PNG written to path (absolute, .png). Query as RoboCAD's: view ({} or \"dx,dy,dz\"), w and h (16…{MAX_RENDER} px; RoboCAD's default 1200×900), mode ({}), section (\"x|y|z:value\" mm), ids, highlight, labels, edges, focus (a node to frame), tolerance (mm), title; absent ones take RoboCAD's defaults. Works headless (the snapshot renderer); with RoboCAD's window a plain shaded view (no ids, highlight, labels or other mode) is drawn by its GPU viewport at the viewport's size, and w, h, edges, tolerance and title then do not apply (api.py render_request). Without path, the render form opens. RoboCAD has no cancel route for /render, so a sent render is drawn to the end; cad_file {op: cancel, job} (the job strip's Cancel) keeps this window from writing the PNG once the cancel is seen (the outcome is a refusal saying nothing was written, or says the cancel came too late to stop the write); REST callers wait. /capture and /screenshot are not used: they need RoboCAD's window and capture its own viewport.", RENDER_VIEWS.join(", "), RENDER_MODES.join(", "))),
     ]
 }
 
@@ -641,6 +679,11 @@ fn control_list(doc: &CadDocument, files: Option<&CadFiles>) -> Vec<(String, Str
     ];
     if let Some(form) = files.and_then(|f| f.form.as_ref()) {
         out.push(("cad:file:close".to_string(), format!("Close: {}", form.title()), file(FileOp::Close), Ok(())));
+    }
+    // The progress strip's Cancel of each export and render in flight.
+    for j in files.into_iter().flat_map(|f| f.jobs.iter()).filter(|j| jobs::cancellable(j.kind)) {
+        let ready = if j.cancelled { Err(format!("cancel already asked for {}; its outcome follows when RoboCAD answers", j.label)) } else { Ok(()) };
+        out.push((format!("cad:file:cancel-{}", j.seq), format!("Cancel: {}", j.label), CadAction::CadFile(FileArgs { op: FileOp::Cancel, job: Some(j.seq), ..Default::default() }), ready));
     }
     out
 }

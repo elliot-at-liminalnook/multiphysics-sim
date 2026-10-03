@@ -356,7 +356,7 @@ impl FileForm {
                     return Err(why);
                 }
                 let unit = (op == FileOp::Import && MESH_EXTENSIONS.contains(&extension(&path).as_str())).then(|| self.text("unit").to_string());
-                CadAction::CadFile(FileArgs { op, path: Some(path), unit })
+                CadAction::CadFile(FileArgs { op, path: Some(path), unit, job: None })
             }
             Kind::Export => {
                 let fmt = self.format().ok_or_else(|| formats::unknown(self.text("format")))?;

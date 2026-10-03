@@ -279,14 +279,22 @@ pub(super) fn end(cx: &mut Cx, _call: &mut Call) -> Result<Value, String> {
             *display = restored;
         }
     }
-    let tree = cx.doc.doc.as_ref();
-    let kept: Vec<SelectionItem> = i.selection.into_iter().filter(|s| tree.is_some_and(|d| d.nodes.iter().any(|n| n.id == s.0))).collect();
-    if cx.shared.items() != kept {
-        cx.shared.set(kept)?;
-        crate::cad::selection::publish(cx.doc, cx.shared.view());
-    }
+    restore_selection(cx.doc, &mut cx.shared, i.selection)?;
     cx.doc.show(Ok("Returned to the assembly view".into()));
     Ok(json!({"returned": true}))
+}
+
+/// The selection from before a part view put back through the one
+/// Selection, without parts deleted since ([`end`], and a saved view's
+/// restore, `views::end_part_view`).
+pub(crate) fn restore_selection(doc: &mut CadDocument, shared: &mut crate::cad::selection::Shared, selection: Vec<SelectionItem>) -> Result<(), String> {
+    let tree = doc.doc.as_ref();
+    let kept: Vec<SelectionItem> = selection.into_iter().filter(|s| tree.is_some_and(|d| d.nodes.iter().any(|n| n.id == s.0))).collect();
+    if shared.items() != kept {
+        shared.set(kept)?;
+        crate::cad::selection::publish(doc, shared.view());
+    }
+    Ok(())
 }
 
 /// A linked part's row pressed (`highlight_parts([id])`): it and

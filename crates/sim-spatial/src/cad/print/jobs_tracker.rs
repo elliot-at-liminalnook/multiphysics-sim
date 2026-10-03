@@ -17,8 +17,10 @@
 //!   `Pool::Io` job), then the document is refetched (`sync::refresh`) and
 //!   the robot reads taken again for the jobs that publish (RoboCAD's
 //!   `_refresh_panels`); failed: "Kind: error" (RoboCAD's warning title
-//!   and text); cancelled: "kind cancelled". A poll error is shown once by
-//!   name and the poll tried again.
+//!   and text); cancelled: "kind cancelled" (or, when the cancel landed
+//!   after the work had published, that it did, and the document is read
+//!   back); a state RoboCAD never writes is an error naming it, never done.
+//!   A poll error is shown once by name and the poll tried again.
 //! - **Polls are stamped** (a counter moved as each poll starts) and each
 //!   watched job keeps the stamp current when it was adopted: a list from
 //!   a poll that started before the adoption may lack the job, so the job
@@ -391,8 +393,31 @@ fn finish(doc: &mut CadDocument, job: Result<PrintJob, PrintJob>) {
             }
         }
         "failed" => doc.show(Err(format!("{}: {}", capitalize(&j.kind), j.error.as_deref().filter(|e| !e.is_empty()).unwrap_or("failed")))),
-        _ => doc.show(Ok(format!("{} cancelled", j.kind))),
+        "cancelled" => match published_revision(&j) {
+            // The cancel landed after the work published (print_jobs.py
+            // `_start` marks it cancelled once the work returned): the
+            // document did change, so it is said and read back.
+            Some(revision) => {
+                doc.show(Ok(format!("{} cancelled after RoboCAD had already published its result as one undo step (revision {revision}); Ctrl+Z undoes it", j.kind)));
+                crate::cad::sync::refresh(doc, true);
+                doc.robot.data.invalidate();
+            }
+            None => doc.show(Ok(format!("{} cancelled", j.kind))),
+        },
+        // Not one of RoboCAD's states (queued | running | done | failed |
+        // cancelled): never read as done or cancelled.
+        other => doc.show(Err(format!("{} {}: RoboCAD reports the state {other:?}, which this window does not know; its result is not read", j.kind, j.id))),
     }
+}
+
+/// The revision a cancelled job published at, when its work had already
+/// returned a publishing result (split, analyze, plan, an assembly with
+/// its exploded view: each answers the `revision` `_publish` returned).
+pub(super) fn published_revision(j: &PrintJob) -> Option<u64> {
+    if !publishes(j) {
+        return None;
+    }
+    j.result.get("revision").and_then(Value::as_u64)
 }
 
 /// One frame: a new generation starts over; landed opens, cancels and

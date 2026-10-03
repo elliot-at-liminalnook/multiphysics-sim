@@ -369,11 +369,14 @@ pub(super) fn drawn(doc: &CadDocument) -> Option<&WallResult> {
     doc.print.checks.wall.as_ref().filter(|w| w.generation == doc.generation && w.revision == doc.shown_revision() && !w.points.is_empty())
 }
 
-/// A newly opened Wall thickness form: the last threshold a check ran with.
+/// A newly opened Wall thickness form: the last threshold a check ran with,
+/// as the field's 2-decimal spin box shows it ("2", "0.8"; the Fastener
+/// and Clearance forms' rule, `edits::seed`), not Python's "2.0" (that is
+/// the status line's text, [`wall_status`]).
 pub(super) fn seed(entry: &OpEntry, env: &Env, texts: &mut [String]) {
     let Some(t) = env.defaults.and_then(|d| d.wall_threshold) else { return };
     if let Some(slot) = entry.params.iter().position(|p| p.name == "threshold").and_then(|i| texts.get_mut(i)) {
-        *slot = py_float(t);
+        *slot = crate::cad::transform::num((t * 100.0).round() / 100.0);
     }
 }
 

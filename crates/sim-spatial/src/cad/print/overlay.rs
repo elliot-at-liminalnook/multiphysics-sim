@@ -71,7 +71,9 @@ fn blocks(doc: &CadDocument) -> Vec<(&str, &NodeResult)> {
 }
 
 /// The results panel's print line, when any print block is present:
-/// "Print strength: N part(s); least safety factor F on NAME; current".
+/// "Print strength: N part(s); least safety factor F on NAME (current)",
+/// or "…; stale (computed at revision R, now M)" once [`staleness`] says
+/// so (no nested parentheses: [`tag`]).
 pub(crate) fn panel_line(doc: &CadDocument) -> Option<String> {
     let found = blocks(doc);
     if found.is_empty() {
@@ -84,9 +86,20 @@ pub(crate) fn panel_line(doc: &CadDocument) -> Option<String> {
     });
     let n = found.len();
     Some(match worst {
-        Some((sf, id, node)) => format!("Print strength: {n} part(s); least safety factor {sf:.2} on {} ({})", doc.node_name(id), staleness(&node.results, shown)),
-        None => format!("Print strength: {n} part(s) without a safety factor ({})", staleness(&found[0].1.results, shown)),
+        Some((sf, id, node)) => format!("Print strength: {n} part(s); least safety factor {sf:.2} on {}{}", doc.node_name(id), tag(&node.results, shown)),
+        None => format!("Print strength: {n} part(s) without a safety factor{}", tag(&found[0].1.results, shown)),
     })
+}
+
+/// The panel line's end for a block's [`staleness`]: " (current)", else
+/// "; stale (computed at revision R, now M)" or "; staleness unknown (…)".
+pub(crate) fn tag(block: &Value, shown: u64) -> String {
+    let s = staleness(block, shown);
+    match s.as_str() {
+        "current" => " (current)".to_string(),
+        _ if block["cad_revision"].as_u64().is_none() => format!("; staleness {s}"),
+        _ => format!("; {s}"),
+    }
 }
 
 /// `cad_state.print.overlay`: each node with a print block, its safety

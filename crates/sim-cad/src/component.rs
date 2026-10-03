@@ -6,6 +6,22 @@ use crate::{
 };
 use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
+
+// Match components.py's Python truthiness for JSON declarations at the
+// regeneration gate only. Physical metadata is preserved unchanged and still
+// validated by mass.rs: an empty material map is valid, but an empty mass
+// object (or a non-object material value) is not a valid mass declaration.
+fn declaration_is_substantive(value: &Value) -> bool {
+    match value {
+        Value::Null => false,
+        Value::Bool(value) => *value,
+        Value::Number(value) => value.as_f64().is_some_and(|value| value != 0.),
+        Value::String(value) => !value.is_empty(),
+        Value::Array(value) => !value.is_empty(),
+        Value::Object(value) => !value.is_empty(),
+    }
+}
+
 #[derive(Clone, Debug)]
 pub(crate) struct Recipe {
     pub content: String,
@@ -603,8 +619,11 @@ fn variant(
             .ok_or_else(|| format!("feature missing node {target}"))?;
         match kind {
             "box" | "cylinder" => {
-                if !p.node["robot"]["mass_properties"].is_null()
-                    || !p.node["robot"]["solid_materials"].is_null()
+                if !matches!(p.node["kind"].as_str(), Some("body" | "sheet")) {
+                    return Err(format!("{target}: geometry generation must target a body"));
+                }
+                if declaration_is_substantive(&p.node["robot"]["mass_properties"])
+                    || declaration_is_substantive(&p.node["robot"]["solid_materials"])
                 {
                     return Err(format!(
                         "{target}: geometry regeneration requires cleared mass/material declarations"

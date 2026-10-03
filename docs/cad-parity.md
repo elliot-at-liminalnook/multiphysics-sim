@@ -12,6 +12,14 @@ than contacting the preserved Python/browser implementations. Retaining legacy
 code does not retain an active native server adapter. Complete corpus/GUI parity
 is not claimed.
 
+**Current repair scope (source-reviewed, unexecuted):** empty component material
+overrides follow reference truthiness without bypassing declaration validation.
+Local body/face/point picking remains available; edge/vertex modes and exact
+topology inspection expose shared Rust migration refusals. Local command/history
+sections report migration status rather than waiting for RoboCAD. See the current
+source ledger for repair traces and proposed acceptance cases.
+
+
 **Purpose.** This ledger has one row per user-facing feature of RoboCAD
 (`cad/robocad`, Python/OCCT/Qt), so the native viewer's CAD mode can reach
 exact parity in phases and each phase's claim can be checked row by row

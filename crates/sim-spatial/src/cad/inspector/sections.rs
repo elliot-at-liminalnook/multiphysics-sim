@@ -125,7 +125,7 @@ pub(in crate::cad) fn attributes(p: &mut ChildSpawnerCommands, k: &Kit, doc: &Ca
     p.spawn(k.text("Material", size::BODY, TEXT, 1));
     let materials: Vec<(String, String)> = doc.doc.as_ref().map(|d| d.materials.iter().filter_map(material).collect()).unwrap_or_default();
     if materials.is_empty() {
-        p.spawn(k.caption("RoboCAD listed no materials."));
+        p.spawn(k.caption("The archive lists no materials."));
     } else {
         p.spawn(wrap()).with_children(|r| {
             for (material_id, label) in materials {
@@ -144,6 +144,10 @@ pub(in crate::cad) fn attributes(p: &mut ChildSpawnerCommands, k: &Kit, doc: &Ca
 /// RoboCAD's undo and redo labels, most recent first (read-only).
 pub(in crate::cad) fn history(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
     p.spawn(k.section("History"));
+    if doc.client.is_none() {
+        p.spawn(k.caption("Native modelling and undo history await Rust migration; archived source is read only."));
+        return;
+    }
     let Some(d) = &doc.doc else {
         p.spawn(k.caption("RoboCAD has not sent its history yet."));
         return;
@@ -165,6 +169,11 @@ pub(in crate::cad) fn commands_key(doc: &CadDocument) -> String {
 
 /// RoboCAD's GUI command registry, by category; a press runs the command there.
 pub(in crate::cad) fn commands(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem]) {
+    if doc.client.is_none() {
+        p.spawn(k.section("Modelling commands"));
+        p.spawn(k.caption("The modelling command registry awaits Rust migration. No RoboCAD service is started or awaited."));
+        return;
+    }
     p.spawn(k.section("RoboCAD commands"));
     let Some(health) = &doc.health else {
         p.spawn(k.caption("Waiting for RoboCAD to answer."));

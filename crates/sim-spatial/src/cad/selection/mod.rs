@@ -42,14 +42,25 @@ pub(super) fn build(app: &mut App) {
     super::overlay::build(app);
 }
 
+/// One availability contract for native controls and every typed selection action.
+/// Local triangle face ids support face/point picks; exact edges and vertices
+/// need topology that has not migrated to Rust. No service request is pending.
+pub(super) fn mode_available(doc: &CadDocument, mode: SelectMode) -> Result<(), String> {
+    if doc.client.is_none() && matches!(mode, SelectMode::Edge | SelectMode::Vertex) {
+        Err(format!("Select {}: exact topology awaits Rust migration; local body, face and point picking are available", mode.label()))
+    } else {
+        Ok(())
+    }
+}
+
 /// The selection actions (`actions::handle` forwards them here).
 pub(super) fn handle(action: &CadAction, _call: &mut Call, cx: &mut Cx) -> Outcome {
     let doc = &mut *cx.doc;
     let shared = &mut cx.shared;
     let result = match action {
         CadAction::CadSelect { ids, items, extend, toggle, picked_at } => select(doc, shared, ids, items, *extend, *toggle, *picked_at),
-        CadAction::CadSelectMode { mode } => Ok(set_mode(doc, shared, *mode)),
-        CadAction::CadHover { item } => Ok(hover(doc, item.as_ref())),
+        CadAction::CadSelectMode { mode } => mode_available(doc, *mode).map(|()| set_mode(doc, shared, *mode)),
+        CadAction::CadHover { item } => validate(doc, item.as_slice()).map(|()| hover(doc, item.as_ref())),
         CadAction::CadBoxSelect { rect, extend } => match (cx.meshes.as_deref(), cx.view) {
             (Some(meshes), Some(view)) if view.valid => box_select(doc, shared, meshes, cx.topology.as_deref(), view, *rect, *extend),
             _ => Err("box select needs CAD mode's 3D view, which is not shown yet in this window".to_string()),
@@ -105,6 +116,11 @@ fn selection_status(doc: &mut CadDocument, shared: &Shared) {
 /// shown tree, a non-negative index. Refusals name the item.
 fn validate(doc: &CadDocument, items: &[SelectionItem]) -> Result<(), String> {
     for SelectionItem(node, kind, index) in items {
+        if let Some(mode) = SelectMode::parse(kind) {
+            mode_available(doc, mode)?;
+        } else if doc.client.is_none() && kind == "curve" {
+            return Err(format!("[{node}, {kind}, {index}]: curve picking awaits Rust migration"));
+        }
         if !KINDS.contains(&kind.as_str()) {
             return Err(format!("[{node}, {kind}, {index}]: the kind must be one of body, face, edge, vertex, point, curve"));
         }
@@ -271,6 +287,7 @@ pub(super) fn same_material(doc: &mut CadDocument, shared: &mut Shared) -> Resul
 /// tessellation (see the module doc); the mode becomes face. The faces
 /// carry the topology's revision.
 pub(super) fn edges_to_faces(doc: &mut CadDocument, shared: &mut Shared, meshes: Option<&CadMeshes>, topology: Option<&CadTopology>) -> Result<Value, String> {
+    mode_available(doc, SelectMode::Edge)?;
     let edges = shared.items().of_kind("edge");
     if edges.is_empty() {
         return Err("Edges → faces: no edges are selected (edge mode, E)".to_string());

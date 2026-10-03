@@ -307,7 +307,10 @@ pub fn derive_document_with(
             let node = doc.node(id).ok_or("geometry has no manifest node")?;
             let meta = &node["robot"];
             let regions = &meta["solid_materials"];
-            if !regions.is_null() && !regions.is_object() {
+            // Python defaults an absent key to {}, but explicitly supplied
+            // null/false/zero/arrays are invalid, even when regeneration's
+            // truthiness gate permits them. Never erase them into derivation.
+            if meta.get("solid_materials").is_some() && !regions.is_object() {
                 return Err("solid_materials must be an object".into());
             }
             if let Some(regions) = regions.as_object() {

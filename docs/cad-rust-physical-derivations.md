@@ -91,9 +91,9 @@ back through UI DTOs.
 | B-rep compatibility and exact geometry | `kernel/occt.py:1272` serialize, `:1285` deserialize, `:989` inertial properties | `sim-cad/native/bridge.cpp:59` stream read, exact BRepGProp properties and tessellation; `src/geometry.rs:378` jobs-callable numeric query |
 | Declared measurements, source, zero/included_in, symmetry/PSD/principal bounds | `physical.py:116` metadata validation and `:134` body precedence; `assembly.py:29` shared validation consumer | `sim-cad/src/mass.rs:99` inertia validator; `:256` derivation with contextual validation and measured override |
 | Density/defaults, unit factors and per-solid regions | `document.py:127` defaults, `:493` density; `physical.py:108` factors, `:145` regional properties; `kernel/occt.py:864` unjoin | `sim-cad/src/mass.rs:166` density restoration, strict regions, 1e-6 mass/1e-3 length/1e-12 inertia factors; bridge reference region enumeration |
-| Bodies already world placed; instance transform/mirror once | `document.py:454` resolved_body; `components.py:108` physical_transform, `:433` restore_occurrences | `sim-cad/src/geometry.rs:341` source resolution and matrices; `sim-cad/src/component.rs:334` component physics/placement remap; mass accepts world numeric properties |
+| Bodies already world placed; instance transform/mirror once | `document.py:454` resolved_body; `components.py:108` physical_transform, `:433` restore_occurrences | `sim-cad/src/geometry.rs:341` source resolution and matrices; `sim-cad/src/component.rs:354` component physics/placement remap; mass accepts world numeric properties |
 | Assembly centroid/full inertia and physical inclusion | `document.py:430` bodies, `:433` visibility; `physical.py:714` assembly, `:751` centroid/tensor sum | `sim-cad/src/mass.rs:127` weighted full-tensor parallel-axis aggregation, separate display/physical inclusion and reference denominator floors |
-| Model and production derivation identity | Actual archive bytes; reference snapshot reuse `document.py:532` and assembly geometry dependencies `physical.py:722` | `sim-cad/src/archive.rs:32` SHA-256 original archive; `sim-cad/src/lib.rs:9` production_source_identity; `sim-cad/src/mass.rs:510` derivation_identity includes arithmetic, schema and loaded OCCT build identity; saved/declaration attribution retained alongside derived timestamp |
+| Model and production derivation identity | Actual archive bytes; reference snapshot reuse `document.py:532` and assembly geometry dependencies `physical.py:722` | `sim-cad/src/archive.rs:32` SHA-256 original archive; `sim-cad/src/lib.rs:9` production_source_identity; `sim-cad/src/mass.rs:513` derivation_identity includes arithmetic, schema and loaded OCCT build identity; saved/declaration attribution retained alongside derived timestamp |
 | Native positional, picker and REST opening | Historical service launch/poll has been superseded | `sim-spatial/src/main.rs:246`, `sim-spatial/src/app/picker/discover.rs`, `sim-spatial/src/cad/files/mod.rs:282`, `sim-spatial/src/cad/actions.rs:643`, `sim-spatial/src/cad/sync/mod.rs:123`; one typed CadOpen path |
 | Local results, staleness and cancellation | Native jobs/generation contract architecture §4 | `sim-spatial/src/cad/sync/mod.rs:133` sole snapshot landing point; `sim-spatial/src/cad/document/state.rs:150` blockers; `sim-spatial/src/app/switch/leave.rs:94` pending cancellation; local selected paths never construct CadClient |
 
@@ -150,7 +150,7 @@ historical; they do not certify this implementation.
 | cad-rust-physical-derivations:task-CD3 | `sim-spatial/src/cad/actions.rs:643` local open; `cad/sync/mod.rs:75` jobs and `:133` sole landing point; local meshes, shared selection, inspector and refusal gates |
 | cad-rust-physical-derivations:task-CD4 | This inventory/reference ledger, architecture §9, CAD checklist/parity notices and README launch instructions; independent reading reviews and owned-file commit |
 | cad-rust-physical-derivations:outcome-1 | Picker `cad/files/mod.rs:282`, positional `main.rs:246` → `cad/sync/mod.rs:123`, REST → `cad/actions.rs:643` → same local loading job |
-| cad-rust-physical-derivations:outcome-2 | `cad/mesh.rs:408` consumes accepted local triangles; `cad/pick.rs` raycasts those entities and typed body selections reach the shared Selection; `cad/selection/mod.rs:69` never pushes to a server |
+| cad-rust-physical-derivations:outcome-2 | `cad/mesh.rs:408` consumes accepted local triangles; `cad/pick.rs` raycasts those entities and typed body selections reach the shared Selection; `cad/selection/mod.rs:80` never pushes to a server |
 | cad-rust-physical-derivations:outcome-3 | Reference/replacement ledger above; SI conversions, declared origin/source and complete tensors retained; visible and physical inclusion sets explicitly separate; numerical agreement remains unexecuted |
 | cad-rust-physical-derivations:outcome-4 | `cad/actions.rs:482` supported-action gate; file/tree/display gates and permanently absent local CAD client prevent legacy adapters from running; service launch and remote selection/poll implementations removed; legacy Python/browser sources preserved |
 
@@ -162,3 +162,51 @@ implementation cannot retain an identity merely by sharing a version string.
 Unsupported OS/static-library provenance or unreadable native images refuse
 derivation explicitly. Linking, loader packaging and the archive corpus still
 need an authorized execution pass.
+
+## Review repairs: archive emptiness and native availability
+
+Source-reviewed and unexecuted. CD1–CD4 and all eight checklist IDs above remain
+in scope; this repair does not establish numerical or GUI parity.
+
+Primitive regeneration follows Python JSON truthiness rather than non-nullness.
+An empty `solid_materials: {}` therefore permits regeneration and remains a valid
+empty material map. Empty values are retained, not erased: `mass_properties: {}`
+still fails the required mass declaration validation instead of silently deriving
+replacement measurements. Substantive mass/material overrides still refuse
+regeneration with the document/node context. Primitive targets must be bodies or
+sheets, matching the reference.
+
+Local body, face and point selection use displayed meshes and triangle face IDs.
+Edge and vertex modes need exact topology, which this batch has not migrated.
+One shared mode-availability check drives native control status and typed action
+validation, including REST and `system_ui`; explicit unavailable selection items
+and hover/candidate inputs are also refused. Body selection retains the shared
+Selection owner. Face/point inspection explicitly labels missing exact topology
+as a migration gap, never as a pending fetch. Local modelling command registry
+and history sections similarly show migration status, without awaiting RoboCAD.
+
+Unexecuted acceptance cases: regenerate a parameterized box/cylinder with empty
+`solid_materials: {}` and inspect its derived mass; retain and reject empty
+`mass_properties: {}`, malformed material types and substantive overrides; reject
+a primitive targeting a group. In a local document, select a body, face and point;
+verify edge/vertex mode controls and direct REST/system_ui actions return the same
+migration reason. Inject unavailable edge/vertex items through selection, hover
+and candidates and verify refusal without changing Selection. Inspect a local
+face, history and command registry during loading and after opening: captions
+must name local progress or migration status, with no service/fetch implication.
+
+### Repair reference/replacement traces
+
+| Contract | Reference | Replacement (under `crates/`) |
+|---|---|---|
+| Empty override regeneration and body/sheet target | `cad/robocad/components.py:342–345` | `sim-cad/src/component.rs:14` JSON truthiness; `:622` target validation; `:625` substantive refusal |
+| Declarations remain validated, never erased | `cad/robocad/physical.py:116–138` | `sim-cad/src/mass.rs:313` absent versus explicit material values; `:329` declaration validation; `:429` document/node failure context |
+| Shared native mode/control/action contract | `cad/robocad/ui/tools.py` selection reference; local gap documented rather than simulated | `sim-spatial/src/cad/selection/mod.rs:48` availability; `:60` typed handling; `:117` explicit items; `cad/panel.rs:238` control availability; `cad/actions.rs:487` forwarding |
+| REST and system_ui use typed validation | Existing native action architecture | `sim-spatial/src/cad/actions.rs:506` selection forwarding; `:615` system_ui; `cad/ui_api.rs:40` activates captured actions |
+| Local exact-detail and service status | Legacy captions required server responses | `sim-spatial/src/cad/inspector/node.rs:128` topology migration, `:205` local loading; `inspector/sections.rs:147` history, `:172` commands; `cad/panel.rs:445` ancillary local migration panels |
+
+Additional unexecuted validation: explicitly supplied null/non-object material
+maps must fail; an absent material-map key uses the empty default. Ancillary
+Comments, References, Components, Composition, Robot, Materials and Print panels
+show local migration status instead of rendering legacy service-fetch captions.
+They remain out of scope for implementation; no server fallback was added.

@@ -467,3 +467,43 @@ fn parameters_without(p: &std::collections::BTreeMap<String, f64>, name: &str) -
     out.remove(name);
     out
 }
+
+/// The controller-side deadman (`HeartbeatDeadman`, simloop's `DriveState`
+/// with `limit_live=False`): heartbeat 0 is no request; a rising heartbeat
+/// keeps a live request, passed through unchanged; a stale one expires to
+/// the stop rule from the last output; NaN or a decrease never refreshes.
+#[test]
+fn heartbeat_deadman_follows_the_python_drive_state() {
+    let limits = wheeled_limits();
+    let deadman = Deadman { timeout_s: 0.5, on_loss: OnLoss::Ramp { decel: [1.2, 1.2, 12.0] } };
+    let dt = 0.02;
+    let request = BodyTwist::new(0.3, 0.0, 1.0);
+    let mut d = kinematics::HeartbeatDeadman::default();
+    // First sample with heartbeat 0: no request yet, the twist is zero whatever is sent.
+    let c = d.update(0.0, request, 0.0, dt, &limits, &deadman).unwrap();
+    assert_eq!((c.twist, c.expired, d.heartbeat, d.changed_t), (BodyTwist::ZERO, false, Some(0.0), 0.0));
+    // A fresh request passes through unchanged (the host limited it already).
+    let c = d.update(0.1, request, 1.0, dt, &limits, &deadman).unwrap();
+    assert_eq!((c.twist, c.expired, d.changed_t), (request, false, 0.1));
+    // The same heartbeat, a NaN and a decrease do not refresh it.
+    d.update(0.2, request, 1.0, dt, &limits, &deadman).unwrap();
+    d.update(0.3, request, f64::NAN, dt, &limits, &deadman).unwrap();
+    d.update(0.4, request, 0.5, dt, &limits, &deadman).unwrap();
+    assert_eq!((d.heartbeat, d.changed_t), (Some(1.0), 0.1));
+    // Age 0.5 s since the last rise: expired, ramping from the last output at stop_decel.
+    let c = d.update(0.6, request, 1.0, dt, &limits, &deadman).unwrap();
+    assert!(c.expired && d.expired);
+    assert!((c.twist.forward_m_s - (0.3 - 1.2 * dt)).abs() < 1e-12 && (c.twist.yaw_rad_s - (1.0 - 12.0 * dt)).abs() < 1e-12, "{c:?}");
+    // A rise revives it.
+    let c = d.update(0.62, request, 2.0, dt, &limits, &deadman).unwrap();
+    assert_eq!((c.twist, c.expired), (request, false));
+    // A live request outside the profile is refused by name and leaves the state as it was.
+    let before = d;
+    let e = d.update(0.64, BodyTwist::new(0.0, 0.1, 0.0), 3.0, dt, &limits, &deadman).unwrap_err();
+    assert!(e.to_string().contains("lateral"), "{e}");
+    assert_eq!(d, before);
+    // A non-finite first heartbeat is recorded as 0 (no request yet).
+    let mut d = kinematics::HeartbeatDeadman::default();
+    let c = d.update(1.0, request, f64::NAN, dt, &limits, &deadman).unwrap();
+    assert_eq!((c.twist, d.heartbeat, d.changed_t), (BodyTwist::ZERO, Some(0.0), 1.0));
+}

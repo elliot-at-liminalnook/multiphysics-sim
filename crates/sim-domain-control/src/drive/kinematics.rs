@@ -341,3 +341,75 @@ impl Mecanum {
         BodyTwist::new(0.25 * (fl + fr + rl + rr), 0.25 * (-fl + fr + rl - rr), 0.25 * (-fl + fr - rl + rr) / self.lever_m())
     }
 }
+
+/// The controller-side deadman over the seam's twist and heartbeat channels:
+/// the counterpart, inside a robot's controller, of the run thread's
+/// `TwistState` (`sim_runtime::drive_host`), and the exact port of simloop's
+/// `DriveState` with `limit_live=False` (clients/python/simloop/drive.py).
+///
+/// The host raises the heartbeat by one for every fresh request. A heartbeat
+/// is fresh only when it is strictly greater than the one held, so a NaN or
+/// decreasing heartbeat never refreshes the request and the deadman still
+/// fires. The first sample's heartbeat is recorded whatever it is (a
+/// non-finite one as 0) together with its time; heartbeat 0 means no request
+/// has been made yet, so the request is treated as zero. The request's age is
+/// the time since the heartbeat last rose.
+///
+/// While the request is live it is checked against the profile
+/// ([`check_twist`]) and passed through unchanged: the host already limited
+/// it with the same shared rule, and limiting it again would slow a halt or
+/// the host's own deadman ramp. Once the deadman expired the stop rule
+/// applies from the last output ([`step`] with the expired age). State is
+/// committed only when the update succeeds (Python mutates before raising;
+/// either way the controller stops on the error).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct HeartbeatDeadman {
+    /// The twist output by the last update (the stop rule's previous value).
+    pub twist: BodyTwist,
+    /// The heartbeat held; `None` before the first update.
+    pub heartbeat: Option<f64>,
+    /// Time (s) the held heartbeat was recorded or last rose.
+    pub changed_t: f64,
+    /// The last update's deadman verdict.
+    pub expired: bool,
+}
+
+impl Default for HeartbeatDeadman {
+    fn default() -> Self {
+        Self { twist: BodyTwist::ZERO, heartbeat: None, changed_t: 0.0, expired: false }
+    }
+}
+
+impl HeartbeatDeadman {
+    /// One controller sample at time `t` (s) with the host's twist `request`
+    /// and `heartbeat`, `dt_s` the controller period: the twist to mix and
+    /// whether the deadman expired. Refused (state unchanged) for a live
+    /// request outside the profile or a bad parameter.
+    pub fn update(&mut self, t: f64, request: BodyTwist, heartbeat: f64, dt_s: f64, limits: &Limits, deadman: &Deadman) -> Result<Commanded, KinematicsError> {
+        let mut next = *self;
+        match next.heartbeat {
+            None => {
+                next.heartbeat = Some(if heartbeat.is_finite() { heartbeat } else { 0.0 });
+                next.changed_t = t;
+            }
+            // False for NaN and for a decrease.
+            Some(held) if heartbeat > held => {
+                next.heartbeat = Some(heartbeat);
+                next.changed_t = t;
+            }
+            Some(_) => {}
+        }
+        let request = if next.heartbeat == Some(0.0) { BodyTwist::ZERO } else { request };
+        let age = t - next.changed_t;
+        let out = if deadman_expired(age, deadman) {
+            step(next.twist, request, dt_s, age, limits, deadman)?
+        } else {
+            check_twist(request, limits)?;
+            Commanded { twist: request, expired: false }
+        };
+        next.twist = out.twist;
+        next.expired = out.expired;
+        *self = next;
+        Ok(out)
+    }
+}

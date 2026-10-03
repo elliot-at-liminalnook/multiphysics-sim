@@ -35,6 +35,10 @@ pub mod configuration_inspection;
 pub mod controller_binding;
 /// The one place a driven session is stepped: twist requests, the shared limiter and deadman on sim time, `Session::step`.
 pub mod drive_host;
+/// Device bindings (`sim.drive-bindings/1`): one parser and one set of defaults for the native viewer and the browser.
+pub mod drive_bindings;
+/// A bound robot's embedded (Rhai) drive program: the scene and session the browser drives, with the shared limiter and deadman on sim time.
+pub mod embedded_drive;
 /// A system file's hosted robot (linked robot, controller binding and drive profile) resolved for the drive host (native only: reads files).
 #[cfg(not(target_arch = "wasm32"))]
 pub mod system_robot;

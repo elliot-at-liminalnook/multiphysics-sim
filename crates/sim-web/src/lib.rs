@@ -210,6 +210,142 @@ impl EmbeddedSimulation {
     }
 }
 
+/// The committed device bindings (`sim.drive-bindings/1`) with their
+/// description and the W3C Standard Gamepad table (`drive_bindings::json`).
+#[wasm_bindgen]
+pub fn default_drive_bindings() -> Result<String, JsValue> {
+    serde_json::to_string(&sim_runtime::drive_bindings::json(None)).map_err(error)
+}
+
+/// A stored bindings file checked by the shared parser; the answer is the
+/// same shape as `default_drive_bindings` (`stored: true`). A refusal names
+/// its field (`drive_bindings.keyboard.axes[2].key: …`).
+#[wasm_bindgen]
+pub fn validate_drive_bindings(json: &str) -> Result<String, JsValue> {
+    let file = bindings_file(json)?;
+    serde_json::to_string(&sim_runtime::drive_bindings::json(Some(&file))).map_err(error)
+}
+
+fn bindings_file(json: &str) -> Result<sim_runtime::drive_bindings::BindingsFile, JsValue> {
+    let value: serde_json::Value = serde_json::from_str(json).map_err(|e| error(format!("drive_bindings: {e}")))?;
+    sim_runtime::drive_bindings::BindingsFile::from_value(&value).map_err(error)
+}
+
+/// The browser's held keys and pads through the bindings
+/// (`drive_bindings::browser_axes`): `devices_json` is `BrowserDevices`
+/// (`{"keys": ["KeyW"], "gamepads": [{"mapping", "id", "axes", "buttons", "pressed"}]}`),
+/// `supported_json` the drive's supported axes (`[true, false, true]`).
+/// Answers `DeviceAxes` (normalized axes; scale them with `drive_request`).
+#[wasm_bindgen]
+pub fn drive_device_axes(bindings_json: &str, devices_json: &str, supported_json: &str) -> Result<String, JsValue> {
+    let resolved = bindings_file(bindings_json)?.resolve().map_err(error)?;
+    let devices: sim_runtime::drive_bindings::BrowserDevices = serde_json::from_str(devices_json).map_err(|e| error(format!("devices: {e}")))?;
+    let supported: [bool; 3] = serde_json::from_str(supported_json).map_err(|e| error(format!("supported axes: {e}")))?;
+    serde_json::to_string(&sim_runtime::drive_bindings::browser_axes(&resolved, &devices, supported)).map_err(error)
+}
+
+/// The files a controller binding's embedded program needs, relative to the
+/// binding, as a JSON array (`embedded_drive::files_to_read`): fetch each and
+/// pass them to `build_drive_scene`.
+#[wasm_bindgen]
+pub fn drive_binding_files(binding_path: &str, binding_json: &str) -> Result<String, JsValue> {
+    let path = std::path::Path::new(binding_path);
+    let binding = sim_runtime::controller_binding::ControllerBinding::from_json(binding_json, path).map_err(error)?;
+    serde_json::to_string(&sim_runtime::embedded_drive::files_to_read(&binding, path).map_err(error)?).map_err(error)
+}
+
+/// The embedded drive (`embedded_drive::build`, the one scene builder) from
+/// the model, its binding and `files_json` (`{"<path as the binding writes
+/// it>": "<text>"}`), for `DriveSimulation`'s constructor. Call from a worker:
+/// it parses the model and resolves its geometry.
+#[wasm_bindgen]
+pub fn build_drive_scene(model_path: &str, model_json: &str, binding_path: &str, binding_json: &str, files_json: &str) -> Result<String, JsValue> {
+    let files: std::collections::BTreeMap<String, String> = serde_json::from_str(files_json).map_err(|e| error(format!("files: {e}")))?;
+    let drive = sim_runtime::embedded_drive::build(
+        model_json,
+        model_path,
+        std::path::Path::new(binding_path),
+        binding_json,
+        &files,
+        sim_runtime::controller_binding::DRIVE_DURATION_S,
+    )
+    .map_err(error)?;
+    serde_json::to_string(&drive).map_err(error)
+}
+
+/// A drive request interpreted against the drive's profile, without a
+/// session (`embedded_drive::interpret_json`): `{"twist": {forward_m_s,
+/// lateral_m_s, yaw_rad_s}, "halt": bool}`. `request_json` is
+/// `{"axes": {...}}`, `{"action": {"name": ...}}` or `"stop"`.
+#[wasm_bindgen]
+pub fn drive_request(drive_json: &str, request_json: &str) -> Result<String, JsValue> {
+    serde_json::to_string(&sim_runtime::embedded_drive::interpret_json(drive_json, request_json).map_err(error)?).map_err(error)
+}
+
+/// A bound robot driven in the browser: the binding's embedded Rhai adapter
+/// in the shared embedded session, with the shared limiter and deadman on
+/// simulation time (`embedded_drive::DriveSession`). The page sends requests
+/// only. Run it in a worker and advance it in bounded chunks of control periods.
+#[wasm_bindgen]
+pub struct DriveSimulation {
+    session: sim_runtime::embedded_drive::DriveSession,
+}
+
+#[wasm_bindgen]
+impl DriveSimulation {
+    /// `drive_json` is `build_drive_scene`'s answer.
+    #[wasm_bindgen(constructor)]
+    pub fn new(drive_json: &str, seed: u32) -> Result<DriveSimulation, JsValue> {
+        let drive: sim_runtime::embedded_drive::EmbeddedDrive = serde_json::from_str(drive_json).map_err(|e| error(format!("embedded drive: {e}")))?;
+        if drive.config.profile_solver {
+            return Err(error("process-global profiling is unavailable in the browser session"));
+        }
+        Ok(Self { session: sim_runtime::embedded_drive::DriveSession::new(drive, seed as u64).map_err(error)? })
+    }
+    /// A fresh request (`DriveRequest`'s JSON) at the current simulation
+    /// time; answers the drive status. Refused while replaying.
+    pub fn request(&mut self, request_json: &str) -> Result<String, JsValue> {
+        let request: sim_runtime::drive_host::DriveRequest = serde_json::from_str(request_json).map_err(|e| error(format!("drive request: {e}")))?;
+        let status = self.session.request(&request).map_err(error)?;
+        serde_json::to_string(&status.json()).map_err(error)
+    }
+    /// Up to `periods` (1..1000) control periods, then the frame. A solver
+    /// failure is a visible terminal frame (its `error`), as in
+    /// `EmbeddedSimulation::advance`, and so is the horizon (`done: true`,
+    /// `remaining_steps() == 0`); any other refusal is an error.
+    pub fn advance(&mut self, periods: u32) -> Result<String, JsValue> {
+        if periods == 0 || periods > 1000 {
+            return Err(error("browser work chunk must be 1..1000 control periods"));
+        }
+        if let Err(e) = self.session.advance(periods as usize) {
+            let session = self.session.session();
+            if session.error().is_none() && session.remaining_steps() > 0 {
+                return Err(error(e));
+            }
+        }
+        self.frame()
+    }
+    pub fn frame(&self) -> Result<String, JsValue> {
+        serde_json::to_string(&self.session.frame().map_err(error)?).map_err(error)
+    }
+    pub fn metadata(&self) -> Result<String, JsValue> {
+        serde_json::to_string(&self.session.metadata()).map_err(error)
+    }
+    pub fn recording(&self) -> Result<String, JsValue> {
+        serde_json::to_string(&self.session.recording()).map_err(error)
+    }
+    /// Check a recording against the loaded drive (identity, scene, config)
+    /// and start its replay; answers the control periods to advance.
+    pub fn prepare_replay(&mut self, json: &str) -> Result<u32, JsValue> {
+        let recording: EmbeddedRecording = serde_json::from_str(json).map_err(|e| error(format!("recording: {e}")))?;
+        if recording.config.profile_solver {
+            return Err(error("process-global profiling is unavailable in the browser session"));
+        }
+        let periods = self.session.prepare_replay(recording).map_err(error)?;
+        u32::try_from(periods).map_err(|_| error(format!("replay of {periods} control periods is too long")))
+    }
+}
+
 #[wasm_bindgen]
 pub struct Simulation {
     session: Session,

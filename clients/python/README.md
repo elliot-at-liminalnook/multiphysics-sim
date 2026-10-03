@@ -89,3 +89,46 @@ To run it outside the viewer, write the resolved JSON to a file and pass
 that lacks the command channels or wheel targets is refused before `ready`
 (`Loop.stdio(check=...)`), so the viewer's handshake reports the reason. The README
 in `examples/wheeled-robot` lists the channels and the deadman rule.
+
+## Example: build and drive a rover over the viewer's REST API
+
+`examples/build_rover_over_rest.py` (stdlib only) builds the rover of
+`cad/scripts/wheeled_learning_fixture.py` through the native viewer's loopback
+REST API (`http://127.0.0.1:8421`, `--port` to change). The rover has two driven
+wheels (left and right, each turned by an N20 motor on a continuous axle read by
+an encoder) and one unpowered passive wheel. The script works in this order:
+
+1. Creates a new CAD document.
+2. Adds four comment threads, pinned to the chassis, the left axle joint, the
+   right axle joint and the passive wheel. It replies on the left axle thread
+   with a `[left wheel](part:ID)` part link, and runs a link op that adds the
+   drive motors and the IMU to the chassis thread.
+3. Saves, exports `robot.simrobot.json` and checks the export's `cad_sha256`
+   against the saved `.rcad`.
+4. Derives `robot.drive.json` from the export and writes `robot.controller.json`.
+5. Wires and runs the rover in Build mode.
+6. Drives it in Robot mode and saves the drive recording (checklist RV-40; its
+   Robot-mode requests are tagged RV-17, RV-18, RV-29, RV-32 and RV-33 from
+   `docs/rover-checklist.md`).
+
+Each request and response is in `<out>/rest_log.json`, tagged with its RV step
+id. The script talks only to the viewer and never to hardware.
+
+On a failure it cancels a timed-out job (`DELETE /v1/jobs/{id}`) and stops the
+simulated drive. It then writes the log, names the failing step and exits 1. A
+stop queued behind a long job may run late.
+
+It refuses (exit 2) an output directory that already exists or lies under the
+repository's `examples/`, `cad/` or `web/`. It also stops at RV-01 if the viewer
+does not list a command it needs.
+
+    cargo run -p sim-spatial -- examples/wheeled-robot/baseline/robot.rcad
+    python3 clients/python/examples/build_rover_over_rest.py --out /tmp/rover-<date>
+
+The seed `.rcad` is only used to bring CAD mode up (`--cad-seed` to change it).
+It is never edited or saved.
+
+Status: committed **unexecuted**. Its request shapes were checked by reading the
+viewer's source, and no run evidence exists yet. Build-mode `link_file` and
+`system_drive` and the export's `cad_sha256` fields come from work landing
+alongside it.

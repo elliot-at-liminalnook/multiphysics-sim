@@ -52,6 +52,8 @@ jobs:
           cargo test --locked -p sim-runtime --test robot_contract
       - run: cargo test --locked -p sim-domain-control --test neural
       - run: node --test web/tests/residual-distillation.mjs
+      # Drive-input stop rules (web/viewer/drive-input.mjs); no build or browser needed. Listed by focus-safety-closure; not yet run.
+      - run: node web/tests/drive_input.mjs
       - run: node --test examples/interactive/prepare_direct_distillation.test.mjs
       - run: node --test examples/interactive/test_causal_response.mjs
       - run: node --test examples/interactive/test_feedback_contributions.mjs

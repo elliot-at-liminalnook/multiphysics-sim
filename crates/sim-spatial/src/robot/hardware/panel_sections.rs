@@ -95,6 +95,7 @@ pub(super) fn top_bar(root: &mut ChildSpawnerCommands, k: &Kit) {
         top.spawn(row()).with_children(|r| {
             r.spawn((k.caption(""), PanelText::Connection, Node { flex_grow: 1.0, min_width: Val::Px(0.0), ..default() }));
             control(r, k, "connect", "Connect", HardwareAction::Connect, Look::Secondary, true).insert(Shown::Connect);
+            control(r,k,"disconnect","Disconnect calibration",HardwareAction::Disconnect,Look::Secondary,true);
         });
         top.spawn((k.text("", size::SMALL, WARN, 0), PanelText::Notice));
     });

@@ -1,37 +1,7 @@
-//! Real motor sync: the port of `web/viewer/hardware-sync.mjs` against
-//! `serve_motor_bench`. Robot mode's live preset run publishes named motor
-//! targets on its frames (`robot::run::Frame::motor_targets`, the session's
-//! `servo_targets_rad` and coordinate names); this streams the newest of them
-//! to the bench's `/live/*` routes. The bench maps them to three motors, the
-//! FPGA runs the loop, the watchdog and the 12-second session; nothing here
-//! computes a motor command or plant physics.
-//!
-//! - **Link.** `token::connect(…, ServerKind::MotorBench)` and `GET /config`
-//!   on a `jobs::Pool::Dedicated` job (`api('/config')`); `/status` on its own
-//!   `Pool::Dedicated` job, one at a time, 150 ms after each answer (:29); one
-//!   `jobs::RunThread` ("hardware-sync") posts `/live/open` and, while active,
-//!   the newest sample every 50 ms if newer than the last sent (:21, :31).
-//! - **STOP never queues and is never gated on local state**: `/stop` goes
-//!   out on its own `Pool::Dedicated` job (`complete_on_drop`) whenever a
-//!   session is or may be open (active, opening, stopping, bench busy), and
-//!   again if an open lands after a stop. Dropping [`LiveSync`] (the page's
-//!   `pagehide`) also writes it at once with `Client::send_only`.
-//!   [`LiveSync::post_stop_on_leave`] is the same synchronous write for the
-//!   window closing (`handlers.rs` calls it before the process exits).
-//! - **Start is gated on the run**: a session opens only when the run is
-//!   already running or `RunController::check(RunAction::Start)` accepts
-//!   Start; a refused Start (a recorded preset, a replay or a cancelled partial
-//!   replay, a gait preview holding the run, an ended or failed run) is shown
-//!   as the status and no `/live/open` is posted, so the motors never hold the
-//!   initial target while the simulation stands still.
-//! - **Stop rules** (the page's): Stop motors; the run paused or reset;
-//!   input that is no longer live (a replay in progress or a run a replay
-//!   replaced, a recorded preset, a gait preview holding the run, the episode
-//!   ended, no named targets); a failed sample post; a failed poll. Native
-//!   additions: the run failed or ended without a done frame, and Start not
-//!   seen running within [`START_GRACE`].
-//! - Preferences: the page's `walking-hardware-map-v1` is
-//!   `settings::SyncSettings`, saved on every change and at start.
+//! Jobs-owned live motor synchronization through shared in-process bench acquisition.
+//! Open/sample requests retain their original timing and durable reference contract.
+//! STOP latches before the independent acknowledgement job; callbacks and UI polling
+//! never start an acquisition executable or contact a hardware server.
 mod apply;
 mod page;
 mod thread;
@@ -39,14 +9,14 @@ mod thread;
 pub use apply::apply;
 pub use page::{banner_text, distinct, legs, live_input, mapping, reading_lines, sample_from, source_text};
 
-use super::ServerTarget;
+use super::LocalTarget;
 use super::mirror::SceneId;
 use super::settings::{SyncBinding, SyncSettings};
 use crate::jobs::{Job, Pool, RunThread};
 use crate::robot::{RobotAction, RobotView};
 use crate::robot::run::{Phase, RunAction};
 use serde_json::{Value, json};
-use sim_runtime::hardware_client::{Body, Client, STOP_TIMEOUT, ServerKind, bench, token};
+use super::local::{Body, Client, STOP_TIMEOUT, ServiceKind, bench};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thread::worker;
@@ -65,7 +35,7 @@ pub const INITIAL_BANNER: &str = "Simulation only — real motors are not connec
 pub const READY: &str = "Ready. Choose a leg, then start sync and steer with WASD.";
 pub const CHART_IDLE: &str = "Connect motors to compare tracking while steering with WASD.";
 /// Shown instead of the page's absent section when no bench was given at launch.
-pub const NO_BENCH: &str = "Start serve_motor_bench and launch with --motor-bench http://127.0.0.1:PORT (add --motor-bench-token-file FILE if its page does not carry the token).";
+pub const NO_BENCH: &str = "Launch with --motor-bench-config FILE for the direct local driver. Server URLs and token files are obsolete.";
 /// Deliberately refused (the page's `play()` silently does nothing while it mirrors).
 pub const MIRROR_ON: &str = "Turn the leg mirror off first: the simulation cannot run while it mirrors the real leg.";
 /// The run failed while a session was open (native: the page's run cannot fail).
@@ -82,7 +52,7 @@ pub enum SyncCommand {
     /// The newest live sample (`latest`).
     Latest(bench::Sample),
     /// `/live/open`; then `lastSent = initial.sequence` and one `send()`.
-    Open { body: Body, last_sent: u64 },
+    Open { body: Body, last_sent: u64, stop_epoch: u64 },
     /// The UI stopped: no more samples.
     Deactivate,
 }
@@ -102,7 +72,7 @@ impl crate::jobs::Stamped for SyncShared {
 
 /// The page's closure state.
 pub struct LiveSync {
-    target: Option<ServerTarget>,
+    target: Option<LocalTarget>,
     saved: SyncSettings,
     connecting: Option<Job<(Client, bench::Config)>>,
     client: Option<Client>,
@@ -111,6 +81,9 @@ pub struct LiveSync {
     /// The `/status` request in flight (one at a time), whether an open answered
     /// since it was sent (its answer may predate the session), and when the next is due.
     status_job: Option<Job<bench::Status>>,
+    inspection_job: Option<Job<Value>>,
+    inspecting: bool,
+    inspection_accepted: bool,
     status_stale: bool,
     next_poll: Instant,
     generation: u64,
@@ -149,7 +122,7 @@ pub struct LiveSync {
 }
 
 impl LiveSync {
-    pub fn new(target: Option<ServerTarget>, settings: &SyncSettings) -> Self {
+    pub fn new(target: Option<LocalTarget>, settings: &SyncSettings) -> Self {
         Self {
             target,
             saved: settings.clone(),
@@ -158,6 +131,9 @@ impl LiveSync {
             config: None,
             thread: None,
             status_job: None,
+            inspection_job: None,
+            inspecting: false,
+            inspection_accepted: false,
             status_stale: false,
             next_poll: Instant::now(),
             generation: 0,
@@ -202,7 +178,7 @@ impl LiveSync {
     }
     /// Work in flight whose answer the panel waits for (keep frames coming).
     pub fn wants_frames(&self) -> bool {
-        self.active || self.preparing || self.stopping || self.connecting.is_some() || !self.stops.is_empty()
+        self.active || self.preparing || self.stopping || self.inspecting || self.connecting.is_some() || !self.stops.is_empty()
     }
     /// Connect once, when the panel is first shown with a bench configured.
     pub fn auto_connect(&mut self) {
@@ -245,11 +221,11 @@ impl LiveSync {
     }
     /// `hw-start` enabled: after the first poll, with the config, nothing running or stopping (:25).
     pub fn start_enabled(&self) -> bool {
-        self.config.is_some() && self.polled && !self.server_busy && !self.active && !self.preparing && !self.stopping
+        self.config.is_some() && self.polled && !self.server_busy && !self.active && !self.preparing && !self.stopping && !self.inspecting
     }
     /// The selects (leg, rows, scale) enabled (:25).
     pub fn selects_enabled(&self) -> bool {
-        !(self.server_busy || self.active || self.preparing)
+        !(self.server_busy || self.active || self.preparing || self.inspecting)
     }
     /// Publish inactive form choices only; never connect, open a session or
     /// start a run. Mapping still uses the bench's validated configuration.
@@ -275,10 +251,16 @@ impl LiveSync {
         SyncSettings { leg: Some(self.leg.clone()), amplitude: Some(self.amplitude), bindings: self.rows.clone() }
     }
 
+    pub fn simulated(&self) -> bool { self.config.as_ref().is_some_and(|c| c.kind == "virtual" && c.fidelity.as_deref()==Some("virtual_host_bench")) }
+    pub fn identity_label(&self) -> &str {
+        if self.simulated() { "SIMULATED host-loop bench · no physical FPGA proof" }
+        else if self.config.as_ref().is_some_and(|c|c.kind=="physical") { "Physical direct serial bench" }
+        else { "Bench identity not established" }
+    }
     /// For `hardware_status`.
     pub fn state_json(&self) -> Value {
-        json!({"configured": self.configured(), "url": self.target.as_ref().map(|t| &t.url), "connected": self.connected(), "connecting": self.connecting(),
-            "active": self.active, "preparing": self.preparing, "stopping": self.stopping, "server_busy": self.server_busy,
+        json!({"configured": self.configured(), "configuration": self.target.as_ref().map(|t| &t.config_file), "connected": self.connected(), "connecting": self.connecting(),
+            "identity": self.identity_label(), "simulated": self.simulated(), "inspecting": self.inspecting, "active": self.active, "preparing": self.preparing, "stopping": self.stopping, "server_busy": self.server_busy,
             "status": self.status, "banner": self.banner, "leg": self.leg, "amplitude": self.amplitude,
             "bindings": self.rows.iter().map(|b| json!({"coordinate": b.coordinate, "motor_id": b.motor_id, "polarity": b.polarity})).collect::<Vec<_>>(),
             "samples": self.samples.len(), "session_run": self.session_run, "readings": self.readings, "stops_posted": self.stops_posted})
@@ -287,11 +269,11 @@ impl LiveSync {
     /// `stateText(s)` (:16).
     fn state_text(&mut self, s: impl Into<String>) {
         let s = s.into();
-        self.banner = banner_text(self.active, self.preparing, &s);
+        self.banner = format!("{}{}", if self.simulated(){"SIMULATED host-loop bench · "}else{""}, banner_text(self.active, self.preparing, &s));
         self.status = s;
     }
 
-    /// Start the connection (token from the bench's page or the token file, then `/config`).
+    /// Open explicit local bench configuration on a job.
     pub fn connect(&mut self) -> Result<(), String> {
         let Some(target) = self.target.clone() else { return Err(format!("No motor bench configured. {NO_BENCH}")) };
         if self.connecting.is_some() || self.config.is_some() {
@@ -301,10 +283,26 @@ impl LiveSync {
         self.generation += 1;
         self.state_text("Connecting…");
         self.connecting = Some(Job::spawn(Pool::Dedicated, self.generation, "motor-bench connect", move |_| {
-            let client = token::connect(&target.url, target.token_file.as_deref(), ServerKind::MotorBench).map_err(|e| e.to_string())?;
+            let client = Client::open(&target.config_file, ServiceKind::MotorBench)?;
             let config = client.get_as::<bench::Config>(bench::CONFIG).map_err(|e| e.to_string())?;
             Ok((client, config))
         }));
+        Ok(())
+    }
+
+    /// Zero-drive inspection uses the same acquisition worker and exclusive lease.
+    /// A STOP before the queued job starts invalidates its stamped epoch.
+    pub fn inspect_enabled(&self)->bool {self.config.is_some() && self.polled && !self.may_be_open() && self.inspection_job.is_none()}
+    pub fn inspect(&mut self)->Result<(),String> {
+        if !self.inspect_enabled(){return Err("Inspection needs a connected, idle bench; stop any pending session first".into());}
+        let client=self.client.clone().ok_or("local bench is not connected")?;
+        let stop_epoch=client.bench_stop_epoch();
+        self.inspection_accepted=false;
+        self.inspecting=true;
+        self.left.store(false,std::sync::atomic::Ordering::SeqCst);
+        self.state_text("Inspecting zero-drive devices and refreshing prerequisite evidence…");
+        self.revision+=1;
+        self.inspection_job=Some(Job::spawn(Pool::Dedicated,self.generation,"local bench inspection",move |_|client.post_at_epoch("/inspect",&Body::empty(),stop_epoch).map_err(|e|e.to_string())));
         Ok(())
     }
 
@@ -405,20 +403,21 @@ impl LiveSync {
         }
         let body = bench::open(&bindings, self.amplitude, &input.source, &initial);
         if let Some(t) = self.thread.as_ref() {
-            let _ = t.send(SyncCommand::Open { body, last_sent: initial.sequence });
+            let stop_epoch=self.client.as_ref().map_or(0,|client|client.bench_stop_epoch());
+            let _ = t.send(SyncCommand::Open { body, last_sent: initial.sequence, stop_epoch });
         }
     }
 
     /// A session is or may be open on the bench: ours (open, opening, stopping) or the bench busy.
     fn may_be_open(&self) -> bool {
-        self.active || self.preparing || self.stopping || self.server_busy
+        self.active || self.preparing || self.stopping || self.inspecting || self.server_busy
     }
     /// A session this viewer opened (or is opening, or is stopping). The bench's
     /// own `active` is not enough: it is also set by another client's session
     /// (the browser's /walking/ page), which this viewer's focus loss, panel
     /// close or mode exit must not end.
     fn ours(&self) -> bool {
-        self.active || self.preparing || self.stopping
+        self.active || self.preparing || self.stopping || self.inspecting
     }
 
     /// [`Self::stop`] for a loss of control (focus loss, panel close, leaving):
@@ -439,7 +438,7 @@ impl LiveSync {
         self.active = false;
         self.preparing = false;
         self.stopping = true;
-        self.state_text(format!("{reason} — verifying physical stop…"));
+        self.state_text(format!("{reason} — verifying {}stop…", if self.simulated(){"simulated "}else{"physical "}));
         if let Some(t) = self.thread.as_ref() {
             let _ = t.send(SyncCommand::Deactivate);
         }
@@ -456,6 +455,7 @@ impl LiveSync {
 
     fn post_stop(&self) -> Option<Job<Value>> {
         let client = self.client.clone()?.with_timeout(STOP_TIMEOUT);
+        client.latch_stop();
         Some(Job::spawn(Pool::Dedicated, self.generation, "motor-bench stop", move |_| client.post(bench::STOP, &bench::stop()).map_err(|e| e.to_string())).complete_on_drop())
     }
 
@@ -468,6 +468,23 @@ impl LiveSync {
             match result {
                 Ok((client, config)) => self.connected_with(client, config),
                 Err(e) => self.state_text(e),
+            }
+        }
+        if let Some(result)=self.inspection_job.as_ref().and_then(Job::poll) {
+            self.inspection_job=None;
+            match result {
+                Ok(_)=>{
+                    self.inspection_accepted=true;
+                    self.status_stale=self.status_job.is_some();
+                    self.next_poll=Instant::now();
+                },
+                Err(error)=>{
+                    self.inspecting=false;
+                    self.inspection_accepted=false;
+                    self.stopping=false;
+                    self.state_text(format!("Inspection refused: {error}. If calibration owns this device, Disconnect calibration first; retry after release."));
+                    self.revision+=1;
+                },
             }
         }
         let mut failures = Vec::new();
@@ -528,6 +545,25 @@ impl LiveSync {
                     self.server_busy = s.active;
                     self.revision += 1;
                 }
+                if self.inspecting && self.inspection_accepted {
+                    self.session_run=s.run.clone();
+                    if !s.active {
+                        self.inspecting=false;
+                        self.inspection_accepted=false;
+                        self.stopping=false;
+                        self.revision+=1;
+                        let run=self.session_run.clone().unwrap_or_else(||"unknown".into());
+                        let result = s.result.clone().unwrap_or_default();
+                        let outcome = result.error.unwrap_or_else(|| {
+                            if result.completed == Some(true) {
+                                "Zero-drive inspection completed; review the saved device readback before authorizing motion.".into()
+                            } else {
+                                "Inspection ended without completion; release/readback remains unverified.".into()
+                            }
+                        });
+                        self.state_text(format!("Inspection finished. {outcome} Saved: {run}"));
+                    }
+                }
                 if self.active || self.stopping {
                     self.session_run = s.run.clone();
                     self.samples = s.samples;
@@ -550,7 +586,7 @@ impl LiveSync {
             }
             Some(Err(e)) => {
                 self.polled = true;
-                if self.active || self.preparing {
+                if self.active || self.preparing || self.inspecting {
                     self.stop("Bridge disconnected");
                     pause = true;
                 } else {
@@ -609,12 +645,8 @@ impl LiveSync {
 }
 
 impl LiveSync {
-    /// The window is closing (the page's `pagehide`, a keepalive fetch): when
-    /// this viewer owns the bench session, the bench STOP is written at once
-    /// on its own connection and never answered ([`Client::send_only`]). It
-    /// blocks the calling thread for at most the client's 500 ms connect
-    /// timeout plus a loopback write bounded by [`LEAVE_STOP_TIMEOUT`]; once
-    /// per LiveSync (Drop does not write it again). No-op otherwise.
+    /// Window exit: latch cancellation immediately for our owned session.
+    /// No stationary readback is claimed by this acceptance-only path.
     pub fn post_stop_on_leave(&self) {
         if !self.ours() || self.left.swap(true, std::sync::atomic::Ordering::SeqCst) {
             return;

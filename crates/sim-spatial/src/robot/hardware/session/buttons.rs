@@ -5,7 +5,7 @@ use super::Session;
 use crate::robot::hardware::actions::Boundary;
 use crate::robot::hardware::link::Intent;
 use serde_json::Value;
-use sim_runtime::hardware_client::calibration::{self, Status};
+use sim_runtime::hardware::protocol::calibration::{self, Status};
 
 /// Why a `capture_hold` answer that is not the server's status (an older
 /// server's `{"ok":true}`, sent before its hold session saved anything) is

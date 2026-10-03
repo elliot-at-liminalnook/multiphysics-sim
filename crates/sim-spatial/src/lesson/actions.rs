@@ -179,7 +179,7 @@ impl actions::Action for LessonCommand {
             c("lesson_quiz", json!({"id":"current-follows-load","choice":0}), "Answer a lesson question like a reader would (choice index, text with a number for numeric/predict, or sketch: [[t, v], …] for a sketch), or reveal:true after two misses. Records progress and the spaced-review schedule; gates and prediction locks follow"),
             c("lesson_reflect", json!({"id":"why-stall-current","text":"…"}), "Save a self-explanation"),
             c("lesson_task", json!({"id":"fast-under-load","action":"start"}), "A sim-task: start (its own scene and sandbox), check (re-run the sandbox and judge the goal), hint (reveal the next hint). Results appear in lesson_state tasks"),
-            c("lesson_lab", json!({"id":"knee-quarter","action":"tick","index":0}), "A sim-lab: tick (a checklist item), predict (text), run (ask the bench in SIM_BENCH_URL; refused until every item is ticked and a prediction is given)"),
+            c("lesson_lab", json!({"id":"knee-quarter","action":"tick","index":0}), "A sim-lab: tick (a checklist item), predict (text), run (operator-only in-process bench from SIM_BENCH_CONFIG; refused until every item is ticked and a prediction is given)"),
             c("lesson_review", json!({"action":"start"}), "Mixed review session across lessons: start, next or end"),
             c("lesson_frames", json!({"scene":"load-step","mode":"seek","clock":"screen","count":64,"region":"card","tile_width":320,"path":"/tmp/sheet.png"}), "Contact sheet of a scene's animation: frames at times (seek: on the screen clock with pacing holds, or the sim clock; `times` list or `from`..`to` with `count` ≤ 256) or captured every `interval_s` while it plays for real (live: `start` scene or narration `section`, muted). One labelled grid PNG (index, screen time, sim time) as an image artifact, plus `path`; metadata lists caption, pace and times per tile"),
             c("lesson_settings", json!({"reduced_motion":true,"text_scale":1.15,"narration_speed":1.25,"transcript":true}), "Reader preferences (any subset); saved per machine"),
@@ -199,6 +199,11 @@ const NO_LESSONS: &str = "no lessons are open in this window: switch with viewer
 /// as every entry to Lessons from Build is. `lesson_frames` captures over
 /// several frames.
 fn handle(learn: &mut Learn, scene: &mut SpatialScene, mode: ViewerMode, switch: &mut MessageWriter<Act<WindowAction>>, command: &LessonCommand, call: &mut Call) -> Outcome {
+    let motion = matches!(command, LessonCommand::Ui(LessonAction::LabRun(_)))
+        || matches!(command, LessonCommand::LessonLab { action, .. } if action == "run");
+    if motion && call.remote() {
+        return Outcome::Done(Err("lesson lab run needs an operator at the window; automation cannot authorize physical motion".into()));
+    }
     // A lesson command waiting for the mode switch it asked for. `lesson_open`
     // opens its lesson only once the switch is accepted, so a refused switch
     // leaves the builder (and the lesson) as they were.
@@ -258,6 +263,7 @@ pub(super) fn apply(
     learn: Option<ResMut<Learn>>,
     scene: Option<ResMut<SpatialScene>>,
     mode: Res<State<ViewerMode>>,
+    window: Query<&bevy::window::Window, With<bevy::window::PrimaryWindow>>,
     mut switch: MessageWriter<Act<WindowAction>>,
     (shared, registry, builder): (Option<ResMut<crate::selection::Selection>>, Option<Res<crate::document::DocumentRegistry>>, Option<Res<Builder>>),
 ) {
@@ -270,7 +276,13 @@ pub(super) fn apply(
     }
     let mode = *mode.get();
     let picked = learn.picked.clone();
-    actions::apply(&mut messages, &mut in_flight, &mut replies, |command, call| handle(&mut learn, &mut scene, mode, &mut switch, command, call));
+    let focused = window.single().is_ok_and(|window| window.focused);
+    actions::apply(&mut messages, &mut in_flight, &mut replies, |command, call| {
+        let motion = matches!(command, LessonCommand::Ui(LessonAction::LabRun(_)))
+            || matches!(command, LessonCommand::LessonLab { action, .. } if action == "run");
+        if motion && !focused { return Outcome::Done(Err("Lesson lab run needs the focused operator window".into())); }
+        handle(&mut learn, &mut scene, mode, &mut switch, command, call)
+    });
     if let (ViewerMode::Lessons, true, Some(mut shared), Some(registry), Some(builder)) = (mode, learn.picked != picked, shared, registry, builder) {
         selection::share(learn.picked.as_deref(), &builder, &mut shared, &registry);
     }
@@ -596,7 +608,8 @@ fn execute(learn: &mut Learn, scene: &mut SpatialScene, command: LessonCommand) 
                     learn.dirty = true;
                 }
                 "run" => learn.try_act(LessonAction::LabRun(id), scene)?,
-                other => return Err(format!("lab action `{other}`: tick, predict or run")),
+                "stop" => learn.try_act(LessonAction::LabStop, scene)?,
+                other => return Err(format!("lab action `{other}`: tick, predict, run or stop")),
             }
             Ok(state(learn))
         }

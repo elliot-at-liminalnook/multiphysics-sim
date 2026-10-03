@@ -211,3 +211,21 @@ agreement. Its full 60-second native/WASM comparison and exact replay/reset
 pass. It remains unranked because realtime, held-out disturbances and terrain
 requirements are unresolved. The faster 20 ms secant steering profile stays
 available with its separate 26.1 ms p95 result.
+
+## Hardware browser compatibility — leg-in-process (2026-10-03)
+
+`serve_actuator_calibration` and `serve_motor_bench` remain HTTP/static-asset
+adapters for the existing browser pages. Authoritative calibration, gait,
+campaign, bench acquisition and safety now live in
+`sim_runtime::hardware::{calibration, bench}`. The acquisition CLI is a thin
+wrapper over the same callable Rust implementation; the bench adapter does not
+launch its configured executable. Legacy acquisition-path fields remain readable
+and are never executed. Local virtual calibration is explicit in configuration;
+the former `--virtual-bench SOCKET` argument refuses with migration guidance.
+
+The native viewer uses local configuration and jobs-owned workers and never
+contacts these adapters or starts a virtual socket server. Browser tokens and
+same-origin checks remain compatibility-transport security. Historical HTTP-era
+receipts do not establish the new in-process path. [Source map and run sheets](../docs/leg-in-process.md)
+are unexecuted reading evidence; physical motion was not performed. CAD still
+requires RoboCAD's Python/OCCT service, outside this hardware batch.

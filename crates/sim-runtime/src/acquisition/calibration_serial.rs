@@ -46,7 +46,7 @@ pub struct SweepOutcome {
     pub motion_error: Option<String>,
 }
 pub struct CalibrationBus {
-    file: File,
+    file: Box<dyn SerialIo>,
     pending: PacketBuffer,
     log: File,
     stop_reply_recoveries: u64,
@@ -87,6 +87,48 @@ pub fn servo_command(mode: DriveMode, s: &SweepSample, (lo, hi): (i32, i32), hol
         }
     }
 }
+/// A caller-owned byte transport. Physical descriptors retain their exclusive lock.
+pub trait SerialIo: Read + Write + Send {}
+impl<T: Read + Write + Send> SerialIo for T {}
+
+struct InProcessIo {
+    bench: super::virtual_bench::Bench,
+    tx: PacketBuffer,
+    rx: std::collections::VecDeque<u8>,
+    clock: Instant,
+}
+impl InProcessIo {
+    fn advance(&mut self) {
+        let dt = self.clock.elapsed().as_secs_f64();
+        self.bench.advance(dt);
+        self.clock = Instant::now();
+    }
+}
+impl Read for InProcessIo {
+    fn read(&mut self, bytes: &mut [u8]) -> std::io::Result<usize> {
+        self.advance();
+        if self.rx.is_empty() { return Err(std::io::ErrorKind::WouldBlock.into()); }
+        let n = bytes.len().min(self.rx.len());
+        for b in &mut bytes[..n] { *b = self.rx.pop_front().unwrap(); }
+        Ok(n)
+    }
+}
+impl Write for InProcessIo {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        self.advance();
+        self.tx.push(bytes).map_err(std::io::Error::other)?;
+        while let Some(frame) = self.tx.next_packet().map_err(std::io::Error::other)? {
+            if frame.len() < 6 { return Err(std::io::Error::other("short virtual request")); }
+            let response = self.bench.handle(frame[2], frame[4], &frame[5..frame.len()-1]);
+            std::thread::sleep(Duration::from_secs_f64(self.bench.transaction_s));
+            self.advance();
+            self.rx.extend(response);
+        }
+        Ok(bytes.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+}
+
 impl CalibrationBus {
     /// Connect only to the virtual bench's Unix socket. The returned descriptor
     /// is a socket, never a serial file; handshake failure has no fallback.
@@ -112,7 +154,7 @@ impl CalibrationBus {
         struct Handshake { schema_version: u32, kind: String, bench_instance: String }
         let h: Handshake = serde_json::from_slice(&response).map_err(|e| e.to_string())?;
         if h.schema_version != 1 || h.kind != "virtual_calibration"
-            || !crate::hardware_client::calibration::valid_instance(&h.bench_instance)
+            || !crate::hardware::protocol::calibration::valid_instance(&h.bench_instance)
             || expected_bench.is_some_and(|expected| expected != h.bench_instance) {
             return Err("Virtual bench identity mismatch; no transport opened".into());
         }
@@ -121,13 +163,25 @@ impl CalibrationBus {
         stream.set_nonblocking(true).map_err(|e| e.to_string())?;
         let descriptor: OwnedFd = stream.into();
         let bus = Self {
-            file: File::from(descriptor), pending: PacketBuffer::default(),
+            file: Box::new(File::from(descriptor)), pending: PacketBuffer::default(),
             stop_reply_recoveries: 0, encoders: [EncoderTurns::default(); 3],
             log: OpenOptions::new().create(true).append(true).open(log).map_err(|e| e.to_string())?,
         };
         Ok((bus, h.bench_instance))
     }
-    pub fn open(port: &str, log: &Path) -> R<Self> {
+    /// Direct virtual acquisition; no socket, server or subprocess fallback.
+    pub fn in_process(bench: super::virtual_bench::Bench, log: &Path) -> R<Self> {
+        Ok(Self {
+            file: Box::new(InProcessIo { bench, tx: PacketBuffer::default(), rx: Default::default(), clock: Instant::now() }),
+            pending: PacketBuffer::default(), stop_reply_recoveries: 0,
+            encoders: [EncoderTurns::default(); 3],
+            log: OpenOptions::new().create(true).append(true).open(log).map_err(|e|e.to_string())?,
+        })
+    }
+    /// Move the exclusively owned byte transport into the finite FPGA recorder.
+    pub fn into_transport(self) -> Box<dyn SerialIo> { self.file }
+    pub fn open(port: &str, log: &Path) -> R<Self> { Self::open_baud(port, 115200, log) }
+    pub fn open_baud(port: &str, baud: u32, log: &Path) -> R<Self> {
         let file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -148,21 +202,9 @@ impl CalibrationBus {
         if unsafe { ioctl(file.as_raw_fd(), 0x2000740d) } != 0 {
             return Err(std::io::Error::last_os_error().to_string());
         }
-        // Configure the existing descriptor through stty's stdin; no second serial opener.
-        let copy = file.try_clone().map_err(|e| e.to_string())?;
-        if !std::process::Command::new("stty")
-            .args([
-                "115200", "raw", "-echo", "clocal", "-hupcl", "min", "0", "time", "0",
-            ])
-            .stdin(copy)
-            .status()
-            .map_err(|e| e.to_string())?
-            .success()
-        {
-            return Err("Serial setup failed".into());
-        }
+        configure_serial(&file, baud)?;
         Ok(Self {
-            file,
+            file: Box::new(file),
             pending: PacketBuffer::default(),
             stop_reply_recoveries: 0,
             encoders: [EncoderTurns::default(); 3],
@@ -1240,7 +1282,7 @@ mod tests {
         let file = File::from(fd);
         (
             CalibrationBus {
-                file,
+                file: Box::new(file),
                 pending: PacketBuffer::default(),
                 stop_reply_recoveries: 0,
                 encoders: [EncoderTurns::default(); 3],
@@ -2154,7 +2196,7 @@ mod tests {
     fn virtual_socket_handshake_pins_identity_and_cannot_open_serial_paths() {
         use std::os::unix::{fs::FileTypeExt, net::UnixListener};
         // Short absolute base: macOS $TMPDIR exceeds the 104-byte sun_path limit.
-        let base = std::path::PathBuf::from(format!("/tmp/vc-{}-{}", std::process::id(), &crate::hardware_client::new_client_id()[..8]));
+        let base = std::path::PathBuf::from(format!("/tmp/vc-{}-{}", std::process::id(), &crate::hardware::protocol::new_client_id()[..8]));
         std::fs::create_dir(&base).unwrap();
         // Removed even when an assertion below fails.
         struct Cleanup(std::path::PathBuf);
@@ -2162,7 +2204,7 @@ mod tests {
         let _cleanup = Cleanup(base.clone());
         let socket = base.join("bench.sock");
         let log = base.join("serial.jsonl");
-        let instance = crate::hardware_client::new_client_id();
+        let instance = crate::hardware::protocol::new_client_id();
         for expected in [Some(instance.as_str()), Some("ffffffff-ffff-ffff-ffff-ffffffffffff")] {
             let listener = UnixListener::bind(&socket).unwrap();
             let peer_instance = instance.clone();
@@ -2182,7 +2224,8 @@ mod tests {
             if expected == Some(instance.as_str()) {
                 let (bus, actual) = opened.unwrap();
                 assert_eq!(actual, instance);
-                assert!(bus.file.metadata().unwrap().file_type().is_socket());
+                assert!(std::fs::metadata(&socket).unwrap().file_type().is_socket());
+                drop(bus);
             } else { assert!(opened.is_err()); }
             server.join().unwrap();
             std::fs::remove_file(&socket).unwrap();
@@ -2192,4 +2235,34 @@ mod tests {
         assert!(CalibrationBus::open_virtual(Path::new("/dev/null"),None,&log).is_err());
     }
 
+}
+
+/// Configure the owned descriptor directly; never start an external `stty` process.
+fn configure_serial(file: &File, baud: u32) -> R<()> {
+    if ![115200, 1_000_000].contains(&baud) { return Err("Unsupported bridge baud".into()); }
+    let fd = file.as_raw_fd();
+    let mut raw = std::mem::MaybeUninit::<libc::termios>::uninit();
+    // SAFETY: fd is owned and raw points to a correctly sized output termios.
+    if unsafe { libc::tcgetattr(fd, raw.as_mut_ptr()) } != 0 { return Err(std::io::Error::last_os_error().to_string()); }
+    let mut raw = unsafe { raw.assume_init() };
+    unsafe { libc::cfmakeraw(&mut raw); }
+    raw.c_cflag |= libc::CLOCAL;
+    raw.c_cflag &= !libc::HUPCL;
+    raw.c_cc[libc::VMIN] = 0;
+    raw.c_cc[libc::VTIME] = 0;
+    #[cfg(target_os="macos")]
+    let speed = libc::B115200;
+    #[cfg(not(target_os="macos"))]
+    let speed = if baud == 115200 { libc::B115200 } else { libc::B1000000 };
+    // SAFETY: all pointers reference this live termios; operations affect owned fd only.
+    if unsafe { libc::cfsetispeed(&mut raw, speed) } != 0
+        || unsafe { libc::cfsetospeed(&mut raw, speed) } != 0
+        || unsafe { libc::tcsetattr(fd, libc::TCSANOW, &raw) } != 0 {
+        return Err(std::io::Error::last_os_error().to_string());
+    }
+    #[cfg(target_os="macos")]
+    if baud != 115200 {
+        if unsafe { libc::ioctl(fd, 0x80045402, &baud as *const u32) } != 0 { return Err(std::io::Error::last_os_error().to_string()); }
+    }
+    Ok(())
 }

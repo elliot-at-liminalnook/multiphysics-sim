@@ -1,5 +1,5 @@
 use super::*;
-use sim_runtime::hardware_client::calibration::{CalibrationDoc, GaitLimit, GaitState, Sweep, SweepSample, Telemetry};
+use sim_runtime::hardware::protocol::calibration::{CalibrationDoc, GaitLimit, GaitState, Sweep, SweepSample, Telemetry};
 use std::time::Duration;
 
 fn axis(lower: Option<i64>, upper: Option<i64>, reverse: bool) -> Axis {
@@ -193,7 +193,7 @@ fn leg_gait(s: &mut LinkSnapshot, simulated: bool) {
 
 #[test]
 fn a_simulated_leg_gait_and_run_are_labelled_virtual() {
-    use sim_runtime::hardware_client::calibration::GaitRun as RunRecord;
+    use sim_runtime::hardware::protocol::calibration::GaitRun as RunRecord;
     let now = Instant::now();
     let mut s = snapshot(1, 2000, Axis { role: "Knee".into(), ..Default::default() });
     s.read_at = Some(now);
@@ -202,7 +202,7 @@ fn a_simulated_leg_gait_and_run_are_labelled_virtual() {
     assert!(text.contains("\nVIRTUAL (simulated) · Leg: playing · error Knee 2 counts"), "{text}");
     // Not simulated by the server's word, but the link is pinned to a virtual bench.
     leg_gait(&mut s, false);
-    s.execution = Some(sim_runtime::hardware_client::calibration::ExecutionIdentity {
+    s.execution = Some(sim_runtime::hardware::protocol::calibration::ExecutionIdentity {
         schema_version: 1,
         kind: "virtual_calibration".into(),
         server_instance: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa".into(),

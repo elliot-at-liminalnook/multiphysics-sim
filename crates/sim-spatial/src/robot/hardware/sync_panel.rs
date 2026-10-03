@@ -24,7 +24,7 @@ use crate::app::{ViewerMode, ViewerSet};
 use crate::robot::{RobotAction, RobotView};
 use crate::ui_kit::{Corner, FAINT, Kit, Look, OK, RAISED, SUBTLE, TEXT, UiFonts, WARN, size, wrap};
 use bevy::prelude::*;
-use sim_runtime::hardware_client::bench;
+use sim_runtime::hardware::protocol::bench;
 
 /// The section's content node (the panel spawns it inside "Real motor sync").
 #[derive(Component)]
@@ -202,7 +202,7 @@ pub(crate) fn chart_note(retained: usize) -> String {
 
 /// The chart note shown: the page's initial one before `/config`, then [`chart_note`].
 pub(crate) fn chart_note_of(s: &sync::LiveSync) -> String {
-    if s.connected() { chart_note(s.samples().len()) } else { sync::CHART_IDLE.into() }
+    if s.connected() { if s.simulated() { format!("Simulated host-loop feedback · no physical FPGA proof. {} simulated samples retained.",s.samples().len()) } else {chart_note(s.samples().len())} } else { sync::CHART_IDLE.into() }
 }
 
 /// A row's title: `c.split(' | ')[1].replace(' servo output','')`.
@@ -213,7 +213,8 @@ pub(crate) fn row_title(coordinate: &str) -> String {
 /// The section's controls in the page's order (:6).
 fn controls(p: &mut ChildSpawnerCommands, k: &Kit, s: &sync::LiveSync) {
     p.spawn(k.text("Real motor sync", size::ITEM, TEXT, 2));
-    p.spawn(k.caption(sync::DESCRIPTION));
+    p.spawn(k.caption(if s.simulated(){"Map three simulated bench motors to one leg. Live targets go to the in-process Bench host loop; no physical motion or FPGA proof."}else{sync::DESCRIPTION}));
+    p.spawn(k.caption(s.identity_label()));
     if !s.configured() {
         p.spawn(k.caption(format!("No motor bench configured. {}", sync::NO_BENCH)));
         return;
@@ -259,12 +260,13 @@ fn controls(p: &mut ChildSpawnerCommands, k: &Kit, s: &sync::LiveSync) {
         if !s.connected() && !s.connecting() {
             r.spawn(k.button("Connect", HardwareAction::SyncConnect, Look::Secondary, true));
         }
+        r.spawn(k.button("Inspect bench · zero drive",HardwareAction::SyncInspect,Look::Secondary,s.inspect_enabled()));
         r.spawn(k.button("Sync motors · 12 seconds", HardwareAction::SyncStart, Look::Primary, s.start_enabled()));
         r.spawn(k.button("Stop motors", HardwareAction::SyncStop, Look::Danger, true));
     });
     p.spawn((k.caption(s.status()), SyncStatus));
     p.spawn((k.mono(s.readings(), size::DETAIL, TEXT), SyncReadings));
-    p.spawn(k.note(sync::NOTE));
+    p.spawn(k.note(if s.simulated(){"Simulated host feedback with bounded targets, cancellation and leases; physical FPGA independence, watchdog deployment and stationary readback are not exercised."}else{sync::NOTE}));
     let (banner, ok) = s.banner();
     p.spawn((Node { padding: UiRect::axes(Val::Px(10.0), Val::Px(6.0)), border_radius: BorderRadius::all(Val::Px(4.0)), flex_shrink: 0.0, ..default() }, BackgroundColor(RAISED), SyncBannerStrip))
         .with_children(|b| {

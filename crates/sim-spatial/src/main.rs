@@ -100,23 +100,24 @@ struct Args {
     /// relative to the current directory.
     #[arg(long)]
     robot_presets: Option<PathBuf>,
-    /// Robot mode's Leg calibration panel: the running `serve_actuator_calibration`
-    /// (loopback only, e.g. http://127.0.0.1:4194). The panel opens and connects
-    /// (reads status; nothing moves until the operator selects a motor).
-    /// Without it, the panel's Connect uses http://127.0.0.1:4194.
-    #[arg(long, value_name = "URL")]
+    /// Obsolete: use --hardware-config FILE. Explicitly refused before launch.
+    #[arg(long, value_name = "URL", hide = true)]
     hardware: Option<String>,
-    /// The calibration server's control token in a file (default: read from
-    /// the page the server serves, as the browser receives it).
-    #[arg(long, value_name = "FILE", requires = "hardware")]
+    /// Obsolete: tokens do not authorize local hardware sessions.
+    #[arg(long, value_name = "FILE", hide = true)]
     hardware_token_file: Option<PathBuf>,
-    /// The Leg calibration panel's Real motor sync: the running
-    /// `serve_motor_bench` (loopback only).
-    #[arg(long, value_name = "URL")]
+    /// Obsolete: use --motor-bench-config FILE. Explicitly refused before launch.
+    #[arg(long, value_name = "URL", hide = true)]
     motor_bench: Option<String>,
-    /// The motor bench's control token in a file (default: read from its page).
-    #[arg(long, value_name = "FILE", requires = "motor_bench")]
+    /// Obsolete: tokens do not authorize local bench sessions.
+    #[arg(long, value_name = "FILE", hide = true)]
     motor_bench_token_file: Option<PathBuf>,
+    /// Local calibration driver configuration; opens the Leg panel without a server.
+    #[arg(long, value_name = "FILE")]
+    hardware_config: Option<PathBuf>,
+    /// Local motor bench driver configuration for Sync motors.
+    #[arg(long, value_name = "FILE")]
+    motor_bench_config: Option<PathBuf>,
     /// CAD mode attached to a running RoboCAD service (its desktop GUI serves
     /// http://127.0.0.1:8420; loopback only). Never stopped by this window;
     /// unsaved edits stay in that service.
@@ -209,8 +210,8 @@ fn documents(args: &Args) -> Documents {
     }
     config.presets = args.robot_presets.clone();
     config.hardware = sim_spatial::robot::hardware::HardwareConfig {
-        calibration: args.hardware.clone().map(|url| sim_spatial::robot::hardware::ServerTarget { url, token_file: args.hardware_token_file.clone() }),
-        bench: args.motor_bench.clone().map(|url| sim_spatial::robot::hardware::ServerTarget { url, token_file: args.motor_bench_token_file.clone() }),
+        calibration: args.hardware_config.clone().map(|config_file| sim_spatial::robot::hardware::LocalTarget { config_file }),
+        bench: args.motor_bench_config.clone().map(|config_file| sim_spatial::robot::hardware::LocalTarget { config_file }),
     };
     let exhibit = args.exhibit.clone().or_else(|| std::env::var("PHENOMENA_EXHIBIT").ok().filter(|v| !v.trim().is_empty()));
     Documents { config, registry: Default::default(), exhibit }
@@ -442,6 +443,14 @@ fn take_file(args: &mut Args) -> Result<Option<PathBuf>, String> {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = Args::parse();
+    for (supplied, name, replacement) in [
+        (args.hardware.is_some(), "--hardware", "--hardware-config FILE"),
+        (args.hardware_token_file.is_some(), "--hardware-token-file", "--hardware-config FILE"),
+        (args.motor_bench.is_some(), "--motor-bench", "--motor-bench-config FILE"),
+        (args.motor_bench_token_file.is_some(), "--motor-bench-token-file", "--motor-bench-config FILE"),
+    ] {
+        if supplied { return Err(format!("{name} is obsolete: native hardware runs in process; use {replacement}. No hardware server was contacted.").into()); }
+    }
     let cad_file = take_file(&mut args)?;
     if args.lesson.is_some() && args.lessons.is_none() {
         return Err("--lesson requires lessons mode (--lessons DIR or a lessons directory as FILE)".into());

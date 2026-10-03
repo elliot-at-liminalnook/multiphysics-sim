@@ -37,28 +37,7 @@ pub struct Endpoint {
     pub port: u16,
 }
 
-/// Why a request failed.
-#[derive(Clone, Debug, PartialEq)]
-pub enum Error {
-    /// Not a loopback address (nothing was sent).
-    NotLoopback(String),
-    /// Connecting, writing or reading failed (includes timeouts).
-    Transport(String),
-    /// The server answered with an error status: its `error` field, or
-    /// "Request failed (HTTP {status})" when the answer has none.
-    Server { status: u16, error: String },
-    /// The answer was not the JSON expected.
-    Decode(String),
-}
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::NotLoopback(e) | Error::Transport(e) | Error::Decode(e) => f.write_str(e),
-            Error::Server { error, .. } => f.write_str(error),
-        }
-    }
-}
-impl std::error::Error for Error {}
+pub use crate::hardware::protocol::ClientError as Error;
 
 /// One request: what goes on the wire after the request line's
 /// `HTTP/1.1` and the `Host` header, and how a closed connection is

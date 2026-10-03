@@ -3,8 +3,8 @@
 //! frames, and the shutdown STOP when the link's channel closes.
 use super::{COMMAND, GAIT_FRAME, Session};
 use crate::robot::hardware::link::{HEARTBEAT, Intent, POLL_ACTIVE, POLL_IDLE};
-use sim_runtime::hardware_client::STOP_TIMEOUT;
-use sim_runtime::hardware_client::calibration::{self, Status};
+use sim_runtime::hardware::local::STOP_TIMEOUT;
+use sim_runtime::hardware::protocol::calibration::{self, Status};
 use std::time::Instant;
 
 impl Session {

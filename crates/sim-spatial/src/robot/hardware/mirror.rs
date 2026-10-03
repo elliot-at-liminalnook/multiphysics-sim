@@ -36,7 +36,7 @@ use super::view::fixed;
 use crate::robot::preset::{PresetRun, RecordedRun};
 use bevy::math::DQuat;
 use serde_json::{Value, json};
-use sim_runtime::hardware_client::calibration::{Axis, GaitBinding, Status};
+use sim_runtime::hardware::protocol::calibration::{Axis, GaitBinding, Status};
 use sim_runtime::session::Scene;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Weak};

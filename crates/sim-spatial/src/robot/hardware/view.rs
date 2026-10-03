@@ -40,7 +40,7 @@ use super::actions::{DriveMode, GaitMode};
 use super::link::{Inputs, Intent, LinkHealth, LinkSnapshot};
 use serde::Serialize;
 use serde_json::Value;
-use sim_runtime::hardware_client::calibration::{Axis, GaitEntry, GaitStatistics, Status};
+use sim_runtime::hardware::protocol::calibration::{Axis, GaitEntry, GaitStatistics, Status};
 use std::collections::{BTreeMap, BTreeSet};
 use std::time::Instant;
 
@@ -701,3 +701,16 @@ fn render_gait(s: &LinkSnapshot, form: &Form, now: Instant) -> GaitView {
 
 #[cfg(test)]
 mod tests;
+
+/// Only release evidence stamped with the current authoritative stop epoch can
+/// attest readback; the immediate latch and an ordinary command answer cannot.
+pub(crate) fn release_verified(status:&Status)->bool {
+    let Some(epoch)=status.stop_epoch else{return false};
+    status.stop_latched && status.release.as_ref().is_some_and(|release|
+        release["epoch"].as_u64()==Some(epoch) && release["verified"].as_bool()==Some(true))
+}
+pub(crate) fn release_note(status:&Status)->&'static str {
+    if !status.stop_latched {""}
+    else if release_verified(status) {" · release readback verified"}
+    else {" · STOP latched; release readback pending or uncertain"}
+}

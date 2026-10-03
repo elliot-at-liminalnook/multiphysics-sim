@@ -1,50 +1,12 @@
-//! The calibration server's link: one `jobs::RunThread` ("hardware-link")
-//! running the page's session logic ([`super::session`]) over
-//! `sim_runtime::hardware_client`, the commands the UI sends it
-//! ([`LinkCommand`], one per page handler), the form values the page reads
-//! when it sends ([`Inputs`]), and what it publishes ([`LinkSnapshot`]).
-//!
-//! - **Order and sequence.** The thread sends every request itself except
-//!   the heartbeats and `capture_hold` (the beat's, below), one at a time,
-//!   in the order the commands arrive, each `/calibration/command` with the
-//!   next value of the shared sequence counter ([`Link::sequence`]),
-//!   which the immediate STOP path draws from too, so sequences only grow.
-//! - **Periods** (the page's): status poll 600 ms, 150 ms while a motion
-//!   session or a leg gait runs (after each answer, as `setTimeout`);
-//!   sweep-all progress every 250 ms, tune 300 ms, campaign 500 ms. The
-//!   heartbeats are not on this thread: a second `jobs::RunThread`
-//!   ("hardware-beat", `session::beat`) posts `motion_update` 100 ms after
-//!   the previous one answered while a session is open (and at once on an
-//!   intent change, which the link thread waits for), and the gait lease
-//!   `gait_update` every 300 ms while a leg gait runs (and at once on a
-//!   pause or speed change). A slow request on this thread therefore never
-//!   lets the server's 1.5 s motion or gait lease lapse. The beat is the
-//!   only sender of the motion session's sequence domain (`motion_update`,
-//!   `capture_hold`) and sends nothing while a STOP is pending.
-//! - **Epoch.** [`Link::epoch`] is the page's `epoch`: the UI bumps it before
-//!   posting an immediate STOP, so an answer to a request that was in flight
-//!   when STOP was pressed is dropped exactly as the page drops it. Unlike
-//!   the page, a dropped successful `select`, `motion_start`, `sweep_all`,
-//!   `gait_start`, `tune` or `campaign` is followed by a `stop` at once: the
-//!   server may have parsed it after the UI's STOP (a `select` clears the
-//!   stop latch), and nothing else would end what it energized.
-//! - **Stop on drop.** Dropping [`Link`] closes the channel; the thread sends
-//!   STOP (when [`drive_active`]) before it returns. The UI also posts STOP
-//!   on the immediate path first ([`stop_now`]), so neither waits for the
-//!   other. The thread is
-//!   never joined: the UI drops the link off its own thread
-//!   (`jobs::drop_off_thread`), and the shutdown STOP may take up to
-//!   `STOP_TIMEOUT`. The detached thread and the STOP job can die with the
-//!   process, so dropping a [`Link`] whose snapshot says [`drive_active`] also
-//!   writes STOP synchronously first ([`Link::post_stop_sync`], once per link;
-//!   the window-close loss and `AppExit` call it earlier). That covers a mode
-//!   switch (dropped off the UI thread), a reconnect and the process exiting
-//!   (winit's `exiting` clears the world on the main thread, also on Cmd+Q).
-//! - **Staleness.** The snapshot carries when the server's status was last
-//!   read; the panel shows an older one as stale ([`STALE_AFTER`]), never as live.
+//! Jobs-owned native calibration orchestration over the shared local application.
+//! Link commands retain UI timing, increasing sequences and generation snapshots.
+//! Heartbeats run independently on another jobs worker. STOP changes the shared
+//! latch and native epoch synchronously before its acknowledgement Job is queued.
+//! Process death relies on independent firmware protection; host release readback
+//! cannot be guaranteed after process termination.
 use super::actions::{Boundary, Direction, DriveMode, GaitMode};
-use sim_runtime::hardware_client::calibration::{self, GaitBinding, GaitEntry, Status};
-use sim_runtime::hardware_client::{Client, STOP_TIMEOUT};
+use sim_runtime::hardware::protocol::calibration::{self, GaitBinding, GaitEntry, Status};
+use super::local::{Client, STOP_TIMEOUT};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
@@ -483,22 +445,10 @@ impl Link {
         snapshot.authorization_revoked |= self.authorization.load(Ordering::SeqCst);
         snapshot
     }
-    /// STOP written synchronously on its own connection when a motor is
-    /// known (id-less when none is but this link drove,
-    /// [`LinkSnapshot::stop_target`]; nothing otherwise), for when the process may end before the immediate path's job
-    /// (or the link thread's shutdown STOP) runs: the page's `fetch(...,
-    /// {keepalive:true})` on `pagehide`. The request is sent and its answer is
-    /// never read ([`Client::send_only`]); the server latches STOP as soon as
-    /// it parses it. Blocks the caller for at most the 500 ms connect timeout
-    /// (`hardware_client::CONNECT_TIMEOUT`) plus the write of a few hundred
-    /// bytes to loopback (bounded by [`SYNC_STOP_TIMEOUT`]), and runs at most
-    /// once per link, only on exit paths: the window-close loss
-    /// (`handlers::loss`, `Origin::Quiet` only), `AppExit`
-    /// (`actions::stop_on_exit`) and [`Drop`] (off the UI thread on a mode
-    /// switch, on the main thread at process teardown). Uses the shared
-    /// sequence counter, so sequences only grow; a duplicate STOP (the job's,
-    /// the thread's) is harmless.
+    /// Latch STOP synchronously on exit; acquisition later publishes release
+    /// evidence or its uncertainty. This path does not await readback.
     pub fn post_stop_sync(&self, why: &str) {
+        self.client.latch_stop();
         let snapshot = self.snapshot();
         // Nothing of this link's to stop: no id-less STOP that could end another client's session.
         if !snapshot.stop_target() {
@@ -524,46 +474,23 @@ pub const SYNC_STOP_TIMEOUT: Duration = Duration::from_millis(500);
 /// A link dropped while its published snapshot says [`drive_active`] writes
 /// STOP synchronously ([`Link::post_stop_sync`]) before its fields drop (the
 /// `RunThread` field, whose drop closes the channel, drops after this runs),
-/// so a process ending right after the drop still stops the motors.
+/// requesting release before teardown; abrupt process exit cannot prove readback.
 impl Drop for Link {
     fn drop(&mut self) {
+        self.epoch.fetch_add(1, Ordering::SeqCst);
+        self.client.latch_stop();
         if drive_active(&self.snapshot()) {
             self.post_stop_sync("the hardware link was dropped");
         }
     }
 }
 
-/// The immediate STOP (the page's `stop()` request): bumps the shared epoch
-/// (so an answer to a request in flight is dropped, as the page's `++epoch`
-/// does) and, when a motor is chosen or `all_axes` is set, posts `stop` (with
-/// the motor's id, else id-less: every axis) with the next sequence on a
-/// fresh connection from its own `Pool::Dedicated` job with the short STOP
-/// timeout. Returns the epoch it bumped to, and the job (None when `id` is
-/// None and `all_axes` is not set: the page's `if(id==null)return`).
-///
-/// `all_axes` is set for an operator's STOP (the button, Z/Escape, REST
-/// `hardware_stop`: a person's STOP is never skipped) and for an automatic
-/// STOP from a link that drove ([`LinkSnapshot::drove`]); an automatic STOP
-/// from a link that never drove sends nothing without a known motor.
-///
-/// It cannot queue behind the link thread: that thread sends one request at
-/// a time and may be waiting up to 8 s for a hardware reply (a select
-/// proving watchdogs, a jog), and STOP must not wait for it. The server
-/// latches its stop and cancel flags as soon as it parses a `stop` request,
-/// before it queues the hardware job (serve_actuator_calibration.rs
-/// `handle()`, `if request.action == "stop"`), so a STOP on its own
-/// connection takes effect even while the link's request is in progress.
-///
-/// The caller must then send [`LinkCommand::Stopped`] with the returned
-/// epoch (always, also when there is no job: the link thread treats a bumped
-/// epoch as a STOP it has not yet applied and sends nothing but `stop` until
-/// that STOP's `Stopped` arrives; carrying the epoch keeps a second STOP
-/// pressed before the first `Stopped` was handled pending until its own
-/// `Stopped`), and later forward the job's result as
-/// [`LinkCommand::StopAnswered`]. The job is `complete_on_drop`: dropping
-/// its handle never cancels the STOP.
+/// Bump the native epoch and latch shared STOP immediately, including an idle
+/// snapshot with a queued selection. The completion-on-drop Job reads latch
+/// acceptance; subsequent status polling reports authoritative release or uncertainty.
 pub fn stop_now(link: &Link, id: Option<u8>, all_axes: bool) -> (u64, Option<crate::jobs::Job<serde_json::Value>>) {
     let epoch = link.epoch.fetch_add(1, Ordering::SeqCst) + 1;
+    link.client.latch_stop();
     if id.is_none() && !all_axes {
         return (epoch, None);
     }

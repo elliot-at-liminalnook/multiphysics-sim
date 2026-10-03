@@ -318,6 +318,7 @@ impl Learn {
                     self.input = Some(Input { purpose: Purpose::LabPrediction(id), buffer });
                 }
                 LessonAction::LabRun(id) => self.run_lab(&id)?,
+                LessonAction::LabStop => self.stop_labs(),
                 LessonAction::Setting(change) => self.change_setting(change)?,
                 LessonAction::SliderFocus(p) => self.focus_slider = if self.focus_slider.as_deref() == Some(p.as_str()) { None } else { Some(p) },
                 LessonAction::SliderStep(step, coarse) => {

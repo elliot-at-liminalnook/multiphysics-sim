@@ -134,14 +134,16 @@ fn loss(hw: &mut Hardware, reason: Loss, origin: Origin) {
         Loss::FocusLost => "Window lost focus",
         Loss::Leaving => "Page closed",
     });
-    let active = hw.link.as_ref().is_some_and(|l| link::drive_active(&l.snapshot()));
-    if reason == Loss::Leaving || active {
+    if reason == Loss::Leaving && origin == Origin::Quiet { hw.sync.post_stop_on_leave(); }
+    // A selection may be queued before its busy snapshot is published.
+    // This local service owns its device exclusively, so invalidate every
+    // pending command and latch STOP even when the last snapshot was idle.
+    if hw.link.is_some() {
         stop_immediate(hw);
         if reason == Loss::Leaving && origin == Origin::Quiet {
             if let Some(link) = hw.link.as_ref() {
                 link.post_stop_sync("window close");
             }
-            hw.sync.post_stop_on_leave();
         }
         return;
     }
@@ -397,9 +399,19 @@ fn handle_inner(hw: &mut Hardware, action: &HardwareAction, call: &mut Call, now
             close(hw);
             done()
         }
+        H::Disconnect => {
+            stop_immediate(hw);
+            hw.connecting.take();
+            if let Some(link)=hw.link.take() { crate::jobs::drop_off_thread(link,"disconnected calibration owner"); }
+            hw.snapshot=Default::default();
+            hw.form.gait_ok=false;
+            hw.notice=Some("Calibration disconnected; STOP requested. Device ownership releases after acquisition finishes; release readback may remain uncertain.".into());
+            hw.ui_revision+=1;
+            done()
+        }
         H::Connect => {
             if hw.connecting.is_some() {
-                return Answer::Done(Err(format!("already connecting to {}", hw.url())));
+                return Answer::Done(Err(format!("already connecting to {}", hw.configuration_label())));
             }
             connect(hw);
             done()
@@ -660,7 +672,7 @@ fn handle_inner(hw: &mut Hardware, action: &HardwareAction, call: &mut Call, now
             send(hw, LinkCommand::RawStep { delta: step as i16 })
         }
         H::MirrorEnabled { .. } | H::MirrorLeg { .. } | H::MirrorJoint { .. } | H::MirrorPolarity { .. } | H::MirrorAlign { .. } => Answer::Done(super::mirror::apply(hw, action).map(|()| None)),
-        H::SyncConnect | H::SyncLeg { .. } | H::SyncMotor { .. } | H::SyncPolarity { .. } | H::SyncScale { .. } | H::SyncStart | H::SyncStop => Answer::Done(super::sync::apply(hw, action, view, run).map(|()| None)),
+        H::SyncConnect | H::SyncInspect | H::SyncLeg { .. } | H::SyncMotor { .. } | H::SyncPolarity { .. } | H::SyncScale { .. } | H::SyncStart | H::SyncStop => Answer::Done(super::sync::apply(hw, action, view, run).map(|()| None)),
     }
 }
 

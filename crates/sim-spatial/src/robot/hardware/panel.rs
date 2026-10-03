@@ -183,7 +183,7 @@ pub(super) const HOLD_OTHERS: &str = "Hold the other enabled motors in place whi
 /// only, Both) is in scope: the virtual bench runs `gait_start` and its
 /// lease, and its results are labelled simulated (`view::render_gait`).
 pub(crate) const OUT_OF_VIRTUAL_SCOPE: &str = "Outside virtual calibration scope: the virtual bench does not simulate this command";
-pub(super) const NOT_CONNECTED: &str = "the Leg calibration panel is not connected to the calibration server (Connect first)";
+pub(super) const NOT_CONNECTED: &str = "the Leg calibration panel has no local calibration session (configure --hardware-config FILE, then Connect)";
 /// The raw step stepper: (id suffix, label, change).
 pub(super) const STEPS: [(&str, &str, i32); 6] = [("minus_100", "−100", -100), ("minus_10", "−10", -10), ("minus_1", "−1", -1), ("plus_1", "+1", 1), ("plus_10", "+10", 10), ("plus_100", "+100", 100)];
 
@@ -208,7 +208,7 @@ fn gait_mode_name(mode: GaitMode) -> &'static str {
 pub(crate) fn panel_view(hw: &Hardware, now: Instant) -> PanelView {
     let mut v = view::render(&hw.snapshot, &hw.form, now);
     if hw.link.is_none() {
-        v.block(if hw.connecting.is_some() { format!("Connecting to {}…", hw.url()) } else { "Not connected to the calibration server.".into() });
+        v.block(if hw.connecting.is_some() { format!("Connecting to {}…", hw.configuration_label()) } else { "No local calibration session is open.".into() });
     }
     if hw.snapshot.authorization_revoked || (hw.link.is_some() && !hw.snapshot.connection_valid) {
         v.block("Connection or execution identity lost; reconnect required before calibration automation.".into());
@@ -252,6 +252,7 @@ pub(crate) fn control_list(hw: &Hardware, v: &PanelView) -> Vec<Control> {
     add(s("toggle_panel"), s("Leg calibration"), HardwareAction::TogglePanel, Ok(()), Some(hw.open));
     add(s("close"), s("Close calibration"), HardwareAction::ClosePanel, Ok(()), None);
     add(s("stop"), s("Stop"), HardwareAction::Stop, Ok(()), None);
+    add(s("disconnect"), s("Disconnect calibration"), HardwareAction::Disconnect, why(hw.link.is_some() || hw.connecting.is_some(), "no local calibration session is open"), None);
     add(s("connect"), s(if hw.link.is_some() { "Reconnect" } else { "Connect" }), HardwareAction::Connect, why(hw.connecting.is_none(), "already connecting"), None);
     for chip in &v.chips {
         add(format!("select_{}", chip.id), chip.label.clone(), HardwareAction::Select { id: chip.id }, why_m(chip.enabled, "a motor is being connected and checked"), Some(chip.pressed));
@@ -327,6 +328,7 @@ pub(crate) fn control_list(hw: &Hardware, v: &PanelView) -> Vec<Control> {
     add(s("mirror_on"), s("Show the real leg on the suspended simulated robot"), HardwareAction::MirrorEnabled { on: true }, Ok(()), Some(mirror));
     add(s("mirror_off"), s("Stop showing the real leg on the simulated robot"), HardwareAction::MirrorEnabled { on: false }, Ok(()), Some(!mirror));
     add(s("sync_connect"), s("Connect to the motor bench"), HardwareAction::SyncConnect, why(!hw.sync.connecting(), "already connecting to the motor bench"), None);
+    add(s("sync_inspect"),s("Inspect bench · zero drive"),HardwareAction::SyncInspect,why(hw.sync.inspect_enabled(),"connect the bench and stop pending work before inspection"),None);
     let sync_start = if !hw.sync.connected() { Err("connect to the motor bench first".to_string()) } else { why(!hw.sync.active(), "live sync is already running") };
     add(s("sync_start"), s("Sync motors · 12 seconds"), HardwareAction::SyncStart, sync_start, None);
     add(s("sync_stop"), s("Stop motors"), HardwareAction::SyncStop, Ok(()), None);
@@ -444,13 +446,14 @@ fn text_of(t: PanelText, v: &PanelView, hw: &Hardware, connection: &str) -> Stri
 
 /// The connection line: the link (url · link generation) and its state.
 fn connection_line(hw: &Hardware, v: &PanelView) -> String {
-    match (&hw.link, &hw.connecting) {
-        (_, Some(_)) => format!("Connecting to {}…", hw.url()),
-        (Some(link), None) => format!("{} · link {} · {}{}", hw.url(), link.generation,
+    let connection=match (&hw.link, &hw.connecting) {
+        (_, Some(_)) => format!("Connecting to {}…", hw.configuration_label()),
+        (Some(link), None) => format!("{} · link {} · {}{}", hw.configuration_label(), link.generation,
             if hw.snapshot.execution.as_ref().is_some_and(|i| i.is_virtual_calibration()) { "VIRTUAL simulated bench" } else { "physical or unknown execution" },
             if v.blocked.is_some() { " · stale/reconnect required" } else { "" }),
-        (None, None) => format!("Not connected · {}", hw.url()),
-    }
+        (None, None) => format!("Not connected · {}", hw.configuration_label()),
+    };
+    format!("{connection}{}",super::view::release_note(&hw.snapshot.state))
 }
 
 /// Present: copy the rendered view into the widgets (see the module doc).
@@ -683,6 +686,6 @@ mod tests {
         let stop = listed.iter().find(|(id, ..)| id == "hardware:stop").unwrap();
         assert_eq!(stop.3, Ok(()));
         // The panel's header shows the offline reason as its status.
-        assert_eq!(panel_view(&hw, Instant::now()).status, "Not connected to the calibration server.");
+        assert_eq!(panel_view(&hw, Instant::now()).status, "No local calibration session is open.");
     }
 }

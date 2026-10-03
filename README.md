@@ -127,26 +127,31 @@ controls and REST path. T46 is implemented for reading-only review; compilation,
 fixture execution and parity remain unverified. Controller/FPGA/power refinement
 and accepted-model promotion still require their existing external workflows.
 
-Start the calibration server as today
-([fixture README](examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/README.md)),
-then open Robot mode connected to it:
+Native hardware runs in the viewer's process over shared Rust libraries:
 
 ```sh
-cargo run -p sim-spatial -- --robot-preset robot-measured-400hz --hardware http://127.0.0.1:4194
+sim-spatial --robot-preset robot-measured-400hz --hardware-config /absolute/path/calibration.json
+# Add --motor-bench-config /absolute/path/bench.json for Sync motors.
 ```
 
-Or press **Leg calibration** in the robot header and press **Connect**. Add
-`--motor-bench http://127.0.0.1:4180` for live motor sync with
-`serve_motor_bench`. REST and `system_ui` may read status, list gaits,
-export, connect, change the mirror's display and STOP; anything that starts,
-changes or arms motion (selecting or enabling a motor, jogging, speeds,
-sweeps, tune, campaign, gait choice and play, drive settings, the safety
-confirmations, raw step, live sync's mapping and start) is refused by name
-and needs the operator at the window. Losing window focus, closing the panel
-or the window, and leaving Robot mode stop any drive. The panel is not
-compiled or run yet; see the [parity ledger](docs/hardware-parity.md). The
-browser page at the server's URL stays available until the
-[hardware checklist](docs/hardware-checklist.md) is signed off.
+These are launch instructions for a separately verified binary, not commands
+executed in this batch. Open **Leg calibration**, then **Connect**. Configuration
+names a direct serial device or an explicit simulated bench; no hardware server,
+virtual socket server or acquisition executable is needed. Disconnect calibration
+before Sync acquires the same device; pending release retains exclusive ownership.
+The obsolete hardware URL/token flags refuse by name. Lessons lab steps use
+`SIM_BENCH_CONFIG` with the same application; `SIM_BENCH_URL` is obsolete.
+Physical motion needs the operator at the window. STOP remains independent during
+long work, focus loss, panel close, disconnect and mode exit. A STOP latch does
+not prove stationary readback; uncertain release requires motor power cutoff.
+
+All five leg-in-process outcomes are implemented and reviewed by reading only:
+no builds, tests, launches or hardware operation. See [source parity and operator
+run sheets](docs/leg-in-process.md), [feature ledger](docs/hardware-parity.md)
+and [hardware checklist](docs/hardware-checklist.md). Browser server examples
+remain thin compatibility adapters. Virtual Sync is labelled host Bench simulation,
+not FPGA equivalence. CAD mode still requires RoboCAD's Python/OCCT service;
+this batch does not implement the Rust CAD kernel.
 
 ## Principles
 
@@ -180,5 +185,6 @@ measured-PWM study**, open an archive or saved review, then configure the source
 controller electrical feedback, simulate/predict, compare captured servo voltage or
 a calibrated sidecar, review and save-new/reopen. See
 [the bounded T52 navigation and source map](docs/native-power-authoring.md).
-Implementation is source-reviewed only; no executed parity is claimed. Hardware
-acquisition/driving, FPGA refinement, raw sweeps and Python/OCCT CAD remain external.
+Implementation is source-reviewed only; no executed parity is claimed. FPGA refinement and Python/OCCT CAD retain their existing external workflows.
+Native hardware acquisition/driving uses the shared in-process Rust sessions
+described above; physical execution remains an operator check.

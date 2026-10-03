@@ -355,24 +355,17 @@ physical-source acceptance follows.
   [docs/sim-app-parity.md](../sim-app-parity.md) (58 rows, none open). Every
   child process starts in `jobs` (`spawn_detached`, `open_in_browser`,
   `ChildProcess`), enforced by `jobs::tests::processes_are_started_only_in_jobs`.
-- **Hardware front end** (§8, see
-  [Hardware front end](#hardware-front-end-2026-09-30)), done 2026-09-30
-  pending the user's hardware checklist: the Leg calibration panel is a
-  dock in Robot mode (`robot/hardware/`, built by `RobotPlugin`), opened by
-  the header's "Leg calibration" button or `--hardware URL`. It talks to
-  the unchanged `serve_actuator_calibration` and `serve_motor_bench` through
-  one typed loopback client, `sim_runtime::hardware_client`. Every intent is
-  a `HardwareAction`, and anything that starts, changes or arms motion is
-  refused by name from REST and `system_ui`. STOP goes out on its own
-  connection from a Dedicated job, never behind the link thread. Focus
-  loss, panel close, leaving Robot mode and closing the window stop any
-  drive (wider than the page's rule), as does the link's drop; closing the
-  window or quitting also writes STOP synchronously. The heartbeats run on
-  their own worker beside the link. Built and tested in the 2026-09-30
-  verification pass (see the section's Verification pass). The panel also holds the leg mirror
-  (blue-tinted suspended robot) and live motor sync. The feature-by-feature
-  ledger is [docs/hardware-parity.md](../hardware-parity.md), and the
-  operator's steps are [docs/hardware-checklist.md](../hardware-checklist.md).
+- **Hardware in process** (§8, leg-in-process LIP1–LIP3, 2026-10-03;
+  implemented and source-reviewed, unexecuted): Robot mode's Leg panel,
+  calibration/gait/mirror and Sync motors use shared Rust application sessions
+  and caller-owned `jobs::RunThread` workers. Native Lessons lab steps use the
+  same calibration layer. `--hardware-config FILE` and `--motor-bench-config FILE`
+  replace URL/token arguments, which refuse by name. STOP latches independently
+  of queued acquisition and reports release/readback separately. The browser
+  examples are compatibility adapters; no native hardware server, virtual socket
+  server or acquisition child is required. [Source parity and run sheets](../leg-in-process.md)
+  distinguish host virtual simulation from physical FPGA acquisition.
+  **CAD still depends on RoboCAD's service**; §9 is not implemented by this batch.
 - **File size: closed and guarded** (split-large-files, 2026-10-01; see
   [Split large files](#split-large-files-2026-10-01)). No non-test source
   file in `crates/sim-spatial/src` is over 750 lines, and the lib test
@@ -1314,6 +1307,10 @@ The verification pass ran the following (verified at 4bc03789, below):
   4bc03789.
 
 ## Hardware front end (2026-09-30)
+
+Historical HTTP-era implementation. The current in-process owners and launch
+path are in §8 and [leg-in-process.md](../leg-in-process.md); the dated receipts
+here establish only their stated historical code, not the new migration.
 
 Batch hardware-front-end (epic order item 6, §8) built the Leg calibration
 panel: a native front end, feature for feature, over the browser's
@@ -6109,208 +6106,66 @@ started before the `App` (tests, `--validate-only`, headless) and
   `document::DocumentRegistry`, `selection::Selection` with
   `SelectionAction`, and `annotations` with the `ui_kit::threads` panel.
 
-### 8. Hardware front end in the native viewer
+### 8. Hardware in process in the native viewer
 
-*Decided 2026-09-30; built 2026-09-30 (batch hardware-front-end, see
-[Hardware front end](#hardware-front-end-2026-09-30)), pending the user's
-hardware checklist.* The browser's calibration and hardware pages
-(`web/viewer/calibration-ui.mjs` with `actuator-motion-view.mjs`,
-`calibration-mirror.mjs`, `hardware-sync.mjs`) have a native front end in
-`sim-spatial` with source-traced coverage, ledgered row by row in
-[docs/hardware-parity.md](../hardware-parity.md).
+*Current implementation: leg-in-process, LIP1–LIP3, 2026-10-03, source review
+only, unexecuted.* This supersedes the historical HTTP front-end description
+below the dated 2026-09-30 heading. All five batch outcomes and the action-level
+reference/replacement map are in [leg-in-process.md](../leg-in-process.md).
 
-- **Placement.** A dock inside Robot mode, not a mode of its own: the
-  mirror poses Robot mode's own robot, live sync streams the targets of
-  Robot mode's own run, and the page lived beside the robot viewer too. The
-  header's "Leg calibration" button shows it; `--hardware URL` opens and
-  connects it at launch. `robot/hardware/` is built by `RobotPlugin`; its
-  `Hardware` resource exists only while Robot mode is entered.
-- **One client** (`sim_runtime::hardware_client`, shared crate, not the
-  viewer):
-  - loopback only (`Endpoint::parse` accepts `http://127.0.0.1:PORT` and
-    `http://localhost:PORT`, connected as 127.0.0.1; `[::1]` and anything
-    else is refused before a byte is sent: both servers bind IPv4
-    127.0.0.1). Plain HTTP/1.1, one request per connection, with a 500 ms
-    connect timeout and read and write timeouts (10 s for ordinary requests,
-    longer than the server's own 8 s hardware wait; 12 s for STOP, which the
-    server answers only after its worker finishes, up to 8 s), and the
-    servers' body limits (4096 bytes calibration, 8192 bench) checked before
-    connecting;
-  - the pages' headers: `Host` the server's own origin, `X-Control-Token`,
-    `X-Client-Id` (one 36-character UUID per viewer process,
-    `hardware_client::process_client_id`, reused on every connect to
-    either server, as the page keeps one per page load),
-    `Content-Type: application/json`; no `Origin` or `Sec-Fetch-Site`;
-  - bodies with their members in the page's order and numbers in
-    ECMAScript `Number::toString` form (`Body`, `js_number`,
-    `js_number_text`: `0.0000032`, `1e-7`, `1e+21`, 2^60 as
-    `1152921504606847000`, -0 as `0`, non-finite as `null`), so each
-    request is the page's `JSON.stringify` byte for byte;
-  - a non-2xx answer surfaces the server's `error` field verbatim
-    (`ClientError::Server`), as the pages show `v.error`; without one it
-    reads "Request failed (HTTP {status})". A server that refuses a request
-    after reading only its head (a stale token after a restart) closes
-    with the body unread, which may reset the connection; the answer that
-    arrived is still used, and without one the error says the server
-    closed the connection and its token may have changed.
-- **Token hand-off.** The token is read from the page the server already
-  serves, as the browser receives it: the calibration server's
-  `<meta name="calibration-token">`, the bench's `const token='…'` in `/`
-  or the `motor-bridge-token` meta of `/walking/`. Or it comes from a file
-  the operator names (`--hardware-token-file`, `--motor-bench-token-file`).
-  Browser token discovery remains compatible. Virtual calibration additionally
-  pins execution identity; token discovery alone never authorizes automation.
-- **Refusal rule and origins.** Every intent is a `HardwareAction`, applied
-  by its existing action owner. Remote HW-01–HW-09 calibration is allowed
-  only for a fresh connected virtual session whose strict execution identity
-  matches the identity pinned to that link generation. Physical, unknown,
-  stale, disconnected and replaced sessions retain motion refusal. Reconnect
-  creates a new generation and requires a new identity handshake. The shared
-  runtime contract and server execution checks enforce the same boundary;
-  a URL, pseudo-terminal name, fixture label or client boolean cannot grant it.
-  Since HW-10 (2026-10-02) the allowlist also holds gait playback (select,
-  mode, speed, effort, the suspended confirmation and Play), run by the
-  server's one gait loop on the virtual bench and labelled simulated; raw
-  steps, polarity flipping, the mirror's bindings, live sync and unrelated
-  robot motion remain outside it. The leg gait's clock, the link's health
-  (stale and disconnected never shown as live) and captures answered only
-  after their save are in the
-  [Hardware front end decisions](#hardware-front-end-2026-09-30). Physical motion
-  continues to require the operator at the window. Allowed
-  from automation: toggle/close panel, connect, sections, status, STOP,
-  loss (except `leaving`, which only the window's close request sends),
-  export, load gaits, gait stop, turning the mirror on or off, sync
-  connect and sync stop (REST `hardware_status`, `hardware_stop`,
-  `hardware_export`, `hardware_gaits`, `hardware {action}`; `system_ui`
-  `hardware:<name>`). A `system_ui` activation of a hardware control that
-  is disabled now is refused with "{id} is disabled: {why}"
-  (`robot/actions/mod.rs` `apply`). While live motor sync is engaged, REST and
-  `system_ui` may not start, step, jog, drive or re-speed the robot run
-  either, since its targets go to the motors (`moves_synced_motors`);
-  Pause, Reset and STOP stay available.
-- **STOP paths.**
-  - *Immediate.* The Stop button, Z, Escape, REST `hardware_stop` and
-    `system_ui` `hardware:stop` post `stop` on a fresh connection from a
-    `jobs::Pool::Dedicated` job with `complete_on_drop` (`link::stop_now`).
-    It never queues behind the link thread, which may be waiting on a select
-    that proves the watchdogs, or on a reply the server waits up to 8 s for.
-    The server latches its stop flags when it parses the request. The job
-    draws its sequence from the link's shared counter, and the UI bumps the
-    link's epoch first, so answers already in flight are dropped as the page
-    drops them.
-  - *Loss of control* (the page's `loss()`, widened). Bevy
-    `WindowFocused` false (the page's `visibilitychange`), panel close (×
-    or the header toggle), leaving Robot mode (`actions::leave`) and
-    closing the window (`WindowCloseRequested`, the page's `pagehide`)
-    stop drive on the same immediate path whenever anything may drive
-    (`link::drive_active`: ready, starting, a session, busy, sweep-all,
-    tuning, campaigning, a leg gait), not only when a motor is ready,
-    starting or in a session as the page checks; leaving always stops. Live
-    sync stops on every loss, but only a session this viewer opened
-    (`LiveSync::stop_ours`).
-  - *Link drop.* When the link's channel closes (reconnect, mode exit,
-    window close), the link thread sends STOP before it returns. Dropping
-    the `Link` itself also writes a synchronous STOP when drive is active
-    (`Link::post_stop_sync`, at most once per link), and an `AppExit`
-    system in `Last` (`actions::stop_on_exit`) does what a window close
-    does. bevy_winit clears the world when its event loop exits, so Cmd+Q
-    and other exits without `WindowCloseRequested` still stop drive.
-  - *Keepalive equivalence.* The page marks STOP `keepalive` so it outlives
-    the tab. The native equivalent is `complete_on_drop` on its own thread
-    (the request finishes even if the panel or the mode goes away first)
-    and, when the window closes or the app exits, a STOP written
-    synchronously with `Client::send_only` (`Link::post_stop_sync`; the
-    bench's `/stop` likewise, `LiveSync::post_stop_on_leave`, only for a
-    session this viewer opened), since the process may end before a job
-    connects. Only the window's own close request (`Origin::Quiet`) writes
-    it on the UI thread.
-  - *Underneath.* The servers' leases (1.5 s motion and gait leases on the
-    calibration server, 0.9 s on the bench) and the FPGA's command and
-    telemetry watchdogs still stop the motors if the viewer dies without
-    sending anything (SIGKILL, a crash). A tune, campaign or sweep-all has
-    no lease and keeps running on the server until it ends or someone
-    presses STOP (on the server's page, or in a restarted viewer).
-  - *Heartbeats beside the link.* The `motion_update` heartbeat (100 ms
-    after each answer) and the gait lease (`gait_update`, 300 ms, at once
-    on pause or speed) run on their own `jobs::RunThread`
-    ("hardware-beat", `session/beat.rs`), not on the link thread, so a
-    request there that waits up to 8 s cannot let a 1.5 s lease lapse. The
-    beat is the only sender of the server's per-run sequence domain
-    (`motion_update`, `capture_hold`), draws sequences from the shared
-    counter as it sends, and sends nothing while a STOP is pending.
-- **What stays in the servers.** The serial bus, the one hardware worker,
-  leases, sequence and owner checks, watchdog proofs, the FPGA supervisor
-  and taught travel windows, the feedback controller, tuning, the campaign,
-  gait playback on the leg and live streaming. Nothing in the viewer opens a
-  serial port or computes a motor command. The mirror uses the shared
-  `sim_runtime::kinematic_mirror`, and gait sampling uses the shared
-  `sim_runtime::gait_playback`, as the page's worker does.
-- **Virtual transport isolation (LC1).** `hx_virtual_bench` owns the simulated
-  motor transport. In explicit capability-socket mode, the calibration server
-  receives HX protocol traffic over a connected Unix socket and never opens a
-  serial pathname or runs serial configuration. A failed handshake cannot
-  select the physical opener. Inspect, select and reconnect share that same
-  transport owner. The server publishes its per-start identity and the bench
-  identity; bound commands carry both plus their connection generation. The
-  server validates the binding before accepting an action and again before
-  its worker executes it. STOP bypasses this binding and remains independent.
-  The legacy pseudo-terminal bench remains a reference compatibility surface,
-  not an authorization mechanism for remote calibration.
-  Only binding refusals (an identity mismatch, a stale or replaced
-  connection generation, a lost virtual bench) answer HTTP 409 with
-  `calibration::BINDING_REFUSED`; every other refusal is 400. An
-  out-of-scope command (anything `virtual_command_allowed` rejects, such as
-  flip, raw step or a Leg/Both gait) with a valid binding is an ordinary 400
-  refusal and never runs, so an operator's click on such a control cannot
-  revoke the virtual session; the panel also lists those controls disabled
-  on a virtual link with `OUT_OF_VIRTUAL_SCOPE` (verification pass
-  2026-10-02). Native links revoke their pinned authorization only on a
-  409 or a transport/decode failure (`calibration::binding_lost`), or when a
-  status names another execution or none (the bench was lost), never on an
-  ordinary refusal; STOP is never gated by the binding. Exports from a
-  virtual bench are labelled simulated (`execution`, `"simulated": true`, a
-  `-virtual` file name, the panel line `VIRTUAL (simulated)`).
-  STOP's reply is immediate (`stop_latched`, `enabled_id: null`); the
-  server's worker torques off every configured axis whenever the safety epoch
-  advances, and refuses jobs captured before that epoch or older than its
-  HTTP wait.
-- **Remote acknowledgement (LC2).** A remote motion `HardwareAction` is queued
-  as `LinkCommand::Checked { ticket, generation, epoch, inputs, command }`;
-  the link thread re-authorizes, validates, runs it and checks its
-  postcondition (a declined select or tune is an error, not an
-  acknowledgement), then records the ticket result. The REST call stays
-  Pending until then. Robot mode's `system_ui` activation of a
-  `hardware:<name>` control forwards the action with its own reply
-  (`Replies::submit`), so `HardwareAction` keeps its one apply system.
-  Automatic STOPs (loss, leaving, reconnect, revocation) send an id-less
-  all-axes STOP only if this link drove a motor; an operator's STOP always
-  sends. A remote jog release is exempt from freshness checks and becomes a
-  STOP when it cannot be authorized.
-  Decision: use a bench-owned binary-protocol socket capability for automation,
-  rather than authorize a pseudo-terminal pathname. The same `CalibrationBus`
-  packet/controller execution consumes the descriptor; no second physics or
-  calibration implementation is introduced. Revisit the transport only if a
-  descriptor-transfer alternative preserves the no-serial-opener guarantee.
-- **Calibration acceptance scope (LC1–LC3).** The native panel, shared client,
-  acquisition controller and separate Rust calibration server remain the one
-  execution path. The committed driver in the hardware checklist is for a
-  future authorized fresh-binary verification pass only. Written fixtures and
-  source traces do not establish HW-01–HW-09 acceptance. Its virtual encoder
-  and fitted records describe simulated bench responses, not measured hardware;
-  no automatic CAD or actuator-registry promotion follows. HW-10–HW-11 and
-  hardware operation stay outside this batch. Browser compatibility and the
-  separate Rust-server launch requirement remain until parity is demonstrated.
-- **Safety stays underneath the UI.** The FPGA supervisor, taught travel
-  windows, watchdogs and STOP are unchanged and hold whatever the UI does.
-  STOP sits in the panel's top bar, which never scrolls, so it is reachable
-  from every section.
-- **Agents never drive hardware.** They build and verify by reading. This
-  epic ends with [docs/hardware-checklist.md](../hardware-checklist.md),
-  which the user runs with the operator present (connect, select, jog,
-  teach, STOP from every section, focus loss and mode exit, sweeps, tune,
-  campaign, gait, mirror, advanced settings, live sync, watchdog trip and
-  lease loss, export, REST refusal). The browser pages stay until the user
-  has signed that checklist off.
+- **Placement and ownership.** The Leg calibration dock remains in Robot mode
+  with its mirror and live Sync motors. `HardwareAction` retains its one apply
+  and public ViewerSet pipeline; the kit entities keep their mode lifetimes.
+  Shared `hardware::protocol` types carry request bodies, tolerant statuses,
+  strict execution identity and virtual allowlist. `hardware::calibration`
+  owns teaching, sweeps, tuning, campaigns, gait and lab actions;
+  `hardware::bench` owns finite/live acquisition and records. The single
+  process-wide `DeviceLease` excludes concurrent calibration/bench ownership;
+  the physical serial descriptor also retains OS exclusivity. Disconnect
+  calibration before acquiring that same device for Sync, and retry only after
+  final release; a pending release still refuses acquisition.
+- **Execution.** Local sessions return caller-owned workers; native starts them
+  through `jobs::RunThread`, with discrete jobs through `Job`. No library starts
+  a viewer thread. Physical transport calls `CalibrationBus` directly; serial
+  configuration calls libc, without stty. Virtual calibration calls existing
+  `Bench` through in-process packet I/O. Virtual Sync uses that Bench's host
+  loop and explicitly reports `virtual_host_bench`; it does not emulate the
+  other installed FPGA profiles or establish device-clock/physical parity.
+  Physics and measured policies remain in shared Rust libraries.
+- **Configuration.** Launch with `--hardware-config FILE` and optionally
+  `--motor-bench-config FILE`. Configurations declare physical serial paths or
+  explicit virtual identity/model/taught-window inputs. URL/token arguments
+  `--hardware`, `--hardware-token-file`, `--motor-bench` and
+  `--motor-bench-token-file` refuse by name. Older inactive preferences remain
+  readable. Lessons use `SIM_BENCH_CONFIG`; obsolete `SIM_BENCH_URL` refuses.
+  No native path starts, discovers, polls or waits for a hardware server.
+- **Safety.** Immediate STOP/cancel and motion/gait heartbeats remain separate
+  from ordinary serialized jobs. Acceptance-time epochs bind queued acquisition;
+  STOP and generation replacement refuse old work. Queue expiry, sequence and
+  owner checks, watchdog proofs, taught windows, bounded targets, measured limits
+  and record publication stay authoritative. Late heartbeats cannot revive an
+  expired lease. Focus loss, panel close, mode exit, disconnect and dropped or
+  replaced owned handles latch STOP even if snapshots are idle and work is queued.
+  An unwind guard attempts all-axis release before calibration bus close.
+  STOP acceptance is a latch, **not stationary readback**; authoritative status
+  separately reports release proof or uncertainty. Abrupt process termination
+  cannot execute destructors or publish release. FPGA supervision remains
+  independent; cut motor power when release is unverified.
+- **Authorization and truth.** Physical motion needs the operator at the window;
+  REST/system_ui cannot authorize it. Virtual automation requires fresh connection
+  generation and strict explicit identity, remains allowlisted, and records are
+  simulated. Unknown/stale/replaced frames refuse. Mirror layout and display
+  bindings never mutate CAD geometry or physical definition. Lessons lab run is
+  operator-only with focused window, supported-fixture checklist, shared watchdog
+  proofs/limits and independent STOP; virtual lab_step stays outside the allowlist.
+- **Compatibility and evidence.** Browser server examples are thin HTTP/static
+  asset/startup adapters over these same applications. Browser paths and historical
+  executed receipts remain; their old acceptance drivers are not in-process
+  receipts. Current evidence is reading only; no builds, tests, launches,
+  screenshots or hardware operation. See [hardware parity](../hardware-parity.md)
+  and [operator checklist](../hardware-checklist.md). **CAD still reaches
+  `sim_runtime::cad_client` and Python/OCCT RoboCAD**; §9 is the next separate
+  migration and remains an external service requirement.
 
 ### 9. CAD in Rust
 

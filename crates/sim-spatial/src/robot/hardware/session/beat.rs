@@ -33,8 +33,8 @@ use super::{COMMAND, STOP_PENDING};
 use crate::jobs::RunThread;
 use crate::robot::hardware::link::{GAIT_HEARTBEAT, HEARTBEAT};
 use serde_json::Value;
-use sim_runtime::hardware_client::calibration::{self, Input};
-use sim_runtime::hardware_client::{Body, Client};
+use sim_runtime::hardware::protocol::calibration::{self, Input};
+use crate::robot::hardware::local::{Body, Client};
 use std::sync::atomic::{AtomicU64, Ordering::SeqCst};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
@@ -84,7 +84,7 @@ impl Refused {
     pub fn local(error: &str) -> Self {
         Refused { error: error.into(), binding_lost: false }
     }
-    fn client(error: sim_runtime::hardware_client::ClientError) -> Self {
+    fn client(error: sim_runtime::hardware::protocol::ClientError) -> Self {
         Refused { binding_lost: calibration::binding_lost(&error), error: error.to_string() }
     }
 }
@@ -196,9 +196,10 @@ impl Beater {
                 let _ = reply.send(result);
             }
             Beat::Post(build, reply) => {
+                let stop_epoch=self.client.calibration_stop_epoch();
                 let result = if self.applied() {
                     let body = build(self.seq());
-                    self.client.post(COMMAND, &body).map_err(Refused::client)
+                    self.client.post_at_epoch(COMMAND, &body,stop_epoch).map_err(Refused::client)
                 } else {
                     Err(Refused::local(STOP_PENDING))
                 };
@@ -238,22 +239,24 @@ impl Beater {
     /// is [`HEARTBEAT`] after this one answered.
     fn motion(&mut self) -> Option<Result<(), Failure>> {
         let motion = self.plan.motion.clone()?;
+        let stop_epoch=self.client.calibration_stop_epoch();
         let epoch = self.epoch.load(SeqCst);
         if epoch != self.plan.seen_epoch {
             return None;
         }
         let body = calibration::motion_update(motion.id, self.seq(), motion.run, &motion.input);
-        let result = self.client.post(COMMAND, &body).map(|_| ()).map_err(|e| Failure { run: motion.run, epoch, refused: Refused::client(e) });
+        let result = self.client.post_at_epoch(COMMAND, &body,stop_epoch).map(|_| ()).map_err(|e| Failure { run: motion.run, epoch, refused: Refused::client(e) });
         self.next_motion = Instant::now() + HEARTBEAT;
         Some(result)
     }
     /// One `gait_update` (errors ignored, as the page's `.catch`), unless a
     /// STOP is pending.
     fn gait(&mut self) {
+        let stop_epoch=self.lease.calibration_stop_epoch();
         let Some(gait) = self.plan.gait else { return };
         if !self.applied() {
             return;
         }
-        let _ = self.lease.post(COMMAND, &calibration::gait_update(gait.scale, gait.playing));
+        let _ = self.lease.post_at_epoch(COMMAND, &calibration::gait_update(gait.scale, gait.playing),stop_epoch);
     }
 }

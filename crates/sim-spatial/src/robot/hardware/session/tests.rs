@@ -1374,6 +1374,34 @@ fn a_checked_leg_gait_play_answers_ok_only_after_the_gait_started() {
     }
 }
 
+/// After a leg play's own select, an answer marked ready without a motor id
+/// (no path produces it today; start_gait's guard is [`Session::armed_motor`])
+/// refuses the play and releases through the existing STOP, id-less (the
+/// select set `drove`), and the notice says the id was unknown and that the
+/// motors were released. Not ready: the same release.
+#[test]
+fn a_ready_select_without_a_motor_id_refuses_and_releases_the_motors() {
+    let fake = gait_server(GaitStart::Runs);
+    let mut session = pinned_session(&fake, virtual_identity(SERVER_A));
+    session.snap.id = None;
+    session.snap.drove = true;
+    session.snap.ready = true;
+    let refused = session.armed_motor();
+    assert_eq!(refused, Err(format!("Could not enable the motors: the motor id is unknown after the select; the motors released (STOP sent: {STOP_LATCHED})")));
+    let commands = fake.commands();
+    assert_eq!(actions(&commands), ["stop".to_string()], "the release is one STOP: {commands:?}");
+    assert!(commands[0]["id"].is_null(), "an id-less STOP latches every axis: {commands:?}");
+    assert!(!session.snap.ready);
+
+    // Not ready (the select's answer lost or not adopted): released the same way.
+    let fake = gait_server(GaitStart::Runs);
+    let mut session = pinned_session(&fake, virtual_identity(SERVER_A));
+    session.snap.drove = true;
+    session.snap.ready = false;
+    assert!(session.armed_motor().is_err_and(|e| e.contains("released (STOP sent")));
+    assert_eq!(actions(&fake.commands()), ["stop".to_string()]);
+}
+
 /// Through the panel's remote dispatch: the gait form intents are answered at
 /// once once authorized, and Play waits for the link's verdict; a Leg play
 /// without the mirror's bindings is refused with the play's reason.

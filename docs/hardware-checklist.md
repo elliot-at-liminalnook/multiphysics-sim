@@ -299,8 +299,12 @@ are not leg results).
   locked while it plays. Stop stops drive. A Leg/Both start the server
   refuses releases the motor Play selected (STOP is sent; the gait line reads
   "gait_start refused: …; motor N released (STOP sent: …)"; since 2026-10-03,
-  by reading, unexecuted). The browser leaves that motor held: mark it as a
-  deliberate difference (ledger CAL-157), not a failure.
+  by reading, unexecuted). Every other refusal after Play's select releases
+  the same way ("…; the motors released (STOP sent: …)"). The browser leaves
+  that motor held: mark it as a deliberate difference (ledger CAL-157), not a
+  failure. If the gait line ever reads "releasing … failed" or "no STOP was
+  sent", press STOP (or Z) at once and cut motor power if a motor is still
+  energized.
 - **On a verified virtual bench** (since `313964e3`) Leg only and Both run too.
   The Leg line reads "VIRTUAL (simulated) · Leg: {phase} · error … counts", and
   the new Recent leg runs row is headed "VIRTUAL (simulated) · …". A physical
@@ -1159,38 +1163,50 @@ The short names are those of the HW-01–HW-09 traces, plus:
   started when `snap.gait` has that mode and nothing failed (`:863-872`). The
   verdict goes to `command_results` (`:668`) and REST is answered from it
   with `hardware_status` (`handlers.rs:175-181`).
-- **Start.** `start_gait` (`sequences.rs:270-322`) with `leg` true: no
+- **Start.** `start_gait` (`sequences.rs:270-317`) with `leg` true: no
   binding refuses with "No motor is aligned, taught and enabled: …"
   (`:281-283`). It STOPs, selects the first bound motor holding all the
-  others (`:284-285`, which proves their watchdogs on the server), needs it
-  ready (`:286-295`), and posts `calibration::gait_start` (`:298-302`; body
+  others (`:284-285`, which proves their watchdogs on the server), takes the
+  armed motor through `armed_motor` (`:288`, `:320-338`: ready and with an
+  id), and posts `calibration::gait_start` (`:289-297`; body
   `calibration.rs:636-655`: `supported`, gait path, bindings, speed scale,
   effort, PWM ceiling, drive mode). A STOP pressed meanwhile drops the answer
-  and stops (`:303-308`). The answered status is adopted (`:313`).
+  and stops (`:298-303`). The answered status is adopted (`:308`).
 - **Refused start releases the motor (2026-10-03, by reading, unexecuted).**
-  A `gait_start` the server refuses (an error answer, `:299-303`; or a
-  status whose gait is not running and carries its error, a refusal inside
-  `run_gait`, `:311-318`), and a select that left the session not ready
-  (`:286-294`; sent whether or not the select's answer was adopted, since a
-  lost answer can still leave motors held), go through
-  `release_after_refused_start` (`:337-357`). A UI STOP pending since the
-  select returns its own reason with no prefix and no extra request
-  (`:302`, and `:338-340`: that STOP releases every motor itself); otherwise
-  it sends the
-  existing STOP request (`Session::stop`, `session.rs:924-937`;
+  Every refusal after the select goes through `release_after_refused_start`
+  (`:351-374`); the only other exits are a UI STOP pending since the select
+  (`:295`, and `:352-354`: that STOP releases every motor itself, so the
+  play's reason is returned with no prefix and no extra request) and a STOP
+  pressed while the gait started (`:298-303`, `stop_after_dropped`). The
+  refusals are: a select that left the session not ready (`:321-328`; sent
+  whether or not the select's answer was adopted, since a lost answer can
+  still leave motors held); a select answered ready without a motor id
+  (`:330-337`, focus-final-leftovers: before, `:295`'s
+  `self.snap.id.ok_or(…)?` returned with no release; no path produces this
+  state today, since `select_motor` sets the id before asking,
+  `session.rs:961`); a `gait_start` the server refuses with an error
+  (`:296`); and a status whose gait is not running and carries its error, a
+  refusal inside `run_gait` (`:307-311`). The release sends the existing
+  STOP request (`Session::stop`, `session.rs:924-937`;
   `calibration.rs:592-594`), whose server answer latches STOP and torques
   off every configured axis (`server.rs:1600-1611`). It returns the play's
   error with the release: "gait_start refused: {server's reason}; motor N
   released (STOP sent: STOP latched; all configured axes torque off. Records
   retained.)" ("…; the motors released (…)" after a select that was not
-  ready, since STOP latches every axis), or "…; releasing motor N failed:
-  {why}. Press STOP." when the STOP request itself failed (`:346-354`). `gait_play` puts it in the gait
-  notice (`sequences.rs:263-266`): the panel's gait line shows it
+  ready, since STOP latches every axis; "Could not enable the motors: the
+  motor id is unknown after the select; the motors released (…)" when ready
+  without an id, the STOP sent id-less because the select set `drove`,
+  `session.rs:964`), or "…; releasing motor N failed: {why}. Press STOP."
+  when the STOP request itself failed (`:367-368`), or "…; no STOP was sent:
+  no motor is known and this link never drove" when `stop()` would send
+  nothing (`:358-361`, the page's `if(id==null)return`). `gait_play` puts it
+  in the gait notice (`sequences.rs:263-266`): the panel's gait line shows it
   (`view.rs:651-653`), REST shows it as `session.gait_notice`
   (`status.rs:54`), and a remote Play is answered with it (`session.rs:863-872`).
   The browser page leaves the motor held here; the difference is deliberate
-  (AGENTS.md hardware safety; ledger CAL-157). Test
-  `a_checked_leg_gait_play_answers_ok_only_after_the_gait_started`
+  (AGENTS.md hardware safety; ledger CAL-157). Tests
+  `a_checked_leg_gait_play_answers_ok_only_after_the_gait_started` and
+  `a_ready_select_without_a_motor_id_refuses_and_releases_the_motors`
   (`session/tests.rs`): written, never executed.
 - **Server handle.** The pinned client adds the identity headers
   (`http.rs:112-120`). `handle` (`server.rs:1381`) checks identity and

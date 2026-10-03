@@ -283,16 +283,9 @@ impl Session {
             };
             self.stop();
             self.select_motor(first.id, true, false);
-            if !self.snap.ready {
-                let why = self.snap.state.message.clone().filter(|m| !m.is_empty()).unwrap_or_else(|| "Could not enable the motors".into());
-                // The select may have reached the server and left a motor (and,
-                // with hold others, the rest) held even when its answer was lost
-                // or not adopted (revoked, another motor enabled, a timeout), so
-                // the existing STOP is sent whenever it was not ready: STOP is
-                // idempotent and latches every axis, so the notice says "motors".
-                return Err(self.release_after_refused_start(None, why));
-            }
-            let id = self.snap.id.ok_or("Could not enable the motors")?;
+            // From here every refusal goes through `release_after_refused_start`
+            // (or, for a UI STOP, leaves it to that STOP): none leaves a motor held.
+            let id = self.armed_motor()?;
             let effort = self.inputs.gait_effort_percent / 100.0;
             let body = calibration::gait_start(id, self.seq(), &entry.path, bindings, scale, effort, self.drive_pwm(), self.inputs.drive_mode.wire());
             let status = match self.send_status(body) {
@@ -322,6 +315,27 @@ impl Session {
         }
         Ok(run)
     }
+    /// After a leg play's own `select`: the motor it armed, or the refusal,
+    /// after the release ([`Self::release_after_refused_start`]).
+    pub(super) fn armed_motor(&mut self) -> Result<u8, String> {
+        if !self.snap.ready {
+            let why = self.snap.state.message.clone().filter(|m| !m.is_empty()).unwrap_or_else(|| "Could not enable the motors".into());
+            // The select may have reached the server and left a motor (and,
+            // with hold others, the rest) held even when its answer was lost
+            // or not adopted (revoked, another motor enabled, a timeout), so
+            // the existing STOP is sent whenever it was not ready: STOP is
+            // idempotent and latches every axis, so the notice says "motors".
+            return Err(self.release_after_refused_start(None, why));
+        }
+        match self.snap.id {
+            Some(id) => Ok(id),
+            // Ready without a selected motor (no path sets that today: the
+            // select sets the id before asking): the gait cannot name its
+            // motor, so it is refused, and the select's hold is released
+            // as above. The select set `drove`, so the STOP is sent id-less.
+            None => Err(self.release_after_refused_start(None, "Could not enable the motors: the motor id is unknown after the select".into())),
+        }
+    }
     /// A leg play that this handler's own `select` armed was refused (the
     /// `gait_start`, or the select itself): motor `id` (the one the STOP
     /// names; None after a select that was not ready, "motors") is released at once
@@ -338,12 +352,18 @@ impl Session {
         if self.interrupted() {
             return why;
         }
+        let what = id.map_or_else(|| "the motors".to_string(), |id| format!("motor {id}"));
+        // `stop()` sends nothing without a known motor on a link that never
+        // drove (the page's `if(id==null)return`): say so rather than "released".
+        if self.snap.id.is_none() && !self.snap.drove {
+            self.stop();
+            return format!("{why}; no STOP was sent: no motor is known and this link never drove");
+        }
         // The release's own failure, kept apart from the play's first reason.
         let earlier = self.command_error.take();
         self.stop();
         let failed = self.command_error.take();
         self.command_error = earlier;
-        let what = id.map_or_else(|| "the motors".to_string(), |id| format!("motor {id}"));
         match failed {
             Some(e) => format!("{why}; releasing {what} failed: {e}. Press STOP."),
             None => match self.snap.state.message.as_deref().map(str::trim).filter(|m| !m.is_empty()) {

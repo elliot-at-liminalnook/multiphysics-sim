@@ -119,6 +119,20 @@ In Build mode, a system file that hosts this robot (`system_drive`) is now
 also driven by the bound keys and gamepad, through the same one device
 poller as Robot mode (`docs/rover-checklist.md` RV-41 to RV-43).
 
+Motor rating ambient (by reading, unexecuted): `robot.simrobot.json` states
+25 °C in each motor's `thermal.ambient_c` (the datasheet rating ambient,
+`cad/PHYSICAL_MODEL.md` "Motor") and no `world.ambient_c`. The parser used to
+drop the per-motor field, so the sessions referenced these motors'
+resistance and torque constant to the parser's 20 °C world default; they now
+use 25 °C through `PhysicalModel::motor_ambient`, the same value the builder
+checks the config's imposed `winding_temperature_k` (298.15 K) against, so
+the browser's servos run at the temperature their resistance is stated at.
+The check's error names where the value came from, and a world ambient the
+model does not state is labelled as the parser's default. The native
+thermal network's environment stays `world.ambient_c` (20 °C by default
+here, labelled). Motor resistance and torque change slightly, so any
+earlier qualification of this robot needs a rerun.
+
 All of this was verified by reading the code only. Nothing here has been run
 or calibrated against hardware. The Python kinematics are checked against
 the Rust golden vectors by

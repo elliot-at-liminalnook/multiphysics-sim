@@ -478,13 +478,16 @@ impl EmbeddedSession {
                             .map(|j| j.physics.drive_backlash_rad(session.robot.model.version >= 4))
                             .transpose().map_err(|e| format!("{dof}: {e}"))?
                             .unwrap_or(0.0);
+                        // Each motor's resistance and derating reference is its rating ambient
+                        // (motors[i].thermal.ambient_c, else world.ambient_c), as PhysicalRobot's.
+                        let ambient = session.robot.model.motor_ambient(i).map_err(|e| format!("{dof}: {e}"))?;
                         Ok::<_, String>(EmbeddedMotorConfig {
                             dof: dof.clone(),
                             residual_scales: experiment.residual_scales,
                             parameters: sim_domain_robot::motor::cad_motor_unit_parameters(
                                 motor,
                                 backlash,
-                                session.robot.model.world.ambient_c + 273.15,
+                                ambient.kelvin(),
                                 session.scene.options.analytic_motor_jacobian,
                                 experiment.events.is_some(),
                             )

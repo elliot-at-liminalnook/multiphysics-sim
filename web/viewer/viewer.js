@@ -102,7 +102,7 @@ function scheduleLive() {
 }
 function setPlaying(value) { if(value&&mirrorActive)return; if(!value)hardwareSync.stop('Simulation paused'); playing = value; clearTimeout(liveTimer);
   if (!playing && driveKeys.size) {driveKeys.clear();applyDriveKeys();}
-  if (!playing && drive) sendDrive(drive.input.stop());
+  if (!playing && drive) { sendDrive(drive.input.stop()); pauseDrive(); }
   if (playing) { liveStartWall = performance.now(); liveStartSim = tick; scheduleLive(); }
   $('play').textContent = playing ? 'Pause' : 'Play';
   $('execution-state').textContent = playing ? (playback ? 'Playing recorded physics' : 'Running physics in background…') : (busy ? 'Pausing after the current physics chunk…' : 'Paused'); }
@@ -372,6 +372,16 @@ function sendDrive(requests) {
   for (const request of requests) worker.request('drive_request', { request }).then(
     next => { if (token === epoch && drive) drive.panel.status(next); },
     error => { if (token === epoch) status(`Drive request refused: ${error.message}`, true); });
+}
+// Pause: after the stop request (same worker queue), Rust invalidates any live
+// request (DriveSession::pause), so on resume the profile's on-loss rule runs
+// until a fresh request. Rust ignores it while replaying; none is sent then.
+function pauseDrive() {
+  if (!drive || !worker || drive.replaying || drive.replayPending) return;
+  const token = epoch;
+  worker.request('drive_pause', {}).then(
+    next => { if (token === epoch && drive) drive.panel.status(next); },
+    error => { if (token === epoch) status(`Drive pause refused: ${error.message}`, true); });
 }
 // Once per animation frame: poll devices through Rust while running; refresh the panel.
 function driveTick(now) {

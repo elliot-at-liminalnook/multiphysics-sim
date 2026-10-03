@@ -148,7 +148,7 @@ explains why the old inference needs re-evaluation before controller training.
                 "rotor_inertia" (rotor side), "supply_voltage", "current_limit", "poles": 0 | n},
  "gearbox": {"ratio", "efficiency", "backlash_rad" (output side), "inertia" (output side), "stiffness": N·m/rad (gear train), "max_output_torque", "max_output_speed"},
  "thermal": {"winding_heat_capacity", "case_heat_capacity", "r_winding_case", "r_case_mount", "r_case_ambient", "resistance_temp_coeff": 0.0039, "torque_derating_per_c": 0.001, "max_winding_c",
-             "ambient_c": datasheet rating ambient, informational — the simulation uses world.ambient_c},
+             "ambient_c": datasheet rating ambient: the temperature resistance and torque are stated at, so the motor unit's resistance/derating reference (absent: world.ambient_c); the thermal network's environment is world.ambient_c},
  "firmware": {"kind": "servo"|"position"|"velocity"|"torque"|"stepper"|"none", "loop_rate_hz", "latency_s", "deadband_rad", "sensor_resolution_rad", "kp", "ki", "kd", "output": "voltage"|"current"},
  "driver": {"kind": "h_bridge"|"servo_internal"|"stepper"|"esc", "pwm_hz", "on_resistance", "current_limit"}}
 ```

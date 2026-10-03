@@ -180,6 +180,12 @@ self.onmessage = ({ data }) => {
           result = JSON.parse(drive.request(JSON.stringify(data.request)));
           break;
         }
+        // The page paused: Rust invalidates a live request (no-op while replaying).
+        case 'drive_pause': {
+          if (!drive) throw new Error('load a drive preset first');
+          result = JSON.parse(drive.pause());
+          break;
+        }
         case 'drive_advance': {
           if (!drive) throw new Error('load a drive preset first');
           if (!Number.isInteger(data.periods) || data.periods < 1 || data.periods > 1000) throw new Error('drive work chunk must be an integer number of periods in 1..1000');

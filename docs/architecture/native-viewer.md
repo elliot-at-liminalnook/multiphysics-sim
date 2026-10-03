@@ -1596,11 +1596,29 @@ definition) against the final code.
   the page's capture-phase handler takes Q/A from the robot viewer the same
   way, and A is the lower jog. *Revisit if* robot mode's steering keys
   change.
-- **Run refused while mirroring.** `robot::actions::check` refuses
-  `Run { Start }` while `RobotView::mirror` is set (`mirror::MIRRORING`).
-  *Why:* the page's `setPlaying` refuses to play while mirroring, and the
-  mirror's poses replace the run's frame. *Revisit if* the mirror is drawn
-  as a second robot instead.
+- **Run, Step and Reset refused while mirroring.** `robot::actions::check`
+  (and `check_planar`) refuse `Run { Start | Step | Reset }` by name while
+  `RobotView::mirror` is set (`mirror::refuse_run`: "Run refused: …",
+  "Step refused: …", "Reset refused: …", each with `mirror::MIRRORING`);
+  Pause stays allowed. The run buttons are dimmed through the same `check`
+  (`robot::scene::highlight`), and a click, `system_ui` and REST
+  `robot_run` all reach it. *Why:* the page's `setPlaying` refuses to play
+  while mirroring, and the mirror's poses replace the run's frame; Step
+  and Reset would advance or rebuild that run too (focus-safety-closure,
+  2026-10-03; by reading, unexecuted). *Revisit if* the mirror is drawn as
+  a second robot instead.
+- **A refused `gait_start` releases the motor** (focus-safety-closure,
+  2026-10-03; a deliberate safety difference from the browser page, which
+  leaves the selected motor held). When the server refuses a Leg or Both
+  gait start after the stop and select, `Session::start_gait` releases the
+  selected motor through the existing STOP request
+  (`session/sequences.rs` `release_after_refused_start`, `Session::stop`)
+  and reports "gait_start refused: …; motor N released" in the panel's gait
+  line and REST `session.gait_notice`. A 200 answer whose gait is not
+  running and carries an error is now treated as a refusal too (it used to
+  read as a started gait). Ledger: `docs/hardware-parity.md` CAL-157,
+  MIR-38. *Why:* AGENTS.md hardware safety: a motor nobody is driving must
+  not stay held. *Revisit if* the user prefers page parity for that case.
 - **Placement: a dock in Robot mode, not a mode.** The dock blocks the
   pointer (`FocusPolicy::Block`) and takes the wheel while open, so nothing
   reaches the inspector under it. *Why:* the mirror and live sync need Robot
@@ -7827,8 +7845,46 @@ and RV-41 to RV-43.
 Goal 4's software steps are complete by reading (unexecuted): RV-01 to
 RV-38 and RV-40 to RV-43. RV-39 (hardware) is a run sheet; the agent never
 drives hardware. Known gaps: the browser path's realtime performance is not
-measured; Build robot runs keep no run record and draw no robot; the web
-node test `web/tests/drive_input.mjs` is not in CI yet.
+measured; Build robot runs keep no run record and draw no robot.
+
+focus-safety-closure (2026-10-03; by reading, unexecuted; traces in
+`docs/rover-checklist.md` "Safety closure"):
+- **One disarm path.** `drive_input::Disarm` (a Message, `DISARM_RULE`) is
+  written by each mode's one apply when it accepts a stop, halt, named
+  action, Pause or Reset from any origin (Robot: `robot::actions::apply`;
+  Build: `builder::system_actions::apply`), in `ViewerSet::Actions`, and
+  read every frame by the one poller (`drive_input::input::devices`,
+  `InputSet::Window`, no `run_if`). A held key, stick or button is ignored
+  until released; if the devices were driving they send one Stop first.
+- **Pause invalidates a live request.** `sim_runtime::drive_host::PAUSE_RULE`:
+  `TwistState::pause` (shared with a replay's end) zeroes the request and
+  expires the deadman, so on resume the profile's on-loss rule runs until a
+  fresh request. Called from Robot's run thread (`Command::Pause` →
+  `Sim::pause_drive`), Build's robot-system run (`RunControl::Pause` →
+  `DriveHost::pause`) and the browser (`setPlaying(false)` → `drive_pause`
+  → `DriveSimulation::pause` → `DriveSession::pause`; a no-op while
+  replaying).
+- **One deadman bound.** `sim_domain_control::drive::kinematics::deadman_bound`
+  (timeout strictly longer than one finite, positive period), called by
+  `drive_geometry::check_deadman` and the `control.drive_limiter` element.
+- **One stated motor ambient.** The parser keeps `motors[i].thermal.ambient_c`,
+  the motor's datasheet rating ambient; `PhysicalModel::motor_ambient(i)`
+  returns it with provenance (else `world.ambient_c`, labelled stated or the
+  parser's 20 °C default). It is the motor unit's resistance and derating
+  reference in the embedded session and the native `PhysicalRobot`, and the
+  value the embedded drive's servo-temperature check uses (its JSON re-read
+  is gone). The thermal network's environment stays `world.ambient_c`.
+  Motor resistance and torque change for models that state a per-motor
+  ambient: gait qualifications need a rerun.
+- **Build `system_state`** carries `bindings` and `drive_input` from the one
+  serializer Robot's `robot_state` uses (`drive_input::insert_state`).
+- **Replay cancel.** Robot's drive replay cancels through the run thread
+  (`jobs::RunThread`, `Command::CancelReplay`), ends Cancelled with
+  "cancelled at n/N seam periods, sim time t s of T s" and leaves no live
+  request. Build mode has no drive replay; its run-history replay cancels
+  through `jobs::Job`.
+- `web/tests/drive_input.mjs` is listed in `.github/workflows/browser.yml`
+  (not yet run).
 
 Earlier history. Written and traced by reading on the wheeled robot: the drive library and
 registry description, the geometry derivation, the golden file (generated),

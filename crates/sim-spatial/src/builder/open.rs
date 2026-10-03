@@ -247,7 +247,10 @@ impl Builder {
         // A live run is kept, not dropped: saved to the old file's runs.
         if self.run.is_some() {
             let time = self.run.as_ref().and_then(|r| r.worker.shared().lock().ok().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time))).unwrap_or(0.);
-            if time >= 0.1 {
+            if self.run.as_ref().is_some_and(|r| r.robot) {
+                // `save_run` refuses robot runs (robot_run::NO_RUN_RECORD): stop it without a save.
+                notes.push(format!("the robot system's run was stopped at t = {time:.3} s (a robot system's run keeps no run record yet)"));
+            } else if time >= 0.1 {
                 match self.save_run("stopped to open another system") {
                     Ok(saved) => notes.push(format!("the live run was stopped and saved as {}", saved.display())),
                     Err(e) => {

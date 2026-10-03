@@ -33,6 +33,10 @@ pub(crate) enum BuildAction {
     Reset,
     /// Advance the paused live run one timestep (`Builder::run_step`).
     Step,
+    /// A robot system's drive request (the run panel's drive buttons and
+    /// `system_ui`; REST `system_drive` makes the same request): applied by
+    /// `Builder::drive`, the one drive apply.
+    Drive { request: sim_runtime::drive_host::DriveRequest },
     Up,
     Level(String),
     Select(String),
@@ -190,6 +194,10 @@ pub(super) fn dispatch(builder: &mut Builder, scene: &mut SpatialScene, orbit: &
         }
         BuildAction::Step => {
             let r = builder.run_step();
+            builder.report(r);
+        }
+        BuildAction::Drive { request } => {
+            let r = builder.drive(request);
             builder.report(r);
         }
         BuildAction::Up => {

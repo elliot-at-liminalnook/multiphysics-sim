@@ -82,21 +82,7 @@ impl TryFrom<wire::Command> for RobotAction {
                 };
                 RobotAction::Motion { request }
             }
-            W::RobotDrive { forward, lateral, yaw, action, stop } => {
-                let axes = forward.is_some() || lateral.is_some() || yaw.is_some();
-                let request = match (axes, action, stop) {
-                    (true, None, None) => DriveRequest::Axes { forward: forward.unwrap_or(0.0), lateral: lateral.unwrap_or(0.0), yaw: yaw.unwrap_or(0.0) },
-                    (false, Some(name), None) => DriveRequest::Action { name },
-                    (false, None, Some(true)) => DriveRequest::Stop,
-                    (false, None, Some(false)) => return Err("robot_drive stop must be true; to drive give forward, lateral or yaw".into()),
-                    (axes, action, stop) => {
-                        let given: Vec<&str> = [(axes, "axes (forward/lateral/yaw)"), (action.is_some(), "action"), (stop.is_some(), "stop")].into_iter().filter(|(on, _)| *on).map(|(_, name)| name).collect();
-                        let given = if given.is_empty() { "none".to_string() } else { given.join(" and ") };
-                        return Err(format!("robot_drive needs exactly one of axes (forward, lateral, yaw: each -1..1), action (a profile action name) or stop: true; given: {given}"));
-                    }
-                };
-                RobotAction::Drive { request }
-            }
+            W::RobotDrive { forward, lateral, yaw, action, stop } => RobotAction::Drive { request: DriveRequest::from_fields(forward, lateral, yaw, action, stop, "robot_drive")? },
             W::RobotSaveRecording { path, note } => RobotAction::SaveRecording { path, note },
             W::RobotReplay { file, path, action } => match (action.as_deref(), file.is_some() || path.is_some()) {
                 (None | Some("start"), _) => RobotAction::Replay { file, path },

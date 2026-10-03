@@ -5,7 +5,8 @@ use std::collections::VecDeque;
 use std::sync::Arc;
 use std::time::Instant;
 use crate::robot::recording;
-use super::controlled::{ControlledRun, TwistState, check_inputs, differences};
+use super::controlled::{ControlledRun, differences};
+use sim_runtime::drive_host::DriveHost;
 use super::frames::environment_names;
 use super::protocol::{Drive, Source};
 use super::sim::Sim;
@@ -168,11 +169,13 @@ pub(super) fn prepare_replay(source: &Source, current: Option<&Sim>, path: &std:
 
 /// Reads `path` as a drive session's `sim_runtime::session::Recording`,
 /// refuses it by name when its controller or robot differs from the loaded
-/// binding's (`controlled::differences`), else rebuilds `Session::new(recorded
-/// scene, recorded seed)` (which starts the controller again) with the
-/// recorded actions to step (recording::DRIVE_REPLAY_RULE).
+/// binding's (`controlled::differences`), else rebuilds the drive host
+/// (`DriveHost::new`: `Session::new(recorded scene, recorded seed)`, which
+/// starts the controller again, with the loaded binding's limits, whose
+/// identity the recording matched) with the recorded actions to step
+/// (recording::DRIVE_REPLAY_RULE).
 fn prepare_drive_replay(run: &Arc<ControlledRun>, path: &std::path::Path, mut state: ReplayState) -> Result<(Sim, ActiveReplay), (String, ReplayState)> {
-    use sim_runtime::session::{Recording, Session};
+    use sim_runtime::session::Recording;
     macro_rules! tryr {
         ($e:expr) => {
             match $e {
@@ -197,11 +200,11 @@ fn prepare_drive_replay(run: &Arc<ControlledRun>, path: &std::path::Path, mut st
         return Err((format!("refused by the drive identity check: {} was recorded with a different controller or robot than {} and its binding {}: {}; a replay must run the loaded robot's controller (restore the recorded script/profile or open the recorded model to replay it)",
             path.display(), run.model_path.display(), run.controlled.binding_path.display(), differ.join("; ")), state));
     }
-    let session = tryr!(Session::new(record.scene, record.seed).map_err(|e| format!("Session::new refused the recorded scene (seed {}): {e}", record.seed)));
-    tryr!(check_inputs(&session.inputs));
+    let seed = record.seed;
+    let host = tryr!(DriveHost::new(record.scene, seed, &run.controlled).map_err(|e| format!("the recorded drive session could not be rebuilt (Session::new with the recorded scene and seed {seed}, then its command inputs): {e}")));
     state.total = Some(record.actions.len() as u64);
     state.unit = Some("seam periods");
-    Ok((Sim::Controlled { session, drive: TwistState::default(), run: run.clone() }, ActiveReplay { state, work: ReplayWork::Drive(record.actions.into()), final_frame, started: Instant::now() }))
+    Ok((Sim::Controlled { host, run: run.clone() }, ActiveReplay { state, work: ReplayWork::Drive(record.actions.into()), final_frame, started: Instant::now() }))
 }
 
 /// The verdict once the work is exhausted (`error` None) or the runtime

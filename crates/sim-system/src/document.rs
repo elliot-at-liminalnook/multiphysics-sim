@@ -40,6 +40,37 @@ pub struct SystemDocument {
     /// The realtime (interactive/browser) profile and its measured error.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub realtime: Option<RealtimeProfile>,
+    /// Hosted instances: a root-definition element whose implementation
+    /// comes from a file, keyed by its instance name (see [`FileLink`] and
+    /// [`HOSTED_TYPES`]). Set with `Command::LinkFile`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub links: BTreeMap<String, FileLink>,
+}
+
+/// A file a hosted instance runs from. A hosted instance's implementation
+/// parameters (the robot's model handle, the external seam's period, the
+/// drive limiter's limits) are never typed into the document: the host reads
+/// them from the linked file at run time, so measured and derived values have
+/// one source. Hosted instances are left out of the flattened model
+/// ([`crate::Flattened::hosted`] lists them) and run on the shared drive host
+/// (`sim_runtime::system_robot`); their nets join only other hosted instances
+/// and are kept as the authored wiring.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FileLink {
+    /// Relative to the system file's directory, `/`-separated; never absolute.
+    pub path: String,
+}
+
+/// The component types an instance can be hosted as, with the file suffix
+/// its link must have: the robot model, its controller binding and its
+/// drive profile.
+pub const HOSTED_TYPES: [(&str, &str); 3] = [("robot.articulated", ".simrobot.json"), ("control.external", ".controller.json"), ("control.drive_limiter", ".drive.json")];
+
+/// The file suffix a hosted instance of `component_type` links to, or None
+/// when that type cannot be hosted.
+pub fn hosted_suffix(component_type: &str) -> Option<&'static str> {
+    HOSTED_TYPES.iter().find(|(t, _)| *t == component_type).map(|(_, s)| *s)
 }
 
 /// How this system runs in realtime: every part's realtime model (notes
@@ -475,7 +506,17 @@ impl SystemDocument {
     pub fn new(title: &str) -> Self {
         let mut definitions = BTreeMap::new();
         definitions.insert("root".to_string(), Definition::new(title));
-        Self { discussions: Default::default(), schema: SCHEMA.into(), title: title.into(), revision: 0, root: "root".into(), definitions, assets: BTreeMap::new(), run: None, studies: BTreeMap::new(), realtime: None }
+        Self { discussions: Default::default(), schema: SCHEMA.into(), title: title.into(), revision: 0, root: "root".into(), definitions, assets: BTreeMap::new(), run: None, studies: BTreeMap::new(), realtime: None, links: BTreeMap::new() }
+    }
+
+    /// The file a root instance is hosted from, when it is linked.
+    pub fn link(&self, instance: &str) -> Option<&FileLink> {
+        self.links.get(instance)
+    }
+
+    /// Whether `instance` of definition `definition` is hosted: links name root instances only.
+    pub fn hosted(&self, definition: &str, instance: &str) -> bool {
+        definition == self.root && self.links.contains_key(instance)
     }
 
     /// Canonical content hash, independent of pretty printing and revision.

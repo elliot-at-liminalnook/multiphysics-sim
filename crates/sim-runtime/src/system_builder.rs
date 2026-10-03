@@ -77,6 +77,21 @@ pub fn compile(document: &SystemDocument, registry: &BehaviorRegistry, config: S
     Ok(Compiled { flat, description, spatial, animation, launch })
 }
 
+/// The one guard every host runs before it starts a `SystemSession` from a
+/// compiled document: hosted instances (`SystemDocument::links`) are not in
+/// the flattened model, so running it would simulate a different (partial)
+/// system. A robot system runs on the shared drive host instead
+/// (`crate::system_robot`, Build mode's Run).
+pub fn check_hosted(flat: &Flattened) -> Result<(), String> {
+    if flat.hosted.is_empty() {
+        return Ok(());
+    }
+    Err(format!(
+        "this system hosts {} (linked to files); hosted instances run on the shared drive host (sim_runtime::system_robot, Build mode's Run in the native viewer), not the system session, so this host cannot run it",
+        flat.hosted.iter().map(|(name, h)| format!("`{name}` ({})", h.component_type)).collect::<Vec<_>>().join(", ")
+    ))
+}
+
 /// Display bindings for a compiled system; see [`crate::system_display`].
 pub fn animation(description: &SystemDescription, spatial: &SpatialDescription) -> Option<AnimationDescription> {
     crate::system_display::animation(description, spatial)
@@ -127,7 +142,18 @@ pub struct Bundle {
     pub live: PathBuf,
 }
 
+/// Refused for a system with hosted instances ([`check_hosted`]): its live
+/// capture (the `Launch` a viewer's system session runs) would be a partial
+/// model, so none is written and a stale one from before the link is removed.
 pub fn write_bundle(compiled: &Compiled, directory: &Path, stem: &str) -> Result<Bundle, String> {
+    if let Err(e) = check_hosted(&compiled.flat) {
+        let stale = directory.join(format!("{stem}.live.json"));
+        match std::fs::remove_file(&stale) {
+            Ok(()) => return Err(format!("{e}; removed the stale live bundle {}", stale.display())),
+            Err(r) if r.kind() == std::io::ErrorKind::NotFound => return Err(e),
+            Err(r) => return Err(format!("{e}; the stale live bundle {} could not be removed: {r}", stale.display())),
+        }
+    }
     std::fs::create_dir_all(directory).map_err(|e| e.to_string())?;
     fn write<T: Serialize>(directory: &Path, name: String, value: &T) -> Result<PathBuf, String> {
         let path = directory.join(name);
@@ -178,6 +204,7 @@ pub const CANCELLED: &str = "cancelled";
 /// [`CANCELLED`].
 pub fn simulate_cancellable(document: &SystemDocument, registry: &BehaviorRegistry, duration: f64, config: SessionConfig, select: &[String], cancel: Option<&std::sync::atomic::AtomicBool>) -> Result<Vec<Series>, String> {
     let compiled = compile(document, registry, config.clone())?;
+    check_hosted(&compiled.flat)?;
     let source = ModelSource {
         model: compiled.flat.model.clone(),
         registry: registry.clone(),

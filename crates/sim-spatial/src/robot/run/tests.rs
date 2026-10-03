@@ -592,11 +592,13 @@ fn measure_full_robot_preset() {
 }
 
 mod drive {
-    //! The drive session's pure parts (no Python process is started here):
-    //! TwistState through Command::Twist's rules, the deadman on sim time,
-    //! halt, the drained command batch, the end of a replay, the
-    //! not-running refusal, and the replay identity refusal.
-    use super::super::controlled::{ControlledRun, TwistState, differences};
+    //! The drive session's parts that need the run thread's protocol (no
+    //! Python process is started here): the drained command batch through
+    //! TwistState, the not-running refusal, and the replay identity refusal.
+    //! TwistState's own rules (requests, the deadman on sim time, halt, the
+    //! end of a replay) are tested with it in `sim_runtime::drive_host`.
+    use super::super::controlled::{ControlledRun, differences};
+    use sim_runtime::drive_host::TwistState;
     use super::super::replay::{ReplayPhase, ReplayState, prepare_replay};
     use super::super::Source;
     use sim_domain_control::drive::kinematics::{BodyTwist, Deadman, Limits, OnLoss};
@@ -608,76 +610,6 @@ mod drive {
     }
     fn ramp() -> Deadman {
         Deadman { timeout_s: 0.5, on_loss: OnLoss::Ramp { decel: [1.2, 1.2, 12.0] } }
-    }
-
-    #[test]
-    fn twist_requests_raise_the_heartbeat_and_are_limited_on_sim_time() {
-        let (l, d) = (limits(), ramp());
-        let mut s = TwistState::default();
-        // Before any request: zero request at t = 0, heartbeat 0.
-        assert_eq!(s.advance(0.0, PERIOD, &l, &d).unwrap(), [0.0, 0.0, 0.0, 0.0]);
-        s.request(BodyTwist::new(0.3, 0.0, 1.0), false, PERIOD, &l).unwrap();
-        assert_eq!((s.heartbeat, s.last_request_s), (1, PERIOD));
-        // One period moves each axis by at most max_accel × period.
-        let a = s.advance(PERIOD, PERIOD, &l, &d).unwrap();
-        assert!((a[0] - 0.6 * PERIOD).abs() < 1e-12 && (a[2] - 6.0 * PERIOD).abs() < 1e-12 && a[1] == 0.0 && a[3] == 1.0, "{a:?}");
-        // Fresh requests keep the deadman alive; the twist reaches the request and never exceeds the profile.
-        let mut t = 2.0 * PERIOD;
-        for _ in 0..40 {
-            s.request(BodyTwist::new(0.3, 0.0, 1.0), false, t, &l).unwrap();
-            let a = s.advance(t, PERIOD, &l, &d).unwrap();
-            assert!(a[0] <= 0.3 && a[2] <= 3.0 && !s.expired, "{a:?}");
-            t += PERIOD;
-        }
-        assert_eq!((s.commanded.forward_m_s, s.commanded.yaw_rad_s), (0.3, 1.0));
-        assert_eq!(s.heartbeat, 41);
-        // Refused by name, with no heartbeat change: an unsupported axis and a speed beyond the profile.
-        let e = s.request(BodyTwist::new(0.0, 0.1, 0.0), false, t, &l).unwrap_err();
-        assert!(e.contains("lateral") && e.contains("not supported"), "{e}");
-        let e = s.request(BodyTwist::new(0.31, 0.0, 0.0), false, t, &l).unwrap_err();
-        assert!(e.contains("forward") && e.contains("0.3"), "{e}");
-        assert!(s.request(BodyTwist::new(f64::NAN, 0.0, 0.0), false, t, &l).unwrap_err().contains("finite"));
-        assert_eq!(s.heartbeat, 41);
-    }
-
-    #[test]
-    fn the_deadman_expires_on_sim_time_without_fresh_requests() {
-        let l = limits();
-        let mut s = TwistState { commanded: BodyTwist::new(0.3, 0.0, 0.0), request: BodyTwist::new(0.3, 0.0, 0.0), heartbeat: 7, ..TwistState::default() };
-        // Ramp: live until age 0.5 s (exclusive), then the request is ignored and the twist ramps down at stop_decel.
-        let mut t = 0.0;
-        while t < 0.5 - 1e-9 {
-            s.advance(t, PERIOD, &l, &ramp()).unwrap();
-            assert!(!s.expired && s.commanded.forward_m_s == 0.3, "t = {t}");
-            t += PERIOD;
-        }
-        let a = s.advance(0.5, PERIOD, &l, &ramp()).unwrap();
-        assert!(s.expired && (a[0] - (0.3 - 1.2 * PERIOD)).abs() < 1e-12, "{a:?}");
-        assert_eq!(a[3], 7.0, "the heartbeat does not change without a request");
-        // Pausing passes no sim time: the status age is frozen at the last period's time.
-        assert!((s.status(0.5).age_s - 0.5).abs() < 1e-12);
-        // Immediate: zero at once.
-        let mut s = TwistState { commanded: BodyTwist::new(0.3, 0.0, 0.0), request: BodyTwist::new(0.3, 0.0, 0.0), ..TwistState::default() };
-        let a = s.advance(0.6, PERIOD, &l, &Deadman { timeout_s: 0.5, on_loss: OnLoss::Immediate }).unwrap();
-        assert!(s.expired && a[..3] == [0.0, 0.0, 0.0]);
-        // A fresh request revives it.
-        s.request(BodyTwist::new(0.1, 0.0, 0.0), false, 0.62, &l).unwrap();
-        s.advance(0.62, PERIOD, &l, &ramp()).unwrap();
-        assert!(!s.expired && s.commanded.forward_m_s > 0.0);
-    }
-
-    #[test]
-    fn halt_zeroes_the_request_and_the_commanded_twist_at_once() {
-        let (l, d) = (limits(), ramp());
-        let mut s = TwistState { commanded: BodyTwist::new(0.3, 0.0, 2.0), request: BodyTwist::new(0.3, 0.0, 2.0), heartbeat: 3, ..TwistState::default() };
-        s.request(BodyTwist::ZERO, true, 1.0, &l).unwrap();
-        assert_eq!((s.request, s.commanded, s.heartbeat, s.halted), (BodyTwist::ZERO, BodyTwist::ZERO, 4, true));
-        assert_eq!(s.advance(1.0, PERIOD, &l, &d).unwrap(), [0.0, 0.0, 0.0, 4.0]);
-        // A stop (not a halt) only requests zero: the twist ramps down under max_accel.
-        let mut s = TwistState { commanded: BodyTwist::new(0.3, 0.0, 0.0), request: BodyTwist::new(0.3, 0.0, 0.0), ..TwistState::default() };
-        s.request(BodyTwist::ZERO, false, 0.0, &l).unwrap();
-        let a = s.advance(0.0, PERIOD, &l, &d).unwrap();
-        assert!((a[0] - (0.3 - 0.6 * PERIOD)).abs() < 1e-12 && !s.halted, "{a:?}");
     }
 
     #[test]
@@ -715,28 +647,6 @@ mod drive {
         assert!(batch.len() == 1 && matches!(batch[0], Command::Step) && closed);
         assert!(drain(&rx, true).is_none());
         assert!(drain(&rx, false).is_some_and(|(b, closed)| b.is_empty() && closed));
-    }
-
-    #[test]
-    fn a_finished_drive_replay_leaves_no_request_driving() {
-        let (l, d) = (limits(), ramp());
-        let mut s = TwistState::default();
-        // Recorded periods starting at 0 and PERIOD; a new heartbeat is stamped at its period's start, like a live request.
-        s.replayed(&[0.3, 0.0, 1.0, 1.0], 0.0);
-        assert_eq!((s.last_request_s, s.heartbeat, s.request, s.periods), (0.0, 1, BodyTwist::new(0.3, 0.0, 1.0), 1));
-        s.replayed(&[0.3, 0.0, 1.0, 1.0], PERIOD);
-        assert_eq!(s.last_request_s, 0.0, "the same heartbeat is no fresh request");
-        // The replay ends at 2 × PERIOD: no request, the deadman counts as expired; heartbeat and periods are kept.
-        s.replay_ended(2.0 * PERIOD, &d);
-        assert!(s.request.is_zero() && s.expired && !s.halted && s.heartbeat == 1 && s.periods == 2, "{s:?}");
-        assert!(s.status(2.0 * PERIOD).age_s >= d.timeout_s);
-        // The next live period (Run after the replay) ramps down at stop_decel instead of driving the last recorded twist.
-        let a = s.advance(2.0 * PERIOD, PERIOD, &l, &d).unwrap();
-        assert!(s.expired && (a[0] - (0.3 - 1.2 * PERIOD)).abs() < 1e-12 && (a[2] - (1.0 - 12.0 * PERIOD)).abs() < 1e-12, "{a:?}");
-        // A fresh request drives again.
-        s.request(BodyTwist::new(0.3, 0.0, 0.0), false, 3.0 * PERIOD, &l).unwrap();
-        s.advance(3.0 * PERIOD, PERIOD, &l, &d).unwrap();
-        assert!(!s.expired && s.heartbeat == 2);
     }
 
     /// The example binding (no Python process: the binding, profile and script are only read and hashed).

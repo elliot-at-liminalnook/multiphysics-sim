@@ -8,7 +8,8 @@ use crate::robot::motion::{self, Motion, MotionChannel};
 use crate::robot::preset::PresetRun;
 use crate::robot::recording::Saved;
 use sim_domain_control::drive::kinematics::BodyTwist;
-use super::controlled::{ControlledRun, DriveStatus};
+use super::controlled::ControlledRun;
+use sim_runtime::drive_host::DriveStatus;
 use super::{CHUNK_S, Frame, OverlayFlags, ReplayState};
 
 #[derive(Clone, Copy, Serialize, Debug, PartialEq, Eq)]

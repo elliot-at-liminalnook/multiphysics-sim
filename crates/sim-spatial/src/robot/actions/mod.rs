@@ -7,8 +7,7 @@ use crate::app::actions::{self, Act, InFlight, Origin, Replies};
 use crate::robot::run::SPEED_SCALES;
 use bevy::ecs::message::Messages;
 use sim_api::Outcome;
-use sim_domain_control::drive::kinematics::{self, Axes, BodyTwist};
-use sim_domain_control::drive::profile::ActionRequest;
+use sim_domain_control::drive::kinematics::BodyTwist;
 
 /// Every intent of robot mode: the buttons and keys carry these values,
 /// `system_ui` lists them (the `action` of each control, serialized as
@@ -91,20 +90,10 @@ pub(crate) enum RobotAction {
     Drive { request: DriveRequest },
 }
 
-/// What a drive request asks for. Axes are normalized (-1..1) and scaled by
-/// the robot's profile ([`kinematics::scale`]), so a twist outside the
-/// profile cannot be requested; actions are the profile's, by name.
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "snake_case")]
-pub(crate) enum DriveRequest {
-    /// Normalized axes: forward (+ ahead), lateral (+ left), yaw (+ turn left, CCW).
-    Axes { forward: f64, lateral: f64, yaw: f64 },
-    /// One of the profile's named actions (`stop`: zero twist under the
-    /// acceleration limit; `halt`: zero at once).
-    Action { name: String },
-    /// Request a zero twist (approached under the profile's acceleration limit).
-    Stop,
-}
+/// What a drive request asks for: the shared vocabulary (normalized axes, a
+/// profile action, stop) Build mode's robot systems use too, interpreted
+/// against the robot's profile by `DriveRequest::interpret`.
+pub(crate) use sim_runtime::drive_host::DriveRequest;
 
 /// How a drive request's refusal for a run without a drive profile starts;
 /// the run's own reason follows (`RunController::check_drive`: no binding
@@ -114,24 +103,16 @@ pub(crate) const NOT_CONTROLLED: &str = "this robot has no drive profile";
 const PLANAR_DRIVE: &str = "drive (robot_drive, drive:*) is refused for a planar v2 file: it has no controller binding or sim.drive/1 profile";
 
 /// The twist a drive request asks the run thread for, and whether it is a
-/// halt (zero at once): the one place a drive request is interpreted, for
-/// [`check`] and `dispatch` alike.
+/// halt (zero at once): the shared interpretation (`DriveRequest::interpret`,
+/// the same one Build mode's robot systems use) against the run's binding,
+/// with this mode's refusal for a run without one; for [`check`] and
+/// `dispatch` alike.
 fn drive_request(run: &RunController, request: &DriveRequest) -> Result<(BodyTwist, bool), String> {
     let c = run.controlled().ok_or_else(|| match run.check_drive() {
         Err(why) => format!("{NOT_CONTROLLED}; {why}"),
         Ok(()) => format!("{NOT_CONTROLLED}; driving needs a controller binding (<model stem>.controller.json beside the model) naming a sim.drive/1 profile"),
     })?;
-    match request {
-        DriveRequest::Axes { forward, lateral, yaw } => {
-            let twist = kinematics::scale(Axes { forward: *forward, lateral: *lateral, yaw: *yaw }, &c.controlled.resolved.limits()).map_err(|e| format!("drive request refused: {e} (profile {})", c.controlled.resolved.profile))?;
-            Ok((twist, false))
-        }
-        DriveRequest::Action { name } => match c.controlled.profile.action(name)?.request {
-            ActionRequest::Stop => Ok((BodyTwist::ZERO, false)),
-            ActionRequest::Halt => Ok((BodyTwist::ZERO, true)),
-        },
-        DriveRequest::Stop => Ok((BodyTwist::ZERO, false)),
-    }
+    request.interpret(&c.controlled)
 }
 
 /// The action that flips one overlay from its current requested value.

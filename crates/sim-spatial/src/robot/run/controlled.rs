@@ -5,13 +5,15 @@
 //! program and attaches it on the model's `control.external` seam) and
 //! feeds it, once per seam period, the twist the shared drive limiter
 //! (`kinematics::step`, on sim time) allows plus the request heartbeat
-//! ([`TwistState`]). The UI side asks through `RunController::drive` and
-//! reads [`DriveStatus`] and `drive_json`.
+//! (`sim_runtime::drive_host::DriveHost`, the one place a driven session is
+//! stepped, shared with Build mode's robot systems). The UI side asks through
+//! `RunController::drive` and reads `DriveStatus` and `drive_json`.
 use serde_json::{Value, json};
-use sim_domain_control::drive::kinematics::{self, ACCEL_UNITS, AXIS_NAMES, BodyTwist, Deadman, Limits, SPEED_UNITS};
+use sim_domain_control::drive::kinematics::{self, ACCEL_UNITS, AXIS_NAMES, BodyTwist, Limits, SPEED_UNITS};
 use sim_domain_robot::PhysicalModel;
 use sim_runtime::controller_binding::{COMMAND_CHANNELS, ControlledRobot};
-use sim_runtime::session::{ExternalProgram, InputChannel, Scene};
+use sim_runtime::drive_host::{DriveStatus, twist_json};
+use sim_runtime::session::{ExternalProgram, Scene};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use super::{Phase, RunController};
@@ -28,9 +30,6 @@ pub const SEED_RULE: &str = "a --robot FILE drive session is built with seed 0 (
 pub const DRIVE_FIDELITY: &str = "the --robot FILE's PhysicalModel run by sim_runtime::session::Session: sim_runtime::physical::PhysicalRobot (shared registry, BuildOptions::default()) on the run thread, with the external controller (Python, simloop) attached on the model's control.external seam at the model's control period; the physics is the model file's (provenance as the file declares it; uncalibrated where it says so); the drive limiter and deadman run on sim time on the run thread and the controller applies its own (idempotent) limiter, deadman and wheel mixer";
 pub const DEADMAN_RULE: &str = "the deadman counts simulation time since the last fresh drive request (each request raises command.heartbeat by one); a request older than the profile's timeout_s is lost and the stop rule applies (ramp at stop_decel, or immediate). While paused no simulation time passes, so the deadman cannot expire while paused; a held input must keep sending requests (each one is a fresh request) or the robot stops after timeout_s of simulated time. The viewer re-sends a held input once per frame, so at speed scale s and frame rate f a held input is refreshed every s/f simulated seconds: below f = s / timeout_s frames per second (16 fps at ×8 with timeout_s 0.5 s, 2 fps at ×1) the deadman can expire between frames and the robot stutters (stops and restarts) although the input is held. When the run thread is compute-limited it advances less simulated time per frame, which shortens that interval. A replay's recorded requests are not live: when a drive replay ends the request is zero and the deadman counts as expired, so the next Run stops the robot until a fresh request arrives";
 pub const DRIVE_RULE: &str = "requests are body twists (forward m/s, lateral m/s, yaw rad/s) checked against the profile (kinematics::check_twist) on the UI thread and again on the run thread; once per seam period the run thread sends the limited twist (kinematics::step: acceleration limit, deadman on sim time) and the heartbeat on the four command channels; halt zeroes the request and the commanded twist at once. A nonzero request moves the robot only while it runs: it is refused while idle, paused, building before Run, failed or ended (it would otherwise wait with no age, since no simulation time passes, and drive the robot at the next Run with no input); a zero request (stop) or a halt is accepted in every phase that is not failed or ended, and one made before the first build is applied right after it (the newest one wins). The run thread applies every queued command in order before each seam period, so the newest request (a release, stop or halt included) governs the next period however far the run thread has fallen behind.";
-/// Largest heartbeat the `command.heartbeat` channel carries (2^53, exact in
-/// f64): the runtime's own bound on that input (`controller_binding::HEARTBEAT_MAX`), as an integer.
-pub const HEARTBEAT_MAX: u64 = sim_runtime::controller_binding::HEARTBEAT_MAX as u64;
 /// Why a nonzero drive request is refused while the run is not running ([`DRIVE_RULE`]).
 pub const NOT_RUNNING: &str = "drive requests move the robot only while it runs; press Run (the Run button, or REST robot_run start) first (a stop or halt is accepted while paused)";
 
@@ -66,145 +65,10 @@ impl ControlledRun {
     pub fn limits(&self) -> Limits {
         self.controlled.resolved.limits()
     }
-    pub fn deadman(&self) -> Deadman {
-        self.controlled.resolved.deadman()
-    }
     /// The scene's external program (what Session::new starts).
     pub fn external(&self) -> Option<&ExternalProgram> {
         self.scene.controller.as_ref().and_then(|c| c.external.as_ref())
     }
-}
-
-/// Session inputs must be exactly the four command channels, in order, or the actions below would be misassigned.
-pub(super) fn check_inputs(inputs: &[InputChannel]) -> Result<(), String> {
-    if inputs.iter().map(|c| c.name.as_str()).eq(COMMAND_CHANNELS) {
-        Ok(())
-    } else {
-        Err(format!("the drive session's command inputs are [{}]; the run thread sends [{}] (controller_binding::COMMAND_CHANNELS)", inputs.iter().map(|c| c.name.as_str()).collect::<Vec<_>>().join(", "), COMMAND_CHANNELS.join(", ")))
-    }
-}
-
-/// The run thread's drive state: the latest request, the limited twist it
-/// commanded and the heartbeat. Pure (no session), so it is unit-tested alone.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct TwistState {
-    pub request: BodyTwist,
-    pub commanded: BodyTwist,
-    /// Sim time (s) of the last fresh request (0 before any: the zero request at t = 0).
-    pub last_request_s: f64,
-    /// Fresh requests so far (`command.heartbeat`).
-    pub heartbeat: u64,
-    /// The last period's deadman verdict.
-    pub expired: bool,
-    /// The last request was a halt.
-    pub halted: bool,
-    /// The action last sent: `[forward, lateral, yaw, heartbeat]` (COMMAND_CHANNELS order).
-    pub sent: [f64; 4],
-    /// Seam periods stepped since the build.
-    pub periods: u64,
-}
-impl Default for TwistState {
-    fn default() -> Self {
-        Self { request: BodyTwist::ZERO, commanded: BodyTwist::ZERO, last_request_s: 0.0, heartbeat: 0, expired: false, halted: false, sent: [0.0; 4], periods: 0 }
-    }
-}
-impl TwistState {
-    /// A fresh request at sim time `now_s` (`Command::Twist`): checked against
-    /// the profile, heartbeat + 1; a halt zeroes the request and the commanded twist at once.
-    pub fn request(&mut self, request: BodyTwist, halt: bool, now_s: f64, limits: &Limits) -> Result<(), String> {
-        kinematics::check_twist(request, limits).map_err(|e| format!("drive request refused: {e}"))?;
-        if !now_s.is_finite() {
-            return Err(format!("drive request refused: the simulation time {now_s} is not finite"));
-        }
-        if self.heartbeat >= HEARTBEAT_MAX {
-            return Err(format!("drive request refused: command.heartbeat is exhausted at {HEARTBEAT_MAX}; Reset starts a new session"));
-        }
-        self.heartbeat += 1;
-        self.last_request_s = now_s;
-        self.halted = halt;
-        if halt {
-            self.request = BodyTwist::ZERO;
-            self.commanded = BodyTwist::ZERO;
-        } else {
-            self.request = request;
-        }
-        Ok(())
-    }
-    /// One seam period starting at sim time `now_s`: the shared rule
-    /// (`kinematics::step` with age = now − last request) and the action to
-    /// send. The result is clamped into ±max_speed (0 on an unsupported axis):
-    /// mathematically a no-op, it removes the rounding of `p + (r − p)` that
-    /// could otherwise exceed the session's input bounds by one ulp.
-    pub fn advance(&mut self, now_s: f64, period_s: f64, limits: &Limits, deadman: &Deadman) -> Result<[f64; 4], String> {
-        let age = now_s - self.last_request_s;
-        let c = kinematics::step(self.commanded, self.request, period_s, age, limits, deadman).map_err(|e| format!("drive limiter at t = {now_s:.3} s: {e}"))?;
-        let t = c.twist.to_array();
-        let bounded: [f64; 3] = std::array::from_fn(|i| if limits.supported[i] { t[i].max(-limits.max_speed[i]).min(limits.max_speed[i]) } else { 0.0 });
-        self.commanded = BodyTwist::from_array(bounded);
-        self.expired = c.expired;
-        self.sent = [bounded[0], bounded[1], bounded[2], self.heartbeat as f64];
-        self.periods += 1;
-        Ok(self.sent)
-    }
-    /// A recorded action re-sent by a replay: the state shows what was sent
-    /// (the original request is not in the recording, so it is shown as the
-    /// commanded twist). Called after the period stepped, with `now_s` the
-    /// sim time at the START of that period: a live request is stamped with
-    /// the time the next period starts at, so a replayed one is too.
-    pub fn replayed(&mut self, action: &[f64], now_s: f64) {
-        let at = |i: usize| action.get(i).copied().unwrap_or(0.0);
-        let twist = BodyTwist::new(at(0), at(1), at(2));
-        let heartbeat = at(3).max(0.0) as u64;
-        if heartbeat != self.heartbeat || self.periods == 0 {
-            self.last_request_s = now_s;
-        }
-        (self.request, self.commanded, self.heartbeat, self.halted) = (twist, twist, heartbeat, false);
-        self.sent = [at(0), at(1), at(2), at(3)];
-        self.periods += 1;
-    }
-    /// A drive replay ended (finished, failed or cancelled) at sim time
-    /// `now_s`: the recorded requests were not live, so nothing may keep
-    /// driving after it. The request is zero and the deadman counts as
-    /// expired (the last request is stamped 2 × timeout_s before `now_s`, so
-    /// the next period's age is past the timeout without relying on rounding
-    /// at exactly timeout_s): the next Run ramps the commanded twist to zero
-    /// by the stop rule until a fresh request arrives. The heartbeat and
-    /// periods are kept (they count what the session received).
-    pub fn replay_ended(&mut self, now_s: f64, deadman: &Deadman) {
-        self.request = BodyTwist::ZERO;
-        self.halted = false;
-        self.expired = true;
-        self.last_request_s = self.last_request_s.min(now_s - 2.0 * deadman.timeout_s);
-    }
-    pub fn status(&self, time_s: f64) -> DriveStatus {
-        DriveStatus { request: self.request, commanded: self.commanded, heartbeat: self.heartbeat, age_s: time_s - self.last_request_s, expired: self.expired, halted: self.halted, time_s, periods: self.periods }
-    }
-}
-
-/// What the run thread publishes about the drive, each chunk and after each request.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct DriveStatus {
-    pub request: BodyTwist,
-    pub commanded: BodyTwist,
-    pub heartbeat: u64,
-    /// Sim seconds since the last fresh request.
-    pub age_s: f64,
-    /// The deadman expired at the last period.
-    pub expired: bool,
-    pub halted: bool,
-    /// Sim time (s) of this status.
-    pub time_s: f64,
-    pub periods: u64,
-}
-impl DriveStatus {
-    pub fn json(&self) -> Value {
-        json!({"request": twist_json(self.request), "commanded": twist_json(self.commanded), "heartbeat": self.heartbeat, "age_s": self.age_s,
-            "expired": self.expired, "halted": self.halted, "time_s": self.time_s, "periods": self.periods})
-    }
-}
-/// A twist with its units.
-pub fn twist_json(t: BodyTwist) -> Value {
-    json!({"forward_m_s": t.forward_m_s, "lateral_m_s": t.lateral_m_s, "yaw_rad_s": t.yaw_rad_s})
 }
 
 /// The resolved drive the host handed the controller (the trailing `--drive-json <json>`), parsed.

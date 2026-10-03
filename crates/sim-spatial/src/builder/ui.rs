@@ -195,9 +195,22 @@ fn toolbar(commands: &mut Commands, k: &Kit, b: &Builder, selected: &BTreeSet<St
                 right.spawn(divider());
                 if b.run.is_some() {
                     right.spawn(k.caption(format!("t = {time:.3} s   {speed:.2}x real time")));
-                    right.spawn(k.button("Save run", BuildAction::SaveRun, Look::Ghost, true));
+                    // A robot system's run keeps no run record (`robot_run::NO_RUN_RECORD`).
+                    if !b.run.as_ref().is_some_and(|r| r.robot) {
+                        right.spawn(k.button("Save run", BuildAction::SaveRun, Look::Ghost, true));
+                    }
                     right.spawn(k.button("Reset", BuildAction::Reset, Look::Ghost, true));
                     right.spawn(k.button("Step", BuildAction::Step, Look::Ghost, !running));
+                }
+                // A robot system's run: one full-axis drive request per press (the profile's
+                // deadman stops it unless repeated), and Stop; the same apply as REST system_drive.
+                if b.run.as_ref().is_some_and(|r| r.robot) {
+                    right.spawn(divider());
+                    let axes = |forward: f64, yaw: f64| BuildAction::Drive { request: sim_runtime::drive_host::DriveRequest::Axes { forward, lateral: 0.0, yaw } };
+                    for (label, action) in [("Forward", axes(1.0, 0.0)), ("Back", axes(-1.0, 0.0)), ("Left", axes(0.0, 1.0)), ("Right", axes(0.0, -1.0))] {
+                        right.spawn(k.button(label, action, Look::Ghost, running));
+                    }
+                    right.spawn(k.button("Stop", BuildAction::Drive { request: sim_runtime::drive_host::DriveRequest::Stop }, Look::Danger, true));
                 }
                 if running {
                     right.spawn(k.button("Pause", BuildAction::Pause, Look::Secondary, true));

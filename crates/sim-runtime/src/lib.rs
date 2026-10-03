@@ -33,6 +33,11 @@ pub mod contact_implicit;
 pub mod configuration_inspection;
 /// A model's bound external controller and drive profile (`<stem>.controller.json`).
 pub mod controller_binding;
+/// The one place a driven session is stepped: twist requests, the shared limiter and deadman on sim time, `Session::step`.
+pub mod drive_host;
+/// A system file's hosted robot (linked robot, controller binding and drive profile) resolved for the drive host (native only: reads files).
+#[cfg(not(target_arch = "wasm32"))]
+pub mod system_robot;
 pub mod kinematic_mirror;
 pub mod system_inspection;
 pub mod system_session;

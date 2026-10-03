@@ -4776,7 +4776,14 @@ another crate.
   latest-wins. Leaving CAD is refused while an export runs or is queued.
   *Why:* a job can be cancelled before the write and reports progress;
   RoboCAD's `path=` would write from inside RoboCAD with no cancel.
-  *Revisit if* RoboCAD's export becomes cancellable.
+  *Revisit if* RoboCAD's export becomes cancellable. Since rover-rest-flow
+  (by reading, unexecuted): a third kind, `rigid` (`GET /physical?flex=0`,
+  the fixture scripts' model; `ExportKind::Rigid`); the job stamps
+  `source.cad_sha256` only when RoboCAD's document is the saved, absolute,
+  unchanged file for the whole export (`cad_client::stamp_saved_source`),
+  else it records why not; each export has a `seq`, and outcomes land in
+  `cad_state.results.exports.last` and the bounded `recent`
+  (`docs/rover-checklist.md` RV-03).
 - **Live link in the app.** `cad/results/link.rs`: no process is started;
   the first written export switches this window to Robot mode
   (`WindowAction::Switch`), later saves re-export and bump the registry's
@@ -7717,6 +7724,30 @@ counter-clockwise.
   Python unittest reads it. This was the one executed step of the batch.
 - *Hardware.* Not driven. The same resolved drive and controller can run on
   a hardware host later; the twist path there is documented only (RV-39).
+- *One stepped drive session, shared (rover-rest-flow).* `TwistState`,
+  `DriveStatus`, `twist_json`, `check_inputs`, `HEARTBEAT_MAX` and the
+  request vocabulary `DriveRequest` (with `from_fields` for REST and
+  `interpret` against a profile) live in `sim_runtime::drive_host`, beside
+  `DriveHost` (the `Session` plus its `TwistState`): the one place a driven
+  session is stepped. Robot mode's run thread (`Sim::Controlled { host }`)
+  and Build mode's robot-system run thread both own a `DriveHost`.
+- *Build mode hosts the robot on `DriveHost`, not `SystemSession`.*
+  `SystemSession` runs `Runtime::advance`, which would skip
+  `PhysicalRobot::advance`'s slice retry and battery sampling: a second
+  stepping path for the same robot. A system file instead hosts root
+  instances from files (`SystemDocument::links`, `Command::LinkFile`): a
+  `robot.articulated` linked to the `.simrobot.json`, a `control.external`
+  linked to the robot's own `<stem>.controller.json` and optionally a
+  `control.drive_limiter` linked to the `.drive.json` that binding names.
+  Their parameters come from those files only; the document may give only
+  the controller's `sense.command.<axis>` port members, and the only
+  wiring is `limiter.twist.<axis> → controller.sense.command.<axis>`
+  (`sim_runtime::system_robot::resolve`). Hosted instances are left out of
+  the flattened model, and every `SystemSession` host refuses a document
+  that has them (`system_builder::check_hosted`), so nothing runs a partial
+  model. Rejected: a parallel binding format inside the system file (the
+  binding file beside the model stays the one source, as Robot mode finds
+  it), and attaching the external controller to `SystemSession`.
 
 ### Where it is today
 
@@ -7725,9 +7756,16 @@ registry description, the geometry derivation, the golden file (generated),
 the Python port and the rover controller, the runtime's external program and
 binding loader, the Robot-mode run thread, recording and replay, the bindings
 and their settings group, the one drive action with keyboard, gamepad,
-`system_ui` and REST `robot_drive`, and the inspector's Drive block. Not
-compiled, not run. Next (rover-rest-flow): the rover built over CAD REST,
-rigging and annotation, systems-editor wiring and the Build-mode
-`SystemSession` attachment, browser driving (the browser cannot host a Python
-process; its controller path needs a decision) and the committed example
-script.
+`system_ui` and REST `robot_drive`, and the inspector's Drive block. Added by
+rover-rest-flow: the shared `sim_runtime::drive_host`; Build mode's robot
+system (linked files, `link_file`, a live run on `DriveHost`, REST
+`system_drive` and the run panel's Forward, Back, Left, Right and Stop
+buttons; no keyboard or gamepad in Build mode, no run record and no robot
+drawing for that run yet); the CAD export's `rigid` kind, `cad_sha256`
+stamping and `seq`/`recent`; and the committed script
+`clients/python/examples/build_rover_over_rest.py`, which builds the rover
+over CAD REST, rigs and annotates it, wires and drives it in Build mode and
+drives it in Robot mode. None of it compiled or run: all by reading,
+unexecuted. Traces: `docs/rover-checklist.md` RV-01 to RV-07 and RV-40.
+Next (rover-browser-drive): browser driving. The browser cannot host a
+Python process, so its controller path needs a decision (RV-38).

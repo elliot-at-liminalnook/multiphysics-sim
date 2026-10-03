@@ -61,9 +61,10 @@ pub(crate) struct Running {
     /// Whole seconds last shown in the status line.
     pub shown: u64,
     pub cancel_requested: bool,
-    /// The shown revision when it started: RoboCAD exports its document as
-    /// it is when the request arrives, so an edit made while the export
-    /// runs is not in the file ([`poll`] says so when it lands).
+    /// The revision the viewer showed when the export was asked for. RoboCAD
+    /// builds the model from its document when the request arrives, which is
+    /// not known here, so this only tells [`poll`] that the document changed
+    /// while the export ran (later edits may then not be in the file).
     pub revision: u64,
 }
 
@@ -254,16 +255,27 @@ pub(crate) fn poll(doc: &mut CadDocument) -> Option<Landed> {
             if !same_document {
                 message.push_str("; it was exported from the document as it was before CAD mode reconnected or opened another one, so Robot mode does not follow it");
             } else if revision != now {
-                message.push_str(&format!("; it holds the document at revision {revision}, when the export started: the document changed while it ran (now revision {now})"));
+                message.push_str(&format!("; the export started at revision {revision} and the document changed while it ran (now revision {now}), so later edits may not be in it"));
             }
             doc.show(Ok(message.clone()));
             doc.results.exports.last = Some((label, path.clone(), Ok(message)));
-            doc.results.exports.written = Some(path.clone());
-            same_document.then_some(Landed { path, link: request.link })
+            // Only this document's model is what "Show in Robot mode" opens
+            // (`link::shown_model`); an older one's leaves the previous model.
+            if same_document {
+                doc.results.exports.written = Some(path.clone());
+                Some(Landed { path, link: request.link })
+            } else {
+                None
+            }
         }
-        // A cancel that arrived before publication: nothing was written (RoboCAD's "{label} export cancelled").
-        Err(e) if cancel_requested && e == "cancelled" => {
-            let message = format!("{label} export cancelled: nothing was written to {}", path.display());
+        // A cancel was requested and the job failed: nothing was published.
+        // Every `Err` from the job comes before or instead of the rename
+        // (`write_model`, the cancel check in `start`, `physical_model`), and
+        // `crate::jobs` reports a job cancelled before it ran as
+        // "{name} was cancelled before it started." (RoboCAD: "{label} export cancelled").
+        Err(e) if cancel_requested => {
+            let mut message = format!("{label} export cancelled: nothing was written to {}", path.display());
+            if e != "cancelled" { message.push_str(&format!(" ({e})")); }
             doc.show(Ok(message.clone()));
             doc.results.exports.last = Some((label, path, Err(message)));
             None

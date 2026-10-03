@@ -13,7 +13,9 @@
 //!   (or at once on `PollCommand::Refresh`), and from a desktop window
 //!   (`health.gui`) `GET /autosave` too (its state changes without the
 //!   revision moving); `GET /doc` and `/commands` when the (document id,
-//!   revision) changed or on Refresh. Errors are published verbatim, never hidden. Between requests
+//!   revision) changed or on Refresh. Errors are published verbatim, never
+//!   hidden (one exception: a single failed `/autosave` after an Ok keeps
+//!   the shown state; the second in a row is published). Between requests
 //!   it checks its channel, so a dropped document's worker exits after at
 //!   most the request in progress.
 //! - **Results** ([`receive`], `ViewerSet::JobResults`): the connect, the
@@ -164,6 +166,11 @@ fn poll_loop(client: &CadClient, slow: &CadClient, commands: &Receiver<PollComma
     let mut seq = 0;
     // The first tick fetches everything at once.
     let mut refresh = true;
+    // `GET /autosave`: whether this worker has published an Ok, and whether
+    // the previous read failed. One failed read after an Ok keeps the shown
+    // state (a slow tick must not flash the line red); a second failure in a
+    // row, or one with no Ok yet, is published.
+    let (mut autosave_read, mut autosave_failed) = (false, false);
     loop {
         if !refresh {
             match commands.recv_timeout(POLL_PERIOD) {
@@ -193,8 +200,18 @@ fn poll_loop(client: &CadClient, slow: &CadClient, commands: &Receiver<PollComma
         // timer starting one), so a desktop window's is read every tick,
         // one small main-thread read like `GET /` (api.py `autosave`). A
         // headless service has none (None: the line says not applicable);
-        // a failed `GET /` keeps the last one.
-        let autosave = health.as_ref().ok().map(|h| h.gui.then(|| client.autosave().map_err(|e| e.to_string())));
+        // a failed `GET /` keeps the last one, and so does a single failed
+        // `GET /autosave` after an Ok (`autosave_failed`).
+        let mut autosave = health.as_ref().ok().map(|h| h.gui.then(|| client.autosave().map_err(|e| e.to_string())));
+        if matches!(autosave, Some(Some(Err(_)))) {
+            if autosave_read && !autosave_failed {
+                autosave = None;
+            }
+            autosave_failed = true;
+        } else if let Some(read) = &autosave {
+            // An Ok, or a headless service (no autosave to keep).
+            (autosave_read, autosave_failed) = (read.is_some(), false);
+        }
         if drain(commands, &mut again) {
             return;
         }

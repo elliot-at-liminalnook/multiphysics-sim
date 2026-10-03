@@ -73,7 +73,7 @@ impl actions::Action for InspectAction {
     fn commands() -> Vec<Spec> {
         use actions::SPATIAL as S;
         vec![
-            spec("annotations", S, json!({"action":{"operation":"document"}}), "Shared multi-part notes, links, saved views and hover emphasis; same sidecar as schematic"),
+            spec("annotations", S, json!({"action":{"operation":"document"}}), "Shared multi-part notes, links, saved views and hover emphasis; same sidecar as schematic. Operations: document, edit, save_view, restore_view, follow_link (reply for a reply's link), select_note, emphasize, reply {note, body, author}, edit_comment {note, comment (the note's id: its text), body}, delete_comment {note, comment}, resolve {note, resolved}"),
             spec("render", S, json!({"options":{"view":"isometric","size":{"width":1280,"height":900},"section":null}}), "Off-screen PNG of captured geometry; x/y/z sections use meters and do not change the viewport"),
             spec("state", S, json!({}), "Display, selection, camera and live status"),
             spec("description", S, json!({}), "Shared typed components, ports, nets, observables and validation"),

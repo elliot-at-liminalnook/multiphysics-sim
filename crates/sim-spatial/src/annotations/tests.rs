@@ -138,6 +138,53 @@ fn inspect_notes_files_round_trip_through_the_adapter() {
     assert!(checked >= 3, "found {checked} sidecars");
 }
 
+/// A version-2 note (replies with links and an edit time, resolved) shows
+/// as a thread whose comments after the note's text are its replies, turns
+/// back into the same note, and writes its version-2 keys only when used.
+#[test]
+fn inspect_replies_and_resolve_round_trip_through_the_adapter() {
+    use sim_inspect::annotations as notes;
+    use sim_inspect::selection::SelectionTarget;
+    let description: sim_inspect::SystemDescription = serde_json::from_slice(&std::fs::read(repo("examples/systems-viewer/spatial/motor-thermal.description.json")).unwrap()).unwrap();
+    let part = description.components.keys().next().unwrap().clone();
+    let link = notes::Link { label: "Motor".into(), target: notes::LinkTarget::Selection { target: SelectionTarget::component(part.clone()) } };
+    let reply = |id: &str, links: Vec<notes::Link>| Comment { id: id.into(), author: "Ada".into(), body: format!("reply {id}"), created_at: "1760000000".into(), edited_at: None, links };
+    let note = notes::Note {
+        id: "n".into(),
+        label: "Heat path".into(),
+        text: "The winding heats the housing.".into(),
+        targets: SelectionTarget::component(part),
+        links: vec![link.clone()],
+        color: [10, 140, 150],
+        replies: vec![Comment { edited_at: Some("1760000100".into()), ..reply("r1", vec![link.clone()]) }, reply("r2", vec![])],
+        resolved: true,
+    };
+    let thread = crate::notes::as_thread(&note, &description);
+    assert!(thread.resolved);
+    assert_eq!(thread.comments.len(), 3);
+    assert_eq!((thread.comments[0].id.as_str(), thread.comments[0].author.as_str()), ("n", ""), "the note's text comes first, without author");
+    assert_eq!((thread.comments[1].author.as_str(), thread.comments[1].edited_at.as_deref()), ("Ada", Some("1760000100")));
+    assert_eq!(thread.comments[0].links[0].reply, None);
+    assert_eq!(thread.comments[1].links[0].reply.as_deref(), Some("r1"));
+    assert_eq!(crate::notes::as_note(&thread, note.color).unwrap(), note);
+    // The whole-thread form of a reply edit, a reply delete and a reopen
+    // turns into the note the sidecar's own commands give.
+    let edited_thread = edited(thread.clone(), ThreadCommand::EditComment { thread: "n".into(), comment: "r2".into(), body: "changed".into(), edited_at: "7".into() }).unwrap();
+    assert_eq!(crate::notes::as_note(&edited_thread, note.color).unwrap().replies[1].body, "changed");
+    let deleted = edited(thread.clone(), ThreadCommand::DeleteComment { thread: "n".into(), comment: "r1".into() }).unwrap();
+    assert_eq!(crate::notes::as_note(&deleted, note.color).unwrap().replies, vec![reply("r2", vec![])]);
+    let reopened = edited(thread, ThreadCommand::Resolve { thread: "n".into(), resolved: false }).unwrap();
+    assert!(!crate::notes::as_note(&reopened, note.color).unwrap().resolved);
+    // On disk: `replies` and `resolved` only when used.
+    let json = rewritten(&note);
+    assert_eq!(json["resolved"], serde_json::json!(true));
+    assert_eq!(json["replies"][0]["edited_at"], serde_json::json!("1760000100"));
+    assert_eq!(serde_json::from_value::<notes::Note>(json).unwrap(), note);
+    let plain = notes::Note { replies: vec![], resolved: false, ..note };
+    let json = rewritten(&plain);
+    assert!(json.get("replies").is_none() && json.get("resolved").is_none());
+}
+
 /// No committed system file holds discussions, so a system file from the
 /// repository gets the pre-refactor thread JSON (the shape
 /// `sim-system/tests/display.rs` pins): the document the builder saves

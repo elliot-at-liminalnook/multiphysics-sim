@@ -308,6 +308,22 @@ physical-source acceptance follows.
   the catalogue has 101 entries (the same two greps give 85 and 16);
   `cad_client` gains `robot.rs` 491, `robot_ops.rs` 132 and `physical.rs`
   219 lines, plus their tests.
+  **cad-checklist-traces** (2026-10-02): Parts G to J of the CAD
+  checklist (CAD-131 to CAD-175, CAD-187 to CAD-213) are **traced by
+  reading, unexecuted**: each step has a path:line trace from the control
+  through `CadAction`, the feature's job, `cad_client` and RoboCAD's
+  `api.py` route back to the display ("Reading traces — Part G/H/I/J" in
+  [cad-checklist.md](../cad-checklist.md)), and the gaps found were fixed
+  in e7b8393f, 83ebb812, 49bc553e, 0caaf92e, 38cf7745, e6c48005,
+  ac973444 and b75846ff (export and exact-measurement stale guards and cancel texts,
+  print late-cancel and stale-line texts, component job recovery and
+  draft locking, the outliner and system-link reads, a refused Open in CAD
+  dropping its pending reveal, the Autosave line read every poll tick,
+  the results form consuming its Escape).
+  CAD Escape now orders through public sets (`CadKeySet::EscapeTool`,
+  `Escape`; the numeric bar in `CadKeySet::NumericEntry`). Nothing was
+  compiled, run or compared side by side; the ledger records the
+  differences found.
 - **Phenomena mode and planar v2 robot files** (see
   [Fold in sim-app](#fold-in-sim-app-2026-09-30)), written 2026-09-30 and
   verified at 80b5997e (sim-spatial lib tests 172 passed, 1 ignored;
@@ -5570,11 +5586,23 @@ doc comment listing what it does and its deliberate differences.
   (`results::switch_refusal`, the live link's check). Nothing outside
   `jobs` starts a process.
 - **Escape has one consumer per press, in a fixed order:** the outliner
-  popup's (`tree::popup::input`, before `keys::gate`), then the calibrate
-  tool's (`references::calibrate::escape`), then the threads'
-  (`threads::input::escape`: Annotate, else Return to assembly), then the
-  Select tool's (`transform::keys`). Each consumes the key only when it
-  acted (the `cad/keys.rs` Escape row).
+  popup's (`tree::popup::input`, before `keys::gate`), the results
+  form's (`results::forms::input`, before `CadKeySet::Gate`; consumed
+  since b75846ff), the file form's
+  (`files::form::input`, before `CadKeySet::EscapeTool`), then the
+  calibrate tool's (`references::calibrate::escape`, in the public
+  `CadKeySet::EscapeTool`), then the threads' (`threads::input::escape`:
+  Annotate, else Return to assembly; in `CadKeySet::Escape`), then the
+  Select tool's (`transform::keys`, `CadKeySet::ToolKeys`). The sets are
+  chained Gate → EscapeTool → Escape → ToolKeys in `cad::configure_sets`
+  (cad-checklist-traces, 2026-10-02), so no feature orders against
+  another's Escape system. Each consumes the key only when it acted (the
+  `cad/keys.rs` Escape row); the surfaces' Escape, which doesn't consume
+  it, is stood aside for by state. Before b75846ff the results form's
+  Escape closed it without consuming the key, so the same press also
+  fired the Select tool's `cad:cancel` (`transform::keys` stands aside
+  only for `doc.ops`); it now clears the key
+  (`cad/results/forms.rs:309-314`).
 - **Drag-and-drop reads pointer messages, a recorded departure from §3.**
   §3 keeps observer triggers for pointer events on entities. The
   outliner's gesture (press, double-click timing, a pending plain press
@@ -5665,9 +5693,9 @@ doc comment listing what it does and its deliberate differences.
    the camera, selection and whole `CadDisplay` captured, the part and its
    descendants shown alone, framed), then the selection exactly `[ID]`,
    as `cad_select` selects it.
-7. **Return.** Escape → `cad/threads/input.rs:escape` (208; after
-   `references::calibrate::escape`, before `transform::keys`) →
-   `cad/threads/isolation.rs:end` (248): the camera, the selection
+7. **Return.** Escape → `cad/threads/input.rs:escape` (214; in
+   `CadKeySet::Escape`, after `CadKeySet::EscapeTool`, before `transform::keys`) →
+   `cad/threads/isolation.rs:end` (270): the camera, the selection
    (without parts deleted since) and the whole `CadDisplay` restored.
 8. **Open in builder.** References ▸ Open in builder →
    `CadAction::CadReferences` → `cad/references/system_link.rs:open_builder`
@@ -5760,7 +5788,8 @@ a substitute for a build). Fixed:
   Comments dock's key moved the non-`Copy` `sending` out of a borrow
   (`threads/dock.rs:key` now keys the sequence only). The calibrate and
   threads Escape readers now stand aside while a file form is open
-  (`files::form` closes on Escape without consuming it).
+  (`files::form` then closed on Escape without consuming it; it consumes
+  it since 83ebb812, and the results form since b75846ff).
 
 Low-severity leftovers, not fixed: the builder's existing drop and
 library import read files on the UI thread (pre-existing); one
@@ -6686,7 +6715,7 @@ No effective ordering relation or ViewerSet phase was intentionally changed.
 | `InputSet::{Rest, Window}` | `app::ModesPlugin` | Chained inside Input; only serve is Rest. Former serve-dependent inputs are Window. |
 | `RobotSet::{Actions, Frames}` | `robot::configure_sets`, RobotPlugin | One robot action handler in Actions; only apply_frames in SimSync Frames. |
 | `CadSet::{Results, Mesh, Highlight, Plane, View}` | `cad::configure_sets`, CadCorePlugin | Singleton service receive, mesh sync, highlight, plane sync and view snapshot; existing producer chains preserved. |
-| `CadKeySet::{Gate, Focus, Keys, ToolKeys}` | same CAD configuration | Gate precedes Keys and ToolKeys; Focus precedes Keys. Other relations remain explicit at readers. |
+| `CadKeySet::{Gate, Focus, Keys, ToolKeys, NumericEntry, EscapeTool, Escape}` | same CAD configuration | Gate precedes Keys and ToolKeys; Focus precedes Keys; Gate → EscapeTool → Escape → ToolKeys chained, EscapeTool before Keys; NumericEntry (the numeric bar) inside Focus (cad-checklist-traces, 2026-10-02). Other relations remain explicit at readers. |
 | `InspectViewSet::{Notes, Link, Camera, Parts}` | `inspect_view::configure_sets`, SpatialViewerPlugin | Singleton notes navigation, linked exchange, camera synchronization and part update in SimSync. |
 | `TextInputSet` | `ui_kit::text::configure_sets`, TextEntryPlugin | PreUpdate input after Bevy input and UI focus; picker sync before and picker modal keys after. |
 | `CameraSet` | CameraPlugin (existing) | Viewport → Navigate → Place in SimSync, unchanged. |
@@ -6838,7 +6867,12 @@ threads, data::sync at robot/tools, numeric::entry at surfaces and local
 sketch-plane sync (six); lesson ui::rebuild and playback (two). Thus 99 of
 the 112 original occurrences are replaced or redundant, and zero serve
 function ordering edges remain. Public set ordering calls are excluded
-from these function counts.
+from these function counts. (cad-checklist-traces, 2026-10-02: the four
+CAD edges against `numeric::entry` and `calibrate::escape` in the table
+above now order against `CadKeySet::NumericEntry` and
+`CadKeySet::EscapeTool`/`Escape`; their rows are kept as history. The
+headline counts above are as of that batch; the CAD function edges left
+are `data::sync` at robot/tools and the local sketch-plane sync.)
 
 **Small gaps:** PhysicsLabel stores a stable key and occurrence number.
 The existing visible-label pass reconciles Node/Text in place, using

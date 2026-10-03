@@ -144,6 +144,7 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     crate::contact_slip::register(registry)?;
     crate::smooth_return::register(registry)?;
     crate::command_lease::register(registry)?;
+    registry.register(crate::drive::profile::limiter_descriptor())?;
     crate::heading::register(registry)?;
     use sim_core::ParameterDeclaration as P;
     use sim_core::quantities::Dimensionless as D;

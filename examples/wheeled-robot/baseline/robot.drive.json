@@ -1,0 +1,29 @@
+{
+  "schema": "sim.drive/1",
+  "description": "Teleoperation drive for the uncalibrated wheeled learning fixture: two N20-driven wheels mixed as a differential drive, no lateral axis. Limits are a chosen 60% operating fraction of the library N20 gearbox speed; geometry is derived from robot.simrobot.json.",
+  "kinematics": {"type": "differential", "left": "left axle", "right": "right axle"},
+  "geometry": {"source": "model"},
+  "axes": {
+    "forward": {
+      "max_speed": {"value": 0.26, "unit": "m/s"},
+      "max_accel": {"value": 0.5, "unit": "m/s^2"},
+      "stop_decel": {"value": 1.0, "unit": "m/s^2"},
+      "provenance": {"kind": "estimated", "source": "max_speed: robot.simrobot.json motors[left drive, right drive].gearbox.max_output_speed 14.66 rad/s (library N20 estimate, equal to no_load_speed) x wheel collision radius 0.03 m = 0.440 m/s free-running wheel speed; 60% operating fraction (margin for load, supply sag and the position firmware's tracking) = 0.264 m/s, rounded down to 0.26 m/s. max_accel: chosen, not motor-limited (2 x 0.2 N m gearbox max_output_torque / 0.03 m on about 0.27 kg of links would allow tens of m/s^2): 0.5 m/s^2 reaches max_speed in about 0.5 s and asks each wheel for under 17 rad/s^2, kept small so the integrated position targets stay close to the wheels. stop_decel: twice max_accel, an estimate assumed well inside traction (friction not calibrated). Uncalibrated."}
+    },
+    "yaw": {
+      "max_speed": {"value": 4.3, "unit": "rad/s"},
+      "max_accel": {"value": 8.0, "unit": "rad/s^2"},
+      "stop_decel": {"value": 16.0, "unit": "rad/s^2"},
+      "provenance": {"kind": "estimated", "source": "max_speed: the wheel-speed-limited spin in place at the same 60% fraction: 2 x 0.264 m/s / track 0.12 m (left/right axle origins y = +/-0.06 m) = 4.40 rad/s, rounded down to 4.3 rad/s. Full forward and full yaw together ask the outer wheel for up to 0.26 + 4.3 x 0.06 = 0.52 m/s, beyond the 0.44 m/s free-running speed: the limiter does not cap combined wheel speed, so the wheels then lag their targets. max_accel: the forward 0.5 m/s^2 wheel acceleration as a spin, 2 x 0.5 / 0.12 = 8.3 rad/s^2, rounded down to 8.0. stop_decel: twice max_accel. Uncalibrated."}
+    }
+  },
+  "actions": [
+    {"name": "stop", "request": "stop", "description": "Bring the rover to rest under the profile's acceleration limits."},
+    {"name": "halt", "request": "halt", "description": "Zero the twist at once (wheel targets stop advancing; the firmware holds them)."}
+  ],
+  "deadman": {
+    "timeout_s": 0.5,
+    "on_loss": "ramp",
+    "provenance": {"kind": "estimated", "source": "0.5 s: 25 control periods of 0.02 s (robot.simrobot.json control.period_s), long enough to ride over a dropped frame or a slow viewer frame, short enough that the rover covers at most 0.26 x 0.5 = 0.13 m before it starts stopping; ramp uses each axis's stop_decel. Chosen, not measured."}
+  }
+}

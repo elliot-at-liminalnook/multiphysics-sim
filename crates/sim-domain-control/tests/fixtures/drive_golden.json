@@ -1,0 +1,57 @@
+{
+  "schema": "sim.drive.golden/1",
+  "generated_by": "rustc -O --edition 2024 crates/sim-domain-control/tests/fixtures/gen_drive_golden.rs -o /tmp/gen_drive_golden && /tmp/gen_drive_golden > crates/sim-domain-control/tests/fixtures/drive_golden.json",
+  "tolerance": 1e-12,
+  "scale": [
+    {"name": "straight (forward 1)", "axes": [1.0, 0.0, 0.0], "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "twist": [0.3, 0.0, 0.0]},
+    {"name": "spin (yaw 1)", "axes": [0.0, 0.0, 1.0], "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "twist": [0.0, 0.0, 3.0]},
+    {"name": "arc (forward 0.5, yaw 0.5)", "axes": [0.5, 0.0, 0.5], "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "twist": [0.15, 0.0, 1.5]},
+    {"name": "reverse quarter", "axes": [-0.25, 0.0, 0.0], "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "twist": [-0.075, 0.0, 0.0]},
+    {"name": "negative zero lateral on an unsupported axis", "axes": [0.5, -0.0, 0.0], "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "twist": [0.15, 0.0, 0.0]},
+    {"name": "unsupported lateral nonzero", "axes": [0.0, 0.5, 0.0], "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "error": "unsupported"},
+    {"name": "out of range forward 1.5", "axes": [1.5, 0.0, 0.0], "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "error": "out_of_range"},
+    {"name": "out of range yaw -1.01", "axes": [0.0, 0.0, -1.01], "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "error": "out_of_range"},
+    {"name": "mecanum strafe right (lateral -1)", "axes": [0.0, -1.0, 0.0], "limits": {"supported": [true, true, true], "max_speed": [0.5, 0.4, 2.0], "max_accel": [1.0, 1.0, 4.0]}, "twist": [0.0, -0.4, 0.0]},
+    {"name": "mecanum combined", "axes": [0.5, 0.25, -0.75], "limits": {"supported": [true, true, true], "max_speed": [0.5, 0.4, 2.0], "max_accel": [1.0, 1.0, 4.0]}, "twist": [0.25, 0.1, -1.5]}
+  ],
+  "limit": [
+    {"name": "ramp up from zero over one dt", "previous": [0.0, 0.0, 0.0], "request": [0.3, 0.0, 3.0], "dt_s": 0.02, "max_accel": [0.6, 0.6, 6.0], "twist": [0.012, 0.0, 0.12]},
+    {"name": "ramp that reaches the request", "previous": [0.29, 0.0, 2.95], "request": [0.3, 0.0, 3.0], "dt_s": 0.02, "max_accel": [0.6, 0.6, 6.0], "twist": [0.3, 0.0, 3.0]},
+    {"name": "deceleration toward zero", "previous": [0.3, 0.0, -3.0], "request": [0.0, 0.0, 0.0], "dt_s": 0.02, "max_accel": [1.2, 1.2, 12.0], "twist": [0.27599999999999997, 0.0, -2.76]},
+    {"name": "reverse through zero", "previous": [0.005, 0.0, 0.0], "request": [-0.3, 0.0, 0.0], "dt_s": 0.02, "max_accel": [0.6, 0.6, 6.0], "twist": [-0.007, 0.0, 0.0]},
+    {"name": "zero dt holds the previous twist", "previous": [0.1, 0.2, 0.3], "request": [0.5, -0.4, 2.0], "dt_s": 0.0, "max_accel": [1.0, 1.0, 4.0], "twist": [0.1, 0.2, 0.3]},
+    {"name": "all three axes at once", "previous": [0.0, 0.0, 0.0], "request": [0.5, -0.4, 2.0], "dt_s": 0.1, "max_accel": [1.0, 1.0, 4.0], "twist": [0.1, -0.1, 0.4]},
+    {"name": "negative dt_s refused", "previous": [0.0, 0.0, 0.0], "request": [0.3, 0.0, 3.0], "dt_s": -0.02, "max_accel": [0.6, 0.6, 6.0], "error": "bad_parameter"},
+    {"name": "zero max_accel refused", "previous": [0.0, 0.0, 0.0], "request": [0.3, 0.0, 3.0], "dt_s": 0.02, "max_accel": [0.0, 0.6, 6.0], "error": "bad_parameter"}
+  ],
+  "step": [
+    {"name": "live request ramps up", "previous": [0.0, 0.0, 0.0], "request": [0.3, 0.0, 3.0], "dt_s": 0.02, "age_s": 0.1, "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "deadman": {"timeout_s": 0.5, "on_loss": "ramp", "decel": [1.2, 1.2, 12.0]}, "twist": [0.012, 0.0, 0.12], "expired": false},
+    {"name": "live request, age zero", "previous": [0.1, 0.0, 1.0], "request": [0.3, 0.0, -3.0], "dt_s": 0.02, "age_s": 0.0, "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "deadman": {"timeout_s": 0.5, "on_loss": "immediate"}, "twist": [0.112, 0.0, 0.88], "expired": false},
+    {"name": "deadman timeout, immediate stop", "previous": [0.2, 0.0, 1.0], "request": [0.3, 0.0, 3.0], "dt_s": 0.02, "age_s": 0.6, "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "deadman": {"timeout_s": 0.5, "on_loss": "immediate"}, "twist": [0.0, 0.0, 0.0], "expired": true},
+    {"name": "deadman timeout, ramp stop", "previous": [0.2, 0.0, 1.0], "request": [0.3, 0.0, 3.0], "dt_s": 0.02, "age_s": 0.6, "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "deadman": {"timeout_s": 0.5, "on_loss": "ramp", "decel": [1.2, 1.2, 12.0]}, "twist": [0.17600000000000002, 0.0, 0.76], "expired": true},
+    {"name": "age exactly the timeout is expired", "previous": [0.2, 0.0, -1.0], "request": [0.3, 0.0, 3.0], "dt_s": 0.02, "age_s": 0.5, "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "deadman": {"timeout_s": 0.5, "on_loss": "ramp", "decel": [1.2, 1.2, 12.0]}, "twist": [0.17600000000000002, 0.0, -0.76], "expired": true},
+    {"name": "age just under the timeout is live", "previous": [0.2, 0.0, -1.0], "request": [0.3, 0.0, 3.0], "dt_s": 0.02, "age_s": 0.49, "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "deadman": {"timeout_s": 0.5, "on_loss": "ramp", "decel": [1.2, 1.2, 12.0]}, "twist": [0.21200000000000002, 0.0, -0.88], "expired": false},
+    {"name": "expired ignores an out-of-profile request", "previous": [0.1, 0.0, 0.0], "request": [9.0, 0.0, 0.0], "dt_s": 0.02, "age_s": 1.0, "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "deadman": {"timeout_s": 0.5, "on_loss": "immediate"}, "twist": [0.0, 0.0, 0.0], "expired": true},
+    {"name": "out of profile forward 0.4", "previous": [0.0, 0.0, 0.0], "request": [0.4, 0.0, 0.0], "dt_s": 0.02, "age_s": 0.0, "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "deadman": {"timeout_s": 0.5, "on_loss": "ramp", "decel": [1.2, 1.2, 12.0]}, "error": "out_of_profile"},
+    {"name": "unsupported lateral request", "previous": [0.0, 0.0, 0.0], "request": [0.0, 0.1, 0.0], "dt_s": 0.02, "age_s": 0.0, "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "deadman": {"timeout_s": 0.5, "on_loss": "ramp", "decel": [1.2, 1.2, 12.0]}, "error": "unsupported"},
+    {"name": "mecanum live request, all axes", "previous": [0.0, 0.0, 0.0], "request": [0.5, -0.4, 2.0], "dt_s": 0.02, "age_s": 0.0, "limits": {"supported": [true, true, true], "max_speed": [0.5, 0.4, 2.0], "max_accel": [1.0, 1.0, 4.0]}, "deadman": {"timeout_s": 0.5, "on_loss": "ramp", "decel": [1.2, 1.2, 12.0]}, "twist": [0.02, -0.02, 0.08], "expired": false},
+    {"name": "zero deadman timeout refused", "previous": [0.0, 0.0, 0.0], "request": [0.3, 0.0, 0.0], "dt_s": 0.02, "age_s": 0.0, "limits": {"supported": [true, false, true], "max_speed": [0.3, 0.0, 3.0], "max_accel": [0.6, 0.6, 6.0]}, "deadman": {"timeout_s": 0.0, "on_loss": "immediate"}, "error": "bad_parameter"}
+  ],
+  "differential": [
+    {"name": "wheeled robot: straight 0.3 m/s", "track_width_m": 0.12, "wheel_radius_m": 0.03, "signs": [1.0, 1.0], "twist": [0.3, 0.0, 0.0], "wheels": [10.0, 10.0]},
+    {"name": "wheeled robot: spin 3 rad/s", "track_width_m": 0.12, "wheel_radius_m": 0.03, "signs": [1.0, 1.0], "twist": [0.0, 0.0, 3.0], "wheels": [-6.0, 6.0]},
+    {"name": "wheeled robot: arc 0.15 m/s, 1.5 rad/s", "track_width_m": 0.12, "wheel_radius_m": 0.03, "signs": [1.0, 1.0], "twist": [0.15, 0.0, 1.5], "wheels": [2.0, 8.0]},
+    {"name": "wheeled robot: reverse arc", "track_width_m": 0.12, "wheel_radius_m": 0.03, "signs": [1.0, 1.0], "twist": [-0.1, 0.0, -0.5], "wheels": [-2.3333333333333335, -4.333333333333334]},
+    {"name": "signs [-1, 1]: straight", "track_width_m": 0.12, "wheel_radius_m": 0.03, "signs": [-1.0, 1.0], "twist": [0.3, 0.0, 0.0], "wheels": [-10.0, 10.0]},
+    {"name": "signs [-1, 1]: spin", "track_width_m": 0.12, "wheel_radius_m": 0.03, "signs": [-1.0, 1.0], "twist": [0.0, 0.0, 3.0], "wheels": [6.0, 6.0]},
+    {"name": "lateral refused", "track_width_m": 0.12, "wheel_radius_m": 0.03, "signs": [1.0, 1.0], "twist": [0.0, 0.1, 0.0], "error": "unsupported"},
+    {"name": "wider track", "track_width_m": 0.3, "wheel_radius_m": 0.05, "signs": [1.0, 1.0], "twist": [0.2, 0.0, 1.0], "wheels": [1.0000000000000002, 6.999999999999999]},
+    {"name": "sign 0.5 refused when the mixer is built", "track_width_m": 0.12, "wheel_radius_m": 0.03, "signs": [0.5, 1.0], "twist": [0.3, 0.0, 0.0], "error": "bad_parameter"}
+  ],
+  "mecanum": [
+    {"name": "forward", "track_width_m": 0.2, "wheelbase_m": 0.15, "wheel_radius_m": 0.03, "signs": [1.0, 1.0, 1.0, 1.0], "twist": [0.3, 0.0, 0.0], "wheels": [10.0, 10.0, 10.0, 10.0]},
+    {"name": "pure strafe left", "track_width_m": 0.2, "wheelbase_m": 0.15, "wheel_radius_m": 0.03, "signs": [1.0, 1.0, 1.0, 1.0], "twist": [0.0, 0.3, 0.0], "wheels": [-10.0, 10.0, 10.0, -10.0]},
+    {"name": "yaw", "track_width_m": 0.2, "wheelbase_m": 0.15, "wheel_radius_m": 0.03, "signs": [1.0, 1.0, 1.0, 1.0], "twist": [0.0, 0.0, 1.0], "wheels": [-5.833333333333333, 5.833333333333333, -5.833333333333333, 5.833333333333333]},
+    {"name": "combined, mixed signs", "track_width_m": 0.2, "wheelbase_m": 0.15, "wheel_radius_m": 0.03, "signs": [1.0, -1.0, 1.0, -1.0], "twist": [0.2, -0.1, 0.5], "wheels": [7.083333333333336, -6.25, 0.4166666666666671, -12.91666666666667]}
+  ]
+}

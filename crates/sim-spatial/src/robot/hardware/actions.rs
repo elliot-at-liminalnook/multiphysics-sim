@@ -118,8 +118,10 @@ pub enum HardwareAction {
     TogglePanel,
     /// The panel's × (stops drive).
     ClosePanel,
-    /// Connect to the calibration server (token from its page, then status polling; no motion).
+    /// Open the explicitly configured local calibration application; no motion.
     Connect,
+    /// STOP and close the local calibration owner so another section may acquire the device.
+    Disconnect,
     /// Open or close a collapsible section (opening Gait playback loads the gait list).
     ToggleSection { section: super::Section },
     // ---- reads and STOP (allowed from REST and system_ui) ----
@@ -210,8 +212,10 @@ pub enum HardwareAction {
     MirrorPolarity { id: u8, polarity: i8 },
     MirrorAlign { id: u8, align: Align },
     // ---- live motor sync (serve_motor_bench) ----
-    /// Connect to the motor bench (token from its page, `/config`, status polling; no motion).
+    /// Open explicit local motor bench configuration and observe status; no motion.
     SyncConnect,
+    /// Refresh direct zero-drive device inspection through shared acquisition.
+    SyncInspect,
     SyncLeg { leg: String },
     /// A joint row's motor ID (row index in the leg's coordinate order).
     SyncMotor { row: usize, motor_id: u8 },
@@ -295,6 +299,7 @@ impl HardwareAction {
             H::TogglePanel
             | H::ClosePanel
             | H::Connect
+            | H::Disconnect
             | H::ToggleSection { .. }
             | H::Status
             | H::Stop
@@ -304,6 +309,7 @@ impl HardwareAction {
             | H::GaitStop
             | H::MirrorEnabled { .. }
             | H::SyncConnect
+            | H::SyncInspect
             | H::SyncStop => false,
         }
     }
@@ -348,7 +354,7 @@ impl HardwareAction {
             return Err(self.remote_refusal());
         }
         let Some((link_generation, s)) = link else { return Err(self.remote_refusal()); };
-        sim_runtime::hardware_client::calibration::authorize_virtual(
+        sim_runtime::hardware::protocol::calibration::authorize_virtual(
             s.execution.as_ref(), s.generation, generation,
             s.connection_valid && s.state.connected && !s.authorization_revoked && s.disconnected.is_none() && link_generation == generation,
             !s.stale(now),
@@ -384,10 +390,10 @@ impl actions::Action for HardwareAction {
     fn commands() -> Vec<Spec> {
         let r = crate::app::actions::ROBOT;
         vec![
-            spec("hardware_status", r, json!({}), "Leg calibration panel: the link (connected, stale, age), the page's session state and the calibration server's last status. Read-only."),
-            spec("hardware_stop", r, json!({}), "STOP the calibration server's drive (the panel's Stop / Z) on the immediate path, and the live motor sync if it runs. Always allowed."),
+            spec("hardware_status", r, json!({}), "Leg calibration panel: the link (connected, stale, age), the page's session state and the shared calibration application's last status. Read-only."),
+            spec("hardware_stop", r, json!({}), "STOP the shared calibration application's drive (the panel's Stop / Z) on the immediate path, and the live motor sync if it runs. Always allowed."),
             spec("hardware_export", r, json!({}), "Download calibration: /calibration/export plus the mirror's display-only binding, written to a new file under the calibration output directory; answers {path, simulated}. A virtual bench's download is labelled simulated (execution and simulated: true in the file, a -virtual file name)."),
-            spec("hardware_gaits", r, json!({}), "The calibration server's gait list (/calibration/gaits), as the Gait playback select lists it."),
+            spec("hardware_gaits", r, json!({}), "The shared calibration application's gait list (/calibration/gaits), as the Gait playback select lists it."),
             spec(
                 "hardware",
                 r,
@@ -397,6 +403,20 @@ impl actions::Action for HardwareAction {
         ]
     }
     fn parse(command: &sim_api::Command) -> Result<Self, String> {
+        fn obsolete(value:&Value)->Option<&str> {
+            match value {
+                Value::Object(args)=>{
+                    for (name,value) in args {
+                        if ["url","token","token_file","hardware","hardware_token_file","motor_bench","motor_bench_token_file"].contains(&name.as_str()) {return Some(name);}
+                        if let Some(name)=obsolete(value){return Some(name);}
+                    }
+                    None
+                },
+                Value::Array(values)=>values.iter().find_map(obsolete),
+                _=>None,
+            }
+        }
+        if let Some(name)=obsolete(&command.args) { return Err(format!("hardware argument `{name}` is obsolete: configure the local driver with --hardware-config FILE or --motor-bench-config FILE; no server will be contacted")); }
         Ok(match sim_api::decode::<wire::Command>(command)? {
             wire::Command::HardwareStatus => HardwareAction::Status,
             wire::Command::HardwareStop => HardwareAction::Stop,
@@ -430,7 +450,7 @@ use input::{buttons, jog_buttons, keys, sliders, window_loss};
 use bevy::ecs::message::Messages;
 use bevy::prelude::*;
 use sim_api::Outcome;
-use sim_runtime::hardware_client::ServerKind;
+use sim_runtime::hardware::local::ServiceKind;
 use std::time::Instant;
 
 /// Registers the action type and the shared-owner preference adapter, the
@@ -485,7 +505,7 @@ fn stop_on_exit(mut exits: MessageReader<bevy::app::AppExit>, hw: Option<ResMut<
 
 /// OnEnter(Robot): the panel's state from the launch's servers and the
 /// shared owner preferences (already in memory: no file read
-/// here); with `--hardware` the panel is open and connects (status only:
+/// here); with `--hardware-config` the panel is open and connects (status only:
 /// nothing moves until the operator selects a motor).
 fn enter(mut commands: Commands, documents: Option<Res<crate::app::switch::Documents>>, preferences: Res<crate::app::settings::SettingsOwner>) {
     let config = documents.map(|d| d.hardware.clone()).unwrap_or_default();
@@ -581,18 +601,18 @@ pub(super) fn connect(hw: &mut Hardware) {
         }
         hw.snapshot = Default::default();
     }
-    hw.generation = sim_runtime::hardware_client::next_connection_generation();
+    hw.generation = sim_runtime::hardware::local::next_connection_generation();
     hw.notice = None;
-    let target = hw.target();
+    let target = match hw.target() { Ok(target) => target, Err(error) => { hw.notice = Some(error); return; } };
     let generation = hw.generation;
     hw.connecting = Some(Job::spawn(Pool::Dedicated, hw.generation, "hardware connect", move |_| {
-        let client = sim_runtime::hardware_client::token::connect(&target.url, target.token_file.as_deref(), ServerKind::Calibration).map_err(|e| e.to_string())?;
-        let status = client.get_as::<sim_runtime::hardware_client::calibration::Status>("/calibration/status").map_err(|e| e.to_string())?;
+        let client = super::local::Client::open(&target.config_file, ServiceKind::Calibration)?;
+        let status = client.get_as::<sim_runtime::hardware::protocol::calibration::Status>("/calibration/status").map_err(|e| e.to_string())?;
         Ok(match status.execution.filter(|identity| identity.is_virtual_calibration()) {
             Some(identity) => {
                 let pinned = client.with_calibration_execution(identity.clone(), generation);
-                let body = sim_runtime::hardware_client::calibration::inspect(1);
-                let inspected: sim_runtime::hardware_client::calibration::Status = serde_json::from_value(
+                let body = sim_runtime::hardware::protocol::calibration::inspect(1);
+                let inspected: sim_runtime::hardware::protocol::calibration::Status = serde_json::from_value(
                     pinned.post("/calibration/command", &body).map_err(|e| e.to_string())?
                 ).map_err(|e| format!("virtual inspect status: {e}"))?;
                 // This link has not selected anything yet: no STOP (an id-less
@@ -609,7 +629,7 @@ pub(super) fn connect(hw: &mut Hardware) {
 
 /// The panel's notice after a reconnect that replaced a link pinned to a
 /// virtual bench with an unpinned one.
-pub(super) const BENCH_GONE: &str = "The virtual bench this panel was pinned to is gone and the server reports no virtual execution now: this link is not pinned (physical or unknown), so remote motion is refused. Restart the virtual bench server, then Reconnect to pin its new identity.";
+pub(super) const BENCH_GONE: &str = "The local virtual bench this panel was pinned to is gone: this link is not pinned (physical or unknown), so remote motion is refused. Verify the local virtual configuration, then Reconnect to pin its new identity.";
 
 /// Actions: the panel's one apply system. Remote calibration uses the shared
 /// fail-closed virtual authorization; a control disabled at submission is
@@ -749,7 +769,7 @@ fn poll_jobs(hw: Option<ResMut<Hardware>>) {
                 hw.form.seen_speed_reset = 0;
                 hw.ui_revision += 1;
             }
-            Err(e) => hw.notice = Some(format!("Could not connect to {}: {e}", hw.url())),
+            Err(e) => hw.notice = Some(format!("Could not connect to {}: {e}", hw.configuration_label())),
         }
     }
     // An immediate STOP's answer goes to the link that posted it (a STOP

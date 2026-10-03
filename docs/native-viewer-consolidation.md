@@ -2515,3 +2515,21 @@ HW-02–HW-09 completion, full CAD parity and physical equivalence remain unveri
 Portable work at `f541b05f` remains set aside/unaccepted. Browser pages and legacy
 reference surfaces remain available; no CAD physical definition or accepted
 actuator registry model is automatically changed.
+
+## In-process hardware inventory update — LIP1–LIP3 (2026-10-03)
+
+This supersedes historical hardware URL/token/server prerequisites above. The
+existing shell remains sim-spatial. Native Robot Leg calibration and gait
+Sim/Leg/Both, mirror and Sync motors use `hardware::protocol`, shared calibration
+and bench application sessions, direct CalibrationBus physical acquisition and
+existing Bench virtual acquisition, on caller-owned jobs workers. Native Lessons
+lab steps use the same calibration authority with operator/focus/STOP guards.
+The [workflow/source inventory](leg-in-process.md) records each entry point,
+shared layer, source owner, dependency, visible refusal and acceptance trace.
+
+All five required outcomes and LIP1–LIP3 are source-reviewed, unexecuted;
+hardware fidelity, releases, timing and durable publication have no new execution
+receipt. Legacy browser adapters remain separately available, but no native
+hardware workflow requires them, socket servers or acquisition child processes.
+CAD still uses cad_client and RoboCAD Python/OCCT; §9 is outside this batch.
+No data or earlier receipts were deleted or relabelled.

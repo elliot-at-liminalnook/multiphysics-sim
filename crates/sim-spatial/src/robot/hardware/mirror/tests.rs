@@ -1,5 +1,5 @@
 use super::*;
-use sim_runtime::hardware_client::calibration::{CalibrationDoc, Telemetry};
+use sim_runtime::hardware::protocol::calibration::{CalibrationDoc, Telemetry};
 
 fn roles() -> BTreeMap<u8, String> {
     BTreeMap::from([(1, "belt/hip".to_string()), (2, "worm".to_string()), (3, "knee".to_string())])

@@ -229,7 +229,7 @@ pub struct Documents {
     pub models: PathBuf,
     /// `--robot-presets` (None: `<workspace>/web/viewer/presets.json`).
     pub presets: Option<PathBuf>,
-    /// The hardware servers given at launch (`--hardware`, `--motor-bench`), for robot mode's Leg calibration panel.
+    /// Explicit local hardware configurations given at launch (`--hardware-config`, `--motor-bench-config`), for Robot mode's Leg panel.
     pub hardware: crate::robot::hardware::HardwareConfig,
 }
 impl Default for Documents {

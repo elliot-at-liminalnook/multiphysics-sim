@@ -48,8 +48,8 @@
 use super::actions::{Direction, GaitMode};
 use super::link::{Inputs, Intent, LinkCommand, LinkSnapshot, POLL_IDLE};
 use serde_json::Value;
-use sim_runtime::hardware_client::calibration::{self, Axis, Input, Status, SweepSample};
-use sim_runtime::hardware_client::{Body, CONNECT_TIMEOUT, Client, ClientError, STOP_TIMEOUT};
+use sim_runtime::hardware::protocol::calibration::{self, Axis, Input, Status, SweepSample};
+use super::local::{Body, CONNECT_TIMEOUT, Client, ClientError, STOP_TIMEOUT};
 use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicU64, Ordering::SeqCst};
 use std::sync::{Arc, Mutex, mpsc};
@@ -395,14 +395,15 @@ impl Session {
     /// that means the binding is gone ([`calibration::binding_lost`])
     /// revokes; an ordinary refusal is only returned.
     fn send(&mut self, body: Body) -> Result<Value, String> {
-        let is_stop = matches!(body.get("action"), Some(sim_runtime::hardware_client::Json::Value(Value::String(a))) if a == "stop");
+        let stop_epoch=self.client.calibration_stop_epoch();
+        let is_stop = matches!(body.get("action"), Some(sim_runtime::hardware::protocol::Json::Value(Value::String(a))) if a == "stop");
         if !is_stop && self.interrupted() {
             return Err(STOP_PENDING.into());
         }
         if !is_stop && self.revoked() {
             return Err(REVOKED.into());
         }
-        self.request(|client| client.post(COMMAND, &body)).map_err(|e| {
+        self.request(|client| client.post_at_epoch(COMMAND, &body, stop_epoch)).map_err(|e| {
             if calibration::binding_lost(&e) {
                 self.lose_binding();
             }

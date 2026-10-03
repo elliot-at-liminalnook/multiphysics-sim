@@ -1,115 +1,24 @@
-//! The session against an in-process fake calibration server (plain HTTP on
-//! 127.0.0.1:0, served from a `jobs::Pool::Dedicated` job): no window, no
-//! hardware. Most tests drive [`Session`]'s handlers directly; the disconnect
-//! test runs [`run`] on the test thread, and late preference publication drives
-//! the real [`super::super::link::Link`] against the fake server. The heartbeats
-//! come from the session's beat thread, as in the viewer; the fake answers
-//! each connection on its own job, as the real server does, so a request it
-//! holds does not hold the others.
+//! Session safety fixtures use direct local callbacks: no HTTP or socket server.
+//! The existing timing, STOP, generation and command assertions remain unchanged.
 use super::*;
 use crate::jobs::{Job, Pool};
 use serde_json::json;
-use sim_runtime::hardware_client::Endpoint;
-use std::io::{ErrorKind, Read, Write};
-use std::net::{IpAddr, Ipv4Addr, TcpListener, TcpStream};
 
 type Handler = Arc<dyn Fn(&str, &Value) -> Result<Value, String> + Send + Sync>;
-/// (path, body, when it was parsed) of every request, in arrival order.
 type Log = Arc<Mutex<Vec<(String, Value, Instant)>>>;
-
-/// The fake server; dropping it cancels its job, which ends its accept loop.
-struct Fake {
-    port: u16,
-    log: Log,
-    _job: Job<()>,
-}
+struct Fake { handler: Handler, log: Log }
 impl Fake {
-    fn start(handler: Handler) -> Fake {
-        let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
-        listener.set_nonblocking(true).expect("nonblocking");
-        let port = listener.local_addr().expect("address").port();
-        let log: Log = Arc::default();
-        let served = log.clone();
-        let job = Job::spawn(Pool::Dedicated, 0, "fake calibration server", move |ctx| {
-            while !ctx.cancelled() {
-                match listener.accept() {
-                    Ok((stream, _)) => {
-                        let (handler, served) = (handler.clone(), served.clone());
-                        let request = Job::spawn(Pool::Dedicated, 0, "fake calibration request", move |_| {
-                            answer(stream, &handler, &served);
-                            Ok(())
-                        });
-                        // Runs to its end when the handle is dropped (a
-                        // cancelled dedicated job may never start).
-                        drop(request.complete_on_drop());
-                    }
-                    Err(e) if e.kind() == ErrorKind::WouldBlock => std::thread::sleep(Duration::from_millis(1)),
-                    Err(e) => return Err(e.to_string()),
-                }
-            }
-            Ok(())
-        });
-        Fake { port, log, _job: job }
+    fn start(handler:Handler)->Self { Self {handler,log:Arc::default()} }
+    fn client(&self)->Client {
+        let (handler,log)=(self.handler.clone(),self.log.clone());
+        Client::fixture(Arc::new(move |path,body| {
+            log.lock().unwrap().push((path.into(),body.clone(),Instant::now()));
+            handler(path,body).map_err(|error|ClientError::Server {status:if error.starts_with(calibration::BINDING_REFUSED){calibration::BINDING_REFUSED_STATUS}else{400},error})
+        }))
     }
-    fn client(&self) -> Client {
-        let endpoint = Endpoint::loopback(IpAddr::V4(Ipv4Addr::LOCALHOST), self.port).expect("loopback");
-        Client::new(endpoint, "token".into(), "00000000-0000-4000-8000-000000000000".into()).with_timeout(Duration::from_secs(2))
-    }
-    /// (path, body) of every request so far; a GET's body is null.
-    fn requests(&self) -> Vec<(String, Value)> {
-        self.log.lock().unwrap().iter().map(|(p, b, _)| (p.clone(), b.clone())).collect()
-    }
-    /// The commands posted so far, with when each arrived.
-    fn timed_commands(&self) -> Vec<(Value, Instant)> {
-        self.log.lock().unwrap().iter().filter(|(p, _, _)| p == COMMAND).map(|(_, b, t)| (b.clone(), *t)).collect()
-    }
-    /// The commands posted so far.
-    fn commands(&self) -> Vec<Value> {
-        self.requests().into_iter().filter(|(p, _)| p == COMMAND).map(|(_, b)| b).collect()
-    }
-}
-
-/// One request per connection, as the client sends them.
-fn answer(mut stream: TcpStream, handler: &Handler, log: &Log) {
-    let _ = stream.set_nonblocking(false);
-    let _ = stream.set_read_timeout(Some(Duration::from_secs(2)));
-    let mut data = Vec::new();
-    let mut chunk = [0u8; 4096];
-    let end = loop {
-        match stream.read(&mut chunk) {
-            Ok(0) | Err(_) => return,
-            Ok(n) => data.extend_from_slice(&chunk[..n]),
-        }
-        if let Some(p) = data.windows(4).position(|w| w == b"\r\n\r\n") {
-            break p + 4;
-        }
-    };
-    let head = String::from_utf8_lossy(&data[..end]).to_string();
-    let length = head
-        .lines()
-        .filter_map(|l| l.split_once(':'))
-        .find(|(k, _)| k.trim().eq_ignore_ascii_case("content-length"))
-        .and_then(|(_, v)| v.trim().parse::<usize>().ok())
-        .unwrap_or(0);
-    while data.len() < end + length {
-        match stream.read(&mut chunk) {
-            Ok(0) | Err(_) => return,
-            Ok(n) => data.extend_from_slice(&chunk[..n]),
-        }
-    }
-    let path = head.split_whitespace().nth(1).unwrap_or("").to_string();
-    let body: Value = if length > 0 { serde_json::from_slice(&data[end..end + length]).unwrap_or(Value::Null) } else { Value::Null };
-    log.lock().unwrap().push((path.clone(), body.clone(), Instant::now()));
-    // As the calibration server answers: a binding refusal (its text starts
-    // with `calibration::BINDING_REFUSED`) is 409, any other refusal 400.
-    let (status, reply) = match handler(path.as_str(), &body) {
-        Ok(v) => (200, v),
-        Err(e) if e.starts_with(calibration::BINDING_REFUSED) => (calibration::BINDING_REFUSED_STATUS, json!({ "error": e })),
-        Err(e) => (400, json!({ "error": e })),
-    };
-    let text = reply.to_string();
-    let _ = write!(stream, "HTTP/1.1 {status} X\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{text}", text.len());
-    let _ = stream.flush();
+    fn requests(&self)->Vec<(String,Value)> {self.log.lock().unwrap().iter().map(|(p,b,_)|(p.clone(),b.clone())).collect()}
+    fn timed_commands(&self)->Vec<(Value,Instant)> {self.log.lock().unwrap().iter().filter(|(p,_,_)|p==COMMAND).map(|(_,b,t)|(b.clone(),*t)).collect()}
+    fn commands(&self)->Vec<Value> {self.requests().into_iter().filter(|(p,_)|p==COMMAND).map(|(_,b)|b).collect()}
 }
 
 /// A server that enables the chosen motor, starts run 7 and accepts heartbeats.
@@ -1358,7 +1267,7 @@ fn a_checked_leg_gait_play_answers_ok_only_after_the_gait_started() {
         let fake = gait_server(start);
         let mut session = pinned_session(&fake, virtual_identity(SERVER_A));
         session.handle(LinkCommand::Checked { ticket: 1, epoch: session.epoch_now(), generation: 1, inputs: None, command: Box::new(play()) });
-        let expected = format!("gait_start refused: {reason}; motor 1 released (STOP sent: {STOP_LATCHED})");
+        let expected = format!("gait_start refused: {reason}; STOP requested for motor 1; release readback pending or uncertain ({STOP_LATCHED})");
         let result = session.snap.command_results[&1].clone();
         assert_eq!(result, Err(expected.clone()));
         assert_eq!(session.snap.gait_notice.as_deref(), Some(expected.as_str()), "the panel and REST status show the refusal and the release");
@@ -1387,7 +1296,7 @@ fn a_ready_select_without_a_motor_id_refuses_and_releases_the_motors() {
     session.snap.drove = true;
     session.snap.ready = true;
     let refused = session.armed_motor();
-    assert_eq!(refused, Err(format!("Could not enable the motors: the motor id is unknown after the select; the motors released (STOP sent: {STOP_LATCHED})")));
+    assert_eq!(refused, Err(format!("Could not enable the motors: the motor id is unknown after the select; STOP requested for the motors; release readback pending or uncertain ({STOP_LATCHED})")));
     let commands = fake.commands();
     assert_eq!(actions(&commands), ["stop".to_string()], "the release is one STOP: {commands:?}");
     assert!(commands[0]["id"].is_null(), "an id-less STOP latches every axis: {commands:?}");
@@ -1398,7 +1307,7 @@ fn a_ready_select_without_a_motor_id_refuses_and_releases_the_motors() {
     let mut session = pinned_session(&fake, virtual_identity(SERVER_A));
     session.snap.drove = true;
     session.snap.ready = false;
-    assert!(session.armed_motor().is_err_and(|e| e.contains("released (STOP sent")));
+    assert!(session.armed_motor().is_err_and(|e| e.contains("STOP requested for the motors")));
     assert_eq!(actions(&fake.commands()), ["stop".to_string()]);
 }
 

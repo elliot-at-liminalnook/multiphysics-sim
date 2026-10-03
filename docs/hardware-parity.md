@@ -1,5 +1,20 @@
 # Hardware front end: parity ledger
 
+
+**Current migration — leg-in-process LIP1–LIP3, 2026-10-03.** The native
+viewer now uses local Rust sessions and jobs-owned workers. The current launch,
+action-level source map, safety comparisons and operator run sheets are in
+[leg-in-process.md](leg-in-process.md). All five outcomes are reviewed by reading
+only; no new build, test, launch, screenshot, publication or hardware execution
+is claimed. The older server launch paths/driver receipts and transport rows
+below are historical reference evidence and are superseded for native launch.
+Current `hc/` request/status owners are `sim_runtime::hardware::protocol`;
+`hardware_client` re-exports them only for browser compatibility. STOP latches
+independently and authoritative release/readback is reported separately.
+Native virtual calibration is direct Bench packet I/O; virtual Sync is labelled
+host Bench simulation, not FPGA-profile parity. Physical run sheets remain
+unexecuted. CAD still needs RoboCAD's service; this is not a §9 completion.
+
 **Purpose.** One row per feature of the browser's hardware pages, with the
 native Leg calibration panel's owner for it, so the epic's claim of exact
 feature parity (docs/architecture/native-viewer.md §8) can be checked row by

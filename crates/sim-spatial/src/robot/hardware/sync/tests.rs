@@ -2,8 +2,8 @@ use super::*;
 use super::page::{LiveInput, live_run};
 use super::thread::{Outbox, drain};
 use crate::robot::hardware::sync_panel::{chart_note, charts, rms_and_saturation, row_title, stats_text};
-use sim_runtime::hardware_client::calibration::Telemetry;
-use sim_runtime::hardware_client::{Endpoint, new_client_id};
+use sim_runtime::hardware::protocol::calibration::Telemetry;
+
 use std::sync::mpsc;
 
 fn coords() -> Vec<String> {
@@ -84,7 +84,7 @@ fn state_text_and_banner() {
 /// A client of a loopback port nothing listens on (port 1): requests fail at
 /// once with "connection refused"; no server is started.
 fn nowhere() -> Client {
-    Client::new(Endpoint { ip: std::net::Ipv4Addr::LOCALHOST.into(), port: 1 }, "token".into(), new_client_id())
+    Client::fixture(std::sync::Arc::new(|_,_|Err(sim_runtime::hardware::protocol::ClientError::Transport("local worker unavailable".into()))))
 }
 fn sample_seq(sequence: u64) -> bench::Sample {
     bench::Sample { sequence, time_s: sequence as f64, targets: Vec::new() }
@@ -124,7 +124,7 @@ fn stop_posts_whenever_a_session_may_be_open() {
 fn newest_sample_wins_and_commands_apply_in_order() {
     let (tx, rx) = mpsc::channel();
     let mut opens = 0;
-    let mut open = |_: &Body| -> Result<(), String> {
+    let mut open = |_: &Body, _: u64| -> Result<(), String> {
         opens += 1;
         Ok(())
     };
@@ -137,16 +137,16 @@ fn newest_sample_wins_and_commands_apply_in_order() {
     // Open, then newer samples: active, send at once, the newest wins.
     tx.send(SyncCommand::Latest(sample_seq(5))).unwrap();
     tx.send(SyncCommand::Latest(sample_seq(6))).unwrap();
-    assert!(drain(&rx, Some(SyncCommand::Open { body: Body::empty(), last_sent: 4 }), &mut out, &mut open));
+    assert!(drain(&rx, Some(SyncCommand::Open { body: Body::empty(), last_sent: 4, stop_epoch: 0 }), &mut out, &mut open));
     assert_eq!((out.latest.as_ref().map(|s| s.sequence), out.active, out.last_sent), (Some(6), true, 4));
     // A stop queued behind an open is applied before anything is sent.
     tx.send(SyncCommand::Deactivate).unwrap();
     tx.send(SyncCommand::Latest(sample_seq(7))).unwrap();
-    assert!(!drain(&rx, Some(SyncCommand::Open { body: Body::empty(), last_sent: 6 }), &mut out, &mut open));
+    assert!(!drain(&rx, Some(SyncCommand::Open { body: Body::empty(), last_sent: 6, stop_epoch: 0 }), &mut out, &mut open));
     assert_eq!((out.latest.as_ref().map(|s| s.sequence), out.active), (Some(7), false));
     // A failed open stays inactive.
-    let mut failing = |_: &Body| -> Result<(), String> { Err("refused".to_string()) };
-    assert!(!drain(&rx, Some(SyncCommand::Open { body: Body::empty(), last_sent: 7 }), &mut out, &mut failing));
+    let mut failing = |_: &Body, _: u64| -> Result<(), String> { Err("refused".to_string()) };
+    assert!(!drain(&rx, Some(SyncCommand::Open { body: Body::empty(), last_sent: 7, stop_epoch: 0 }), &mut out, &mut failing));
     assert!(!out.active);
     drop(open);
     assert_eq!(opens, 2);

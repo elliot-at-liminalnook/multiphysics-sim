@@ -96,7 +96,7 @@ fn claims_are_narrow_and_mirror_pose_reference_is_distinct_from_joint() {
 mod remote_gait {
     use super::*;
     use crate::robot::hardware::link::{LinkSnapshot, STALE_AFTER};
-    use sim_runtime::hardware_client::calibration::ExecutionIdentity;
+    use sim_runtime::hardware::protocol::calibration::ExecutionIdentity;
     use std::time::{Duration, Instant};
 
     fn identity(kind: &str) -> ExecutionIdentity {

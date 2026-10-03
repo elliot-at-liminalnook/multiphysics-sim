@@ -1,5 +1,20 @@
 # Hardware front end: the operator's checklist
 
+
+**Current migration — leg-in-process LIP1–LIP3, 2026-10-03.** The native
+viewer now uses local Rust sessions and jobs-owned workers. The current launch,
+action-level source map, safety comparisons and operator run sheets are in
+[leg-in-process.md](leg-in-process.md). All five outcomes are reviewed by reading
+only; no new build, test, launch, screenshot, publication or hardware execution
+is claimed. The older server launch paths/driver receipts and transport rows
+below are historical reference evidence and are superseded for native launch.
+Current `hc/` request/status owners are `sim_runtime::hardware::protocol`;
+`hardware_client` re-exports them only for browser compatibility. STOP latches
+independently and authoritative release/readback is reported separately.
+Native virtual calibration is direct Bench packet I/O; virtual Sync is labelled
+host Bench simulation, not FPGA-profile parity. Physical run sheets remain
+unexecuted. CAD still needs RoboCAD's service; this is not a §9 completion.
+
 This is the pending operator checklist for the native hardware front end in
 [architecture/native-viewer.md](architecture/native-viewer.md) §8. The
 LC1–LC3 batch covers **HW-01–HW-09**. The native-leg-clock-alignment batch

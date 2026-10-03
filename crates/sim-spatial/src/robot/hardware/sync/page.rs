@@ -7,7 +7,7 @@ use crate::robot::hardware::settings::{SyncBinding, sign};
 use crate::robot::hardware::view::fixed;
 use crate::robot::run::ReplayPhase;
 use serde_json::Value;
-use sim_runtime::hardware_client::bench;
+use sim_runtime::hardware::protocol::bench;
 
 /// The page's `snapshot().live` (`!playback`): a preset's own physics run,
 /// not a recorded preset, not a replay in progress or a run a replay

@@ -7,7 +7,7 @@
 //!   and where every parameter came from;
 //! - `sim-task` cards: the task's own scene and sandbox, judged on each run;
 //! - `sim-lab` cards: a prediction, the operator checklist, and the bench
-//!   step through the calibration server (never driven from here);
+//!   step through the shared in-process calibration worker;
 //! - time on screen, rewinds and narration skips per block, for authors.
 use super::*;
 use crate::builder::ui::num;
@@ -56,6 +56,7 @@ pub(crate) struct LabState {
     pub prediction: String,
     job: Option<crate::jobs::Job<serde_json::Value>>,
     pub running: bool,
+    pub(super) control: Option<std::sync::Arc<super::lab::Control>>,
     pub result: Option<Result<serde_json::Value, String>>,
 }
 
@@ -191,39 +192,6 @@ impl Learn {
                 }
             }
         }
-    }
-
-    /// Ask the bench for a lab step (checklist ticked, prediction given).
-    pub(crate) fn run_lab(&mut self, id: &str) -> Result<(), String> {
-        let lab = self.lesson.as_ref().and_then(|l| l.lab(id)).cloned().ok_or("no such lab")?;
-        let base = lesson_lab::bench_url().ok_or("no bench: start the calibration server and set SIM_BENCH_URL (e.g. http://127.0.0.1:8123)")?;
-        let state = self.labs.entry(id.into()).or_default();
-        if lab.predict.is_some() && sim_lesson::units::split_quantity(&state.prediction).is_none() {
-            return Err("write your prediction first".into());
-        }
-        if !state.ticks.iter().all(|t| *t) {
-            return Err("tick every item of the checklist first".into());
-        }
-        // Network requests to the bench, up to a minute: a dedicated thread.
-        let job = crate::jobs::Job::spawn(crate::jobs::Pool::Dedicated, 0, "the bench request", move |_| {
-            lesson_lab::bench_start(&base, &lab, true).and_then(|_| {
-                let started = std::time::Instant::now();
-                loop {
-                    std::thread::sleep(std::time::Duration::from_millis(300));
-                    let status = lesson_lab::bench_status(&base)?;
-                    if let Some(r) = lesson_lab::bench_result(&status)? {
-                        return Ok(r);
-                    }
-                    if started.elapsed().as_secs() > 60 {
-                        return Err("the bench did not finish within a minute".into());
-                    }
-                }
-            })
-        });
-        state.job = Some(job);
-        state.running = true;
-        state.result = None;
-        Ok(())
     }
 
     /// Record a finished lab step in progress (once).
@@ -470,7 +438,8 @@ pub(super) fn task_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &
 
 pub(super) fn lab_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &sim_lesson::Block, lab: &Lab, theme: &crate::markdown::Theme) {
     let state = l.labs.get(&lab.id);
-    let bench = lesson_lab::bench_url();
+    let configured = lesson_lab::bench_config();
+    let bench = configured.as_ref().ok().and_then(|p| p.as_ref());
     col.spawn((frame(), super::ui::BlockNode(b.id.clone()))).with_children(|c| {
         c.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, ..default() }).with_children(|r| {
             r.spawn(k.text(if lab.title.is_empty() { &lab.id } else { &lab.title }, 15., TEXT, 2));
@@ -518,14 +487,15 @@ pub(super) fn lab_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &s
         let ready = bench.is_some() && state.is_some_and(|s| s.ticks.iter().all(|t| *t)) && (lab.predict.is_none() || state.is_some_and(|s| sim_lesson::units::split_quantity(&s.prediction).is_some()));
         let running = state.is_some_and(|s| s.running);
         c.spawn(wrap()).with_children(|r| {
+            r.spawn(k.button("STOP motors", LessonAction::LabStop, Look::Danger, true));
             r.spawn(k.button(if running { "Running on the bench…" } else { "Run on the bench" }, LessonAction::LabRun(lab.id.clone()), Look::Primary, ready && !running));
         });
         match &bench {
             None => {
-                c.spawn(k.text("No bench is connected. To run it, start the calibration server with the leg on its fixture and set SIM_BENCH_URL. The supervisor, taught travel window and STOP stay in charge; this page only asks.", 11.5, FAINT, 0));
+                c.spawn(k.text(configured.as_ref().err().map(String::as_str).unwrap_or("Set SIM_BENCH_CONFIG to a local calibration JSON file. No hardware server is used. The operator, supported fixture, taught windows, independent supervisor and STOP remain required."), 11.5, FAINT, 0));
             }
-            Some(url) => {
-                c.spawn(k.text(format!("Bench: {url} · the server backs the joint to one end of its taught window, then runs the test under the campaign's guards."), 11.5, FAINT, 0));
+            Some(path) => {
+                c.spawn(k.text(format!("Local bench: {} · shared calibration acquisition under the campaign guards.", path.display()), 11.5, FAINT, 0));
             }
         }
         // 4. Compare.

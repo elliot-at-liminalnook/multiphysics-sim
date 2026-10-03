@@ -26,7 +26,7 @@
 //! shared raster's rule; the page marks each one).
 use super::view::{fixed, js_num};
 use serde::Serialize;
-use sim_runtime::hardware_client::calibration::{Axis, Sweep, SweepSample, Telemetry};
+use sim_runtime::hardware::protocol::calibration::{Axis, Sweep, SweepSample, Telemetry};
 
 /// The heading and the note under the chart (:12).
 pub const HEADING: &str = "Command vs real motion";

@@ -1,72 +1,14 @@
-//! Robot mode's Leg calibration and hardware panel (docs/architecture/
-//! native-viewer.md §8, ledger docs/hardware-parity.md): a native front end,
-//! feature for feature, over the browser's `web/viewer/calibration-ui.mjs`
-//! (with `actuator-motion-view.mjs`), `calibration-mirror.mjs` and
-//! `hardware-sync.mjs`. It talks to the existing Rust hardware servers
-//! (`serve_actuator_calibration`, `serve_motor_bench`) through the one typed
-//! loopback client, `sim_runtime::hardware_client`. The servers keep the
-//! serial bus, leases, watchdogs, the supervisor and STOP; nothing here opens
-//! a serial port or computes a motor command.
-//!
-//! - **Where it lives.** A dock inside Robot mode (not a mode of its own),
-//!   shown by the header's "Leg calibration" button, or open from launch
-//!   with `--hardware URL`. [`Hardware`] (a resource) is inserted when Robot
-//!   mode is entered and removed when it is left.
-//! - **Actions** ([`actions`]): every intent is a [`HardwareAction`], written
-//!   by the panel's buttons, keys (Q/A hold-to-move, Z/Escape stop), window
-//!   focus loss, `system_ui` and REST, and applied by one system,
-//!   [`actions::apply`], in `ViewerSet::Actions`. Motion-starting actions
-//!   ([`HardwareAction::starts_motion`]) share [`HardwareAction::authorize`].
-//!   Remote HW-01–HW-09 calibration requires verified virtual provenance pinned
-//!   to this connection generation; a stale status (unless the link thread
-//!   still awaits a request's answer), a lost connection or binding (transport,
-//!   or the server's 409) and an identity replacement revoke it until an
-//!   explicit reconnect; an ordinary refusal (400) does not. Gait playback
-//!   (Leg and Both on the virtual bench, labelled simulated) is allowed the
-//!   same way; raw step, flip, live sync and bindings stay refused. STOP
-//!   and the gait's Stop are immediate and unconditional. Remote replies (REST, and `system_ui` activations, which
-//!   robot mode passes on with their own reply) await the link thread's
-//!   verdict on what the command achieved; queueing is not success.
-//! - **Link** ([`link`], [`session`]): one `jobs::RunThread`
-//!   ("hardware-link") per connection runs the page's session logic
-//!   (select, hold-to-move, sweeps, tune, campaign, gait on the leg): it
-//!   polls `/calibration/status` (600 ms, 150 ms while a session or leg gait
-//!   runs) and, through its own "hardware-beat" worker (so a slow request
-//!   cannot let a lease lapse), the `motion_update` heartbeat every 100 ms
-//!   while a motion session is open and the gait lease every 300 ms, with
-//!   one increasing sequence, and publishes a generation-stamped
-//!   [`link::LinkSnapshot`]. When its channel closes (the link dropped:
-//!   panel reconnect, mode exit, window close) it sends STOP before it
-//!   returns.
-//! - **STOP never queues** ([`link::stop_now`]): the button, Z, Escape,
-//!   REST `hardware_stop` (always posted, id-less without a known motor),
-//!   focus loss, panel close and mode exit (with a known motor, or id-less
-//!   only if this link drove: [`link::LinkSnapshot::drove`]) post STOP on a fresh connection
-//!   from a `jobs::Pool::Dedicated` job (`complete_on_drop`), not through the
-//!   link thread, so it cannot wait behind a slow request (a select proving
-//!   watchdogs, a hardware reply the server waits up to 8 s for). The
-//!   server latches its stop flags as soon as it parses the request.
-//! - **Loss stops any drive** (`handlers::loss`): focus loss, panel close
-//!   and window close stop whenever [`link::drive_active`] (a session,
-//!   start, busy select, sweep-all, tune, campaign or leg gait), wider than
-//!   the page's `loss()` (ready, starting or a session only) on purpose,
-//!   and stop a live sync this viewer opened (not another client's). A
-//!   window close also writes STOP synchronously
-//!   (`Client::send_only`, the page's `keepalive` fetch on `pagehide`),
-//!   since the detached STOP job may not outlive the process.
-//! - **Mirror** ([`mirror`]) and **live sync** ([`sync`]): the suspended
-//!   robot posed from the measured encoders through the shared
-//!   `sim_runtime::kinematic_mirror::KinematicMirror` on a jobs worker, and
-//!   the Real motor sync section streaming a live run's named motor targets
-//!   to `serve_motor_bench` `/live/*` (samples on its RunThread, `/status`
-//!   and `/stop` on their own jobs, so neither waits behind the other). Their preferences persist in
-//!   the shared `app::settings::SettingsOwner` (never calibration data),
-//!   loaded through jobs and seeded as inactive form choices.
-//! - **UI** ([`panel`], `panel_sections`, [`view`], [`dial`],
-//!   [`motion_view`]): ui_kit widgets in the page's order and labels;
-//!   [`view`] holds the page's `render()` rules as pure functions of the
-//!   snapshot and the form; `handlers` holds one handler per action.
+//! Robot mode's native hardware front end over shared in-process applications.
+//! One HardwareAction apply writes UI state in ViewerSet::Actions; jobs-owned
+//! link/beat/sync/mirror workers publish generation-stamped frames. Physical
+//! serial acquisition, safety, limits and durable records belong to sim-runtime.
+//! Explicit local configuration files replace hardware URLs and token discovery.
+//! STOP first reaches the shared latch synchronously, then an independent Job
+//! awaits authoritative release evidence. Latch acceptance alone is never
+//! stationary readback. Mode exit, focus loss, panel close and link replacement
+//! retain the same unconditional safety paths and no native HTTP fallback.
 pub(crate) mod actions;
+pub(crate) mod local;
 pub(crate) mod dial;
 mod handlers;
 pub(crate) mod link;
@@ -86,29 +28,17 @@ pub(crate) use actions::HardwareAction;
 use bevy::prelude::*;
 use std::path::PathBuf;
 
-/// The calibration server's usual address
-/// (examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/README.md).
-pub const DEFAULT_CALIBRATION_URL: &str = "http://127.0.0.1:4194";
-
-/// A hardware server the operator started, as given at launch.
+/// An explicit local driver configuration file. No URL or token is interpreted.
 #[derive(Clone, Debug, PartialEq)]
-pub struct ServerTarget {
-    /// `http://127.0.0.1:PORT` (loopback only; the client refuses anything else).
-    pub url: String,
-    /// A file holding the server's control token; None: read it from the page
-    /// the server serves, as the browser receives it.
-    pub token_file: Option<PathBuf>,
+pub struct LocalTarget {
+    pub config_file: PathBuf,
 }
 
-/// Launch facts for the panel (`--hardware`, `--hardware-token-file`,
-/// `--motor-bench`, `--motor-bench-token-file`); kept in `app::switch::Documents`
-/// so they survive mode switches.
+/// Launch configuration survives Robot mode switches; driver ownership does not.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct HardwareConfig {
-    /// `serve_actuator_calibration`; None: the panel's Connect uses [`DEFAULT_CALIBRATION_URL`].
-    pub calibration: Option<ServerTarget>,
-    /// `serve_motor_bench` (live sync); None: the Real motor sync section explains how to start it.
-    pub bench: Option<ServerTarget>,
+    pub calibration: Option<LocalTarget>,
+    pub bench: Option<LocalTarget>,
 }
 
 /// The panel's collapsible sections (the page's `<details>`), with the
@@ -146,10 +76,10 @@ pub(crate) struct Hardware {
     pub config: HardwareConfig,
     /// The panel is shown (the page's `!panel.hidden`).
     pub open: bool,
-    /// The calibration server's link (None until connected).
+    /// The local calibration application's link (None until connected).
     pub link: Option<link::Link>,
-    /// Token discovery and the link's start, off the UI thread.
-    pub connecting: Option<crate::jobs::Job<sim_runtime::hardware_client::Client>>,
+    /// Local configuration loading and the driver's start, off the UI thread.
+    pub connecting: Option<crate::jobs::Job<local::Client>>,
     /// Why the last connect failed, or a local refusal to show in the panel.
     pub notice: Option<String>,
     /// The page's form controls (sliders, checkboxes, selects, open sections).
@@ -222,7 +152,7 @@ pub(crate) struct PendingPress {
 
 impl Hardware {
     /// The state Robot mode starts with: the launch's servers, the saved
-    /// preferences and the page's initial form; open when `--hardware` was
+    /// preferences and the page's initial form; open when `--hardware-config` was
     /// given (the caller then starts connecting). Nothing is connected yet.
     pub fn new(config: HardwareConfig, settings: settings::Settings) -> Self {
         Hardware {
@@ -254,14 +184,14 @@ impl Hardware {
         }
     }
 
-    /// The calibration server to connect to (`--hardware`, else [`DEFAULT_CALIBRATION_URL`]).
-    pub fn target(&self) -> ServerTarget {
-        self.config.calibration.clone().unwrap_or_else(|| ServerTarget { url: DEFAULT_CALIBRATION_URL.into(), token_file: None })
+    pub fn target(&self) -> Result<LocalTarget, String> {
+        self.config.calibration.clone().ok_or_else(|| "No local calibration configuration. Launch with --hardware-config FILE; hardware server URLs and tokens are obsolete.".into())
     }
 
-    pub fn url(&self) -> String {
-        self.target().url
+    pub fn configuration_label(&self) -> String {
+        self.config.calibration.as_ref().map(|t| t.config_file.display().to_string()).unwrap_or_else(|| "no local calibration configuration".into())
     }
+
 }
 
 /// What the leg mirror shows instead of the run's frame (`RobotView`'s

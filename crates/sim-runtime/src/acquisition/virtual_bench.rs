@@ -19,7 +19,8 @@ pub enum ServoMode {
     Pwm,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MotorModel {
     /// Counts/s per unit duty beyond moving friction.
     pub speed_gain: f64,

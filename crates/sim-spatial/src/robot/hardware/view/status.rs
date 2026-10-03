@@ -2,11 +2,11 @@
 use crate::robot::hardware::Hardware;
 use crate::robot::hardware::panel::panel_view;
 use serde_json::{Value, json};
-use sim_runtime::hardware_client::calibration::Status;
+use sim_runtime::hardware::protocol::calibration::Status;
 use std::collections::BTreeMap;
 use std::time::Instant;
 
-/// REST `hardware_status`: the link (connected, url, generation, stale and
+/// REST `hardware_status`: the link (connected, configuration, generation, stale and
 /// the age of the last read; `link_state`, one of `none`, `waiting`, `live`,
 /// `stale`, `disconnected` ([`LinkHealth::name`](crate::robot::hardware::link::LinkHealth::name)),
 /// and `link_note`, why the leg's data is not live), the page's session
@@ -33,7 +33,7 @@ pub fn status_json(hw: &Hardware, now: Instant) -> Value {
         "open": hw.open,
         "connected": connected,
         "connecting": hw.connecting.is_some(),
-        "url": hw.url(),
+        "configuration": hw.configuration_label(),
         "generation": hw.link.as_ref().map(|l| l.generation),
         "stale": hw.link.is_some() && (s.stale(now) || !s.connection_valid || s.authorization_revoked),
         "link_reachable": hw.link.is_some() && s.connection_valid,
@@ -94,6 +94,7 @@ fn server_json(st: &Status) -> Value {
     });
     json!({
         "execution": st.execution,
+        "release": st.release, "stop_epoch": st.stop_epoch, "stop_latched": st.stop_latched,
         "fidelity": if st.execution.as_ref().is_some_and(|i| i.is_virtual_calibration()) { "virtual_simulated" } else { "physical_or_unknown" },
         "connected": st.connected, "enabled_id": st.enabled_id, "busy": st.busy, "message": st.message, "error": st.error,
         "output": st.output, "coordinate_session": st.coordinate_session, "maximum_speed_counts_s": st.maximum_speed_counts_s,

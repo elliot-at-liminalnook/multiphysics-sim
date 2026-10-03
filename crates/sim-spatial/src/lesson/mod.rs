@@ -30,6 +30,7 @@ mod agent;
 mod controls;
 mod editing;
 pub(crate) mod extras;
+mod lab;
 pub(crate) mod frames;
 mod handler;
 pub(crate) mod narrate;
@@ -183,6 +184,7 @@ pub(crate) enum LessonAction {
     LabTick(String, usize),
     LabPredict(String),
     LabRun(String),
+    LabStop,
     /// A mixed review session across lessons; next question; stop.
     ReviewSession,
     ReviewNext,
@@ -614,6 +616,7 @@ impl Learn {
         if self.active == learn {
             return;
         }
+        if !learn { self.stop_labs(); }
         self.active = learn;
         self.switched = true;
         self.dirty = true;
@@ -638,6 +641,7 @@ impl Plugin for LearnPlugin {
         let open = || in_state(crate::app::ModeScope::Builder).and_then(resource_exists::<Learn>);
         crate::app::actions::register::<actions::LessonCommand>(app);
         actions::add_fields(app);
+        app.add_systems(Update, lab::window_loss.in_set(crate::app::InputSet::Window));
         // Keys, buttons, the timebars and slider releases write lesson actions;
         // the one handler applies them and REST's (in build and lessons:
         // without a lesson, REST is told so).

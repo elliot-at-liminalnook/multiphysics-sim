@@ -2,7 +2,7 @@
 //! a snapshot and an instant, so every case builds `now` from the read
 //! instant (`read + d`) instead of sleeping.
 use super::*;
-use sim_runtime::hardware_client::calibration::GaitState;
+use sim_runtime::hardware::protocol::calibration::GaitState;
 
 fn close(a: f64, b: f64) -> bool {
     (a - b).abs() < 1e-12

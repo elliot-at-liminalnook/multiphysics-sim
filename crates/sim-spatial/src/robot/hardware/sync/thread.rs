@@ -1,7 +1,7 @@
 //! The "hardware-sync" thread: `/live/open` and the newest sample every
 //! [`SEND_PERIOD`] while a session is active.
 use super::{SEND_PERIOD, SyncCommand, SyncShared};
-use sim_runtime::hardware_client::{Body, Client, bench};
+use crate::robot::hardware::local::{Body, Client, bench};
 use std::sync::{Arc, Mutex, MutexGuard, mpsc};
 use std::time::Instant;
 
@@ -20,14 +20,14 @@ pub(super) struct Outbox {
 /// Applies `first` and every queued command in order, re-checking the queue after each (a stop
 /// sent during `/live/open` is seen before any sample); the newest Latest wins.
 /// True when a session opened and is still active (send at once, :23).
-pub(super) fn drain(rx: &mpsc::Receiver<SyncCommand>, first: Option<SyncCommand>, out: &mut Outbox, open: &mut dyn FnMut(&Body) -> Result<(), String>) -> bool {
+pub(super) fn drain(rx: &mpsc::Receiver<SyncCommand>, first: Option<SyncCommand>, out: &mut Outbox, open: &mut dyn FnMut(&Body,u64) -> Result<(), String>) -> bool {
     let (mut next, mut opened) = (first, false);
     while let Some(command) = next.take().or_else(|| rx.try_recv().ok()) {
         match command {
             SyncCommand::Latest(s) => out.latest = Some(s),
-            SyncCommand::Open { body, last_sent } => {
+            SyncCommand::Open { body, last_sent, stop_epoch } => {
                 out.last_sent = last_sent;
-                out.active = open(&body).is_ok();
+                out.active = open(&body,stop_epoch).is_ok();
                 opened = true;
             }
             SyncCommand::Deactivate => out.active = false,
@@ -41,8 +41,8 @@ pub(super) fn drain(rx: &mpsc::Receiver<SyncCommand>, first: Option<SyncCommand>
 pub(super) fn worker(client: Client, rx: mpsc::Receiver<SyncCommand>, shared: Arc<Mutex<SyncShared>>) {
     let mut out = Outbox::default();
     let mut next_send = Instant::now() + SEND_PERIOD;
-    let mut open = |body: &Body| {
-        let result = client.post(bench::LIVE_OPEN, body).map(|_| ()).map_err(|e| e.to_string());
+    let mut open = |body: &Body, stop_epoch: u64| {
+        let result = client.post_at_epoch(bench::LIVE_OPEN, body, stop_epoch).map(|_| ()).map_err(|e| e.to_string());
         lock(&shared).open = Some(result.clone());
         result
     };

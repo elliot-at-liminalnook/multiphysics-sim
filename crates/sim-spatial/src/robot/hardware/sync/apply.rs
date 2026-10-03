@@ -9,6 +9,7 @@ pub fn apply(hw: &mut Hardware, action: &HardwareAction, view: Option<&RobotView
     let s = &mut hw.sync;
     match action {
         HardwareAction::SyncConnect => return s.connect(),
+        HardwareAction::SyncInspect => return s.inspect(),
         HardwareAction::SyncStart => {
             s.start(view, run)?;
             if s.preparing {

@@ -6,7 +6,7 @@
 use super::{Session, SweepAll};
 use crate::robot::hardware::actions::GaitMode;
 use crate::robot::hardware::link::{CAMPAIGN_TICK, GaitRun, Intent, SWEEP_ALL_TICK, TUNE_TICK};
-use sim_runtime::hardware_client::calibration::{self, GaitBinding, GaitEntry, Gaits};
+use sim_runtime::hardware::protocol::calibration::{self, GaitBinding, GaitEntry, Gaits};
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -366,9 +366,10 @@ impl Session {
         self.command_error = earlier;
         match failed {
             Some(e) => format!("{why}; releasing {what} failed: {e}. Press STOP."),
+            None if super::super::view::release_verified(&self.snap.state) => format!("{why}; {what} released; torque-off and stationary readback verified"),
             None => match self.snap.state.message.as_deref().map(str::trim).filter(|m| !m.is_empty()) {
-                Some(answer) => format!("{why}; {what} released (STOP sent: {answer})"),
-                None => format!("{why}; {what} released (STOP sent)"),
+                Some(answer) => format!("{why}; STOP requested for {what}; release readback pending or uncertain ({answer})"),
+                None => format!("{why}; STOP requested for {what}; release readback pending or uncertain"),
             },
         }
     }

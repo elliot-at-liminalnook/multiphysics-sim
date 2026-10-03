@@ -10,9 +10,10 @@
 //!   connect that fails or is cancelled stops it too.
 //! - **Poll** (a `RunThread` "cad-poll", its own client with a
 //!   [`POLL_TIMEOUT`]): `GET /` and `GET /selection` every [`POLL_PERIOD`]
-//!   (or at once on `PollCommand::Refresh`); `GET /doc`, `/commands` and
-//!   (GUI) `/autosave` when the (document id, revision) changed or on
-//!   Refresh. Errors are published verbatim, never hidden. Between requests
+//!   (or at once on `PollCommand::Refresh`), and from a desktop window
+//!   (`health.gui`) `GET /autosave` too (its state changes without the
+//!   revision moving); `GET /doc` and `/commands` when the (document id,
+//!   revision) changed or on Refresh. Errors are published verbatim, never hidden. Between requests
 //!   it checks its channel, so a dropped document's worker exits after at
 //!   most the request in progress.
 //! - **Results** ([`receive`], `ViewerSet::JobResults`): the connect, the
@@ -51,10 +52,10 @@ use std::time::{Duration, Instant};
 
 /// How often the poll worker asks RoboCAD for its health and selection.
 pub const POLL_PERIOD: Duration = Duration::from_millis(500);
-/// The poll's timeout for `GET /` and `GET /selection`: shorter than
-/// `cad_client::REQUEST_TIMEOUT` so a hung service shows as Lost within
-/// seconds and a dropped document's worker exits soon. `/doc`, `/commands`
-/// and `/autosave` keep `REQUEST_TIMEOUT` (a large document's `/doc` may take
+/// The poll's timeout for `GET /`, `GET /selection` and `GET /autosave`:
+/// shorter than `cad_client::REQUEST_TIMEOUT` so a hung service shows as
+/// Lost within seconds and a dropped document's worker exits soon. `/doc`
+/// and `/commands` keep `REQUEST_TIMEOUT` (a large document's `/doc` may take
 /// longer; a slow tick is its own back-off).
 pub const POLL_TIMEOUT: Duration = Duration::from_secs(5);
 /// How long dropping the poll worker waits for it (it may sit in a request
@@ -187,6 +188,16 @@ fn poll_loop(client: &CadClient, slow: &CadClient, commands: &Receiver<PollComma
         if drain(commands, &mut again) {
             return;
         }
+        // RoboCAD's autosave state changes without the revision moving (a
+        // write finishing: `notify("autosaved")` leaves it; the window's
+        // timer starting one), so a desktop window's is read every tick,
+        // one small main-thread read like `GET /` (api.py `autosave`). A
+        // headless service has none (None: the line says not applicable);
+        // a failed `GET /` keeps the last one.
+        let autosave = health.as_ref().ok().map(|h| h.gui.then(|| client.autosave().map_err(|e| e.to_string())));
+        if drain(commands, &mut again) {
+            return;
+        }
         let mut fetch = None;
         if let Ok(h) = &health {
             let key = (h.document_id.clone(), h.revision);
@@ -199,11 +210,10 @@ fn poll_loop(client: &CadClient, slow: &CadClient, commands: &Receiver<PollComma
                 if drain(commands, &mut again) {
                     return;
                 }
-                let autosave = h.gui.then(|| slow.autosave().map_err(|e| e.to_string()));
                 if let Ok(d) = &doc {
                     fetched = Some((d.document_id.clone(), d.revision));
                 }
-                fetch = Some((doc, registry, autosave));
+                fetch = Some((doc, registry));
             }
         }
         // A Refresh pending on a tick whose `GET /` failed is kept for the next.
@@ -213,7 +223,11 @@ fn poll_loop(client: &CadClient, slow: &CadClient, commands: &Receiver<PollComma
         snapshot.seq = seq;
         snapshot.health = Some(health);
         snapshot.selection = Some((sent, selection));
-        if let Some((doc, registry, autosave)) = fetch {
+        // Applied by `take_snapshot` only when it differs from the shown one.
+        if let Some(autosave) = autosave {
+            snapshot.autosave = autosave;
+        }
+        if let Some((doc, registry)) = fetch {
             match doc {
                 Ok(d) => {
                     snapshot.doc_key = Some((d.document_id.clone(), d.revision));
@@ -223,7 +237,6 @@ fn poll_loop(client: &CadClient, slow: &CadClient, commands: &Receiver<PollComma
                 Err(e) => snapshot.doc_error = Some(e),
             }
             snapshot.commands = Some(registry);
-            snapshot.autosave = autosave;
         }
     }
 }
@@ -387,8 +400,12 @@ fn take_snapshot(doc: &mut CadDocument, shared: &mut Shared) {
         if s.seq <= doc.seen_poll {
             return;
         }
-        // The tree is cloned only when it is newer than the shown one.
-        let doc_changed = s.doc_key != doc.doc_key;
+        // The tree is cloned only when it is newer than the shown one, or
+        // when its active group differs at the same key: RoboCAD's
+        // `set_active_group` notifies without moving the revision
+        // (document.py `notify`), so the refetch after Set as active group
+        // or Clear active group carries the same (id, revision).
+        let doc_changed = s.doc_key != doc.doc_key || s.doc.as_ref().map(|d| &d.active_group) != doc.doc.as_ref().map(|d| &d.active_group);
         PollSnapshot {
             seq: s.seq,
             health: s.health.clone(),

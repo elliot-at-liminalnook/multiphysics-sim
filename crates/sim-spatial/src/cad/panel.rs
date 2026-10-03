@@ -599,7 +599,7 @@ fn autosave_line(doc: &CadDocument) -> Option<(String, bool)> {
                 line += &format!(" · saved revision {r}");
             }
             if let Some(r) = a.revision {
-                line += &format!(" · document revision {r}");
+                line += &format!(" · writing revision {r}");
             }
             if let Some(p) = &a.path {
                 line += &format!(" · {p}");

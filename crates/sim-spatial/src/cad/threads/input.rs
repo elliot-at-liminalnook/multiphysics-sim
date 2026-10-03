@@ -209,10 +209,11 @@ fn input(doc: Option<ResMut<CadDocument>>, presses: Query<&ThreadsInput, With<cr
 }
 
 /// Input: Escape ends Annotate or returns to the assembly (see the module doc).
-/// An open file form (`files::form`) takes Escape first: it closes itself.
+/// An open file form (`files::form`) or results form (`results::forms`)
+/// takes Escape first: it closes itself without consuming the key.
 fn escape(keys: Option<ResMut<ButtonInput<KeyCode>>>, doc: Option<Res<CadDocument>>, files: Option<Res<crate::cad::files::CadFiles>>, mut out: MessageWriter<Act<CadAction>>) {
     let (Some(mut keys), Some(doc)) = (keys, doc) else { return };
-    let file_form = files.as_ref().is_some_and(|f| f.form.is_some());
+    let file_form = files.as_ref().is_some_and(|f| f.form.is_some()) || doc.results.form.is_some();
     if !keys.just_pressed(KeyCode::Escape) || doc.ops.surface.is_some() || doc.ops.form.is_some() || file_form {
         return;
     }

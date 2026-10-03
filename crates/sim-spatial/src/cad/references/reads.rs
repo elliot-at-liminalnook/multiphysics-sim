@@ -10,7 +10,10 @@
 //! - **System status**: `system_status()` per (generation, shown revision)
 //!   while the dock is open (or Open in builder asked for it): "Reading the
 //!   linked system file…" until then. Opening the dock and every link edit
-//!   read it again (the file can change on disk without a RoboCAD revision).
+//!   read it again, and so does every [`STATUS_PERIOD`] while the dock is
+//!   open: the file can change on disk without a RoboCAD revision, and
+//!   Accept changes is ready only once the status says "changed". A re-read
+//!   that answers the same marks nothing changed.
 //! - **Form**: the current image (the first image when none is current, as
 //!   RoboCAD's list) and its form, reloaded from each newer placement.
 //! - **After an import**: the align on its last image, once its placement is
@@ -32,6 +35,11 @@ use bevy::prelude::*;
 use sim_runtime::cad_client::{ImagePlacement, SystemStatus};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::{Duration, Instant};
+
+/// How often the open dock reads the linked system file's status again
+/// (one `system_status()`: RoboCAD reads and hashes the file).
+pub(crate) const STATUS_PERIOD: Duration = Duration::from_secs(2);
 
 /// (generation, shown revision).
 pub(crate) type Key = (u64, u64);
@@ -54,6 +62,8 @@ pub struct Reads {
     pub(crate) placement_job: Option<((Key, u64), Job<Vec<(String, Result<ImagePlacement, String>)>>)>,
     pub(crate) status: Option<(Key, Result<SystemStatus, String>)>,
     pub(crate) status_job: Option<(Key, Job<SystemStatus>)>,
+    /// When `status` landed (the open dock reads it again after [`STATUS_PERIOD`]).
+    pub(crate) status_at: Option<Instant>,
     /// Open in builder, Accept changes or Unlink asked for the status with
     /// the dock closed (an atomic: the controls' readiness, which reads the
     /// document shared, asks for it too).
@@ -184,16 +194,22 @@ pub(crate) fn tick(doc: &mut CadDocument) -> bool {
     let landed = reads.status_job.as_ref().and_then(|(k, job)| job.poll().map(|r| (*k, r)));
     if let Some((k, result)) = landed {
         reads.status_job = None;
+        // The periodic re-read usually answers the same: nothing shown changes.
+        let same = reads.status.as_ref().is_some_and(|(old, was)| *old == k && *was == result);
         reads.status = Some((k, result));
+        reads.status_at = Some(Instant::now());
         reads.want_status.store(false, Ordering::Relaxed);
-        changed = true;
+        changed |= !same;
     }
-    let wanted = (doc.references.open || reads.want_status.load(Ordering::Relaxed)) && reads.status_job.is_none() && reads.status.as_ref().is_none_or(|(k, _)| *k != now);
+    let unread = reads.status.as_ref().is_none_or(|(k, _)| *k != now);
+    let aged = doc.references.open && reads.status_at.is_some_and(|at| at.elapsed() >= STATUS_PERIOD);
+    let wanted = (doc.references.open || reads.want_status.load(Ordering::Relaxed)) && reads.status_job.is_none() && (unread || aged);
     if wanted && doc.doc.is_some()
         && let Some(c) = client
     {
         reads.status_job = Some((now, Job::spawn(Pool::Dedicated, now.0, "cad system status", move |_| c.system_status().map_err(|e| e.to_string()))));
-        changed = true;
+        // A periodic re-read shows nothing new until it answers differently.
+        changed |= unread;
     }
     // Another tool or interaction replaced the calibrate tool.
     if doc.references.calibrate.is_some() && (doc.tool != CadTool::Select || doc.ops.active.is_some()) {

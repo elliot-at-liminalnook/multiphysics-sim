@@ -51,7 +51,8 @@
 //!   the selection when the dragged row is selected, else that row: one
 //!   `Ops.move_nodes`. RoboCAD's refusals (a target that is not a group, a
 //!   group into itself or its descendants) are checked before sending
-//!   (`state::move_plan`).
+//!   (`state::move_plan`): no drop marker is drawn there, and a drop there
+//!   sends nothing and says why in the status line.
 //! - **Context menu** (`menu`; `_menu`, `_context_menu`, widgets.py:383-390,
 //!   403-437):
 //!   a right press on an unselected row selects it first; the kit popup

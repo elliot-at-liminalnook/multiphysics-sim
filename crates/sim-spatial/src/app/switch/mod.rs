@@ -454,11 +454,32 @@ pub(crate) fn handle(world: &mut World) {
                     continue;
                 }
             };
+            let target = request.mode;
             if let Err(e) = start(world, &mut switch, current, origin, request, interactive) {
+                if target == ViewerMode::Cad {
+                    drop_reveal(world, &switch, current);
+                }
                 switch.finish(world, origin, Err(e));
             }
         }
     });
+}
+
+/// A refused switch to CAD mode drops the thread another mode asked CAD mode
+/// to reveal (`cad::threads::RevealThread`, set by Robot mode's Open in CAD
+/// just before it writes this switch), so no reveal stays pending to land on
+/// a later, unrelated visit. Kept when the reveal belongs to a CAD mode that
+/// is active, or to another switch to CAD mode still loading or being
+/// entered (a second Open in CAD refused as "still being applied").
+fn drop_reveal(world: &mut World, switch: &Switcher, current: ViewerMode) {
+    let cad = ViewerMode::Cad;
+    let theirs = current == cad || switch.pending.as_ref().is_some_and(|p| p.mode == cad) || switch.entering.as_ref().is_some_and(|e| e.1 == cad);
+    if theirs {
+        return;
+    }
+    if let Some(mut reveal) = world.get_resource_mut::<crate::cad::threads::RevealThread>() {
+        reveal.set_if_neq(crate::cad::threads::RevealThread(None));
+    }
 }
 
 /// `screenshot`: the window as drawn, saved on the render thread after the next frame.

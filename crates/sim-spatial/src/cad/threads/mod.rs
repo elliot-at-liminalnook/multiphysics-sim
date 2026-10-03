@@ -87,8 +87,10 @@ pub(crate) const DRAFTING: &str = "Post or cancel your current draft first";
 /// keeps its thread, and the status line says why), or the status line
 /// says it is gone. A read that failed at the current revision, or a lost
 /// connection, ends the request with a status line; a document for another
-/// target drops it. One writer each way: the asking mode sets it
-/// ([`Reveal::new`]), [`read`]'s `sync` takes it.
+/// target drops it. The asking mode sets it ([`Reveal::new`]), [`read`]'s
+/// `sync` takes it; the window's switch drops it when the switch to CAD
+/// mode is refused (`app::switch::drop_reveal`) and when CAD mode is left
+/// (`app::switch::leave::leave_cad`), so none stays pending.
 #[derive(Resource, Default, Clone, Debug, PartialEq)]
 pub(crate) struct RevealThread(pub Option<Reveal>);
 #[derive(Clone, Debug, PartialEq)]

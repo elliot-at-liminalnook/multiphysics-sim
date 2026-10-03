@@ -19,7 +19,7 @@
 //! - **Entries** ([`entries`]): one list per surface, with each entry's
 //!   command id, label, keys, readiness and action; the drawing, the clicks,
 //!   [`handle`]'s REST answer and `system_ui` read the same list.
-//! - **Input** (ViewerSet::Input, before `numeric::entry`, the CAD keys
+//! - **Input** (ViewerSet::Input, before `CadKeySet::NumericEntry` (`numeric::entry`), the CAD keys
 //!   and transform's keys): the form, then the palette, then [`input`]
 //!   (entry clicks, presses outside, Escape), the radials, the context
 //!   menu's right-click, the two-step key gate (`keys::gate`). A click on an entry writes its action, then
@@ -322,7 +322,7 @@ pub(super) fn build(app: &mut App) {
                 .chain()
                 // The form's Tab focuses its first field before the numeric
                 // bar reads Tab (it stands aside while a field types).
-                .before(super::numeric::entry)
+                .before(crate::cad::CadKeySet::NumericEntry)
                 .run_if(in_state(ViewerMode::Cad)),
         )
         .add_systems(Update, (toolbar::refresh, toolbar::hint, draw, form::draw).chain().in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));

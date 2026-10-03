@@ -32,7 +32,8 @@
 //!   a `[label](part:ID)` link whose node is on a link selects that link
 //!   (`picked::select`, the one selection, keeping the inspector's scroll).
 //! - **Open in CAD** (`act::open_in_cad`): the CAD document switch, with the
-//!   thread to reveal in CAD's state (`cad::threads::RevealThread`).
+//!   thread to reveal in CAD's state (`cad::threads::RevealThread`); a
+//!   refused switch drops it (`app::switch::drop_reveal`).
 use super::{RobotView, Section};
 use crate::annotations::{Committed, InFlight, ThreadSource};
 use crate::app::ViewerMode;

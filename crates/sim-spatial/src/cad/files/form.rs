@@ -447,7 +447,7 @@ pub(super) fn input(
     doc: Option<Res<CadDocument>>,
     files: Option<ResMut<CadFiles>>,
     parts: Query<(&FilePart, Option<&Enabled>), With<crate::ui_kit::activation::Activated>>,
-    keys: Option<Res<ButtonInput<KeyCode>>>,
+    keys: Option<ResMut<ButtonInput<KeyCode>>>,
     // The field's messages are read first, then `TextFocus` acts (a `ParamSet`: one at a time).
     mut field: ParamSet<(MessageReader<FieldMsg>, TextFocus)>,
     mut out: MessageWriter<Act<CadAction>>,
@@ -537,11 +537,14 @@ pub(super) fn input(
     // No row typing (the kit consumes a typing field's keys): the form's
     // own Enter, Escape and Tab, as before.
     if !text.typing() && !text.ordinary_focused() && !submit && !close
-        && let Some(keys) = keys.as_ref()
+        && let Some(keys) = keys.as_mut()
     {
         if keys.just_pressed(KeyCode::Enter) {
             submit = true;
         } else if keys.just_pressed(KeyCode::Escape) {
+            // Consumed: the Select tool's Escape (`CadKeySet::ToolKeys`) must not
+            // also cancel on the press that closed this form.
+            keys.clear_just_pressed(KeyCode::Escape);
             close = true;
         } else if keys.just_pressed(KeyCode::Tab) {
             form.focus = next_text(&rows, None);

@@ -280,10 +280,15 @@ fn click(
 /// keys) and only with the keys free (no field typing, no pending chord:
 /// `keys::free`): Escape ends the active tool and is consumed, so the
 /// threads' Escape (`CadKeySet::Escape`) never sees the same press.
-/// An open file form (`files::form`) takes Escape first: it closes itself.
+/// An open file form (`files::form`) or results form (`results::forms`)
+/// takes Escape first: it closes itself; so does an open command surface or
+/// catalogue form (`surfaces::input` closes or cancels it). None of them
+/// consumes the key, so this reader stands aside for them, as the threads'
+/// Escape does.
 fn escape(doc: Option<Res<CadDocument>>, keys: Option<ResMut<ButtonInput<KeyCode>>>, files: Option<Res<crate::cad::files::CadFiles>>, mut out: MessageWriter<Act<CadAction>>) {
     let (Some(doc), Some(mut keys)) = (doc, keys) else { return };
-    if doc.references.calibrate.is_none() || !keys.just_pressed(KeyCode::Escape) || files.as_ref().is_some_and(|f| f.form.is_some()) {
+    let other = files.as_ref().is_some_and(|f| f.form.is_some()) || doc.results.form.is_some() || doc.ops.surface.is_some() || doc.ops.form.is_some();
+    if doc.references.calibrate.is_none() || !keys.just_pressed(KeyCode::Escape) || other {
         return;
     }
     keys.clear_just_pressed(KeyCode::Escape);

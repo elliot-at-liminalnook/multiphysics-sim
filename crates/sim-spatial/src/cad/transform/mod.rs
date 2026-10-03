@@ -266,9 +266,9 @@ pub(super) fn build(app: &mut App) {
             Update,
             (
                 // Before CAD's keys: a Tab or press that gives the bar the keyboard holds the frame's keys.
-                super::numeric::entry.in_set(crate::cad::CadKeySet::Focus),
+                super::numeric::entry.in_set(crate::cad::CadKeySet::NumericEntry),
                 // After the two-step key gate (`keys::free` reads it) and the numeric bar (its Tab may take the keyboard first).
-                keys.in_set(crate::cad::CadKeySet::ToolKeys).after(crate::cad::CadKeySet::Gate).after(super::numeric::entry).run_if(super::keys::free),
+                keys.in_set(crate::cad::CadKeySet::ToolKeys).after(crate::cad::CadKeySet::Gate).after(crate::cad::CadKeySet::NumericEntry).run_if(super::keys::free),
             )
                 .run_if(in_state(ViewerMode::Cad)),
         )

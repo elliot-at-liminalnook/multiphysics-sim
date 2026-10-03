@@ -53,7 +53,7 @@ pub(crate) fn controls_of(doc: &CadDocument, selection: &[SelectionItem]) -> Vec
     if let Some(state) = &doc.doc {
         let moving = with_descendants(state, &selected);
         for (group, path) in group_paths(state, &[]) {
-            let into = if moving.contains(&group) { Err(format!("cannot move a group into itself or its descendants ({path})")) } else { on_selection(doc, &selected) };
+            let into = if moving.contains(&group) { Err(format!("Cannot move a group into itself or its descendants ({path})")) } else { on_selection(doc, &selected) };
             add(&format!("move-{group}"), format!("Move to group {path}"), args(TreeOp::Move, |a| a.parent = Some(group.clone())), into);
             add(&format!("set_active-{group}"), format!("Set {path} as active group"), TreeArgs::on(TreeOp::SetActive, &group).action(), ready(blocked.clone()));
         }

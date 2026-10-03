@@ -166,7 +166,7 @@ pub(super) fn build(app: &mut App) {
             pointer
                 .in_set(crate::app::InputSet::Window)
                 .after(crate::cad::CadKeySet::Gate)
-                .after(super::numeric::entry)
+                .after(crate::cad::CadKeySet::NumericEntry)
                 .run_if(in_state(ViewerMode::Cad)),
         );
 }

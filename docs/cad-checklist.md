@@ -393,17 +393,17 @@ verification pass yet**.
 | CAD-173 Drag into a group, before a sibling | Drag two selected bodies onto the middle of a group row; undo; drag one body onto a body row in another group; then drag a group onto the top quarter of another group's row; finally drag a group onto one of its own children | The same drags in the Outliner | The same tree in both after the first two: on a group the rows move into it (at its end); on a body they move before it under its parent; each drag is one `move_nodes` undo step. The top quarter of a group row moves the group in front of it in the viewer, where RoboCAD drops into the group (recorded). A group onto its own child is refused in both ("Cannot move a group into itself or its descendants"; the viewer checks before sending) |
 | CAD-174 Context menu | Right-click an unselected body row (it becomes the selection), then a selected one: read the entries; **Hide**, **Show**, **Isolate**, **Show all**; **Lock**, then **Unlock**; **Group selection…** (`Organize components` / `Group name:` `Pair`, OK); under **Move to group**, **Top level**, then a group by its path ("A / B"); right-click a group: **Set as active group**; then **Clear active group**; registry `group.set_active` with no group selected | The same entries in RoboCAD's Outliner menu; the registry command "Set selected group as active" with no group selected | The same entries in the same order in both (Fit in view, Isolate, Hide, Show, Lock, Unlock, Group selection…, Move to group, Make unique (bake instance), Set as active group for one group, Delete, Clear active group, Show all); the same visibility, lock state, groups, moves and active group (its row in blue in both) after each, Hide and Show one undo step each; Move to group lists the same group paths in the same order, without the selection and its descendants, as a heading over indented entries in the viewer, a submenu in RoboCAD (recorded); with no group selected `group.set_active` is refused by name in the viewer, where RoboCAD silently clears the active group (recorded) |
 | CAD-175 New group | **New group** above the tree: `Group name:` `Empty`, OK; then New group with an empty name | Outliner ▸ **New group**, the same names | An empty group "Empty" appears in the same place in both, one undo step; an empty name creates nothing in both, and the viewer says why in the dialog (RoboCAD's dialog just closes: recorded) |
-| CAD-176 Comments section and Annotate | View ▸ Comments panel; **＋ Annotate model** (or N with the pointer over the 3D view): click a face of a body; type `Check this face`, **Post annotation**; then N and click empty space | View ▸ Comments panel, Annotate (N), click the same face, the same text | The same thread "1 · part" in both lists with the same preview and "Attached to surface"; the pin "1" at the clicked point in both; clicking empty space says "Click a visible surface to place the annotation" in both; with the composer focused, N is typed, not a new annotation. The viewer picks on the press and leaves the selection mode as it is (RoboCAD picks on the release and shows face mode while the tool is on: recorded) |
-| CAD-177 Reply with a part link | Select the thread; select another body in the tree; **Insert part link from selection**; type ` needs a fillet`; Shift+Enter, a second line; **Reply** (then, for a second reply, Enter) | The same in RoboCAD's Comments dock (Enter types a newline there; Reply posts) | The same reply in both, the link shown as the part's label; with nothing selected both say "Select a part in the outliner or viewport first"; in the viewer Enter posts and Shift+Enter is a newline (recorded) |
-| CAD-178 Click the part link | Click the link in the reply (use a link to a group) | Click the same link | Both show only that part and its descendants, framed, with "Part view: name" in the status line; the viewer selects exactly the linked node (as `cad_select`), RoboCAD the node with its descendants (recorded) |
-| CAD-179 Show on model | **Return to assembly**, then **Show on model** | **Show on model** | The anchor body is selected and the camera returns to the view saved with the thread in both; the viewer restores it from the thread list, not through RoboCAD's GUI-only `/threads/{id}/show` (recorded); on a thread of experiment evidence the viewer refuses by name (RoboCAD opens its experiments panel: cad-experiments-motion) |
-| CAD-180 Fit in view | **Fit in view** | **Fit in view** | Both frame the thread's linked parts at the current angle, select them and show the pins, "Fit annotation in view: names" in both |
-| CAD-181 Show only linked parts and Return | **Link selected parts** with two bodies selected; **Show only linked parts**; **Return to assembly**; again Show only linked parts, then Escape | The same | Only the linked parts are drawn in both, the tool hint "Showing linked parts only · Esc or Return to assembly restores your view"; Return and Escape restore the camera and the selection from before in both; no node's visibility changes in either (`GET /doc`), and RoboCAD's window is not isolated by the viewer's (recorded) |
-| CAD-182 Resolve and Reopen | **Resolve**; filter **Resolved**, then **Open**, then **All**; **Reopen** | The same | The thread moves between the filters the same way in both, "✓" when resolved; its pin is hidden while resolved in both |
-| CAD-183 Edit and delete a message | Select the reply, **Edit message**, change the text, **Save edit**; then **Delete message** | The same | The same text, then the message gone, in both; each one RoboCAD undo step |
-| CAD-184 Delete thread | **Delete thread** | **Delete thread** | The thread and its pin are gone in both; undo brings both back |
-| CAD-185 Pins | View ▸ Toggle comment pins off and on; click pin "1" | The same | The pins hide and show in both; a click on a pin opens its thread in the Comments section in both (amber for "needs review", blue otherwise) |
-| CAD-186 Reattach | Delete the anchored body (then undo after the step), so the thread says "Part deleted — reattach this annotation"; **Reattach…**, click another face | The same | The same attachment texts in both; after the click the thread is attached to the new face in both (one `PATCH`, one undo step) and its pin moves; the viewer picks on the press (recorded) |
+| CAD-176 Comments section and Annotate | View ▸ Comments panel; **＋ Annotate model** (or N with the pointer over the 3D view): click a face of a body; type `Check this face`, **Post annotation**; then N and click empty space | View ▸ Comments panel, Annotate (N), click the same face, the same text | The same thread "1 · part" in both lists with the same preview and "Attached to surface"; the pin "1" at the clicked point in both; clicking empty space says "Click a visible surface to place the annotation" in both; with the composer focused, N is typed, not a new annotation. The viewer picks on the press and leaves the selection mode as it is (RoboCAD picks on the release and shows face mode while the tool is on: recorded). A pin placed at a revision the shown document has since moved past is refused by name with the text kept, and Annotate again places it on the current model (trace "Remote refresh keeps the draft"). Trace: "Reading traces — annotations › CAD-176" (by reading, unexecuted) |
+| CAD-177 Reply with a part link | Select the thread; select another body in the tree; **Insert part link from selection**; type ` needs a fillet`; Shift+Enter, a second line; **Reply** (then, for a second reply, Enter) | The same in RoboCAD's Comments dock (Enter types a newline there; Reply posts) | The same reply in both, the link shown as the part's label; with nothing selected both say "Select a part in the outliner or viewport first"; in the viewer Enter posts and Shift+Enter is a newline (recorded). A draft whose thread is gone is kept and refused by name (trace "Remote refresh keeps the draft"). Trace: "Reading traces — annotations › CAD-177" (by reading, unexecuted) |
+| CAD-178 Click the part link | Click the link in the reply (use a link to a group) | Click the same link | Both show only that part and its descendants, framed, with "Part view: name" in the status line; the viewer selects exactly the linked node (as `cad_select`), RoboCAD the node with its descendants (recorded). Trace: "Reading traces — annotations › CAD-178" (by reading, unexecuted) |
+| CAD-179 Show on model | **Return to assembly**, then **Show on model** | **Show on model** | The anchor body is selected and the camera returns to the view saved with the thread in both; the viewer restores it from the thread list, not through RoboCAD's GUI-only `/threads/{id}/show` (recorded); the selection is pushed to RoboCAD (`GET /selection` shows the body), its camera is not moved. On a thread of experiment evidence both open the captured run: the viewer in its captured-run review, RoboCAD in its experiments panel; without a run_id or a connection the viewer refuses by name. Trace: "Reading traces — annotations › CAD-179" (by reading, unexecuted) |
+| CAD-180 Fit in view | **Fit in view** | **Fit in view** | Both frame the thread's linked parts at the current angle, select them and show the pins, "Fit annotation in view: names" in both. Trace: "Reading traces — annotations › CAD-180" (by reading, unexecuted) |
+| CAD-181 Show only linked parts and Return | **Link selected parts** with two bodies selected; **Show only linked parts**; **Return to assembly**; again Show only linked parts, then Escape | The same | Only the linked parts are drawn in both, the tool hint "Showing linked parts only · Esc or Return to assembly restores your view"; Return and Escape restore the camera and the selection from before in both; no node's visibility changes in either (`GET /doc`), and RoboCAD's window is not isolated by the viewer's (recorded). Trace: "Reading traces — annotations › CAD-181" (by reading, unexecuted) |
+| CAD-182 Resolve and Reopen | **Resolve**; filter **Resolved**, then **Open**, then **All**; **Reopen** | The same | The thread moves between the filters the same way in both, "✓" when resolved; its pin is hidden while resolved in both. Trace: "Reading traces — annotations › CAD-182" (by reading, unexecuted) |
+| CAD-183 Edit and delete a message | Select the reply, **Edit message**, change the text, **Save edit**; then **Delete message** | The same | The same text, then the message gone, in both; each one RoboCAD undo step. Trace: "Reading traces — annotations › CAD-183" (by reading, unexecuted) |
+| CAD-184 Delete thread | **Delete thread** | **Delete thread** | The thread and its pin are gone in both; undo brings both back. Trace: "Reading traces — annotations › CAD-184" (by reading, unexecuted) |
+| CAD-185 Pins | View ▸ Toggle comment pins off and on; click pin "1" | The same | The pins hide and show in both; a click on a pin opens its thread in the Comments section in both (amber for "needs review", blue otherwise). Trace: "Reading traces — annotations › CAD-185" (by reading, unexecuted) |
+| CAD-186 Reattach | Delete the anchored body (then undo after the step), so the thread says "Part deleted — reattach this annotation"; **Reattach…**, click another face | The same | The same attachment texts in both; after the click the thread is attached to the new face in both (one `PATCH`, one undo step) and its pin moves; the viewer picks on the press (recorded). Trace: "Reading traces — annotations › CAD-186" (by reading, unexecuted) |
 | CAD-187 Add reference images | View ▸ References; **＋ Add reference images…**: the absolute path of `<img>` in the path field, Enter; then drop `<img>` on the 3D view; then drop a `.step` file, and type a relative path in the path field | References ▸ **＋ Add reference images…**, the same file in the file dialog; then drop it on the viewport; then drop the `.step` file | One locked image node per file in both, on the active plane (else XY), 100 mm wide, the view aligned on it; the image textured on its plane at 60 % opacity in both; "n reference image(s) added • Calibrate scale before tracing"; the viewer takes one typed image per submit, not the system's file dialog (recorded); the `.step` drop and the relative path are refused by name in the viewer with nothing sent, where RoboCAD's import fails in Pillow (recorded) |
 | CAD-188 Visibility | Uncheck the image in the References list (its chip), then check it; read the list | The same | The image hides and shows in both, one undo step each; RoboCAD shows a preview thumbnail under the list, the viewer none (the image is drawn on its plane; recorded); a WebP or BMP image is listed in the viewer with a note that it is not drawn (recorded) |
 | CAD-189 Placement | Plane `Front (XZ)`, Width `200`, Origin `10, 0, 5`, Rotation `15`, Opacity `40`, **Apply placement** | The same fields, **Apply placement** | The same plane, size, rotation and opacity in both; "Reference placement updated • Ctrl+Z undoes"; one undo step |
@@ -558,7 +558,10 @@ are deliberate presentation differences, so this sequence cannot claim exact par
   attachment state reads "Attachment unknown" with a grey pin; Show on
   model and Show only linked parts are reproduced from the thread list
   (RoboCAD's `/threads/{id}/show` is GUI-only), and a thread of experiment
-  evidence is refused (cad-experiments-motion); reference images and the
+  evidence opens its captured run in the viewer's captured-run review
+  (RoboCAD: its experiments panel); a pin placed before RoboCAD's document
+  changed is not posted (Annotate again places it; RoboCAD posts it as
+  picked); reference images and the
   system file are typed in the viewer's path field, one image per submit,
   and non-image paths and drops are refused by name; a file dropped
   anywhere on the CAD window is imported; only PNG and JPEG (and MPO)
@@ -617,3 +620,386 @@ Button/CadButton/Enabled entities rather than catalogue registration alone.
 Python/OCCT, registry/experiment executables and local ffmpeg remain required;
 no assigned step requires a Qt window. Exact parity and physical qualification
 remain open. No fixture, build, launch, screenshot, capture or export ran.
+
+## Reading traces — annotations
+
+Each trace follows one Part I comment step (CAD-176 to CAD-186) from the
+native control to RoboCAD and back to what the Comments section, the pins
+and the status line show, plus four cross-cutting traces. Everything here
+is **by reading, unexecuted**: nothing was built, run or captured, and no
+step was compared side by side. Native paths are under
+`crates/sim-spatial/src/` unless they start with `crates/`; RoboCAD paths
+are under `cad/robocad/`. The common legs are written out once:
+
+- **Commit leg** (every thread edit): `cad/threads/ops.rs:handle` (167) →
+  `ops.rs:commit` (68) → `annotations/mod.rs:apply` (219; `ThreadOp` →
+  `ThreadCommand`, 175-193) → `cad/threads/source.rs:CadThreadSource::commit`
+  (423; a known thread through `request_on`, 475) → `source.rs:send` (321)
+  → `cad/edit.rs:edit_auxiliary_at` (65; refused by name with nothing sent
+  by `cad/document/state.rs:commit_refusal_for`, 141, when another edit is
+  in flight, the connection is down, or RoboCAD's revision moved since the
+  list was read) → `InFlight::submitted` (`source.rs:333`,
+  `annotations/mod.rs:107`) → the edit job runs `Request::send`
+  (`source.rs:283`) → `crates/sim-runtime/src/cad_client/threads.rs`
+  (`create_thread` 341, `update_thread` 351, `delete_thread` 355,
+  `add_comment` 359, `update_comment` 367, `delete_comment` 371) → RoboCAD
+  `api.py:1611-1613` → `api.py:annotation_request` (396-449) →
+  `annotations.py:AnnotationOps` (create 233, update 251, delete 271, reply
+  276, edit/delete message 284-305), each pushing exactly one
+  `ChangeThreads` (190-212) on the command stack (`commands.py:212-219`),
+  whose `apply` sets `dirty` and calls `notify("annotations")`, which moves
+  `doc.revision` (`document.py:287-289`).
+- **Answer leg**: `cad/sync/mod.rs:finish_edit` (531) →
+  `cad/threads/mod.rs:edit_answered` (451; only this source's sequences,
+  `InFlight::waits`, `annotations/mod.rs:115`) → `st.read.again()` (458;
+  the read epoch moves) and the draft ends only if it is still the text
+  sent (467) → the status line is the edit's message (`source.rs:324`:
+  RoboCAD's "Annotation saved in document • Ctrl+S writes the file •
+  Ctrl+Z undoes" after a post, reply or edit; "<label> · Ctrl+Z undoes"
+  otherwise) → `sync/mod.rs:refresh` (607) asks the poll for `/doc`.
+- **Re-read leg**: `cad/threads/read.rs:key` (59; generation, shown
+  revision, epoch) → `read.rs:sync` (281; JobResults, after
+  `CadSet::Results`) → `needs_work` (115) → `tick` (129) spawns one
+  `Pool::Dedicated` job (155) calling `CadClient::threads` (160;
+  `crates/sim-runtime/src/cad_client/threads.rs:328`, `GET /threads`,
+  `annotations.py:216` with `thread_detail`, 106-121) → `listed` (145) →
+  the dock (`cad/threads/dock.rs:draw`, 141; redrawn when `dock.rs:key`,
+  124, changes) and the pins (`cad/threads/pins.rs:draw`, 132; rebuilt on
+  `activation::render_key`, 150). While a newer key is read the old list
+  stays shown with "Comments as read at revision R; reading revision N…"
+  (`read.rs:line`, 86-101), and commits are refused by name until it lands
+  (`ops.rs:began`, 41-64).
+
+### CAD-176 Comments section and Annotate
+
+1. View ▸ Comments panel: registry `view.comments`
+   (`cad/surfaces/registry.rs:295`) → `Do::Organize` →
+   `cad/threads/mod.rs:command_action` (421) → `ThreadsOp::Dock {open:
+   true}` → `ops.rs:handle` (167) → the section is drawn (`dock.rs:draw`,
+   141) and the re-read leg starts (`read.rs:wanted`, 105).
+2. ＋ Annotate model (`dock.rs:155`, control `cad:threads:annotate`,
+   `controls.rs:70`) or N (`registry.rs:294`, `cad/keys.rs` →
+   `CadInvoke { tool.annotate }` → `command_action`, `mod.rs:424`) →
+   `ops.rs:181` → `cad/threads/annotate.rs:start` (51): refused while a
+   draft is open ("Post or cancel your current draft before placing
+   another pin", RoboCAD's `begin`, ui/comments.py:326-331), unless only
+   a stale pin is drafted (see "Remote refresh keeps the draft"); the
+   Select tool replaces another tool; the status line shows RoboCAD's hint
+   "Click a surface to place a comment • click a pin to read it • Esc
+   cancels" (`mod.rs:77`, ui/comments.py:100), also drawn in the section.
+3. The click: `annotate.rs:click` (160; Input) casts the cursor ray
+   (`transform::ray_hit`) on a left **press** over the 3D view and reads
+   the face only through `CadMeshes::face_at` at the shown revision (201);
+   nothing hit: the status line says "Click a visible surface to place the
+   annotation" (197, `MISSED`, 48; RoboCAD's ui/comments.py:121), the tool
+   stays. A hit writes `cad_threads {op: place, node, point, face, view,
+   revision}` (208).
+4. `ops.rs:182` → `annotate.rs:place` (83): refused when the click's
+   revision is not the shown one (90); the node must be in the shown tree;
+   the pending pin is `Pending {node, point, face, view, revision}` (118),
+   the composer gets the keyboard, the status line "Pin placed • write your
+   annotation, then Post annotation" (122; RoboCAD's ui/comments.py:346).
+   The "+" pin is drawn at the point (`pins.rs:106`).
+5. Typing `Check this face`: the kit field `COMPOSE`
+   (`cad/threads/input.rs:232`) mirrors into `ThreadsState::compose`
+   (`input.rs:108-114`). **N while the composer is focused is typed**: the
+   kit's `Typing` holds the keyboard, `cad/keys.rs:358` returns before any
+   binding, and `input.rs:input` runs in `CadKeySet::Focus` (239), before
+   CAD's keys.
+6. Post annotation (or Enter, `EnterKey::ShiftNewline`, 232) →
+   `input.rs:post` (76) → `controls.rs:submit_action` (21, `Create`) →
+   `ops.rs:create` (384; a stale pin is refused here, 387) → the commit leg
+   with `NewThread {node_id, point, face, view}` (`source.rs:444-453`) at
+   the pin's revision → RoboCAD `api.py:418-424` →
+   `annotations.py:create_thread` (233; `anchor`, 91-103, stores the
+   point, the geometry stamp and the face's description), undo step "Add
+   annotation".
+7. Answer leg: `mod.rs:edit_answered` opens the new thread (473-480:
+   filter All, current = RoboCAD's id) and ends the draft (467).
+8. Shown: the list row "1 · <part>" with the first message as preview
+   (`dock.rs:148`, `CadHost::heading` 88, `previewed` 93); the location
+   line "<part> · Attached to surface" (`dock.rs:179-191`,
+   `controls.rs:attachment` 40-48 = ui/comments.py:283); the pin "1" at the
+   point, blue (`pins.rs:80-101`, `ATTACHED` 38).
+
+### CAD-177 Reply with a part link
+
+1. The thread is current (`ops.rs:open`, 363). A body selected in the
+   tree is in the one `Selection` (through the CAD selection adapter,
+   `cx.shared`).
+2. Insert part link from selection (`dock.rs:250`, `controls.rs:100`) →
+   `ops.rs:346` → `ops.rs:insert_link` (502): with nothing selected,
+   "Select a part in the outliner or viewport first" (505; RoboCAD's
+   ui/comments.py:463) in the status line (`cad/actions.rs:407-408`);
+   otherwise `[label](part:ID)` per selected node, labelled as the thread
+   names it or by the part's name, `[`/`]`/newline escaped
+   (`crates/sim-runtime/src/cad_client/threads.rs:part_link`, 315; as
+   ui/comments.py:460-473), appended to the draft; the composer takes the
+   keyboard (`input.rs:179-187`).
+3. ` needs a fillet`, Shift+Enter (a newline in the kit field), a second
+   line; Reply or Enter (`input.rs:115-122`, `post`) →
+   `controls.rs:submit_action` (26, `Reply`) → `ops.rs:211` → the commit
+   leg: `ThreadCommand::AddComment` (`source.rs:485-489`) →
+   `add_comment` → RoboCAD `api.py:434-436` →
+   `annotations.py:add_comment` (276), undo step "Reply to annotation".
+4. Answer and re-read legs; the reply is drawn with the link as the
+   part's label (`ui_kit::threads::messages`, `dock.rs:241`; a deleted
+   part's link reads "label (part deleted)", `dock.rs:237`, as
+   ui/comments.py:57-68).
+
+### CAD-178 Click the part link
+
+1. The link in the message → `dock.rs:CadHost::link` (70; only for a node
+   in the shown tree) → `ThreadsOp::PartLink` → `ops.rs:341` →
+   `cad/threads/isolation.rs:part_link` (308).
+2. `isolation.rs:view_parts` (215; called with highlight off, 316) captures
+   the camera, the selection and the display once (229-232), frames the
+   part and its descendants, shows them alone (display only:
+   `cad/mesh.rs` hides the others; `isolation.rs:shown`, 66), and the
+   status line says "Part view: <name>" (265; RoboCAD's
+   ui/comments.py:423).
+3. Then exactly the linked node is selected (317) through
+   `isolation.rs:select` (132) → `cad/selection/mod.rs:handle` (104), the
+   one path `cad_select {ids: [ID]}` takes. RoboCAD selects the node with
+   its descendants (`highlight_parts`, ui/comments.py:396-400): recorded.
+
+### CAD-179 Show on model
+
+1. Return to assembly first (`ops.rs:340` → `isolation.rs:end`, 270),
+   then Show on model (`dock.rs:199`, `controls.rs:89`) → `ops.rs:325`
+   (refused by name only for another thread than an open draft's,
+   RoboCAD's `select` rule as its `/threads/{id}/show` applies it,
+   api.py:408-409; `ops.rs:not_drafting_other`, 141) →
+   `isolation.rs:show` (146).
+2. Surface thread: any isolation ends; the pin's part is selected through
+   `cad/selection/mod.rs:handle`; the thread's saved camera (`thread.view`,
+   from the list, not `GET /threads/{id}`) is merged over the current
+   camera with mode "turntable" when absent (`camera_of_dict`, 106-118, as
+   ui/comments.py:383-388) and pushed as `CameraAction::Set` (176-182);
+   with no saved camera only a trackball camera is set, back to turntable
+   (178); then the `inspection_view`; status "Showing the annotation on
+   <part>" (186; RoboCAD shows none). The selection is pushed to RoboCAD
+   as every `cad_select` is (`cad/selection/mod.rs:publish`, 132; `GET
+   /selection` shows it); the view is not: RoboCAD's camera stays where
+   it is (its `POST /threads/{id}/show`, api.py:399-414, is GUI-only).
+3. Experiment-evidence thread: the code now opens the captured run in
+   experiment review (148-163, `experiment_review::handle`), as RoboCAD
+   opens its experiments panel (ui/comments.py:374-376); without a
+   `run_id` or a connection the control is disabled and the op refused by
+   name ("Captured evidence requires a run_id and a connected service",
+   `controls.rs:80-86`; `isolation.rs:149-150`).
+
+### CAD-180 Fit in view
+
+1. Fit in view (`dock.rs:199`, `controls.rs:90`, disabled without linked
+   parts that exist) → `ops.rs:329` (refused only for another thread than
+   an open draft's) → `isolation.rs:fit` (191).
+2. The linked parts still in the tree (`fit_nodes`, 83) and their
+   descendants are framed at the current angle (`CadMeshes::frame`, 200;
+   no geometry: "This annotation has no geometry to frame", 199, RoboCAD's
+   text), selected (`select`, through the one selection), and the pins
+   turned on (205, as `vp.show_comment_pins = True`).
+3. Status line "Fit annotation in view: <names>" (208; ui/comments.py:484).
+
+### CAD-181 Show only linked parts and Return
+
+1. Link selected parts (`dock.rs:215`, `controls.rs:95`) → `ops.rs:link`
+   → the commit leg, `PATCH {part_refs}` (`source.rs:patch`, 352), undo
+   step "Update annotation".
+2. Show only linked parts (`dock.rs:224`, `controls.rs:98`) → `ops.rs:333`
+   (refused only for another thread than an open draft's)
+   → `isolation.rs:view_parts` (215): the camera, the selection
+   (`cx.shared.items()`, 231) and the whole `CadDisplay` captured the first
+   time; a single part with a saved view restores it, else the section off,
+   orthographic (247), framed; the parts and descendants shown alone (257)
+   and selected; status "Part view: <names>".
+3. The hint "Showing linked parts only · Esc or Return to assembly
+   restores your view" is drawn in the section (`dock.rs:229`; RoboCAD's
+   viewport tool hint, ui/comments.py:421).
+4. Return to assembly (`controls.rs:99`) or Escape (`input.rs:escape`,
+   212, `ThreadsOp::Return`, 221) → `isolation.rs:end` (270): the camera
+   pushed back (273), the display restored, the selection from before
+   (without parts deleted since) set on the one `Selection` (285) and
+   published to RoboCAD (286); status "Returned to the assembly view"
+   (288).
+5. No `PATCH visible` and no `Ops.isolate` anywhere in `isolation.rs`:
+   `GET /doc` visibility is unchanged; RoboCAD's window is not isolated.
+
+### CAD-182 Resolve and Reopen
+
+1. Resolve (`dock.rs:199`, `controls.rs:93`, "Reopen" when resolved) →
+   `ops.rs:288` (a window press is refused by name while a draft is open,
+   `ops.rs:ui_not_drafting` 152, as RoboCAD's dock disables the button; a
+   REST `resolve` is accepted, as RoboCAD's `PATCH` route) → the commit leg:
+   `ThreadCommand::Resolve` → `PATCH {status}` (`source.rs:510-513`) →
+   `annotations.py:update_thread` (251-269), undo step "Update
+   annotation".
+2. Filters: `cad:threads:filter-*` (`controls.rs:72`, chips `dock.rs:156`)
+   → `ops.rs:190` (refused while drafting) → `Filter::keeps`
+   (`mod.rs:134-140`) in `controls.rs:shown_threads` (31-36).
+3. Shown: the row's number becomes "✓" (`dock.rs:148`, `controls.rs:77`;
+   ui/comments.py:257); the pin is not drawn while resolved
+   (`pins.rs:88`; RoboCAD draws open threads only, ui/comments.py:520).
+
+### CAD-183 Edit and delete a message
+
+1. "···" → Edit message (`ThreadsOp::EditMessage`, `ops.rs:254` →
+   `edit_message`, 415): the body into the composer, `editing` set; Save
+   edit (`controls.rs:24`) → `ops.rs:234` (a message gone since is refused
+   under the composer, 237) → commit leg: `PATCH /comments/{id}`
+   (`source.rs:491-497`) → `annotations.py:update_comment` →
+   `_change_comment` (290-305), undo step "Edit comment".
+2. Delete message (`controls.rs:110`; the last message is refused before
+   sending, "delete the thread to remove its last comment",
+   `source.rs:506`, RoboCAD's annotations.py:298) → `ops.rs:262` →
+   `DELETE /comments/{id}`, undo step "Delete comment".
+3. Each is one RoboCAD undo step; see "One undo step per thread edit".
+
+### CAD-184 Delete thread
+
+1. Delete thread (`dock.rs:279`, `controls.rs:113`) → `ops.rs:277`
+   (refused while drafting) → commit leg: `DELETE /threads/{id}`
+   (`source.rs:515-517`) → `annotations.py:delete_thread` (271-274), undo
+   step "Delete annotation".
+2. Answer: `mod.rs:482-485` clears the current thread; the re-read drops
+   the row and its pin.
+3. Undo: `cad_undo` / Ctrl+Z (`registry.rs:307`) brings the thread and its
+   pin back (see "One undo step per thread edit").
+
+### CAD-185 Pins
+
+1. View ▸ Toggle comment pins (`registry.rs:297`, `cad:threads:pins`
+   `controls.rs:114`) → `mod.rs:427` → `CadDisplay::comment_pins`
+   (display only) → `pins.rs:draw` (149-157) draws none with it off.
+2. Pins drawn: each open thread with a surface anchor on a visible part,
+   numbered by its place in RoboCAD's list (`pins.rs:80-101`); amber
+   `REVIEW` (40) for "needs_review", blue `ATTACHED` (38) otherwise
+   (ui/comments.py:529); none for evidence or a deleted part (92).
+3. Click pin "1": a UI button (`pins.rs:169`) → `press` (201) →
+   `ThreadsOp::Open` (204) → `ops.rs:open` (363): the section shown, the
+   filter All, the thread current (refused while a draft is open on
+   another thread, as RoboCAD's `select`, ui/comments.py:310-314).
+
+### CAD-186 Reattach
+
+1. Delete the anchored body: RoboCAD's `thread_detail` answers
+   `anchor_status: "missing"`, `node_name: "Deleted part"`
+   (annotations.py:110-114); the location line reads "Deleted part · Part
+   deleted — reattach this annotation" (`controls.rs:44`), in WARN
+   (`dock.rs:192-195`); the pin is not drawn (`pins.rs:92`).
+2. Reattach… (`controls.rs:91`) → `ops.rs:305` → `annotate.rs:start` (51)
+   with the thread → the click as in CAD-176 (press, shown revision) →
+   `place` (83) → `moved` (140): the thread's first target replaced with
+   the new surface pin → `ops.rs:put` (94) → `source.rs:patch` (352: only
+   `node_id`, `point`, `face`, `view`, 366-369) → **one** `PATCH
+   /threads/{id}` → `annotations.py:update_thread` (257-258: `anchor` at
+   the new node, a fresh geometry stamp), one undo step "Update
+   annotation"; the thread is opened (`annotate.rs:111`).
+3. Re-read: "attached", "<new part> · Attached to surface", the pin moves
+   to the new point.
+4. Every anchor text matches RoboCAD's dict (ui/comments.py:283):
+   "Captured experiment", "Attached to surface", "Part deleted — reattach
+   this annotation", "Geometry changed — check and reattach this pin"
+   (`controls.rs:42-45`); "Attachment unknown" is the viewer's own for a
+   state it does not know (recorded). The evidence run line now prints
+   the time range as Python's `str()` does, `[0.5, 2.0]` (`dock.rs:time_range`,
+   289).
+
+### Persistence: save, close, reopen
+
+1. After creating, replying to and resolving a thread (CAD-176, 177,
+   182), `doc.annotations[tid]` holds the anchor (node id, point, geometry
+   stamp, face description), the saved camera `view`, `status`, the
+   comments and `part_refs` (annotations.py:241-247, 256-268, 279).
+2. Save (`cad_save` / `cad_file save_as`) → `cad/files/mod.rs:save` (378)
+   → `POST /save/thumbnail` (api.py:1736) → `save_with_thumbnail`
+   (api.py:1296) → `Document.save` (document.py:514) →
+   `archive_snapshot` (525) → `to_manifest` writes `"annotations"` and
+   `"revision"` (499-512).
+3. Close and reopen in a new service and window: `cad_open` → a new
+   headless service loads the file, `Document.load` restores
+   `annotations` (document.py:569) and `revision` (562); a pin stays
+   "attached" because the stamp fingerprints mass properties and face
+   geometry, not B-rep bytes or face indices (annotations.py:47-58).
+4. The new window's document has a new generation
+   (`cad/sync/mod.rs:start`, `threads::restarted` at 85 drops whatever was
+   read before); `read.rs:listed` keeps only lists of this generation
+   (65-67), so the first read is `GET /threads` at (generation, revision,
+   epoch). The anchor, the pin point, the saved view (Show on model,
+   CAD-179) and the resolved state ("✓", no pin) come back as read.
+
+### Autosave while attached
+
+1. RoboCAD's desktop window autosaves on a timer
+   (`ui/app.py:_start_autosave`, 129-133): `_autosave` (135-146) runs
+   only while `doc.dirty` and the revision differs from the last autosave,
+   captures `archive_snapshot` (the manifest with `annotations`) on the Qt
+   thread and writes `<file>.autosave.rcad` on a worker; `_finish_autosave`
+   (148-160) records the revision. `notify("autosaved")` does not move the
+   revision (document.py:288).
+2. A thread edit from the viewer sets `doc.dirty` and moves the revision
+   (annotations.py:200-201), so the next autosave includes it.
+3. The viewer reads `GET /autosave` (api.py:462-471) only when the
+   document's (id, revision) changed or on Refresh
+   (`cad/sync/mod.rs:193`, 202) and shows it in the left dock's Autosave
+   line (`cad/panel.rs:autosave_line`, 588). A headless service has no
+   autosave (409). Open: an autosave that completes without a later
+   revision change shows in the viewer only after the next edit or a
+   Refresh.
+
+### One undo step per thread edit
+
+1. Every thread commit is one RoboCAD call (`source.rs:request_on`, 475;
+   `Request`, 271-279) and one `ChangeThreads` push (annotations.py:248,
+   268, 274, 281, 303).
+2. The annotations service's own undo is refused: `ThreadCommand::Undo` /
+   `Redo` → `UNDO_IS_ROBOCADS` (`source.rs:455`, 465, 519), which names
+   the document's Undo and Redo.
+3. Undo: `cad_undo` / Ctrl+Z (`registry.rs:307`) →
+   `cad/actions.rs:525` → `POST /undo` (api.py:1677-1678) →
+   `Api.undo` (api.py:1046) → `CommandStack.undo` (commands.py:221-228)
+   → `ChangeThreads.undo` restores the previous threads and
+   `notify("annotations")` moves the revision (document.py:287-289).
+4. The answer is not a thread commit (`edit_answered` returns at
+   `mod.rs:453-455`), but the revision moved: `sync/mod.rs:refresh` →
+   `GET /doc` → `doc.doc_key` (`sync/mod.rs:456`) → a new read key
+   (`read.rs:59-60`) → the re-read leg. Redo is the same through
+   `POST /redo`.
+
+### Remote refresh keeps the draft
+
+1. A reply typed in RoboCAD's own window → `annotations.py:add_comment`
+   → `notify("annotations")` → revision + 1.
+2. The viewer's poll (`cad/sync/mod.rs:poll_loop`, 160) reads `GET /`
+   every 500 ms (181); a new (document id, revision) fetches `GET /doc`
+   (193) → `receive` sets `doc.doc_key` (456) → `shown_revision`
+   (`cad/document/state.rs:128`) → the read key moves (`read.rs:59-60`) →
+   the re-read leg, with no manual refresh (while the section is open or
+   the pins are on, `read.rs:105-107`).
+3. The draft survives: `read.rs:tick` (129-166) writes only the read
+   state; nothing in the re-read touches `compose`, `current`, `editing`
+   or `pending`; the composer field is redrawn from `ThreadsState`
+   (`input.rs:192-199`).
+4. A pending pin whose revision the shown document has moved past is
+   stale (`mod.rs:stale_pin`, 266): its face index is RoboCAD's numbering
+   at that revision, so Post annotation is refused under the composer
+   with "RoboCAD's document changed since the pin was placed: Annotate
+   again to place it on the current model" (`mod.rs:STALE_PIN`, 260),
+   nothing sent and the text kept (`ops.rs:387`, `refuse_draft` 159,
+   `mod.rs:draft_gone` 282); ＋ Annotate model and N are allowed then
+   (`controls.rs:70`, `annotate.rs:53`) and the click replaces the pin
+   (`annotate.rs:97`), keeping the text.
+5. A reply whose thread, or a Save edit whose message, is gone from a list
+   read at RoboCAD's current revision (deleted there, or undone) is kept,
+   its composer and Cancel still drawn (`dock.rs:247`), the reason shown
+   under it (`dock.rs:271`) and the post refused by name, nothing sent
+   (`ops.rs:218-223`, 237-241). While the list is being read again nothing
+   is claimed gone.
+6. Another mode's request to show a thread (`mod.rs:RevealThread`,
+   `Reveal::new` 104) opens the Comments dock once (`read.rs:reveal_step`
+   219, `reveal` 243-249; closing it drops the request), then opens the
+   thread as RoboCAD's `select` does (`read.rs:261`, `ops.rs:open`): an
+   open draft on another thread keeps its thread and the status line says
+   why. A read that failed at the current key, or a lost connection, ends
+   it with "Asked to show comment thread X: RoboCAD's comments could not
+   be read: …" (`read.rs:223-228`, 255-258).

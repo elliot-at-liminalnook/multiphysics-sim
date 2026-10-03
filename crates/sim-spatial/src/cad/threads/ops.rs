@@ -9,7 +9,7 @@
 use super::source::{self, CadThreadSource};
 use super::{ADD, CadAnchor, DELETE_COMMENT, DELETE_THREAD, DRAFTING, EDIT_COMMENT, Field, Filter, LabelDialog, REPLY, ThreadsArgs, ThreadsOp, UPDATE, annotate, isolation, read, state_json};
 use crate::annotations::{self, Committed, ThreadOp, ThreadSource};
-use crate::app::actions::Call;
+use crate::app::actions::{Call, Origin};
 use crate::cad::actions::{CadAction, Cx};
 use crate::cad::document::CadDocument;
 use crate::cad::selection::CadItems;
@@ -134,6 +134,35 @@ pub(super) fn not_drafting(doc: &CadDocument) -> Result<(), String> {
     if doc.threads.drafting() { Err(DRAFTING.to_string()) } else { Ok(()) }
 }
 
+/// RoboCAD's `select` rule (`open`): with a draft open, another thread is
+/// not opened. Show on model, Fit in view and Show only linked parts go
+/// through `select` in RoboCAD's `/threads/{id}/show` (api.py:408-409),
+/// so a REST or window request about the draft's own thread is accepted.
+fn not_drafting_other(doc: &CadDocument, thread: Option<&str>) -> Result<(), String> {
+    let st = &doc.threads;
+    match thread {
+        Some(id) if st.drafting() && st.current.as_deref() != Some(id) => Err("Post or cancel your current draft before opening another thread".into()),
+        _ => Ok(()),
+    }
+}
+
+/// The dock's draft guard (RoboCAD's `update_send` disables the button),
+/// for a window press only: RoboCAD's `PATCH /threads/{id}` takes a REST
+/// caller's change whatever the window's draft.
+fn ui_not_drafting(doc: &CadDocument, call: &Call) -> Result<(), String> {
+    if matches!(call.origin, Origin::Ui) { not_drafting(doc) } else { Ok(()) }
+}
+
+/// The composer's post refused because what it is for is stale or gone
+/// (`threads::draft_gone`): the reason under the composer and in the
+/// answer, nothing sent, the draft kept. None: nothing to refuse.
+fn refuse_draft(doc: &mut CadDocument) -> Option<Outcome> {
+    let why = super::draft_gone(doc)?;
+    doc.threads.error = Some(why.clone());
+    doc.touch();
+    Some(done(Err(why)))
+}
+
 /// `CadThreads`, from any entry point.
 pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcome {
     let CadAction::CadThreads(args) = action else { return done(Err("not a comment-threads action".into())) };
@@ -184,6 +213,14 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
                 Ok(id) => id,
                 Err(e) => return done(Err(e)),
             };
+            // The composer's reply to a thread gone since it was opened: said under the composer.
+            let st = &cx.doc.threads;
+            let composer = st.pending.is_none() && st.editing.is_none() && st.current.as_deref() == Some(id.as_str()) && args.body.as_deref().is_none_or(|b| b == st.compose);
+            if composer {
+                if let Some(refused) = refuse_draft(cx.doc) {
+                    return refused;
+                }
+            }
             let began = match began(args, cx.doc, call, Some(&id)) {
                 Ok(b) => b,
                 Err(o) => return o,
@@ -196,6 +233,12 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
         }
         ThreadsOp::Edit => {
             let Some(comment) = args.comment.clone().or_else(|| cx.doc.threads.editing.clone()) else { return done(Err("edit needs comment: the message to change".into())) };
+            // The composer's Save edit of a message gone since Edit message: said under the composer.
+            if cx.doc.threads.editing.as_deref() == Some(comment.as_str()) {
+                if let Some(refused) = refuse_draft(cx.doc) {
+                    return refused;
+                }
+            }
             let began = match began(args, cx.doc, call, None) {
                 Ok(b) => b,
                 Err(o) => return o,
@@ -243,7 +286,8 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
             commit(cx, call, began, DELETE_THREAD, ThreadOp::Delete { thread: id }, None)
         }
         ThreadsOp::Resolve => {
-            let id = match thread_arg(args, cx.doc) {
+            // RoboCAD's dock disables Resolve while a draft is open (`update_send`); its PATCH route does not.
+            let id = match thread_arg(args, cx.doc).and_then(|id| ui_not_drafting(cx.doc, call).map(|()| id)) {
                 Ok(id) => id,
                 Err(e) => return done(Err(e)),
             };
@@ -261,6 +305,9 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
         ThreadsOp::Reattach => match (args.node.as_deref(), thread_arg(args, cx.doc)) {
             (_, Err(e)) => done(Err(e)),
             (None, Ok(id)) => annotate::start(cx, call, Some(id)),
+            // RoboCAD's `begin` (the window's click) refuses a reattach while a
+            // draft is open; its PATCH route does not.
+            (Some(_), Ok(_)) if matches!(call.origin, Origin::Ui) && cx.doc.threads.drafting() => done(Err("Post or cancel your current draft before placing another pin".into())),
             (Some(_), Ok(id)) => annotate::reattach(args, &id, call, cx),
         },
         ThreadsOp::Link => link(args, call, cx),
@@ -273,16 +320,21 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
             cx.doc.threads.label = None;
             changed(cx.doc, json!({"label": null}))
         }
-        ThreadsOp::Show => match thread_arg(args, cx.doc) {
+        // Show on model, Fit in view and Show only linked parts: refused only
+        // for another thread than the draft's (`not_drafting_other`).
+        ThreadsOp::Show => match thread_arg(args, cx.doc).and_then(|id| not_drafting_other(cx.doc, Some(&id)).map(|()| id)) {
             Ok(id) => done(isolation::show(cx, call, &id)),
             Err(e) => done(Err(e)),
         },
-        ThreadsOp::Fit => match thread_arg(args, cx.doc) {
+        ThreadsOp::Fit => match thread_arg(args, cx.doc).and_then(|id| not_drafting_other(cx.doc, Some(&id)).map(|()| id)) {
             Ok(id) => done(isolation::fit(cx, call, &id)),
             Err(e) => done(Err(e)),
         },
         ThreadsOp::ShowParts => {
             let thread = args.thread.clone().or_else(|| cx.doc.threads.current.clone());
+            if let Err(e) = not_drafting_other(cx.doc, thread.as_deref()) {
+                return done(Err(e));
+            }
             done(isolation::view_parts(cx, call, thread.as_deref(), args.ids.as_deref(), true))
         }
         ThreadsOp::Return => done(isolation::end(cx, call)),
@@ -330,6 +382,13 @@ pub(crate) fn open(doc: &mut CadDocument, id: &str) -> Result<Value, String> {
 
 /// Post annotation: the placed pin (or REST's `node` and `point`).
 fn create(args: &ThreadsArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
+    // The placed pin's face index is RoboCAD's numbering at the revision it
+    // was clicked at: never sent once the shown document moved past it.
+    if args.node.is_none() && super::stale_pin(cx.doc).is_some() {
+        if let Some(refused) = refuse_draft(cx.doc) {
+            return refused;
+        }
+    }
     let doc = &*cx.doc;
     let (node, point, face, view, began) = match (&args.node, &doc.threads.pending) {
         (Some(node), _) => {

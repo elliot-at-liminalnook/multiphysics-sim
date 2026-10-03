@@ -353,3 +353,161 @@ fn evidence_navigation_uses_captured_run_instead_of_a_model_pin() {
     let controls=controls_of(&doc,&[]);
     assert!(controls.iter().find(|c|c.id=="cad:threads:show").unwrap().ready.is_err());
 }
+
+/// A pin placed at revision 4 is never posted once the shown document is
+/// at 5 (its face index may name another face): refused by name under the
+/// composer with nothing sent, the text and the pin kept; Annotate is
+/// allowed then and its click replaces the pin, keeping the text; the post
+/// at the new revision goes out.
+#[test]
+fn a_stale_pin_is_never_sent_and_annotate_replaces_it_keeping_the_text() {
+    let mut doc = document();
+    let mut f = Fixture::at(4);
+    listed(&mut doc);
+    doc.threads.pending = Some(super::Pending { node: "b2".into(), point: [1.0, 2.0, 3.0], face: Some(4), view: Default::default(), revision: 4 });
+    doc.threads.compose = "Chamfer this edge".into();
+    assert_eq!(super::stale_pin(&doc), None);
+    // RoboCAD's window edited something: the shown document is at revision 5, read again.
+    doc.health.as_mut().unwrap().revision = 5;
+    doc.doc_key = Some((None, 5));
+    listed(&mut doc);
+    assert_eq!(super::stale_pin(&doc), Some(4));
+    let (post, _) = super::submit_action(&doc).expect("a post");
+    let out = apply(&post, &mut doc, &mut f);
+    assert!(matches!(&out, Outcome::Done(Err(e)) if e == super::STALE_PIN), "the stale pin was not refused by name");
+    assert!(doc.edit.is_none() && !doc.threads.in_flight.busy());
+    assert!(doc.threads.error.as_deref().is_some_and(|e| e == super::STALE_PIN));
+    assert_eq!(doc.threads.compose, "Chamfer this edge");
+    let find = |doc: &CadDocument, id: &str| controls_of(doc, &[]).into_iter().find(|c| c.id == format!("cad:threads:{id}")).unwrap();
+    assert!(find(&doc, "annotate").ready.is_ok());
+    assert!(find(&doc, "post").ready.is_err_and(|e| e == super::STALE_PIN));
+    // Annotate, then a click at revision 5: the pin replaced, the text kept.
+    assert!(matches!(apply(&ThreadsArgs::of(ThreadsOp::Annotate).action(), &mut doc, &mut f), Outcome::Done(Ok(_))));
+    let click = ThreadsArgs { op: ThreadsOp::Place, node: Some("b3".into()), point: Some([4.0, 5.0, 6.0]), face: Some(1), revision: Some(5), ..ThreadsArgs::default() }.action();
+    assert!(matches!(apply(&click, &mut doc, &mut f), Outcome::Done(Ok(_))));
+    let pin = doc.threads.pending.clone().expect("the new pin");
+    assert_eq!((pin.node.as_str(), pin.face, pin.revision), ("b3", Some(1), 5));
+    assert_eq!(doc.threads.compose, "Chamfer this edge");
+    assert!(doc.threads.error.is_none() && super::stale_pin(&doc).is_none());
+    // A pin that is not stale still refuses a second Annotate while the draft is open.
+    assert!(matches!(apply(&ThreadsArgs::of(ThreadsOp::Annotate).action(), &mut doc, &mut f), Outcome::Done(Err(e)) if e.contains("current draft")));
+    let (post, _) = super::submit_action(&doc).expect("a post");
+    assert!(matches!(apply(&post, &mut doc, &mut f), Outcome::Done(Ok(_))));
+    assert_eq!(doc.edit_label(), Some(ADD));
+}
+
+/// A draft whose thread or edited message is gone from a list read at
+/// RoboCAD's current revision (deleted in RoboCAD's window, or undone) is
+/// kept and refused by name under the composer, nothing sent; while the
+/// list is being read again nothing is claimed gone.
+#[test]
+fn a_draft_whose_target_is_gone_is_kept_and_refused_by_name() {
+    let mut doc = document();
+    let mut f = Fixture::at(4);
+    let key = read::key(&doc);
+    let without_a1: Vec<CadThread> = threads().into_iter().filter(|t| t.id != "a1").collect();
+    doc.threads.read.listed = Some((key, without_a1.clone()));
+    doc.threads.current = Some("a1".into());
+    doc.threads.compose = "Agreed".into();
+    let (reply, label) = super::submit_action(&doc).expect("a reply");
+    assert_eq!(label, "Reply");
+    assert!(matches!(apply(&reply, &mut doc, &mut f), Outcome::Done(Err(e)) if e.contains("no longer in RoboCAD's comments")));
+    assert!(doc.edit.is_none());
+    assert_eq!(doc.threads.compose, "Agreed");
+    assert!(doc.threads.error.as_deref().is_some_and(|e| e.contains("copy your text")));
+    let post = controls_of(&doc, &[]).into_iter().find(|c| c.id == "cad:threads:post").unwrap();
+    assert!(post.ready.is_err_and(|e| e.contains("no longer")));
+    // The message being edited is gone.
+    doc.threads.error = None;
+    doc.threads.editing = Some("c2".into());
+    doc.threads.compose = "See the plate".into();
+    let (save, label) = super::submit_action(&doc).expect("a save");
+    assert_eq!(label, "Save edit");
+    assert!(matches!(apply(&save, &mut doc, &mut f), Outcome::Done(Err(e)) if e.contains("message being edited")));
+    assert!(doc.edit.is_none() && doc.threads.editing.as_deref() == Some("c2") && doc.threads.compose == "See the plate");
+    // Being read again: nothing is claimed gone.
+    doc.threads.read.again();
+    assert_eq!(super::draft_gone(&doc), None);
+    // Read again with the thread back (an undo elsewhere): the draft can go out.
+    listed(&mut doc);
+    assert_eq!(super::draft_gone(&doc), None);
+}
+
+/// Another mode's request to show a thread opens the Comments dock once,
+/// never moves an open reply draft to another thread (RoboCAD's `select`
+/// refuses it), and without a draft opens the thread with the filter All.
+/// A read that failed at the current key, or a lost connection, ends it
+/// with a status line; closing the dock it opened drops it.
+#[test]
+fn a_reveal_opens_once_keeps_an_open_drafts_thread_and_ends_when_it_cannot_land() {
+    let mut doc = document();
+    listed(&mut doc);
+    doc.threads.current = Some("a1".into());
+    doc.threads.compose = "Agreed".into();
+    let ask = || super::RevealThread(Some(super::Reveal::new(CadTarget::Service("http://127.0.0.1:9".into()), "e1")));
+    let step = |doc: &CadDocument, pending: &super::RevealThread| read::reveal_step(doc, pending.0.as_ref().unwrap());
+    let mut pending = ask();
+    assert_eq!(step(&doc, &pending), read::RevealStep::OpenDock);
+    read::reveal(&mut doc, &mut pending, read::RevealStep::OpenDock);
+    assert!(doc.threads.open && pending.0.as_ref().is_some_and(|r| r.opened));
+    let next = step(&doc, &pending);
+    assert_eq!(next, read::RevealStep::Land(true));
+    read::reveal(&mut doc, &mut pending, next);
+    assert!(pending.0.is_none());
+    assert_eq!(doc.threads.current.as_deref(), Some("a1"));
+    assert!(matches!(&doc.status, Some(Err(e)) if e.contains("current draft") && e.contains("e1")));
+    // Without a draft: the thread opens.
+    doc.threads.compose.clear();
+    let mut pending = ask();
+    read::reveal(&mut doc, &mut pending, read::RevealStep::OpenDock);
+    let next = step(&doc, &pending);
+    read::reveal(&mut doc, &mut pending, next);
+    assert_eq!((doc.threads.current.as_deref(), doc.threads.filter), (Some("e1"), super::Filter::All));
+    // Closed after it was opened for the request: dropped, not reopened.
+    let mut pending = ask();
+    read::reveal(&mut doc, &mut pending, read::RevealStep::OpenDock);
+    doc.threads.open = false;
+    assert_eq!(step(&doc, &pending), read::RevealStep::Drop);
+    read::reveal(&mut doc, &mut pending, read::RevealStep::Drop);
+    assert!(pending.0.is_none() && !doc.threads.open);
+    // A failed read at the current key: said once, dropped.
+    let key = read::key(&doc);
+    doc.threads.read.error = Some((key, "boom".into()));
+    let mut pending = ask();
+    let failed = step(&doc, &pending);
+    assert_eq!(failed, read::RevealStep::Fail("boom".into()));
+    read::reveal(&mut doc, &mut pending, failed);
+    assert!(pending.0.is_none() && !doc.threads.open);
+    assert!(matches!(&doc.status, Some(Err(e)) if e == "Asked to show comment thread e1: RoboCAD's comments could not be read: boom"));
+    // A lost connection: the same.
+    doc.threads.read.error = None;
+    doc.connection = Connection::Lost { error: "refused".into(), since: std::time::Instant::now() };
+    let pending = ask();
+    assert!(matches!(step(&doc, &pending), read::RevealStep::Fail(e) if e.contains("refused")));
+}
+
+/// A window's Resolve is refused while a draft is open, as its control is
+/// (RoboCAD's `update_send` disables it); the evidence run line prints the
+/// time range as RoboCAD's location line does; Show on model is refused
+/// only for another thread than the draft's.
+#[test]
+fn the_draft_guards_follow_robocad_and_the_run_line_matches_it() {
+    let mut doc = document();
+    let mut f = Fixture::at(4);
+    listed(&mut doc);
+    doc.threads.current = Some("a1".into());
+    doc.threads.compose = "Agreed".into();
+    let resolve = ThreadsArgs { op: ThreadsOp::Resolve, thread: Some("a1".into()), resolved: Some(true), ..ThreadsArgs::default() }.action();
+    assert!(matches!(apply(&resolve, &mut doc, &mut f), Outcome::Done(Err(e)) if e == super::DRAFTING));
+    assert!(doc.edit.is_none());
+    assert_eq!(super::dock::time_range(Some(&json!([0.5, 2.0]))), "[0.5, 2.0]");
+    assert_eq!(super::dock::time_range(Some(&json!([0, 3]))), "[0, 3]");
+    assert_eq!(super::dock::time_range(None), "[]");
+    assert_eq!(super::dock::time_range(Some(&Value::Null)), "None");
+    // Show on model about another thread than the draft's is refused (RoboCAD's `select` rule);
+    // about the draft's own thread it runs (display only, nothing sent).
+    let show = |id: &str| ThreadsArgs { op: ThreadsOp::Show, thread: Some(id.into()), ..ThreadsArgs::default() }.action();
+    assert!(matches!(apply(&show("e1"), &mut doc, &mut f), Outcome::Done(Err(e)) if e.contains("current draft")));
+    assert!(matches!(apply(&show("a1"), &mut doc, &mut f), Outcome::Done(Ok(_))));
+    assert!(doc.edit.is_none());
+}

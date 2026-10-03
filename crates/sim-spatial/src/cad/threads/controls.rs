@@ -5,7 +5,7 @@
 //! list, the filter and the thread actions while a draft is open
 //! (`update_send`, ui/comments.py:235-240).
 use super::ops::not_drafting;
-use super::{Filter, ThreadsArgs, ThreadsOp, command_action, isolation, read};
+use super::{Filter, ThreadsArgs, ThreadsOp, command_action, draft_gone, isolation, may_replace_pin, read};
 use crate::cad::actions::{CadAction, Cx};
 use crate::cad::document::CadDocument;
 use crate::cad::panel::Control;
@@ -66,7 +66,8 @@ pub(crate) fn controls_of(doc: &CadDocument, selection: &[SelectionItem]) -> Vec
     };
     c("open".into(), "Comments panel", ThreadsArgs { op: ThreadsOp::Dock, open: Some(true), ..ThreadsArgs::default() }.action(), Ok(()));
     c("close".into(), "Close", ThreadsArgs { op: ThreadsOp::Dock, open: Some(false), ..ThreadsArgs::default() }.action(), Ok(()));
-    c("annotate".into(), "＋ Annotate model", ThreadsArgs::of(ThreadsOp::Annotate).action(), draft.clone());
+    // A stale pin is re-placed by Annotate, its text kept (`threads::draft_gone`).
+    c("annotate".into(), "＋ Annotate model", ThreadsArgs::of(ThreadsOp::Annotate).action(), if may_replace_pin(doc) { Ok(()) } else { draft.clone() });
     for f in Filter::ALL {
         c(format!("filter-{}", f.name()), f.label(), ThreadsArgs { op: ThreadsOp::Filter, filter: Some(f), ..ThreadsArgs::default() }.action(), draft.clone());
     }
@@ -112,7 +113,11 @@ pub(crate) fn controls_of(doc: &CadDocument, selection: &[SelectionItem]) -> Vec
     c("delete_thread".into(), "Delete thread", ThreadsArgs::thread(ThreadsOp::DeleteThread, id), need(edits.clone()));
     c("pins".into(), "Toggle comment pins", command_action("view.comment_pins").unwrap_or(CadAction::State), Ok(()));
     if let Some((action, label)) = submit_action(doc) {
-        let ready = if st.compose.trim().is_empty() { Err("Write a message first".to_string()) } else { edits.clone() };
+        let ready = match draft_gone(doc) {
+            _ if st.compose.trim().is_empty() => Err("Write a message first".to_string()),
+            Some(why) => Err(why),
+            None => edits.clone(),
+        };
         c("post".into(), label, action, ready);
     }
     c("discard".into(), "Cancel", ThreadsArgs::of(ThreadsOp::Discard).action(), if st.drafting() { Ok(()) } else { Err("No draft to cancel".into()) });

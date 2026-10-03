@@ -170,9 +170,14 @@ pub(super) fn show(cx: &mut Cx, call: &mut Call, id: &str) -> Result<Value, Stri
     if let Some(node) = node.clone() {
         select(cx, call, vec![node])?;
     }
-    if let Some(view) = t.view.as_object().filter(|v| !v.is_empty()) {
-        let current = camera_dict(cx.views.as_deref(), cx.display.as_deref());
-        let state = camera_of_dict(view, current)?;
+    // `focus_thread` sets the keys the saved camera has and the mode
+    // ("turntable" when it has none), so a thread with no saved camera
+    // only turns a trackball camera back to turntable (nothing else moves).
+    let view = t.view.as_object().cloned().unwrap_or_default();
+    let current = camera_dict(cx.views.as_deref(), cx.display.as_deref());
+    let trackball = current.as_ref().is_some_and(|c| c.get("mode").and_then(Value::as_str) == Some("trackball"));
+    if !view.is_empty() || trackball {
+        let state = camera_of_dict(&view, current)?;
         cx.camera.push(CameraAction::Set { state });
     }
     if let Some(inspection) = t.inspection_view.as_ref().filter(|v| !v.is_null()) {

@@ -132,7 +132,7 @@ pub(in crate::cad) fn key(doc: &CadDocument, selection: &[SelectionItem]) -> Str
         (
             (read::listed(doc), read::line(doc), st.filter, st.selected_only, &st.current, &st.part, &st.menu),
             (&st.compose, &st.pending, &st.editing, &st.author, &st.label, st.focus, &st.error, st.sending.as_ref().map(|s| s.0)),
-            (st.tool.is_some(), st.isolation.as_ref().map(|i| &i.parts), selection.nodes(), doc.doc.as_ref().map(|d| d.nodes.len()), ready),
+            (st.tool.is_some(), st.isolation.as_ref().map(|i| &i.parts), selection.nodes(), doc.doc.as_ref().map(|d| d.nodes.len()), ready, super::draft_gone(doc)),
         )
     )
 }
@@ -182,7 +182,7 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
             let mut line = format!("{} · {}", t.node_name, attachment(t.anchor_status));
             if let Some(ev) = &t.evidence {
                 let run: String = ev["run_id"].as_str().unwrap_or("").chars().take(8).collect();
-                line.push_str(&format!("\nRun {run} · {} · {} s", ev["signal"].as_str().unwrap_or(""), ev.get("time_range").map_or("[]".to_string(), |v| v.to_string())));
+                line.push_str(&format!("\nRun {run} · {} · {} s", ev["signal"].as_str().unwrap_or(""), time_range(ev.get("time_range"))));
             }
             line
         }
@@ -241,7 +241,10 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
         threads::messages(p, k, &host, &shown, st.menu.as_deref());
     }
     let drafting = st.drafting() || st.focus == Some(Field::Compose);
-    if current.is_some() || st.pending.is_some() {
+    // A draft stays drawn (with its Cancel) when its thread or message is
+    // gone since: RoboCAD's composer is always there.
+    let gone = super::draft_gone(doc);
+    if current.is_some() || st.pending.is_some() || st.drafting() {
         p.spawn(k.caption("Author"));
         p.spawn(k.input(&st.author, "Your display name", ThreadsInput::Author, st.focus == Some(Field::Author)));
         p.spawn(wrap()).with_children(|r| button(r, k, &all, "insert_link", Look::Ghost));
@@ -265,7 +268,7 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
                 submit_label: submit,
                 cancel: ThreadsInput::Cancel,
                 author: None,
-                error: st.error.as_deref(),
+                error: st.error.as_deref().or(gone.as_deref()),
             },
         );
         if st.sending.is_some() {
@@ -277,6 +280,27 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
     }
     if current.is_none() && st.pending.is_none() && !listed.is_empty() {
         p.spawn(k.text("Open a thread to read and reply.", size::DETAIL, FAINT, 0));
+    }
+}
+
+/// An evidence time range as RoboCAD's location line prints it: Python's
+/// `str()` of `ev.get('time_range', [])` (`[0.5, 2.0]`, `[]` when absent,
+/// `None` for null).
+pub(super) fn time_range(v: Option<&serde_json::Value>) -> String {
+    v.map_or_else(|| "[]".to_string(), |v| python_str(v, true))
+}
+
+/// Python's `str()` of a JSON value (`repr()` inside a list or a dict).
+fn python_str(v: &serde_json::Value, top: bool) -> String {
+    use serde_json::Value;
+    match v {
+        Value::Null => "None".into(),
+        Value::Bool(b) => (if *b { "True" } else { "False" }).to_string(),
+        Value::Number(n) => n.to_string(),
+        Value::String(s) if top => s.clone(),
+        Value::String(s) => format!("'{s}'"),
+        Value::Array(items) => format!("[{}]", items.iter().map(|i| python_str(i, false)).collect::<Vec<_>>().join(", ")),
+        Value::Object(m) => format!("{{{}}}", m.iter().map(|(k, i)| format!("'{k}': {}", python_str(i, false))).collect::<Vec<_>>().join(", ")),
     }
 }
 

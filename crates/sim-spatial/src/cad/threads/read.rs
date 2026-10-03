@@ -203,21 +203,35 @@ pub(crate) fn wait(doc: &mut CadDocument, call: &mut Call) -> Result<bool, Strin
 /// borrows, so a frame that only waits writes nothing).
 #[derive(Debug, PartialEq)]
 pub(crate) enum RevealStep {
-    /// Another document is open: the request is dropped.
+    /// Another document is open, or the Comments dock was closed after the
+    /// request opened it: the request is dropped.
     Drop,
-    /// The dock is to be opened, so the threads are read.
+    /// The dock is to be opened (once), so the threads are read.
     OpenDock,
     /// Waiting for the threads at the current revision.
     Wait,
     /// Read: show it (true) or say it is gone (false).
     Land(bool),
+    /// It can never land (the read failed at the current key, or the
+    /// connection is lost): the reason, said once, and the request dropped.
+    Fail(String),
 }
 pub(crate) fn reveal_step(doc: &CadDocument, reveal: &super::Reveal) -> RevealStep {
     if doc.target != reveal.target {
         return RevealStep::Drop;
     }
-    if !doc.threads.open {
+    if let crate::cad::document::Connection::Lost { .. } = &doc.connection {
+        return RevealStep::Fail(doc.connection_line().0);
+    }
+    if let Some((_, e)) = doc.threads.read.error.as_ref().filter(|(k, _)| *k == key(doc)) {
+        return RevealStep::Fail(e.clone());
+    }
+    if !reveal.opened {
         return RevealStep::OpenDock;
+    }
+    // The user closed the dock the request opened: they no longer want it.
+    if !doc.threads.open {
+        return RevealStep::Drop;
     }
     if !current(doc) {
         return RevealStep::Wait;
@@ -227,26 +241,33 @@ pub(crate) fn reveal_step(doc: &CadDocument, reveal: &super::Reveal) -> RevealSt
 
 /// The pending reveal applied once its step is known.
 pub(crate) fn reveal(doc: &mut CadDocument, pending: &mut super::RevealThread, step: RevealStep) {
-    let Some(r) = pending.0.as_ref() else { return };
+    let Some(r) = pending.0.as_mut() else { return };
     let id = r.thread.clone();
     match step {
         RevealStep::Wait => return,
         RevealStep::OpenDock => {
+            r.opened = true;
             doc.threads.open = true;
             doc.touch();
             return;
         }
         RevealStep::Drop => {}
-        RevealStep::Land(true) => {
-            let st = &mut doc.threads;
-            st.open = true;
-            st.filter = super::Filter::All;
-            st.selected_only = false;
-            st.current = Some(id);
-            st.part = None;
-            st.menu = None;
+        RevealStep::Fail(e) => {
+            doc.status = Some(Err(format!("Asked to show comment thread {id}: RoboCAD's comments could not be read: {e}")));
             doc.touch();
         }
+        // Opened as RoboCAD's `select` opens it (`ops::open`): an open draft
+        // on another thread keeps its thread (a reply never changes target).
+        RevealStep::Land(true) => match super::open(doc, &id) {
+            Ok(_) => {
+                doc.threads.menu = None;
+                doc.touch();
+            }
+            Err(e) => {
+                doc.status = Some(Err(format!("{e} (asked to show comment thread {id})")));
+                doc.touch();
+            }
+        },
         RevealStep::Land(false) => {
             doc.status = Some(Err(format!("The comment thread {id} is no longer in RoboCAD's comments of {}", doc.target.describe())));
             doc.touch();

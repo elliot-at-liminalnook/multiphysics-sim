@@ -75,15 +75,24 @@ pub(super) fn tick(doc: Option<ResMut<CadDocument>>, mut st: ResMut<CadCompositi
                         .and_then(|s| s.presentation_error.clone())
                 }
                 // The service answered for this revision and check but named
-                // no document: never shown as this document's graph, and not
-                // read again every frame until the source key changes.
+                // no document, or another document than the one read: never
+                // shown as this document's graph, and not read again every
+                // frame until the source key changes. (While this document's
+                // own ID is unread, the read repeats as before.)
                 Ok(snapshot)
                     if snapshot.graph.revision == key.1
                         && snapshot.check_id == st.check_id
-                        && snapshot.graph.document_id.is_none() =>
+                        && (snapshot.graph.document_id.is_none()
+                            || doc.doc.as_ref().is_some_and(|d| d.document_id.is_some())) =>
                 {
                     st.failed = Some(key);
-                    st.error = Some("composition.document_id: RoboCAD's /system answer names no document, so it is not shown as this document's graph; it is read again when the document or revision changes".into());
+                    st.error = Some(match &snapshot.graph.document_id {
+                        None => "composition.document_id: RoboCAD's /system answer names no document, so it is not shown as this document's graph; it is read again when the document or revision changes".into(),
+                        Some(other) => format!(
+                            "composition.document_id: RoboCAD's /system answer names document {other}, not the open document {}, so it is not shown; it is read again when the document or revision changes",
+                            doc.doc.as_ref().and_then(|d| d.document_id.as_deref()).unwrap_or("")
+                        ),
+                    });
                 }
                 Ok(_) => st.failed = None,
                 Err(e) => {

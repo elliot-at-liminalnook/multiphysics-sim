@@ -14,11 +14,16 @@ use sim_runtime::cad_client::{
 };
 use std::time::{Duration, Instant};
 
-/// What the start job answers: the job IDs RoboCAD listed before the POST
-/// (lost-answer recovery may adopt only a job that is not among them), and
-/// the POST's own outcome. The job's own error means the listing failed and
-/// no POST was sent.
-pub(crate) type Started = (Vec<String>, Result<ComponentStarted, String>);
+/// What the start job answers. The job's own error is not one of these: it
+/// is a panic, which may have come after the POST (`crate::jobs` turns it
+/// into an error), so it is treated as a lost answer.
+pub(crate) enum Started {
+    /// Listing RoboCAD's jobs before the POST failed: no POST was sent.
+    NotSent(String),
+    /// The job IDs RoboCAD listed before the POST (lost-answer recovery may
+    /// adopt only a job that is not among them), and the POST's own outcome.
+    Sent(Vec<String>, Result<ComponentStarted, String>),
+}
 /// How long after a start's answer was lost a listing that still shows no
 /// matching new job ends the wait. The POST waits `EDIT_TIMEOUT`, longer
 /// than RoboCAD's own 120 s run-on-main deadline, so by then the service has
@@ -62,8 +67,14 @@ pub(crate) struct Active {
     cancel: Option<Job<ComponentJobStatus>>,
     pub cancel_requested: bool,
     cancel_sent: bool,
+    /// RoboCAD answered a cancel for this job (it reached the service).
+    cancel_delivered: bool,
+    /// When the first cancel was sent while this request's identity was
+    /// displaced (a reconnect or another document): cancels to the old
+    /// service that keep failing end after `NOT_LISTED_AFTER`.
+    displaced_cancel_at: Option<Instant>,
     last: Option<Instant>,
-    uncertain: Option<String>,
+    pub uncertain: Option<String>,
     /// When the start's answer was lost (`uncertain` set).
     uncertain_at: Option<Instant>,
     recovery: Option<Job<Vec<ComponentJobStatus>>>,
@@ -93,6 +104,8 @@ impl Active {
             cancel: None,
             cancel_requested: false,
             cancel_sent: false,
+            cancel_delivered: false,
+            displaced_cancel_at: None,
             last: None,
             uncertain: None,
             uncertain_at: None,
@@ -189,13 +202,24 @@ pub(crate) fn tick(
     if let Some(result) = active.start.as_ref().and_then(Job::poll) {
         active.start = None;
         match result {
-            Err(e) => {
+            Ok(Started::NotSent(e)) => {
                 // The listing before the POST failed: nothing was sent.
                 let error = format!("components.{op}: nothing was sent: {e}");
                 report(&mut st, &active, doc.as_deref_mut(), error);
                 ended = true;
             }
-            Ok((known, Ok(started))) => {
+            Err(e) => {
+                // The start job panicked, perhaps after its POST: whether
+                // RoboCAD received it is unknown, so the guard stays while
+                // recovery reads RoboCAD's jobs. No listing from before the
+                // POST survived, so any matching job may be adopted.
+                st.error = Some(format!(
+                    "components.{op}: the start job failed before its answer: {e}; outcome uncertain: reading RoboCAD's jobs (no POST is retried); check the model"
+                ));
+                active.uncertain = Some(e);
+                active.uncertain_at = Some(Instant::now());
+            }
+            Ok(Started::Sent(known, Ok(started))) => {
                 active.known = known;
                 let status = started.job;
                 if status.document_id != active.identity.document_id
@@ -207,7 +231,7 @@ pub(crate) fn tick(
                 }
                 active.status = Some(status);
             }
-            Ok((known, Err(e))) => {
+            Ok(Started::Sent(known, Err(e))) => {
                 active.known = known;
                 let error = format!("components.{op}: {e}");
                 if ambiguous_start(&e) {
@@ -301,16 +325,33 @@ pub(crate) fn tick(
         ));
         active.cancel_sent = true;
         active.last = Some(Instant::now());
+        if displaced && active.displaced_cancel_at.is_none() {
+            active.displaced_cancel_at = active.last;
+        }
     }
+    // The terminal status below came in this cancel's own answer.
+    let mut by_cancel = false;
     if let Some(result) = active.cancel.as_ref().and_then(Job::poll) {
         active.cancel = None;
+        // Cancels to a displaced request's old service have failed (e.g.
+        // read timeouts) for longer than a start may take to be listed.
+        let gave_up = displaced
+            && active
+                .displaced_cancel_at
+                .is_some_and(|t| t.elapsed() >= NOT_LISTED_AFTER);
         match result {
-            Ok(status) => accept_cancel(&mut active, status),
+            Ok(status) => {
+                let before = terminal(&active);
+                accept_cancel(&mut active, status);
+                by_cancel = !before && terminal(&active);
+            }
             // The job cannot end on a service that no longer has it (unless
             // its terminal status already arrived, reported below).
             Err(e)
                 if !terminal(&active)
-                    && (e.contains(GONE) || (displaced && e.contains(UNREACHABLE))) =>
+                    && (e.contains(GONE)
+                        || (displaced && e.contains(UNREACHABLE))
+                        || gave_up) =>
             {
                 report(&mut st, &active, doc.as_deref_mut(), lost(op, &e));
                 ended = true;
@@ -339,11 +380,55 @@ pub(crate) fn tick(
         && status.state.terminal()
     {
         ended = true;
+        // DELETE cannot undo a commit RoboCAD had already made.
+        let cancel_note = if !active.cancel_requested {
+            ""
+        } else if by_cancel {
+            "Cancel arrived after RoboCAD had applied it. "
+        } else if active.cancel_sent || active.cancel_delivered {
+            "Cancel was sent, but RoboCAD applied it before the cancel took effect. "
+        } else {
+            "Cancel was requested, but RoboCAD applied it before the cancel was sent. "
+        };
         if status.document_id != active.identity.document_id
             || status.revision != active.expected_revision
         {
             st.error = Some("components.job: completion belongs to another document".into());
-        } else if let Some(d) = doc.as_deref_mut().filter(|d| active.identity.matches(d)) {
+        } else if displaced {
+            // Sent on a previous connection (or for a document no longer
+            // open): its outcome is reported here, never applied to the
+            // document open now. An applied draft is not offered again. The
+            // cancel note is left out: a displaced request is cancelled by
+            // this view, not necessarily by the user.
+            match status.state {
+                ComponentJobState::Applied => {
+                    let message = format!(
+                        "components.{op}: RoboCAD applied it on the previous connection; refresh before reusing this draft"
+                    );
+                    close_applied(&mut st, &active);
+                    if let Some(draft) = active.draft.and_then(|i| st.drafts.get_mut(i)) {
+                        draft.error = Some(message.clone());
+                    }
+                    st.catalogue = None;
+                    if let Some(d) = doc.as_deref_mut().filter(|d| {
+                        Identity::of(d).is_ok_and(|id| id.document_id == active.identity.document_id)
+                    }) {
+                        d.show(Ok(message.clone()));
+                    }
+                    st.error = Some(message);
+                }
+                ComponentJobState::Failed => {
+                    let error = failure(op, status);
+                    report(&mut st, &active, None, error);
+                }
+                ComponentJobState::Cancelled => {
+                    st.error = Some(format!(
+                        "components.{op}: RoboCAD cancelled it on the previous connection; the model is unchanged"
+                    ));
+                }
+                _ => {}
+            }
+        } else if let Some(d) = doc.as_deref_mut() {
             match status.state {
                 ComponentJobState::Applied => {
                     crate::cad::sync::refresh(d, true);
@@ -383,40 +468,16 @@ pub(crate) fn tick(
                     if let Some(target) = target {
                         st.selection_after = Some((active.identity.clone(), target.into()));
                     }
-                    // The applied form closes, as RoboCAD's dialog does; it
-                    // stays in the list but is no longer offered to resume.
-                    if let Some(i) = active.draft {
-                        if let Some(draft) = st.drafts.get_mut(i) {
-                            draft.applied = true;
-                            draft.error = None;
-                        }
-                        if st.current == Some(i) {
-                            st.current = None;
-                            st.focus = None;
-                        }
-                    }
+                    close_applied(&mut st, &active);
                     let done = if matches!(active.operation, ComponentOperation::Export { .. }) {
                         "Saved to the component library."
                     } else {
                         "Component updated. Undo restores the previous version."
                     };
-                    // DELETE cannot undo a commit RoboCAD had already made.
-                    d.show(Ok(if active.cancel_requested {
-                        format!("Cancel arrived after RoboCAD had applied it. {done}")
-                    } else {
-                        done.into()
-                    }));
+                    d.show(Ok(format!("{cancel_note}{done}")));
                 }
                 ComponentJobState::Failed => {
-                    let error = status.error.as_deref().unwrap_or("Component rebuild failed");
-                    // RoboCAD's message already names its diagnostics file
-                    // when it has one (component_jobs.py ComponentJob.run).
-                    let log = status
-                        .log_path
-                        .as_ref()
-                        .filter(|p| !error.contains(p.as_str()))
-                        .map_or(String::new(), |p| format!("; diagnostics: {p}"));
-                    let error = format!("components.{op}: {error}{log}");
+                    let error = failure(op, status);
                     report(&mut st, &active, Some(d), error);
                 }
                 ComponentJobState::Cancelled => {
@@ -429,6 +490,10 @@ pub(crate) fn tick(
         st.touch();
     }
     if ended {
+        // The lock on its draft ends with the job.
+        if st.error.as_deref() == Some(super::APPLYING) {
+            st.error = None;
+        }
         // Only this request sets the busy guard, and only one runs at a time,
         // so it is cleared on whichever document is open now: a reconnect
         // keeps the same document resource under a new generation.
@@ -474,6 +539,39 @@ fn report(st: &mut ComponentsState, active: &Active, doc: Option<&mut CadDocumen
     if let Some(d) = doc.filter(|d| active.identity.matches(d)) {
         d.show(Err(error));
     }
+}
+
+/// The applied form closes, as RoboCAD's dialog does; its draft stays in
+/// the list but is no longer offered to resume or copy (applying it again
+/// would repeat the change).
+fn close_applied(st: &mut ComponentsState, active: &Active) {
+    let Some(i) = active.draft else { return };
+    if let Some(draft) = st.drafts.get_mut(i) {
+        draft.applied = true;
+        draft.error = None;
+    }
+    if st.current == Some(i) {
+        st.current = None;
+        st.focus = None;
+    }
+}
+
+/// RoboCAD's failure, with its diagnostics file named once: its message
+/// already names it when it has one (component_jobs.py ComponentJob.run).
+fn failure(op: &str, status: &ComponentJobStatus) -> String {
+    let error = status.error.as_deref().unwrap_or("Component rebuild failed");
+    let log = status
+        .log_path
+        .as_ref()
+        .filter(|p| !error.contains(p.as_str()))
+        .map_or(String::new(), |p| format!("; diagnostics: {p}"));
+    format!("components.{op}: {error}{log}")
+}
+
+/// The draft a running request was built from refuses edits until the job
+/// ends: an applied draft is closed and hidden, so later edits would be lost.
+pub(crate) fn applying(st: &ComponentsState, index: Option<usize>) -> bool {
+    index.is_some() && st.active.as_ref().is_some_and(|a| a.draft == index)
 }
 
 fn terminal(active: &Active) -> bool {
@@ -573,6 +671,7 @@ fn accept_status(active: &mut Active, status: ComponentJobStatus) {
 // DELETE acknowledges the request, not necessarily worker termination. Repeat
 // DELETE until terminal so a ready result never slips through a publishing GET.
 fn accept_cancel(active: &mut Active, status: ComponentJobStatus) {
+    active.cancel_delivered = true;
     accept_status(active, status);
     if active.status.as_ref().is_none_or(|s| !s.state.terminal()) {
         active.cancel_sent = false;
@@ -643,6 +742,8 @@ mod tests {
             cancel: None,
             cancel_requested: false,
             cancel_sent: false,
+            cancel_delivered: false,
+            displaced_cancel_at: None,
             last: None,
             uncertain: None,
             uncertain_at: None,

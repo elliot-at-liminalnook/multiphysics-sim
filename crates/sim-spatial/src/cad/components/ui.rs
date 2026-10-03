@@ -115,8 +115,17 @@ fn input(
             _ => {}
         }
     }
+    // The draft a running job was built from keeps the values that were
+    // sent (`super::jobs::applying`): its fields neither take the keyboard
+    // nor keep it, so the kit field never shows text the draft refused.
+    let locked = super::jobs::applying(&state, state.current);
     for field in &fields {
         {
+            if locked && !["find", "folder"].contains(&field.0.as_str()) {
+                state.error = Some(super::APPLYING.into());
+                state.touch();
+                continue;
+            }
             let value = match field.0.as_str() {
                 "find" => state.find.clone(),
                 "folder" => state.folder.clone(),
@@ -130,6 +139,16 @@ fn input(
             focus.focus(FIELD, value);
             state.touch();
         }
+    }
+    if locked
+        && state
+            .focus
+            .as_deref()
+            .is_some_and(|f| f != "find" && f != "folder")
+    {
+        state.focus = None;
+        focus.blur(FIELD);
+        state.touch();
     }
 }
 fn button(p: &mut ChildSpawnerCommands, k: &Kit, controls: &[Control], id: &str) {
@@ -215,7 +234,13 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, st:
         button(p, k, &controls, &format!("cad:components:copy-{index}"));
     }
     if let Some(d) = st.draft() {
+        let locked = super::jobs::applying(st, st.current);
         p.spawn(k.title(d.kind.label()));
+        if locked {
+            p.spawn(k.note(
+                "This draft is being applied: its fields are locked until the rebuild ends or is cancelled.",
+            ));
+        }
         p.spawn(k.note("Parameter values below are unevaluated expressions, not measured current values. Shared defaults apply unless an occurrence overrides them. Dimensions use explicit units; expressions may refer to parameters. Nested local overrides take precedence over mappings."));
         if d.nested_member {
             p.spawn(k.note("Nested occurrence: branch-local overrides only; move through the parent definition."));
@@ -288,7 +313,7 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, st:
                             .action(),
                         ),
                         Look::Ghost,
-                        true,
+                        !locked,
                     ),
                 );
             }
@@ -313,7 +338,7 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, st:
                                     .action(),
                                 ),
                                 Look::Ghost,
-                                true,
+                                !locked,
                             ),
                         );
                     }
@@ -332,6 +357,10 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, st:
         let line = match &active.status {
             Some(job) if job.total > 0 => format!("{} · {}/{}", job.stage, job.done, job.total),
             Some(job) if !job.stage.is_empty() => job.stage.clone(),
+            // The start's answer was lost: say so, not "Preparing".
+            _ if active.uncertain.is_some() => {
+                "Outcome uncertain; reading RoboCAD's jobs (no POST is retried)".into()
+            }
             _ => "Preparing component… You can keep viewing the model.".into(),
         };
         p.spawn(k.caption(line));

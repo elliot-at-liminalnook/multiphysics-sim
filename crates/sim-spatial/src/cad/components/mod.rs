@@ -195,6 +195,11 @@ pub(crate) fn handle(a: &ComponentsArgs, call: &mut Call, cx: &mut Cx) -> Outcom
             a.id.as_deref(),
             &items.nodes(),
         ),
+        // The draft being applied keeps the values that were sent: an
+        // applied draft closes and is hidden, so later edits would be lost.
+        ComponentsOp::FormSet if jobs::applying(st, a.draft_index.or(st.current)) => {
+            Err(APPLYING.into())
+        }
         ComponentsOp::FormSet => form::set_at(
             st,
             a.draft_index,
@@ -214,6 +219,9 @@ pub(crate) fn handle(a: &ComponentsArgs, call: &mut Call, cx: &mut Cx) -> Outcom
                 Err(format!(
                     "components.library.{path}: select a listed component file"
                 ))
+            } else if a.revision.is_none() {
+                // As a direct submit: the row's revision is its stamp.
+                Err("components.revision: required for import_selected (the revision the library row was offered at); nothing was sent".into())
             } else if let Some(revision) = a.revision.filter(|r| *r != doc.shown_revision()) {
                 // The row was offered at another revision: nothing is sent.
                 Err(format!(
@@ -248,6 +256,7 @@ pub(crate) fn handle(a: &ComponentsArgs, call: &mut Call, cx: &mut Cx) -> Outcom
                     .parse::<usize>()
                     .map_err(|_| "components.draft: invalid index".to_string());
             match i {
+                Ok(i) if st.drafts.get(i).is_some_and(|d| d.applied) => Err(applied_refusal(i)),
                 Ok(i) if i < st.drafts.len() => {
                     st.current = Some(i);
                     st.focus = None;
@@ -273,7 +282,9 @@ pub(crate) fn handle(a: &ComponentsArgs, call: &mut Call, cx: &mut Cx) -> Outcom
         st.error = Some(e.clone());
         // Only a form's own edit or submission is named on that draft (the
         // one addressed); a refused Select, Cancel or folder read is not.
-        let draft_op = a.op == ComponentsOp::FormSet
+        // The lock on a draft being applied is the job's state, not the
+        // draft's: it is not stored on the draft (it would outlive the job).
+        let draft_op = (a.op == ComponentsOp::FormSet && e != APPLYING)
             || (a.op == ComponentsOp::Submit && a.operation.is_none());
         if draft_op
             && let Some(d) = a.draft_index.or(st.current).and_then(|i| st.drafts.get_mut(i))
@@ -337,14 +348,12 @@ fn submit(
         move |_| {
             // The jobs RoboCAD already has: if the POST's answer is lost,
             // recovery adopts only a job that is not among them. A failed
-            // listing sends nothing.
-            let known = sending
-                .component_jobs()
-                .map_err(|e| e.to_string())?
-                .into_iter()
-                .map(|s| s.id)
-                .collect::<Vec<_>>();
-            Ok((
+            // listing sends nothing, and says so in its own variant.
+            let known = match sending.component_jobs() {
+                Ok(list) => list.into_iter().map(|s| s.id).collect::<Vec<_>>(),
+                Err(e) => return Ok(jobs::Started::NotSent(e.to_string())),
+            };
+            Ok(jobs::Started::Sent(
                 known,
                 sending
                     .start_component(&sent, &stamp)
@@ -373,6 +382,9 @@ fn copy_draft(st: &mut ComponentsState, doc: &CadDocument, id: &str) -> Result<V
         .get(index)
         .ok_or("components.draft: no such retained draft")?
         .clone();
+    if copied.applied {
+        return Err(applied_refusal(index));
+    }
     copied.identity = jobs::Identity::of(doc)?;
     copied.began = doc.shown_revision();
     copied.error = None;
@@ -383,6 +395,18 @@ fn copy_draft(st: &mut ComponentsState, doc: &CadDocument, id: &str) -> Result<V
     st.open = true;
     st.touch();
     Ok(json!({"current":st.current,"copied_from":index,"revision":doc.shown_revision()}))
+}
+
+/// FormSet's refusal on the draft a running job was built from.
+const APPLYING: &str =
+    "components.draft: this draft is being applied; wait for the rebuild or cancel it";
+
+/// RoboCAD applied this draft: resuming or copying it would apply the same
+/// change again, so it is not offered (as in the window).
+fn applied_refusal(index: usize) -> String {
+    format!(
+        "components.draft.{index}: RoboCAD already applied this draft; open a new form to change the model again"
+    )
 }
 
 fn folder(st: &mut ComponentsState, doc: &CadDocument, path: &str) -> Result<Value, String> {
@@ -598,6 +622,6 @@ pub(crate) fn specs() -> Vec<crate::app::actions::Spec> {
         "cad_components",
         crate::cad::actions::CAD,
         json!({"op":"open","kind":"place"}),
-        "Reusable assemblies. op: state, dock(open), find(value), select(id definition), open(kind make/create/parametric/place/defaults/overrides/reset/detach/transform/import/export/family/link_family; id optional: definition for place/defaults/export, occurrence for overrides/reset/detach/link_family; link_family uses the selected library family), form_set(name,value text), submit (retained form or typed operation with required revision), close_form (retains draft), resume(id draft index), copy_draft(id draft index: a copy re-stamped at the shown document and revision, the consent a stale draft needs), folder(path absolute on service host; absent uses RoboCAD default), import_selected(path,revision), cancel (durable request). Every window and system_ui control uses this handler; source edits are guarded by document ID and revision and prepared by RoboCAD. Rebuilds block other edits and document/mode changes until terminal. Unsaved/rejected form drafts survive close and mode exit.",
+        "Reusable assemblies. op: state, dock(open), find(value), select(id definition), open(kind make/create/parametric/place/defaults/overrides/reset/detach/transform/import/export/family/link_family; id optional: definition for place/defaults/export, occurrence for overrides/reset/detach/link_family; link_family uses the selected library family), form_set(name,value text; refused on the draft being applied), submit (retained form or typed operation with required revision), close_form (retains draft), resume(id draft index; not an applied draft), copy_draft(id draft index, not an applied draft: a copy re-stamped at the shown document and revision, the consent a stale draft needs), folder(path absolute on service host; absent uses RoboCAD default), import_selected(path, revision required: the row's revision), cancel (durable request). Every window and system_ui control uses this handler; source edits are guarded by document ID and revision and prepared by RoboCAD. Rebuilds block other edits and document/mode changes until terminal. Unsaved/rejected form drafts survive close and mode exit.",
     )]
 }

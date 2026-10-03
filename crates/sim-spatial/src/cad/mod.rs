@@ -1,60 +1,7 @@
-//! CAD mode (native-viewer.md §9 phase 1): a RoboCAD document shown and
-//! edited in the native viewer through RoboCAD's REST service
-//! (`sim_runtime::cad_client`). RoboCAD's kernel and command layer own the
-//! document; this mode shows its tree, inspector and tessellations and sends
-//! every edit to RoboCAD's routes, so undo, provenance and the `.rcad` file
-//! stay RoboCAD's.
-//!
-//! - [`document`]: the [`CadDocument`] resource (target, client, connection,
-//!   snapshot, work in flight) and the helpers the panels read.
-//! - [`sync`]: the connect job (a self-started service is a
-//!   `jobs::ChildProcess`), the poll `RunThread` and every result (JobResults).
-//! - [`mesh`]: tessellations fetched and built on jobs, drawn and picked.
-//! - [`scene`]: cameras (on the shared `crate::camera`), light, the Z-up
-//!   root, the framed bounds and the camera's gesture gates.
-//! - [`actions`]: [`CadAction`] and its one handler (Actions), `system_ui`,
-//!   `cad_state` and the REST snapshot (Present).
-//! - [`keys`]: RoboCAD's shortcuts (Input).
-//! - `panel`, `tree`, `inspector`: the header, model tree and inspector.
-//! - [`view`]: the camera as plain matrices (projection and cursor rays in
-//!   RoboCAD's model frame), [`topology`]: faces, edges (sampled polylines)
-//!   and vertices by (node, revision).
-//! - `selection`, `pick`, `overlay`: sub-body selection (modes, hover, box
-//!   select, the Alt menu, the selection commands), picking and the
-//!   display-only highlights (cad-select-transform, native-viewer.md "CAD
-//!   selection and transform").
-//! - `transform`, `numeric`, `snap`, `measure`: the tools (gizmo move,
-//!   rotate and scale; push/pull and offset; measure), the numeric bar
-//!   with unit expressions, snapping and live dimensions. Previews are
-//!   display only; each commit is one RoboCAD Ops call through
-//!   `actions::edit`.
-//!
-//! - `robot`, `materials`, `results` and the inspector's physical rows
-//!   (cad-physical-inspect, native-viewer.md "CAD physical properties"):
-//!   the Robot panel and robot tools and glyphs over `GET /robot`, the
-//!   materials panel, joint and material edits, results with the stress
-//!   overlay, physical export and the live link to Robot mode. Every edit
-//!   is one RoboCAD call through `actions::edit_at`.
-//! - `print` (cad-print, native-viewer.md "CAD print"): RoboCAD's Print
-//!   menu: wall check, validate, overhang shading, fastener hole and
-//!   clearance, the print studies, the one poller of RoboCAD's print jobs,
-//!   the Print jobs section and the print overlay.
-//! - `tree`, `threads`, `references` (cad-organize, native-viewer.md "CAD
-//!   organize"): the outliner's organization (search, collapse, multi-select,
-//!   rename, drag-and-drop, the context menu, the active group, New group);
-//!   RoboCAD's comment threads as the fourth `annotations::ThreadSource`
-//!   drawn by the one `ui_kit::threads` panel (Annotate, pins, part links,
-//!   Show on model, Fit in view, temporary isolation); the References dock
-//!   with textured image planes and the calibrate tool, and the linked
-//!   system file with Open in builder (an in-window switch to Build mode).
-//!   Every edit is one RoboCAD call through `actions::edit_at`.
-//!
-//! Teardown is the one-app pattern: `app::switch`'s OnExit(ModeScope::Cad)
-//! removes the document, releases its self-started service at once
-//! (`CadDocument::release_child`: stopped, also while still starting, or
-//! left running when it may hold unsaved edits), drops the rest off the UI
-//! thread (the poll joins) and [`clear`]s the other resources; entities go
-//! by `DespawnOnExit`.
+//! Native CAD opening/display/body selection/exact mass inspection are local
+//! through sim-cad and direct OCCT. The retained modelling UI is migration
+//! scaffolding: unsupported controls refuse by name and never attach a service.
+//! Local jobs preserve the active source until an accepted replacement succeeds.
 mod actions;
 mod edit;
 mod ui_api;
@@ -184,13 +131,9 @@ pub(crate) fn configure_sets(app: &mut App) {
         .configure_sets(Update, CadKeySet::NumericEntry.in_set(CadKeySet::Focus));
 }
 
-/// What CAD mode needs without a window (the switch test runs it with
-/// `ModesPlugin` on MinimalPlugins + StatesPlugin): the action, its
-/// handler, the connection and its results, the mesh cache's lifetime and
-/// the REST snapshot. Entering CAD mode starts the connect job
-/// (`sync::enter`); `sync::receive` turns its answer into
-/// `CadDocument::connection` (`Connection::Lost { error, .. }` for a refused
-/// connection); leaving removes `CadDocument` and `CadMeshes`.
+/// Windowless local CAD ownership/actions/jobs/snapshot. OnEnter submits
+/// typed CadOpen, CadSet::Results accepts its lifetime-checked result, and
+/// mode exit cancels pending work before dropping the source off thread.
 pub struct CadCorePlugin;
 impl Plugin for CadCorePlugin {
     fn build(&self, app: &mut App) {
@@ -290,8 +233,7 @@ impl Plugin for CadPlugin {
         display::build(app);
         views::build(app);
         files::build(app);
-        // window-first-usability: the attach-URL field of an unconnected document.
-        attach::build(app);
+        // Service attachment is intentionally unavailable in local CAD mode.
         // cad-physical-inspect: the Robot panel, robot tools and glyphs, the
         // materials panel, the inspector's physical rows' input, the stress
         // overlay and the result, export and live-link forms.

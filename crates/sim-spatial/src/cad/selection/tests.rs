@@ -252,107 +252,26 @@ fn box_select_takes_bodies_edges_and_vertices_inside_the_rectangle() {
 }
 
 #[test]
-fn a_face_selection_is_pushed_with_its_items_and_mode() {
+fn local_selection_remains_authoritative_and_never_creates_a_push() {
     let mut doc = document();
     let mut f = shared();
     doc.select_mode = SelectMode::Face;
     f.set(vec![item("b1", "face", 2)]);
-    let (items, mode) = super::super::sync::selection_body(&doc, f.items());
-    assert_eq!(items, vec![item("b1", "face", 2)]);
-    assert_eq!(mode, Some("face"));
-    // As RoboCAD's PUT /selection body.
-    assert_eq!(serde_json::to_value(&items).unwrap(), json!([["b1", "face", 2]]));
+    assert!(!publish(&mut doc, f.shared().view()));
+    assert_eq!(f.items(), vec![item("b1", "face", 2)]);
+    assert_eq!(doc.select_mode, SelectMode::Face);
+    assert!(doc.selection_job.is_none());
+    assert_eq!(doc.published_selection, f.selection.changed);
+    let revision = doc.revision;
+    publish_changes(&mut doc, f.shared().view());
+    assert_eq!(doc.revision, revision, "an unchanged shared selection does not loop");
+    f.set(vec![item("b2", "body", 0)]);
+    publish_changes(&mut doc, f.shared().view());
+    assert_eq!(f.items(), vec![item("b2", "body", 0)]);
+    assert!(doc.selection_job.is_none(), "local selection never starts HTTP work");
+    assert!(doc.revision > revision);
 }
 
-#[test]
-fn robocads_moded_selection_is_adopted_but_not_during_a_push() {
-    let mut doc = document();
-    let mut f = shared();
-    doc.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:8420").unwrap());
-    doc.connection = Connection::Connected;
-    doc.health = Some(Health { ok: true, gui: true, revision: 3, ..Default::default() });
-    let adopt = |doc: &mut CadDocument, f: &mut Fixture, sent: Instant, s: Selection| super::super::sync::adopt_selection(doc, &mut f.shared(), sent, s);
-    let sent = Instant::now();
-    let remote = Selection { items: vec![item("b2", "edge", 5)], mode: Some("edge".into()) };
-    assert!(adopt(&mut doc, &mut f, sent, remote.clone()));
-    assert_eq!(doc.select_mode, SelectMode::Edge);
-    assert_eq!(f.items(), vec![item("b2", "edge", 5)]);
-    // The same answer again changes nothing.
-    assert!(!adopt(&mut doc, &mut f, sent, remote));
-    // A headless answer (no mode) keeps the viewer's mode.
-    let headless = Selection { items: vec![item("b1", "face", 1)], mode: None };
-    assert!(adopt(&mut doc, &mut f, sent, headless));
-    assert_eq!(doc.select_mode, SelectMode::Edge);
-    assert_eq!(f.items(), vec![item("b1", "face", 1)]);
-    // An item naming a node the (current) shown tree lacks is left out;
-    // RoboCAD's copy keeps it as read. While the tree is behind, it is kept.
-    let ghost = Selection { items: vec![item("b1", "face", 1), item("gone", "body", 0)], mode: None };
-    assert!(!adopt(&mut doc, &mut f, sent, ghost.clone()));
-    assert_eq!(f.items(), vec![item("b1", "face", 1)]);
-    assert_eq!(doc.remote_selection, ghost.items);
-    doc.remote_selection.clear();
-    doc.stale = Some("refetching revision 4".into());
-    assert!(adopt(&mut doc, &mut f, sent, ghost.clone()));
-    assert_eq!(f.items(), ghost.items);
-    doc.stale = None;
-    f.set(vec![item("b1", "face", 1)]);
-    // While our push is in flight, or for a read sent before it answered, nothing is adopted.
-    doc.selection_job = Some(Job::finished(doc.generation, Ok(Vec::new())));
-    let other = Selection { items: vec![item("b1", "body", 0)], mode: Some("body".into()) };
-    assert!(!adopt(&mut doc, &mut f, Instant::now(), other.clone()));
-    assert_eq!((doc.select_mode, f.items()), (SelectMode::Edge, vec![item("b1", "face", 1)]));
-    doc.selection_job = None;
-    doc.selection_pushed_at = Some(Instant::now());
-    assert!(!adopt(&mut doc, &mut f, sent.checked_sub(Duration::from_millis(1)).unwrap_or(sent), other));
-    assert_eq!(doc.select_mode, SelectMode::Edge);
-}
-
-/// (a) RoboCAD's `/selection` echo does not loop: an adopted selection is
-/// not pushed back; a local change (any writer, here the shared apply as
-/// an `Act<SelectionAction>` makes it) is pushed exactly once; a change
-/// while a push is in flight is pushed once more when that push answers.
-/// The client points at a closed port: a push spawned here never reaches
-/// a RoboCAD on this machine, and each one is answered by hand.
-#[test]
-fn the_selection_echo_does_not_loop() {
-    let mut doc = document();
-    let mut f = shared();
-    doc.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:9").unwrap());
-    doc.connection = Connection::Connected;
-    doc.health = Some(Health { ok: true, gui: false, revision: 3, ..Default::default() });
-    // Adopted from RoboCAD: no push, and nothing differs from RoboCAD's copy.
-    let remote = Selection { items: vec![item("b1", "body", 0)], mode: None };
-    assert!(super::super::sync::adopt_selection(&mut doc, &mut f.shared(), Instant::now(), remote));
-    publish_changes(&mut doc, f.shared().view());
-    assert!(doc.selection_job.is_none(), "an adopted selection is not pushed back");
-    assert!(!differs_from_remote(&doc, &f.items()));
-    // A local change: exactly one push, and seeing it again pushes nothing more.
-    f.shared().apply(Op::Set, [(item("b2", "body", 0), None)]).unwrap();
-    publish_changes(&mut doc, f.shared().view());
-    assert!(doc.selection_job.is_some() && !doc.selection_again, "one push started");
-    publish_changes(&mut doc, f.shared().view());
-    assert!(!doc.selection_again, "the same change is not pushed twice");
-    // A change while that push is in flight waits for it.
-    f.shared().apply(Op::Add, [(item("s1", "body", 0), None)]).unwrap();
-    publish_changes(&mut doc, f.shared().view());
-    assert!(doc.selection_again, "queued behind the push in flight");
-    // RoboCAD answers the first push: the newest is pushed, once.
-    doc.selection_job = Some(Job::finished(doc.generation, Ok(vec![item("b2", "body", 0)])));
-    super::super::sync::finish_selection(&mut doc, f.shared().view());
-    assert!(doc.selection_job.is_some() && !doc.selection_again, "one more push for the queued change");
-    assert_eq!(doc.remote_selection, vec![item("b2", "body", 0)]);
-    // It answers too: nothing more is pushed, and RoboCAD's copy is the selection.
-    doc.selection_job = Some(Job::finished(doc.generation, Ok(f.items())));
-    super::super::sync::finish_selection(&mut doc, f.shared().view());
-    assert!(doc.selection_job.is_none() && !doc.selection_again);
-    assert!(!differs_from_remote(&doc, &f.items()));
-}
-
-/// (b) Revisions: a face picked against an older tree is refused by name;
-/// when a new tree is shown, a body item is restamped, a face keeps the
-/// revision it was picked at (CAD's own stale refusals use it), and an
-/// item naming a node absent from the current tree is dropped and named
-/// (kept while the tree is behind RoboCAD's revision).
 #[test]
 fn picks_carry_their_revision_and_a_new_tree_rechecks_them() {
     let mut doc = document();

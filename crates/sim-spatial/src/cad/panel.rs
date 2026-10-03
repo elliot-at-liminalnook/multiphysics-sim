@@ -208,7 +208,7 @@ pub(crate) fn own_controls(doc: &CadDocument, selection: &[SelectionItem]) -> Ve
         add("cad:reconcile_edit".into(), "Acknowledge inspected unknown edit outcome".into(), CadAction::CadReconcileEdit { acknowledge: true, revision: Some(doc.shown_revision()) }, ready);
     }
     add("cad:fit".into(), "Fit".into(), CadAction::CadFit { id: None }, Ok(()));
-    let physical = if doc.connected() { Ok(()) } else { Err(format!("not connected to RoboCAD: {}", doc.connection_line().0)) };
+    let physical = if doc.connected() { Ok(()) } else { Err(format!("local archive is not ready: {}", doc.connection_line().0)) };
     add("cad:physical".into(), "Physical".into(), CadAction::CadPhysical, physical);
     // RoboCAD's Delete: every selected node in one step (the catalogue's
     // `edit.delete`); REST `cad_delete {id}` still deletes one node.
@@ -440,7 +440,7 @@ fn refresh(
         commands.entity(entity).with_children(|p| match doc {
             None => {
                 if part == Part::Document {
-                    p.spawn(k.caption("No CAD document is open: choose a .rcad file in the mode switcher's document picker. With a document open, File → Open… (Ctrl+O) opens another, and the Attach field under an unconnected document's status attaches to a running RoboCAD."));
+                    p.spawn(k.caption("Choose a local .rcad archive in the document picker. File → Open… loads another archive in process."));
                 }
             }
             Some(doc) => match part {
@@ -476,7 +476,7 @@ fn part_key(part: Part, doc: Option<&CadDocument>, selection: &[SelectionItem], 
     match part {
         Part::Top => format!("{:?}", (doc.document_name(), connection_state(&doc.connection), dirty(doc), doc.health.is_some(), top_controls(doc, selection), plane_line(doc, plane))),
         Part::Document => format!("{:?}", (path_line(doc), doc.service_line(), doc.connection_line(), doc.connection == Connection::Connected, autosave_line(doc), &doc.stale)),
-        Part::Status => format!("{:?}", (doc.edit_label(), &doc.status)),
+        Part::Status => format!("{:?}", (doc.edit_label(), &doc.status, doc.local_load.as_ref().map(|load| load.sequence))),
         Part::Tree => super::tree::key(doc),
         Part::TreeTools => super::tree::tools_key(doc, selection),
         Part::Comments => super::threads::dock::key(doc, selection),
@@ -625,14 +625,14 @@ fn document(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
     if !connected && let Some(stale) = &doc.stale {
         p.spawn(k.text(format!("View may be behind RoboCAD: {stale}"), size::SMALL, WARN, 0));
     }
-    // Not connected: the attach-URL field (`attach`, the same CadOpen {url} as cad_open).
-    if !connected {
-        super::attach::root(p);
-    }
+    p.spawn(k.note("Source modelling, robot export, print/flex and service attachment await Rust migration."));
 }
 
 /// The status bar: the edit in flight, then the last outcome (one line each).
 fn status(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
+    if doc.local_load.is_some() {
+        p.spawn(k.button("Cancel open", CadButton(CadAction::CadCancel), Look::Ghost, true));
+    }
     if let Some(label) = doc.edit_label() {
         p.spawn(k.text(format!("Sending: {label}…"), size::CAPTION, WARN, 1)).insert(TextLayout::no_wrap());
     }

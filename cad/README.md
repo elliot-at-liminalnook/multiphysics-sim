@@ -1,5 +1,18 @@
 # robocad
 
+## Native Rust opening and mass inspection (2026-10-03)
+
+The native viewer opens compatible `.rcad` archives through shared `sim-cad`
+Rust libraries and directly linked OCCT. Body display, shared body selection,
+mass, centroid and full inertia inspection run in the viewer process. They do
+not launch this Python application or contact its REST service. See
+[deployment prerequisites](../crates/sim-cad/README.md) and the
+[source-review migration ledger](../docs/cad-rust-physical-derivations.md).
+These replacements are source-reviewed and unexecuted. Remaining modelling,
+sketch, print/flex and physical export workflows await Rust migration; native
+controls refuse them by name. The Python instructions below remain the preserved
+reference implementation's own instructions.
+
 Direct-modeling CAD for 3D-printable mechanical parts, built on Open
 CASCADE with a PySide6/OpenGL desktop UI, and linked to the physics
 simulator in this repository so a robot modelled here runs there.

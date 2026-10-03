@@ -58,46 +58,21 @@ impl CadDocument {
     /// The service: self-started (with its pid) or attached, its URL, and
     /// RoboCAD's GUI or headless service once it has answered.
     pub(crate) fn service_line(&self) -> String {
-        let url = self.url.as_deref().unwrap_or("a port not yet chosen");
-        let mut line = match (&self.target, self.child.pid()) {
-            (CadTarget::File(p), Some(pid)) if self.connect.is_some() => format!("Starting RoboCAD's headless service (pid {pid}) on {}", p.display()),
-            (CadTarget::File(_), Some(pid)) => format!("Self-started RoboCAD (pid {pid}) at {url}"),
-            (CadTarget::File(p), None) if self.connect.is_some() => format!("Starting RoboCAD's headless service on {}", p.display()),
-            (CadTarget::File(p), None) => format!("RoboCAD's service for {} is not running", p.display()),
-            (CadTarget::Service(_), _) => format!("Attached to RoboCAD at {url} (never stopped by this window)"),
-        };
-        if let Some(h) = &self.health {
-            line.push_str(if h.gui { " · desktop GUI" } else { " · headless" });
-            if !h.version.is_empty() {
-                line.push_str(&format!(" · RoboCAD {}", h.version));
-            }
+        match &self.target {
+            CadTarget::File(path) => format!("In-process Rust CAD · {} · direct OCCT", path.display()),
+            CadTarget::Service(_) => "Service attachment awaiting Rust migration; open a local .rcad file".into(),
         }
-        line
     }
 
     /// The header's connection line and whether it is an error.
     pub(crate) fn connection_line(&self) -> (String, bool) {
+        if let Some(load) = &self.local_load {
+            return (format!("Opening locally: {}", load.job.progress().message), false);
+        }
         match &self.connection {
-            Connection::Connecting { what, since } => (format!("Connecting: {what} ({} s)", since.elapsed().as_secs()), false),
-            Connection::Connected => {
-                let mut line = String::from("Connected");
-                if let Some((_, revision)) = &self.doc_key {
-                    line.push_str(&format!(" · revision {revision}"));
-                }
-                match self.unsaved() {
-                    Some(true) => line.push_str(" · unsaved edits in RoboCAD"),
-                    None => line.push_str(" · saved state being refetched"),
-                    Some(false) => {}
-                }
-                if let Some(stale) = &self.stale {
-                    line.push_str(&format!(" · tree may be behind RoboCAD: {stale}"));
-                }
-                if let Some(e) = &self.selection_error {
-                    line.push_str(&format!(" · RoboCAD's selection could not be read: {e}"));
-                }
-                (line, self.doc_error_shown() || self.selection_error.is_some())
-            }
-            Connection::Lost { error, .. } => (format!("Not connected: {error}"), true),
+            Connection::Connected => ("Local archive ready · exact OCCT properties · source read only".into(), false),
+            Connection::Connecting { what, .. } => (what.clone(), false),
+            Connection::Lost { error, .. } => (error.clone(), true),
         }
     }
 
@@ -155,7 +130,7 @@ impl CadDocument {
 
     /// The service answers and the window may send it requests.
     pub(crate) fn connected(&self) -> bool {
-        self.client.is_some() && self.connection == Connection::Connected
+        self.local.is_some() && self.connection == Connection::Connected
     }
 
     /// Whether RoboCAD holds unsaved edits: `health.dirty`, or None when
@@ -163,16 +138,7 @@ impl CadDocument {
     /// old; RoboCAD may hold edits made since), an edit in flight, or just
     /// after one until a successful `GET /` sent after it has been read.
     pub(crate) fn unsaved(&self) -> Option<bool> {
-        if self.dirty_known_at.is_some() || self.edit.is_some() || self.component_busy.is_some() || self.uncertain_edit.is_some() || !self.connected() {
-            return None;
-        }
-        self.health.as_ref().map(|h| h.dirty)
-    }
-
-    /// A self-started service that has answered in this connection (so it
-    /// may hold edits) and has not exited (an exited one's edits are gone).
-    fn child_may_hold_edits(&self) -> bool {
-        self.client.is_some() && self.child_exit.is_none() && self.child.running()
+        self.local.as_ref().map(|_| self.doc.as_ref().is_some_and(|d| d.dirty))
     }
 
     /// Why a mutating request cannot be sent now (refusals name it).
@@ -180,22 +146,8 @@ impl CadDocument {
         self.edit_refusal_for(false)
     }
     pub(crate) fn edit_refusal_for(&self, auxiliary: bool) -> Option<String> {
-        if let Some(error) = &self.uncertain_edit {
-            return Some(format!("Unknown source edit outcome: {error}; inspect fresh source/history and explicitly acknowledge; no automatic retry"));
-        }
-        if self.preview_read_only && !auxiliary {
-            return Some("Return to live CAD before editing the physical source; captured and kinematic previews are read-only".into());
-        }
-        if let Some(label) = &self.component_busy {
-            return Some(format!("a component rebuild is in progress: {label}; wait or cancel it in Components"));
-        }
-        if let Some(label) = self.edit_label() {
-            return Some(format!("another CAD edit is in flight: {label}"));
-        }
-        if !self.connected() {
-            return Some(format!("not connected to RoboCAD: {}", self.connection_line().0));
-        }
-        None
+        let _ = auxiliary;
+        Some("CAD source editing awaiting Rust migration (CD1–CD4 provides local opening, display, selection and mass inspection)".into())
     }
 
     /// What leaving CAD mode (or replacing this document) would lose: an
@@ -205,6 +157,7 @@ impl CadDocument {
     /// dropped with the document, nothing written).
     pub(crate) fn switch_blockers(&self) -> Vec<String> {
         let mut blockers = Vec::new();
+        if self.doc.as_ref().is_some_and(|d| d.dirty) { blockers.push("Local CAD document has unsaved work; preserve it before replacement or mode exit".into()); }
         if self.uncertain_edit.is_some() { blockers.push("An unknown source edit outcome needs inspection and explicit acknowledgment before replacing this document".into()); }
         if let Some(label) = &self.component_busy {
             blockers.push(format!("a component rebuild is in progress: {label}; wait or cancel it in Components"));
@@ -221,35 +174,14 @@ impl CadDocument {
         }
         // cad-print: a RoboCAD print job this window started and still tracks.
         blockers.extend(self.print.jobs.blockers());
-        if self.edit.is_none() && self.child_may_hold_edits() {
-            let name = self.document_name();
-            let pid = self.child.pid().map_or_else(String::new, |p| format!(" (pid {p})"));
-            match self.unsaved() {
-                Some(false) => {}
-                Some(true) => blockers.push(format!("{name} has unsaved edits in the RoboCAD service this window started{pid}, which stops when CAD mode closes: save first (the Save button)")),
-                None if !self.connected() => blockers.push(format!(
-                    "{name} may have unsaved edits in the RoboCAD service this window started{pid}, and its saved state can't be confirmed while the window is not connected to it ({}); that service stops when CAD mode closes: press Refresh to reconnect and save first, or stop that process yourself to discard its edits",
-                    self.connection_line().0
-                )),
-                None => blockers.push(format!("{name} may have unsaved edits in the RoboCAD service this window started{pid} (an edit just finished and RoboCAD's state is being refetched), which stops when CAD mode closes: wait a moment, or save first (the Save button)")),
-            }
-        }
+
         blockers
     }
 
     /// Leaving an attached document with unsaved edits is allowed: the
     /// switch's message says where the edits stay.
     pub(crate) fn leaving_note(&self) -> Option<String> {
-        if self.child.is_some() {
-            return None;
-        }
-        let url = self.url.as_deref().unwrap_or("its URL");
-        match self.unsaved() {
-            Some(true) => Some(format!("RoboCAD at {url} keeps the unsaved edits to {}", self.document_name())),
-            // Not confirmed now, but the last answer said dirty.
-            None if self.health.as_ref().is_some_and(|h| h.dirty) => Some(format!("RoboCAD at {url} had unsaved edits to {} when last read; any it still holds stay there", self.document_name())),
-            _ => None,
-        }
+        None
     }
 
     /// Mark something shown as changed (the panels refresh on it).
@@ -263,33 +195,11 @@ impl CadDocument {
         self.touch();
     }
 
-    /// Before the document is dropped (window close, leaving CAD mode,
-    /// `cad_open`): the child slot is closed (a service still starting is
-    /// stopped by its connect job the moment it would be put there) and a
-    /// self-started service is stopped, unless it has answered in this
-    /// connection, has not exited and may hold unsaved edits (dirty, or not
-    /// confirmable: not connected, an edit in flight or just finished). Then
-    /// it is detached (left running, its URL logged) so the edits are not
-    /// lost: unsaved edits are RoboCAD's, and the viewer never saves on its
-    /// own. Synchronous and non-blocking (`ChildProcess::stop`/`detach`).
-    /// Returns the URL of a service left running.
+    /// Compatibility seam for close callers: cancel a local pending load.
+    /// There is no child process, service stop, release or detach operation.
     pub(crate) fn release_child(&mut self, why: &str) -> Option<String> {
-        let keep = self.child_may_hold_edits() && self.unsaved() != Some(false);
-        let child = self.child.close()?;
-        if keep {
-            let state = if self.unsaved() == Some(true) { "holds unsaved edits" } else { "may hold unsaved edits (its saved state could not be confirmed)" };
-            bevy::log::warn!(
-                "{why}: the RoboCAD service this window started (pid {}) {state} to {}; it is left running at {} so they are not lost: open it there (sim-spatial --cad-url {}) and save, or stop it",
-                child.id(),
-                self.document_name(),
-                self.url.as_deref().unwrap_or("its URL"),
-                self.url.as_deref().unwrap_or("URL")
-            );
-            child.detach();
-            self.url.clone()
-        } else {
-            child.stop();
-            None
-        }
+        let _ = why;
+        self.local_load = None; // cancel-on-drop; no service exists to release.
+        None
     }
 }

@@ -462,6 +462,10 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         return wait_edit(cx.doc, call, seq);
     }
     if matches!(action, CadAction::CadCancel) {
+        if let Some(seq) = cx.doc.local_load.as_ref().map(|load| load.sequence) {
+            sync::cancel_load(cx.doc, seq);
+            return Outcome::Done(Ok(json!({"message": "Local open cancelled; current document preserved"})));
+        }
         if cx.motion.active || cx.motion.export.is_some() {
             return super::motion::handle(&super::motion::MotionArgs::of(super::motion::MotionOp::Return), call, cx);
         }
@@ -475,6 +479,18 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         if !super::activation::current(source, doc) || !super::activation::files_current(source, cx.files.as_deref()) { return done(Err("CAD control belongs to a replaced source or form".into())); }
         return handle(action, call, cx);
     }
+    let supported = matches!(action,
+        CadAction::State | CadAction::CadState | CadAction::CadOpen { .. }
+        | CadAction::CadSelect { .. } | CadAction::CadSelectMode { .. }
+        | CadAction::CadHover { .. } | CadAction::CadBoxSelect { .. }
+        | CadAction::CadCandidates { .. } | CadAction::CadSelectAll
+        | CadAction::CadInvertSelection | CadAction::CadSelectSameMaterial
+        | CadAction::CadRefresh | CadAction::CadFit { .. } | CadAction::CadPhysical
+        | CadAction::CadCancel | CadAction::SystemUi(_) | CadAction::CadTree(_)
+        | CadAction::CadFile(_) | CadAction::CadDisplay(_) | CadAction::CadSurface { .. });
+    if !supported {
+        return done(Err(format!("{action:?}: awaiting Rust migration; local opening, body display/selection and mass inspection are available")));
+    }
     match action {
         CadAction::Captured { .. } => unreachable!("captured intent handled above"),
         CadAction::State | CadAction::CadState => done(Ok(state_json(doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref()).authoring(cx.components, cx.composition).experiments(cx.experiments, cx.review, cx.motion).defaults(&cx.settings.cad)))),
@@ -484,7 +500,7 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
             cx.motion.request_cancel();
             let blockers = cx.experiments.mode_blockers().into_iter().chain(cx.motion.mode_blockers()).collect::<Vec<_>>();
             if !blockers.is_empty() { return done(Err(blockers.join("; "))); }
-            done(open(doc, &mut cx.shared, path.as_ref(), url.as_deref()))
+            open(doc, call, path.as_ref(), url.as_deref())
         },
         CadAction::CadSelect { .. }
         | CadAction::CadSelectMode { .. }
@@ -560,7 +576,10 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         }
         CadAction::CadInvoke { .. } | CadAction::CadRun { .. } | CadAction::CadFormSet { .. } | CadAction::CadFormSubmit | CadAction::CadFormCancel | CadAction::CadSketch { .. } => super::ops::handle(action, call, cx),
         CadAction::CadSurface { .. } => super::surfaces::handle(action, call, cx),
-        CadAction::CadRefresh => done(Ok(refresh(doc))),
+        CadAction::CadRefresh => {
+            let blockers = doc.switch_blockers();
+            if !blockers.is_empty() { done(Err(blockers.join("; "))) } else { done(Ok(refresh(doc))) }
+        },
         CadAction::CadReconcileEdit { acknowledge, revision } => {
             if !acknowledge { return done(Ok(refresh(doc))); }
             if *revision != Some(doc.shown_revision()) || doc.dirty_known_at.is_some() || doc.stale.is_some() || !doc.connected() {
@@ -576,7 +595,7 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
             }
         },
         CadAction::CadFit { id } => done(fit(doc, cx.meshes.as_deref_mut(), id.as_deref())),
-        CadAction::CadPhysical => done(sync::fetch_physical(doc).map(|()| json!({"message": "Fetching RoboCAD's physical description (GET /physical?flex=0); it shows in cad_state.physical."}))),
+        CadAction::CadPhysical => done(sync::fetch_physical(doc).map(|()| json!({"message": "Local exact mass properties are available in cad_state.local_mass."}))),
         CadAction::CadDisplay(_) | CadAction::CadSection(_) => super::display::handle(action, call, cx),
         CadAction::CadViews(_) => super::views::handle(action, call, cx),
         CadAction::CadFile(_) | CadAction::CadExport(_) | CadAction::CadRender(_) => super::files::handle(action, call, cx),
@@ -621,70 +640,28 @@ fn wait_edit(doc: &mut CadDocument, call: &mut Call, seq: u64) -> Outcome {
 
 /// `cad_open`: replace the document (refused on an edit in flight or a
 /// self-started document's unsaved edits, or edits it cannot confirm saved).
-fn open(doc: &mut CadDocument, shared: &mut Shared, path: Option<&PathBuf>, url: Option<&str>) -> Result<Value, String> {
-    let target = match (path, url) {
-        (Some(p), None) => {
-            if !p.to_string_lossy().ends_with(".rcad") {
-                return Err(format!("{}: cad_open opens a *.rcad file", p.display()));
-            }
-            // Known cost: one stat on the UI thread, as the other modes'
-            // opens do (the switch's `prepare` too); the file is read by
-            // RoboCAD's service, never here.
-            if !p.is_file() {
-                return Err(format!("{}: no such file", p.display()));
-            }
-            CadTarget::File(p.clone())
+fn open(doc: &mut CadDocument, call: &mut Call, path: Option<&PathBuf>, url: Option<&str>) -> Outcome {
+    if let Some(seq) = call.continuation.get("local_open").and_then(Value::as_u64) {
+        if call.cancelled { sync::cancel_load(doc, seq); }
+        if let Some(result) = doc.load_outcomes.remove(&seq) { return Outcome::Done(result); }
+        if doc.local_load.as_ref().is_none_or(|load| load.sequence != seq) {
+            return Outcome::Done(Err("Local CAD open was superseded or cancelled; current document preserved".into()));
         }
-        (None, Some(u)) => {
-            CadClient::new(u).map_err(|e| e.to_string())?;
-            CadTarget::Service(u.to_string())
-        }
-        _ => return Err("cad_open takes path (a *.rcad file) or url (a loopback RoboCAD service), exactly one".into()),
-    };
+        return Outcome::Pending;
+    }
+    if url.is_some() { return Outcome::Done(Err("CAD service attachment awaiting Rust migration; open a local .rcad file".into())); }
+    let Some(path) = path else { return Outcome::Done(Err("cad_open needs path to a .rcad archive".into())); };
+    if path.extension().is_none_or(|e| e != "rcad") { return Outcome::Done(Err(format!("{}: expected .rcad archive", path.display()))); }
     let blockers = doc.switch_blockers();
-    if !blockers.is_empty() {
-        return Err(format!("Not opening {}: {}", target.describe(), blockers.join("; ")));
-    }
-    let note = doc.leaving_note();
-    // The old document's self-started service is stopped now (also one
-    // still starting), or left running if edits appeared since the check.
-    let left_running = doc.release_child("opening another CAD document");
-    let mut next = CadDocument::new(target.clone());
-    next.revision = doc.revision + 1;
-    sync::start(&mut next);
-    let old = std::mem::replace(doc, next);
-    // Its poll joins off the UI thread.
-    crate::jobs::drop_off_thread(old, "the previous CAD document");
-    // The registry's CAD entry follows, and is what CAD mode reopens (a new
-    // source gets a new id and the replaced document's items go; the same
-    // source again keeps its id).
-    super::selection::reopen(shared.registry, shared.selection, &target);
-    let mut message = format!("Opening {}", target.describe());
-    if let Some(note) = &note {
-        message.push_str(&format!("; {note}"));
-    }
-    if let Some(url) = &left_running {
-        message.push_str(&format!("; the RoboCAD service the previous document started may hold unsaved edits and is left running at {url} (open it there and save, or stop it)"));
-    }
-    doc.show(Ok(message.clone()));
-    Ok(json!({"opened": target.json(), "message": message, "generation": doc.generation}))
+    if !blockers.is_empty() { return Outcome::Done(Err(blockers.join("; "))); }
+    let seq = sync::request_load(doc, path.clone());
+    if call.rest() { *call.continuation = json!({"local_open": seq}); Outcome::Pending }
+    else { Outcome::Done(Ok(json!({"loading": path, "request": seq, "message": "Loading archive locally; current document retained until success"}))) }
 }
 
-/// `cad_refresh`: refetch now; reconnect when the connection is gone (a
-/// self-started service that exited is started again).
 fn refresh(doc: &mut CadDocument) -> Value {
-    if doc.connect.is_some() {
-        return json!({"message": "Already connecting."});
-    }
-    if doc.client.is_none() || doc.child_exit.is_some() {
-        sync::start(doc);
-        doc.show(Ok(format!("Reconnecting: {}", doc.target.describe())));
-        return json!({"message": "Reconnecting.", "generation": doc.generation});
-    }
-    // Bodies whose mesh failed are fetched again (`mesh::sync`).
-    doc.mesh_retry += 1;
-    sync::refresh(doc, false);
-    json!({"message": "Refetching RoboCAD's document."})
+    sync::start(doc);
+    json!({"message": "Reload requested locally; current document retained until success", "request": doc.load_sequence})
 }
 
 /// `cad_fit`: frame every drawn body, or node `id` and its descendants.
@@ -704,7 +681,7 @@ fn fit(doc: &CadDocument, meshes: Option<&mut CadMeshes>, id: Option<&str>) -> R
         None => "nothing to frame: no bodies are drawn yet".to_string(),
     })?;
     meshes.frame(bounds);
-    Ok(json!({"framed": id.map_or_else(|| "every drawn body".to_string(), |id| doc.node_name(id)), "note": "display only: RoboCAD's view and the geometry are unchanged"}))
+    Ok(json!({"framed": id.map_or_else(|| "every drawn body".to_string(), |id| doc.node_name(id)), "note": "display only: source geometry is unchanged"}))
 }
 
 /// Node `id` and everything under it in the shown tree.

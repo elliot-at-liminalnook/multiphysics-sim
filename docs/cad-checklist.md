@@ -1,5 +1,14 @@
 # CAD mode: side-by-side checklist against RoboCAD
 
+**Current native migration, 2026-10-03:** CD1–CD4 replaces selected opening,
+tree, B-rep display, body selection and mass-family inspection paths with
+shared Rust and directly called OCCT. The [current source ledger](cad-rust-physical-derivations.md)
+supersedes their server-backed traces below and records archive limitations.
+All current evidence is source-reviewed and unexecuted. Service startup,
+attachment, edits, save, annotations and print traces below are historical;
+they do not authorize an active native server path. Unmigrated native controls
+refuse with a named Rust migration gap. No checklist or GUI parity is signed off.
+
 This checklist closes the first CAD epic (**cad-mode**, §9 phase 1 of
 [docs/architecture/native-viewer.md](architecture/native-viewer.md), section
 "CAD mode (2026-09-30)"), the second (**cad-select-transform**: sub-body

@@ -197,7 +197,7 @@ fn example_section(mode: ViewerMode, root: Option<&Path>, cancel: &AtomicBool) -
 }
 
 /// What the picker offers for `mode`: recent documents, then (robot)
-/// presets, (CAD) the RoboCAD service at the default URL, then the
+/// presets, then local CAD archives and the
 /// workspace's examples. Reads files: call it on `Pool::Io`, with the job's
 /// cancel flag (`jobs::Ctx::cancel_flag`): the walk stops once it is set.
 pub(crate) fn discover(mode: ViewerMode, root: Option<PathBuf>, presets: Option<PathBuf>, recents: Recents, ready: bool, cancel: &AtomicBool) -> Sources {
@@ -209,9 +209,6 @@ pub(crate) fn discover(mode: ViewerMode, root: Option<PathBuf>, presets: Option<
             sections.push(example_section(mode, root, cancel));
         }
         ViewerMode::Cad => {
-            let url = sim_runtime::cad_client::DEFAULT_URL;
-            let service = Choice { label: format!("RoboCAD service at {url}"), detail: "attach to a running RoboCAD".into(), enabled: true, document: Document::Url(url.into()) };
-            sections.push(Section { title: "RoboCAD service".into(), empty: String::new(), choices: vec![service] });
             sections.push(example_section(mode, root, cancel));
         }
         ViewerMode::Phenomena => {}

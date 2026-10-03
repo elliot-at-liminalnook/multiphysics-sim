@@ -15,12 +15,9 @@ use std::time::Instant;
 /// What CAD mode was asked to show.
 #[derive(Clone, Debug, PartialEq)]
 pub enum CadTarget {
-    /// A `.rcad` file: the viewer starts RoboCAD's headless service on it
-    /// (`python -m robocad.api PATH --port N`) and stops that service when
-    /// the document is closed.
+    /// A compatible archive owned and queried in process through sim-cad.
     File(PathBuf),
-    /// A RoboCAD service already running (its GUI on 8420 by default, or a
-    /// headless one): attached to, never stopped.
+    /// Legacy target shape; native entry points refuse attachment by name.
     Service(String),
 }
 impl CadTarget {

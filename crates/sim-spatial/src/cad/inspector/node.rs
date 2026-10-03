@@ -27,6 +27,10 @@ pub(in crate::cad) fn name(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
         return;
     };
     k.header(p, &n.name, &format!("{} · {}", n.kind, n.id));
+    if doc.local.is_some() {
+        p.spawn(k.note("Archived source is read only; renaming awaits Rust modelling migration."));
+        return;
+    }
     let editing = draft.editing().filter(|(edit, _)| *edit == id);
     let shown = editing.map_or(n.name.as_str(), |(_, text)| text);
     p.spawn(k.input(shown, "Name", NameField { id: id.to_string(), name: n.name.clone() }, editing.is_some()));
@@ -222,7 +226,29 @@ pub(in crate::cad) fn inspector(p: &mut ChildSpawnerCommands, k: &Kit, doc: &Cad
     if let Some(v) = &n.component_member {
         lines(p, k, "component_member", v);
     }
-    super::editors::editors(p, k, doc, n);
+    if doc.local.is_none() { super::editors::editors(p, k, doc, n); }
+    if let Some(local) = &doc.local {
+        p.spawn(k.section("Exact physical properties"));
+        if let Some(body) = local.geometry.iter().find(|body| body.node_id == id) {
+            field(p, k, "B-rep volume", &body.properties.volume_mm3.to_string(), "mm³");
+        }
+        if let Some(mass) = local.masses.bodies.get(id) {
+            field(p, k, "Mass", &mass.mass_kg.to_string(), "kg");
+            field(p, k, "Centroid", &numbers(&mass.centroid_m), "m");
+            for (i, row) in mass.inertia_kg_m2.iter().enumerate() {
+                field(p, k, &format!("Inertia row {}", i + 1), &numbers(row), "kg·m²");
+            }
+            field(p, k, "Origin", &mass.origin, "");
+            lines(p, k, "Source", &mass.source);
+            lines(p, k, "Provenance", &mass.provenance);
+            field(p, k, "Included in", mass.included_in.as_deref().unwrap_or("standalone"), "");
+        } else { p.spawn(k.note("This node has no applicable mass declaration or solid body.")); }
+        if let Some(raw) = local.archive.node(id) {
+            p.spawn(k.section("Archived metadata"));
+            lines(p, k, "Node", raw);
+        }
+        return;
+    }
     p.spawn(k.section("Detail"));
     match &doc.detail {
         Some((detail_id, revision, result)) if detail_id == id => match result {

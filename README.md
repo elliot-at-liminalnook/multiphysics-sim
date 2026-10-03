@@ -18,9 +18,10 @@ driven on a physical leg through an FPGA.
 - **One solver for many domains.** 17 domain libraries of reusable equation
   elements, one compiler and one implicit integrator. There is no special-case
   robot runtime.
-- **CAD that owns the physics.** RoboCAD (Python, OCCT, Qt) holds geometry,
+- **CAD that owns the physics.** Compatible `.rcad` documents hold geometry,
   materials, joints, transmissions, actuators, sensors and limits, each with
-  units and provenance.
+  units and provenance. Native opening and mass inspection call OCCT from Rust;
+  RoboCAD remains the behaviour reference for the remaining migration.
 - **Linked viewers and a system builder.** A schematic view and a 3D physical
   view show one running system; select in one, see it in the other. Build
   hierarchical systems from a parts library, with component icons, responsive
@@ -86,24 +87,21 @@ The browser workspace is built and served as described in
 
 ### CAD mode in the native viewer
 
-`cargo run -p sim-spatial -- path/to/model.rcad` opens CAD mode: the viewer
-starts RoboCAD's headless REST service on the file (`cad/.venv/bin/python -m
-robocad.api`, from `cad/`; run `cad/run.sh` once to create the venv) and
-shows its model tree, tessellated bodies and inspector. To work beside
-RoboCAD's own window, attach to it instead:
-`cargo run -p sim-spatial -- --cad-url http://127.0.0.1:8420` (selection is
-shared). Every edit (visibility, lock, material, name, delete, undo, redo,
-save, registry commands) goes through RoboCAD's command layer, so its undo
-and `.rcad` file stay its own; the viewer never saves for you: it refuses to
-leave CAD mode while a document it started has unsaved edits, and keeps that
-service running (logging its URL) if the window closes. Sketching, direct-edit
-tools, printing, captured experiment/candidate review and kinematic pose/program
-controls now have native source paths. Experiments use the headless reference
-service and shared Rust runner; native video export requires local ffmpeg.
-These implementations are reviewed by reading, with execution/parity still
-unverified
-([parity ledger](docs/cad-parity.md)); compare the two step by step with
-[docs/cad-checklist.md](docs/cad-checklist.md). Not compiled or run yet.
+`cargo run -p sim-spatial -- path/to/model.rcad` selects native CAD mode.
+Opening, displayed B-rep bodies, body selection and mass/centroid/full inertia
+inspection use shared Rust libraries and OCCT in the viewer process. The CAD
+path picker and native REST `cad_open` use the same typed opening action.
+No RoboCAD process, Python environment or CAD HTTP service belongs to these
+paths. Building requires OCCT development headers and libraries; see
+[the shared CAD crate](crates/sim-cad/README.md) for dependency setup and
+[the source-review ledger](docs/cad-rust-physical-derivations.md) for supported
+archive content and limitations. This implementation has not been built or run.
+
+Full modelling, sketch editing, booleans, fillets, print/flex derivation and
+physical simrobot export await Rust migration. Their native controls refuse
+with a named migration status. Legacy RoboCAD and browser sources remain the
+behaviour reference; their historical execution receipts do not establish
+parity for this Rust replacement. See [the CAD ledger](docs/cad-parity.md).
 
 ### Leg calibration in the native viewer
 
@@ -150,8 +148,8 @@ no builds, tests, launches or hardware operation. See [source parity and operato
 run sheets](docs/leg-in-process.md), [feature ledger](docs/hardware-parity.md)
 and [hardware checklist](docs/hardware-checklist.md). Browser server examples
 remain thin compatibility adapters. Virtual Sync is labelled host Bench simulation,
-not FPGA equivalence. CAD mode still requires RoboCAD's Python/OCCT service;
-this batch does not implement the Rust CAD kernel.
+not FPGA equivalence. Native CAD opening and mass inspection now call OCCT
+directly; the remaining CAD migration gaps are documented above.
 
 ## Principles
 

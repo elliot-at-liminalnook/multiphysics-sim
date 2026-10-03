@@ -105,7 +105,7 @@ pub(super) fn wants(mode: ViewerMode) -> &'static str {
         ViewerMode::Lessons => "a lessons folder (<slug>/lesson.md entries)",
         ViewerMode::Robot => "a robot",
         ViewerMode::Place => "a scanned place (a folder holding place.json)",
-        ViewerMode::Cad => "a RoboCAD document",
+        ViewerMode::Cad => "a local .rcad archive",
         ViewerMode::Inspect => "an assembly",
         ViewerMode::Phenomena => "no document",
     }
@@ -117,7 +117,7 @@ fn offers(mode: ViewerMode) -> &'static str {
         ViewerMode::Robot => "presets, recent and example files, or Open file…",
         ViewerMode::Lessons => "recent and example lesson folders, or Open file…",
         ViewerMode::Place => "recent and example places, or Open file…",
-        ViewerMode::Cad => "the RoboCAD service, recent and example documents, or Open file…",
+        ViewerMode::Cad => "local recent and example .rcad archives, or Open file…",
         _ => "recent and example files, or Open file…",
     }
 }
@@ -273,12 +273,11 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
         ViewerMode::Cad => {
             let target = match (&request.document, path) {
                 (Some(Document::Url(url)), _) => {
-                    sim_runtime::cad_client::CadClient::new(url).map_err(|e| e.to_string())?;
-                    CadTarget::Service(url.clone())
+                    return Err(format!("{url}: CAD service attachment awaiting Rust migration; open a local .rcad archive"));
                 }
                 (_, Some(p)) => {
                     if !p.to_string_lossy().ends_with(".rcad") {
-                        return Err(format!("{}: cad mode opens a *.rcad file (or url, a running RoboCAD)", p.display()));
+                        return Err(format!("{}: cad mode opens a local *.rcad archive", p.display()));
                     }
                     // Known cost: one stat on the UI thread, as the other
                     // modes' paths get here; RoboCAD's service reads the file.
@@ -287,7 +286,7 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
                     }
                     CadTarget::File(p)
                 }
-                _ => remembered.and_then(cad_target).unwrap_or_else(|| CadTarget::Service(sim_runtime::cad_client::DEFAULT_URL.into())),
+                _ => remembered.and_then(cad_target).ok_or_else(|| needs(ViewerMode::Cad))?,
             };
             Ok(Prepared::Now(Box::new(Arrival { document: target.json(), cad: Some(CadDocument::new(target)), ..Default::default() })))
         }

@@ -74,13 +74,7 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem],
     let mut state = json!({
         "target": doc.target.json(),
         "document": doc.document_name(),
-        "service": {
-            "kind": if doc.child.is_some() || matches!(doc.target, CadTarget::File(_)) { "self-started" } else { "attached" },
-            "url": doc.url(),
-            "pid": doc.child.pid(),
-            "exited": doc.child_exit,
-            "line": doc.service_line(),
-        },
+        "service": { "kind": "in-process", "line": doc.service_line() },
         "connection": connection,
         "health": doc.health.as_ref().map(value),
         "unsaved": doc.unsaved(),
@@ -107,6 +101,9 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem],
         "generation": doc.generation,
     });
     // Outside the macro: one more key there would pass json!'s recursion limit.
+    state["local_open"] = doc.local_load.as_ref().map(|load| json!({"request": load.sequence, "path": load.target, "source_generation": load.source_generation, "source_revision": load.source_revision, "stage": load.job.progress().message, "cancel": "cad_file op cancel or Escape"})).unwrap_or(Value::Null);
+    state["local_mass"] = doc.local.as_ref().map(|local| value(&local.masses)).unwrap_or(Value::Null);
+    state["inspected"] = selection.first().and_then(|item| doc.local.as_ref().and_then(|local| local.masses.bodies.get(&item.0).map(|mass| json!({"id": item.0, "mass": value(mass)})))).unwrap_or(state["inspected"].clone());
     state["uncertain_edit"] = json!(doc.uncertain_edit);
     state["uncertain_edit_history"] = json!(doc.uncertain_history);
     state["preview_read_only"] = json!(doc.preview_read_only);

@@ -1,14 +1,7 @@
-//! CAD mode's document: what the window knows about one RoboCAD document,
-//! reached only through RoboCAD's REST service (`sim_runtime::cad_client`).
-//! RoboCAD's kernel and command layer own the document (undo, provenance and
-//! the `.rcad` file); this resource holds the client, the connection, the
-//! last snapshot RoboCAD gave and the work in flight. Nothing here writes a
-//! `.rcad` file, mutates geometry or fills in a physical value.
-//!
-//! Split by seam: `types` holds the value types (target, connection,
-//! edits, snapshot, rows, the child slot, modes, tools), this file the
-//! document resource and its constructor, `state` its queries and the
-//! refusals every edit path shares.
+//! One CAD source owner: the shared immutable archive and its local exact
+//! geometry/mass snapshot. Pending replacement is jobs-owned and only lands
+//! against the captured document generation/revision. Legacy DTO and tool state
+//! fields remain as migration scaffolding, never a connected native service.
 mod state;
 mod types;
 
@@ -26,11 +19,17 @@ use std::time::Instant;
 /// CAD mode's document (present only in CAD mode; removed on exit).
 #[derive(Resource)]
 pub struct CadDocument {
+    /// Local archive ownership; opaque contents remain in the shared document.
+    pub(crate) local: Option<std::sync::Arc<super::sync::LocalSnapshot>>,
+    /// Durable pending replacement. The current snapshot stays until success.
+    pub(crate) local_load: Option<super::sync::LocalLoad>,
+    pub(crate) load_sequence: u64,
+    pub(crate) load_outcomes: HashMap<u64, Result<Value, String>>,
     /// Bumped on every (re)connect and open: results of an older generation
     /// are dropped.
     pub generation: u64,
     pub target: CadTarget,
-    /// The client, once the service answers (None while connecting).
+    /// Legacy unmigrated control seam. Native local loading NEVER fills it.
     pub client: Option<CadClient>,
     /// The service this window started (empty when attached): the only
     /// RoboCAD the viewer ever stops. Shared with the connect job, which
@@ -182,10 +181,11 @@ impl CadDocument {
             CadTarget::File(_) => None,
         };
         let what = match &target {
-            CadTarget::File(p) => format!("starting RoboCAD's service on {}", p.display()),
+            CadTarget::File(p) => format!("opening local archive {}", p.display()),
             CadTarget::Service(url) => format!("connecting to RoboCAD at {url}"),
         };
         Self {
+            local: None, local_load: None, load_sequence: 0, load_outcomes: HashMap::new(),
             generation: next_generation(),
             target,
             client: None,

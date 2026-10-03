@@ -466,6 +466,14 @@ through the official 0.16→0.17→0.18→0.19 guides, with no intended feature 
     then adds `UiWidgetsPlugins` and the input-focus plugins. `bevy_feathers`
     is not enabled (see [UI kit](#ui-kit-2026-09-30)). Both crates were
     already in `Cargo.lock`.
+  - **Later addition (rover-drive-layers):** `bevy_gilrs` (it enables
+    `gamepad`), for the drive bindings' gamepad sticks and buttons;
+    `DefaultPlugins` then adds `GilrsPlugin`
+    (`bevy_internal-0.19.1/src/default_plugins.rs:82-83`). `Cargo.lock`
+    resolved offline (`cargo update --offline -p sim-spatial`, about 3 s):
+    `bevy_gilrs` 0.19.1, `gilrs` 0.11.2, `gilrs-core` 0.6.8 and their
+    platform crates (on Linux `libudev-sys`, which CI already installs). See
+    [Teleoperation](#teleoperation-rover-drive-layers-2026-10-02).
 - **Pins.** `bevy = "0.19.1"` (workspace) and `=0.19.1` (`sim-spatial`).
   `image = "=0.25.10"` is unchanged (0.19.1 resolves to it). `objc2` 0.6 and
   `raw-window-handle` 0.6 became direct macOS dependencies of `sim-spatial`
@@ -7586,3 +7594,140 @@ sibling companion contract; no automatic migration or reference retirement occur
 §§8–9, CAD physical authority and hardware safety remain unchanged. Source reading
 and written unexecuted fixtures establish implementation evidence only; compilation,
 GUI parity, execution and platform durability remain unverified.
+
+## Teleoperation (rover-drive-layers, 2026-10-02)
+
+Goal 4's substrate: a keyboard, gamepad, `system_ui` or REST request in Robot
+mode becomes one body twist, the twist reaches the robot's own external
+controller on the `control.external` seam, the controller mixes it into
+wheel commands, and the twist is recorded with the run for replay. Proven by
+reading on the CAD-built two-wheel robot
+`examples/wheeled-robot/baseline/robot.simrobot.json`. The step list and its
+path:line traces are in [docs/rover-checklist.md](../rover-checklist.md).
+**Everything here is by reading, unexecuted**: nothing was compiled, tested
+or run; the only executed step was the golden-vector generator (below).
+
+### Shape: three layers that don't know about each other
+
+| Layer | Owner | Format | Code |
+|---|---|---|---|
+| Device bindings: keys, sticks, buttons → normalized axes (forward, lateral, yaw in -1..1) and named actions | The viewer, per device, shared across robots: the persisted preferences' `drive_bindings` group (the `app/settings` owner) | `sim.drive-bindings/1`; defaults in code (`BindingsFile::default`), stored only once a user sets them; REST `drive_bindings` reads, sets, resets | `robot/drive_input/` (`bindings.rs`, `input.rs`, `plugin.rs`) |
+| Drive profile: supported axes, max speed / accel / stop decel with units and provenance, named actions (`stop`, `halt`), deadman (timeout, ramp or immediate) | The robot, beside its model: `<stem>.drive.json`, named by `<stem>.controller.json` | `sim.drive/1`, `deny_unknown_fields`; errors name the file and field | `sim_domain_control::drive::profile`; registry description `control.drive_limiter` (a real sampled element, so CAD inspectors, exports, Rhai and the systems editor share it) |
+| Kinematic adapter: twist → wheel joint rates → integrated position targets | The robot's controller: `clients/python/examples/diff_drive_rover.py` on the seam | `--drive-json <sim.drive.resolved/1>` appended by the host | Rust reference `sim_domain_control::drive::kinematics` (`DifferentialDrive`, `Mecanum`); stdlib Python port `clients/python/simloop/drive.py`, checked against one golden file |
+
+The body twist is `[forward m/s, lateral m/s, yaw rad/s]`, the order
+`SteeredGait::command` takes (`drive::steered::command_steered` shows the
+same `BodyTwist` steering a gait), lateral positive left, yaw positive
+counter-clockwise.
+
+### The path (one execution path)
+
+1. **Open.** `--robot FILE` finds `<stem>.controller.json` beside the model
+   (`controller_binding::binding_path_for`), on the reload job, never the UI
+   thread. `controller_binding::load` resolves the script (sha256), the
+   simloop library (sha256 over its `.py` files), the profile (sha256),
+   derives the geometry from the model (`sim_domain_robot::drive_geometry`:
+   track width from the wheel joint anchors, wheel radius from the wheel
+   collision geometry about the joint axis, joint signs from the axes, each
+   `Provenance::Derived { from }`), checks the profile's speeds against the
+   motors' free-running wheel speed and the deadman against the control
+   period, and builds the controller program: `ControllerProgram.external`
+   (Python) with the four command inputs. A binding that fails to load fails
+   the run naming it; there is no silent fallback to the hold controller.
+2. **Run.** The run thread (the jobs-owned `RunThread`) builds
+   `sim_runtime::session::Session` from `controller_binding::scene`: the
+   shared `PhysicalRobot` with the Python program started by
+   `sim_couple::python` and attached through `Runtime::attach` on the
+   model's `control.external` seam, wrapped in the session's
+   `EpisodeCoupler`, which appends `command.forward`, `command.lateral`,
+   `command.yaw` and `command.heartbeat` to the controller's sensors. No
+   thread is spawned in a feature; no physics or mixing runs in the viewer.
+3. **Drive.** Every input writes one action, `RobotAction::Drive { request:
+   DriveRequest::{Axes, Action, Stop} }`, applied by robot mode's one apply
+   system: axes are scaled by the profile (`kinematics::scale`, so a twist
+   outside the profile cannot be made), sent as `Command::Twist`; the run
+   thread applies the shared limiter and deadman (`kinematics::step`) on
+   simulation time once per seam period and steps the session with
+   `[forward, lateral, yaw, heartbeat]`. The heartbeat rises by one for every
+   fresh request.
+4. **Adapter.** The controller passes the live twist through (the run
+   thread's limited twist is authoritative), applies its own deadman on
+   heartbeat staleness (the stop rule from its last output), mixes with the
+   resolved geometry and integrates `left axle.target`, `right axle.target`
+   (`target += period × joint_rate`, as `velocity-controller.rhai` does),
+   which the CAD motor firmware tracks.
+5. **Record.** Save writes `Session::recording()` (the scene with the
+   controller identity, the seed, one `[f, l, y, heartbeat]` action per
+   period) under `runs/robot-drive/<stem>/`. Replay compares the recorded
+   identity (script, script sha256, simloop library sha256, args, profile
+   and its sha256, resolved drive, robot, period) with the loaded binding's
+   and refuses by name on any difference; otherwise it rebuilds the session
+   with the recorded seed and steps the recorded actions.
+
+### Decisions
+
+- *Three layers, three owners.* Bindings are the viewer's (a person's
+  devices, every robot); the profile is the robot's, beside its CAD export
+  (limits belong with the model, and the browser and hardware hosts read the
+  same file); the adapter is the controller's (teleoperation requests motion
+  through the controller, so sim, browser and hardware get one twist).
+  Rejected: mixing in the viewer (duplicates the controller, breaks one
+  execution path); limits in the bindings (per device, not per robot).
+- *The session's command inputs carry the twist.* `EpisodeCoupler` already
+  appended named command channels for Rhai programs; `ControllerProgram`
+  gained `external` (an external Python simloop program) beside Rhai
+  `sources`, so recording and replay come from the shared `Session` path.
+  Rejected: a second command-input mechanism on the physical runtime.
+- *Geometry goes to the controller as `--drive-json`.* The hello is fixed in
+  Rust and the derived geometry is not in the profile file (it is derived
+  from the model at load, never hand-copied). The resolved JSON is part of
+  the recorded args. Rejected: a profile path argument (the controller would
+  need the model too) or extending the hello (a protocol change for every
+  client).
+- *The binding is a file beside the model.* `<stem>.controller.json` (script
+  path, args, the drive profile), found by convention. Rejected: a field in
+  the CAD export (the controller is not a physical property).
+- *Limit and deadman on the run thread, on simulation time.* Replay is then
+  deterministic (the recorded actions are the limited ones). The deadman
+  cannot expire while paused (no simulation time passes); a nonzero request
+  is accepted only while Running, so nothing waits to move the robot at the
+  next Run. Every queued command is applied before each period, so a
+  release, stop or halt is never stuck behind stale requests.
+- *Stops.* Release (every input neutral) sends one zero request; window
+  focus loss stops what the devices were driving; Escape, the Stop button,
+  the profile's `stop` (ramp at `stop_decel`) and `halt` (zero at once), a
+  text field taking the keyboard and the deadman all stop. Leaving Robot
+  mode drops the view and with it the run (`app/switch/leave.rs`).
+- *Coexistence with presets.* The preset motion-channel path
+  (`robot/motion.rs`, `Command::Motion`, `actions::motion_keys`) acts only
+  for a preset with a motion config; drive input acts only for a run with a
+  controller binding. A run is one or the other, so one key press never
+  drives both.
+- *Native gamepad: enabled* (`bevy_gilrs`; the lockfile resolved offline).
+  Default bindings: keyboard W/S forward, A/D yaw, Q/E lateral, X `stop`,
+  B `halt` (Space, Enter, Tab and Escape are the kit's activation and focus
+  keys and are refused as bindings); gamepad left stick Y forward, right
+  stick X yaw, left stick X lateral, South `stop`, East `halt`, deadzone
+  0.15. Axes a robot's profile does not support are zeroed and named by the
+  device layer (REST stays strict).
+- *Golden vectors from the Rust reference.* `kinematics.rs` is standard
+  library only, so `tests/fixtures/gen_drive_golden.rs` compiles it alone
+  with `rustc` (about 2 s, no cargo) and prints
+  `tests/fixtures/drive_golden.json`; the Rust test recomputes it and the
+  Python unittest reads it. This was the one executed step of the batch.
+- *Hardware.* Not driven. The same resolved drive and controller can run on
+  a hardware host later; the twist path there is documented only (RV-39).
+
+### Where it is today
+
+Written and traced by reading on the wheeled robot: the drive library and
+registry description, the geometry derivation, the golden file (generated),
+the Python port and the rover controller, the runtime's external program and
+binding loader, the Robot-mode run thread, recording and replay, the bindings
+and their settings group, the one drive action with keyboard, gamepad,
+`system_ui` and REST `robot_drive`, and the inspector's Drive block. Not
+compiled, not run. Next (rover-rest-flow): the rover built over CAD REST,
+rigging and annotation, systems-editor wiring and the Build-mode
+`SystemSession` attachment, browser driving (the browser cannot host a Python
+process; its controller path needs a decision) and the committed example
+script.

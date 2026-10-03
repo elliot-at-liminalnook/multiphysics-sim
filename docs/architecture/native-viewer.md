@@ -6163,14 +6163,51 @@ reference/replacement map are in [leg-in-process.md](../leg-in-process.md).
   executed receipts remain; their old acceptance drivers are not in-process
   receipts. Current evidence is reading only; no builds, tests, launches,
   screenshots or hardware operation. See [hardware parity](../hardware-parity.md)
-  and [operator checklist](../hardware-checklist.md). **CAD still reaches
-  `sim_runtime::cad_client` and Python/OCCT RoboCAD**; §9 is the next separate
-  migration and remains an external service requirement.
+  and [operator checklist](../hardware-checklist.md). The selected CAD
+  opening/display/body-selection/mass paths now use Rust and directly called
+  OCCT (§9); other native CAD controls name their remaining migration gap.
 
 ### 9. CAD in Rust
 
 *Decided 2026-09-30.* RoboCAD (Python/OCCT/Qt, about 27,700 lines) moves to
 Rust with exact feature parity, in phases. RoboCAD is the reference throughout.
+
+**Current implementation, 2026-10-03: cad-rust-physical-derivations (CD1–CD4).**
+The selected opening/display/body-selection/mass-inspection paths use the shared
+`sim-cad` archive and mass modules and a narrow C ABI bridge into OCCT, all in
+the viewer process. Native ownership is the existing CAD document resource;
+the document registry and shared Selection remain authoritative. Typed actions
+start jobs; accepted job results precede mesh synchronization through CadSet and
+ViewerSet. Numeric snapshots cross the job boundary; OCCT handles never do.
+Current source evidence, inventory, limitations and unexecuted acceptance cases
+are in [the bounded migration ledger](../cad-rust-physical-derivations.md).
+
+The binding decision is a focused C++ bridge rather than a process/server adapter
+or a general Rust CAD wrapper: the exact archive B-rep stream reader, tessellation,
+per-solid enumeration, placement and full volume tensor queries are required
+together. [BRepTools](https://dev.opencascade.org/doc/refman/html/class_b_rep_tools.html),
+[BRepGProp](https://dev.opencascade.org/doc/refman/html/class_b_rep_g_prop.html)
+and [BRepMesh_IncrementalMesh](https://dev.opencascade.org/doc/refman/html/class_b_rep_mesh___incremental_mesh.html)
+document these kernel operations. Pinned native source inspection and linking
+requirements are recorded in [sim-cad](../../crates/sim-cad/README.md).
+Archive format version 1 and OCCT topology stream version are separate contracts;
+existing archived bytes, unknown JSON and opaque entries remain owned unchanged.
+Triangle meshes serve display only. Exact B-rep integration supplies mass,
+centroid and full inertia, with declared measurements taking precedence.
+
+OCCT access is serialized conservatively on a jobs worker. Native shapes are
+constructed, queried and destroyed there before returning owned numeric buffers.
+Cancellation is cooperative between kernel operations; an active OCCT operation
+is not forcibly interrupted. Failed/cancelled replacement preserves the current
+document, and captured generation/revision stamps reject stale completion.
+No unmigrated native control may silently start or contact RoboCAD. Legacy
+sources remain behaviour references. Full modelling/sketch edits, booleans,
+fillets, print/flex derivations and physical simrobot export remain migration
+gaps; this batch does not claim complete archive corpus or GUI parity.
+
+**Historical migration plan and receipts below.** The user decision of
+2026-10-03 supersedes its active server ownership and server-parity-gate policy.
+It is retained to explain earlier implementations and evidence.
 
 1. **A CAD mode in `sim-spatial`.** It covers RoboCAD's workflows (sketch,
    features, direct edits, physical properties, joints, print splitting,

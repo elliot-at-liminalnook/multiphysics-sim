@@ -259,7 +259,7 @@ fn discovery_finds_examples_and_skips_runs() {
     assert_eq!(section(&lessons, "Lesson folders").choices.iter().map(|c| c.label.as_str()).collect::<Vec<_>>(), ["lessons"]);
 
     let cad = discover(ViewerMode::Cad, Some(root.clone()), None, Recents::default(), true, &go);
-    assert_eq!(section(&cad, "RoboCAD service").choices[0].document, Document::Url(sim_runtime::cad_client::DEFAULT_URL.into()));
+    assert!(cad.sections.iter().all(|section| section.choices.iter().all(|choice| !matches!(choice.document, Document::Url(_)))), "native CAD picker offers local archives, never service attachment");
     assert!(section(&cad, "Examples").choices.is_empty() && !section(&cad, "Examples").empty.is_empty());
 
     // Recent documents: a path that no longer exists is shown, disabled.

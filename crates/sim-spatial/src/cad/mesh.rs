@@ -1,45 +1,22 @@
-//! CAD mode's 3D bodies: RoboCAD's tessellations (`GET /nodes/{id}/mesh`),
-//! drawn as they are. Display only: nothing here PATCHes RoboCAD, and the
-//! geometry is never changed.
-//!
-//! - **What is drawn**: every node of a body-like kind ([`BODY_KINDS`]) that
-//!   RoboCAD reports `effective_visible`, at the shown (document id,
-//!   revision). A node RoboCAD has no mesh for (404 "no mesh") is
-//!   remembered and not asked again until the revision changes. A failed
-//!   fetch or build is reported and retried on a revision change,
-//!   `cad_refresh` or a reconnection (Lost → Connected:
-//!   `CadDocument::mesh_retry`).
-//! - **Known cost**: RoboCAD's revision covers the whole document, so every
-//!   revision refetches every visible body's mesh (even ones the edit did
-//!   not touch); at most [`MAX_FETCHES`] at a time, the old mesh shown meanwhile.
-//! - **How**: the fetch runs on `Pool::Dedicated` (network: the jobs
-//!   module's pool rule, deliberately not `Pool::Io`, which the asset server
-//!   shares; at most [`MAX_FETCHES`] at once), the Bevy mesh data is built on
-//!   `Pool::Compute` ([`build`]), and the asset and entity are made on the UI
-//!   thread. A body keeps its previous mesh on screen until the new
-//!   revision's arrives. Results of another generation or revision are dropped.
-//! - **Picking** is `pick`'s (one path for bodies, faces, edges, vertices
-//!   and points, through Bevy's `MeshRayCast` on these entities and
-//!   [`CadMeshes::face_of`]); the bodies carry `RayCastBackfaces` because
-//!   they are drawn double-sided (sheets are seen from both sides).
-//! - **Highlight** ([`highlight`]): a body selected as a body item is drawn
-//!   in the selection material; faces, edges, vertices and points are drawn
-//!   by `overlay`, so a face selection does not paint the whole body.
+//! Local OCCT display triangles, never a physical approximation. Geometry
+//! comes from the accepted jobs-owned sim-cad snapshot. Bevy attribute building
+//! remains on Compute; this system alone owns body assets/entities. Existing
+//! shared selection and MeshRayCast consume the same drawn triangle order.
 use super::document::CadDocument;
 use crate::jobs::{Job, Pool};
 use bevy::picking::mesh_picking::ray_cast::RayCastBackfaces;
 use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
-use sim_runtime::cad_client::{MeshData, NODE_TOLERANCE};
+use sim_runtime::cad_client::MeshData;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 /// RoboCAD node kinds that have a tessellation (`Document.mesh_of`: a body
 /// or sheet's own body, an instance's resolved body, a mesh node).
 pub const BODY_KINDS: [&str; 4] = ["body", "sheet", "instance", "mesh"];
-/// Mesh requests in flight at once.
-pub const MAX_FETCHES: usize = 2;
+/// Display attribute builds in flight at once.
+pub const MAX_BUILDS: usize = 2;
 
 /// A drawn RoboCAD body.
 #[derive(Component, Clone, Debug)]
@@ -83,11 +60,6 @@ struct Entry {
     drawn: Option<(u64, Arc<MeshData>)>,
 }
 
-struct Fetch {
-    id: String,
-    revision: u64,
-    job: Job<Option<MeshData>>,
-}
 struct Building {
     id: String,
     revision: u64,
@@ -109,7 +81,6 @@ pub struct CadMeshes {
     generation: u64,
     document_id: Option<String>,
     entries: HashMap<String, Entry>,
-    fetching: Vec<Fetch>,
     building: Vec<Building>,
     pub counts: MeshCounts,
     /// The `CadDocument::mesh_retry` last applied (failed entries retried).
@@ -307,7 +278,9 @@ pub fn build(id: &str, mesh: &MeshData) -> Result<Built, String> {
     let mut split: HashMap<(u32, i64), u32> = HashMap::new();
     let vertex = |i: u32| -> Result<Vec3, String> {
         let v = mesh.vertices.get(i as usize).ok_or_else(|| format!("node {id}: RoboCAD's mesh names vertex {i} of {}", mesh.vertices.len()))?;
-        Ok(Vec3::new(v[0] as f32, v[1] as f32, v[2] as f32))
+        let point = Vec3::new(v[0] as f32, v[1] as f32, v[2] as f32);
+        if !point.is_finite() { return Err(format!("node {id}: display vertex {i} is non-finite or outside f32 range")); }
+        Ok(point)
     };
     for (t, tri) in mesh.triangles.iter().enumerate() {
         let face = mesh.triangle_face.get(t).copied().unwrap_or(-1 - t as i64);
@@ -392,35 +365,7 @@ pub(super) fn sync(
             meshes.epoch += 1;
         }
     }
-    meshes.fetching.retain(|f| wanted.contains(f.id.as_str()) && f.revision == revision && f.job.generation() == doc.generation);
     meshes.building.retain(|b| wanted.contains(b.id.as_str()) && b.revision == revision && b.job.generation() == doc.generation);
-
-    // Fetched: build on Compute (or remember "no mesh" / the error).
-    let mut i = 0;
-    while i < meshes.fetching.len() {
-        let Some(result) = meshes.fetching[i].job.poll() else {
-            i += 1;
-            continue;
-        };
-        let Fetch { id, revision: at, .. } = meshes.fetching.swap_remove(i);
-        match result {
-            Ok(Some(data)) => {
-                let name = id.clone();
-                let job = Job::spawn(Pool::Compute, doc.generation, "cad-mesh-build", move |_| build(&name, &data).map(|built| (built, Arc::new(data))));
-                meshes.building.push(Building { id, revision: at, job });
-            }
-            Ok(None) => {
-                meshes.hidden.remove(&id);
-                let entry = meshes.entries.entry(id).or_insert(Entry { revision: Some(at), state: State::NoMesh, entity: None, bounds: None, drawn: None });
-                if let Some(e) = entry.entity.take() {
-                    commands.entity(e).despawn();
-                    meshes.epoch += 1;
-                }
-                *entry = Entry { revision: Some(at), state: State::NoMesh, entity: None, bounds: None, drawn: None };
-            }
-            Err(error) => settle_failed(meshes, id, at, error),
-        }
-    }
 
     // Built: the asset and the entity (or the new mesh on the drawn one).
     let mut i = 0;
@@ -453,20 +398,23 @@ pub(super) fn sync(
         }
     }
 
-    // Start fetches for bodies not yet at this revision.
-    if let Some(client) = doc.client.clone().filter(|_| doc.connected()) {
+    // Build display triangles from the accepted local kernel snapshot only.
+    if let Some(local) = &doc.local {
         let mut ids: Vec<&str> = wanted.iter().copied().filter(|id| meshes.entries.get(*id).is_none_or(|e| e.revision != Some(revision))).collect();
         ids.sort_unstable();
         for id in ids {
-            if meshes.fetching.len() >= MAX_FETCHES {
-                break;
-            }
-            if meshes.fetching.iter().any(|f| f.id == id) || meshes.building.iter().any(|b| b.id == id) {
+            if meshes.building.len() >= MAX_BUILDS { break; }
+            if meshes.building.iter().any(|b| b.id == id) { continue; }
+            let Some(data) = local.meshes.get(id).cloned() else {
+                meshes.entries.insert(id.to_string(), Entry { revision: Some(revision), state: State::NoMesh, entity: None, bounds: None, drawn: None });
                 continue;
-            }
-            let (client, node) = (client.clone(), id.to_string());
-            let job = Job::spawn(Pool::Dedicated, doc.generation, "cad-mesh-fetch", move |_| client.mesh(&node, NODE_TOLERANCE).map_err(|e| e.to_string()));
-            meshes.fetching.push(Fetch { id: id.to_string(), revision, job });
+            };
+            let node = id.to_string();
+            let job = Job::spawn(Pool::Compute, doc.generation, "local-cad-mesh-build", move |ctx| {
+                if ctx.cancelled() { return Err("Display mesh cancelled".into()); }
+                build(&node, &data).map(|built| (built, data))
+            });
+            meshes.building.push(Building { id: id.to_string(), revision, job });
         }
     }
 
@@ -532,7 +480,7 @@ fn hide_isolated(commands: &mut Commands, doc: &CadDocument, meshes: &mut CadMes
 }
 
 fn counts_pending(meshes: &CadMeshes) -> bool {
-    meshes.counts.pending > 0 || !meshes.fetching.is_empty() || !meshes.building.is_empty()
+    meshes.counts.pending > 0 || !meshes.building.is_empty()
 }
 
 /// A failed fetch or build: reported, and the previous mesh (if any) stays

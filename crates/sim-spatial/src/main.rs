@@ -10,13 +10,10 @@ struct Args {
     /// mode (--system), a `*.simrobot.json` file → robot mode (--robot), a
     /// directory holding `place.json` → place mode (--place), a directory with
     /// `<slug>/lesson.md` entries → lessons mode (--lessons), a `*.rcad` file →
-    /// CAD mode (RoboCAD's headless service is started on it with
-    /// cad/.venv/bin/python and stopped when the document closes, unless it
-    /// may hold unsaved edits: then closing the window leaves it running and
-    /// logs its URL; --select, --exploded, --connections, --compact and
-    /// --annotations are refused with it). Detected by name or directory
-    /// structure only; anything else is an error. Presets stay on
-    /// --robot-preset.
+    /// CAD mode (local Rust archive and direct OCCT; no service is started).
+    /// --select, --exploded, --connections, --compact and --annotations are
+    /// refused with CAD. Detected by name or directory structure only;
+    /// anything else is an error. Presets stay on --robot-preset.
     #[arg(value_name = "FILE", conflicts_with_all = ["system", "robot", "robot_preset", "lessons", "place", "description", "spatial", "live", "animation", "selection_link", "cad_url", "phenomena"])]
     file: Option<PathBuf>,
     /// Shared discussion and saved-view sidecar.
@@ -118,7 +115,7 @@ struct Args {
     /// Local motor bench driver configuration for Sync motors.
     #[arg(long, value_name = "FILE")]
     motor_bench_config: Option<PathBuf>,
-    /// CAD mode attached to a running RoboCAD service (its desktop GUI serves
+    /// Legacy service URL option; native CAD refuses it pending Rust migration (previously
     /// http://127.0.0.1:8420; loopback only). Never stopped by this window;
     /// unsaved edits stay in that service.
     /// --select, --exploded, --connections, --compact and --annotations are
@@ -244,29 +241,18 @@ fn launch(mode: sim_spatial::ViewerMode, api: sim_api::Server, documents: Docume
     sim_spatial::Launch { mode, api, documents: config, registry, models, scene: None, link: None, builder: None, learn: None, robot: None, place: None, cad: None }
 }
 
-/// CAD mode: a `.rcad` file (RoboCAD's headless service is started on it
-/// once the window is open, off the UI thread) or a running RoboCAD's URL.
-/// `--validate-only` checks the file and the interpreter (or the URL) and
-/// starts nothing.
+/// CAD mode: a local archive. The typed open applies after mode entry;
+/// validation-only reports the planned local path without querying the kernel.
 fn cad_mode(args: &Args, target: sim_spatial::cad::CadTarget) -> Result<(), Box<dyn std::error::Error>> {
     use sim_spatial::cad::CadTarget;
+    if matches!(&target, CadTarget::Service(_)) {
+        return Err("CAD service attachment awaiting Rust migration; open a local .rcad archive".into());
+    }
     if args.validate_only {
-        match &target {
-            CadTarget::File(path) => {
-                let cad_dir = sim_spatial::workspace::path("cad")?;
-                let python = sim_runtime::cad_client::service::interpreter(&cad_dir)?;
-                println!("Validated {}: CAD mode would start RoboCAD's headless service with {} -m robocad.api (in {}). No service was started.", path.display(), python.display(), cad_dir.display());
-            }
-            CadTarget::Service(url) => {
-                let client = sim_runtime::cad_client::CadClient::new(url).map_err(|e| e.to_string())?;
-                println!("Validated {}: CAD mode would attach to RoboCAD at {}. Nothing was requested.", url, client.url());
-            }
+        if let CadTarget::File(path) = &target {
+            println!("CAD mode will read {} locally through sim-cad and direct OCCT; archive/kernel validation was not executed.", path.display());
         }
         return Ok(());
-    }
-    // A malformed or non-loopback URL is refused here, as viewer_mode {url} refuses it, not shown as a lost window.
-    if let CadTarget::Service(url) = &target {
-        sim_runtime::cad_client::CadClient::new(url).map_err(|e| e.to_string())?;
     }
     let mut documents = documents(args);
     documents.open(sim_spatial::ViewerMode::Cad, sim_spatial::app::switch::sources::cad_source(&target));

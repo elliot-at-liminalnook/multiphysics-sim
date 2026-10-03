@@ -1,63 +1,5 @@
-//! Sub-body selection (cad-select-transform, native-viewer.md "CAD selection
-//! and transform"): the handler of the selection actions, the selection
-//! commands and the push to RoboCAD. RoboCAD is the reference:
-//! `ui/tools.py` `SelectTool` (click, Shift extends, Ctrl toggles, the box),
-//! `ui/app.py` `set_selection_mode`, `select_all`, `invert_selection`,
-//! `select_same_material`, `convert_edges_to_faces`, and `document.py`
-//! `same_material`.
-//!
-//! - **One handler** ([`handle`], called from `actions::handle`) for
-//!   `CadSelect`, `CadSelectMode`, `CadHover`, `CadBoxSelect`,
-//!   `CadCandidates`, `CadSelectAll`, `CadInvertSelection`,
-//!   `CadSelectSameMaterial` and `CadEdgesToFaces`. The 3D clicks
-//!   (`pick`), the tree rows, the mode strip and buttons (`overlay`), the
-//!   Alt menu, the keys, `system_ui` and REST all write these actions.
-//! - **One owner**: the items are the shared selection's (`crate::selection`,
-//!   `Item::Cad` under CAD's registry entry; [`shared`]). Every arm changes
-//!   them through `Selection::apply` with a `SelectionAction` (Ctrl toggles,
-//!   Shift adds, otherwise set: [`op`]), after the same validation as before.
-//! - **Push** ([`publish`]): after a selection or mode change the panels are
-//!   touched and, when connected and changed, the items and the mode go to
-//!   RoboCAD's `PUT /selection` (`sync::push_selection`, one at a time).
-//!   A change another writer made (an `Act<SelectionAction>`, a re-check
-//!   after a new tree) is pushed once by [`publish_changes`]; an adopted
-//!   RoboCAD selection is not pushed back.
-//!   A hover is display only: it neither touches the panels nor is pushed.
-//! - **Status**: as RoboCAD's `selection_changed`, "n selected" (or the
-//!   empty status, "Ready") after a selection change; "Selection mode: m"
-//!   after a mode switch.
-//! - **Revisions**: an item with an index carries the shown revision it
-//!   was computed at into `Selection::apply`, which refuses it by name when
-//!   CAD's document has since moved on: a 3D pick (`picked_at`), a box
-//!   select's edges and vertices (their topology's revision), an Alt-menu
-//!   choice (the revision the menu was gathered at, `Candidates::revision`)
-//!   and edges → faces (the topology's revision; an edge picked at another
-//!   revision than the topology's is refused before converting).
-//!
-//! Deliberate differences from RoboCAD (recorded):
-//! - Edges → faces: RoboCAD asks its kernel (`faces_of_edge`), which has no
-//!   REST route. Here the faces come from RoboCAD's drawn tessellation: a
-//!   face bounds the edge when one of its triangles has a side whose two
-//!   ends and midpoint lie on the edge's sampled polyline within a
-//!   tolerance (one sagitta of the polyline plus RoboCAD's tessellation
-//!   tolerance, no fraction of the body's size, so a face across a thin
-//!   wall is not taken) and that runs along it (parallel to the nearest
-//!   polyline segment within 8° plus the polyline's largest turn)
-//!   ([`faces_along`]). It needs the node's mesh and topology at
-//!   the same revision and refuses by name until both are loaded.
-//! - Select Same Material refuses (by name) when nothing is selected or the
-//!   first selected node has no material; RoboCAD silently does nothing for
-//!   an empty selection and selects every body without a material for one
-//!   with none.
-//! - `CadCandidates` with no items closes the Alt menu (a click elsewhere
-//!   in the 3D view closes it, as a Qt popup does).
-//! - Box select runs inline in the handler: one projection of every drawn
-//!   body's 8 bounding-box corners (body, face, point modes), or of every
-//!   sampled edge point / vertex of the drawn bodies (edge, vertex modes),
-//!   once on release. A few hundred thousand projections (a few ms) is
-//!   acceptable for one release; a `Pool::Compute` job would need the
-//!   handler to answer Pending and a second apply path for a one-shot
-//!   gesture.
+//! CAD items in the shared selection. Local body picks and tree gestures
+//! apply through CadAction; no remote selection reads, writes or echo exists.
 mod shared;
 
 pub(crate) use shared::{CadItems, CadSelection, Shared, View, cad_id, ensure_registered, follow_tree, reopen, source};
@@ -122,25 +64,12 @@ pub(super) fn handle(action: &CadAction, _call: &mut Call, cx: &mut Cx) -> Outco
     Outcome::Done(result)
 }
 
-/// After any selection or mode change: the panels refresh and, when
-/// connected and RoboCAD's copy differs (or a push is in flight, which then
-/// sends the newest once it answers), the shared selection's CAD items and
-/// the mode are pushed. The change count it saw is recorded
-/// (`published_selection`), so [`publish_changes`] does not push it again.
-/// Returns whether a push was started or queued. Part D calls this when a
-/// tool switches the mode (push/pull to face mode).
+/// Mark the shared selection change for presentation. Always false: no
+/// network push is queued and no second selection owner exists.
 pub(super) fn publish(doc: &mut CadDocument, shared: View) -> bool {
     doc.touch();
     doc.published_selection = shared.changed();
-    if !doc.connected() || shared.id().is_none() {
-        return false;
-    }
-    let items = shared.items();
-    if doc.selection_job.is_some() || differs_from_remote(doc, &items) {
-        super::sync::push_selection(doc, items);
-        return true;
-    }
-    false
+    false // Shared Selection is authoritative; no remote echo or push.
 }
 
 /// A change any writer made since CAD last published or adopted (an

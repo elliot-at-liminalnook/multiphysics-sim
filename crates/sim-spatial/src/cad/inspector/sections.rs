@@ -25,6 +25,20 @@ pub(in crate::cad) fn physical_key(doc: &CadDocument, selection: &[SelectionItem
 /// (`rows`: colour, joint, joint physics, results, exact measurements,
 /// material properties).
 pub(in crate::cad) fn physical(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem]) {
+    if let Some(local) = &doc.local {
+        for (label, mass) in [("Visible assembly (including instances)", &local.masses.assembly), ("Physical source assembly (body/sheet inventory)", &local.masses.physical_assembly)] {
+            p.spawn(k.section(label));
+            field(p, k, "Mass", &mass.mass_kg.to_string(), "kg");
+            field(p, k, "Centroid", &super::numbers(&mass.centroid_m), "m");
+            for (i, row) in mass.inertia_kg_m2.iter().enumerate() { field(p, k, &format!("Inertia row {}", i + 1), &super::numbers(row), "kg·m²"); }
+            field(p, k, "Origin", &mass.origin, "");
+            lines(p, k, "Provenance", &mass.provenance);
+        }
+        field(p, k, "Model identity", &local.masses.model_identity, "");
+        field(p, k, "Derivation identity", &local.masses.derivation_identity, "");
+        p.spawn(k.note("Exact B-rep properties are authoritative. Triangles are display only. Editing, physical export and print/flex derivations await Rust migration."));
+        return;
+    }
     link(p, k, doc, selection);
     super::rows::draw(p, k, doc, selection);
 }

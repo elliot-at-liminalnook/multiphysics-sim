@@ -1,65 +1,8 @@
-//! File workflows (cad-views-export): new, open, save as and import with
-//! units, export in every RoboCAD format and the drawing, and render, each
-//! a `CadAction` on a job with progress and a named refusal; new and open
-//! never lose unsaved edits, as in RoboCAD.
-//!
-//! - **Paths, not dialogs.** A command without a path opens a modal path
-//!   form on the UI kit (`form`), pre-filled with the document's directory,
-//!   with the directory's matching files listed by a `Pool::Io` job (the
-//!   kit path field's listing, `ui_kit::path_field`, the one way to enter
-//!   a path in the window); no file I/O on the UI thread. rfd is not in
-//!   the workspace: a native dialog adds a dependency tree (objc2/AppKit
-//!   on macOS, GTK or the portal on Linux) whose macOS dialogs must run on
-//!   the main thread's event loop, which cannot be verified without
-//!   building and running; revisit in a verification pass.
-//! - **Unsaved edits.** RoboCAD's New and Open open another window, so
-//!   they never lose edits. CAD mode shows one document, so new and open
-//!   replace it under `cad_open`'s rule (`CadDocument::switch_blockers`,
-//!   the one check for the form, REST and `cad_open`): refused by name on
-//!   an edit in flight or a self-started service's unsaved (or
-//!   unconfirmable) edits, which the viewer never discards; an attached
-//!   RoboCAD keeps its edits, and the answer and status line say so
-//!   (`CadDocument::leaving_note`). There is no "discard" answer: RoboCAD's
-//!   Save / Discard / Cancel prompt is a rejected design here
-//!   (native-viewer.md, CAD mode). New checks the rule before RoboCAD
-//!   writes the file, so a refused open does not leave one behind, and a
-//!   REST caller's answer is the open's outcome (`jobs::wait`).
-//! - **Save and Save As** (`save`, also `cad_save`) send `POST
-//!   /save/thumbnail`, as RoboCAD's desktop Save and Save As both write the
-//!   thumbnail (`MainWindow.save`/`save_as`: `doc.save(…,
-//!   thumbnail=self.thumbnail())`; a plain `/save` would drop the file's
-//!   thumbnail). A save to a path makes it the document's file in RoboCAD
-//!   (`Document.save` sets `path`), so a self-started document's target
-//!   follows it once the save succeeds (`Edit::retarget`, set on the edit
-//!   this call started).
-//! - **Document edits** (open, import, save as) are one RoboCAD call each
-//!   through `actions::edit` / `cad_open`; **writes** that leave the
-//!   document as it is (export, render, new) run on `Pool::Dedicated` jobs
-//!   marked `complete_on_drop` (they finish, and log their outcome, even
-//!   after CAD mode closes); the unit guess and the listing are reads.
-//!   REST callers wait for the answer.
-//! - **Cancel says what was written** (`FileOp::Cancel`: the progress
-//!   strip's Cancel, `cad:file:cancel-<job>`, REST `cad_file {op: cancel,
-//!   job?}`): api.py has no cancel route for `/export` or `/render`, so a
-//!   sent request runs to its end in RoboCAD (under its document lock
-//!   headless, on its Qt thread with a window). A cancelled render's PNG is
-//!   this window's to write, and it is not written once the cancel was seen
-//!   (`jobs::cancel`; the outcome is a refusal naming that nothing was
-//!   written, or, when the cancel came too late to stop the write, the written file
-//!   with that note); an export's file is RoboCAD's to write, so its
-//!   outcome says the cancel did not stop it. A job cancelled before its
-//!   thread started sends nothing. A REST caller may also stop waiting; the
-//!   outcome still lands in `cad_state.files.last` and the status line, and
-//!   a failed or cancelled job is never shown as done.
-//! - **Render** is `GET /render` (headless: the snapshot renderer; with a
-//!   window: the GPU viewport for plain shaded views, else a snapshot copy),
-//!   written to a PNG by the job. `/capture` and `/screenshot` need
-//!   RoboCAD's window (409 headless) and capture RoboCAD's own viewport, so
-//!   they are deliberately not used: the native view is this window's.
-//!   The Blender live link and web share (`bridge.*`) are desktop-only
-//!   servers started by RoboCAD's window, deliberately not ported.
-mod formats;
-pub(in crate::cad) mod form;
+//! Local path-picker Open shares CadAction::CadOpen with REST and startup.
+//! Archive replacement is jobs-owned; failures/cancellation preserve the source.
+//! The legacy save/import/export catalogue is retained as migration scaffolding
+//! and refuses by name; no selected opening path calls its client adapters.
+mod form;
 mod jobs;
 #[cfg(test)]
 mod tests;
@@ -299,6 +242,14 @@ fn files<'a>(cx: &'a mut Cx) -> Result<&'a mut CadFiles, String> {
 
 fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
     let done = Outcome::Done;
+    if !matches!(args.op, FileOp::Open | FileOp::Close | FileOp::Cancel) {
+        return done(Err(format!("{}: file workflow awaiting Rust migration", args.op.label())));
+    }
+    if args.op == FileOp::Cancel && cx.doc.local_load.is_some() {
+        let seq = cx.doc.local_load.as_ref().map(|load| load.sequence).unwrap();
+        crate::cad::sync::cancel_load(cx.doc, seq);
+        return done(Ok(json!({"cancelled": seq, "message": "Local open cancelled; current document preserved"})));
+    }
     let what = args.op.label();
     if args.op == FileOp::Close {
         return done(files(cx).map(|f| json!({"closed": f.form.take().map(|form| form.title())})));
@@ -665,7 +616,7 @@ pub(in crate::cad) fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Resul
 
 /// [`controls`] from the document and the file state.
 fn control_list(doc: &CadDocument, files: Option<&CadFiles>) -> Vec<(String, String, CadAction, Result<(), String>)> {
-    let connected = || if doc.connected() { Ok(()) } else { Err(format!("not connected to RoboCAD: {}", doc.connection_line().0)) };
+    let connected = || Err("File export/render/new awaiting Rust migration".to_string());
     let editable = || doc.edit_refusal().map_or(Ok(()), Err);
     let file = |op| CadAction::CadFile(FileArgs { op, ..Default::default() });
     let mut out = vec![

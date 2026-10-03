@@ -1,5 +1,17 @@
 # CAD mode: parity ledger against RoboCAD
 
+**Current scope, 2026-10-03:** `cad-rust-physical-derivations` CD1–CD4 migrates
+opening existing archives, B-rep body display, shared body selection and exact
+body/assembly mass, centroid and full inertia inspection. See the
+[focused inventory and reference/replacement source ledger](cad-rust-physical-derivations.md).
+Evidence is source-reviewed and unexecuted. The historical rows below retain
+their original receipts; server-backed reading traces are superseded for these
+selected paths. Full modelling, sketch editing, booleans, fillets, print/flex
+and physical export await Rust migration, and native controls refuse rather
+than contacting the preserved Python/browser implementations. Retaining legacy
+code does not retain an active native server adapter. Complete corpus/GUI parity
+is not claimed.
+
 **Purpose.** This ledger has one row per user-facing feature of RoboCAD
 (`cad/robocad`, Python/OCCT/Qt), so the native viewer's CAD mode can reach
 exact parity in phases and each phase's claim can be checked row by row

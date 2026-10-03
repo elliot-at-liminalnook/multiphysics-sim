@@ -29,6 +29,25 @@ impl actions::Action for CadAction {
         specs.extend(super::tree::specs());
         specs.extend(super::threads::specs());
         specs.extend(super::references::specs());
+        // Current native contract supersedes the retained historical REST catalogue.
+        for entry in &mut specs {
+            let description = match entry.name {
+                "state" | "cad_state" => "Local CAD snapshot: archive tree, shared selection, drawn meshes, local_open progress/request stamp, local_mass body and visible/physical assembly SI properties, provenance and model/derivation identities. No external CAD service.",
+                "cad_open" => "Open a compatible .rcad archive locally through a jobs-owned Rust loader and direct OCCT. Picker and positional launch use the same typed apply path. REST waits for acceptance/failure; local_open exposes stages. Cancellation, replacement, mode exit and stale generation/revision refuse late results. Current document and unsaved work stay through failure/cancel. Service URL attachment awaits Rust migration.",
+                "cad_refresh" => "Reload the current local archive on jobs, preserving it until success. Refuses unsaved/pending source work; no service connect or poll.",
+                "cad_physical" => "Publish authoritative local body and assembly mass, centroid and full inertia tensors in SI, with declared/explicitly measured/derived/provisional origin, inclusion and provenance. Exact B-rep properties; display triangles never supply mass. Physical simrobot export awaits Rust migration.",
+                "cad_select" | "cad_select_all" | "cad_invert_selection" | "cad_select_same_material" => "Change CAD items in the viewer's shared Selection under DocumentRegistry. Tree and viewport use the same typed action. No server synchronization, remote echo or separate CAD selection owner.",
+                "cad_select_mode" | "cad_hover" | "cad_box_select" | "cad_candidates" => "Local selection/picking display state over accepted body triangles. Body selection is migrated; detailed edge/vertex topology queries await Rust migration. No service requests.",
+                "cad_file" => "Local file Open (without path opens the kit path picker), Close and Cancel are available. Open forwards to cad_open; Cancel drops pending loading and retains the active source. New/save/import/export/render await Rust migration.",
+                "cad_fit" | "cad_display" => "Display-only local framing/settings over the accepted mesh snapshot; source geometry remains unchanged. Detailed kernel analysis controls await Rust migration.",
+                "cad_tree" => "Local outliner search/disclosure/body selection use the archive tree and shared Selection. Source organization edits await Rust migration.",
+                "cad_cancel" => "Cancel pending local opening, retaining the current document; also closes display-only transient tools.",
+                "cad_surface" => "Browse the retained command surfaces. Source modelling and analysis operations refuse with a named Rust migration status.",
+                "system_ui" => "Inspect or activate current native kit controls through the same typed CAD actions. Unmigrated controls refuse by name.",
+                _ => "Awaiting Rust migration. This historical CAD capability shape is retained for compatibility; the native viewer refuses it and never falls back to RoboCAD.",
+            };
+            entry.description = description.into();
+        }
         specs
     }
     fn controls() -> &'static [&'static str] {

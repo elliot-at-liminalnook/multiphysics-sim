@@ -233,17 +233,16 @@ pub(crate) fn own_controls(doc: &CadDocument, selection: &[SelectionItem]) -> Ve
         add(format!("cad:visible:{}", row.id), label, patch(&row.id, "visible", Value::Bool(!row.visible)), ready(blocked.clone()));
     }
     // Selection modes and commands (RoboCAD's select.* and edit.select_*):
-    // the viewer's own state until a selection is pushed, so always enabled
-    // unless they need a selection.
+    // the one shared availability contract also validates REST and keyboard actions.
     for mode in SelectMode::ALL {
         let label = if mode == doc.select_mode { format!("Select {} (active)", mode.label()) } else { format!("Select {}", mode.label()) };
-        add(format!("cad:mode:{}", mode.name()), label, CadAction::CadSelectMode { mode }, Ok(()));
+        add(format!("cad:mode:{}", mode.name()), label, CadAction::CadSelectMode { mode }, super::selection::mode_available(doc, mode));
     }
     add("cad:select_all".into(), "Select All".into(), CadAction::CadSelectAll, Ok(()));
     add("cad:invert_selection".into(), "Invert Selection".into(), CadAction::CadInvertSelection, Ok(()));
     let same = if selection.is_empty() { Err("nothing is selected".to_string()) } else { Ok(()) };
     add("cad:select_same_material".into(), "Select Same Material".into(), CadAction::CadSelectSameMaterial, same);
-    let edges = if selection.iter().any(|i| i.1 == "edge") { Ok(()) } else { Err("no edges are selected (edge mode, E)".to_string()) };
+    let edges = super::selection::mode_available(doc, SelectMode::Edge).and_then(|()| if selection.iter().any(|i| i.1 == "edge") { Ok(()) } else { Err("no edges are selected (edge mode, E)".to_string()) });
     add("cad:edges_to_faces".into(), "Selection: edges → bounding faces".into(), CadAction::CadEdgesToFaces, edges);
     // The Alt+click menu's entries while it is open (RoboCAD's labels).
     if let Some(c) = &doc.candidates {
@@ -443,6 +442,20 @@ fn refresh(
                     p.spawn(k.caption("Choose a local .rcad archive in the document picker. File → Open… loads another archive in process."));
                 }
             }
+            Some(doc) if doc.client.is_none() && matches!(part, Part::Comments | Part::References | Part::Components | Part::Composition | Part::Robot | Part::Materials | Part::Print) => {
+                let label = match part {
+                    Part::Comments => "Annotation editing",
+                    Part::References => "Reference inspection",
+                    Part::Components => "Component library editing",
+                    Part::Composition => "Assembly authoring",
+                    Part::Robot => "Physical robot inspection/export",
+                    Part::Materials => "Material editing",
+                    Part::Print => "Print analysis/jobs",
+                    _ => unreachable!("guarded migration section"),
+                };
+                p.spawn(k.section(label));
+                p.spawn(k.caption(format!("{label} awaits Rust migration. No RoboCAD request is pending; archived metadata remains available in the node inspector.")));
+            }
             Some(doc) => match part {
                 Part::Top => top(p, &k, doc, &selection, plane),
                 Part::Document => document(p, &k, doc),
@@ -514,8 +527,8 @@ fn dirty(doc: &CadDocument) -> Option<bool> {
 /// The connection's state word and colour (the error itself is in the document block).
 fn connection_state(c: &Connection) -> (&'static str, &'static str) {
     match c {
-        Connection::Connecting { .. } => ("Connecting…", "warn"),
-        Connection::Connected => ("Connected", "ok"),
+        Connection::Connecting { .. } => ("Loading local archive…", "warn"),
+        Connection::Connected => ("Local archive ready", "ok"),
         Connection::Lost { .. } => ("Lost", "danger"),
     }
 }
@@ -623,7 +636,7 @@ fn document(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
     }
     // While connected the connection line already names it.
     if !connected && let Some(stale) = &doc.stale {
-        p.spawn(k.text(format!("View may be behind RoboCAD: {stale}"), size::SMALL, WARN, 0));
+        p.spawn(k.text(format!("Previous local snapshot retained: {stale}"), size::SMALL, WARN, 0));
     }
     p.spawn(k.note("Source modelling, robot export, print/flex and service attachment await Rust migration."));
 }

@@ -23,7 +23,7 @@ pub(in crate::cad) fn name(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
         return;
     };
     let Some(n) = node(doc, id) else {
-        k.header(p, id, "Not in the document RoboCAD last sent (it may have been deleted).");
+        k.header(p, id, "Not in the current document snapshot (it may have been replaced or deleted).");
         return;
     };
     k.header(p, &n.name, &format!("{} · {}", n.kind, n.id));
@@ -125,6 +125,14 @@ fn sub_body(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection:
     if selection.len() > 1 {
         field(p, k, "Selected items", &selection.len().to_string(), "");
     }
+    if doc.client.is_none() {
+        if matches!(kind.as_str(), "face" | "point") {
+            p.spawn(k.note("This selection names a face from local display triangles. Exact face, edge and vertex details await Rust topology migration; no topology fetch is pending."));
+        } else {
+            p.spawn(k.note("This sub-body selection requires exact topology, which awaits Rust migration; no topology fetch is pending."));
+        }
+        return;
+    }
     let Some(topology) = topology else {
         p.spawn(k.caption("This window holds no topology (no 3D view)."));
         return;
@@ -193,6 +201,13 @@ fn instance_of(doc: &CadDocument, source: &str) -> String {
 fn waiting(doc: &CadDocument) -> Option<(String, bool)> {
     if doc.connected() {
         return None;
+    }
+    if doc.client.is_none() {
+        return Some(match &doc.connection {
+            Connection::Connecting { what, .. } => (format!("Local archive loading: {what}."), false),
+            Connection::Lost { error, .. } => (format!("Local archive unavailable: {error}"), true),
+            Connection::Connected => ("No local document snapshot is available.".to_string(), false),
+        });
     }
     Some(match &doc.connection {
         Connection::Connecting { what, .. } => (format!("Waiting for the connection to RoboCAD: {what}."), false),

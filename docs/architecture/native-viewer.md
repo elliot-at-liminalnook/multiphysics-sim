@@ -6179,6 +6179,12 @@ the viewer process. Native ownership is the existing CAD document resource;
 the document registry and shared Selection remain authoritative. Typed actions
 start jobs; accepted job results precede mesh synchronization through CadSet and
 ViewerSet. Numeric snapshots cross the job boundary; OCCT handles never do.
+Local body/face/point picking uses displayed triangles; edge/vertex modes require
+unmigrated exact topology. One shared availability check drives controls and typed
+action validation. Exact topology, modelling history and command registry rows
+show migration status rather than fictitious fetch/service progress. Empty
+component overrides follow reference truthiness at regeneration while preserved
+declarations retain their full downstream validation.
 Current source evidence, inventory, limitations and unexecuted acceptance cases
 are in [the bounded migration ledger](../cad-rust-physical-derivations.md).
 

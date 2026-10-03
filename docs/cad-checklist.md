@@ -9,6 +9,14 @@ attachment, edits, save, annotations and print traces below are historical;
 they do not authorize an active native server path. Unmigrated native controls
 refuse with a named Rust migration gap. No checklist or GUI parity is signed off.
 
+**Current repair scope (source-reviewed, unexecuted):** empty component material
+overrides follow reference truthiness without bypassing declaration validation.
+Local body/face/point picking remains available; edge/vertex modes and exact
+topology inspection expose shared Rust migration refusals. Local command/history
+sections report migration status rather than waiting for RoboCAD. See the current
+source ledger for repair traces and proposed acceptance cases.
+
+
 This checklist closes the first CAD epic (**cad-mode**, §9 phase 1 of
 [docs/architecture/native-viewer.md](architecture/native-viewer.md), section
 "CAD mode (2026-09-30)"), the second (**cad-select-transform**: sub-body

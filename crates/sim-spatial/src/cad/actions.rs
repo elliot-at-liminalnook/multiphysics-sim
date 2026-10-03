@@ -484,7 +484,7 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         | CadAction::CadSelect { .. } | CadAction::CadSelectMode { .. }
         | CadAction::CadHover { .. } | CadAction::CadBoxSelect { .. }
         | CadAction::CadCandidates { .. } | CadAction::CadSelectAll
-        | CadAction::CadInvertSelection | CadAction::CadSelectSameMaterial
+        | CadAction::CadInvertSelection | CadAction::CadSelectSameMaterial | CadAction::CadEdgesToFaces
         | CadAction::CadRefresh | CadAction::CadFit { .. } | CadAction::CadPhysical
         | CadAction::CadCancel | CadAction::SystemUi(_) | CadAction::CadTree(_)
         | CadAction::CadFile(_) | CadAction::CadDisplay(_) | CadAction::CadSurface { .. });

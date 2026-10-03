@@ -308,6 +308,11 @@ fn strip(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts: Res<UiFon
                 }
             }
         });
+        for mode in SelectMode::ALL {
+            if let Err(reason) = super::selection::mode_available(&doc, mode) {
+                p.spawn(k.caption(reason));
+            }
+        }
         p.spawn(wrap()).with_children(|r| {
             for (id, label) in COMMANDS {
                 if let Some(c) = control(&all, id) {

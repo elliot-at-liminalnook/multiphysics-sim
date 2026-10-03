@@ -28,7 +28,7 @@ fn request(link: bool, label: &str) -> ExportRequest {
 
 /// A finished export of `request` (as `export::start` would leave it once RoboCAD answered).
 fn landed(request: ExportRequest, generation: u64) -> Running {
-    Running { request, job: crate::jobs::Job::finished(generation, Ok(Written { links: 4, flexible: 0 })), started: Instant::now(), shown: 0, cancel_requested: false }
+    Running { request, job: crate::jobs::Job::finished(generation, Ok(Written { links: 4, flexible: 0 })), started: Instant::now(), shown: 0, cancel_requested: false, revision: 0 }
 }
 
 /// The live link's export, once written: the first after toggling on asks

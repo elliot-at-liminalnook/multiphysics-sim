@@ -128,6 +128,6 @@ mod activation_tests {
         let actions:Vec<_>=app.world_mut().resource_mut::<Messages<Act<WindowAction>>>().drain().collect();
         assert_eq!(actions.len(),1);
         let WindowAction::Switch(request)=&actions[0].action else{panic!("wrong action")};
-        assert_eq!(request,&ModeSwitch{mode:ViewerMode::Build,document:None});
+        assert_eq!(request,&ModeSwitch{mode:ViewerMode::Build,document:None,reveal:None});
     }
 }

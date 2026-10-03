@@ -190,7 +190,7 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, st:
     // Closing a form preserves its draft. Reopening against the same source
     // offers retained forms explicitly, including rejected configurations.
     for (index, draft) in st.drafts.iter().enumerate() {
-        if Some(index) != st.current {
+        if Some(index) != st.current && !draft.applied {
             p.spawn(
                 k.button(
                     &format!(
@@ -210,6 +210,9 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, st:
                 ),
             );
         }
+    }
+    for index in 0..st.drafts.len() {
+        button(p, k, &controls, &format!("cad:components:copy-{index}"));
     }
     if let Some(d) = st.draft() {
         p.spawn(k.title(d.kind.label()));
@@ -324,13 +327,18 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, st:
         button(p, k, &controls, "cad:components:close_form");
     }
     if let Some(active) = &st.active {
-        if let Some(job) = &active.status {
-            p.spawn(k.caption(format!(
-                "{} · {} / {} · {:?}",
-                job.stage, job.done, job.total, job.state
-            )));
-        } else {
-            p.spawn(k.caption("Preparing component request…"));
+        // RoboCAD's progress line (ui/components.py ComponentsPanel.poll and
+        // watch): "stage · done/total", the stage alone without a total.
+        let line = match &active.status {
+            Some(job) if job.total > 0 => format!("{} · {}/{}", job.stage, job.done, job.total),
+            Some(job) if !job.stage.is_empty() => job.stage.clone(),
+            _ => "Preparing component… You can keep viewing the model.".into(),
+        };
+        p.spawn(k.caption(line));
+        if active.cancel_requested {
+            p.spawn(k.note(
+                "Cancel requested · waiting for RoboCAD to confirm; a change it already applied is reported as applied",
+            ));
         }
         button(p, k, &controls, "cad:components:cancel");
     }

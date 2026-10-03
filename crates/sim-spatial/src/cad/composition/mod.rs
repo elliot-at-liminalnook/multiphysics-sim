@@ -418,7 +418,14 @@ pub(crate) fn handle(a: &CadCompositionArgs, call: &mut Call, cx: &mut Cx) -> Ou
     })();
     if let Err(error) = &result {
         st.error = Some(error.clone());
-        if let Some(d) = st.current.and_then(|i| st.drafts.get_mut(i)) {
+        // Only a draft's own edit or submission is named on that draft (the
+        // one addressed, not whichever form is open); a refused port pick,
+        // pan or check read is not the form's error.
+        let draft_op = matches!(a.op, CompositionOp::SetField | CompositionOp::AddParameter)
+            || (matches!(a.op, CompositionOp::Submit) && a.command.is_none());
+        if draft_op
+            && let Some(d) = a.draft_index.or(st.current).and_then(|i| st.drafts.get_mut(i))
+        {
             d.error = Some(error.clone());
         }
     }

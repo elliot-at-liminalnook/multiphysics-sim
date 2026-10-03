@@ -90,6 +90,9 @@ pub(crate) struct Draft {
     pub fields: BTreeMap<String, String>,
     pub error: Option<String>,
     pub nested_member: bool,
+    /// RoboCAD applied this draft: its form closed and it is no longer
+    /// offered to resume (it is kept, like every draft).
+    pub applied: bool,
 }
 fn text(v: &Value) -> String {
     v.as_str()
@@ -139,6 +142,7 @@ pub(crate) fn open(
         fields: BTreeMap::new(),
         error: None,
         nested_member: false,
+        applied: false,
     };
     let nodes = doc
         .doc

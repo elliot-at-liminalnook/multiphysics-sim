@@ -74,6 +74,17 @@ pub(super) fn tick(doc: Option<ResMut<CadDocument>>, mut st: ResMut<CadCompositi
                         .as_ref()
                         .and_then(|s| s.presentation_error.clone())
                 }
+                // The service answered for this revision and check but named
+                // no document: never shown as this document's graph, and not
+                // read again every frame until the source key changes.
+                Ok(snapshot)
+                    if snapshot.graph.revision == key.1
+                        && snapshot.check_id == st.check_id
+                        && snapshot.graph.document_id.is_none() =>
+                {
+                    st.failed = Some(key);
+                    st.error = Some("composition.document_id: RoboCAD's /system answer names no document, so it is not shown as this document's graph; it is read again when the document or revision changes".into());
+                }
                 Ok(_) => st.failed = None,
                 Err(e) => {
                     st.failed = Some(key);

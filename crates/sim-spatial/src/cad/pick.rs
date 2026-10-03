@@ -336,9 +336,11 @@ pub(super) fn search(s: &Search) -> Vec<SelectionItem> {
     out
 }
 
-/// Every candidate under `cursor` in the current mode, nearest first (a click's, inline).
+/// Every candidate under `cursor` in the current mode, nearest first (a
+/// click's, inline). The measure tool's edge and vertex picks take its
+/// first (RoboCAD's `MeasureTool.press` reads the same pick pass).
 #[allow(clippy::too_many_arguments)]
-fn candidates_at(doc: &CadDocument, meshes: &CadMeshes, topology: Option<&CadTopology>, view: &CadView, cursor: Vec2, ray_cast: &mut MeshRayCast, bodies: &Query<&CadBody>, clip: Option<SectionPlane>) -> Vec<SelectionItem> {
+pub(super) fn candidates_at(doc: &CadDocument, meshes: &CadMeshes, topology: Option<&CadTopology>, view: &CadView, cursor: Vec2, ray_cast: &mut MeshRayCast, bodies: &Query<&CadBody>, clip: Option<SectionPlane>) -> Vec<SelectionItem> {
     if matches!(doc.select_mode, SelectMode::Body | SelectMode::Face | SelectMode::Point) {
         return surface_items(doc, meshes, view, cursor, ray_cast, bodies);
     }

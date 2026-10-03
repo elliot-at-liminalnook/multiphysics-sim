@@ -250,4 +250,8 @@ fn a_print_block_colours_its_body_through_the_shared_rule() {
     assert_eq!(overlay::staleness(&b, 5), "current");
     assert_eq!(overlay::staleness(&b, 7), "stale (computed at revision 4, now 7)");
     assert_eq!(overlay::staleness(&json!({}), 7), "unknown (RoboCAD recorded no cad_revision)");
+    // The results panel's line ends without nested parentheses.
+    assert_eq!(overlay::tag(&b, 5), " (current)");
+    assert_eq!(overlay::tag(&b, 7), "; stale (computed at revision 4, now 7)");
+    assert_eq!(overlay::tag(&json!({}), 7), "; staleness unknown (RoboCAD recorded no cad_revision)");
 }

@@ -270,4 +270,8 @@ fn accepted_cached_launch_updates_the_owner_and_refusal_does_not() {
     let mut texts = vec!["1.2".into()];
     super::seed(entry("print.wall_check").unwrap(), &document(), &Env { defaults: Some(&settings.cad), ..Default::default() }, &mut texts);
     assert_eq!(texts, ["0.8"]);
+    // A whole threshold reopens as the spin box shows it ("2"), not "2.0".
+    settings.cad.wall_threshold = Some(2.0);
+    super::seed(entry("print.wall_check").unwrap(), &document(), &Env { defaults: Some(&settings.cad), ..Default::default() }, &mut texts);
+    assert_eq!(texts, ["2"]);
 }

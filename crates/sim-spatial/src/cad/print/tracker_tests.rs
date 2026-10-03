@@ -5,7 +5,7 @@
 //! ending it, and cancel sending exactly one `DELETE /print/jobs/{id}` for
 //! the one running job, only after the confirmation and a list read.
 use super::jobs_panel;
-use super::jobs_tracker::{self, UNREAD, capitalize, done_text, line, publishes};
+use super::jobs_tracker::{self, UNREAD, capitalize, done_text, line, published_revision, publishes};
 use super::studies::Started;
 use crate::app::actions::{Call, Origin, Replies};
 use crate::cad::document::{CadDocument, CadTarget, Connection};
@@ -224,6 +224,14 @@ fn robocads_texts_for_each_kind() {
     quiet.state = "running".into();
     quiet.fraction = 0.126;
     assert_eq!(line(&quiet), "analyze x: running 13 % ");
+    // A cancel that landed after the work published: its revision; a
+    // cancel before publishing (no result) or a kind that never publishes: none.
+    let mut late = job("plan", json!({"revision": 9, "plate_files": []}));
+    late.state = "cancelled".into();
+    assert_eq!(published_revision(&late), Some(9));
+    late.result = Value::Null;
+    assert_eq!(published_revision(&late), None);
+    assert_eq!(published_revision(&job("coupons", json!({"revision": 9}))), None);
 }
 
 #[test]

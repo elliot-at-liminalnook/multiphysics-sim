@@ -405,9 +405,56 @@ fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, 
     Outcome::Done(result)
 }
 
+/// Why `action`, once accepted, disarms held drive inputs
+/// (`crate::drive_input::DISARM_RULE`), or None, and whether its acceptance
+/// is `dispatch`'s (no error recorded in `Builder::action_error`) rather
+/// than the answer's: a drive stop or named action, Pause or Reset from the
+/// run panel's buttons and keys (`Ui`, `RenderedUi`), as a `system_ui`
+/// control (resolved by its listed action before it runs), or REST
+/// `system_drive` and `system_run` pause / reset. Every non-device origin of
+/// Build's drive and run actions passes through [`apply`], so this is their
+/// one place; the devices' own requests go to `actions::drive_devices`.
+/// Returns (reason, dispatched, stop): `dispatched` when the action goes
+/// through `dispatch` (its refusal is `action_error`), `stop` for a drive
+/// stop or action (`Disarm::stop`; Pause and Reset send no Stop).
+fn disarm_reason(builder: &Builder, action: &SystemAction) -> Option<(String, bool, bool)> {
+    fn what(action: &BuildAction) -> Option<(String, bool)> {
+        use sim_runtime::drive_host::DriveRequest;
+        match action {
+            BuildAction::Drive { request: DriveRequest::Stop } => Some(("Stop".into(), true)),
+            BuildAction::Drive { request: DriveRequest::Action { name } } => Some((format!("action {name}"), true)),
+            BuildAction::Pause => Some(("Pause".into(), false)),
+            BuildAction::Reset => Some(("Reset".into(), false)),
+            _ => None,
+        }
+    }
+    match action {
+        SystemAction::Ui(a) | SystemAction::RenderedUi { action: a, .. } => what(a).map(|(w, stop)| (w, true, stop)),
+        SystemAction::SystemUi { action: UiAction::Activate { id, .. }, .. } => builder.listed_action(id).as_ref().and_then(what).map(|(w, stop)| (format!("{w} from system_ui"), false, stop)),
+        SystemAction::SystemRun { action } => match action.as_str() {
+            "pause" => Some(("Pause from REST".into(), false, false)),
+            "reset" => Some(("Reset from REST".into(), false, false)),
+            _ => None,
+        },
+        SystemAction::SystemDrive { forward, lateral, yaw, action, stop } => {
+            match sim_runtime::drive_host::DriveRequest::from_fields(*forward, *lateral, *yaw, action.clone(), *stop, "system_drive").ok()? {
+                sim_runtime::drive_host::DriveRequest::Stop => Some(("Stop from REST".into(), false, true)),
+                sim_runtime::drive_host::DriveRequest::Action { name } => Some((format!("action {name} from REST"), false, true)),
+                sim_runtime::drive_host::DriveRequest::Axes { .. } => None,
+            }
+        }
+        _ => None,
+    }
+}
+
 /// Actions: the builder's one apply system (build and lessons). Buttons,
 /// keys and markers go to `dispatch` (a refusal is the status line); REST
-/// commands answer their caller.
+/// commands answer their caller. Build mode's one writer of
+/// `crate::drive_input::Disarm` ([`disarm_reason`]: an accepted drive stop or
+/// action, Pause or Reset from any non-device origin), and every answer
+/// that carries `system_state` (`live_run` at its top or under `state`)
+/// gets the device layer's `bindings` and `drive_input`
+/// (`Builder::with_drive_input`, the serializer Robot's `robot_state` uses).
 #[allow(clippy::too_many_arguments)]
 pub(super) fn apply(
     mut messages: ResMut<Messages<Act<SystemAction>>>,
@@ -423,6 +470,7 @@ pub(super) fn apply(
     mut registry: ResMut<DocumentRegistry>,
     studies: Option<Res<calibration::study::StudyOwner>>,
     study_ui: Option<Res<calibration::study::forms::StudyUi>>,
+    (bindings, drive_input, mut disarm): (Option<Res<crate::drive_input::DriveBindings>>, Option<Res<crate::drive_input::DriveInput>>, MessageWriter<crate::drive_input::Disarm>),
 ) {
     let (Some(mut builder), Some(mut scene), Some(mut orbit)) = (builder, scene, orbit) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |action, _| Outcome::Done(Err(no_builder(action))));
@@ -457,9 +505,25 @@ pub(super) fn apply(
                 return Outcome::Done(Err(format!("system_open refused: {reason}")));
             }
         }
-        let outcome = execute(&mut builder, &mut scene, &mut orbit, &mut pick, lessons, &mut switch, action, call);
+        // Resolved before the action runs (a `system_ui` activation by the control list it was made from).
+        let disarms = disarm_reason(&builder, action);
+        let mut outcome = execute(&mut builder, &mut scene, &mut orbit, &mut pick, lessons, &mut switch, action, call);
         // An edit re-checks the selection at once (a later action in this frame sees it).
         pick.sync(&builder);
+        if let Outcome::Done(Ok(answer)) = &mut outcome {
+            // DISARM_RULE: accepted (a dispatched action records its refusal in `action_error`).
+            if let Some((reason, dispatched, stop)) = disarms
+                && (!dispatched || builder.action_error.is_none())
+            {
+                disarm.write(crate::drive_input::Disarm { mode: ViewerMode::Build, reason, stop });
+            }
+            // `system_state`, at the top of the answer or as its `state`: the device layer too.
+            if answer.get("live_run").is_some() {
+                builder.with_drive_input(answer, bindings.as_deref(), drive_input.as_deref());
+            } else if let Some(state) = answer.get_mut("state").filter(|s| s.get("live_run").is_some()) {
+                builder.with_drive_input(state, bindings.as_deref(), drive_input.as_deref());
+            }
+        }
         outcome
     });
 }

@@ -8,7 +8,7 @@
 //! - **Display.** While shown, `mirror_panel` writes the solved poses to
 //!   `RobotView::mirror` (drawn instead of the run's frame) with the mirrored
 //!   leg's links tinted blue (the page's `robotViewer.begin/show/end`), and
-//!   Robot mode refuses Run ([`MIRRORING`]).
+//!   Robot mode refuses Run, Step and Reset by name ([`refuse_run`], [`MIRRORING`]).
 //! - **Latest wins** (the page's `busy`/`queued`, :127-136): the worker drains
 //!   its channel and solves only the newest pose request.
 //! - **Gait sim sampling** (calibration-ui.mjs:241-270): a gait playing in Sim
@@ -53,8 +53,22 @@ pub const JOINTS: [(&str, &str); 3] = [("Hip servo output", "Hip swing (belt)"),
 pub const LEGS: [&str; 4] = ["+X", "-X", "+Y", "-Y"];
 /// The section's explanatory paragraph (:28).
 pub const NOTE: &str = "Align each motor once: move the real leg until it matches the simulated leg's alignment pose (CAD home, or mid-travel where the real part cannot reach home), then press Save sim alignment. The pose's joint angle is saved with the alignment. If the simulated part turns the wrong way, flip its sign. The mirrored leg is tinted blue. Geometry only: no simulated forces, contact or motor model.";
-/// Why Run is refused while the mirror is shown (robot/actions.rs `check`).
+/// Why Run, Step and Reset are refused while the mirror is shown ([`refuse_run`],
+/// called by `check` and `check_planar` in robot/actions/mod.rs).
 pub const MIRRORING: &str = "the leg mirror is showing the real leg on the robot; turn the mirror off (Leg calibration › Simulated leg mirror) to run the simulation";
+
+/// The refusal of a run action while the mirror is shown, naming it
+/// (`Run refused: …`): Run, Step and Reset would advance or rebuild the run
+/// whose frame the mirror replaces. Pause is allowed (it only stops a run).
+/// None: the action is allowed. Robot mode's one `check` (and its planar
+/// twin) calls this, so a click, `system_ui` and REST `robot_run` share it.
+pub fn refuse_run(action: crate::robot::run::RunAction, mirroring: bool) -> Option<String> {
+    use crate::robot::run::RunAction;
+    match action {
+        RunAction::Start | RunAction::Step | RunAction::Reset if mirroring => Some(format!("{} refused: {MIRRORING}", action.label())),
+        _ => None,
+    }
+}
 /// `--robot FILE` has no scene for the mirror to pose.
 pub const NO_SCENE: &str = "open a robot preset (the mirror poses a scene's robot)";
 const RECORD_NOTE: &str = "Display-only encoder to CAD-joint binding; not promoted to CAD.";

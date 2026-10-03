@@ -29,7 +29,7 @@ pub(super) const RUNNING_STATUS: &str = "Running the robot system on the shared 
 /// Why a robot system's run is not kept as a run record.
 pub(super) const NO_RUN_RECORD: &str = "a robot system's run is not kept as a run record yet: its drive session (the scene with the controller identity, the seed and one twist per seam period) is not written from Build mode; drive the robot in Robot mode (robot_save_recording) to record it";
 /// The Build-mode drive rule (Robot mode's `run::DRIVE_RULE`, for a system run).
-pub(super) const DRIVE_RULE: &str = "requests are normalized axes, a profile action or stop, interpreted against the linked drive profile (DriveRequest::interpret: kinematics::scale) by the one apply (Builder::drive_request, for the run-panel drive buttons, system_ui, REST system_drive and the bound keys and gamepad); once per seam period the run thread sends the limited twist (kinematics::step: acceleration limit, deadman on simulated time) and the heartbeat on the controller's four command channels, and the controller mixes it. A nonzero request moves the robot only while the run runs (the last Run, not Pause or Reset); a stop or halt is accepted until the run fails or ends (also while a reset is in progress: it waits in the channel behind the Reset), and one made while the system is still loading waits in the run thread's channel and is applied, in order, right after it loads. The run thread applies every queued request in order before each period";
+pub(super) const DRIVE_RULE: &str = "requests are normalized axes, a profile action or stop, interpreted against the linked drive profile (DriveRequest::interpret: kinematics::scale) by the one apply (Builder::drive_request, for the run-panel drive buttons, system_ui, REST system_drive and the bound keys and gamepad); once per seam period the run thread sends the limited twist (kinematics::step: acceleration limit, deadman on simulated time) and the heartbeat on the controller's four command channels, and the controller mixes it. A nonzero request moves the robot only while the run runs (the last Run, not Pause or Reset); a stop or halt is accepted until the run fails or ends (also while a reset is in progress: it waits in the channel behind the Reset), and one made while the system is still loading waits in the run thread's channel and is applied, in order, right after it loads. The run thread applies every queued request in order before each period. Pause (every pause path: the run panel's Pause and R key, system_ui, REST system_run pause, leaving Build, opening a lesson) invalidates a request live at Pause on the run thread (DriveHost::pause, sim_runtime::drive_host::PAUSE_RULE: the request becomes zero and the deadman counts as expired, the commanded twist is kept), so after Run the profile's on-loss rule applies until a fresh request arrives; the viewer also disarms held keys and the gamepad at an accepted stop, halt, Pause or Reset (drive_input::DISARM_RULE), so an input still held must be released and pressed again";
 /// The status after stopping a robot run whose controller was still starting.
 pub(super) const STOPPED_WHILE_STARTING: &str = "The robot system's run was stopped while its controller was still starting; the starting controller is still shutting down (its run thread closes it as soon as the start returns, within the controller reply timeout).";
 /// Why a system run is not a robot system.
@@ -177,6 +177,16 @@ impl Builder {
         Ok((twist, halt))
     }
 
+    /// `system_state.bindings` and `system_state.drive_input`, added to every
+    /// answer that carries `system_state` (`system_actions::apply`) by the
+    /// one serializer Robot mode's `robot_state` uses
+    /// (`crate::drive_input::insert_state`): set only while a robot system's
+    /// run is live (the run the devices may drive), null otherwise.
+    pub(super) fn with_drive_input(&self, state: &mut serde_json::Value, bindings: Option<&crate::drive_input::DriveBindings>, input: Option<&crate::drive_input::DriveInput>) {
+        let drivable = self.run.as_ref().is_some_and(|r| r.robot);
+        crate::drive_input::insert_state(state, drivable, bindings, input);
+    }
+
     /// `system_state.live_run.drive`: null for a run that is not a robot
     /// system; else the phase, the system (instances, files, limits with
     /// units, deadman, period, channels, wiring), the drive status, the last
@@ -200,6 +210,7 @@ impl Builder {
             "seed": drive.as_ref().map(|d| d.seed),
             "seed_rule": SEED_RULE,
             "rule": DRIVE_RULE,
+            "pause_rule": sim_runtime::drive_host::PAUSE_RULE,
             "host": "sim_runtime::drive_host::DriveHost (the shared Session: PhysicalRobot with the external controller attached on the model's control.external seam)",
         })
     }
@@ -405,7 +416,15 @@ fn robot_thread(document: SystemDocument, path: PathBuf, registry: BehaviorRegis
                         sim_at_wall = w.time();
                     }
                 }
-                RunControl::Pause => w.running = false,
+                RunControl::Pause => {
+                    // Every Build pause reaches here (the run panel's Pause and R key, system_ui,
+                    // REST system_run pause, leaving Build or opening a lesson: `Builder::pause_run`).
+                    // PAUSE_RULE: a request live at Pause does not drive after Run without a fresh one.
+                    w.running = false;
+                    if let Some(host) = w.host.as_mut() {
+                        host.pause();
+                    }
+                }
                 RunControl::Step => {
                     if w.running {
                         w.note = Some("step refused: pause the run before stepping".into());

@@ -1,13 +1,14 @@
 //! [`DriveInputPlugin`]: the drive input's resources, its message, the
 //! bindings sync and the one device poller.
-use super::{DriveBindings, DriveDevice, DriveInput, DriveTarget};
+use super::{Disarm, DriveBindings, DriveDevice, DriveInput, DriveTarget};
 use crate::app::actions::Act;
 use crate::app::settings::{SettingsOwner, SettingsSet};
 use crate::app::{InputSet, ViewerSet};
 use bevy::prelude::*;
 
 /// Registers [`DriveBindings`] (the committed defaults until the preferences
-/// load), [`DriveInput`], [`DriveTarget`] and `Act<DriveDevice>`; keeps the
+/// load), [`DriveInput`], [`DriveTarget`], `Act<DriveDevice>` and [`Disarm`]
+/// (written by each mode's one apply in Actions, read by the poller); keeps the
 /// bindings in step with the settings owner; and runs the one device poller
 /// (`input::devices`) in `InputSet::Window` in every mode (it reads nothing
 /// unless the current mode's target is live). The modes write the target
@@ -19,6 +20,7 @@ impl Plugin for DriveInputPlugin {
             .init_resource::<DriveInput>()
             .init_resource::<DriveTarget>()
             .add_message::<Act<DriveDevice>>()
+            .add_message::<Disarm>()
             .add_systems(Update, super::input::devices.in_set(InputSet::Window))
             // After the settings owner lands its load (`SettingsSet::Publish`, a
             // public set in JobResults), so the next frame's Input reads them.

@@ -2,7 +2,7 @@
 //! bindings into [`DriveDevice`] for the mode whose [`DriveTarget`] is live,
 //! and [`DriveInput`], what it last did.
 use super::bindings::DriveBindings;
-use super::{DriveDevice, DriveTarget};
+use super::{Disarm, DriveDevice, DriveTarget};
 use crate::app::ViewerMode;
 use crate::app::actions::Act;
 use crate::ui_kit::text::Typing;
@@ -47,10 +47,14 @@ pub struct DriveInput {
     /// The last refused drive request (any origin), verbatim.
     pub last_error: Option<String>,
 }
+/// Why `drive_input.ignored_axes` lists an axis.
+pub const IGNORED_RULE: &str = "device axes the robot's drive profile does not support are zeroed before sending and listed here; REST robot_drive and system_drive refuse them by name";
 impl DriveInput {
+    /// `drive_input` as both modes' state answers carry it ([`super::insert_state`], the one serializer).
     pub fn json(&self) -> Value {
-        json!({"active": self.active, "axes": {"forward": self.axes.forward, "lateral": self.axes.lateral, "yaw": self.axes.yaw},
-            "source": self.source, "ignored_axes": self.ignored, "last_action": self.last_action, "last_error": self.last_error})
+        json!({"active": self.active, "axes": {"forward": self.axes.forward, "lateral": self.axes.lateral, "yaw": self.axes.yaw}, "axes_unit": "normalized, -1..1",
+            "source": self.source, "ignored_axes": self.ignored, "ignored_rule": IGNORED_RULE,
+            "last_action": self.last_action, "last_error": self.last_error, "disarm_rule": super::DISARM_RULE})
     }
 }
 
@@ -137,6 +141,24 @@ pub fn live_target(target: &DriveTarget, mode: Option<ViewerMode>) -> Option<&su
 ///   keyboard while keys drive, once. After any stop or named action (every
 ///   profile action today is stop or halt) the held inputs are disarmed
 ///   until released.
+/// - [`Disarm`] ([`super::DISARM_RULE`]): a stop, halt, named action, Pause
+///   or Reset the current mode's one apply accepted from any origin (the
+///   Drive block's or run panel's Stop, its Pause, `system_ui`, REST) in the
+///   previous frame's Actions. The messages are drained every frame, before
+///   any early return, so none waits for a later target. One for the live
+///   target's mode disarms exactly as a device stop does: if the devices
+///   were driving and the message is a drive stop or action
+///   (`Disarm::stop`), one quiet Stop first (the held axes this poller sent
+///   in the click's frame were applied after the click, so without it the
+///   last request would be those axes; a Pause or Reset sends none, so the
+///   paused request's on-loss rule is not replaced by a fresh zero), then every held key, the gamepad and the
+///   sending latch are disarmed until released. `last_action` names it
+///   ("stop (<reason>)" when a Stop was sent, "disarmed (<reason>)" when an
+///   input was held but not sending, unchanged when nothing was held, so a
+///   device's own stop, echoed back by Robot's apply, keeps its reason). A
+///   message for another mode is ignored. Escape, focus loss and a text
+///   field taking the keyboard in the same frame take precedence (they
+///   disarm too).
 /// - A bound action key or button press sends `Action { name }`, preceded by
 ///   a zero request while driving (so an action name the profile refuses
 ///   still stops the robot).
@@ -157,6 +179,7 @@ pub(crate) fn devices(
     pads: Query<&Gamepad>,
     windows: Query<&Window>,
     mut focus: MessageReader<WindowFocused>,
+    mut disarms: MessageReader<Disarm>,
     mode: Option<Res<State<ViewerMode>>>,
     target: Res<DriveTarget>,
     bindings: Res<DriveBindings>,
@@ -167,6 +190,8 @@ pub(crate) fn devices(
     mut redraw: MessageWriter<RequestRedraw>,
 ) {
     let lost = focus.read().filter(|e| !e.focused).count() > 0;
+    // Drained every frame (before any early return): a disarm is for this frame's target only.
+    let disarmed: Vec<Disarm> = disarms.read().cloned().collect();
     let typing = text.get();
     let typing_started = !std::mem::replace(&mut latch.was_typing, typing) && typing;
     let last_error = input.last_error.clone();
@@ -239,6 +264,24 @@ pub(crate) fn devices(
         let last_action = if sent {
             send(&mut out, DriveRequest::Stop, shown);
             Some(format!("stop ({reason})"))
+        } else {
+            input.last_action.clone()
+        };
+        disarm(&mut *latch);
+        input.set_if_neq(DriveInput { active: true, axes: Axes::ZERO, source: None, ignored: Vec::new(), last_action, last_error });
+        return;
+    }
+    // A stop, halt, action, Pause or Reset the mode applied last frame (DISARM_RULE); the newest
+    // reason is shown, and a Stop is owed if any of them was a drive stop or action (`Disarm::stop`).
+    if let Some(applied) = disarmed.iter().rev().find(|d| d.mode == mode) {
+        let owed_stop = disarmed.iter().any(|d| d.mode == mode && d.stop);
+        let held_keys = bindings.keys().any(|k| keys.pressed(k) && !latch.blocked_keys.contains(&k));
+        let held_pad = !latch.pad_blocked && pads.iter().any(|g| bindings.buttons().any(|b| g.pressed(b)) || bindings.gamepad_axes(|axis| g.get(axis), |b| g.pressed(b)) != Axes::ZERO);
+        let last_action = if latch.sending && owed_stop {
+            send(&mut out, DriveRequest::Stop, false);
+            Some(format!("stop ({})", applied.reason))
+        } else if held_keys || held_pad {
+            Some(format!("disarmed ({})", applied.reason))
         } else {
             input.last_action.clone()
         };

@@ -2,11 +2,14 @@
 //! rule (not executed by their author). The bindings file's own validation
 //! and refusals are tested with the shared parser (`sim_runtime::drive_bindings`).
 use super::bindings::{BindingsFile, ButtonBinding, DEFAULT_DEADZONE, KeyAxis, SCHEMA, gamepad_button, key_code, shape, stick_axis, supported_only, unmapped_names};
-use super::input::live_target;
-use super::{DriveBindings, DriveTarget, LiveTarget};
+use super::input::{devices, live_target};
+use super::{Disarm, DriveBindings, DriveDevice, DriveInput, DriveTarget, LiveTarget, insert_state};
 use crate::app::ViewerMode;
+use crate::app::actions::{Act, Origin};
 use bevy::prelude::*;
-use serde_json::json;
+use bevy::window::{RequestRedraw, WindowFocused};
+use sim_runtime::drive_host::DriveRequest;
+use serde_json::{Value, json};
 use sim_domain_control::drive::kinematics::Axes;
 use sim_runtime::drive_bindings::{BUTTONS, KEYS, STICKS};
 
@@ -168,4 +171,123 @@ fn a_target_for_another_mode_is_ignored() {
     assert_eq!(live_target(&target, Some(ViewerMode::Lessons)), None);
     assert_eq!(live_target(&target, None), None);
     assert_eq!(live_target(&DriveTarget::default(), Some(ViewerMode::Build)), None);
+}
+
+/// The one poller alone, in `mode`, with a live target for `mode` (a
+/// differential profile) and nothing pressed. No window, so no gamepad is
+/// read; no input plugin, so the tests clear `just_pressed` themselves.
+fn poller(mode: ViewerMode) -> App {
+    let mut app = App::new();
+    app.init_resource::<ButtonInput<KeyCode>>()
+        .init_resource::<DriveBindings>()
+        .init_resource::<DriveInput>()
+        .insert_resource(DriveTarget { live: Some(LiveTarget { mode, supported: [true, false, true], run: "rover.simrobot.json".into() }), owned_keys: Vec::new() })
+        .insert_resource(State::new(mode))
+        .add_message::<WindowFocused>()
+        .add_message::<RequestRedraw>()
+        .add_message::<Act<DriveDevice>>()
+        .add_message::<Disarm>()
+        .add_systems(Update, devices);
+    // The target becomes live with nothing held: armed.
+    frame(&mut app);
+    app
+}
+/// One frame; returns the device requests it wrote (request, origin).
+fn frame(app: &mut App) -> Vec<(DriveRequest, Origin)> {
+    app.update();
+    app.world_mut().resource_mut::<ButtonInput<KeyCode>>().clear();
+    app.world_mut().resource_mut::<Messages<Act<DriveDevice>>>().drain().map(|a| (a.action.request, a.origin)).collect()
+}
+fn forward() -> DriveRequest {
+    DriveRequest::Axes { forward: 1.0, lateral: 0.0, yaw: 0.0 }
+}
+
+/// DISARM_RULE: a held W drives; a Disarm for the current mode (a Stop
+/// button, Pause or REST stop its apply accepted) sends one quiet Stop, so
+/// the axes applied after the click are not the last request, and W, still
+/// held, then sends nothing. Released and pressed again, W drives again.
+#[test]
+fn a_disarm_for_the_current_mode_stops_and_disarms_held_keys() {
+    for mode in [ViewerMode::Robot, ViewerMode::Build] {
+        let mut app = poller(mode);
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::KeyW);
+        assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)]);
+        assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)], "held: repeated every frame");
+        app.world_mut().write_message(Disarm { mode, reason: "Stop".into(), stop: true });
+        assert_eq!(frame(&mut app), [(DriveRequest::Stop, Origin::Quiet)]);
+        let input = app.world().resource::<DriveInput>().clone();
+        assert_eq!((input.axes, input.last_action.as_deref()), (Axes::ZERO, Some("stop (Stop)")));
+        assert!(frame(&mut app).is_empty(), "W is still held but disarmed");
+        assert!(frame(&mut app).is_empty());
+        // A second disarm with nothing newly held (e.g. Robot's apply echoing the poller's own
+        // stop) sends nothing and keeps the reason.
+        app.world_mut().write_message(Disarm { mode, reason: "Stop".into(), stop: true });
+        assert!(frame(&mut app).is_empty());
+        assert_eq!(app.world().resource::<DriveInput>().last_action.as_deref(), Some("stop (Stop)"));
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().release(KeyCode::KeyW);
+        assert!(frame(&mut app).is_empty());
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::KeyW);
+        assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)], "a fresh press drives again");
+    }
+}
+
+/// A Pause or Reset disarms held keys without sending a Stop
+/// (`Disarm::stop` false): a fresh zero request would replace the paused
+/// request's on-loss rule (PAUSE_RULE) with the acceleration limit.
+#[test]
+fn a_pause_disarms_without_a_stop() {
+    for mode in [ViewerMode::Robot, ViewerMode::Build] {
+        let mut app = poller(mode);
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::KeyW);
+        assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)]);
+        app.world_mut().write_message(Disarm { mode, reason: "Pause".into(), stop: false });
+        assert!(frame(&mut app).is_empty(), "no Stop for a Pause");
+        assert_eq!(app.world().resource::<DriveInput>().last_action.as_deref(), Some("disarmed (Pause)"));
+        assert!(frame(&mut app).is_empty(), "W is still held but disarmed");
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().release(KeyCode::KeyW);
+        assert!(frame(&mut app).is_empty());
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::KeyW);
+        assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)], "a fresh press drives again");
+    }
+}
+
+/// A Disarm written for another mode (a request still buffered across a
+/// mode switch) is drained and ignored: the held key keeps driving.
+#[test]
+fn a_disarm_for_another_mode_is_ignored() {
+    let mut app = poller(ViewerMode::Build);
+    app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(KeyCode::KeyW);
+    assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)]);
+    app.world_mut().write_message(Disarm { mode: ViewerMode::Robot, reason: "Pause".into(), stop: false });
+    assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)]);
+    assert_eq!(frame(&mut app), [(forward(), Origin::Quiet)], "not read again in a later frame");
+}
+
+/// A Disarm while the devices are idle (nothing held, nothing sending) sends
+/// nothing and leaves `last_action` alone.
+#[test]
+fn a_disarm_while_idle_sends_nothing() {
+    let mut app = poller(ViewerMode::Robot);
+    app.world_mut().write_message(Disarm { mode: ViewerMode::Robot, reason: "Pause from REST".into(), stop: false });
+    assert!(frame(&mut app).is_empty());
+    assert_eq!(app.world().resource::<DriveInput>().last_action, None);
+}
+
+/// The one serializer of `bindings` and `drive_input` (Robot's
+/// `robot_state`, Build's `system_state`): both set while drivable, both
+/// null otherwise, a non-object state unchanged.
+#[test]
+fn the_state_serializer_is_shared_and_null_when_not_drivable() {
+    let (bindings, input) = (DriveBindings::default(), DriveInput { active: true, last_action: Some("stop (Stop)".into()), ..default() });
+    let mut state = json!({"live_run": null});
+    insert_state(&mut state, true, Some(&bindings), Some(&input));
+    assert_eq!(state["drive_input"], input.json());
+    assert_eq!(state["drive_input"]["last_action"], json!("stop (Stop)"));
+    assert!(state["drive_input"]["disarm_rule"].as_str().is_some_and(|r| r.contains("Pause")));
+    assert_eq!(state["bindings"].as_array().map(Vec::len), Some(bindings.describe().len()));
+    insert_state(&mut state, false, Some(&bindings), Some(&input));
+    assert_eq!((state["bindings"].clone(), state["drive_input"].clone()), (Value::Null, Value::Null));
+    let mut scalar = json!(1);
+    insert_state(&mut scalar, true, Some(&bindings), Some(&input));
+    assert_eq!(scalar, json!(1));
 }

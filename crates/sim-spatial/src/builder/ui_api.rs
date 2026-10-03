@@ -67,6 +67,12 @@ impl Builder {
         }
         Ok(c)
     }
+    /// The action the listed control `id` carries (None for an unknown id),
+    /// read before activating it: `system_actions::apply` names what a
+    /// `system_ui` activation applies (`drive_input::DISARM_RULE`).
+    pub(super) fn listed_action(&self, id: &str) -> Option<BuildAction> {
+        self.ui_api.items.get(id).map(|c| c.action.clone())
+    }
     /// Whether `request` activates the "‹ lesson" control, whose button writes
     /// the mode switch to Lessons (`actions::buttons`) rather than a builder
     /// action: its activation goes to the same switch (`system_actions`).

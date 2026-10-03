@@ -11,6 +11,13 @@
 //! robot's profile ([`DriveRequest::interpret`]) and the published
 //! [`DriveStatus`]. No mixing happens here: the twist goes to the controller,
 //! which mixes it into wheel commands.
+//!
+//! Pause ([`PAUSE_RULE`]): no simulation time passes while a run is paused,
+//! so a request's age would freeze and it would drive again on resume with
+//! no new input. Every host's pause path calls [`TwistState::pause`] (or
+//! [`DriveHost::pause`]), which invalidates the request the way a replay's
+//! end does; after resume the profile's on-loss rule runs until a fresh
+//! request arrives.
 use crate::controller_binding::{COMMAND_CHANNELS, ControlledRobot};
 use crate::session::{EpisodeFrame, InputChannel, Scene, Session};
 use serde::{Deserialize, Serialize};
@@ -21,6 +28,10 @@ use sim_domain_control::drive::profile::{ActionRequest, DriveProfile, ResolvedDr
 /// Largest heartbeat the `command.heartbeat` channel carries (2^53, exact in
 /// f64): the runtime's own bound on that input (`controller_binding::HEARTBEAT_MAX`), as an integer.
 pub const HEARTBEAT_MAX: u64 = crate::controller_binding::HEARTBEAT_MAX as u64;
+
+/// The pause rule, in one sentence (cited by [`TwistState::pause`] and the
+/// hosts that call it).
+pub const PAUSE_RULE: &str = "A drive request live at Pause is invalidated like a replay's end (the request becomes zero and the deadman counts as expired, so on resume the profile's on-loss rule runs, ramping to zero at stop_decel or zeroing at once, until a fresh request arrives, while the commanded twist is kept), and every host's pause path calls TwistState::pause: Robot mode's run thread, Build mode's robot-system run thread and the browser's DriveSession.";
 
 /// What a drive request asks for. Axes are normalized (-1..1) and scaled by
 /// the robot's profile ([`kinematics::scale`], in [`DriveRequest::interpret`]),
@@ -99,6 +110,9 @@ pub fn check_inputs(inputs: &[InputChannel]) -> Result<(), String> {
 
 /// The run thread's drive state: the latest request, the limited twist it
 /// commanded and the heartbeat. Pure (no session), so it is unit-tested alone.
+/// A request stays live while its sim-time age is below the deadman timeout;
+/// a replay's end ([`TwistState::replay_ended`]) and a pause
+/// ([`TwistState::pause`], [`PAUSE_RULE`]) end it at once.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct TwistState {
     pub request: BodyTwist,
@@ -184,10 +198,33 @@ impl TwistState {
     /// by the stop rule until a fresh request arrives. The heartbeat and
     /// periods are kept (they count what the session received).
     pub fn replay_ended(&mut self, now_s: f64, deadman: &Deadman) {
+        self.invalidate(now_s, deadman);
+    }
+    /// The shared invalidation behind [`TwistState::replay_ended`] and [`TwistState::pause`].
+    fn invalidate(&mut self, now_s: f64, deadman: &Deadman) {
         self.request = BodyTwist::ZERO;
         self.halted = false;
         self.expired = true;
         self.last_request_s = self.last_request_s.min(now_s - 2.0 * deadman.timeout_s);
+    }
+    /// The run paused at sim time `now_s` ([`PAUSE_RULE`]): no sim time passes
+    /// while paused, so a request live at Pause would otherwise keep its age
+    /// and drive again on resume for up to `timeout_s` with no new input.
+    /// Pause invalidates it the way a replay's end does
+    /// ([`TwistState::replay_ended`]): the request is zero and the deadman
+    /// counts as expired, so after resume the profile's on-loss rule
+    /// (`kinematics::step`: ramp to stop, or zero at once) runs until a
+    /// fresh [`TwistState::request`] arrives. The commanded twist is kept
+    /// (a ramp-to-stop profile decelerates from it; nothing lurches), and so
+    /// are the heartbeat, the periods and the last action sent. Pausing again
+    /// at the same time changes nothing; pausing with no request (or a zero
+    /// one) only marks the deadman expired, so a stopped robot stays stopped.
+    /// A halt as the last request stays reported (`halted`): the halt already
+    /// zeroed the commanded twist, and the status keeps saying it was a halt.
+    pub fn pause(&mut self, now_s: f64, deadman: &Deadman) {
+        let halted = self.halted;
+        self.invalidate(now_s, deadman);
+        self.halted = halted;
     }
     pub fn status(&self, time_s: f64) -> DriveStatus {
         DriveStatus { request: self.request, commanded: self.commanded, heartbeat: self.heartbeat, age_s: time_s - self.last_request_s, expired: self.expired, halted: self.halted, time_s, periods: self.periods }
@@ -290,6 +327,12 @@ impl DriveHost {
     pub fn replay_ended(&mut self) {
         let now = self.time();
         self.twist.replay_ended(now, &self.deadman);
+    }
+    /// The run paused now ([`TwistState::pause`]): a request live at Pause
+    /// does not drive after resume until a fresh one arrives.
+    pub fn pause(&mut self) {
+        let now = self.time();
+        self.twist.pause(now, &self.deadman);
     }
     /// The drive status now.
     pub fn status(&self) -> DriveStatus {

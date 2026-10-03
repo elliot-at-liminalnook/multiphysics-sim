@@ -17,6 +17,6 @@ pub mod geometry;
 pub mod profile;
 pub mod steered;
 
-pub use kinematics::{Axes, BodyTwist, Commanded, Deadman, DifferentialDrive, KinematicsError, Limits, Mecanum, OnLoss};
+pub use kinematics::{Axes, BodyTwist, Commanded, Deadman, DeadmanBound, DifferentialDrive, KinematicsError, Limits, Mecanum, OnLoss, deadman_bound};
 pub use geometry::{DriveGeometry, Provenance, Valued, WheelJoint};
 pub use profile::{DriveProfile, DriveProfileError, KinematicsSpec, ResolvedDrive};

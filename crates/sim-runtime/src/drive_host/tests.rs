@@ -106,6 +106,88 @@ fn a_finished_drive_replay_leaves_no_request_driving() {
     assert!(!s.expired && s.heartbeat == 2);
 }
 
+/// A state driving (0.3, 0, 1.0) with a fresh request live at t = 1 s: heartbeat 6, 50 periods.
+fn driving_at_one_second(l: &Limits) -> TwistState {
+    let mut s = TwistState { commanded: BodyTwist::new(0.3, 0.0, 1.0), heartbeat: 5, periods: 50, sent: [0.3, 0.0, 1.0, 5.0], ..TwistState::default() };
+    s.request(BodyTwist::new(0.3, 0.0, 1.0), false, 1.0, l).unwrap();
+    s
+}
+
+#[test]
+fn pause_invalidates_a_live_request_and_resume_applies_the_on_loss_rule() {
+    let (l, d) = (limits(), ramp());
+    let s = driving_at_one_second(&l);
+    // Without the pause the request is live at t = 1 (age 0) and keeps driving.
+    let mut unpaused = s;
+    unpaused.advance(1.0, PERIOD, &l, &d).unwrap();
+    assert!(!unpaused.expired && unpaused.commanded.forward_m_s == 0.3, "{unpaused:?}");
+    // Paused at t = 1 (PAUSE_RULE): zero request, deadman expired; commanded, heartbeat, periods and sent kept.
+    let mut s = driving_at_one_second(&l);
+    let before = s;
+    s.pause(1.0, &d);
+    assert!(s.request.is_zero() && s.expired && !s.halted, "{s:?}");
+    assert_eq!((s.commanded, s.heartbeat, s.periods, s.sent), (before.commanded, 6, 50, before.sent));
+    assert!(s.status(1.0).age_s >= d.timeout_s);
+    // Pausing again at the same time changes nothing.
+    let once = s;
+    s.pause(1.0, &d);
+    assert_eq!(s, once);
+    // Resume (no sim time passed): the first period ramps down at stop_decel, it does not drive the old request.
+    let a = s.advance(1.0, PERIOD, &l, &d).unwrap();
+    assert!(s.expired && (a[0] - (0.3 - 1.2 * PERIOD)).abs() < 1e-12 && (a[2] - (1.0 - 12.0 * PERIOD)).abs() < 1e-12 && a[1] == 0.0, "{a:?}");
+    assert_eq!((a[3], s.heartbeat, s.periods), (6.0, 6, 51), "a pause sends no heartbeat");
+    // Immediate on-loss: zero at once on resume.
+    let immediate = Deadman { timeout_s: 0.5, on_loss: OnLoss::Immediate };
+    let mut s = driving_at_one_second(&l);
+    s.pause(1.0, &immediate);
+    assert_eq!(s.commanded, BodyTwist::new(0.3, 0.0, 1.0), "the pause itself does not zero the commanded twist");
+    let a = s.advance(1.0, PERIOD, &l, &immediate).unwrap();
+    assert!(s.expired && a == [0.0, 0.0, 0.0, 6.0], "{a:?}");
+}
+
+#[test]
+fn a_fresh_request_after_pause_drives_again() {
+    let (l, d) = (limits(), ramp());
+    let mut s = driving_at_one_second(&l);
+    s.pause(1.0, &d);
+    s.advance(1.0, PERIOD, &l, &d).unwrap();
+    assert!(s.expired);
+    let ramped = s.commanded;
+    // A fresh request one period later is live: approached under max_accel, not the stop rule.
+    s.request(BodyTwist::new(0.1, 0.0, 0.0), false, 1.0 + PERIOD, &l).unwrap();
+    assert_eq!(s.heartbeat, 7);
+    let a = s.advance(1.0 + PERIOD, PERIOD, &l, &d).unwrap();
+    assert!(!s.expired && s.request == BodyTwist::new(0.1, 0.0, 0.0), "{s:?}");
+    assert!((a[0] - (ramped.forward_m_s - 0.6 * PERIOD)).abs() < 1e-12 && (a[2] - (ramped.yaw_rad_s - 6.0 * PERIOD)).abs() < 1e-12 && a[3] == 7.0, "{a:?}");
+}
+
+#[test]
+fn pause_with_no_request_is_harmless() {
+    let (l, d) = (limits(), ramp());
+    let mut s = TwistState::default();
+    s.pause(0.0, &d);
+    assert!(s.request.is_zero() && s.commanded.is_zero() && s.expired && s.heartbeat == 0 && s.periods == 0, "{s:?}");
+    // Resume: the stop rule from zero is zero.
+    assert_eq!(s.advance(0.0, PERIOD, &l, &d).unwrap(), [0.0, 0.0, 0.0, 0.0]);
+    assert_eq!(s.periods, 1);
+    // The first request still drives.
+    s.request(BodyTwist::new(0.3, 0.0, 0.0), false, PERIOD, &l).unwrap();
+    let a = s.advance(PERIOD, PERIOD, &l, &d).unwrap();
+    assert!(!s.expired && (a[0] - 0.6 * PERIOD).abs() < 1e-12 && a[3] == 1.0, "{a:?}");
+}
+
+#[test]
+fn pause_keeps_a_halt_reported() {
+    let (l, d) = (limits(), ramp());
+    let mut s = TwistState { commanded: BodyTwist::new(0.3, 0.0, 0.0), request: BodyTwist::new(0.3, 0.0, 0.0), ..TwistState::default() };
+    s.request(BodyTwist::ZERO, true, 1.0, &l).unwrap();
+    s.pause(1.0, &d);
+    assert!(s.halted && s.expired && s.request.is_zero() && s.commanded.is_zero(), "{s:?}");
+    // A replay's end clears it (the recorded requests were not a halt).
+    s.replay_ended(1.0, &d);
+    assert!(!s.halted, "{s:?}");
+}
+
 #[test]
 fn the_session_inputs_must_be_the_four_command_channels_in_order() {
     let channel = |name: &str| InputChannel { name: name.into(), kind: sim_core::QuantityKind::Dimensionless, lower: 0.0, upper: 1.0, initial: 0.0 };

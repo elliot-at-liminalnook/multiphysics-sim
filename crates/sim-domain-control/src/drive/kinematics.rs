@@ -95,6 +95,42 @@ pub struct Deadman {
     pub on_loss: OnLoss,
 }
 
+/// Why a deadman timeout does not fit a control period ([`deadman_bound`]).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum DeadmanBound {
+    /// The period is not a positive, finite number of seconds.
+    Period { period_s: f64 },
+    /// The timeout is not strictly longer than one period (or not finite).
+    NotLonger { timeout_s: f64, period_s: f64 },
+}
+impl std::fmt::Display for DeadmanBound {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DeadmanBound::Period { period_s } => write!(f, "the control period {period_s} s is not a positive period"),
+            DeadmanBound::NotLonger { timeout_s, period_s } => {
+                write!(f, "the deadman timeout {timeout_s} s is not longer than one control period ({period_s} s): every request would be lost before the next control step")
+            }
+        }
+    }
+}
+
+/// The one deadman bound (DEADMAN_BOUND): a request is live while its age
+/// is below `timeout_s`, and the controller samples once per `period_s`, so
+/// the timeout must be strictly longer than one period, or every request is
+/// lost before the next sample and the robot never moves. Both the model
+/// check (`sim_domain_robot::drive_geometry::check_deadman`) and the
+/// registry element `control.drive_limiter` call this; each names its own
+/// path in the error it reports.
+pub fn deadman_bound(timeout_s: f64, period_s: f64) -> Result<(), DeadmanBound> {
+    if !(period_s.is_finite() && period_s > 0.0) {
+        return Err(DeadmanBound::Period { period_s });
+    }
+    if !(timeout_s.is_finite() && timeout_s > period_s) {
+        return Err(DeadmanBound::NotLonger { timeout_s, period_s });
+    }
+    Ok(())
+}
+
 /// Why a kinematic request was refused. Every variant names the axis or
 /// quantity, so a REST caller or a log line can say what was wrong.
 #[derive(Clone, Debug, PartialEq)]
@@ -411,5 +447,29 @@ impl HeartbeatDeadman {
         next.expired = out.expired;
         *self = next;
         Ok(out)
+    }
+}
+
+// Unit tests of the deadman bound. The golden generator compiles this file
+// without `--test`, so this module never reaches it.
+#[cfg(test)]
+mod tests {
+    use super::{DeadmanBound, deadman_bound};
+
+    #[test]
+    fn deadman_bound_needs_a_timeout_strictly_longer_than_a_positive_period() {
+        assert_eq!(deadman_bound(0.5, 0.02), Ok(()));
+        assert_eq!(deadman_bound(0.02, 0.02), Err(DeadmanBound::NotLonger { timeout_s: 0.02, period_s: 0.02 }));
+        assert_eq!(deadman_bound(0.01, 0.02), Err(DeadmanBound::NotLonger { timeout_s: 0.01, period_s: 0.02 }));
+        // NaN is not equal to itself, so match the variant instead of comparing.
+        assert!(matches!(deadman_bound(f64::NAN, 0.02), Err(DeadmanBound::NotLonger { period_s, .. }) if period_s == 0.02));
+        assert!(matches!(deadman_bound(f64::INFINITY, 0.02), Err(DeadmanBound::NotLonger { .. })));
+        assert_eq!(deadman_bound(0.5, 0.0), Err(DeadmanBound::Period { period_s: 0.0 }));
+        assert_eq!(deadman_bound(0.5, -0.02), Err(DeadmanBound::Period { period_s: -0.02 }));
+        assert!(matches!(deadman_bound(0.5, f64::NAN), Err(DeadmanBound::Period { .. })));
+        // The period is checked first: both bad reports the period.
+        assert!(matches!(deadman_bound(f64::NAN, 0.0), Err(DeadmanBound::Period { .. })));
+        let text = deadman_bound(0.02, 0.02).unwrap_err().to_string();
+        assert!(text.contains("not longer than one control period"), "{text}");
     }
 }

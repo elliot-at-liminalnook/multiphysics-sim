@@ -652,7 +652,10 @@ pub(super) fn apply_device(builder: &mut Builder, action: BuildAction, origin: O
 /// `last_refusal` (`Builder::drive_request`'s record of the last refusal
 /// from any origin: the device, the run panel's buttons, `system_ui` or
 /// REST `system_drive`; cleared by an accepted request). Build mode's one
-/// writer of `last_error`.
+/// writer of `last_error`. It writes no `drive_input::Disarm`: these
+/// requests are the poller's own, and it disarmed itself for a stop or
+/// action it sent (the run panel's, `system_ui`'s and REST's go through
+/// `system_actions::apply`, which does).
 pub(super) fn drive_devices(builder: Option<ResMut<Builder>>, mut devices: MessageReader<Act<DriveDevice>>, input: Option<ResMut<DriveInput>>) {
     let requests: Vec<(BuildAction, Origin)> = devices.read().filter_map(device_action).collect();
     let Some(mut builder) = builder else { return };
@@ -672,9 +675,11 @@ pub(super) fn drive_devices(builder: Option<ResMut<Builder>>, mut devices: Messa
 /// called here as a function, so no cross-feature ordering edge is needed),
 /// after one stop through the one drive apply when the devices were
 /// driving (`DriveInput::axes` nonzero): the builder and its run are kept,
-/// paused, and a pause does not zero the requested twist, so the zero the
-/// devices owe on release would otherwise never come (the poller no longer
-/// sends for Build once the mode is left). A refusal is recorded as usual.
+/// paused. The exit's pause also invalidates a live request
+/// (`sim_runtime::drive_host::PAUSE_RULE`); the stop stays as the zero the
+/// devices owe on release (the poller no longer sends for Build once the
+/// mode is left), so the request reads zero whichever reaches the run
+/// thread first. A refusal is recorded as usual.
 pub(super) fn leave_drive(builder: Option<ResMut<Builder>>, target: ResMut<crate::drive_input::DriveTarget>, input: ResMut<DriveInput>) {
     if input.axes != sim_domain_control::drive::kinematics::Axes::ZERO
         && let Some(mut builder) = builder

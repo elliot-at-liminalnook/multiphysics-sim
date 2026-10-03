@@ -110,6 +110,26 @@ impl Sim {
             host.replay_ended();
         }
     }
+    /// The run paused (`Command::Pause`, the user's Pause from any origin;
+    /// not a failure, the horizon or a replay's end, which stop running for
+    /// their own reasons): a drive session's live request is invalidated
+    /// (`DriveHost::pause`, `sim_runtime::drive_host::PAUSE_RULE`), so after
+    /// Run the profile's on-loss rule applies until a fresh request arrives.
+    /// Other kinds: nothing.
+    pub(super) fn pause_drive(&mut self) {
+        if let Sim::Controlled { host, .. } = self {
+            host.pause();
+        }
+    }
+    /// The simulated seconds a drive replay of `total` recorded actions
+    /// covers (one action per seam period), for a cancelled replay's verdict;
+    /// None for other kinds, whose units are not all one fixed step.
+    pub(super) fn replay_span_s(&self, total: u64) -> Option<f64> {
+        match self {
+            Sim::Controlled { host, .. } => Some(total as f64 * host.session.scene.period_s),
+            _ => None,
+        }
+    }
     /// A drive session's status now (None for other kinds).
     pub(super) fn drive_status(&self) -> Option<DriveStatus> {
         match self {

@@ -240,7 +240,16 @@ pub(super) fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Comm
                         r.state.phase = ReplayPhase::Cancelled;
                         r.state.cancel_requested = true;
                         r.state.wall_s = Some(r.started.elapsed().as_secs_f64());
-                        r.state.verdict = Some(format!("cancelled at {}: not a verdict; the replay did not finish", r.state.progress()));
+                        // `completed` is current: it rises with every replayed chunk before that
+                        // chunk is published, and commands are applied only between chunks.
+                        let reached = match sim.as_ref() {
+                            Some(s) => match (s.replay_span_s(r.state.total.unwrap_or(0)), r.state.total) {
+                                (Some(span), Some(_)) => format!(", sim time {:.3} s of {span:.3} s", s.time()),
+                                _ => format!(", sim time {:.3} s", s.time()),
+                            },
+                            None => String::new(),
+                        };
+                        r.state.verdict = Some(format!("cancelled at {}{reached}: not a verdict; the replay did not finish", r.state.progress()));
                         if let Some(s) = sim.as_mut() {
                             // The recorded requests stop here: the next Run does not keep driving them.
                             s.end_drive_replay();
@@ -341,6 +350,16 @@ pub(super) fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Comm
                 }
                 Command::Pause => {
                     running = false;
+                    // PAUSE_RULE: a live drive request does not drive again after Run without a
+                    // fresh one. A replay's recorded requests are not live (they govern each
+                    // period until it ends, which invalidates them: `end_drive_replay`).
+                    if replay.is_none() {
+                        if let Some(s) = sim.as_mut() {
+                            s.pause_drive();
+                            // The invalidated request shows now (paused: no chunk publishes it).
+                            set_twist(s.drive_status());
+                        }
+                    }
                     set(status(if sim.is_some() { Phase::Paused } else { Phase::Idle }, generation, None, None), None);
                 }
                 Command::Step => {

@@ -15,6 +15,10 @@
 //! - [`input`]: the poller and [`DriveInput`], what it last did.
 //! - [`DriveTarget`]: what the active mode offers to drive (one writer per
 //!   mode, set_if_neq), [`DriveDevice`]: what the poller asks of it.
+//! - [`Disarm`]: a mode's one apply telling the poller that it accepted a
+//!   stop, halt, named action, Pause or Reset from any origin ([`DISARM_RULE`]).
+//! - [`insert_state`]: the one serializer of `bindings` and `drive_input` in
+//!   Robot mode's `robot_state` and Build mode's `system_state`.
 //! - [`plugin`]: [`DriveInputPlugin`].
 pub mod bindings;
 pub mod input;
@@ -24,6 +28,7 @@ mod tests;
 
 use crate::app::ViewerMode;
 use bevy::prelude::*;
+use serde_json::{Value, json};
 use sim_runtime::drive_host::DriveRequest;
 
 pub use bindings::{BindingsFile, DriveBindings};
@@ -67,6 +72,63 @@ pub struct LiveTarget {
 pub struct DriveDevice {
     pub mode: ViewerMode,
     pub request: DriveRequest,
+}
+
+/// What a stop, halt or Pause from any origin does to held drive inputs
+/// (shown as `drive_input.disarm_rule`).
+pub const DISARM_RULE: &str = "an accepted stop, halt, named profile action, Pause or Reset from any origin (a panel button, a key, system_ui, REST robot_drive / robot_run / system_drive / system_run, a device) disarms the held drive inputs, as Escape or a bound stop key does: a key, stick or button still held is ignored until it is released and pressed again (a gamepad until every bound stick is in its deadzone and every bound button released), and if the devices were driving and it was a drive stop or action they send one stop first, so a held input applied in the same frame after the click does not leave the robot driving (a Pause or Reset sends none: held axes are refused while paused, and a fresh zero would replace the paused request's on-loss stop); paths that stop a run by removing the drive target (leaving the mode, opening a lesson, a hot swap, another file) disarm through the target change instead; together with the drive host's pause rule (sim_runtime::drive_host::PAUSE_RULE) nothing requested before a Pause moves the robot after Run without fresh input";
+
+/// A native stop, halt, pause or drive action applied in `mode` ([`DISARM_RULE`]):
+/// held drive inputs are disarmed, exactly as Escape or a bound stop key
+/// disarms them, so a key, stick or button still held after the click does
+/// not drive again until it is released and pressed again.
+///
+/// One public path into the poller's latch: written by each mode's one
+/// drive apply when it accepts a stop, halt, Pause or named action from any
+/// origin (a panel button, `system_ui`, REST, a device), in
+/// `ViewerSet::Actions`; read by the one poller ([`input::devices`], every
+/// frame in `InputSet::Window`, never gated by `run_if`, so a message written
+/// in Actions is read in the next frame's Input, well inside its two-update
+/// lifetime). A message for a mode that is not the live target's is ignored.
+///
+/// Writers, one per mode: Robot mode's `robot::actions::apply` (every
+/// `RobotAction::Drive` stop or action, `system_ui` drive:* activation and
+/// `RobotAction::Run` Pause or Reset it accepts) and Build mode's
+/// `builder::system_actions::apply` (the run panel's and keys'
+/// `BuildAction::Drive` stop or action, Pause and Reset, their `system_ui`
+/// activations, REST `system_drive` and `system_run` pause / reset). Build's
+/// device requests go to `Builder::drive_request` without it: the poller has
+/// disarmed itself for those already.
+#[derive(Message, Clone, Debug, PartialEq)]
+pub struct Disarm {
+    pub mode: ViewerMode,
+    /// What was applied, for `DriveInput::last_action` (e.g. "Stop", "Pause from REST").
+    pub reason: String,
+    /// Send one Stop first if the devices were driving: true for a drive
+    /// stop or named action (so held axes applied after the click in the
+    /// same frame do not leave the robot driving). False for Pause and
+    /// Reset: a fresh zero request there would replace the paused
+    /// request's on-loss rule (`sim_runtime::drive_host::PAUSE_RULE`) with
+    /// the acceleration limit, and Reset rebuilds the drive state; held
+    /// axes are refused while paused anyway.
+    pub stop: bool,
+}
+
+/// `bindings` and `drive_input` in a mode's state answer (Robot mode's
+/// `robot_state` through `RobotView::with_drive_input`, Build mode's
+/// `system_state` through `Builder::with_drive_input`): the device layer is
+/// resources rather than view state, so each mode's answer adds them here,
+/// with one shape. `drivable`: the mode's run takes drive requests now
+/// (Robot: a controlled run; Build: a robot system's run); both are null
+/// otherwise, as are absent resources. A `state` that is not an object is
+/// left unchanged.
+pub fn insert_state(state: &mut Value, drivable: bool, bindings: Option<&DriveBindings>, input: Option<&DriveInput>) {
+    let bindings = bindings.filter(|_| drivable).map_or(Value::Null, |b| Value::Array(b.describe().into_iter().map(|(input, action)| json!({"input": input, "action": action})).collect()));
+    let input = input.filter(|_| drivable).map_or(Value::Null, DriveInput::json);
+    if let Some(o) = state.as_object_mut() {
+        o.insert("bindings".into(), bindings);
+        o.insert("drive_input".into(), input);
+    }
 }
 
 /// OnExit of a mode that writes a [`DriveTarget`]: nothing is driven from

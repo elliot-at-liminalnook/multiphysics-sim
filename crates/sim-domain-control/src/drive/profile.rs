@@ -10,7 +10,7 @@
 //! [`ResolvedDrive`] (`sim.drive.resolved/1`), the JSON a controller
 //! receives as `--drive-json`.
 use super::geometry::{DriveGeometry, Provenance, Valued, WheelJoint};
-use super::kinematics::{self, ACCEL_UNITS, AXIS_NAMES, BodyTwist, Deadman, KinematicsError, Limits, OnLoss, SPEED_UNITS};
+use super::kinematics::{self, ACCEL_UNITS, AXIS_NAMES, BodyTwist, Deadman, DeadmanBound, KinematicsError, Limits, OnLoss, SPEED_UNITS};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -795,13 +795,12 @@ impl DriveLimiter {
         }
         let period_s = param(p, "period")?;
         let timeout_s = param(p, "deadman_timeout")?;
-        if !(period_s.is_finite() && period_s > 0.0) {
-            return Err(invalid("period", "must be positive".into()));
-        }
-        // Strictly longer, as `drive_geometry::check_deadman` requires: a request is live while its age < timeout.
-        if !(timeout_s.is_finite() && timeout_s > period_s) {
-            return Err(invalid("deadman_timeout", format!("{timeout_s} s is not longer than one period ({period_s} s); every request would be lost")));
-        }
+        // The one deadman bound, shared with `drive_geometry::check_deadman`;
+        // each error names the parameter at fault.
+        kinematics::deadman_bound(timeout_s, period_s).map_err(|e| match e {
+            DeadmanBound::Period { .. } => invalid("period", e.to_string()),
+            DeadmanBound::NotLonger { .. } => invalid("deadman_timeout", e.to_string()),
+        })?;
         let on_loss = if immediate { OnLoss::Immediate } else { OnLoss::Ramp { decel: stop_decel } };
         Ok(Self { limits, deadman: Deadman { timeout_s, on_loss }, period_s })
     }

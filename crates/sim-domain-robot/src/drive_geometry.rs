@@ -27,6 +27,7 @@
 //! (free-running wheel speed from the motors' gearbox `max_output_speed`).
 use crate::model::{Joint, Link, Motor, PhysicalModel};
 use sim_domain_control::drive::geometry::{DriveGeometry, Provenance, Valued, WheelJoint};
+use sim_domain_control::drive::kinematics::{DeadmanBound, deadman_bound};
 use sim_domain_control::drive::profile::{DriveProfile, KinematicsSpec};
 
 /// How far a wheel axis may stray from ±y (unit-vector components).
@@ -243,21 +244,18 @@ pub fn resolve(model: &PhysicalModel, profile: &DriveProfile) -> Result<DriveGeo
     Ok(geometry)
 }
 
-/// The deadman timeout must be longer than one control period
+/// The deadman timeout must be strictly longer than one control period
 /// (`control.period_s`): otherwise a request is lost before the controller
-/// samples it again, and the robot never moves.
+/// samples it again, and the robot never moves. The rule is the shared
+/// [`deadman_bound`] (the registry element `control.drive_limiter` calls it
+/// too); this check only names the profile's and the model's paths.
 pub fn check_deadman(model: &PhysicalModel, profile: &DriveProfile) -> Result<(), String> {
     let period = model.control.period_s;
-    if !(period.is_finite() && period > 0.0) {
-        return Err(format!("drive profile deadman.timeout_s cannot be checked: the model's control.period_s is {period}, not a positive period"));
-    }
     let timeout = profile.deadman.timeout_s;
-    if !(timeout > period) {
-        return Err(format!(
-            "drive profile deadman.timeout_s {timeout} s is not longer than the model's control period (control.period_s {period} s): every request would be lost before the next control step"
-        ));
-    }
-    Ok(())
+    deadman_bound(timeout, period).map_err(|e| match e {
+        DeadmanBound::Period { .. } => format!("drive profile deadman.timeout_s cannot be checked against the model's control.period_s {period}: {e}"),
+        DeadmanBound::NotLonger { .. } => format!("drive profile deadman.timeout_s {timeout} s does not fit the model's control.period_s {period} s: {e}"),
+    })
 }
 
 /// The fastest one wheel joint can turn (rad/s) and how that was found: its

@@ -131,21 +131,14 @@ impl RobotView {
     }
     /// `robot_state.bindings` and `robot_state.drive_input` (the device
     /// layer, `crate::drive_input::DriveBindings` / `DriveInput`, which are
-    /// resources rather than view state) added to a `robot_state` answer:
-    /// set only while the run is controlled, null otherwise. Every caller
-    /// that answers or publishes `robot_state` passes them.
+    /// resources rather than view state) added to a `robot_state` answer by
+    /// the one serializer both modes share (`crate::drive_input::insert_state`;
+    /// Build's `system_state` uses it too): set only while the run is
+    /// controlled, null otherwise. Every caller that answers or publishes
+    /// `robot_state` passes them.
     pub(crate) fn with_drive_input(&self, mut state: Value, bindings: Option<&crate::drive_input::DriveBindings>, input: Option<&crate::drive_input::DriveInput>) -> Value {
         let controlled = self.run.as_ref().is_some_and(|r| r.controlled().is_some());
-        let bindings = bindings.filter(|_| controlled).map_or(Value::Null, |b| Value::Array(b.describe().into_iter().map(|(input, action)| json!({"input": input, "action": action})).collect()));
-        let input = input.filter(|_| controlled).map_or(Value::Null, |i| {
-            json!({"axes": {"forward": i.axes.forward, "lateral": i.axes.lateral, "yaw": i.axes.yaw}, "axes_unit": "normalized, -1..1",
-                "source": i.source, "ignored_axes": i.ignored, "ignored_rule": "device axes the robot's drive profile does not support are zeroed before sending and listed here; REST robot_drive refuses them by name",
-                "last_action": i.last_action, "last_error": i.last_error})
-        });
-        if let Some(o) = state.as_object_mut() {
-            o.insert("bindings".into(), bindings);
-            o.insert("drive_input".into(), input);
-        }
+        crate::drive_input::insert_state(&mut state, controlled, bindings, input);
         state
     }
     /// `robot_state`; `link` is the selected link (`picked::link`).

@@ -527,6 +527,8 @@ fn preset_replay_reaches_the_runtime_verdict_cancels_and_refuses_mismatches() {
     let r = c.replay_state().clone();
     assert_eq!(r.phase, ReplayPhase::Cancelled, "{r:?}");
     assert!(r.completed < steps && r.verdict.as_deref().unwrap().starts_with("cancelled"), "{r:?}");
+    // How far it got: the progress at cancel and the sim time reached (a preset's units are not one fixed span).
+    assert!(r.verdict.as_deref().unwrap().starts_with(&format!("cancelled at {}, sim time ", r.progress())), "{r:?}");
     assert!(c.act(RunAction::Start).unwrap_err().contains("cancelled partial replay"));
     assert!(c.cancel_replay().unwrap_err().contains("no replay in progress"));
     c.act(RunAction::Reset).unwrap();

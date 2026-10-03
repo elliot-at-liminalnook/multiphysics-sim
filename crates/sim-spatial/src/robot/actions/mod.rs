@@ -150,8 +150,8 @@ fn jog_target(run: &RunController, joint: &str, delta: f64) -> Result<f64, Strin
 fn check_planar(view: &RobotView, p: &PlanarView, action: &RobotAction) -> Result<(), String> {
     match action {
         RobotAction::Run { action } => {
-            if *action == RunAction::Start && view.mirror.is_some() {
-                return Err(super::hardware::mirror::MIRRORING.into());
+            if let Some(refused) = super::hardware::mirror::refuse_run(*action, view.mirror.is_some()) {
+                return Err(refused);
             }
             p.run.check(*action)
         }
@@ -194,8 +194,8 @@ pub(super) fn check(view: &RobotView, action: &RobotAction) -> Result<(), String
     match action {
         RobotAction::SelectJoint { .. } => Err("joint selection (←/→) is for a planar v2 file; select a link to jog its joints".into()),
         RobotAction::Run { action } => {
-            if *action == RunAction::Start && view.mirror.is_some() {
-                return Err(super::hardware::mirror::MIRRORING.into());
+            if let Some(refused) = super::hardware::mirror::refuse_run(*action, view.mirror.is_some()) {
+                return Err(refused);
             }
             view.run.as_ref().ok_or("the robot has not loaded")?.check(*action)
         }
@@ -611,7 +611,10 @@ fn handle(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, re
 /// command is answered only by the link thread's verdict, and this call
 /// answers with that reply. Their ids are stable names, so they need no
 /// `ui_revision`. Link selection goes through the shared selection
-/// (`picked`), applied here as its adapter.
+/// (`picked`), applied here as its adapter. Robot mode's one writer of
+/// `crate::drive_input::Disarm` (`DISARM_RULE`): every drive stop or named
+/// action, Pause and Reset accepted here, from any origin ([`disarm_reason`]),
+/// disarms the held drive inputs from the next frame's poll.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn apply(
     mut messages: ResMut<Messages<Act<RobotAction>>>,
@@ -625,7 +628,7 @@ pub(super) fn apply(
     mut registry: ResMut<DocumentRegistry>,
     closing: Option<Res<crate::app::close::CloseOwner>>,
     (mut threads, reveal, mut window): (ResMut<crate::robot::threads::RobotThreads>, Option<Res<crate::cad::threads::RevealThread>>, MessageWriter<Act<crate::app::switch::WindowAction>>),
-    (mut drive_input, bindings): (Option<ResMut<crate::drive_input::DriveInput>>, Option<Res<crate::drive_input::DriveBindings>>),
+    (mut drive_input, bindings, mut disarm): (Option<ResMut<crate::drive_input::DriveInput>>, Option<Res<crate::drive_input::DriveBindings>>, MessageWriter<crate::drive_input::Disarm>),
 ) {
     let (Some(mut view), Some(mut orbit)) = (view, orbit) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
@@ -643,6 +646,8 @@ pub(super) fn apply(
             return crate::robot::threads::handle(act, call, &mut threads, &view, &registry, &mut selection, reveal.is_some(), &mut window);
         }
         let synced = hardware.as_ref().is_some_and(|hw| hw.sync.engaged());
+        // Resolved before the action runs (a `system_ui` activation by the control list it was made from).
+        let disarms = disarm_reason(&view, picked::link(&selection, &registry), action, call.origin);
         let result = match action {
             _ if synced && call.remote() && moves_synced_motors(&view, picked::link(&selection, &registry), action) => Err(SYNC_REMOTE_REFUSAL.to_string()),
             RobotAction::Activate { id, .. } if id.starts_with("hardware:") => {
@@ -697,6 +702,11 @@ pub(super) fn apply(
             }),
             _ => handle(&mut view, &mut orbit, &mut selection, &mut registry, action),
         };
+        // DISARM_RULE: an accepted stop, halt, action, Pause or Reset (any origin) disarms
+        // held drive inputs; the poller reads it next frame (`drive_input::input::devices`).
+        if let (Ok(_), Some((reason, stop))) = (&result, disarms) {
+            disarm.write(crate::drive_input::Disarm { mode: ViewerMode::Robot, reason, stop });
+        }
         // The inspector's drive line: the last drive request's refusal (any
         // origin, a `system_ui` drive:* activation included: every drive:* id
         // is a `RobotAction::Drive`), cleared by an accepted one.
@@ -739,6 +749,33 @@ pub(super) fn apply(
             Origin::Quiet | Origin::SystemUi => Outcome::Done(Ok(Value::Null)),
         }
     });
+}
+
+/// Why `action`, once accepted, disarms held drive inputs
+/// (`crate::drive_input::DISARM_RULE`), or None: a drive stop or named
+/// action, Pause or Reset, directly or as the `system_ui` control that
+/// carries it (resolved in `controls(view, link)`, the table `Activate`
+/// resolves ids in). The reason names the origin for automation.
+fn disarm_reason(view: &RobotView, link: Option<usize>, action: &RobotAction, origin: Origin) -> Option<(String, bool)> {
+    let resolved = match action {
+        RobotAction::Activate { id, .. } => controls(view, link).into_iter().find(|(i, ..)| i == id).map(|(.., a)| a),
+        _ => None,
+    };
+    // (what, send a Stop first: drive stops and actions only; `Disarm::stop`).
+    let (what, stop) = match resolved.as_ref().unwrap_or(action) {
+        RobotAction::Drive { request: DriveRequest::Stop } => ("Stop".to_string(), true),
+        RobotAction::Drive { request: DriveRequest::Action { name } } => (format!("action {name}"), true),
+        RobotAction::Run { action: RunAction::Pause } => ("Pause".to_string(), false),
+        RobotAction::Run { action: RunAction::Reset } => ("Reset".to_string(), false),
+        _ => return None,
+    };
+    let reason = match (resolved.is_some(), origin) {
+        (true, _) => format!("{what} from system_ui"),
+        (false, Origin::Rest(_)) => format!("{what} from REST"),
+        (false, Origin::SystemUi) => format!("{what} from system_ui"),
+        (false, Origin::Ui | Origin::Quiet) => what,
+    };
+    Some((reason, stop))
 }
 
 /// A device request as robot mode's action: `RobotAction::Drive` with the

@@ -1,7 +1,7 @@
 // Package existing Rust outputs and immutable captures; no browser-side physics.
 import { readFile, writeFile, mkdir, cp } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { resolve, join } from 'node:path';
+import { resolve, join, dirname, relative, isAbsolute } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { isDeepStrictEqual } from 'node:util';
 import { packageLeaderboard } from './leaderboard/package.mjs';
@@ -14,7 +14,7 @@ const wasmArtifact = process.env.WASM_ARTIFACT || 'target/wasm32-unknown-unknown
 const read = async p => JSON.parse(await readFile(resolve(root,p)));
 const hash = async p => createHash('sha256').update(await readFile(resolve(root,p))).digest('hex');
 await mkdir(output, { recursive:true }); await mkdir(join(output,'data'), { recursive:true });
-for (const file of ['index.html','viewer.css','viewer.js','leaderboard.js','leaderboard-model.mjs','leaderboard.css','video-export.js','motion-commands.mjs','hardware-sync.mjs']) await cp(join(root,'web/viewer',file),join(output,file));
+for (const file of ['index.html','viewer.css','viewer.js','leaderboard.js','leaderboard-model.mjs','leaderboard.css','video-export.js','motion-commands.mjs','hardware-sync.mjs','drive-input.mjs','drive-panel.mjs']) await cp(join(root,'web/viewer',file),join(output,file));
 await cp(join(root,'web/worker.js'),join(output,'worker.js'));
 await cp(join(root,'web/worker-message.mjs'),join(output,'worker-message.mjs'));
 await cp(join(root,'web/serve-viewer.mjs'),join(output,'serve-viewer.mjs'));
@@ -34,10 +34,46 @@ if (process.env.WASM_BUILD_MANIFEST) {
   if (!build.completed || build.artifact?.sha256 !== manifest.wasm.sha256) throw Error('WASM build manifest does not match the packaged artifact');
   manifest.wasm.build = build; manifest.inputs[process.env.WASM_BUILD_MANIFEST] = await hash(process.env.WASM_BUILD_MANIFEST);
 }
+// A drive-profile preset ships the model, the binding and every file the
+// binding names for its embedded program, at their repository-relative paths
+// under data/<id>/, so the page resolves each listed path against the
+// binding's URL exactly as Rust names it. The packager reads only the
+// binding's path fields (drive_profile, embedded.entry/files/config); the
+// page asks Rust (drive_binding_files) what to fetch, so a file missed here
+// fails loudly at load. Missing files or paths outside the repository fail packaging.
+async function packageDrive(preset) {
+  const {model, binding} = preset.drive ?? {};
+  if (typeof model !== 'string' || typeof binding !== 'string') throw new Error(`preset ${preset.id}: drive.model and drive.binding must be repository paths`);
+  const inside = path => { const rel = relative(root, resolve(root, path)); if (!rel || rel.startsWith('..') || isAbsolute(rel)) throw new Error(`preset ${preset.id}: ${path} is outside the repository`); return rel.split('\\').join('/'); };
+  const parsed = await read(binding);
+  const embedded = parsed.embedded;
+  if (typeof parsed.drive_profile !== 'string') throw new Error(`${binding}: drive_profile is missing`);
+  if (!embedded || typeof embedded.entry !== 'string' || typeof embedded.config !== 'string' || (embedded.files !== undefined && !Array.isArray(embedded.files)))
+    throw new Error(`${binding}: embedded.entry and embedded.config are required for the browser drive (it cannot start the external controller)`);
+  const named = [parsed.drive_profile, embedded.entry, ...(embedded.files ?? []), embedded.config];
+  const paths = [inside(model), inside(binding), ...named.map(rel => inside(join(dirname(binding), rel)))];
+  const packaged = [];
+  for (const path of [...new Set(paths)]) {
+    const sha256 = await hash(path); manifest.inputs[path] = sha256;
+    await mkdir(dirname(join(output, 'data', preset.id, path)), { recursive: true });
+    await cp(resolve(root, path), join(output, 'data', preset.id, path));
+    packaged.push({path, sha256});
+  }
+  return { version: 1, kind: 'drive_files',
+    model: { path: inside(model), url: `data/${preset.id}/${inside(model)}` },
+    binding: { path: inside(binding), url: `data/${preset.id}/${inside(binding)}` },
+    seed: preset.drive.seed ?? 0, packaged,
+    scope: 'Source files only. The page fetches them; Rust (sim-web) lists, parses and builds the drive, runs its embedded adapter, limits and deadman. Browser compatibility path, unexecuted.' };
+}
 for (const preset of configured.presets) {
   if (onlyPreset && preset.id!==onlyPreset) continue;
   if (environmentOnly && !preset.task && preset.mode !== 'live') continue;
   if (fixtureOnly && preset.mode !== 'live' && !preset.fixture) continue;
+  if (preset.mode === 'drive') {
+    const path=`data/${preset.id}.json`; await writeFile(join(output,path),JSON.stringify(await packageDrive(preset)));
+    catalog.presets.push({...preset,path}); manifest.presets.push({id:preset.id,mode:preset.mode,path});
+    continue;
+  }
   const scene = await read(preset.scene); const sceneHash = await hash(preset.scene); manifest.inputs[preset.scene] = sceneHash;
   let data = scene;
   if (preset.mode === 'embedded') {
@@ -74,6 +110,6 @@ if(onlyPreset){
 }
 await writeFile(join(output,'catalog.json'),JSON.stringify(catalog,null,2));
 for (const path of ['web/leaderboard/package.mjs','web/viewer/leaderboard.js','web/viewer/leaderboard-model.mjs','web/viewer/leaderboard.css','web/viewer/video-export.js']) manifest.inputs[path]=await hash(path);
-for (const path of ['web/build-viewer.mjs','web/serve-viewer.mjs','web/viewer/presets.json','web/viewer/viewer.js','web/viewer/motion-commands.mjs','web/viewer/hardware-sync.mjs','web/viewer/viewer.css','web/viewer/index.html','web/worker.js','web/worker-message.mjs','web/package-lock.json',wasmArtifact]) manifest.inputs[path]=await hash(path);
+for (const path of ['web/build-viewer.mjs','web/serve-viewer.mjs','web/viewer/presets.json','web/viewer/viewer.js','web/viewer/motion-commands.mjs','web/viewer/hardware-sync.mjs','web/viewer/drive-input.mjs','web/viewer/drive-panel.mjs','web/viewer/viewer.css','web/viewer/index.html','web/worker.js','web/worker-message.mjs','web/package-lock.json',wasmArtifact]) manifest.inputs[path]=await hash(path);
 await writeFile(join(output,'build-manifest.json'),JSON.stringify(manifest,null,2));
 console.log(`Packaged ${catalog.presets.length} presets in ${output}`);

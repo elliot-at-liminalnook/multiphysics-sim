@@ -1,10 +1,12 @@
 // Transport only. Physics, controllers, recording and validation execute in Rust.
-import init, { Simulation, EmbeddedSimulation, EnvironmentSimulation, KinematicMirror, GaitPlayer, MotionEvaluation, bind_motion_experiment, inspect_robot_contract, compare_environment_fidelity, materialize_motion } from './sim_web.js';
+import init, { Simulation, EmbeddedSimulation, EnvironmentSimulation, KinematicMirror, GaitPlayer, MotionEvaluation, bind_motion_experiment, inspect_robot_contract, compare_environment_fidelity, materialize_motion, DriveSimulation, default_drive_bindings, validate_drive_bindings, drive_device_axes, drive_binding_files, build_drive_scene, drive_request } from './sim_web.js';
 const ready = init();
 let simulation;
 let evaluation;
 let mirror;
 let gait;
+// Drive-profile session (browser compatibility path); Rust owns limits, mixing and the deadman.
+let drive;
 let embedded = false, environment = false, chunk = 8, loaded;
 let queue = Promise.resolve();
 self.onmessage = ({ data }) => {
@@ -152,6 +154,65 @@ self.onmessage = ({ data }) => {
               await new Promise(resolve => setTimeout(resolve, 0));
             }
           } else result = JSON.parse(simulation.replay(JSON.stringify(data.recording)));
+          break;
+        }
+        case 'drive_bindings': {
+          // Defaults, or a stored override checked by Rust (throws naming the field).
+          result = JSON.parse(data.text === undefined ? default_drive_bindings() : validate_drive_bindings(data.text));
+          break;
+        }
+        case 'drive_device_axes': result = JSON.parse(drive_device_axes(JSON.stringify(data.bindings), JSON.stringify(data.devices), JSON.stringify(data.supported))); break;
+        case 'drive_preview': result = JSON.parse(drive_request(data.drive_json, JSON.stringify(data.request))); break;
+        case 'drive_files': result = JSON.parse(drive_binding_files(data.binding_path, data.binding_text)); break;
+        // The built drive stays JSON text so the scene reaches DriveSimulation exactly as Rust wrote it.
+        case 'drive_build': result = build_drive_scene(data.model_path, data.model_text, data.binding_path, data.binding_text, JSON.stringify(data.files)); break;
+        case 'drive_load': {
+          // Rust's text only: re-serializing a parsed object turns 0.0 into 0, which DriveSession::new refuses.
+          if (typeof data.drive_json !== 'string') throw new Error('drive_load needs drive_json: the text build_drive_scene returned (a parsed object is not accepted)');
+          const next = new DriveSimulation(data.drive_json, data.seed ?? 0);
+          drive?.free(); drive = next;
+          const metadata = JSON.parse(drive.metadata());
+          result = { metadata, frame: JSON.parse(drive.frame()) };
+          break;
+        }
+        case 'drive_request': {
+          if (!drive) throw new Error('load a drive preset first');
+          result = JSON.parse(drive.request(JSON.stringify(data.request)));
+          break;
+        }
+        case 'drive_advance': {
+          if (!drive) throw new Error('load a drive preset first');
+          if (!Number.isInteger(data.periods) || data.periods < 1 || data.periods > 1000) throw new Error('drive work chunk must be an integer number of periods in 1..1000');
+          result = JSON.parse(drive.advance(data.periods));
+          break;
+        }
+        case 'drive_frame':
+        case 'drive_metadata': {
+          if (!drive) throw new Error('load a drive preset first');
+          result = JSON.parse(data.type === 'drive_frame' ? drive.frame() : drive.metadata());
+          break;
+        }
+        // Rust's recording text, saved byte for byte.
+        case 'drive_recording': {
+          if (!drive) throw new Error('load a drive preset first');
+          result = drive.recording();
+          break;
+        }
+        case 'drive_replay': {
+          if (!drive) throw new Error('load a drive preset first');
+          // Refusals (identity differences) come back verbatim as the error.
+          const chunk = data.chunk_periods ?? 1;
+          if (!Number.isInteger(chunk) || chunk < 1 || chunk > 1000) throw new Error('drive replay chunk must be an integer number of periods in 1..1000');
+          const periods = drive.prepare_replay(typeof data.recording === 'string' ? data.recording : JSON.stringify(data.recording));
+          result = JSON.parse(drive.frame());
+          for (let completed = 0; completed < periods;) {
+            const count = Math.min(chunk, periods - completed);
+            result = JSON.parse(drive.advance(count));
+            completed += count;
+            self.postMessage({id: data.id, progress: {completed_periods: completed, total_periods: periods}});
+            if (result.error || result.done) break;
+            await new Promise(resolve => setTimeout(resolve, 0));
+          }
           break;
         }
         default: throw new Error(`Unknown simulation request: ${data.type}`);

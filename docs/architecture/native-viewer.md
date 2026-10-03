@@ -7618,9 +7618,9 @@ or run; the only executed step was the golden-vector generator (below).
 
 | Layer | Owner | Format | Code |
 |---|---|---|---|
-| Device bindings: keys, sticks, buttons → normalized axes (forward, lateral, yaw in -1..1) and named actions | The viewer, per device, shared across robots: the persisted preferences' `drive_bindings` group (the `app/settings` owner) | `sim.drive-bindings/1`; defaults in code (`BindingsFile::default`), stored only once a user sets them; REST `drive_bindings` reads, sets, resets | `robot/drive_input/` (`bindings.rs`, `input.rs`, `plugin.rs`) |
+| Device bindings: keys, sticks, buttons → normalized axes (forward, lateral, yaw in -1..1) and named actions | The viewer, per device, shared across robots: the persisted preferences' `drive_bindings` group (the `app/settings` owner) | `sim.drive-bindings/1`; defaults in code (`BindingsFile::default`), stored only once a user sets them; REST `drive_bindings` reads, sets, resets | Format, defaults, validation and the W3C browser mapping: `sim_runtime::drive_bindings` (no Bevy; shared with the browser). Native polling: `sim-spatial/src/drive_input/` (`DriveInputPlugin`; `bindings.rs` maps names to Bevy, `input.rs` is the one poller for every mode) |
 | Drive profile: supported axes, max speed / accel / stop decel with units and provenance, named actions (`stop`, `halt`), deadman (timeout, ramp or immediate) | The robot, beside its model: `<stem>.drive.json`, named by `<stem>.controller.json` | `sim.drive/1`, `deny_unknown_fields`; errors name the file and field | `sim_domain_control::drive::profile`; registry description `control.drive_limiter` (a real sampled element, so CAD inspectors, exports, Rhai and the systems editor share it) |
-| Kinematic adapter: twist → wheel joint rates → integrated position targets | The robot's controller: `clients/python/examples/diff_drive_rover.py` on the seam | `--drive-json <sim.drive.resolved/1>` appended by the host | Rust reference `sim_domain_control::drive::kinematics` (`DifferentialDrive`, `Mecanum`); stdlib Python port `clients/python/simloop/drive.py`, checked against one golden file |
+| Kinematic adapter: twist → wheel joint rates → integrated position targets | The robot's controller: `clients/python/examples/diff_drive_rover.py` on the seam | `--drive-json <sim.drive.resolved/1>` appended by the host | Rust reference `sim_domain_control::drive::kinematics` (`DifferentialDrive`, `Mecanum`, `HeartbeatDeadman`); stdlib Python port `clients/python/simloop/drive.py`, checked against one golden file. Browser: the binding's `embedded` Rhai adapter `examples/wheeled-robot/drive-adapter.rhai`, mixing only through the Rust functions `sim-script` registers (`sim-script/src/drive.rs`) |
 
 The body twist is `[forward m/s, lateral m/s, yaw rad/s]`, the order
 `SteeredGait::command` takes (`drive::steered::command_steered` shows the
@@ -7749,9 +7749,88 @@ counter-clockwise.
   binding file beside the model stays the one source, as Robot mode finds
   it), and attaching the external controller to `SystemSession`.
 
+### Browser and Build mode (rover-browser-drive, 2026-10-03)
+
+The same three layers drive the rover in the browser and in Build mode's
+live robot-system run. **By reading, unexecuted**: no build, wasm build,
+test, browser or viewer was run. Traces: `docs/rover-checklist.md` RV-38
+and RV-41 to RV-43.
+
+- **Browser adapter: a Rhai program on the Rust mixers.** The browser cannot
+  start a Python process, so `robot.controller.json` gained an optional
+  `embedded` program (`controller_binding::EmbeddedController`: `language:
+  "rhai"`, `entry`, `files`, `config`; serde default, so older bindings read
+  unchanged). `examples/wheeled-robot/drive-adapter.rhai` reads the four
+  command channels, applies the controller-side deadman through
+  `drive_update` (`kinematics::HeartbeatDeadman`, the Rust counterpart of
+  simloop's `DriveState`), mixes through `drive_differential_mix` /
+  `drive_mecanum_mix` with the geometry passed in its parameters (the
+  resolved drive, derived from CAD with provenance) and integrates the wheel
+  targets as `diff_drive_rover.py` does, with the same retry rollback keyed
+  by sample time. No mixing arithmetic lives in Rhai, `sim-script` or JS.
+  Rejected: compiling the mixers into a JS-callable controller (a second
+  controller host), mixing in JS. The Python program stays the reference on
+  the native seam; the browser path is a compatibility surface.
+- **One scene builder.** `sim_runtime::embedded_drive::build` makes the
+  embedded scene from the simrobot, the binding and the files it names
+  (passed as text: the browser fetches, Rust parses): the profile resolved
+  against the model (`controller_binding::resolve_drive`, shared with
+  `load`), the captured adapter sources, the typed command inputs
+  (`drive_inputs`: bounds from the profile, the heartbeat) and an
+  `EmbeddedIdentity` (script, config, profile, model and CAD hashes). The
+  embedded config (`drive-adapter.config.json`) is checked against the model:
+  the servo boundaries' supply voltage and temperature, and a wheel target
+  envelope wide enough for the horizon at the profile's top wheel rate.
+- **`TwistState` on wasm32: no split.** `drive_host` imports only
+  `controller_binding` and `session` items that are not target-gated (only
+  `spawn_external`, `library_sha256` and `controller_binding::load` are
+  native-only). `embedded_drive::DriveSession` wraps `EmbeddedSession` with
+  a `TwistState`: each request is interpreted against the profile
+  (`DriveRequest::interpret_with`) and raises the heartbeat; once per control
+  period `TwistState::advance` (`kinematics::step`) runs on simulation time
+  and `EmbeddedSession::set_inputs` sends `[f, l, y, heartbeat]` before the
+  period is stepped, so the twists are the recording's input events. Replay
+  is the embedded session's own `prepare_replay`, refused when the recorded
+  identity's hashes differ (paths are recorded, not compared). Rejected:
+  methods on `EmbeddedSimulation` (it has no profile or identity), limiting
+  in JS.
+- **sim-web exports** `default_drive_bindings`, `validate_drive_bindings`,
+  `drive_device_axes`, `drive_binding_files`, `build_drive_scene`,
+  `drive_request` and the `DriveSimulation` class. The page
+  (`web/viewer`, preset `rover-drive`) reads keys by `event.code` and the
+  Standard Gamepad per animation frame and only sends requests; stops are
+  release, blur, hidden, Escape, the stop/halt actions and a text field
+  taking focus.
+- **Shared bindings module.** `sim.drive-bindings/1` (types, defaults,
+  validation, deadzone, `supported_only`, describe) moved to
+  `sim_runtime::drive_bindings`; `sim-spatial` keeps only the Bevy name
+  mapping. W3C sign rule: the file's stick convention is gilrs's (up +); the
+  Standard Gamepad's stick Y is +down, so `STICKS` carries sign −1 for Y and
+  `browser_axes` applies it in Rust.
+- **Mode-neutral device input.** `sim-spatial/src/drive_input/` is its own
+  plugin: one poller (`input::devices`, `InputSet::Window`, every mode)
+  reads the devices only for the current mode's live `DriveTarget` (written
+  by Robot's `controls::drive_target` and Build's `robot_run::drive_target`
+  before `InputSet::Window`) and writes `Act<DriveDevice>` stamped with that
+  mode. Robot forwards it as `RobotAction::Drive` before its apply; Build
+  drains it into `Builder::drive_request` → `RunControl::Twist` →
+  `DriveHost`. Leaving Build while driving sends the owed stop; a target
+  that disappears or changes while driving gets one stop. Robot-only
+  inputs (the Leg calibration panel's Q/A/Z, Build's editing keys) are the
+  target's `owned_keys`. Build's run panel shows the bound keys and the
+  requested twist in a strip under the viewport. Rejected: a second key loop
+  in Build mode; the poller writing each mode's action type (it would import
+  both modes).
+
 ### Where it is today
 
-Written and traced by reading on the wheeled robot: the drive library and
+Goal 4's software steps are complete by reading (unexecuted): RV-01 to
+RV-38 and RV-40 to RV-43. RV-39 (hardware) is a run sheet; the agent never
+drives hardware. Known gaps: the browser path's realtime performance is not
+measured; Build robot runs keep no run record and draw no robot; the web
+node test `web/tests/drive_input.mjs` is not in CI yet.
+
+Earlier history. Written and traced by reading on the wheeled robot: the drive library and
 registry description, the geometry derivation, the golden file (generated),
 the Python port and the rover controller, the runtime's external program and
 binding loader, the Robot-mode run thread, recording and replay, the bindings
@@ -7760,12 +7839,11 @@ and their settings group, the one drive action with keyboard, gamepad,
 rover-rest-flow: the shared `sim_runtime::drive_host`; Build mode's robot
 system (linked files, `link_file`, a live run on `DriveHost`, REST
 `system_drive` and the run panel's Forward, Back, Left, Right and Stop
-buttons; no keyboard or gamepad in Build mode, no run record and no robot
-drawing for that run yet); the CAD export's `rigid` kind, `cad_sha256`
+buttons; no run record and no robot drawing for that run yet); the CAD export's `rigid` kind, `cad_sha256`
 stamping and `seq`/`recent`; and the committed script
 `clients/python/examples/build_rover_over_rest.py`, which builds the rover
 over CAD REST, rigs and annotates it, wires and drives it in Build mode and
 drives it in Robot mode. None of it compiled or run: all by reading,
 unexecuted. Traces: `docs/rover-checklist.md` RV-01 to RV-07 and RV-40.
-Next (rover-browser-drive): browser driving. The browser cannot host a
-Python process, so its controller path needs a decision (RV-38).
+Browser and Build-mode device driving followed in rover-browser-drive
+(above).

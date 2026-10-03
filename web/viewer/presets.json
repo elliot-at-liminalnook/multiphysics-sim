@@ -522,6 +522,22 @@
       "description": "A live WASD crawl that can cancel a foot lift before it starts. Release during the weight shift to request a return to standing; airborne steps and reversals finish the current transfer.",
       "readiness": "Experimental command response · same 1.25 mm/s crawl · native stop/resume checks pass · browser and timestep validation in progress.",
       "evidence": "An optional shared Rust planner change preserves motor limits, physical components and student weights. It rechecks a stop or non-reversing command once support is qualified before lift-off. Canceled lifts earn no walking credit. An early reversal prototype exceeded a later motor command bound, so reversals retain the committed transfer. This does not establish physical stopping latency, useful walking speed, general terrain behavior or hardware accuracy."
+    },
+    {
+      "id": "rover-drive",
+      "label": "Two-wheel rover · keyboard and gamepad drive (browser compatibility)",
+      "mode": "drive",
+      "fixture": true,
+      "drive": {
+        "model": "examples/wheeled-robot/baseline/robot.simrobot.json",
+        "binding": "examples/wheeled-robot/baseline/robot.controller.json",
+        "seed": 0
+      },
+      "follow_link": "chassis",
+      "view_grid_size_m": 4,
+      "description": "Drive the uncalibrated two-wheel learning rover from the keyboard or a standard-layout gamepad. The page only reads devices and sends requests; Rust maps them through the shared drive bindings, applies the robot's drive profile (limits, acceleration, deadman on simulation time) and runs the binding's embedded Rhai adapter on the shared embedded session. The rover is drawn from its CAD-derived collision surfaces.",
+      "readiness": "Experimental (unexecuted): browser compatibility path written and checked by reading only; not yet run in a browser. The native viewer's bound external controller is the reference. Physics and drive limits are uncalibrated estimates.",
+      "evidence": "None yet for this browser path. Save run downloads Rust's recording; Replay re-executes a saved run through Rust after checking its identity (adapter, config, profile, model and CAD hashes) against the loaded drive."
     }
   ]
 }

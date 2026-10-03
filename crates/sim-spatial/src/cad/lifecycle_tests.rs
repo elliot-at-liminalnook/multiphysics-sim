@@ -299,6 +299,10 @@ fn a_service_that_took_the_port_is_refused_by_name() {
     assert!(refused.contains("another service took the port") && refused.contains("other.rcad"), "{refused}");
     let refused = sync::accept_served(url, health("", None), &document).unwrap_err();
     assert!(refused.contains("an unknown service serving a new document"), "{refused}");
+    // A desktop RoboCAD on the same file is not the headless child this window started.
+    let desktop = Health { gui: true, ..health("robocad", Some(&document)) };
+    let refused = sync::accept_served(url, desktop, &document).unwrap_err();
+    assert!(refused.contains("another service took the port") && refused.contains("RoboCAD's desktop window"), "{refused}");
 }
 
 /// /tmp is a symlink to /private/tmp on macOS: either spelling of the

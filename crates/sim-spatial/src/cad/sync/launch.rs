@@ -16,15 +16,22 @@ pub(in crate::cad) fn serves(health: &Health, document: &Path) -> bool {
 }
 
 /// The port-race check: `health` (the first answer at `url`) is accepted
-/// only when it is RoboCAD serving `document` (`serves`); otherwise the
-/// refusal names what answered instead.
+/// only when it is a headless RoboCAD serving `document` (`serves`, and
+/// `gui` false: the child `service_command` starts is `robocad.api`, which
+/// has no window). A desktop RoboCAD on the same file that took the port is
+/// another process (its edits are its own; this window only sent `GET /`),
+/// so it is refused like any other service; the refusal names what answered.
 pub(in crate::cad) fn accept_served(url: &str, health: Health, document: &Path) -> Result<Health, String> {
-    if serves(&health, document) {
+    if serves(&health, document) && !health.gui {
         return Ok(health);
     }
+    let what = match (health.app.is_empty(), health.gui) {
+        (true, _) => "an unknown service",
+        (false, true) => "RoboCAD's desktop window",
+        (false, false) => health.app.as_str(),
+    };
     Err(format!(
-        "{url} answered as {} serving {}, not RoboCAD serving {}: another service took the port",
-        if health.app.is_empty() { "an unknown service" } else { health.app.as_str() },
+        "{url} answered as {what} serving {}, not the headless RoboCAD service started for {}: another service took the port",
         health.path.as_deref().unwrap_or("a new document"),
         document.display()
     ))

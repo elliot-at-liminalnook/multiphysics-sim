@@ -511,7 +511,13 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
             let keys = attrs.keys().cloned().collect::<Vec<_>>().join(", ");
             let (id, attrs) = (id.clone(), attrs.clone());
             let message = format!("Patched {name}: {keys}");
-            edit(doc, call, format!("Patch {name}: {keys}"), move |c| c.patch(&id, &attrs).map(|d| EditDone { message, result: value(&d) }))
+            // A chip, name or transform field clicked in the window computed
+            // its value from the shown tree (a toggle sends the opposite of
+            // the shown flag): sent only while that is RoboCAD's revision. A
+            // REST `cad_patch` names its values; a `system_ui` activation has
+            // the REST origin and is checked by its listing's `ui_revision`.
+            let began = (!call.rest()).then(|| doc.shown_revision());
+            edit_at(doc, call, began, format!("Patch {name}: {keys}"), move |c| c.patch(&id, &attrs).map(|d| EditDone { message, result: value(&d) }))
         }
         CadAction::CadDelete { id } => {
             if !doc.has_node(id) {

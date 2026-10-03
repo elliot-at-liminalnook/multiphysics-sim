@@ -41,7 +41,7 @@ fn settle(app: &mut App, reply: Reply) -> Result<Value, String> {
 /// A switch as a REST caller asks for it: the action, with a reply token.
 fn submit(app: &mut App, mode: ViewerMode, document: Option<Document>) -> Reply {
     let reply = app.world_mut().resource_mut::<Replies>().open();
-    app.world_mut().write_message(Act { action: WindowAction::Switch(ModeSwitch { mode, document }), origin: Origin::Rest(reply) });
+    app.world_mut().write_message(Act { action: WindowAction::Switch(ModeSwitch { mode, document, reveal: None }), origin: Origin::Rest(reply) });
     reply
 }
 
@@ -432,6 +432,44 @@ fn leaving_cad_mode_is_refused_only_on_unsent_sketch_points() {
     let seq = submit(&mut app, ViewerMode::Build, None);
     settle(&mut app, seq).unwrap();
     assert_eq!(mode(&app), ViewerMode::Build);
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+/// Robot mode's Open in CAD carries its reveal in its own switch request:
+/// the accepted switch installs it, and a second request refused while the
+/// first is entering takes its reveal away with it, so the switch that
+/// lands reveals its own thread.
+#[test]
+fn a_refused_switch_to_cad_cannot_change_the_reveal_of_the_one_that_lands() {
+    use crate::cad::threads::{Reveal, RevealThread};
+    let dir = std::env::temp_dir().join(format!("mode-switch-reveal-{}", std::process::id()));
+    let (_, builder, scene) = self::board(&dir);
+    let url = "http://127.0.0.1:1";
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .insert_resource(builder)
+        .insert_resource(scene)
+        .insert_resource(crate::models::ModelLibrary::default())
+        .insert_resource(crate::rest::Rest(crate::rest::bind(0).unwrap(), None))
+        .add_plugins((ModesPlugin { initial: ViewerMode::Build }, crate::cad::CadCorePlugin));
+    app.update();
+    let target = crate::cad::CadTarget::Service(url.into());
+    let ask = |thread: &str| ModeSwitch { mode: ViewerMode::Cad, document: Some(Document::Url(url.into())), reveal: Some(Reveal::new(target.clone(), thread)) };
+    let first = app.world_mut().resource_mut::<Replies>().open();
+    let second = app.world_mut().resource_mut::<Replies>().open();
+    app.world_mut().write_message(Act { action: WindowAction::Switch(ask("e1")), origin: Origin::Rest(first) });
+    app.world_mut().write_message(Act { action: WindowAction::Switch(ask("e2")), origin: Origin::Rest(second) });
+    // One frame: the first is accepted (entering), the second refused.
+    app.update();
+    assert_eq!(app.world().resource::<RevealThread>().0, Some(Reveal::new(target.clone(), "e1")));
+    let refused = settle(&mut app, second).unwrap_err();
+    assert!(refused.contains("still being applied"), "{refused}");
+    settle(&mut app, first).unwrap();
+    assert_eq!(mode(&app), ViewerMode::Cad);
+    // Leaving CAD mode drops a reveal that never landed.
+    let seq = submit(&mut app, ViewerMode::Build, None);
+    settle(&mut app, seq).unwrap();
+    assert_eq!(app.world().resource::<RevealThread>().0, None);
     std::fs::remove_dir_all(&dir).ok();
 }
 

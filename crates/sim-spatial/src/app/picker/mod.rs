@@ -237,7 +237,7 @@ impl Picker {
     pub(crate) fn choice(&self, section: usize, entry: usize) -> Option<ModeSwitch> {
         let mode = self.open?;
         let choice = self.found.as_ref()?.sections.get(section)?.choices.get(entry)?;
-        choice.enabled.then(|| ModeSwitch { mode, document: Some(choice.document.clone()) })
+        choice.enabled.then(|| ModeSwitch { mode, document: Some(choice.document.clone()), reveal: None })
     }
 
     /// The switch the typed path asks for (None when closed or empty).
@@ -246,7 +246,7 @@ impl Picker {
         if self.prefilled {
             return None;
         }
-        typed_document(mode, &self.draft.text).map(|d| ModeSwitch { mode, document: Some(d) })
+        typed_document(mode, &self.draft.text).map(|d| ModeSwitch { mode, document: Some(d), reveal: None })
     }
 
     /// Set the draft (a pick, "..", a REST text) and follow it with the listing.

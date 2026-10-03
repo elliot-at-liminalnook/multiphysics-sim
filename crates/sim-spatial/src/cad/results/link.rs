@@ -198,7 +198,7 @@ pub(crate) fn json(doc: &CadDocument) -> Value {
 
 /// The window action a switch request becomes.
 pub(crate) fn switch_action(model: PathBuf) -> Act<WindowAction> {
-    Act { action: WindowAction::Switch(ModeSwitch { mode: ViewerMode::Robot, document: Some(Document::Path(model)) }), origin: Origin::Ui }
+    Act { action: WindowAction::Switch(ModeSwitch { mode: ViewerMode::Robot, document: Some(Document::Path(model)), reveal: None }), origin: Origin::Ui }
 }
 
 /// JobResults (windowless): the link mirrored with [`LiveLink`], the edit

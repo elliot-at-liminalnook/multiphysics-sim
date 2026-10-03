@@ -80,8 +80,8 @@ fn a_picker_choice_is_the_switch_viewer_mode_builds() {
     let controls = picker_with(ViewerMode::Robot, vec![choice("Measured", true, Document::Preset("p".into())), choice("x", true, Document::Path("/abs/x.simrobot.json".into()))]).controls();
     let ids: Vec<&str> = controls.iter().map(|c| c["id"].as_str().unwrap()).collect();
     assert_eq!(ids, ["picker:robot:0", "picker:robot:1", "picker:path", "picker:close"]);
-    assert_eq!(from_args(controls[0]["action"]["viewer_mode"].clone()), ModeSwitch { mode: ViewerMode::Robot, document: Some(Document::Preset("p".into())) });
-    assert_eq!(from_args(controls[1]["action"]["viewer_mode"].clone()), ModeSwitch { mode: ViewerMode::Robot, document: Some(Document::Path("/abs/x.simrobot.json".into())) });
+    assert_eq!(from_args(controls[0]["action"]["viewer_mode"].clone()), ModeSwitch { mode: ViewerMode::Robot, document: Some(Document::Preset("p".into())), reveal: None });
+    assert_eq!(from_args(controls[1]["action"]["viewer_mode"].clone()), ModeSwitch { mode: ViewerMode::Robot, document: Some(Document::Path("/abs/x.simrobot.json".into())), reveal: None });
     assert_eq!(controls[0]["label"], "Open Measured");
 }
 
@@ -131,7 +131,7 @@ fn activate(id: &str, text: Option<&str>) -> WindowAction {
 #[test]
 fn a_click_to_a_mode_with_no_document_opens_the_picker_and_rest_is_refused() {
     let mut app = app();
-    app.world_mut().write_message(Act::ui(WindowAction::Switch(ModeSwitch { mode: ViewerMode::Robot, document: None })));
+    app.world_mut().write_message(Act::ui(WindowAction::Switch(ModeSwitch { mode: ViewerMode::Robot, document: None, reveal: None })));
     app.update();
     assert_eq!(app.world().resource::<Picker>().open, Some(ViewerMode::Robot));
     assert_eq!(mode(&app), ViewerMode::Inspect, "the current mode stays");
@@ -150,13 +150,13 @@ fn a_click_to_a_mode_with_no_document_opens_the_picker_and_rest_is_refused() {
     assert_eq!(app.world().resource::<Picker>().open, Some(ViewerMode::Place));
 
     // An interactive switch to CAD with no document opens the picker (REST falls back to the default URL).
-    app.world_mut().write_message(Act::ui(WindowAction::Switch(ModeSwitch { mode: ViewerMode::Cad, document: None })));
+    app.world_mut().write_message(Act::ui(WindowAction::Switch(ModeSwitch { mode: ViewerMode::Cad, document: None, reveal: None })));
     app.update();
     assert_eq!(app.world().resource::<Picker>().open, Some(ViewerMode::Cad));
     assert_eq!(mode(&app), ViewerMode::Inspect);
 
     // A choice that is refused keeps the picker open, its refusal the switcher's line.
-    app.world_mut().write_message(Act::ui(WindowAction::Switch(ModeSwitch { mode: ViewerMode::Robot, document: None })));
+    app.world_mut().write_message(Act::ui(WindowAction::Switch(ModeSwitch { mode: ViewerMode::Robot, document: None, reveal: None })));
     app.update();
     let missing = "/no/such/dir/robot.simrobot.json";
     let reply = rest(&mut app, activate("picker:path", Some(missing)));
@@ -191,7 +191,7 @@ fn refusals_name_no_rest_payload() {
         (ViewerMode::Inspect, Some(Document::Path("/abs/a.description.json".into()))),
     ];
     for (target, document) in cases {
-        let reply = rest(&mut app, WindowAction::Switch(ModeSwitch { mode: target, document }));
+        let reply = rest(&mut app, WindowAction::Switch(ModeSwitch { mode: target, document, reveal: None }));
         let e = settle(&mut app, reply).unwrap_err();
         assert!(e.starts_with("Not switching to") && e.contains("Inspect mode stays"), "{target:?}: {e}");
         for word in ["viewer_mode", "{", "REST", "system_open", "lesson_open", "robot_preset", "cad_open", "phenomena_select"] {
@@ -293,7 +293,7 @@ fn discovery_finds_examples_and_skips_runs() {
 #[test]
 fn a_stale_picker_index_is_refused_naming_both_revisions() {
     let mut app = app();
-    app.world_mut().write_message(Act::ui(WindowAction::Switch(ModeSwitch { mode: ViewerMode::Robot, document: None })));
+    app.world_mut().write_message(Act::ui(WindowAction::Switch(ModeSwitch { mode: ViewerMode::Robot, document: None, reveal: None })));
     app.update();
     // Discovery lands (and moves the listing on) before the entries are read.
     for _ in 0..500 {

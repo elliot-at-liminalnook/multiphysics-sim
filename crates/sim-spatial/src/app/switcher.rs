@@ -63,7 +63,7 @@ pub(crate) fn spawn_switcher(mut commands: Commands, fonts: Res<UiFonts>, mode: 
 /// reopens its own, or is refused naming what it needs).
 pub(crate) fn switcher_clicks(buttons: Query<&ModeButton, With<crate::ui_kit::activation::Activated>>, mut switch: MessageWriter<Act<WindowAction>>) {
     for button in &buttons {
-        switch.write(Act::ui(WindowAction::Switch(ModeSwitch { mode: button.0, document: None })));
+        switch.write(Act::ui(WindowAction::Switch(ModeSwitch { mode: button.0, document: None, reveal: None })));
     }
 }
 

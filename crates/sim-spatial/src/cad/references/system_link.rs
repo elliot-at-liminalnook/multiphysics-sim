@@ -137,7 +137,7 @@ pub(crate) fn open_builder(doc: &mut CadDocument, windowed: bool) -> Result<Valu
 
 /// The window action Open in builder becomes.
 pub(crate) fn switch_action(path: PathBuf) -> Act<WindowAction> {
-    Act { action: WindowAction::Switch(ModeSwitch { mode: ViewerMode::Build, document: Some(Document::Path(path)) }), origin: Origin::Ui }
+    Act { action: WindowAction::Switch(ModeSwitch { mode: ViewerMode::Build, document: Some(Document::Path(path)), reveal: None }), origin: Origin::Ui }
 }
 
 /// `cad_state.references.system`.

@@ -599,7 +599,7 @@ pub(super) fn buttons(
         if !source.matches(&builder) {continue;}
         if matches!(action, BuildAction::Lessons) {
             if learn.is_some() {
-                switch.write(Act::ui(WindowAction::Switch(ModeSwitch { mode: ViewerMode::Lessons, document: None })));
+                switch.write(Act::ui(WindowAction::Switch(ModeSwitch { mode: ViewerMode::Lessons, document: None, reveal: None })));
             }
             continue;
         }

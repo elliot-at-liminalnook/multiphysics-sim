@@ -112,3 +112,52 @@ fn a_reload_keeps_the_selected_link_by_name_at_its_new_index() {
     assert_eq!(selection.dropped, vec!["link b".to_string()]);
     assert_eq!(picked::link(&selection, &registry), None);
 }
+
+/// REST `robot_drive`'s three forms parse into `RobotAction::Drive`; absent
+/// axes are 0; mixed forms and a false stop are refused naming the fields.
+#[test]
+fn robot_drive_forms_parse_and_ambiguous_ones_are_refused() {
+    let parse = |args: Value| <RobotAction as actions::Action>::parse(&sim_api::Command { command: "robot_drive".into(), args });
+    assert_eq!(parse(json!({"forward": 0.5, "lateral": 0, "yaw": 0})), Ok(RobotAction::Drive { request: DriveRequest::Axes { forward: 0.5, lateral: 0.0, yaw: 0.0 } }));
+    assert_eq!(parse(json!({"yaw": -1})), Ok(RobotAction::Drive { request: DriveRequest::Axes { forward: 0.0, lateral: 0.0, yaw: -1.0 } }));
+    assert_eq!(parse(json!({"action": "halt"})), Ok(RobotAction::Drive { request: DriveRequest::Action { name: "halt".into() } }));
+    assert_eq!(parse(json!({"stop": true})), Ok(RobotAction::Drive { request: DriveRequest::Stop }));
+    let e = parse(json!({"forward": 1, "action": "halt"})).unwrap_err();
+    assert!(e.starts_with("robot_drive needs exactly one of") && e.contains("axes (forward/lateral/yaw) and action"), "{e}");
+    let e = parse(json!({"action": "halt", "stop": true})).unwrap_err();
+    assert!(e.contains("given: action and stop"), "{e}");
+    assert!(parse(json!({})).unwrap_err().contains("given: none"));
+    assert!(parse(json!({"stop": false})).unwrap_err().contains("stop must be true"));
+    assert!(parse(json!({"forward": 1, "speed": 2})).unwrap_err().contains("unknown field `speed`"));
+}
+
+/// A robot without a drive profile (the wheeled baseline has no controller
+/// binding loaded here) refuses every drive request by name, lists no
+/// drive:* controls, and its planar refusal names the planar file.
+#[test]
+fn drive_is_refused_without_a_drive_profile() {
+    let view = loaded_view();
+    for request in [DriveRequest::Axes { forward: 1.0, lateral: 0.0, yaw: 0.0 }, DriveRequest::Action { name: "halt".into() }, DriveRequest::Stop] {
+        let e = check(&view, &RobotAction::Drive { request }).unwrap_err();
+        assert!(e.starts_with(NOT_CONTROLLED) && e.contains("controller binding"), "{e}");
+    }
+    assert!(!controls(&view, None).iter().any(|(id, ..)| id.starts_with("drive:")));
+    // Applied (not only checked): `dispatch` hands a drive request to its own
+    // handler before `check`, and it is refused by the same name.
+    let mut view = view;
+    let mut orbit = Orbit::default();
+    let (mut selection, mut registry) = documents(&view);
+    for request in [DriveRequest::Axes { forward: 0.0, lateral: 0.0, yaw: 1.0 }, DriveRequest::Stop] {
+        let e = handle(&mut view, &mut orbit, &mut selection, &mut registry, &RobotAction::Drive { request }).unwrap_err();
+        assert!(e.starts_with(NOT_CONTROLLED), "{e}");
+    }
+    // A hold-controller file neither records nor replays (its PhysicalRobot run
+    // keeps no recording), so those controls are only a preset's or a controlled run's;
+    // its servo-target jog stays (only a controlled run's external controller drops it).
+    let listed = controls(&view, Some(1));
+    assert!(!listed.iter().any(|(id, ..)| id.starts_with("recording:") || id.starts_with("replay:")));
+    assert!(listed.iter().any(|(id, ..)| id.starts_with("jog:")));
+    // Streaming sync refuses remote driving but not a stop.
+    assert!(moves_synced_motors(&view, None, &RobotAction::Drive { request: DriveRequest::Axes { forward: 1.0, lateral: 0.0, yaw: 0.0 } }));
+    assert!(!moves_synced_motors(&view, None, &RobotAction::Drive { request: DriveRequest::Stop }));
+}

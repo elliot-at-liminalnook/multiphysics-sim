@@ -59,8 +59,9 @@ fn tick(
         recents: serde_json::to_string(&owner.recents).unwrap_or_default(),
         hardware: serde_json::to_string(&owner.hardware).unwrap_or_default(),
         cad: serde_json::to_string(&owner.cad).unwrap_or_default(),
+        drive_bindings: owner.drive_bindings.as_ref().and_then(|b| serde_json::to_string(b).ok()).unwrap_or_default(),
     };
-    if group.recents != next.recents || group.hardware != next.hardware || group.cad != next.cad {
+    if group.recents != next.recents || group.hardware != next.hardware || group.cad != next.cad || group.drive_bindings != next.drive_bindings {
         *group = next;
     }
     if (owner.load.is_some() || owner.save.is_some() || owner.canonical.is_some()
@@ -196,6 +197,10 @@ pub(super) fn land_load(owner: &mut SettingsOwner, answer: Result<jobs::Loaded, 
                 cad.clearance = owner.cad.clearance;
             }
             owner.cad = cad;
+            // Bindings set before the load own their group (as a CAD default).
+            if !owner.drive_claimed {
+                owner.drive_bindings = loaded.drive_bindings;
+            }
             owner.ready = true;
             owner.blocked = false;
             owner.diagnostic = None;
@@ -206,7 +211,7 @@ pub(super) fn land_load(owner: &mut SettingsOwner, answer: Result<jobs::Loaded, 
                         .into(),
                 );
             }
-            if loaded.migrated || owner.touched.iter().any(|v| *v) {
+            if loaded.migrated || owner.touched.iter().any(|v| *v) || owner.drive_claimed {
                 owner.revision += 1;
             }
         }

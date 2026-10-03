@@ -1,10 +1,11 @@
-//! Replay of a saved preset recording: its state, preparation through the shared runtime and verdict.
+//! Replay of a saved preset or drive-session recording: its state, preparation through the shared runtime and verdict.
 use serde::Serialize;
 use serde_json::{Value, json};
 use std::collections::VecDeque;
 use std::sync::Arc;
 use std::time::Instant;
 use crate::robot::recording;
+use super::controlled::{ControlledRun, TwistState, check_inputs, differences};
 use super::frames::environment_names;
 use super::protocol::{Drive, Source};
 use super::sim::Sim;
@@ -71,11 +72,13 @@ impl ReplayState {
 pub(super) enum ReplayWork {
     Actions(VecDeque<Vec<f64>>),
     Steps { remaining: usize },
+    /// A drive session's recorded actions, one per seam period, stepped through `Session::step`.
+    Drive(VecDeque<Vec<f64>>),
 }
 impl ReplayWork {
     pub(super) fn done(&self) -> bool {
         match self {
-            ReplayWork::Actions(q) => q.is_empty(),
+            ReplayWork::Actions(q) | ReplayWork::Drive(q) => q.is_empty(),
             ReplayWork::Steps { remaining } => *remaining == 0,
         }
     }
@@ -95,6 +98,9 @@ pub(super) fn prepare_replay(source: &Source, current: Option<&Sim>, path: &std:
     use sim_runtime::embedded::{CaptureMode, EmbeddedRecording, EmbeddedSession};
     use sim_runtime::environment::{EmbeddedEnvironment, EnvironmentRecording};
     use sim_runtime::physics_context::fingerprint;
+    if let Source::Controlled(run) = source {
+        return prepare_drive_replay(run, path, state);
+    }
     let Source::Preset(run) = source else {
         return Err(("replay is for robot presets; `--robot FILE` runs PhysicalRobot, which has no recording or replay".into(), state));
     };
@@ -160,9 +166,50 @@ pub(super) fn prepare_replay(source: &Source, current: Option<&Sim>, path: &std:
     }
 }
 
+/// Reads `path` as a drive session's `sim_runtime::session::Recording`,
+/// refuses it by name when its controller or robot differs from the loaded
+/// binding's (`controlled::differences`), else rebuilds `Session::new(recorded
+/// scene, recorded seed)` (which starts the controller again) with the
+/// recorded actions to step (recording::DRIVE_REPLAY_RULE).
+fn prepare_drive_replay(run: &Arc<ControlledRun>, path: &std::path::Path, mut state: ReplayState) -> Result<(Sim, ActiveReplay), (String, ReplayState)> {
+    use sim_runtime::session::{Recording, Session};
+    macro_rules! tryr {
+        ($e:expr) => {
+            match $e {
+                Ok(x) => x,
+                Err(e) => return Err((e, state)),
+            }
+        };
+    }
+    state.kind = Some(recording::DRIVE_KIND.into());
+    let text = tryr!(std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display())));
+    let record: Recording = tryr!(serde_json::from_str(&text).map_err(|e| format!("{}: not a drive session recording (sim_runtime::session::Recording): {e}", path.display())));
+    if record.version != 1 {
+        return Err((format!("refused: {} is a drive session recording version {}; this build replays version 1 (Session::replay)", path.display(), record.version), state));
+    }
+    let sidecar: Option<Value> = std::fs::read_to_string(recording::meta_path(path)).ok().and_then(|t| serde_json::from_str(&t).ok());
+    let final_frame = sidecar.as_ref().map(|m| m["final_frame"].clone()).filter(|f| !f.is_null());
+    state.sidecar = sidecar.as_ref().map(|m| json!({"path": recording::meta_path(path), "model": m["model"], "identity": m["identity"], "saved_utc": m["saved_utc"], "note": m["note"], "has_final_frame": final_frame.is_some()}));
+    state.recorded_failure = sidecar.as_ref().and_then(|m| m["failure"].as_str()).map(str::to_string);
+    state.recorded_completed_steps = Some(record.actions.len() as u64);
+    let differ = differences(run, &record.scene);
+    if !differ.is_empty() {
+        return Err((format!("refused by the drive identity check: {} was recorded with a different controller or robot than {} and its binding {}: {}; a replay must run the loaded robot's controller (restore the recorded script/profile or open the recorded model to replay it)",
+            path.display(), run.model_path.display(), run.controlled.binding_path.display(), differ.join("; ")), state));
+    }
+    let session = tryr!(Session::new(record.scene, record.seed).map_err(|e| format!("Session::new refused the recorded scene (seed {}): {e}", record.seed)));
+    tryr!(check_inputs(&session.inputs));
+    state.total = Some(record.actions.len() as u64);
+    state.unit = Some("seam periods");
+    Ok((Sim::Controlled { session, drive: TwistState::default(), run: run.clone() }, ActiveReplay { state, work: ReplayWork::Drive(record.actions.into()), final_frame, started: Instant::now() }))
+}
+
 /// The verdict once the work is exhausted (`error` None) or the runtime
 /// returned an error (recording::VERDICT_RULE): only what it establishes.
-pub(super) fn finish_replay(sim: &Sim, r: &mut ActiveReplay, error: Option<String>) {
+/// A drive replay's recorded requests stop here (`Sim::end_drive_replay`).
+pub(super) fn finish_replay(sim: &mut Sim, r: &mut ActiveReplay, error: Option<String>) {
+    sim.end_drive_replay();
+    let sim = &*sim;
     let s = &mut r.state;
     s.completed_steps = sim.completed_steps();
     s.wall_s = Some(r.started.elapsed().as_secs_f64());
@@ -170,6 +217,9 @@ pub(super) fn finish_replay(sim: &Sim, r: &mut ActiveReplay, error: Option<Strin
     let steps_match = done.is_some() && done == recorded;
     let counts = format!("completed_steps {} (recorded {})", done.map_or("?".into(), |n| n.to_string()), recorded.map_or("?".into(), |n| n.to_string()));
     let (phase, verdict, err) = match (sim, error) {
+        (Sim::Controlled { .. }, None) if steps_match => (ReplayPhase::Done, format!("passed the drive replay checks: the recording's controller (script, its sha256, the simloop library's sha256, args, profile and its sha256, the resolved drive) and robot matched the loaded binding's, Session::new rebuilt the recorded scene with the recorded seed and every recorded action stepped through Session::step without error; {counts}; states are not compared (see measured)"), None),
+        (Sim::Controlled { .. }, None) => (ReplayPhase::Failed, format!("failed: {counts} differ"), Some(format!("replayed {counts}"))),
+        (Sim::Controlled { .. }, Some(e)) => (ReplayPhase::Failed, format!("failed: Session::step returned an error during the replay{}", s.recorded_failure.as_ref().map_or(String::new(), |f| format!(" (the saved run had failed: {f})"))), Some(e)),
         (Sim::Environment { env, .. }, None) => match env.error() {
             Some(e) => (ReplayPhase::Failed, "failed: the environment reported an error after the replay".to_string(), Some(e.to_string())),
             None if steps_match => (ReplayPhase::Done, format!("passed the shared runtime's replay checks: EmbeddedEnvironment::prepare_replay accepted the recording against the loaded task, scene and config, and all {} returned actions stepped through EmbeddedEnvironment::step without error; {counts}; states are not compared by the runtime", s.completed), None),

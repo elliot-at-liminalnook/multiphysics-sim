@@ -7,6 +7,8 @@ use crate::robot::graphs;
 use crate::robot::playback::{RecordedAction, RecordedPlayback};
 use crate::robot::preset::{PresetRun, RecordedRun};
 use crate::robot::recording::{Listed, Saved};
+use sim_domain_control::drive::kinematics::BodyTwist;
+use super::controlled::{CONTROLLER_LABEL, ControlledRun, DriveStatus};
 use super::protocol::{Command, Published, Status};
 use super::worker::worker;
 use super::{COMPUTE_LIMITED_FRACTION, COMPUTE_LIMITED_RULE, DEFLECTION_MAGNIFICATION, Drive, FORCE_SCALE_M_PER_N, Frame, JOINT_AXIS_HALF_M, OVERLAY_COST_RULE, OVERLAY_SAMPLE, OverlayFlags, PACING, Phase, ReplayPhase, ReplayState, RunAction, SPEED_SCALES, Servo, Source, SpeedRequest, accept, check_target, servo, speed_target};
@@ -64,6 +66,16 @@ pub struct RunController {
     pub(super) overlays: OverlayFlags,
     /// The requested run speed scale (SPEED_SCALES; pacing only).
     pub(super) speed_scale: f64,
+    /// `--robot FILE` with a loaded controller binding (`controlled`).
+    pub(super) controlled: Option<Arc<ControlledRun>>,
+    /// Why the binding beside the file did not load (the run is failed with it).
+    pub(super) unbound: Option<String>,
+    /// The run thread's latest drive status, the last drive request sent this
+    /// generation (with its halt flag), the last refusal and the last apply error.
+    pub(super) twist: Option<DriveStatus>,
+    pub(super) twist_requested: Option<(BodyTwist, bool)>,
+    pub(super) twist_refusal: Option<String>,
+    pub(super) twist_error: Option<String>,
 }
 
 impl RunController {
@@ -74,7 +86,8 @@ impl RunController {
     /// A fresh run context for a reloaded file (`robot_source`): the same idle
     /// run thread as [`Self::spawn`], starting at `generation` so it continues
     /// strictly after the replaced controller's and no older frame is accepted.
-    /// FILE mode never records or replays, so this generation is never stored.
+    /// A file without a controller binding never records or replays, so this
+    /// generation is never stored ([`Self::spawn_file`] covers a bound file).
     pub fn spawn_at(model: PhysicalModel, generation: u64) -> Self {
         Self::spawn_source(Source::Robot(model.clone()), model, None, generation)
     }
@@ -96,7 +109,7 @@ impl RunController {
         // No run thread: nothing is ever sent (all sends are refused first).
         let generation = 0;
         let status = Status { phase: Phase::Idle, generation, rtf: None, error: None, end: None };
-        let thread = crate::jobs::RunThread::idle("robot-run", Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None, save: None, replay: None });
+        let thread = crate::jobs::RunThread::idle("robot-run", Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None, save: None, replay: None, twist: None, twist_error: None });
         let mut graphs = graphs::History::default();
         graphs.clear(generation);
         let frame = run.frames.first().cloned();
@@ -104,7 +117,8 @@ impl RunController {
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
             replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), listing: Default::default(), recordings: Vec::new(), list_error: None,
-            graphs, chassis: graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0 }
+            graphs, chassis: graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0,
+            controlled: None, unbound: None, twist: None, twist_requested: None, twist_refusal: None, twist_error: None }
     }
     pub fn recorded(&self) -> Option<&Arc<RecordedRun>> {
         self.recorded.as_ref()
@@ -145,9 +159,35 @@ impl RunController {
             None => Ok(()),
         }
     }
+    /// A `--robot FILE`'s run context from what the loader found beside it
+    /// (`Loaded::controlled`): no binding runs the file's hold controller
+    /// (`Source::Robot`); a loaded binding runs the drive session
+    /// (`Source::Controlled`); a binding that did not load is a failed run
+    /// naming it (`Source::Unbound`), never a hold run. Starts at `generation`.
+    pub fn spawn_file(model: PhysicalModel, controlled: Option<Result<Arc<ControlledRun>, String>>, generation: u64) -> Self {
+        let source = match controlled {
+            None => Source::Robot(model.clone()),
+            Some(Ok(run)) => Source::Controlled(run),
+            Some(Err(error)) => Source::Unbound { model: model.clone(), error },
+        };
+        let mut c = Self::spawn_source(source, model, None, generation);
+        if c.controlled.is_some() {
+            c.refresh_recordings();
+        }
+        c
+    }
     fn spawn_source(source: Source, model: PhysicalModel, preset: Option<Arc<PresetRun>>, generation: u64) -> Self {
-        let status = Status { phase: Phase::Idle, generation, rtf: None, error: None, end: None };
-        let published = Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None, save: None, replay: None };
+        let (controlled, unbound) = match &source {
+            Source::Controlled(run) => (Some(run.clone()), None),
+            Source::Unbound { error, .. } => (None, Some(error.clone())),
+            Source::Robot(_) | Source::Preset(_) => (None, None),
+        };
+        // A binding that did not load is a failed run from the start, so the header and robot_state show it before any Run.
+        let status = match &unbound {
+            Some(e) => Status { phase: Phase::Failed, generation, rtf: None, error: Some(e.clone()), end: None },
+            None => Status { phase: Phase::Idle, generation, rtf: None, error: None, end: None },
+        };
+        let published = Published { status: status.clone(), frame: None, jog_error: None, drive: None, motion_error: None, save: None, replay: None, twist: None, twist_error: None };
         let chunk_s = source.chunk_s();
         let links: Vec<String> = model.links.iter().map(|l| l.name.clone()).collect();
         let thread = crate::jobs::RunThread::spawn("robot-run", published, move |rx, out| worker(source, links, rx, out, generation));
@@ -157,7 +197,8 @@ impl RunController {
             drive: None, requested: None, keys: Vec::new(), keys_physical: false, motion_refusal: None, motion_error: None,
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
             replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), listing: Default::default(), recordings: Vec::new(), list_error: None,
-            graphs, chassis: graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0 }
+            graphs, chassis: graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0,
+            controlled, unbound, twist: None, twist_requested: None, twist_refusal: None, twist_error: None }
     }
     pub fn preset(&self) -> Option<&Arc<PresetRun>> {
         self.preset.as_ref()
@@ -183,6 +224,12 @@ impl RunController {
         if let Some(p) = &self.preset {
             return Err(format!("joint `{joint}`: servo-target jog is for `--robot FILE`; preset `{}` is driven by its declared controller recipe ({}), so the viewer sets no joint target", p.preset.id, p.kind()));
         }
+        if let Some(run) = &self.controlled {
+            return Err(format!("joint `{joint}`: servo-target jog is refused: {} (the {CONTROLLER_LABEL} bound by {}); drive the robot with drive requests", super::sim::OWNS_TARGETS, run.controlled.binding_path.display()));
+        }
+        if let Some(e) = &self.unbound {
+            return Err(format!("joint `{joint}`: servo-target jog is refused: the controller binding did not load ({e}); the run does not fall back to the file's hold controller"));
+        }
         let servo = servo(&self.model, joint)?;
         check_target(&servo, target)?;
         if self.status.phase == Phase::Failed {
@@ -201,6 +248,10 @@ impl RunController {
     /// Why an action is unavailable now (`Ok` when it can be sent).
     pub fn check(&self, action: RunAction) -> Result<(), String> {
         self.recorded_refusal(&format!("run {}", action.name()))?;
+        // Reset stays available (it retries the same binding and fails again, naming it).
+        if let Some(e) = self.unbound.as_ref().filter(|_| action != RunAction::Reset) {
+            return Err(format!("run {} refused: {e}; fix the controller binding and Reload (a file with a binding never runs the hold controller instead)", action.name()));
+        }
         if action != RunAction::Reset {
             if let Some(why) = self.replay_block() {
                 return Err(why);
@@ -253,6 +304,10 @@ impl RunController {
                 self.keys.clear();
                 self.keys_physical = false;
                 self.motion_error = None;
+                // A fresh drive session: heartbeat 0, zero request.
+                self.twist = None;
+                self.twist_requested = None;
+                self.twist_error = None;
                 // Reset ends any replay: a fresh run.
                 self.replay = ReplayState::new(self.replay.seq, self.generation, None, ReplayPhase::Idle);
                 self.graphs.clear(self.generation);
@@ -303,6 +358,8 @@ impl RunController {
             self.jog_error = published.jog_error.clone();
             self.drive = published.drive.clone();
             self.motion_error = published.motion_error.clone();
+            self.twist = published.twist;
+            self.twist_error = published.twist_error.clone();
             if matches!(self.status.phase, Phase::Failed | Phase::Ended) {
                 self.running = false;
             }
@@ -387,6 +444,10 @@ impl RunController {
     /// frames can never be applied: the new idle controller starts at the next
     /// generation. Returns it and whether run or jog state was discarded.
     pub fn replace(previous: Option<RunController>, model: PhysicalModel) -> (Self, bool) {
+        Self::replace_file(previous, model, None)
+    }
+    /// [`Self::replace`] with what the loader found beside the file (see [`Self::spawn_file`]).
+    pub fn replace_file(previous: Option<RunController>, model: PhysicalModel, controlled: Option<Result<Arc<ControlledRun>, String>>) -> (Self, bool) {
         let reset = previous.as_ref().is_some_and(Self::has_run_state);
         let generation = previous.as_ref().map_or(0, |r| r.generation + 1);
         // The user's overlay choice survives a reload.
@@ -394,7 +455,7 @@ impl RunController {
         // So does the run speed scale.
         let speed = previous.as_ref().map(|r| r.speed_scale);
         drop(previous);
-        let mut next = Self::spawn_at(model, generation);
+        let mut next = Self::spawn_file(model, controlled, generation);
         if let Some(flags) = overlays.filter(|f| *f != next.overlays) {
             let _ = next.set_overlays(flags);
         }
@@ -406,7 +467,9 @@ impl RunController {
     /// Whether discarding this controller loses run or jog state: anything
     /// built, running, failed or ended, or a jog requested this generation.
     pub fn has_run_state(&self) -> bool {
-        self.running || self.frame.is_some() || !self.jogged.is_empty() || self.status.phase != Phase::Idle
+        // A binding that did not load starts failed, but nothing ran.
+        let failed_unbound = self.unbound.is_some() && self.frame.is_none();
+        self.running || self.frame.is_some() || !self.jogged.is_empty() || (self.status.phase != Phase::Idle && !failed_unbound)
     }
     pub fn phase(&self) -> Phase {
         self.status.phase
@@ -505,6 +568,8 @@ impl RunController {
         });
         let build = match &self.preset {
             None if self.recorded.is_some() => format!("nothing is built: {}", crate::robot::preset::RECORDED_RUNS_AS),
+            None if self.controlled.is_some() => format!("sim_runtime::session::Session::new(controller_binding::scene(model clone, binding, DRIVE_DURATION_S), seed {}) on the run thread: PhysicalRobot (sim_runtime::registry(), BuildOptions::default()) with the {CONTROLLER_LABEL} attached on the control.external seam (see robot_state.drive)", self.controlled.as_ref().map_or(0, |r| r.seed)),
+            None if self.unbound.is_some() => format!("nothing is built: the controller binding did not load ({}); a file with a binding never falls back to the hold run", self.unbound.as_deref().unwrap_or_default()),
             None => "sim_runtime::physical::PhysicalRobot::build(model clone, sim_runtime::registry(), BuildOptions::default()) on the run thread".to_string(),
             Some(p) if p.task.is_some() => format!("sim_runtime::environment::EmbeddedEnvironment::new(scene, config, task, seed {}) from the preset's files unchanged, on the run thread", p.seed),
             Some(p) => format!("sim_runtime::embedded::EmbeddedSession::new(scene, config, seed {}, CaptureMode::Latest) from the preset's files unchanged, on the run thread", p.seed),

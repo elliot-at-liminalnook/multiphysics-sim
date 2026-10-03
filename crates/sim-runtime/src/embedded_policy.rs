@@ -273,6 +273,10 @@ impl SampledPolicy {
             if !config.neural_command_saturation {return Err("Gaussian exploration requires explicit command saturation".into());}
             sim_domain_control::ppo::GaussianSampler::new(c,n.definition().outputs.len(),seed^0x504f4c494359)
         }).transpose()?;
+        if let Some(external) = &program.external {
+            return Err(format!("sampled policies run Rhai controllers only; refusing external controller ({}) {}",
+                external.language, external.script.display()));
+        }
         let mut policy = RhaiController::with_seed_and_registry(
             program.sources.clone(),
             parameter_map(&program.parameters).map_err(|e| e.to_string())?,

@@ -7,6 +7,8 @@ use crate::app::actions::{self, Act, InFlight, Origin, Replies};
 use crate::robot::run::SPEED_SCALES;
 use bevy::ecs::message::Messages;
 use sim_api::Outcome;
+use sim_domain_control::drive::kinematics::{self, Axes, BodyTwist};
+use sim_domain_control::drive::profile::ActionRequest;
 
 /// Every intent of robot mode: the buttons and keys carry these values,
 /// `system_ui` lists them (the `action` of each control, serialized as
@@ -82,6 +84,54 @@ pub(crate) enum RobotAction {
     /// presses and composer, REST `robot_threads`), applied by
     /// `threads::handle` from [`apply`].
     Threads { act: crate::robot::threads::ThreadsAct },
+    /// A drive request for a controlled robot (a controller binding with a
+    /// `sim.drive/1` profile): the bound keys and gamepad
+    /// (`drive_input::devices`), `system_ui` drive:* and REST `robot_drive`.
+    /// Applied by [`drive_request`] then `RunController::drive`.
+    Drive { request: DriveRequest },
+}
+
+/// What a drive request asks for. Axes are normalized (-1..1) and scaled by
+/// the robot's profile ([`kinematics::scale`]), so a twist outside the
+/// profile cannot be requested; actions are the profile's, by name.
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum DriveRequest {
+    /// Normalized axes: forward (+ ahead), lateral (+ left), yaw (+ turn left, CCW).
+    Axes { forward: f64, lateral: f64, yaw: f64 },
+    /// One of the profile's named actions (`stop`: zero twist under the
+    /// acceleration limit; `halt`: zero at once).
+    Action { name: String },
+    /// Request a zero twist (approached under the profile's acceleration limit).
+    Stop,
+}
+
+/// How a drive request's refusal for a run without a drive profile starts;
+/// the run's own reason follows (`RunController::check_drive`: no binding
+/// beside the model, a binding that failed to load, a preset).
+pub(crate) const NOT_CONTROLLED: &str = "this robot has no drive profile";
+/// A planar (v2) file has no drive profile or controller.
+const PLANAR_DRIVE: &str = "drive (robot_drive, drive:*) is refused for a planar v2 file: it has no controller binding or sim.drive/1 profile";
+
+/// The twist a drive request asks the run thread for, and whether it is a
+/// halt (zero at once): the one place a drive request is interpreted, for
+/// [`check`] and `dispatch` alike.
+fn drive_request(run: &RunController, request: &DriveRequest) -> Result<(BodyTwist, bool), String> {
+    let c = run.controlled().ok_or_else(|| match run.check_drive() {
+        Err(why) => format!("{NOT_CONTROLLED}; {why}"),
+        Ok(()) => format!("{NOT_CONTROLLED}; driving needs a controller binding (<model stem>.controller.json beside the model) naming a sim.drive/1 profile"),
+    })?;
+    match request {
+        DriveRequest::Axes { forward, lateral, yaw } => {
+            let twist = kinematics::scale(Axes { forward: *forward, lateral: *lateral, yaw: *yaw }, &c.controlled.resolved.limits()).map_err(|e| format!("drive request refused: {e} (profile {})", c.controlled.resolved.profile))?;
+            Ok((twist, false))
+        }
+        DriveRequest::Action { name } => match c.controlled.profile.action(name)?.request {
+            ActionRequest::Stop => Ok((BodyTwist::ZERO, false)),
+            ActionRequest::Halt => Ok((BodyTwist::ZERO, true)),
+        },
+        DriveRequest::Stop => Ok((BodyTwist::ZERO, false)),
+    }
 }
 
 /// The action that flips one overlay from its current requested value.
@@ -145,6 +195,7 @@ fn check_planar(view: &RobotView, p: &PlanarView, action: &RobotAction) -> Resul
             Ok(())
         }
         RobotAction::Motion { .. } => Err(planar::MOTION.into()),
+        RobotAction::Drive { .. } => Err(PLANAR_DRIVE.into()),
         RobotAction::SaveRecording { .. } => Err(planar::SAVE_RECORDING.into()),
         RobotAction::Replay { .. } | RobotAction::CancelReplay | RobotAction::RefreshRecordings => Err(planar::REPLAY.into()),
         RobotAction::Gait { .. } => Err(planar::GAIT.into()),
@@ -172,6 +223,11 @@ pub(super) fn check(view: &RobotView, action: &RobotAction) -> Result<(), String
         }
         RobotAction::JogTo { joint, target } => view.run.as_ref().ok_or("the robot has not loaded")?.check_jog(joint, *target).map(|_| ()),
         RobotAction::Motion { request } => view.run.as_ref().ok_or("the robot has not loaded")?.check_motion_request(request),
+        RobotAction::Drive { request } => {
+            let run = view.run.as_ref().ok_or("the robot has not loaded")?;
+            drive_request(run, request)?;
+            run.check_drive()
+        }
         RobotAction::SaveRecording { .. } => view.run.as_ref().ok_or("the robot has not loaded")?.check_save().map(|_| ()),
         RobotAction::Replay { .. } => view.run.as_ref().ok_or("the robot has not loaded")?.check_replay().map(|_| ()),
         RobotAction::CancelReplay => view.run.as_ref().ok_or("the robot has not loaded")?.check_cancel(),
@@ -245,15 +301,15 @@ fn dispatch_planar(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Sele
             orbit.home = true;
         }
         // Refused by `check_planar` (named); listed so a new action is not silently accepted.
-        RobotAction::Motion { .. } | RobotAction::SaveRecording { .. } | RobotAction::Replay { .. } | RobotAction::CancelReplay | RobotAction::RefreshRecordings
+        RobotAction::Motion { .. } | RobotAction::Drive { .. } | RobotAction::SaveRecording { .. } | RobotAction::Replay { .. } | RobotAction::CancelReplay | RobotAction::RefreshRecordings
         | RobotAction::Gait { .. } | RobotAction::Recorded { .. } | RobotAction::ToggleGraphs => return Err("refused for a planar v2 file".into()),
         RobotAction::State | RobotAction::RobotState | RobotAction::Presets | RobotAction::OpenPreset { .. } | RobotAction::Controls | RobotAction::Activate { .. } | RobotAction::Camera { .. } => unreachable!("answered by `handle`"),
         RobotAction::Threads { .. } => return Err(THREADS_IN_APPLY.into()),
     }
     Ok(())
 }
-/// A control action: validated by [`check`] (motion and save validate in
-/// their own handler), then applied.
+/// A control action: validated by [`check`] (motion, save and drive validate
+/// in their own handler), then applied.
 fn dispatch(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, registry: &DocumentRegistry, action: RobotAction) -> Result<(), String> {
     if view.planar.is_some() {
         return dispatch_planar(view, orbit, selection, registry, action);
@@ -266,9 +322,20 @@ fn dispatch(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, 
         // Validated (and a refusal recorded) inside the one save handler.
         return view.run.as_mut().ok_or("the robot has not loaded")?.save_recording(path.as_deref(), note.as_deref()).map(|_| ());
     }
+    if let RobotAction::Drive { request } = action {
+        // The request is interpreted against the profile here (`drive_request`:
+        // no profile, an unsupported or out-of-range axis, an unknown action),
+        // then validated against the run (failed, ended, replaying, not
+        // running) inside the one drive handler, which records that refusal
+        // for robot_state.drive.last_refusal. The run thread limits it under
+        // the profile's acceleration and deadman rule.
+        let run = view.run.as_mut().ok_or("the robot has not loaded")?;
+        let (twist, halt) = drive_request(run, &request)?;
+        return run.drive(twist, halt);
+    }
     check(view, &action)?;
     match action {
-        RobotAction::Motion { .. } | RobotAction::SaveRecording { .. } => unreachable!("handled above"),
+        RobotAction::Motion { .. } | RobotAction::SaveRecording { .. } | RobotAction::Drive { .. } => unreachable!("handled above"),
         RobotAction::State | RobotAction::RobotState | RobotAction::Presets | RobotAction::OpenPreset { .. } | RobotAction::Controls | RobotAction::Activate { .. } | RobotAction::Camera { .. } => unreachable!("answered by `handle`"),
         RobotAction::Threads { .. } => return Err(THREADS_IN_APPLY.into()),
         RobotAction::Replay { file, path } => {
@@ -380,10 +447,18 @@ pub(super) fn controls(view: &RobotView, link: Option<usize>) -> Vec<(String, St
             out.push((format!("jog:{joint}:-"), format!("Jog {joint} servo target −{step} {unit}"), RobotAction::Jog { joint: joint.clone(), delta: -step }));
             out.push((format!("jog:{joint}:+"), format!("Jog {joint} servo target +{step} {unit}"), RobotAction::Jog { joint, delta: step }));
         }
+        let controlled = view.run.as_ref().and_then(|r| r.controlled());
+        if let Some(c) = controlled {
+            out.extend(drive_controls(&c.controlled.profile, c.controlled.resolved.deadman.timeout_s));
+        }
         if view.preset.is_some() {
             for (id, label, request) in motion_buttons() {
                 out.push((id.into(), label.into(), RobotAction::Motion { request }));
             }
+        }
+        // A preset's session and a controlled run's drive Session both record
+        // and replay (the same handlers as REST robot_save_recording / robot_replay).
+        if view.preset.is_some() || controlled.is_some() {
             out.push(("recording:save".into(), "Save recording".into(), RobotAction::SaveRecording { path: None, note: None }));
             if let Some(r) = view.run.as_ref() {
                 for l in r.recordings() {
@@ -392,10 +467,30 @@ pub(super) fn controls(view: &RobotView, link: Option<usize>) -> Vec<(String, St
             }
             out.push(("replay:cancel".into(), "Cancel replay".into(), RobotAction::CancelReplay));
             out.push(("replay:refresh".into(), "Refresh recordings".into(), RobotAction::RefreshRecordings));
+        }
+        if view.preset.is_some() {
             for (id, label, action) in gait_controls(view) {
                 out.push((id, label, RobotAction::Gait { action }));
             }
         }
+    }
+    out
+}
+/// A controlled robot's `system_ui` drive controls: forward, back and the
+/// two turns at full axis for one request (momentary: the deadman stops it
+/// `timeout_s` later), stop, and each of the profile's named actions.
+fn drive_controls(profile: &sim_domain_control::drive::profile::DriveProfile, timeout_s: f64) -> Vec<(String, String, RobotAction)> {
+    let axes = |forward: f64, yaw: f64| RobotAction::Drive { request: DriveRequest::Axes { forward, lateral: 0.0, yaw } };
+    let momentary = format!("(momentary, deadman {timeout_s} s)");
+    let mut out = vec![
+        ("drive:forward".to_string(), format!("Drive forward {momentary}"), axes(1.0, 0.0)),
+        ("drive:back".to_string(), format!("Drive back {momentary}"), axes(-1.0, 0.0)),
+        ("drive:left".to_string(), format!("Turn left {momentary}"), axes(0.0, 1.0)),
+        ("drive:right".to_string(), format!("Turn right {momentary}"), axes(0.0, -1.0)),
+        ("drive:stop".to_string(), "Stop driving".to_string(), RobotAction::Drive { request: DriveRequest::Stop }),
+    ];
+    for a in &profile.actions {
+        out.push((format!("drive:action:{}", a.name), format!("Drive action {}", a.name), RobotAction::Drive { request: DriveRequest::Action { name: a.name.clone() } }));
     }
     out
 }
@@ -548,6 +643,7 @@ pub(super) fn apply(
     mut registry: ResMut<DocumentRegistry>,
     closing: Option<Res<crate::app::close::CloseOwner>>,
     (mut threads, reveal, mut window): (ResMut<crate::robot::threads::RobotThreads>, Option<Res<crate::cad::threads::RevealThread>>, MessageWriter<Act<crate::app::switch::WindowAction>>),
+    (mut drive_input, bindings): (Option<ResMut<crate::robot::drive_input::DriveInput>>, Option<Res<crate::robot::drive_input::DriveBindings>>),
 ) {
     let (Some(mut view), Some(mut orbit)) = (view, orbit) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
@@ -619,18 +715,36 @@ pub(super) fn apply(
             }),
             _ => handle(&mut view, &mut orbit, &mut selection, &mut registry, action),
         };
+        // The inspector's drive line: the last drive request's refusal (any
+        // origin, a `system_ui` drive:* activation included: every drive:* id
+        // is a `RobotAction::Drive`), cleared by an accepted one.
+        let drive = match action {
+            RobotAction::Drive { .. } => true,
+            RobotAction::Activate { id, .. } => id.starts_with("drive:"),
+            _ => false,
+        };
+        if let (true, Some(d)) = (drive, drive_input.as_mut()) {
+            let error = result.as_ref().err().cloned();
+            if d.last_error != error {
+                d.last_error = error;
+            }
+        }
         match call.origin {
             Origin::Rest(_) => Outcome::Done(result.map(|answer| {
-                // `robot_state.cad_threads`: every answer that carries the state carries it.
+                // `robot_state.cad_threads`, and the device layer's `bindings` and
+                // `drive_input` (`with_drive_input`): every answer that carries the state carries them.
                 let cad_threads = || crate::robot::threads::state_json(&view, &registry, &threads);
+                let devices = |state: Value| view.with_drive_input(state, bindings.as_deref(), drive_input.as_deref());
                 match (answer, action) {
-                    (None, _) => view.state_with_threads(picked::link(&selection, &registry), cad_threads()),
+                    (None, _) => devices(view.state_with_threads(picked::link(&selection, &registry), cad_threads())),
                     (Some(mut answer), RobotAction::State) => {
                         answer["robot_state"]["cad_threads"] = cad_threads();
+                        answer["robot_state"] = devices(answer["robot_state"].take());
                         answer
                     }
                     (Some(mut answer), RobotAction::Controls) => {
                         answer["state"]["cad_threads"] = cad_threads();
+                        answer["state"] = devices(answer["state"].take());
                         answer
                     }
                     (Some(answer), _) => answer,
@@ -684,6 +798,8 @@ const SYNC_REMOTE_REFUSAL: &str = "live motor sync is streaming this run's targe
 fn moves_synced_motors(view: &RobotView, link: Option<usize>, action: &RobotAction) -> bool {
     match action {
         RobotAction::Motion { .. } | RobotAction::Jog { .. } | RobotAction::JogTo { .. } | RobotAction::Speed { .. } => true,
+        // Driving moves the run; a stop or a profile action (stop | halt) does not.
+        RobotAction::Drive { request } => matches!(request, DriveRequest::Axes { .. }),
         RobotAction::Run { action } => matches!(action, RunAction::Start | RunAction::Step),
         RobotAction::Activate { id, .. } => controls(view, link).into_iter().find(|(i, _, _)| i == id).is_some_and(|(_, _, a)| !matches!(a, RobotAction::Activate { .. }) && moves_synced_motors(view, link, &a)),
         _ => false,
@@ -698,11 +814,21 @@ mod tests;
 pub(super) use keys::{buttons, graph_key, motion_keys, overlay_keys, pick_link, planar_keys, speed_keys};
 
 /// Present: `/v1/robot_state` (with `cad_threads`), at most every 100 ms.
-pub(super) fn publish(rest: Option<ResMut<crate::rest::Rest>>, view: Res<RobotView>, selection: Res<Selection>, registry: Res<DocumentRegistry>, threads: Res<crate::robot::threads::RobotThreads>) {
+#[allow(clippy::too_many_arguments)]
+pub(super) fn publish(
+    rest: Option<ResMut<crate::rest::Rest>>,
+    view: Res<RobotView>,
+    selection: Res<Selection>,
+    registry: Res<DocumentRegistry>,
+    threads: Res<crate::robot::threads::RobotThreads>,
+    bindings: Option<Res<crate::robot::drive_input::DriveBindings>>,
+    drive_input: Option<Res<crate::robot::drive_input::DriveInput>>,
+) {
     let Some(mut rest) = rest else { return };
     if rest.0.snapshot_due() {
         let cad_threads = crate::robot::threads::state_json(&view, &registry, &threads);
-        rest.0.publish("robot_state", view.state_with_threads(picked::link(&selection, &registry), cad_threads));
+        let state = view.state_with_threads(picked::link(&selection, &registry), cad_threads);
+        rest.0.publish("robot_state", view.with_drive_input(state, bindings.as_deref(), drive_input.as_deref()));
     }
 }
 
@@ -730,6 +856,7 @@ pub(crate) mod wire {
         RobotPresets,
         RobotPreset { id: String },
         RobotInput { channels: Option<std::collections::BTreeMap<String, f64>>, key: Option<String> },
+        RobotDrive { forward: Option<f64>, lateral: Option<f64>, yaw: Option<f64>, action: Option<String>, stop: Option<bool> },
         RobotSaveRecording { path: Option<String>, note: Option<String> },
         RobotReplay { file: Option<String>, path: Option<String>, action: Option<String> },
         RobotGait { action: Option<String>, report: Option<String>, path: Option<String>, t: Option<f64>, scale: Option<f64> },

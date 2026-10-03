@@ -139,6 +139,7 @@ impl Section {
 }
 
 mod actions;
+pub mod drive_input;
 pub mod gait;
 pub mod graphs;
 pub mod hardware;
@@ -150,7 +151,7 @@ pub mod recording;
 pub mod run;
 pub mod source;
 pub mod stress;
-pub(crate) use actions::RobotAction;
+pub(crate) use actions::{DriveRequest, RobotAction};
 use actions::{check, check_stress, overlay_toggle};
 mod controls;
 mod inspector;
@@ -209,6 +210,7 @@ impl Plugin for RobotPlugin {
         hardware::build(app);
         panel_ui::add_field(app);
         threads::build(app);
+        drive_input::build(app);
         app.insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
             .init_resource::<RobotPanelUi>()
             .add_systems(OnEnter(ModeScope::Robot), setup)
@@ -225,7 +227,9 @@ impl Plugin for RobotPlugin {
                 (
                     // Keys and buttons write robot actions after REST's, as the old chain applied them.
                     // The gait path field and the comment composer first: a press that focuses one this frame already stops robot keys (`ui_kit::text::Typing`).
-                    (panel_ui::gait_path_input, threads::input, panel_ui::toggles, panel_ui::recorded_seek, actions::motion_keys, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons)
+                    // Preset motion keys and drive input never both act: `motion_keys` needs a preset with a
+                    // motion config, `drive_input::devices` a controlled run (drive profile).
+                    (panel_ui::gait_path_input, threads::input, panel_ui::toggles, panel_ui::recorded_seek, actions::motion_keys, drive_input::devices, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons)
                         .chain()
                         .in_set(crate::app::InputSet::Window),
                     actions::apply.in_set(RobotSet::Actions),
@@ -234,7 +238,7 @@ impl Plugin for RobotPlugin {
                     // ViewArea `view_area` sets, its place step frames the bounds `receive`
                     // and `planar_sync` write.
                     (watch.in_set(ViewerSet::SimSync), receive.in_set(ViewerSet::SimSync), stress_paint.in_set(ViewerSet::SimSync), apply_frames.in_set(RobotSet::Frames), planar_sync.in_set(ViewerSet::SimSync), scroll.in_set(ViewerSet::SimSync), view_area.in_set(ViewerSet::SimSync), highlight.in_set(ViewerSet::SimSync)).chain().before(CameraSet::Viewport),
-                    (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, recorded_panel, gait_panel, panel_ui::gait_path_draw, graph_dock, draw, actions::publish).chain().in_set(ViewerSet::Present),
+                    (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, controls::drive_panel, recorded_panel, gait_panel, panel_ui::gait_path_draw, graph_dock, draw, actions::publish).chain().in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Robot)),
             );

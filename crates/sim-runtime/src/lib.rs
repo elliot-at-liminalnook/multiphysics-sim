@@ -31,6 +31,8 @@ pub mod numerical_validation;
 pub mod search_comparison;
 pub mod contact_implicit;
 pub mod configuration_inspection;
+/// A model's bound external controller and drive profile (`<stem>.controller.json`).
+pub mod controller_binding;
 pub mod kinematic_mirror;
 pub mod system_inspection;
 pub mod system_session;

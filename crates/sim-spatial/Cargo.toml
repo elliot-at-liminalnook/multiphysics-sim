@@ -22,13 +22,14 @@ serde.workspace = true
 # (ui_kit::Kit::slider on bevy_ui_widgets::Slider, native-viewer.md "UI kit (2026-09-30)");
 # DefaultPlugins adds UiWidgetsPlugins with it. bevy_feathers is not used: its palette and
 # controls do not match the kit's builder look.
-bevy = { version = "=0.19.1", default-features = false, features = ["std", "async_executor", "multi_threaded", "bevy_asset", "bevy_log", "bevy_state", "bevy_window", "bevy_winit", "x11", "keyboard", "mouse", "bevy_render", "bevy_core_pipeline", "bevy_camera", "bevy_light", "bevy_mesh", "bevy_image", "bevy_color", "bevy_shader", "bevy_material", "bevy_pbr", "bevy_gizmos", "bevy_gizmos_render", "bevy_text", "bevy_ui", "bevy_ui_render", "bevy_ui_widgets", "bevy_picking", "mesh_picking", "ui_picking", "default_font", "png", "jpeg"] }
+bevy = { version = "=0.19.1", default-features = false, features = ["std", "async_executor", "multi_threaded", "bevy_asset", "bevy_log", "bevy_state", "bevy_window", "bevy_winit", "x11", "keyboard", "mouse", "bevy_gilrs", "bevy_render", "bevy_core_pipeline", "bevy_camera", "bevy_light", "bevy_mesh", "bevy_image", "bevy_color", "bevy_shader", "bevy_material", "bevy_pbr", "bevy_gizmos", "bevy_gizmos_render", "bevy_text", "bevy_ui", "bevy_ui_render", "bevy_ui_widgets", "bevy_picking", "mesh_picking", "ui_picking", "default_font", "png", "jpeg"] }
 sim-inspect = { path = "../sim-inspect" }
 sim-diagram = { path = "../sim-diagram" }
 sim-core = { path = "../sim-core" }
 sim-compile = { path = "../sim-compile" }
 sim-runtime = { path = "../sim-runtime" }
 sim-domain-robot = { path = "../sim-domain-robot" }
+sim-domain-control = { path = "../sim-domain-control" }
 # Phenomena mode's exhibits and robot mode's planar (v2) files run through
 # the shared sim_phenomena paths (exhibits::all, scenarios::cad_robot).
 sim-phenomena = { path = "../sim-phenomena" }

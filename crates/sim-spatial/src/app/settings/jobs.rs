@@ -5,6 +5,8 @@ use std::{
     path::{Path, PathBuf},
 };
 pub(super) const SCHEMA: u32 = 1;
+/// The preferences group key of the drive bindings (`robot::drive_input::bindings`).
+pub(super) const DRIVE_BINDINGS: &str = "drive_bindings";
 #[derive(Clone)]
 pub(super) struct Paths {
     pub unified: Option<PathBuf>,
@@ -31,6 +33,8 @@ pub(super) struct Loaded {
     pub recents: Recents,
     pub hardware: Settings,
     pub cad: CadDefaults,
+    /// The stored `drive_bindings` group (None: absent, the defaults apply).
+    pub drive_bindings: Option<BindingsFile>,
     pub migrated: bool,
     pub previous: Option<Value>,
 }
@@ -149,11 +153,19 @@ pub(super) fn load(paths: &Paths) -> Result<Loaded, String> {
     )
     .map_err(|e| format!("cad: {e}; saves blocked"))?;
     cad.validate()?;
+    // Absent: the committed defaults, not written until the user sets them.
+    // Present: the schema, shape and every field validated (named), or the
+    // whole file is protected, as a malformed cad group is.
+    let drive_bindings = match group.get(DRIVE_BINDINGS) {
+        None | Some(Value::Null) => None,
+        Some(v) => Some(BindingsFile::from_value(v).map_err(|e| format!("{e}; saves blocked"))?),
+    };
     Ok(Loaded {
         raw,
         recents: r,
         hardware: h,
         cad,
+        drive_bindings,
         migrated,
         previous,
     })
@@ -374,6 +386,26 @@ pub(super) fn snapshot(
     validate_archive(&result)?;
     result["schema"] = SCHEMA.into();
     Ok(result)
+}
+/// The drive bindings in a snapshot: stored whole when set (the bindings
+/// refuse unknown fields, so there is no unknown data in the group to
+/// preserve), removed when reset to the defaults. A snapshot without stored
+/// bindings keeps no group at all, so later default changes reach it.
+pub(super) fn with_drive_bindings(mut snapshot: Value, bindings: Option<&BindingsFile>) -> Result<Value, String> {
+    let group = snapshot
+        .get_mut(PreferenceGroup::settings_group_name())
+        .and_then(Value::as_object_mut)
+        .ok_or("preferences group missing from the snapshot")?;
+    match bindings {
+        Some(b) => {
+            b.validate()?;
+            group.insert(DRIVE_BINDINGS.into(), serde_json::to_value(b).map_err(|e| e.to_string())?);
+        }
+        None => {
+            group.remove(DRIVE_BINDINGS);
+        }
+    }
+    Ok(snapshot)
 }
 /// Normalize in an Io job. Missing paths remain useful recents; other failures
 /// cannot silently drop an accepted record or acknowledge a relative fallback.

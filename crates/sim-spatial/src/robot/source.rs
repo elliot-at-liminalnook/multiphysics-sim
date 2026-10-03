@@ -11,6 +11,14 @@
 //! same bytes parsed. A failed attempt keeps the loaded hash, stat and
 //! model; the stat of the failed attempt is remembered, so the next write
 //! (a changed stat) retries.
+//!
+//! A physical file's controller binding (`<stem>.controller.json`,
+//! `controller_binding::binding_path_for`) is loaded by the same worker
+//! (`loader::load_controller`) and re-read on every check: the binding, its
+//! drive profile and its script are stat'ed with the file, so a change to any
+//! of them is a watch check too, and the outcome is `loaded` when the model's
+//! bytes or the controller's fingerprint (its identity, or its load error)
+//! changed.
 use crate::robot::{Loaded, load_file_bytes};
 use crate::robot::planar::PlanarLoaded;
 use serde::{Deserialize, Serialize};
@@ -20,7 +28,7 @@ use std::time::{Duration, Instant, SystemTime};
 
 /// How often the UI thread stats the opened file.
 pub const POLL: Duration = Duration::from_millis(500);
-pub const RULE: &str = "FILE mode only: the UI thread stats the opened file (length, mtime) every 0.5 s; a changed stat, or a manual Reload, reads and sha256-hashes the whole file on a worker thread. Identical bytes (a touch, an atomic rewrite with the same content) are `unchanged` and nothing is replaced. Different bytes go through the same loader as the first open: the version rule (sim_domain_robot::model::simrobot_version: the `version` field, 2 when absent) sends version >= 3 to PhysicalModel::parse, triangulation and CAD link status, and a planar v2 file to sim-phenomena's CadModel from the same bytes (run by the shared CadRobot planar build, cad_robot::build_planar, on the planar run thread); only a successful parse is applied (`loaded`), and a reload may switch between the two (the old run is dropped). A read or parse error (`failed`) keeps the last good model, its hash and its run; the next change on disk retries. Presets are not watched.";
+pub const RULE: &str = "FILE mode only: the UI thread stats the opened file (length, mtime) every 0.5 s, and the controller binding beside it with the drive profile and script it names and the simloop library's .py files (the paths found by the last check); a changed stat, or a manual Reload, reads and sha256-hashes the whole file on a worker thread. Identical bytes (a touch, an atomic rewrite with the same content) with the same controller fingerprint (no binding; the binding's load error; or its identity: script, script sha256, simloop library sha256, args, profile path and sha256) are `unchanged` and nothing is replaced; a changed fingerprint reloads the model with the new binding (a binding that does not load fails the run naming it, never falling back to the hold run). Different bytes go through the same loader as the first open: the version rule (sim_domain_robot::model::simrobot_version: the `version` field, 2 when absent) sends version >= 3 to PhysicalModel::parse, triangulation and CAD link status, and a planar v2 file to sim-phenomena's CadModel from the same bytes (run by the shared CadRobot planar build, cad_robot::build_planar, on the planar run thread); only a successful parse is applied (`loaded`), and a reload may switch between the two (the old run is dropped). A read or parse error (`failed`) keeps the last good model, its hash and its run; the next change on disk retries. Presets are not watched.";
 
 /// What started a load of the source file.
 #[derive(Clone, Copy, Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -43,6 +51,55 @@ pub struct Stat {
 /// `None` when the file cannot be stat'ed (missing, unreadable directory).
 pub fn stat(path: &Path) -> Option<Stat> {
     std::fs::metadata(path).ok().map(|m| Stat { len: m.len(), modified: m.modified().ok() })
+}
+
+/// The controller fingerprint of a file with no binding (and of a planar file).
+const NO_BINDING: &str = "no controller binding";
+/// What decides whether a controller binding changed: none, its load error, or its identity.
+fn fingerprint(controlled: &Option<Result<std::sync::Arc<crate::robot::run::ControlledRun>, String>>) -> String {
+    match controlled {
+        None => NO_BINDING.into(),
+        Some(Err(e)) => format!("error: {e}"),
+        Some(Ok(run)) => format!("identity: {}", serde_json::to_string(&run.controlled.identity).unwrap_or_default()),
+    }
+}
+/// The files the watch stats besides the model: the binding beside it and,
+/// when the binding parses as JSON, the drive profile and script it names
+/// (relative to the binding), and the `.py` files of the simloop library
+/// the script imports (`<clients>/python/simloop`, whose hash the controller
+/// identity carries: `sim_runtime::session::library_sha256`). Cheap: one
+/// small read and a directory listing, no validation. Runs on the check's worker.
+fn watched_paths(path: &Path) -> Vec<PathBuf> {
+    let binding = sim_runtime::controller_binding::binding_path_for(path);
+    let mut out = vec![binding.clone()];
+    let dir = binding.parent().map(Path::to_path_buf).unwrap_or_default();
+    if let Some(v) = std::fs::read(&binding).ok().and_then(|b| serde_json::from_slice::<Value>(&b).ok()) {
+        if let Some(p) = v.get("drive_profile").and_then(Value::as_str) {
+            out.push(dir.join(p));
+        }
+        if let Some(script) = v.get("controller").and_then(|c| c.get("script")).and_then(Value::as_str).map(|s| dir.join(s)) {
+            // The library as `controller_binding::load` finds it: the nearest ancestor named `clients`.
+            let library = script.canonicalize().ok().and_then(|s| s.ancestors().skip(1).find(|a| a.file_name().is_some_and(|n| n == "clients")).map(|c| c.join(sim_runtime::session::SIMLOOP_LIBRARY)));
+            out.push(script);
+            if let Some(library) = library {
+                python_files(&library, &mut out);
+            }
+        }
+    }
+    out
+}
+/// Every `.py` file under `dir` (recursively; sorted for a stable list).
+fn python_files(dir: &Path, out: &mut Vec<PathBuf>) {
+    let Ok(entries) = std::fs::read_dir(dir) else { return };
+    let mut paths: Vec<PathBuf> = entries.filter_map(|e| e.ok().map(|e| e.path())).collect();
+    paths.sort();
+    for p in paths {
+        if p.is_dir() {
+            python_files(&p, out);
+        } else if p.extension().is_some_and(|x| x == "py") {
+            out.push(p);
+        }
+    }
 }
 
 /// A loaded file: a physical (v3+) model, or a planar (v2) summary.
@@ -77,31 +134,60 @@ pub struct Checked {
     /// The results file beside the model (`robot_stress`), read by the same worker.
     pub results: Option<crate::robot::stress::StressResults>,
     pub seconds: f64,
+    /// The controller fingerprint of what was read (None when the read failed).
+    pub controller: Option<String>,
+    /// The binding, profile and script paths with their stats, taken before they were read.
+    pub watched: Vec<(PathBuf, Option<Stat>)>,
 }
 
 /// Stat, read, hash, compare with `loaded_hash` and (only when different)
 /// parse through the shared loader; then read the results file beside it
-/// (`robot::stress::read`). Called on a worker thread.
+/// (`robot::stress::read`). Called on a worker thread. The controller
+/// fingerprint is not compared ([`check_controlled`] does).
 pub fn check(path: &Path, loaded_hash: Option<&str>) -> Checked {
+    check_controlled(path, loaded_hash, None)
+}
+/// [`check`] that also loads the controller binding beside a physical file
+/// (`loader::load_controller`) and compares its fingerprint with
+/// `loaded_controller` (the displayed model's): the same bytes are
+/// `unchanged` only when the fingerprint is the same too. A file with no
+/// binding beside it whose loaded fingerprint was "none" is not re-parsed.
+pub fn check_controlled(path: &Path, loaded_hash: Option<&str>, loaded_controller: Option<&str>) -> Checked {
     let started = Instant::now();
     let stat = stat(path);
-    let (hash, outcome) = match std::fs::read(path) {
-        Err(e) => (None, Outcome::Failed(format!("{}: {e}", path.display()))),
+    let watched: Vec<(PathBuf, Option<Stat>)> = watched_paths(path).into_iter().map(|p| {
+        let s = self::stat(&p);
+        (p, s)
+    }).collect();
+    let binding_absent = watched.first().is_some_and(|(_, s)| s.is_none());
+    let (hash, outcome, controller) = match std::fs::read(path) {
+        Err(e) => (None, Outcome::Failed(format!("{}: {e}", path.display())), None),
         Ok(bytes) => {
             let hash = sim_domain_robot::cad_link::sha256_hex(&bytes);
-            let outcome = if loaded_hash == Some(hash.as_str()) {
-                Outcome::Unchanged
+            let same_bytes = loaded_hash == Some(hash.as_str());
+            let (outcome, controller) = if same_bytes && (loaded_controller.is_none() || (binding_absent && loaded_controller == Some(NO_BINDING))) {
+                (Outcome::Unchanged, loaded_controller.map(str::to_string))
             } else {
                 match load_file_bytes(path, &bytes) {
-                    Ok(l) => Outcome::Loaded(l),
-                    Err(e) => Outcome::Failed(e),
+                    Ok(FileModel::Physical(mut l)) => {
+                        l.controlled = super::loader::load_controller(path, &l.model);
+                        let fp = fingerprint(&l.controlled);
+                        if same_bytes && loaded_controller == Some(fp.as_str()) { (Outcome::Unchanged, Some(fp)) } else { (Outcome::Loaded(FileModel::Physical(l)), Some(fp)) }
+                    }
+                    // A planar (v2) file has no controller binding.
+                    Ok(planar) if same_bytes => {
+                        drop(planar);
+                        (Outcome::Unchanged, Some(NO_BINDING.to_string()))
+                    }
+                    Ok(planar) => (Outcome::Loaded(planar), Some(NO_BINDING.to_string())),
+                    Err(e) => (Outcome::Failed(e), None),
                 }
             };
-            (Some(hash), outcome)
+            (Some(hash), outcome, controller)
         }
     };
     let results = Some(crate::robot::stress::read(path));
-    Checked { stat, hash, outcome, results, seconds: started.elapsed().as_secs_f64() }
+    Checked { stat, hash, outcome, results, seconds: started.elapsed().as_secs_f64(), controller, watched }
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -129,14 +215,18 @@ pub struct SourceWatch {
     pub run_reset: Option<bool>,
     /// The error of the latest check while the file on disk does not load (the displayed model is the last good one).
     pub failing: Option<String>,
+    /// The displayed model's controller fingerprint (none, the binding's load error, or its identity).
+    pub controller: Option<String>,
     stat: Option<Stat>,
+    /// The binding, drive profile and script stats from the last check (polled with the file).
+    watched: Vec<(PathBuf, Option<Stat>)>,
     next_poll: Instant,
     in_flight: Option<(Trigger, crate::jobs::Job<Checked>)>,
 }
 impl SourceWatch {
     /// Starts the first load (trigger `open`) on a worker.
     pub fn open(path: PathBuf) -> Self {
-        let mut w = Self { path, hash: None, loaded_at: None, reload_count: 0, unchanged_checks: 0, last: None, run_reset: None, failing: None, stat: None, next_poll: Instant::now() + POLL, in_flight: None };
+        let mut w = Self { path, hash: None, loaded_at: None, reload_count: 0, unchanged_checks: 0, last: None, run_reset: None, failing: None, controller: None, stat: None, watched: Vec::new(), next_poll: Instant::now() + POLL, in_flight: None };
         w.spawn(Trigger::Open);
         w
     }
@@ -158,9 +248,11 @@ impl SourceWatch {
         Ok(())
     }
     fn spawn(&mut self, trigger: Trigger) {
-        let (path, hash) = (self.path.clone(), self.hash.clone());
-        // Read, hash, parse and triangulate: CPU work.
-        let job = crate::jobs::Job::spawn(crate::jobs::Pool::Compute, 0, format!("{}: the reload worker", self.path.display()), move |_| Ok(check(&path, hash.as_deref())));
+        let (path, hash, controller) = (self.path.clone(), self.hash.clone(), self.controller.clone());
+        // Read, hash, parse and triangulate, and load the controller binding: CPU and file work.
+        // A first open has no fingerprint yet; "none" never matches, so the binding is always read then.
+        let controller = controller.or_else(|| Some("(not loaded yet)".into()));
+        let job = crate::jobs::Job::spawn(crate::jobs::Pool::Compute, 0, format!("{}: the reload worker", self.path.display()), move |_| Ok(check_controlled(&path, hash.as_deref(), controller.as_deref())));
         self.in_flight = Some((trigger, job));
     }
     /// The UI thread's poll: at most every [`POLL`], a metadata stat.
@@ -171,7 +263,7 @@ impl SourceWatch {
             return false;
         }
         self.next_poll = now + POLL;
-        stat(&self.path) != self.stat
+        stat(&self.path) != self.stat || self.watched.iter().any(|(p, s)| stat(p) != *s)
     }
     /// The first load's outcome without consuming it (a mode switch waits
     /// for it): None while in flight; a success stays queued for `take`.
@@ -188,7 +280,7 @@ impl SourceWatch {
         let (trigger, job) = self.in_flight.as_ref()?;
         let checked = match job.poll()? {
             Ok(c) => c,
-            Err(e) => Checked { stat: None, hash: None, outcome: Outcome::Failed(e), results: None, seconds: 0.0 },
+            Err(e) => Checked { stat: None, hash: None, outcome: Outcome::Failed(e), results: None, seconds: 0.0, controller: None, watched: Vec::new() },
         };
         let trigger = *trigger;
         self.in_flight = None;
@@ -198,6 +290,8 @@ impl SourceWatch {
     /// A failure keeps `hash`, so different content later is still a change.
     pub fn settle(&mut self, trigger: Trigger, checked: Checked, now_utc: String) -> Option<FileModel> {
         self.stat = checked.stat;
+        // Every outcome records what it stat'ed, so an unchanged or failed check is not polled again until those files change.
+        self.watched = checked.watched;
         let error = match &checked.outcome {
             Outcome::Failed(e) => Some(e.clone()),
             _ => None,
@@ -219,6 +313,7 @@ impl SourceWatch {
             Outcome::Loaded(l) => {
                 self.failing = None;
                 self.hash = checked.hash;
+                self.controller = checked.controller;
                 self.loaded_at = Some(now_utc);
                 if trigger != Trigger::Open {
                     self.reload_count += 1;
@@ -231,6 +326,7 @@ impl SourceWatch {
     pub fn json(&self, watching: bool) -> Value {
         json!({"path": self.path, "sha256": self.hash, "loaded_at": self.loaded_at, "reload_count": self.reload_count, "unchanged_checks": self.unchanged_checks,
             "watching": watching, "poll_s": POLL.as_secs_f64(), "in_flight": self.busy(), "last_reload": self.last, "run_reset": self.run_reset,
+            "controller_fingerprint": self.controller, "watched_with_file": self.watched.iter().map(|(p, _)| p).collect::<Vec<_>>(),
             "showing_last_good": self.failing.is_some() && self.hash.is_some(), "failing_error": self.failing, "rule": RULE})
     }
 }

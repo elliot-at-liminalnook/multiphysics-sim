@@ -234,6 +234,12 @@ impl EmbeddedSession {
         seed: u64,
         capture: CaptureMode,
     ) -> Result<Self, String> {
+        // Before `Session::new`, which would start the process: the embedded
+        // policy runs Rhai in-step and has no frame protocol to speak.
+        if let Some(external) = scene.controller.as_ref().and_then(|p| p.external.as_ref()) {
+            return Err(format!("embedded sessions run Rhai controllers only; refusing external controller ({}) {}",
+                external.language, external.script.display()));
+        }
         let declared_power = scene.robot.actuator_profiles.as_ref().and_then(|p| p.power.as_ref()).is_some();
         let selected_power = config.motors.as_ref().and_then(|m|m.power.as_ref()).is_some();
         if declared_power != selected_power {

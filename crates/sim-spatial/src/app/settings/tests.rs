@@ -519,3 +519,59 @@ fn duplicate_coordinates_consume_rows_once_and_archive_removed_later_metadata() 
         out
     );
 }
+
+/// Drive bindings (`robot::drive_input`): absent means the defaults; set
+/// bindings round-trip whole; a reset removes the group again.
+#[test]
+fn drive_bindings_round_trip_and_reset_removes_the_group() {
+    use crate::robot::drive_input::BindingsFile;
+    let p = paths("drive-bindings");
+    let loaded = jobs::load(&p).unwrap();
+    assert_eq!(loaded.drive_bindings, None);
+    let mut b = BindingsFile::default();
+    b.gamepad.deadzone = 0.2;
+    let base = jobs::snapshot(&loaded.raw, &loaded.recents, &loaded.hardware, &loaded.cad).unwrap();
+    let next = jobs::with_drive_bindings(base, Some(&b)).unwrap();
+    publication::publish_snapshot(p.unified.as_ref().unwrap(), &next, 1).unwrap();
+    let again = jobs::load(&p).unwrap();
+    assert_eq!(again.drive_bindings, Some(b));
+    let base = jobs::snapshot(&again.raw, &again.recents, &again.hardware, &again.cad).unwrap();
+    assert!(base["preferences"].get("drive_bindings").is_some(), "an unchanged snapshot keeps the stored group");
+    let reset = jobs::with_drive_bindings(base, None).unwrap();
+    assert!(reset["preferences"].get("drive_bindings").is_none());
+}
+
+/// A stored binding that fails validation protects the whole file, naming the field.
+#[test]
+fn malformed_drive_bindings_block_loading_naming_the_field() {
+    use crate::robot::drive_input::BindingsFile;
+    let p = paths("drive-bindings-bad");
+    let loaded = jobs::load(&p).unwrap();
+    let mut next = jobs::snapshot(&loaded.raw, &loaded.recents, &loaded.hardware, &loaded.cad).unwrap();
+    let mut bad = serde_json::to_value(BindingsFile::default()).unwrap();
+    bad["keyboard"]["axes"][1]["key"] = json!("KeyNope");
+    next["preferences"]["drive_bindings"] = bad;
+    publication::publish_snapshot(p.unified.as_ref().unwrap(), &next, 1).unwrap();
+    let e = jobs::load(&p).err().unwrap();
+    assert!(e.contains("drive_bindings.keyboard.axes[1].key") && e.contains("saves blocked"), "{e}");
+}
+
+/// Bindings set before the load lands own their group against it, and the
+/// owner is dirty so they are written.
+#[test]
+fn drive_bindings_set_before_the_load_survive_it() {
+    use crate::robot::drive_input::BindingsFile;
+    let p = paths("drive-bindings-claim");
+    let mut owner = SettingsOwner::default();
+    let mut b = BindingsFile::default();
+    b.gamepad.deadzone = 0.3;
+    owner.set_drive_bindings(Some(b.clone())).unwrap();
+    plugin::land_load(&mut owner, Ok(jobs::load(&p).unwrap()));
+    assert_eq!(owner.drive_bindings, Some(b));
+    assert!(owner.dirty());
+    // A refused value changes nothing.
+    let mut bad = BindingsFile::default();
+    bad.gamepad.deadzone = 1.0;
+    assert!(owner.set_drive_bindings(Some(bad)).unwrap_err().contains("drive_bindings.gamepad.deadzone"));
+    assert_eq!(owner.drive_bindings.as_ref().map(|b| b.gamepad.deadzone), Some(0.3));
+}

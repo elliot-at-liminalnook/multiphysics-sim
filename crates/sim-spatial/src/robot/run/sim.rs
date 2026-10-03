@@ -1,13 +1,19 @@
-//! The simulation the run thread owns: a PhysicalRobot, an EmbeddedEnvironment or an EmbeddedSession.
+//! The simulation the run thread owns: a PhysicalRobot, an EmbeddedEnvironment, an EmbeddedSession or a drive Session.
 use serde_json::{Value, json};
+use sim_domain_control::drive::kinematics::BodyTwist;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use crate::robot::motion;
 use crate::robot::preset::PresetRun;
-use crate::robot::recording::Snapshot;
+use crate::robot::recording::{self, Snapshot};
+use super::controlled::{ControlledRun, DriveStatus, TwistState, check_inputs};
 use super::frames::{environment_names, frame, preset_frame};
 use super::protocol::{Drive, Source};
 use super::replay::ReplayWork;
 use super::{CHUNK_S, Frame, OverlayFlags};
+
+/// Why a drive session refuses jogs, motion requests and held inputs.
+pub(super) const OWNS_TARGETS: &str = "the external controller owns the wheel targets";
 
 /// The simulation the run thread owns.
 pub(super) enum Sim {
@@ -16,6 +22,9 @@ pub(super) enum Sim {
     /// `names`: the session's coordinate names, for the frames' named motor targets.
     Environment { env: sim_runtime::environment::EmbeddedEnvironment, held: Vec<f64>, run: Arc<PresetRun>, drive: Arc<Drive>, names: Arc<Vec<String>> },
     Session { session: sim_runtime::embedded::EmbeddedSession, run: Arc<PresetRun>, drive: Arc<Drive>, names: Arc<Vec<String>> },
+    /// A `--robot FILE` with its controller binding: the shared Session with
+    /// the external controller on the seam, fed one twist action per period.
+    Controlled { session: sim_runtime::session::Session, drive: TwistState, run: Arc<ControlledRun> },
 }
 impl Sim {
     pub(super) fn build(source: &Source, registry: &mut Option<sim_core::BehaviorRegistry>) -> Result<Sim, String> {
@@ -42,6 +51,15 @@ impl Sim {
                     Ok(Sim::Session { session, run: run.clone(), drive, names })
                 }
             },
+            // Session::new starts the controller program (sim_couple::python) and
+            // attaches it on the seam; this runs on the run thread (worker::build).
+            Source::Controlled(run) => {
+                let session = sim_runtime::session::Session::new(run.scene.clone(), run.seed)?;
+                check_inputs(&session.inputs)?;
+                Ok(Sim::Controlled { session, drive: TwistState::default(), run: run.clone() })
+            }
+            // Never a fallback hold run: the binding's error is the build's.
+            Source::Unbound { error, .. } => Err(error.clone()),
         }
     }
     pub(super) fn time(&self) -> f64 {
@@ -49,6 +67,7 @@ impl Sim {
             Sim::Robot(r) => r.time(),
             Sim::Environment { env, run, .. } => env.transition().completed_steps as f64 * run.config.step_s,
             Sim::Session { session, run, .. } => session.completed_steps() as f64 * run.config.step_s,
+            Sim::Controlled { session, .. } => session.robot.time(),
         }
     }
     /// Advances exactly one chunk: one action packet for a preset, which
@@ -68,6 +87,42 @@ impl Sim {
                 }
                 session.advance(run.chunk_steps())
             }
+            // One seam period: the shared limiter and deadman on sim time, then Session::step.
+            // Computed on a copy and committed only when the step ran, so a
+            // failed step leaves the status describing the last period that did.
+            Sim::Controlled { session, drive, run } => {
+                let now = session.robot.time();
+                let mut next = *drive;
+                let action = next.advance(now, session.scene.period_s, &run.limits(), &run.deadman())?;
+                session.step(&action)?;
+                *drive = next;
+                Ok(())
+            }
+        }
+    }
+    /// A drive session's fresh request at the current sim time (`Command::Twist`).
+    pub(super) fn twist(&mut self, request: BodyTwist, halt: bool) -> Result<DriveStatus, String> {
+        match self {
+            Sim::Controlled { session, drive, run } => {
+                let now = session.robot.time();
+                drive.request(request, halt, now, &run.limits())?;
+                Ok(drive.status(now))
+            }
+            _ => Err("drive requests are for a --robot FILE with a controller binding".into()),
+        }
+    }
+    /// A drive replay ended (done, failed or cancelled): its recorded requests
+    /// stop governing the session (`TwistState::replay_ended`). Other kinds: nothing.
+    pub(super) fn end_drive_replay(&mut self) {
+        if let Sim::Controlled { session, drive, run } = self {
+            drive.replay_ended(session.robot.time(), &run.deadman());
+        }
+    }
+    /// A drive session's status now (None for other kinds).
+    pub(super) fn drive_status(&self) -> Option<DriveStatus> {
+        match self {
+            Sim::Controlled { session, drive, .. } => Some(drive.status(session.robot.time())),
+            _ => None,
         }
     }
     /// Sets the motion channels of the held action, through the session's own
@@ -76,6 +131,7 @@ impl Sim {
     pub(super) fn set_motion(&mut self, values: [f64; 3]) -> Result<(), String> {
         let (motion, current) = match self {
             Sim::Robot(_) => return Err("motion requests are for presets".into()),
+            Sim::Controlled { .. } => return Err(format!("motion requests are refused: {OWNS_TARGETS}; send drive requests")),
             Sim::Environment { held, drive, .. } => (drive.motion.as_ref(), held.clone()),
             Sim::Session { session, drive, .. } => (drive.motion.as_ref(), session.input_values().to_vec()),
         };
@@ -105,6 +161,7 @@ impl Sim {
             }
             Sim::Session { session, .. } => session.set_inputs(&action)?,
             Sim::Robot(_) => return Err("inputs are for presets".into()),
+            Sim::Controlled { .. } => return Err(format!("held inputs are refused: {OWNS_TARGETS}; send drive requests")),
         }
         Ok(())
     }
@@ -114,6 +171,8 @@ impl Sim {
             Sim::Robot(_) => None,
             Sim::Environment { env, .. } => Some(env.transition().completed_steps as u64),
             Sim::Session { session, .. } => Some(session.completed_steps() as u64),
+            // Seam periods stepped (one recorded action each).
+            Sim::Controlled { drive, .. } => Some(drive.periods),
         }
     }
     /// One bounded replay chunk: the next returned action through
@@ -134,20 +193,48 @@ impl Sim {
                 session.advance(n)?;
                 Ok(n as u64)
             }
+            // One recorded action per chunk (one seam period), exactly as recorded.
+            (Sim::Controlled { session, drive, .. }, ReplayWork::Drive(queue)) => {
+                let action = queue.front().ok_or("no pending replay action")?.clone();
+                // Stamped at the period's start, as a live request is (TwistState::replayed).
+                let start = session.robot.time();
+                session.step(&action)?;
+                drive.replayed(&action, start);
+                queue.pop_front();
+                Ok(1)
+            }
             _ => Err("replay work does not match the simulation kind".into()),
         }
     }
-    /// The shared recording, as the browser saves it for this preset kind.
-    pub(super) fn snapshot(&self) -> Result<(Snapshot, &Arc<PresetRun>), String> {
-        match self {
-            Sim::Robot(_) => Err("`--robot FILE` runs PhysicalRobot, which keeps no recording".into()),
-            Sim::Environment { env, run, .. } => Ok((Snapshot::Environment(env.episode_recording()), run)),
-            Sim::Session { session, run, .. } => Ok((Snapshot::Session(session.recording()), run)),
-        }
+    /// The shared recording (as the browser saves it for a preset kind; the
+    /// drive Session's own `recording()` for a controlled file), its sidecar
+    /// and the root the writer checks the target against.
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn save(&self, target: &Path, note: Option<&str>, unix_ms: u128, generation: u64, chunks: u64, last: Option<Value>) -> Result<(Snapshot, Value, PathBuf), String> {
+        let (snapshot, meta, root) = match self {
+            Sim::Robot(_) => return Err("`--robot FILE` runs PhysicalRobot, which keeps no recording (a file with a controller binding records its drive session)".into()),
+            Sim::Environment { env, run, .. } => {
+                let s = Snapshot::Environment(env.episode_recording());
+                let meta = recording::meta(&s, run, target, note, unix_ms, generation, chunks, last);
+                (s, meta, run.root.clone())
+            }
+            Sim::Session { session, run, .. } => {
+                let s = Snapshot::Session(session.recording());
+                let meta = recording::meta(&s, run, target, note, unix_ms, generation, chunks, last);
+                (s, meta, run.root.clone())
+            }
+            Sim::Controlled { session, run, .. } => {
+                let root = run.root.clone().map_err(|e| format!("drive recordings resolve against the workspace root: {e}"))?;
+                let s = Snapshot::Drive { recording: session.recording(), failure: session.frame().error };
+                let meta = recording::drive_meta(&s, run, target, note, unix_ms, generation, chunks, last);
+                (s, meta, root)
+            }
+        };
+        Ok((snapshot, meta, root))
     }
     pub(super) fn drive(&self) -> Option<Arc<Drive>> {
         match self {
-            Sim::Robot(_) => None,
+            Sim::Robot(_) | Sim::Controlled { .. } => None,
             Sim::Environment { drive, .. } | Sim::Session { drive, .. } => Some(drive.clone()),
         }
     }
@@ -172,6 +259,12 @@ impl Sim {
                 json!({"kind": "horizon", "terminated": false, "truncated": true, "termination_reasons": [], "completed_steps": n,
                     "message": format!("horizon reached at t = {:.3} s: {n} of {} steps", n as f64 * run.config.step_s, run.config.steps)})
             }),
+            // Session::step refuses past duration_s (controller_binding::DRIVE_DURATION_S).
+            Sim::Controlled { session, drive, .. } => (session.robot.time() >= session.scene.duration_s - 1e-10).then(|| {
+                let t = session.robot.time();
+                json!({"kind": "horizon", "terminated": false, "truncated": true, "termination_reasons": [], "completed_steps": drive.periods,
+                    "message": format!("drive session horizon reached at t = {t:.3} s: {} periods of {} s; a drive session lasts controller_binding::DRIVE_DURATION_S = {} s of simulated time; Reset starts a new session", drive.periods, session.scene.period_s, session.scene.duration_s)})
+            }),
         }
     }
     pub(super) fn frame(&self, links: &[String], generation: u64, steps: u64, flags: OverlayFlags) -> Result<Frame, String> {
@@ -179,6 +272,13 @@ impl Sim {
             Sim::Robot(r) => Ok(frame(r, generation, steps, flags)),
             Sim::Environment { env, run, held, names, .. } => preset_frame(&env.frame()?, links, generation, steps, run.config.step_s, held, names),
             Sim::Session { session, run, names, .. } => preset_frame(&session.interactive_frame()?, links, generation, steps, run.config.step_s, session.input_values(), names),
+            // PhysicalRobot's own frame (with overlays), plus the action last sent and the periods stepped.
+            Sim::Controlled { session, drive, .. } => {
+                let mut f = frame(&session.robot, generation, steps, flags);
+                f.inputs = drive.sent.to_vec();
+                f.completed_steps = Some(drive.periods);
+                Ok(f)
+            }
         }
     }
 }

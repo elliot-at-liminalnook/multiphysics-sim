@@ -23,11 +23,14 @@ fn run_fpga_bench_input(
     {
         return Err("FPGA image identity changed".into());
     }
+    let acquisition_source = super::provenance::retain(out)?;
     // Save exact sources before motion; later workspace edits must not erase them.
     fs::write(
         out.join("host-source.rs.txt"),
         include_bytes!("hx_fpga.rs.inc"),
     )?;
+    // Compatibility snapshot covers acquisition.rs only; source-manifest.json
+    // identifies and durably retains motion.rs.inc and every production constituent.
     fs::write(
         out.join("transport-source.rs.txt"),
         include_bytes!("acquisition.rs"),
@@ -51,9 +54,10 @@ fn run_fpga_bench_input(
         stop_request_s: 0.,
         stop_receipt_s: 0.,
         transactions_origin_host_s: 0.,
-        initial: json!({}),
+        initial: json!({"acquisition_source":acquisition_source}),
         recovery: json!({}),
         sources: std::collections::BTreeMap::from([
+            ("acquisition_composite".into(), super::provenance::fingerprint()),
             (
                 "host".into(),
                 blake3::hash(include_bytes!("hx_fpga.rs.inc"))
@@ -102,6 +106,7 @@ fn run_fpga_bench_input(
             r.home[(id - 4) as usize] = t.position_raw;
             initial.insert(id.to_string(), json!(t));
         }
+        initial.insert("acquisition_source".into(), acquisition_source.clone());
         r.initial = json!(initial);
         if out.join("STOP").exists() || out.parent().is_some_and(|p|p.join("STOP").exists()) { return Err("Operator STOP before arming".into()); }
         let mut previous = r.home;
@@ -290,7 +295,7 @@ fn run_fpga_bench_input(
     let scores = r.scores();
     fs::write(out.join("scores.json"), serde_json::to_vec_pretty(&scores)?)?;
     Ok(
-        json!({"completed":r.completed,"failure":r.failure,"stop_verified":r.stop_verified,"frames":r.frames.len(),"scores":scores}),
+        json!({"completed":r.completed,"failure":r.failure,"stop_verified":r.stop_verified,"frames":r.frames.len(),"scores":scores,"acquisition_source":acquisition_source}),
     )
 }
 

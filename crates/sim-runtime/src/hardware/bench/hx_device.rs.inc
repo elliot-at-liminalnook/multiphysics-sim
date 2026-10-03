@@ -37,11 +37,14 @@ fn run_device_bench_input(
     if blake3::hash(&image).to_hex().as_str() != plan.bitstream_blake3 {
         return Err("FPGA image identity changed".into());
     }
+    let acquisition_source = super::provenance::retain(out)?;
     fs::write(out.join("plan.json"), serde_json::to_vec_pretty(plan)?)?;
     fs::write(
         out.join("host-source.rs.txt"),
         include_bytes!("hx_device.rs.inc"),
     )?;
+    // Compatibility snapshot covers acquisition.rs only; source-manifest.json
+    // identifies and durably retains motion.rs.inc and every production constituent.
     fs::write(
         out.join("transport-source.rs.txt"),
         include_bytes!("acquisition.rs"),
@@ -342,7 +345,7 @@ fn run_device_bench_input(
         .err()
         .map(|e| e.to_string())
         .or_else(|| (!verified).then(|| "Physical stop not verified".into()));
-    let mut result = json!({"completed":false,"failure":failure,"stop_verified":verified,"physical_scope_ids":ids,"stop":stop,"recovery":recovery,"initial":initial});
+    let mut result = json!({"completed":false,"failure":failure,"stop_verified":verified,"physical_scope_ids":ids,"stop":stop,"recovery":recovery,"initial":initial,"acquisition_source":acquisition_source});
     if let Some(capture) = capture {
         fs::write(
             out.join("device-capture.json"),
@@ -352,6 +355,8 @@ fn run_device_bench_input(
             Ok(mut recording) => {
                 recording.initial["physical_preflight"] = json!(initial);
                 recording.initial["physical_scope_ids"] = json!(ids);
+                recording.initial["acquisition_source"] = acquisition_source.clone();
+                recording.sources.insert("acquisition_composite".into(), super::provenance::fingerprint());
                 recording.transactions_origin_host_s = origin_host_s;
                 recording.recovery = recovery;
                 recording.stop_verified = verified;

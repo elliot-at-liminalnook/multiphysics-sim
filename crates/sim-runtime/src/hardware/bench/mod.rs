@@ -515,6 +515,7 @@ impl App {
     }
 }
 pub mod acquisition;
+pub(super) mod provenance;
 
 mod virtual_run;
 /// Explicit virtual model and taught travel. This is host-loop simulation,

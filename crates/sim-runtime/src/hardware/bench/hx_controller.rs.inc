@@ -54,6 +54,7 @@ fn run_controller_bench(
     if blake3::hash(&evidence).to_hex().as_str() != plan.cadence_evidence_blake3 {
         return Err("Cadence evidence file changed".into());
     }
+    let acquisition_source = super::provenance::retain(out)?;
     let mut recording = Recording {
         version: 1,
         experiment: plan.experiment.clone(),
@@ -64,13 +65,14 @@ fn run_controller_bench(
         completed: false,
         failure: None,
         stop_verified: false,
-        initial_registers: json!({}),
+        initial_registers: json!({"acquisition_source":acquisition_source}),
         transactions_origin_host_s: 0.,
         timing_evidence: format!(
             "{}; host-monotonic request/completion windows; encoder observation at midpoint is an assumption, device sample age unknown; raw transactions use the recorded origin offset",
             plan.cadence_evidence
         ),
         source_hashes: std::collections::BTreeMap::from([
+            ("acquisition_composite".into(), super::provenance::fingerprint()),
             (
                 "controller_host".into(),
                 blake3::hash(include_bytes!("hx_controller.rs.inc"))
@@ -110,7 +112,7 @@ fn run_controller_bench(
         if !(600..=3495).contains(&home) {
             return Err("Small-motion controller trial requires encoder travel clearance".into());
         }
-        recording.initial_registers = json!({"supervisor":status,"devices":initial});
+        recording.initial_registers = json!({"supervisor":status,"devices":initial,"acquisition_source":acquisition_source});
         recording.experiment.initial_encoder_rad = t.position_rad;
         recording.experiment.voltage_v = t.voltage_v;
         recording.experiment.temperature_c = t.temperature_c as f64;
@@ -268,6 +270,6 @@ fn run_controller_bench(
         serde_json::to_vec_pretty(&recording)?,
     )?;
     Ok(
-        json!({"completed":recording.completed,"failure":recording.failure,"frames":recording.frames.len(),"recording":"recording.json","fpga_stop":stop,"recovery":recovery}),
+        json!({"completed":recording.completed,"failure":recording.failure,"frames":recording.frames.len(),"recording":"recording.json","fpga_stop":stop,"recovery":recovery,"acquisition_source":acquisition_source}),
     )
 }

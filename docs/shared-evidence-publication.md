@@ -108,3 +108,15 @@ and close shorthand in the evidence table is under `crates/sim-spatial/src/app/`
 Line numbers are navigation anchors, not execution receipts. Native Study captured
 failure/cancellation/displacement recovery is additionally traced by
 `crates/sim-spatial/src/builder/calibration/study/publication_lifecycle.rs:41`.
+
+## Split acquisition sources (leg-in-process provenance repair)
+
+`sim-runtime::hardware::bench::provenance` publishes exact production source
+companions and a versioned named composite manifest before acquisition effects.
+It uses ImmutableNew for absent artifacts, verifies existing bytes and confirms
+existing file/directory durability for retries. A visible but unconfirmed artifact
+is preserved and reported as an error; acquisition does not proceed. This extends
+source retention without rewriting historical recordings or changing their reader
+schemas. The scheme and producer/consumer reading traces are in
+[leg-in-process.md](leg-in-process.md#acquisition-source-identity-repair-lip1--lip3).
+Evidence here is unexecuted source review, not a durability experiment.

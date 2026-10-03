@@ -228,6 +228,11 @@ impl PhysicalRobot {
                 m.connect([robot.port(leak(name.clone()))]);
             }
         }
+        // The environment node is the world's ambient: links, mounts, motor
+        // windings and cases start at it and shed heat to it. A motor's own
+        // `thermal.ambient_c` is its datasheet rating ambient
+        // (cad/PHYSICAL_MODEL.md "Motor"): only the motor unit's resistance
+        // and derating reference (PhysicalModel::motor_ambient).
         let ambient_k = model.world.ambient_c + 273.15;
         let ambient = m.part(registry, "ambient", sim_domain_thermal::AMBIENT, [("temperature", ambient_k)]).unwrap();
         composition.component(&ambient, "composition/ambient", "environment", None);
@@ -314,7 +319,7 @@ impl PhysicalRobot {
             speed_groups.insert(name.clone(), (format!("sense.{short}.{velocity}"), vec![tacho.port(velocity)]));
         }
         let mut targets_order: Vec<String> = Vec::new();
-        for motor in &model.motors {
+        for (motor_index, motor) in model.motors.iter().enumerate() {
             let Some(jname) = motor.joint.as_deref() else {
                 warnings.push(format!("motor {} drives no joint; it is left out of the circuit", motor.name));
                 continue;
@@ -333,9 +338,12 @@ impl PhysicalRobot {
             let cad_body = link.map(|li| model.links[li].id.as_str());
             let e = &motor.electrical;
             let th = &motor.thermal;
+            // The resistance and derating reference: the motor's rating
+            // ambient (else world.ambient_c, as before).
+            let motor_ambient_k = model.motor_ambient(motor_index)?.kelvin();
             let unit = m.part(registry, &format!("{}.unit", motor.name), MOTOR_UNIT,
                 sim_domain_robot::motor::cad_motor_unit_parameters(
-                    motor, joint_backlash, ambient_k, opts.analytic_motor_jacobian, opts.backlash_events,
+                    motor, joint_backlash, motor_ambient_k, opts.analytic_motor_jacobian, opts.backlash_events,
                 ).into_iter().chain(opts.motor_dynamics.parameter_flags())).unwrap();
             composition.component(&unit, format!("{motor_group}/unit"), &motor_group, cad_body);
             joint_conn.get_mut(&port_name).unwrap().push(unit.port("shaft"));

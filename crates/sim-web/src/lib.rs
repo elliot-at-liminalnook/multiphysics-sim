@@ -309,6 +309,12 @@ impl DriveSimulation {
         let status = self.session.request(&request).map_err(error)?;
         serde_json::to_string(&status.json()).map_err(error)
     }
+    /// The page paused (`DriveSession::pause`): a request live at Pause does
+    /// not drive after resume until a fresh one arrives. A no-op while
+    /// replaying. Answers the drive status.
+    pub fn pause(&mut self) -> Result<String, JsValue> {
+        serde_json::to_string(&self.session.pause().json()).map_err(error)
+    }
     /// Up to `periods` (1..1000) control periods, then the frame. A solver
     /// failure is a visible terminal frame (its `error`), as in
     /// `EmbeddedSimulation::advance`, and so is the horizon (`done: true`,

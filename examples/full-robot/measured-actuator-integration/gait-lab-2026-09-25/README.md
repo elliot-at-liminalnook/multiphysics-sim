@@ -48,6 +48,19 @@ $B/reduced_exploration prepare ../gait-search-fast-12v5-2026-09-25/baseline.spec
 $B/reduced_exploration qualify $L/qualification-q32 $L/STOP
 ```
 
+**Motor rating ambient (2026-10-03, by reading, unexecuted).** The model
+parser now keeps each motor's `thermal.ambient_c`, its datasheet rating
+ambient (`PhysicalModel::motor_ambient`), and the native and embedded
+sessions use it as the motor unit's resistance and torque-derating
+`reference` temperature. The thermal network's environment (winding and case
+start, case-to-air path) stays `world.ambient_c`. The legged models in this
+tree state 25 °C per motor and no `world.ambient_c`, so their reference
+moves from the parser's 20 °C default to 25 °C: at a 20 °C winding the
+resistance is about 2 % lower and the torque constant about 0.6 % higher
+than before. The reduced model needs re-qualifying (above) and every earlier
+evaluation, tune and finalist needs a rerun before its numbers are compared
+with new ones.
+
 ## The file
 
 ```yaml

@@ -266,3 +266,64 @@ fn the_horizon_is_refused_by_name() {
     assert_eq!(s.request(&DriveRequest::Stop).unwrap_err(), e);
     assert_eq!(s.frame().unwrap()["done"], serde_json::json!(true));
 }
+
+/// The servo temperature check reads `PhysicalModel::motor_ambient` (no
+/// re-read of the document): a defaulted world ambient is imposed and
+/// labelled as the parser's default; a stated world ambient stands for
+/// motors that state none.
+#[test]
+fn the_servo_temperature_check_reads_the_parsed_motor_ambient() {
+    let model = |f: &dyn Fn(&mut Value)| {
+        let mut m: Value = serde_json::from_str(MODEL).unwrap();
+        f(&mut m);
+        m.to_string()
+    };
+    let strip = |m: &mut Value| {
+        for motor in m["motors"].as_array_mut().unwrap() {
+            motor["thermal"].as_object_mut().unwrap().remove("ambient_c");
+        }
+    };
+    let build_with = |text: String| build(&text, MODEL_PATH, Path::new(BINDING_PATH), BINDING, &files(), DRIVE_DURATION_S);
+    let drive = build_with(model(&strip)).unwrap();
+    assert!(
+        drive.fidelity.contains("motors.servos[0].winding_temperature_k 298.15 K (left drive: no ambient temperature in the model; the model's motors use world.ambient_c (not stated in the model; the parser's default 20 °C))"),
+        "{}",
+        drive.fidelity
+    );
+    let drive = build_with(model(&|m| {
+        strip(m);
+        m["world"]["ambient_c"] = serde_json::json!(25.0);
+    }))
+    .unwrap();
+    assert!(drive.fidelity.contains("imposed at the model's values"), "{}", drive.fidelity);
+    let e = build_with(model(&|m| {
+        strip(m);
+        m["world"]["ambient_c"] = serde_json::json!(20.0);
+    }))
+    .unwrap_err();
+    assert!(e.contains("motors.servos[0].winding_temperature_k: 298.15 K, but") && e.contains(&format!("{MODEL_PATH} world.ambient_c is 20 °C")), "{e}");
+}
+
+/// Pause invalidates a live request (the deadman counts as expired, the
+/// request is zero, the commanded twist, heartbeat and periods are kept);
+/// a fresh request drives again; during a replay it changes nothing.
+#[test]
+fn pause_invalidates_a_live_request_and_is_ignored_while_replaying() {
+    let mut s = DriveSession::new(built(), 3).unwrap();
+    s.request(&DriveRequest::Axes { forward: 1.0, lateral: 0.0, yaw: 0.0 }).unwrap();
+    s.advance(1).unwrap();
+    let before = s.status();
+    assert!(!before.expired && before.request.forward_m_s > 0.0, "{before:?}");
+    let paused = s.pause();
+    assert!(paused.expired && paused.request == BodyTwist::ZERO && paused.age_s > s.deadman().timeout_s, "{paused:?}");
+    assert_eq!((paused.commanded, paused.heartbeat, paused.periods), (before.commanded, before.heartbeat, before.periods));
+    assert_eq!(s.pause(), paused, "pausing again at the same time changes nothing");
+    let fresh = s.request(&DriveRequest::Axes { forward: 1.0, lateral: 0.0, yaw: 0.0 }).unwrap();
+    assert!(fresh.heartbeat == before.heartbeat + 1 && fresh.age_s == 0.0, "{fresh:?}");
+
+    let recording = s.recording();
+    assert_eq!(s.prepare_replay(recording).unwrap(), 1);
+    let at = s.status();
+    assert_eq!(s.pause(), at, "a replay's twist state follows the recording");
+    assert!(s.replaying());
+}

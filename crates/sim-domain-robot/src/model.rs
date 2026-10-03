@@ -73,22 +73,68 @@ pub struct Transmission {
     pub ratio: f64,
 }
 
+/// Deserialized through [`WorldDocument`] so the parsed world remembers
+/// whether `ambient_c` was stated; serialization is unchanged (`ambient_c` is
+/// always written, so robot-input digests and defaulted-field reports keep
+/// seeing the parser's default as a default).
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(from = "WorldDocument")]
 pub struct World {
-    #[serde(default)]
     pub floor_z: f64,
-    #[serde(default = "World::default_friction")]
     pub floor_friction: f64,
-    #[serde(default = "World::default_stiffness")]
     pub floor_stiffness: f64,
-    #[serde(default = "World::default_damping")]
     pub floor_damping: f64,
-    #[serde(default)]
     pub terrain: Option<Terrain>,
-    #[serde(default = "World::default_ambient")]
+    /// Ambient air temperature, °C. When the model does not state it this
+    /// holds [`World::DEFAULT_AMBIENT_C`]; [`World::ambient_stated`] says which.
     pub ambient_c: f64,
+    /// Whether the document stated `world.ambient_c`. Kept out of the
+    /// serialized model, which must stay byte-compatible with older readers.
+    #[serde(skip)]
+    ambient_stated: bool,
 }
+
+/// The authored form of [`World`]: `ambient_c` stays an Option so a value the
+/// file states is told apart from the parser's default.
+#[derive(Deserialize)]
+struct WorldDocument {
+    #[serde(default)]
+    floor_z: f64,
+    #[serde(default = "World::default_friction")]
+    floor_friction: f64,
+    #[serde(default = "World::default_stiffness")]
+    floor_stiffness: f64,
+    #[serde(default = "World::default_damping")]
+    floor_damping: f64,
+    #[serde(default)]
+    terrain: Option<Terrain>,
+    #[serde(default, deserialize_with = "present_f64")]
+    ambient_c: Option<f64>,
+}
+impl From<WorldDocument> for World {
+    fn from(d: WorldDocument) -> Self {
+        Self {
+            floor_z: d.floor_z,
+            floor_friction: d.floor_friction,
+            floor_stiffness: d.floor_stiffness,
+            floor_damping: d.floor_damping,
+            terrain: d.terrain,
+            ambient_c: d.ambient_c.unwrap_or(World::DEFAULT_AMBIENT_C),
+            ambient_stated: d.ambient_c.is_some(),
+        }
+    }
+}
+
+/// An optional number that, when present, must be a number (JSON `null` is
+/// refused as before rather than read as "absent").
+fn present_f64<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<f64>, D::Error> {
+    f64::deserialize(deserializer).map(Some)
+}
+
 impl World {
+    /// The parser's ambient when a model states none (°C). Not a measurement.
+    pub const DEFAULT_AMBIENT_C: f64 = 20.0;
+
     /// The same authored surface query used by articulated contact and observations.
     pub fn floor_height(&self, x: f64, y: f64) -> f64 {
         ground_height(self.floor_z, self.terrain.as_ref(), x, y)
@@ -96,6 +142,14 @@ impl World {
 
     pub fn validate_ground(&self) -> Result<(), String> {
         validate_ground_surface(self.floor_z, self.terrain.as_ref())
+    }
+
+    /// Whether `ambient_c` is a stated value: the document stated it, or code
+    /// set a value other than the parser's default after parsing (an
+    /// override the robot-input receipt records). A parsed model serialized
+    /// without its original input and parsed again reads as stated.
+    pub fn ambient_stated(&self) -> bool {
+        self.ambient_stated || self.ambient_c != Self::DEFAULT_AMBIENT_C
     }
 
     fn default_friction() -> f64 {
@@ -107,13 +161,56 @@ impl World {
     fn default_damping() -> f64 {
         2.0e3
     }
-    fn default_ambient() -> f64 {
-        20.0
-    }
 }
 impl Default for World {
     fn default() -> Self {
-        Self { floor_z: 0.0, floor_friction: 0.8, floor_stiffness: 2.0e5, floor_damping: 2.0e3, terrain: None, ambient_c: 20.0 }
+        Self {
+            floor_z: 0.0,
+            floor_friction: 0.8,
+            floor_stiffness: 2.0e5,
+            floor_damping: 2.0e3,
+            terrain: None,
+            ambient_c: Self::DEFAULT_AMBIENT_C,
+            ambient_stated: false,
+        }
+    }
+}
+
+/// Where a motor's ambient temperature comes from.
+#[derive(Clone, Debug, PartialEq)]
+pub enum AmbientSource {
+    /// `motors[index].thermal.ambient_c`, stated for this motor.
+    Motor { index: usize, name: String },
+    /// `world.ambient_c`, stated (the motor states none).
+    World,
+    /// `world.ambient_c` absent: the parser's [`World::DEFAULT_AMBIENT_C`].
+    WorldDefault,
+}
+
+/// One motor's ambient temperature with its provenance
+/// ([`PhysicalModel::motor_ambient`]).
+#[derive(Clone, Debug, PartialEq)]
+pub struct MotorAmbient {
+    pub celsius: f64,
+    pub source: AmbientSource,
+}
+impl MotorAmbient {
+    pub fn kelvin(&self) -> f64 {
+        self.celsius + 273.15
+    }
+    /// False only for the parser's default world ambient.
+    pub fn stated(&self) -> bool {
+        self.source != AmbientSource::WorldDefault
+    }
+    /// The model field the value comes from, labelling a default as such.
+    pub fn provenance(&self) -> String {
+        match &self.source {
+            AmbientSource::Motor { index, name } => format!("motors[{index}] ({name}).thermal.ambient_c"),
+            AmbientSource::World => "world.ambient_c".to_owned(),
+            AmbientSource::WorldDefault => {
+                format!("world.ambient_c (not stated in the model; the parser's default {} °C)", World::DEFAULT_AMBIENT_C)
+            }
+        }
     }
 }
 
@@ -798,6 +895,14 @@ pub struct MotorThermal {
     pub torque_derating_per_c: f64,
     #[serde(default = "MotorThermal::default_max")]
     pub max_winding_c: f64,
+    /// This motor's datasheet rating ambient, °C (cad/PHYSICAL_MODEL.md
+    /// "Motor"), when the model states one: the temperature its resistance
+    /// and torque are stated at, so the motor unit's `reference`. Absent
+    /// means `world.ambient_c` ([`PhysicalModel::motor_ambient`]). The
+    /// thermal network's environment is always `world.ambient_c`.
+    /// Not written when absent, so older models serialize as before.
+    #[serde(default, deserialize_with = "present_f64", skip_serializing_if = "Option::is_none")]
+    pub ambient_c: Option<f64>,
 }
 impl MotorThermal {
     fn default_cw() -> f64 {
@@ -1217,6 +1322,27 @@ impl PhysicalModel {
         }
         serde_json::from_str(text).map_err(|e| e.to_string())
     }
+    /// Motor `index`'s rating ambient, the temperature its resistance and
+    /// torque constant are stated at: its `thermal.ambient_c` when the model
+    /// states one, else `world.ambient_c` (stated, or the parser's default,
+    /// labelled so in [`MotorAmbient::provenance`]). The one reader for the
+    /// motor unit's `reference` temperature (the native `PhysicalRobot`, the
+    /// embedded session) and the embedded drive's imposed servo winding
+    /// temperature check. The thermal network's environment (winding and
+    /// case start, case-to-air path) is `world.ambient_c`, not this. Errors
+    /// name the field.
+    pub fn motor_ambient(&self, index: usize) -> Result<MotorAmbient, String> {
+        let motor = self.motors.get(index).ok_or_else(|| format!("motors[{index}]: no such motor ({} motors)", self.motors.len()))?;
+        let ambient = match motor.thermal.ambient_c {
+            Some(celsius) => MotorAmbient { celsius, source: AmbientSource::Motor { index, name: motor.name.clone() } },
+            None if self.world.ambient_stated() => MotorAmbient { celsius: self.world.ambient_c, source: AmbientSource::World },
+            None => MotorAmbient { celsius: self.world.ambient_c, source: AmbientSource::WorldDefault },
+        };
+        if !(ambient.celsius.is_finite() && ambient.celsius > -273.15) {
+            return Err(format!("{}: {} °C is not a temperature above absolute zero", ambient.provenance(), ambient.celsius));
+        }
+        Ok(ambient)
+    }
     pub fn link(&self, name: &str) -> Option<&Link> {
         self.links.iter().find(|l| l.name == name)
     }
@@ -1302,5 +1428,73 @@ mod version_tests {
         let model = PhysicalModel::load(path).unwrap();
         assert!(model.version >= FIRST_PHYSICAL_VERSION && !model.links.is_empty());
         assert!(!PhysicalModel::parse(r#""x""#).unwrap_err().contains("planar"), "non-objects keep serde's error");
+    }
+}
+
+/// `PhysicalModel::motor_ambient`: the per-motor field, else the world's,
+/// with a defaulted world ambient labelled as such. Written by reading; not
+/// yet executed.
+#[cfg(test)]
+mod ambient_tests {
+    use super::*;
+    use serde_json::json;
+
+    fn model(text: &str) -> PhysicalModel {
+        PhysicalModel::parse(text).unwrap()
+    }
+
+    #[test]
+    fn a_motor_without_its_own_ambient_reads_the_world_stated_or_defaulted() {
+        let m = model(r#"{"version":4,"motors":[{"name":"a"}]}"#);
+        let a = m.motor_ambient(0).unwrap();
+        assert_eq!(a, MotorAmbient { celsius: World::DEFAULT_AMBIENT_C, source: AmbientSource::WorldDefault });
+        assert!(!a.stated() && !m.world.ambient_stated() && m.world.ambient_c == 20.0);
+        assert_eq!(a.provenance(), "world.ambient_c (not stated in the model; the parser's default 20 °C)");
+        // A stated 20 °C is stated, not a default.
+        let m = model(r#"{"version":4,"world":{"ambient_c":20.0},"motors":[{"name":"a"}]}"#);
+        let a = m.motor_ambient(0).unwrap();
+        assert_eq!((a.celsius, a.source.clone(), a.provenance()), (20.0, AmbientSource::World, "world.ambient_c".to_owned()));
+        assert!(a.stated());
+        let m = model(r#"{"version":4,"world":{"ambient_c":31.5},"motors":[{"name":"a"}]}"#);
+        assert_eq!(m.motor_ambient(0).unwrap().celsius, 31.5);
+        // Serialization is unchanged: the world's value is written, an absent motor field is not.
+        let v = serde_json::to_value(&m).unwrap();
+        assert_eq!(v["world"]["ambient_c"], json!(31.5));
+        assert!(v["motors"][0]["thermal"].get("ambient_c").is_none(), "{v}");
+        assert!(m.motor_ambient(1).unwrap_err().starts_with("motors[1]: no such motor"));
+        // The default world is unstated; a value set on it after parsing is not the default.
+        let mut w = World::default();
+        assert!(!w.ambient_stated());
+        w.ambient_c = 21.0;
+        assert!(w.ambient_stated());
+        // null is refused as before, not read as absent.
+        assert!(PhysicalModel::parse(r#"{"version":4,"world":{"ambient_c":null}}"#).is_err());
+    }
+
+    #[test]
+    fn a_motor_that_states_its_ambient_reads_its_own_with_provenance() {
+        let m = model(r#"{"version":4,"world":{"ambient_c":18.0},"motors":[{"name":"a","thermal":{"ambient_c":25.0}},{"name":"b"}]}"#);
+        let a = m.motor_ambient(0).unwrap();
+        assert_eq!(a, MotorAmbient { celsius: 25.0, source: AmbientSource::Motor { index: 0, name: "a".into() } });
+        assert_eq!(a.provenance(), "motors[0] (a).thermal.ambient_c");
+        assert!(a.stated() && (a.kelvin() - 298.15).abs() < 1e-9);
+        assert_eq!(m.motor_ambient(1).unwrap(), MotorAmbient { celsius: 18.0, source: AmbientSource::World });
+        // The field survives a serialize/parse round trip.
+        let v = serde_json::to_value(&m).unwrap();
+        assert_eq!(v["motors"][0]["thermal"]["ambient_c"], json!(25.0));
+        let again: PhysicalModel = serde_json::from_value(v).unwrap();
+        assert_eq!(again.motor_ambient(0).unwrap(), a);
+        assert!(PhysicalModel::parse(r#"{"version":4,"motors":[{"name":"a","thermal":{"ambient_c":null}}]}"#).is_err());
+        let e = model(r#"{"version":4,"motors":[{"name":"a","thermal":{"ambient_c":-300.0}}]}"#).motor_ambient(0).unwrap_err();
+        assert!(e.starts_with("motors[0] (a).thermal.ambient_c: -300 °C"), "{e}");
+        // The committed rover states 25 °C per motor and no world ambient.
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/wheeled-robot/baseline/robot.simrobot.json");
+        let rover = PhysicalModel::load(path).unwrap();
+        assert!(!rover.world.ambient_stated());
+        for i in 0..rover.motors.len() {
+            let a = rover.motor_ambient(i).unwrap();
+            assert_eq!(a.celsius, 25.0);
+            assert!(matches!(a.source, AmbientSource::Motor { index, .. } if index == i));
+        }
     }
 }

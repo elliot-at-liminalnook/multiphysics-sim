@@ -210,8 +210,10 @@ fn supplied<'a>(files: &'a BTreeMap<String, String>, binding: &str, path: &Path,
 /// config omits it). Checked against the model: the policy's target bounds
 /// cover a whole session at the largest wheel rate (`max_wheel_rate` ×
 /// `duration_s`), and each servo's supply voltage and winding temperature
-/// equal the model's `motors[i].electrical.supply_voltage` and ambient
-/// temperature (`motors[i].thermal.ambient_c`, else `world.ambient_c`).
+/// equal the model's `motors[i].electrical.supply_voltage` and rating
+/// ambient (the temperature its resistance is stated at,
+/// `PhysicalModel::motor_ambient`: `motors[i].thermal.ambient_c`,
+/// else a stated `world.ambient_c`; the parser's default is not a source).
 /// The config's `steps` and `report_every` are placeholders this
 /// overwrites. The scene's build options are the drive benchmark's
 /// (`prepare_drive_benchmark.mjs`: contact on, flex off): the embedded
@@ -346,8 +348,9 @@ pub fn build(model_text: &str, model_path: &str, binding_path: &Path, binding_te
         }
     }
     // The servo boundaries are imposed constants: each must be the CAD
-    // value it stands for, read from the model document (a field the
-    // parser would default is not a source). A value the model does not
+    // value it stands for: the supply voltage read from the model document,
+    // the ambient from the parsed model's motor_ambient (in both, a field
+    // the parser would default is not a source). A value the model does not
     // state stays an imposed boundary, said so in the fidelity label.
     let mut imposed: Vec<String> = Vec::new();
     for (i, servo) in servos.iter().enumerate() {
@@ -363,21 +366,24 @@ pub fn build(model_text: &str, model_path: &str, binding_path: &Path, binding_te
             Some(_) => {}
             None => imposed.push(format!("motors.servos[{i}].supply_voltage_v {} V ({name}: no electrical.supply_voltage in the model)", servo.supply_voltage_v)),
         }
-        let ambient = motor
-            .and_then(|m| m.pointer("/thermal/ambient_c"))
-            .and_then(Value::as_f64)
-            .map(|c| (c, format!("motors[{i}] ({name}).thermal.ambient_c")))
-            .or_else(|| model_document.pointer("/world/ambient_c").and_then(Value::as_f64).map(|c| (c, "world.ambient_c".to_owned())));
-        match ambient {
-            Some((c, source)) if (c + 273.15 - servo.winding_temperature_k).abs() > 1e-9 => {
-                return Err(format!(
-                    "{config_shown}: motors.servos[{i}].winding_temperature_k: {} K, but {model_path} {source} is {c} °C ({} K)",
-                    servo.winding_temperature_k,
-                    c + 273.15
-                ));
-            }
-            Some(_) => {}
-            None => imposed.push(format!("motors.servos[{i}].winding_temperature_k {} K ({name}: no ambient temperature in the model)", servo.winding_temperature_k)),
+        // The parsed model's one rating-ambient reader, the motor units'
+        // resistance and derating reference (embedded.rs, physical.rs): the
+        // imposed winding temperature must be it, so the servos run at the
+        // temperature their resistance is stated at.
+        let ambient = model.motor_ambient(i).map_err(|e| format!("{model_path}: {e}"))?;
+        let source = ambient.provenance();
+        if !ambient.stated() {
+            imposed.push(format!(
+                "motors.servos[{i}].winding_temperature_k {} K ({name}: no ambient temperature in the model; the model's motors use {source})",
+                servo.winding_temperature_k
+            ));
+        } else if (ambient.kelvin() - servo.winding_temperature_k).abs() > 1e-9 {
+            return Err(format!(
+                "{config_shown}: motors.servos[{i}].winding_temperature_k: {} K, but {model_path} {source} is {} °C ({} K)",
+                servo.winding_temperature_k,
+                ambient.celsius,
+                ambient.kelvin()
+            ));
         }
     }
     let boundaries = if imposed.is_empty() {
@@ -505,6 +511,19 @@ impl DriveSession {
         let now = self.time();
         self.twist.request(twist, halt, now, &self.limits)?;
         Ok(self.status())
+    }
+    /// The page paused at the current simulation time
+    /// ([`TwistState::pause`]): a request live at Pause does not drive after
+    /// resume; the profile's on-loss rule runs until a fresh request. A
+    /// no-op while replaying: the replay's twist state follows the recording
+    /// and its end already invalidates the request
+    /// ([`TwistState::replay_ended`]). Returns the status after pausing.
+    pub fn pause(&mut self) -> DriveStatus {
+        if !self.replaying() {
+            let now = self.time();
+            self.twist.pause(now, &self.deadman);
+        }
+        self.status()
     }
     /// Up to `periods` control periods (live: limiter and deadman, set_inputs, step; replay: step, `TwistState::replayed`).
     /// Called at the horizon it is refused (`the drive's 600 s horizon is

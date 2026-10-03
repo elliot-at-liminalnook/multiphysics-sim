@@ -1478,7 +1478,8 @@ class Run:
 
     def verify_mirror(self):
         """HW-11 on the virtual bench: alignment reads 0.0°, a jog moves the
-        reading, Run is refused while mirroring, hiding ends the display."""
+        reading, Run, Step and Reset are refused while mirroring, hiding ends
+        the display."""
         self.begin("HW-11")
         self.mirror_loaded()
         self.selected(2)
@@ -1495,13 +1496,18 @@ class Run:
         moved = self.wait(lambda s: s["mirror"]["leg_data"] == "live"
                           and abs(mirror_degrees(s["mirror"]["status"], role)) >= 1.0, 10,
                           "mirror reading follows the jog")
-        refused = self.command("robot_run", {"action": "start"}, refusal=True)
-        assert has_text(refused.get("error"), MIRRORING), refused
+        # Run, Step and Reset are refused by name while mirroring
+        # (hw/mirror.rs refuse_run); Pause is not exercised (it only stops).
+        refusals = {}
+        for run_action, label in (("start", "Run"), ("step", "Step"), ("reset", "Reset")):
+            refused = self.command("robot_run", {"action": run_action}, refusal=True)
+            assert has_text(refused.get("error"), MIRRORING) and has_text(refused.get("error"), (f"{label} refused",)), refused
+            refusals[run_action] = refused.get("error")
         self.mirror_hidden()
         self.click("stop")
         self.stopped()
         self.done(mirror={"role": role, "after_save": zero["mirror"]["status"], "after_jog": moved["mirror"]["status"],
-                          "run_refusal": refused.get("error")})
+                          "run_refusal": refusals["start"], "run_refusals": refusals})
 
     # ---- cleanup --------------------------------------------------------
     def cleanup_server_stop(self):

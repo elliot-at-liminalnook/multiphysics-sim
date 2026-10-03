@@ -284,24 +284,73 @@ impl Session {
             self.stop();
             self.select_motor(first.id, true, false);
             if !self.snap.ready {
-                return Err(self.snap.state.message.clone().filter(|m| !m.is_empty()).unwrap_or_else(|| "Could not enable the motors".into()));
+                let why = self.snap.state.message.clone().filter(|m| !m.is_empty()).unwrap_or_else(|| "Could not enable the motors".into());
+                // The select may have reached the server and left a motor (and,
+                // with hold others, the rest) held even when its answer was lost
+                // or not adopted (revoked, another motor enabled, a timeout), so
+                // the existing STOP is sent whenever it was not ready: STOP is
+                // idempotent and latches every axis, so the notice says "motors".
+                return Err(self.release_after_refused_start(None, why));
             }
             let id = self.snap.id.ok_or("Could not enable the motors")?;
             let effort = self.inputs.gait_effort_percent / 100.0;
             let body = calibration::gait_start(id, self.seq(), &entry.path, bindings, scale, effort, self.drive_pwm(), self.inputs.drive_mode.wire());
-            let status = self.send_status(body)?;
+            let status = match self.send_status(body) {
+                Ok(status) => status,
+                // A UI STOP pending since the select: nothing was sent (`send`
+                // refuses with STOP_PENDING) and that STOP releases every motor.
+                Err(why) if self.interrupted() => return Err(why),
+                Err(why) => return Err(self.release_after_refused_start(Some(id), format!("gait_start refused: {why}"))),
+            };
             if self.interrupted() {
                 // STOP was pressed while the gait started: drop the answer
                 // (the page does not check) and stop what it may have started.
                 self.stop_after_dropped(id);
                 return Err("STOP was pressed while the gait was starting.".into());
             }
+            // A server that refused inside its gait run answers with the
+            // status: the gait not running, with its error. That is a
+            // refusal too (the run would never start, so it would never end).
+            let refused = status.gait.as_ref().filter(|g| !g.running).and_then(|g| g.error.clone()).filter(|e| !e.trim().is_empty());
             self.adopt(status);
+            if let Some(why) = refused {
+                return Err(self.release_after_refused_start(Some(id), format!("gait_start refused: {why}")));
+            }
             // The beat's first lease update follows a lease period after
             // the gait is published (the page's `setInterval(…, 300)`).
             self.snap.ready = false;
         }
         Ok(run)
+    }
+    /// A leg play that this handler's own `select` armed was refused (the
+    /// `gait_start`, or the select itself): motor `id` (the one the STOP
+    /// names; None after a select that was not ready, "motors") is released at once
+    /// through the existing STOP request ([`Session::stop`]; the server
+    /// latches STOP and torques off every configured axis), before control
+    /// returns. Returns `why` with what the release did, for the gait notice
+    /// (panel and REST status) and a remote caller's answer.
+    ///
+    /// A deliberate difference from the browser page, which leaves the motor
+    /// held (AGENTS.md: hardware safety; docs/hardware-parity.md). A STOP the
+    /// UI posted and this thread has not applied yet releases every motor
+    /// itself, so none is sent here then.
+    fn release_after_refused_start(&mut self, id: Option<u8>, why: String) -> String {
+        if self.interrupted() {
+            return why;
+        }
+        // The release's own failure, kept apart from the play's first reason.
+        let earlier = self.command_error.take();
+        self.stop();
+        let failed = self.command_error.take();
+        self.command_error = earlier;
+        let what = id.map_or_else(|| "the motors".to_string(), |id| format!("motor {id}"));
+        match failed {
+            Some(e) => format!("{why}; releasing {what} failed: {e}. Press STOP."),
+            None => match self.snap.state.message.as_deref().map(str::trim).filter(|m| !m.is_empty()) {
+                Some(answer) => format!("{why}; {what} released (STOP sent: {answer})"),
+                None => format!("{why}; {what} released (STOP sent)"),
+            },
+        }
     }
     /// Pause / Resume :250. For a leg gait the beat posts `gait_update`
     /// with the new state at once (the plan changed).

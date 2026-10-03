@@ -1269,9 +1269,25 @@ fn a_held_capture_adopts_the_saved_status_and_an_unconfirmed_answer_is_an_error(
 const GAIT_FIXTURE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/full-robot/measured-actuator-integration/gait-search-comparison-2026-09-19/comparison/2301-CmaEs-000/compiled.json");
 const GAIT_PATH: &str = "examples/full-robot/measured-actuator-integration/gait-search-comparison-2026-09-19/comparison/2301-CmaEs-000/compiled.json";
 
+/// How [`gait_server`] answers `gait_start`.
+#[derive(Clone, Copy, PartialEq)]
+enum GaitStart {
+    /// A simulated leg gait starts.
+    Runs,
+    /// Refused before it runs: a 400 (the server's `check_execution`).
+    Refused,
+    /// Refused inside the server's gait run: answered with the status, the
+    /// gait not running and its error (the server's `gait_start` branch).
+    FailsInRun,
+}
+
+/// The server's answer to `stop` (`STOP_LATCHED_MESSAGE` in serve_actuator_calibration.rs).
+const STOP_LATCHED: &str = "STOP latched; all configured axes torque off. Records retained.";
+
 /// A virtual bench (SERVER_A) that lists and serves the fixture gait and
-/// starts a simulated leg gait, or refuses `gait_start` with a 400.
-fn gait_server(refuse_start: bool) -> Fake {
+/// answers `gait_start` as `start` says; `stop` answers as the server does
+/// (latched, no motor enabled).
+fn gait_server(start: GaitStart) -> Fake {
     let status = virtual_document(&virtual_identity(SERVER_A));
     let compiled: Value = serde_json::from_slice(&std::fs::read(GAIT_FIXTURE).expect("gait fixture")).expect("gait fixture JSON");
     Fake::start(Arc::new(move |path: &str, body: &Value| -> Result<Value, String> {
@@ -1282,11 +1298,24 @@ fn gait_server(refuse_start: bool) -> Fake {
             return Ok(compiled.clone());
         }
         match body["action"].as_str() {
-            Some("gait_start") if refuse_start => Err("Out of virtual calibration scope: gait_start".into()),
+            Some("gait_start") if start == GaitStart::Refused => Err("Out of virtual calibration scope: gait_start".into()),
+            Some("gait_start") if start == GaitStart::FailsInRun => {
+                let mut failed = status.clone();
+                failed["enabled_id"] = Value::Null;
+                failed["gait"] = json!({ "running": false, "simulated": true, "error": "+X: save its sim alignment first" });
+                failed["message"] = json!("Gait stopped: +X: save its sim alignment first. Torque off.");
+                Ok(failed)
+            }
             Some("gait_start") => {
                 let mut started = status.clone();
                 started["gait"] = json!({ "running": true, "phase": "approach", "t": 0.0, "speed_scale": 1.0, "simulated": true });
                 Ok(started)
+            }
+            Some("stop") => {
+                let mut stopped = status.clone();
+                stopped["enabled_id"] = Value::Null;
+                stopped["message"] = json!(STOP_LATCHED);
+                Ok(stopped)
             }
             _ => Ok(status.clone()),
         }
@@ -1294,8 +1323,13 @@ fn gait_server(refuse_start: bool) -> Fake {
 }
 
 /// A remote Leg play on a virtual bench (a checked command) is answered Ok
-/// only once `gait_start` was answered and the gait runs; a refused start
-/// is the answer, with the play's own reason, and revokes nothing.
+/// only once `gait_start` was answered and the gait runs. A refused start
+/// (a 400, or a status whose gait failed inside the run) is the answer,
+/// with the server's reason, revokes nothing, and releases the motor the
+/// play's own select left held: one `stop` after the `gait_start`, and the
+/// answer and the gait notice (panel and REST status) say so. A deliberate
+/// difference from the page, which leaves the motor held
+/// (docs/hardware-parity.md).
 #[test]
 fn a_checked_leg_gait_play_answers_ok_only_after_the_gait_started() {
     use crate::robot::hardware::actions::GaitMode;
@@ -1305,11 +1339,13 @@ fn a_checked_leg_gait_play_answers_ok_only_after_the_gait_started() {
         bindings: vec![calibration::GaitBinding { id: 1, joint: "+X | Foot servo output".into(), polarity: 1.0, home_rad: 0.0 }],
         skipped: Vec::new(),
     };
-    let fake = gait_server(false);
+    let fake = gait_server(GaitStart::Runs);
     let mut session = pinned_session(&fake, virtual_identity(SERVER_A));
     session.handle(LinkCommand::Checked { ticket: 1, epoch: session.epoch_now(), generation: 1, inputs: None, command: Box::new(play()) });
     assert_eq!(session.snap.command_results[&1], Ok(()));
-    assert!(actions(&fake.commands()).iter().any(|a| a == "gait_start"), "{:?}", fake.commands());
+    let sent = actions(&fake.commands());
+    let start = sent.iter().position(|a| a == "gait_start").unwrap_or_else(|| panic!("{sent:?}"));
+    assert!(!sent[start + 1..].iter().any(|a| a == "stop"), "a started gait is not released: {sent:?}");
     let run = session.snap.gait.clone().expect("the gait plays");
     assert!(run.leg && run.started && run.mode == GaitMode::Leg);
     assert!(session.snap.state.gait.as_ref().is_some_and(|g| g.running && g.simulated));
@@ -1318,13 +1354,24 @@ fn a_checked_leg_gait_play_answers_ok_only_after_the_gait_started() {
     assert_eq!(session.snap.command_results[&2], Ok(()));
     assert!(session.snap.gait.as_ref().is_some_and(|g| !g.playing));
 
-    let fake = gait_server(true);
-    let mut session = pinned_session(&fake, virtual_identity(SERVER_A));
-    session.handle(LinkCommand::Checked { ticket: 1, epoch: session.epoch_now(), generation: 1, inputs: None, command: Box::new(play()) });
-    let result = session.snap.command_results[&1].clone();
-    assert!(result.as_ref().is_err_and(|e| e.contains("Out of virtual calibration scope: gait_start")), "{result:?}");
-    assert!(session.snap.gait.is_none());
-    assert!(!session.snap.authorization_revoked && session.snap.connection_valid, "a 400 refusal must not revoke");
+    for (start, reason) in [(GaitStart::Refused, "Out of virtual calibration scope: gait_start"), (GaitStart::FailsInRun, "+X: save its sim alignment first")] {
+        let fake = gait_server(start);
+        let mut session = pinned_session(&fake, virtual_identity(SERVER_A));
+        session.handle(LinkCommand::Checked { ticket: 1, epoch: session.epoch_now(), generation: 1, inputs: None, command: Box::new(play()) });
+        let expected = format!("gait_start refused: {reason}; motor 1 released (STOP sent: {STOP_LATCHED})");
+        let result = session.snap.command_results[&1].clone();
+        assert_eq!(result, Err(expected.clone()));
+        assert_eq!(session.snap.gait_notice.as_deref(), Some(expected.as_str()), "the panel and REST status show the refusal and the release");
+        // The release is the existing STOP request, sent after the refusal.
+        let sent = actions(&fake.commands());
+        let at = sent.iter().position(|a| a == "gait_start").unwrap_or_else(|| panic!("{sent:?}"));
+        assert_eq!(sent[at + 1..], ["stop".to_string()], "one stop after the refused gait_start: {sent:?}");
+        assert_eq!(fake.commands().last().and_then(|c| c["id"].as_u64()), Some(1), "the stop names the selected motor");
+        assert!(session.snap.gait.is_none());
+        assert_eq!(session.snap.state.enabled_id, None, "the stop answer is adopted");
+        assert!(!session.snap.ready);
+        assert!(!session.snap.authorization_revoked && session.snap.connection_valid, "a refusal must not revoke");
+    }
 }
 
 /// Through the panel's remote dispatch: the gait form intents are answered at
@@ -1334,7 +1381,7 @@ fn a_checked_leg_gait_play_answers_ok_only_after_the_gait_started() {
 fn remote_gait_intents_are_authorized_and_play_waits_for_the_link() {
     use crate::app::actions::{Origin, Replies};
     use crate::robot::hardware::{actions::{GaitMode, HardwareAction}, handlers::Answer};
-    let fake = gait_server(false);
+    let fake = gait_server(GaitStart::Runs);
     let mut hw = remote_hardware(&fake);
     hw.link.as_ref().unwrap().send(LinkCommand::LoadGaits);
     let deadline = Instant::now() + Duration::from_secs(5);

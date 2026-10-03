@@ -432,10 +432,10 @@ pub(super) fn highlight(
     mut runs: Query<(&RunButton, &mut Enabled)>,
 ) {
     for (button, enabled) in &mut runs {
-        let ok = match &view.planar {
-            Some(p) => p.run.check(button.0).is_ok(),
-            None => view.run.as_ref().is_some_and(|r| r.check(button.0).is_ok()),
-        };
+        // Robot mode's one `check` (as a click is judged): the run's own
+        // check plus the mirroring refusal (`hardware::mirror::refuse_run`),
+        // so Run, Step and Reset are dimmed while the mirror is shown.
+        let ok = check(&view, &RobotAction::Run { action: button.0 }).is_ok();
         enable(enabled, ok);
     }
     for (tab, mut look) in &mut tabs {

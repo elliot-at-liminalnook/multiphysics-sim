@@ -100,6 +100,9 @@ struct RunShared {
     /// pre-reset samples instead of flushing them and `save_run` refuses, so
     /// nothing from before the reset reaches the graphs or a saved run.
     reset_pending: bool,
+    /// A robot system's run (`robot_run`): the loaded system and the drive
+    /// status, written by its run thread only. None for every other run.
+    drive: Option<robot_run::RobotDrive>,
 }
 
 /// Simulated seconds of history kept for graphs.
@@ -119,6 +122,10 @@ enum RunControl {
     Step,
     /// Rebuild at t = 0, paused (`Command::Reset`); clears the history.
     Reset,
+    /// A robot system's twist request (`Builder::drive`), interpreted against
+    /// its profile on the UI thread; the run thread applies every queued one
+    /// in order before the next seam period (`robot_run`).
+    Twist { request: sim_domain_control::drive::kinematics::BodyTwist, halt: bool },
 }
 
 /// A hand pushing on a running system through one of its load elements.
@@ -145,6 +152,15 @@ struct LiveRun {
     /// and whether it was edited live.
     document: SystemDocument,
     edited: bool,
+    /// Hosted instances run on the shared drive host (`robot_run`), not the system session.
+    robot: bool,
+    /// The last Run (true) or Pause/Reset (false) sent: a nonzero drive
+    /// request is refused unless it is true (commands are ordered, so the
+    /// run thread sees that Run before the request).
+    requested_running: bool,
+    /// The last drive request sent, and the last one refused (`Builder::drive`).
+    drive_requested: Option<(sim_domain_control::drive::kinematics::BodyTwist, bool)>,
+    drive_refusal: Option<String>,
 }
 
 #[derive(Resource)]
@@ -574,6 +590,7 @@ mod editing;
 pub(crate) mod picked;
 mod live_run;
 mod rebuild;
+mod robot_run;
 mod studies;
 use background::{finish_actuators, finish_calibration, finish_gait_reports, frame_timing, open_system, watch};
 use drafts::{drops, sync_field};

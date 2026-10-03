@@ -221,9 +221,10 @@ impl RobotView {
         // Run-thread overlays (robot_overlay); null until loaded.
         out["overlays"] = self.run.as_ref().map_or(Value::Null, RunController::overlays_json);
         // A controlled run's drive state (RunController::drive_json: controller, profile,
-        // limits with units, geometry with provenance, twists, deadman); null for any other run.
+        // limits with units, geometry with provenance, twists, deadman), or {bound: false,
+        // binding_error} when the binding beside the model failed to load; null for any other run.
         // The device layer's `bindings` and `drive_input` are resources: `with_drive_input` adds them.
-        out["drive"] = self.run.as_ref().filter(|r| r.controlled().is_some()).map_or(Value::Null, RunController::drive_json);
+        out["drive"] = self.run.as_ref().filter(|r| r.controlled().is_some() || r.binding_error().is_some()).map_or(Value::Null, RunController::drive_json);
         // The recorded timeline (robot_recorded); absent unless a recorded preset is loaded.
         if let Some(r) = self.run.as_ref().and_then(RunController::recorded_json) {
             out["recorded"] = r;

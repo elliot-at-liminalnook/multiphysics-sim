@@ -58,6 +58,7 @@ fn compile_output(document: &SystemDocument, registry: &sim_core::BehaviorRegist
     let config = system_builder::config_for(document);
     let compiled = system_builder::compile(document, registry, config.clone())?;
     let compile_error = sim_compile::Runtime::new(compiled.flat.model.clone(), registry, config.integrator).err().map(|e| system_builder::locate(&compiled.flat, e.to_string()));
+    // A hosted system (linked files) gets no live bundle: `write_bundle` refuses it (check_hosted) and removes a stale one.
     let bundle = system_builder::write_bundle(&compiled, build_dir, "system")?;
     Ok(CompileOutput { findings: compiled.flat.findings.clone(), compile_error, live_path: bundle.live, description: compiled.description })
 }

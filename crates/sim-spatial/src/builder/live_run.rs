@@ -6,25 +6,34 @@ use super::*;
 impl LiveRun {
     /// The one way a run session starts: `run_thread` on a `RunThread`.
     pub(super) fn spawn(document: SystemDocument, registry: BehaviorRegistry, observed: Vec<String>, description_id: String, fidelity: Fidelity) -> Self {
-        let initial = RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new(), reset_pending: false };
+        let initial = RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new(), reset_pending: false, drive: None };
         let (simulated, source_id) = (document.clone(), description_id.clone());
         let worker = crate::jobs::RunThread::spawn("builder-run", initial, move |commands, shared| run_thread(simulated, registry, observed, source_id, commands, shared));
-        Self { worker, description_id, fidelity, document, edited: false }
+        Self { worker, description_id, fidelity, document, edited: false, robot: false, requested_running: true, drive_requested: None, drive_refusal: None }
     }
 }
 
 impl Builder {
     pub(super) fn stop_run(&mut self) {
-        // Keep every run that got anywhere.
-        if self.run.as_ref().is_some_and(|r| r.worker.shared().lock().ok().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time)).unwrap_or(0.) >= 0.1) {
+        // Keep every run that got anywhere (a robot system's run keeps no run record yet: `save_run`).
+        if self.run.as_ref().is_some_and(|r| !r.robot && r.worker.shared().lock().ok().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time)).unwrap_or(0.) >= 0.1) {
             let _ = self.save_run("");
         }
+        // A robot run's thread is detached at once (`spawn_robot`: join bound zero); a
+        // controller still starting is closed when that thread reaches its next command check.
+        let starting = self.run.as_ref().is_some_and(|r| r.robot && r.worker.shared().lock().ok().is_some_and(|s| s.drive.as_ref().is_none_or(|d| d.phase == "loading")));
         self.run = None;
+        if starting {
+            self.status = robot_run::STOPPED_WHILE_STARTING.into();
+        }
     }
 
     /// Keep the current run: its document, seed, settings and recorded history.
     pub fn save_run(&mut self, note: &str) -> Result<PathBuf, String> {
         let run = self.run.as_ref().ok_or("nothing is running")?;
+        if run.robot {
+            return Err(robot_run::NO_RUN_RECORD.into());
+        }
         let (duration, history) = {
             let s = run.worker.shared().lock().map_err(|_| "run state unavailable")?;
             if s.reset_pending {
@@ -53,12 +62,22 @@ impl Builder {
     }
 
     pub(super) fn start_run(&mut self, scene: &SpatialScene) {
-        if let Some(run) = &self.run {
-            if run.description_id == scene.description.id {
+        let robot = !self.document.links.is_empty();
+        if let Some(run) = &mut self.run {
+            // Same document and the same kind of run (robot system or system session): resume it.
+            if run.description_id == scene.description.id && run.robot == robot {
                 let _ = run.worker.send(RunControl::Start);
-                self.status = RUNNING_STATUS.into();
+                run.requested_running = true;
+                self.status = if run.robot { robot_run::RUNNING_STATUS } else { RUNNING_STATUS }.into();
                 return;
             }
+        }
+        // Hosted instances (linked files) run on the shared drive host, not the system session.
+        if robot {
+            self.stop_run();
+            self.run = Some(LiveRun::spawn_robot(self.document.clone(), self.store.path.clone(), self.registry.clone(), scene.description.id.clone()));
+            self.status = robot_run::RUNNING_STATUS.into();
+            return;
         }
         let fidelity = if self.realtime { Fidelity::Realtime } else { Fidelity::Detailed };
         let document = match fidelity.document(&self.document, &self.registry) {
@@ -82,8 +101,9 @@ impl Builder {
     }
 
     pub(super) fn pause_run(&mut self) {
-        if let Some(run) = &self.run {
+        if let Some(run) = &mut self.run {
             let _ = run.worker.send(RunControl::Pause);
+            run.requested_running = false;
             // No time: the last published snapshot may be a frame behind the pause.
             self.status = "Paused (Step advances one timestep; Run resumes).".into();
         }
@@ -97,6 +117,16 @@ impl Builder {
     /// `self.document` or the file.
     pub(super) fn hot_swap(&mut self, source: &SystemDocument, description_id: String) -> bool {
         let Some(fidelity) = self.run.as_ref().map(|r| r.fidelity) else { return false };
+        // Linking or unlinking files changes which host runs the system: never run a partial model.
+        if let Some(was_robot) = self.run.as_ref().map(|r| r.robot).filter(|r| *r == source.links.is_empty()) {
+            self.stop_run();
+            self.status = if was_robot {
+                "The robot system's run was stopped: the system no longer hosts linked files, so it runs on the system session; press Run to start it.".into()
+            } else {
+                "The run was stopped (kept up to the edit): the system now hosts linked files (a robot system), which run on the shared drive host, not the system session; press Run to start it.".into()
+            };
+            return false;
+        }
         match fidelity.document(source, &self.registry) {
             Ok(document) => {
                 let run = self.run.as_mut().expect("checked above");
@@ -199,7 +229,9 @@ impl Builder {
             return Err("reset in progress".into());
         }
         let reached = run.worker.shared().lock().ok().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time)).unwrap_or(0.);
-        let kept = if reached >= 0.1 { Some(self.save_run("")?) } else { None };
+        // A robot system's run keeps no run record yet (`save_run`).
+        let robot = run.robot;
+        let kept = if reached >= 0.1 && !robot { Some(self.save_run("")?) } else { None };
         let run = self.run.as_mut().expect("checked above");
         {
             let mut s = run.worker.shared().lock().map_err(|_| "run state unavailable")?;
@@ -213,9 +245,11 @@ impl Builder {
             return Err("the run has ended; start a new run".into());
         }
         run.edited = false;
+        run.requested_running = false;
         let kept = kept.and_then(|p| self.runs.iter().find(|(q, _)| *q == p).map(|(_, s)| s.id.clone()));
         self.status = match kept {
             Some(id) => format!("Reset to t = 0 (paused); kept the previous run as {id}."),
+            None if robot => "Reset: the robot system is rebuilt from the system file and its linked files, paused at t = 0 (a robot system's run keeps no run record yet).".into(),
             None => "Reset to t = 0 (paused); the previous run was under 0.1 s and was not kept.".into(),
         };
         self.panel_dirty = true;
@@ -225,6 +259,8 @@ impl Builder {
     /// Latest run-thread status: null without a run.
     pub(super) fn live_run_json(&self) -> serde_json::Value {
         let Some(run) = &self.run else { return serde_json::Value::Null };
+        // Before taking the lock: `drive_json` locks the same RunShared (std mutexes are not re-entrant).
+        let drive = self.drive_json();
         let s = run.worker.shared().lock().ok();
         let status = s.as_ref().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.clone()));
         serde_json::json!({
@@ -237,6 +273,7 @@ impl Builder {
             "error": s.as_ref().and_then(|s| s.snapshot.as_ref().and_then(|x| x.error.clone())),
             "fidelity": run.fidelity.label(),
             "edited": run.edited,
+            "drive": drive,
         })
     }
 
@@ -258,6 +295,10 @@ fn run_thread(document: SystemDocument, registry: BehaviorRegistry, observed: Ve
         Ok(c) => c,
         Err(e) => return publish(None, None, Some(e), false),
     };
+    // `start_run` sends a robot system to `robot_run`; never run a partial model here.
+    if let Err(e) = system_builder::check_hosted(&compiled.flat) {
+        return publish(None, None, Some(e), false);
+    }
     let source = sim_runtime::system_session::ModelSource {
         model: compiled.flat.model.clone(),
         registry: registry.clone(),
@@ -383,6 +424,8 @@ fn run_thread(document: SystemDocument, registry: BehaviorRegistry, observed: Ve
                     step_error = error.clone();
                     publish(Some(session.status().clone()), Some(session.latest().clone()), error, false);
                 }
+                // Never sent to a system session: `Builder::drive` refuses a run that is not a robot system.
+                Ok(RunControl::Twist { .. }) => {}
                 Ok(RunControl::Observe(ids)) => {
                     if let Err(e) = session.subscribe(ids) {
                         publish(Some(session.status().clone()), Some(session.latest().clone()), Some(e), running);

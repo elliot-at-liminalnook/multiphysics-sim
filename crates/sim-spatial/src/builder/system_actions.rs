@@ -81,6 +81,19 @@ pub(crate) enum SystemAction {
     SystemRun {
         action: String,
     },
+    /// `system_drive`: one drive request for a robot system's run.
+    SystemDrive {
+        #[serde(default)]
+        forward: Option<f64>,
+        #[serde(default)]
+        lateral: Option<f64>,
+        #[serde(default)]
+        yaw: Option<f64>,
+        #[serde(default)]
+        action: Option<String>,
+        #[serde(default)]
+        stop: Option<bool>,
+    },
     SystemImportImage {
         path: std::path::PathBuf,
     },
@@ -212,7 +225,7 @@ impl actions::Action for SystemAction {
             c("system_grid",json!({}),"Read/set display-only grid (metres, Y up, enclosing definition frame). Never changes physics or CAD geometry. Optional expected_revision."),
             c("system_move",json!({"names":["motor"],"position_m":[0.04,0,0.02],"snap":true,"preview":true}),"Display-only move: first named instance is the anchor, others keep their offsets. Shared mouse/REST snapping, overlap report (allowed=false for invalid preview; commit rejects), atomic undo, expected_revision. Does NOT change physics/CAD."),
             c("system", json!({"label":"Place resistor","commands":[{"command":"add_instance","at":"","name":"r1","instance":{"kind":{"kind":"element","component_type":"electrical.resistor"},"parameters":{"resistance":{"value":100}}}}]}),
-                "Apply sim-system commands atomically (same validation and shared undo history as both viewers and the CLI)"),
+                "Apply sim-system commands atomically (same validation and shared undo history as both viewers and the CLI). Commands apply in order and each is checked as it applies: link_file {instance, path} (host a root robot.articulated, control.external or control.drive_limiter from its .simrobot.json, .controller.json or .drive.json, relative to the system file; path null unlinks, refused while the instance is still connected: disconnect it first) must come before any connect on a hosted port"),
             c("system_state", json!({}), "System file, revision, build level, selection, findings and compile status; workspace (the resolved root: root, found_by override | env | opened_file | cwd, from, error, rule; also in GET /v1/capabilities)"),
             c("system_open", json!({"path":"examples/systems-builder/worm-drive/winch.system.json"}), "Open another system file in this window (same handler as the Systems tab). Refuses, naming the blocker, while a text/discussion draft, placement drag, study, replay or Codex answer is in progress; a live run is stopped and saved to the old file's runs. Loads, validates and compiles off the UI thread (poll the job); a missing or invalid file is an error naming the path and the current system stays open. Writes no runs or annotations. system_state.open reports the pending/last open, discovered systems, the annotations sidecar and whether a --schematic window still shows the old file."),
             c("system_gait_reports", json!({"dir":"examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results"}), "Read-only gait-lab results browser (same handler as the Gait lab tab's path field, Reload and first visit). Reads every <dir>/*/report.yaml (gait, pose_sequence or maneuver by kind) plus <dir>/journal.jsonl with sim_runtime::gait_lab::scan_results, off the UI thread (poll the job). Default dir: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results under the nearest ancestor of the system file, else the workspace root (system_state.workspace); omitted = the current one. Refused while a scan is pending. A missing dir is an error naming it; the last good listing stays in system_state.gait_reports with its own root. Result and system_state.gait_reports: root, journal, warnings, entries [{name, directory, kind, status, report (the report.yaml fields; null numbers mean not recorded/not simulated) | error (names the report.yaml), journal (unix_s, cached, line) or null}], plus pending, selected, error, caveat. Reports carry no runtime fingerprint, so qualification against the current code is unknown. Writes nothing and starts no evaluation."),
@@ -223,6 +236,7 @@ impl actions::Action for SystemAction {
             c("system_undo", json!({}), "Undo the last edit in the shared history"),
             c("system_redo", json!({}), "Redo in the shared history"),
             c("system_run", json!({"action":"step"}), "Control the background run on the shared runtime: action start, pause, step (one timestep while paused) or reset (t = 0, paused; a run that reached 0.1 s is saved first). Same Builder methods as the Run/Pause/Step/Reset buttons"),
+            c("system_drive", json!({"forward":0.5,"lateral":0,"yaw":0}), "Drive a robot system's run: a system whose root hosts a robot.articulated, a control.external and optionally a control.drive_limiter, each linked to its file (system command link_file: .simrobot.json, the robot's .controller.json binding, the .drive.json profile that binding names), running after system_run start on the shared drive host (sim_runtime::drive_host::DriveHost: the shared Session with the binding's external controller on the model's control.external seam; the same code Robot mode drives). Build it with one system batch in this order: add_instance (rover, controller, limiter), link_file each, set_parameter controller sense.command.<axis> (value 1), then connect limiter twist.<axis> to controller sense.command.<axis> (connect is checked as it applies, so it must follow link_file). Give exactly one of: axes forward, lateral, yaw (normalized -1..1: + ahead, + left, + turn left/CCW; absent ones are 0), scaled by the linked profile's max_speed per axis (kinematics::scale; a nonzero axis the profile does not support, a value outside -1..1 or a non-finite one is refused naming the axis); action (one of the profile's named actions: stop approaches zero under the profile's acceleration limit, halt zeroes at once; an unknown name is refused listing the profile's actions); or stop: true. Mixing them is refused naming the fields given. The same BuildAction::Drive as the run panel's Forward/Back/Left/Right/Stop buttons (system_ui). A nonzero request is accepted only while the run is running (system_run start); stop, halt and zero requests are accepted until the run fails or ends, and before the system has loaded only stop is. The run thread limits each request under the profile's max_accel and applies its deadman on simulated time, then sends the twist and a request heartbeat on the controller's command channels (command.forward/lateral/yaw/heartbeat); the controller mixes it. A request older than the profile's deadman timeout is lost and the robot stops, so a REST client must repeat its request faster than that to keep moving. Refused naming the reason: no run, a run that is not a robot system, a run that failed (a controller that exited, timed out or answered badly fails the run; the error names the instance and the controller) or ended, a reset in progress; a refusal is kept in system_state.live_run.drive.last_refusal. Answers system_state.live_run.drive: phase, system (instances and files, limits with units, deadman, period, channels, wiring), status (request and commanded twist, heartbeat, deadman age), requested, last_refusal, last_apply_error and error. No keyboard or gamepad bindings in Build mode yet."),
             c("system_import_image", json!({"path":"/abs/board.png"}), "Import a PNG/JPEG as a reference image at the current level"),
             c("system_suggest", json!({"instance":"motor"}), "What can snap onto each port of an instance at the current level (typed, curated first, conflicts explained)"),
             c("system_snap", json!({"instance":"motor","port":"shaft","kind":{"kind":"element","component_type":"rotational.worm_gear"}}), "Place a fitting part next to an instance and connect it to that port (one undoable edit)"),
@@ -343,6 +357,9 @@ fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, 
             }
             Ok(pick.state(builder))
         })(),
+        SystemAction::SystemDrive { forward, lateral, yaw, action, stop } => {
+            sim_runtime::drive_host::DriveRequest::from_fields(*forward, *lateral, *yaw, action.clone(), *stop, "system_drive").and_then(|request| builder.drive(request))
+        }
         SystemAction::SystemImportImage { path } => builder.import_image(path.clone()).map(|_| pick.state(builder)),
         SystemAction::SystemSuggest { instance } => builder.suggestions(instance).map(|s| json!(s)),
         SystemAction::SystemSnap { instance, port, kind } => (|| -> sim_api::Result {

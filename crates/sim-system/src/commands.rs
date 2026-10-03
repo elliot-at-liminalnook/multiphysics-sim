@@ -191,6 +191,17 @@ pub enum Command {
     SetRealtime { realtime: Option<RealtimeProfile> },
     /// Name (or clear) a definition's realtime counterpart.
     SetRealtimeCounterpart { definition: String, realtime: Option<String> },
+    /// Host a root instance from a file (`path`, relative to the system
+    /// file), or unlink it (`null`). Only robot.articulated
+    /// (`.simrobot.json`), control.external (`.controller.json`) and
+    /// control.drive_limiter (`.drive.json`) elements can be hosted; see
+    /// [`FileLink`]. Removing or renaming the instance drops or renames its link.
+    /// `Connect` is checked when it is applied, so in a batch `link_file`
+    /// must come before any `connect` on a hosted port (a hosted net joins
+    /// only hosted instances and is not type-checked; before the link it is
+    /// an ordinary net and is). An instance whose ports are still connected
+    /// cannot be unlinked: disconnect it first.
+    LinkFile { instance: String, path: Option<String> },
 }
 
 fn default_true() -> bool {
@@ -298,7 +309,9 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
                 net.terminals.retain(|t| t.instance() != Some(name));
             }
             d.nets.retain(|n| n.terminals.len() >= 2);
-            Ok(outcome(document, registry, &id, format!("Removed {name}")))
+            // A removed root instance takes its link with it.
+            let unlinked = id == document.root && document.links.remove(name).is_some();
+            Ok(outcome(document, registry, &id, format!("Removed {name}{}", if unlinked { " and its link" } else { "" })))
         }
         Command::RenameInstance { at, name, new_name } => {
             name_ok(new_name)?;
@@ -314,6 +327,12 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
                     if instance == name {
                         *instance = new_name.clone();
                     }
+                }
+            }
+            // A renamed root instance keeps its link under the new name.
+            if id == document.root {
+                if let Some(link) = document.links.remove(name) {
+                    document.links.insert(new_name.clone(), link);
                 }
             }
             Ok(outcome(document, registry, &id, format!("Renamed {name} to {new_name}")))
@@ -581,6 +600,28 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
             }
             definition_mut(document, definition)?.realtime = realtime.clone();
             Ok(outcome(document, registry, definition, format!("Realtime model of {definition}: {}", realtime.as_deref().unwrap_or("itself"))))
+        }
+        Command::LinkFile { instance, path } => {
+            let root = document.root.clone();
+            match path {
+                Some(path) => {
+                    Resolver::new(document, registry).check_link(instance, path)?;
+                    let previous = document.links.insert(instance.clone(), FileLink { path: path.clone() });
+                    let message = match previous {
+                        Some(p) if p.path != *path => format!("Linked {instance} to {path} (was {})", p.path),
+                        _ => format!("Linked {instance} to {path}"),
+                    };
+                    Ok(outcome(document, registry, &root, message))
+                }
+                None => {
+                    let wired: Vec<String> = document.definitions.get(&root).map(|d| d.nets.iter().flat_map(|n| &n.terminals).filter(|t| t.instance() == Some(instance.as_str())).map(|t| t.to_string()).collect()).unwrap_or_default();
+                    if document.links.contains_key(instance) && !wired.is_empty() {
+                        return Err(SystemError::Invalid(format!("`{instance}` cannot be unlinked while {} {} connected (a hosted instance's nets join only hosted instances); disconnect it first", wired.join(", "), if wired.len() == 1 { "is" } else { "are" })));
+                    }
+                    let removed = document.links.remove(instance).ok_or_else(|| SystemError::Invalid(format!("`{instance}` has no linked file")))?;
+                    Ok(outcome(document, registry, &root, format!("Unlinked {instance} from {}", removed.path)))
+                }
+            }
         }
         Command::SetStudy { name, study } => {
             if !valid_name(name) {

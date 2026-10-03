@@ -305,6 +305,7 @@ pub fn run_scene(document: &SystemDocument, registry: &BehaviorRegistry, scene: 
     let key = run_key(document, scene, timeline);
     let config = system_builder::config_for(document);
     let compiled = system_builder::compile(document, registry, config.clone())?;
+    system_builder::check_hosted(&compiled.flat)?;
     let source = ModelSource { model: compiled.flat.model.clone(), registry: registry.clone(), identities: compiled.flat.identities.clone(), source_hash: compiled.flat.source_hash.clone(), revision: document.revision.max(1) };
     let mut session = SystemSession::new(compiled.launch.run_id.clone(), config.clone(), move |c| source.build(c)).map_err(|e| system_builder::locate(&compiled.flat, e))?;
     let description = session.description().clone();

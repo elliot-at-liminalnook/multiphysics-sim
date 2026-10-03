@@ -347,6 +347,8 @@ impl SystemRun {
         }
         let config = sim_runtime::system_builder::config_for(&document);
         let compiled = sim_runtime::system_builder::compile(&document, &registry, config.clone()).map_err(error)?;
+        // Hosted instances (linked files) need the native drive host; never run a partial model.
+        sim_runtime::system_builder::check_hosted(&compiled.flat).map_err(error)?;
         let source = sim_runtime::system_session::ModelSource {
             model: compiled.flat.model.clone(),
             registry: registry.clone(),

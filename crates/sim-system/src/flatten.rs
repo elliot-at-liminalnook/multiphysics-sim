@@ -29,6 +29,24 @@ pub struct Flattened {
     /// Subsystem instance path → world placement.
     pub subsystems: BTreeMap<String, WorldPlacement>,
     pub findings: Vec<Finding>,
+    /// Hosted root instances (`SystemDocument::links`), left out of `model`:
+    /// the host runs them from their linked files.
+    pub hosted: BTreeMap<String, Hosted>,
+    /// The root nets that join hosted instances (the authored wiring the
+    /// host checks against what it runs); not connections in `model`.
+    pub hosted_nets: Vec<Net>,
+}
+
+/// A hosted instance as authored: its type, linked file and the parameter
+/// values the document gives it (for `control.external`, the `sense.*` /
+/// `act.*` names that declare its port members).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Hosted {
+    pub component_type: String,
+    pub label: String,
+    /// `FileLink::path`, relative to the system file's directory.
+    pub path: String,
+    pub parameters: BTreeMap<String, f64>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -113,6 +131,7 @@ struct Builder<'a> {
     parts: Vec<SpatialPart>,
     subsystems: BTreeMap<String, WorldPlacement>,
     source_hash: String,
+    hosted: BTreeMap<String, Hosted>,
 }
 
 impl Builder<'_> {
@@ -147,6 +166,15 @@ impl Builder<'_> {
         for (name, instance) in &definition.instances {
             let here = join_path(path, name);
             let world = frame.then(&instance.placement);
+            // A hosted root instance is not compiled: the host runs it from its linked file.
+            if let (Some(link), InstanceKind::Element { component_type }) = (self.resolver.document.links.get(name).filter(|_| definition_id == self.resolver.document.root), &instance.kind) {
+                let mut parameters = BTreeMap::new();
+                for (parameter, binding) in &instance.parameters {
+                    parameters.insert(parameter.clone(), resolve_binding(binding, env, &here, parameter)?);
+                }
+                self.hosted.insert(name.clone(), Hosted { component_type: component_type.clone(), label: instance.label.clone(), path: link.path.clone(), parameters });
+                continue;
+            }
             match &instance.kind {
                 InstanceKind::Element { component_type } => {
                     let mut values = Vec::new();
@@ -286,6 +314,7 @@ pub fn flatten(document: &SystemDocument, registry: &BehaviorRegistry) -> Result
         parts: Vec::new(),
         subsystems: BTreeMap::new(),
         source_hash: document.content_hash(),
+        hosted: BTreeMap::new(),
     };
     builder.expand("", &document.root, &env, WorldPlacement::IDENTITY, None, 0)?;
     // Group element ports by merged net; each set with two or more element
@@ -306,7 +335,12 @@ pub fn flatten(document: &SystemDocument, registry: &BehaviorRegistry) -> Result
     for (i, _) in builder.model.connections.iter().enumerate() {
         builder.identities.connections.insert(i, format!("net/{i}"));
     }
+    // Root nets on hosted instances join hosted instances only (`Resolver::check_net`):
+    // their terminals have no element port above, so they made no connection.
+    let hosted_nets = root.nets.iter().filter(|n| n.terminals.iter().any(|t| t.instance().is_some_and(|i| document.hosted(&document.root, i)))).cloned().collect();
     Ok(Flattened {
+        hosted: builder.hosted,
+        hosted_nets,
         source_hash: builder.source_hash,
         revision: document.revision,
         model: builder.model,

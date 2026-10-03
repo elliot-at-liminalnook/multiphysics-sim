@@ -54,3 +54,38 @@ Each `act` echoes the sample's `seq` and carries exactly as many actuators as th
 directory on `PYTHONPATH`, and `Runtime::attach_python(behavior,
 clients_root, script, args)` attaches it to a `control.external` element in
 one call. Give negative-valued flags as `--flag=value`.
+
+## Drive kinematics (`simloop.drive`)
+
+`simloop.drive` is the Python port of
+`crates/sim-domain-control/src/drive/kinematics.rs`, stdlib-only: `BodyTwist`,
+`scale`, `check_twist`, `limit`, `deadman_expired`, `step`,
+`DifferentialDrive` / `Mecanum` (`mix`, `unmix`), `KinematicsError` (`.kind`
+as in Rust), `ResolvedDrive.from_json` for the host's `sim.drive.resolved/1`
+JSON and `DriveState`, the controller-side deadman. On the seam the run
+thread's limited twist is authoritative: `DriveState` checks a live twist
+against the profile and passes it through (so a halt stops at once), and
+applies the stop rule from its last output when the heartbeat stops rising
+(a heartbeat is fresh only when it is greater than the last, as in the Rust
+limiter). `DriveState(limits, deadman, limit_live=True)` also limits live
+twists, for hosts that send raw ones. Arithmetic
+follows the Rust order, and `tests/test_drive.py` checks every case of the
+golden file the Rust code generates
+(`crates/sim-domain-control/tests/fixtures/drive_golden.json`) within its
+tolerance (not run in the batch that added it):
+
+    python3 -m unittest discover -s clients/python/tests -t clients/python -p test_drive.py
+
+## Example: the wheeled rover's teleoperation controller
+
+`examples/diff_drive_rover.py` drives `examples/wheeled-robot/baseline`.
+Robot mode finds `robot.controller.json` beside the model, starts the script
+and appends `--drive-json` with the resolved drive profile:
+
+    cargo run -p sim-spatial -- --robot examples/wheeled-robot/baseline/robot.simrobot.json
+
+To run it outside the viewer, write the resolved JSON to a file and pass
+`--drive FILE`. Without either flag it refuses to start (exit 2). A hello
+that lacks the command channels or wheel targets is refused before `ready`
+(`Loop.stdio(check=...)`), so the viewer's handshake reports the reason. The README
+in `examples/wheeled-robot` lists the channels and the deadman rule.

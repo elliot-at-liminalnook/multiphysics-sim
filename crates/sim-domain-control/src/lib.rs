@@ -40,4 +40,5 @@ pub mod maneuver_script;
 pub mod pose_script;
 
 pub mod adaptive_braking;
+pub mod drive;
 pub mod notes;

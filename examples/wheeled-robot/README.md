@@ -48,3 +48,54 @@ requests to a reference-integrating Rhai controller. Shared
 [controller forecast APIs](../interactive/controller-action-forecasts.md) train
 on the actual held requests and expose read-only trajectory predictions in
 native and browser environments. This remains a short no-contact acceptance case.
+
+## Teleoperation drive
+
+`baseline/robot.drive.json` (`sim.drive/1`) is the rover's drive profile: a
+differential drive on `left axle` / `right axle`, with no lateral axis.
+Geometry is `{"source": "model"}`. Track width, wheel radius and wheel signs
+come from `robot.simrobot.json`, each with its provenance. The limits are
+estimates. Max forward speed is 60% of the free-running wheel speed: the
+N20 gearbox's 14.66 rad/s × 0.03 m = 0.44 m/s, giving 0.26 m/s. Max yaw is the
+spin-in-place rate at the same wheel speed, 4.3 rad/s. Accelerations are
+chosen, not motor-limited. Each provenance `source` states its derivation.
+Full forward plus full yaw asks the outer wheel for more than its
+free-running speed, because the limiter does not cap combined wheel speed.
+
+`baseline/robot.controller.json` (`sim.controller-binding/1`) attaches
+`clients/python/examples/diff_drive_rover.py` as the controller on the
+`control.external` seam:
+
+    cargo run -p sim-spatial -- --robot examples/wheeled-robot/baseline/robot.simrobot.json
+
+Robot mode finds `<stem>.controller.json` beside the model, resolves the
+profile against the model, starts the script with `clients/python` on
+`PYTHONPATH` and appends `--drive-json '<sim.drive.resolved/1 JSON>'`.
+
+Channels the controller sees, appended after the model's own seam sensors
+(`<joint>.angle` rad and `<joint>.speed` rad/s per joint, `imu.*`):
+
+- `command.forward` (m/s), `command.lateral` (m/s, always 0 here) and
+  `command.yaw` (rad/s, positive counter-clockwise from above). This is the
+  twist the viewer's run thread already limited with the shared rule
+  (`kinematics::step`, on sim time).
+- `command.heartbeat`: increases by one for every fresh request. The
+  controller measures a request's age as the sim time since the heartbeat
+  last changed. Heartbeat 0 means no request yet, and the twist is then
+  treated as zero. At or beyond `timeout_s` (0.5 s) the deadman applies the
+  profile's stop rule (ramp at `stop_decel`), whatever the twist channels
+  say. A live twist outside the profile, such as nonzero lateral, is a
+  protocol violation: the controller logs it to stderr and exits, and the
+  run fails naming it.
+
+Actuators it writes: `left axle.target` and `right axle.target` (rad). Each
+frame it mixes the twist into joint rates (rad/s) and integrates them,
+`target += period × rate`, exactly as `velocity-controller.rhai` does. The
+targets start at 0.0, the seam's initial value. The CAD motor firmware tracks
+these position references.
+
+All of this was verified by reading the code only. Nothing here has been run
+or calibrated against hardware. The Python kinematics are checked against
+the Rust golden vectors by
+`python3 -m unittest discover -s clients/python/tests -t clients/python -p test_drive.py`,
+which was not run in the batch that added it.

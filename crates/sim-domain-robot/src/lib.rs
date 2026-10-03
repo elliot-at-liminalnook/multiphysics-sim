@@ -23,6 +23,7 @@ pub mod contact_feasibility;
 pub mod world_load;
 pub mod sdf;
 pub mod stress_results;
+pub mod drive_geometry;
 
 pub use articulated::{Articulated, Generalized, Options, ARTICULATED};
 pub use model::{model_by_handle, register_model, PhysicalModel};

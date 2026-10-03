@@ -33,11 +33,12 @@ import math
 import os
 import socket
 import sys
-from typing import IO, Any, Dict, Iterator, List, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import IO, Any, Callable, Dict, Iterator, List, NamedTuple, Optional, Sequence, Tuple, Union
 
 __all__ = ["Channel", "Contract", "Frame", "Loop", "ProtocolError"]
 
 Address = Tuple[str, int]
+Check = Callable[["Contract"], Any]
 
 
 class ProtocolError(Exception):
@@ -97,12 +98,18 @@ class Loop:
     channels.  Iterate to receive frames and :meth:`send` a reply to each.
     Iteration ends cleanly on ``close`` or end of stream.
 
+    ``check``, if given, receives the :class:`Contract` before ``ready`` is
+    written.  If it raises, the reason goes to stderr and the exception
+    propagates without a ``ready``, so the simulator's handshake fails with
+    the controller's refusal instead of a bare "stream closed" at the first
+    step.  Use it to refuse a hello that lacks the channels a controller needs.
+
     If the next frame is requested before the current one has been answered,
     the held actuator values are sent, so a controller that skips a step
     holds its last output rather than deadlocking the simulator.
     """
 
-    def __init__(self, reader: IO[Any], writer: IO[Any]):
+    def __init__(self, reader: IO[Any], writer: IO[Any], check: Optional[Check] = None):
         self._reader = reader
         self._writer = writer
         self._owned: List[Any] = []
@@ -118,42 +125,54 @@ class Loop:
         self._sensor_names = [c.name for c in self.contract.sensors]
         self._actuator_index = {c.name: i for i, c in enumerate(self.contract.actuators)}
         self._held: List[float] = [0.0] * len(self.contract.actuators)
+        if check is not None:
+            try:
+                check(self.contract)
+            except Exception as e:
+                print(f"simloop: {self.contract.element}: refusing the hello: {e}", file=sys.stderr, flush=True)
+                raise
         self._write({"type": "ready"})
 
     # -- constructors --------------------------------------------------------
 
     @classmethod
-    def stdio(cls) -> "Loop":
+    def stdio(cls, check: Optional[Check] = None) -> "Loop":
         """Speak over this process's stdin/stdout (the simulator spawned us)."""
-        return cls(sys.stdin.buffer, sys.stdout.buffer)
+        return cls(sys.stdin.buffer, sys.stdout.buffer, check=check)
 
     @classmethod
-    def listen(cls, address: Address) -> "Loop":
+    def listen(cls, address: Address, check: Optional[Check] = None) -> "Loop":
         """Listen on a TCP ``(host, port)`` and accept one simulator connection."""
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind(address)
-        return cls._accept(server)
+        return cls._accept(server, check)
 
     @classmethod
-    def listen_unix(cls, path: Union[str, "os.PathLike[str]"]) -> "Loop":
+    def listen_unix(cls, path: Union[str, "os.PathLike[str]"], check: Optional[Check] = None) -> "Loop":
         """Listen on a Unix socket at ``path`` and accept one simulator connection."""
         path = os.fspath(path)
         if os.path.exists(path):
             os.unlink(path)
         server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         server.bind(path)
-        return cls._accept(server)
+        return cls._accept(server, check)
 
     @classmethod
-    def _accept(cls, server: socket.socket) -> "Loop":
+    def _accept(cls, server: socket.socket, check: Optional[Check] = None) -> "Loop":
         with server:
             server.listen(1)
             conn, _ = server.accept()
         if conn.family == socket.AF_INET:
             conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         reader, writer = conn.makefile("rb"), conn.makefile("wb")
-        loop = cls(reader, writer)
+        try:
+            loop = cls(reader, writer, check=check)
+        except BaseException:
+            # A refused or malformed hello: release the connection, then report.
+            for resource in (reader, writer, conn):
+                resource.close()
+            raise
         loop._owned += [reader, writer, conn]
         return loop
 

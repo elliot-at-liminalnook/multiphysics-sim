@@ -10,6 +10,33 @@
 //!   starts when the running one ends.
 //! - **Progress**: "exporting {label} in the background… n s" in the status
 //!   line, refreshed once a second.
+//! - **The saved file's hash** (`source.cad_sha256`, which RoboCAD's `GET
+//!   /physical` does not write): the job reads RoboCAD's `GET /` before
+//!   the model and again after hashing the file, and records the sha256 of
+//!   the `.rcad` only when that file is RoboCAD's document as saved through
+//!   the whole export (`cad_client::stamp_saved_source`: a path, absolute,
+//!   no unsaved edits, the same file, document and revision both times);
+//!   otherwise the model is written without it and the reason is kept
+//!   ([`Written`], `cad_state.results.exports.last`, the status line). The
+//!   live link's exports follow the same rule. `source.file` stays as
+//!   RoboCAD wrote it and must name that same file (its document's path,
+//!   absolute when stamped), which `sim_domain_robot::cad_link::status`
+//!   uses as is. **Remaining limit**: RoboCAD's `dirty` and `revision`
+//!   track only its in-memory document, so a `.rcad` overwritten on disk
+//!   by another program after RoboCAD loaded or saved it would be hashed
+//!   and stamped although the model came from the document in memory;
+//!   closing that needs RoboCAD to report the digest of the file it last
+//!   loaded or saved.
+//! - **Completion**: each started or queued export has a process-wide
+//!   sequence number (`seq` in `cad_results {op: export}`'s answer
+//!   `{started, path, seq, message}` or `{queued, seq, message}`, in
+//!   `queued` and `running`; a queued one keeps it when it starts); its
+//!   outcome (also "not started" for a queued one replaced, dropped or
+//!   failing to start) lands in `recent` (the last [`RECENT`]
+//!   outcomes, oldest first, each as `last`) and in `last` (the newest),
+//!   so a REST caller polls `cad_state.results.exports.recent` for its
+//!   seq: a queued live-link export or another caller's landing after it
+//!   replaces `last`, not the caller's entry in `recent`.
 //! - **Cancel** requests cancellation and retains the job until completion. RoboCAD's request itself
 //!   cannot be aborted (it derives the model to the end; api.py has no
 //!   cancel route). Cancellation after the final check cannot revoke a rename. The job checks the
@@ -21,12 +48,19 @@ use super::ResultsState;
 use crate::cad::document::CadDocument;
 use crate::jobs::{Job, Pool};
 use serde_json::{Value, json};
+use sim_domain_robot::cad_link::sha256_file;
+use sim_runtime::cad_client::stamp_saved_source;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
 /// Makes each temporary file name unique within the process.
 static TMP_SEQ: AtomicU64 = AtomicU64::new(0);
+/// Export sequence numbers, never reused in the process (also across
+/// documents, so a REST caller's seq can only ever name its own export).
+static EXPORT_SEQ: AtomicU64 = AtomicU64::new(0);
+/// How many finished exports' outcomes `Exports::recent` keeps.
+pub(crate) const RECENT: usize = 8;
 
 /// How long the export request may take: RoboCAD's `export_snapshot`
 /// allows its child process an hour; a little more here.
@@ -46,15 +80,35 @@ pub(crate) struct ExportRequest {
     pub link: bool,
 }
 
-/// What a finished export wrote: the model's link count and flexible links.
+/// What a finished export wrote: the model's link count and flexible
+/// links, and the `.rcad` hash recorded as `source.cad_sha256` or why none was.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Written {
     pub links: usize,
     pub flexible: usize,
+    pub cad_sha256: Option<String>,
+    pub cad_sha256_reason: Option<String>,
+}
+
+/// The last finished export (`cad_state.results.exports.last`).
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Last {
+    /// The export's sequence number (its `cad_results` answer's `seq`).
+    pub seq: u64,
+    pub label: String,
+    pub path: PathBuf,
+    /// Ok(message): written; Err(message): failed or cancelled, nothing written.
+    pub outcome: Result<String, String>,
+    /// The hash recorded as `source.cad_sha256` (written exports only).
+    pub cad_sha256: Option<String>,
+    /// Why a written export records no `cad_sha256`.
+    pub cad_sha256_reason: Option<String>,
 }
 
 /// The export in flight.
 pub(crate) struct Running {
+    /// This export's process-wide sequence number (`EXPORT_SEQ`).
+    pub seq: u64,
     pub request: ExportRequest,
     pub job: Job<Written>,
     pub started: Instant,
@@ -73,8 +127,13 @@ pub(crate) struct Running {
 pub(crate) struct Exports {
     pub running: Option<Running>,
     pub queued: Option<ExportRequest>,
-    /// The last outcome: (label, path, Ok(message) | Err(message)).
-    pub last: Option<(String, PathBuf, Result<String, String>)>,
+    /// The queued export's sequence number (given when it was queued and
+    /// kept when it starts; meaningful only while `queued` is Some).
+    pub queued_seq: u64,
+    /// The last outcome.
+    pub last: Option<Last>,
+    /// The last [`RECENT`] outcomes, oldest first (`last` is the newest).
+    pub recent: std::collections::VecDeque<Last>,
     /// The last model written (what "Show in Robot mode" opens without a link).
     pub written: Option<PathBuf>,
 }
@@ -85,18 +144,38 @@ impl Exports {
         json!({
             "running": self.running.as_ref().map(|r| {
                 let mut v = req(&r.request);
+                v["seq"] = json!(r.seq);
                 v["seconds"] = json!(r.started.elapsed().as_secs());
                 v["cancel_requested"] = json!(r.cancel_requested);
                 v
             }),
-            "queued": self.queued.as_ref().map(req),
-            "last": self.last.as_ref().map(|(label, path, r)| match r {
-                Ok(m) => json!({"label": label, "path": path, "ok": true, "message": m}),
-                Err(e) => json!({"label": label, "path": path, "ok": false, "message": e}),
+            "queued": self.queued.as_ref().map(|q| {
+                let mut v = req(q);
+                v["seq"] = json!(self.queued_seq);
+                v
             }),
+            "last": self.last.as_ref().map(last_json),
+            "recent": self.recent.iter().map(last_json).collect::<Vec<_>>(),
             "written": self.written,
         })
     }
+    /// A finished export's outcome: `last`, and kept in `recent` (bounded).
+    pub(crate) fn land(&mut self, outcome: Last) {
+        self.recent.push_back(outcome.clone());
+        while self.recent.len() > RECENT {
+            self.recent.pop_front();
+        }
+        self.last = Some(outcome);
+    }
+}
+
+/// One outcome as `cad_state.results.exports.last` and `recent` show it.
+fn last_json(l: &Last) -> Value {
+    let (ok, message) = match &l.outcome {
+        Ok(m) => (true, m),
+        Err(e) => (false, e),
+    };
+    json!({"seq": l.seq, "label": l.label, "path": l.path, "ok": ok, "message": message, "cad_sha256": l.cad_sha256, "cad_sha256_reason": l.cad_sha256_reason})
 }
 
 /// The file an export writes for a typed path: as typed when it ends in
@@ -120,41 +199,80 @@ pub(crate) fn admit(exports: &mut Exports, request: ExportRequest) -> Result<Opt
     Err(RUNNING.into())
 }
 
-/// An export asked for (a button, the form, the live link).
+/// The next export sequence number (process-wide, never reused).
+fn next_seq() -> u64 {
+    EXPORT_SEQ.fetch_add(1, Ordering::Relaxed) + 1
+}
+
+/// The queued export, dropped without starting: landed as not started
+/// (`ok: false`, `reason`) so a REST caller polling its seq learns it.
+pub(crate) fn drop_queued(exports: &mut Exports, reason: &str) {
+    if let Some(q) = exports.queued.take() {
+        let message = format!("{} export not started: {reason}; nothing was written to {}", q.label, q.path.display());
+        exports.land(Last { seq: exports.queued_seq, label: q.label, path: q.path, outcome: Err(message), cad_sha256: None, cad_sha256_reason: None });
+    }
+}
+
+/// An export asked for (a button, the form, the live link). The answer
+/// is `{started, path, seq, message}` or, for a live-link export queued
+/// behind a running one, `{queued, seq, message}`; either seq's outcome
+/// lands in `Exports::recent` (a queued one replaced by a newer one, or
+/// whose start fails, lands as not started).
 pub(crate) fn request(doc: &mut CadDocument, request: ExportRequest) -> Result<Value, String> {
     let label = request.label.clone();
-    match admit(&mut doc.results.exports, request)? {
-        None => {
-            let message = format!("{label}: queued; it starts when the running export ends");
+    // A live-link request queued behind a running export replaces the
+    // queued one (the latest wins): taken here, landed as not started below.
+    let replaced = if request.link && doc.results.exports.running.is_some() { doc.results.exports.queued.take().map(|q| (doc.results.exports.queued_seq, q)) } else { None };
+    match admit(&mut doc.results.exports, request) {
+        Err(e) => Err(e),
+        Ok(None) => {
+            let seq = next_seq();
+            if let Some((old, q)) = replaced {
+                let message = format!("{} export not started: replaced by a newer live-link export (seq {seq}); nothing was written to {}", q.label, q.path.display());
+                doc.results.exports.land(Last { seq: old, label: q.label, path: q.path, outcome: Err(message), cad_sha256: None, cad_sha256_reason: None });
+            }
+            doc.results.exports.queued_seq = seq;
+            let message = format!("{label}: queued; it starts when the running export ends; poll cad_state.results.exports.recent for seq {seq} (last is the newest)");
             doc.show(Ok(message.clone()));
-            Ok(json!({"queued": true, "message": message}))
+            Ok(json!({"queued": true, "seq": seq, "message": message}))
         }
-        Some(request) => {
+        Ok(Some(request)) => {
             let path = request.path.clone();
-            start(doc, request)?;
-            Ok(json!({"started": true, "path": path, "message": format!("exporting {label} in the background…")}))
+            let seq = next_seq();
+            start(doc, request, seq)?;
+            Ok(json!({"started": true, "path": path, "seq": seq, "message": format!("exporting {label} in the background…; poll cad_state.results.exports.recent for seq {seq} (last is the newest)")}))
         }
     }
 }
 
-/// Starts `request` now (nothing may be running).
-fn start(doc: &mut CadDocument, request: ExportRequest) -> Result<(), String> {
+/// Starts `request` now as export `seq` (nothing may be running).
+/// The job reads RoboCAD's `GET /` before the model and after hashing the
+/// saved file, and records `source.cad_sha256` only under
+/// `cad_client::stamp_saved_source`'s rule (see the module doc).
+fn start(doc: &mut CadDocument, request: ExportRequest, seq: u64) -> Result<(), String> {
     if !doc.connected() {
         return Err(format!("not connected to RoboCAD: {}", doc.connection_line().0));
     }
     let client = doc.client.clone().ok_or("not connected to RoboCAD")?.with_timeout(EXPORT_TIMEOUT);
     let (path, flex, planar) = (request.path.clone(), request.flex, request.planar);
     let job = Job::spawn(Pool::Dedicated, doc.generation, format!("RoboCAD export: {}", request.label), move |ctx| {
-        let model = client.physical_model(flex, planar).map_err(|e| e.to_string())?;
+        let before = client.health().map_err(|e| e.to_string());
+        let mut model = client.physical_model(flex, planar).map_err(|e| e.to_string())?;
         // A cancel before the write leaves no file (RoboCAD's request had run to the end).
         if ctx.cancelled() {
             return Err("cancelled".into());
         }
-        write_model(&path, &model, &|| ctx.cancelled())
+        let stamp = stamp_saved_source(&mut model, before, |p| sha256_file(p).map_err(|e| e.to_string()), || client.health().map_err(|e| e.to_string()));
+        let mut written = write_model(&path, &model, &|| ctx.cancelled())?;
+        match stamp {
+            Ok(hash) => written.cad_sha256 = Some(hash),
+            Err(reason) => written.cad_sha256_reason = Some(reason),
+        }
+        Ok(written)
     });
     doc.show(Ok(format!("exporting {} in the background…", request.label)));
     let revision = doc.shown_revision();
-    doc.results.exports.running = Some(Running { request, job, started: Instant::now(), shown: 0, cancel_requested: false, revision });
+    doc.results.exports.running = Some(Running { seq, request, job, started: Instant::now(), shown: 0, cancel_requested: false, revision });
     Ok(())
 }
 
@@ -176,7 +294,7 @@ fn truthy(v: &Value) -> bool {
 /// the temporary file and leaves `path` as it was.
 pub(crate) fn write_model(path: &Path, model: &Value, cancelled: &dyn Fn() -> bool) -> Result<Written, String> {
     let links = model["links"].as_array().ok_or_else(|| format!("RoboCAD's answer is not a physical model (no links list); nothing was written to {}", path.display()))?;
-    let written = Written { links: links.len(), flexible: links.iter().filter(|l| l.get("flex").is_some_and(truthy)).count() };
+    let written = Written { links: links.len(), flexible: links.iter().filter(|l| l.get("flex").is_some_and(truthy)).count(), cad_sha256: None, cad_sha256_reason: None };
     let bytes = serde_json::to_vec(model).map_err(|e| format!("{}: {e}", path.display()))?;
     // Unique per job: two exports to one path (one cancelled, one started) never share it.
     let n = TMP_SEQ.fetch_add(1, Ordering::Relaxed);
@@ -207,14 +325,19 @@ pub(crate) fn cancel(doc: &mut CadDocument) -> Result<Value, String> {
     Ok(json!({"cancelling": label, "message": message, "note": "RoboCAD's request runs to the end. Cancellation before the final rename leaves the destination unchanged; a completed rename cannot be revoked. Queued exports wait for this job's terminal outcome."}))
 }
 
-/// Starts the queued export, if any; its label, or the reason it could not start.
+/// Starts the queued export, if any, under the seq it was queued with; its
+/// label, or the reason it could not start (then landed as not started in
+/// `Exports::recent`, `ok: false`, so its REST caller learns it).
 fn start_queued(doc: &mut CadDocument) -> Option<Value> {
     let next = doc.results.exports.queued.take()?;
-    let label = next.label.clone();
-    Some(match start(doc, next) {
+    let seq = doc.results.exports.queued_seq;
+    let (label, path) = (next.label.clone(), next.path.clone());
+    Some(match start(doc, next, seq) {
         Ok(()) => json!(label),
         Err(e) => {
-            doc.show(Err(format!("{label} export not started: {e}")));
+            let message = format!("{label} export not started: {e}; nothing was written to {}", path.display());
+            doc.show(Err(message.clone()));
+            doc.results.exports.land(Last { seq, label: label.clone(), path, outcome: Err(message), cad_sha256: None, cad_sha256_reason: None });
             json!({"label": label, "error": e})
         }
     })
@@ -242,7 +365,7 @@ pub(crate) fn poll(doc: &mut CadDocument) -> Option<Landed> {
         }
         return None;
     };
-    let Running { request, cancel_requested, revision, job, .. } = results.exports.running.take()?;
+    let Running { seq, request, cancel_requested, revision, job, .. } = results.exports.running.take()?;
     let (label, path) = (request.label.clone(), request.path.clone());
     // The document this export was made for: a job of an older connection
     // or document (generation) never drives the live link or Robot mode.
@@ -251,6 +374,11 @@ pub(crate) fn poll(doc: &mut CadDocument) -> Option<Landed> {
     let landed = match outcome {
         Ok(w) => {
             let mut message = format!("{label} written: {} ({} links, {} flexible)", path.display(), w.links, w.flexible);
+            match (&w.cad_sha256, &w.cad_sha256_reason) {
+                (Some(hash), _) => message.push_str(&format!("; source.cad_sha256 {hash} of the saved .rcad")),
+                (None, Some(reason)) => message.push_str(&format!("; no source.cad_sha256: {reason}")),
+                (None, None) => {}
+            }
             if cancel_requested { message.push_str("; cancellation arrived after the final publication check and could not revoke the write"); }
             if !same_document {
                 message.push_str("; it was exported from the document as it was before CAD mode reconnected or opened another one, so Robot mode does not follow it");
@@ -258,7 +386,7 @@ pub(crate) fn poll(doc: &mut CadDocument) -> Option<Landed> {
                 message.push_str(&format!("; the export started at revision {revision} and the document changed while it ran (now revision {now}), so later edits may not be in it"));
             }
             doc.show(Ok(message.clone()));
-            doc.results.exports.last = Some((label, path.clone(), Ok(message)));
+            doc.results.exports.land(Last { seq, label, path: path.clone(), outcome: Ok(message), cad_sha256: w.cad_sha256, cad_sha256_reason: w.cad_sha256_reason });
             // Only this document's model is what "Show in Robot mode" opens
             // (`link::shown_model`); an older one's leaves the previous model.
             if same_document {
@@ -277,13 +405,13 @@ pub(crate) fn poll(doc: &mut CadDocument) -> Option<Landed> {
             let mut message = format!("{label} export cancelled: nothing was written to {}", path.display());
             if e != "cancelled" { message.push_str(&format!(" ({e})")); }
             doc.show(Ok(message.clone()));
-            doc.results.exports.last = Some((label, path, Err(message)));
+            doc.results.exports.land(Last { seq, label, path, outcome: Err(message), cad_sha256: None, cad_sha256_reason: None });
             None
         }
         Err(e) => {
             let message = format!("{label} export failed: {e}");
             doc.show(Err(message.clone()));
-            doc.results.exports.last = Some((label, path, Err(message)));
+            doc.results.exports.land(Last { seq, label, path, outcome: Err(message), cad_sha256: None, cad_sha256_reason: None });
             None
         }
     };

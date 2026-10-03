@@ -54,6 +54,7 @@ impl FormKind {
             FormKind::Identify => "Apply identification",
             FormKind::Export(ExportKind::Physical) => "Export physical model",
             FormKind::Export(ExportKind::Simulation) => "Export simulation model",
+            FormKind::Export(ExportKind::Rigid) => "Export rigid physical model",
             FormKind::Profiles => "Apply actuator profiles",
         }
     }
@@ -83,6 +84,7 @@ impl FormKind {
             FormKind::Identify => "identify",
             FormKind::Export(ExportKind::Physical) => "export_physical",
             FormKind::Export(ExportKind::Simulation) => "export",
+            FormKind::Export(ExportKind::Rigid) => "export_rigid",
             FormKind::Profiles => "profiles",
         }
     }

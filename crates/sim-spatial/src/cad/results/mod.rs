@@ -95,9 +95,10 @@ pub enum ResultsOp {
     /// RoboCAD's `print.overlay`: the same stress overlay toggle (print
     /// study blocks colour through the same rule, `print::overlay`).
     PrintOverlay,
-    /// Export the physical model (`kind: physical`, flexible links) or the
-    /// simulation model (`kind: simulation`, the x–z planar hint) to path;
-    /// without path the form opens.
+    /// Export the physical model (`kind: physical`, flexible links), the
+    /// simulation model (`kind: simulation`, the x–z planar hint) or the
+    /// rigid physical model (`kind: rigid`, neither) to path; without path
+    /// the form opens.
     Export,
     /// Request cancellation and retain the actual terminal publication result.
     ExportCancel,
@@ -113,7 +114,8 @@ pub enum ResultsOp {
     FormCancel,
 }
 
-/// Which model an export writes (RoboCAD's two Simulation menu entries).
+/// Which model an export writes: RoboCAD's two Simulation menu entries
+/// (physical, simulation) and the rigid model its fixture scripts write.
 #[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum ExportKind {
@@ -123,6 +125,12 @@ pub enum ExportKind {
     /// `sim.export`: flexible links with the x–z planar hint
     /// (`simbridge.export_sim_model`'s model).
     Simulation,
+    /// `GET /physical?flex=0`: no flexible links (no modal reduction) and no
+    /// planar hint, as `export_physical_model(doc, flex=False)` writes it
+    /// (the fixture scripts' model, e.g. `cad/scripts/wheeled_learning_fixture.py`).
+    /// RoboCAD's window has no menu entry for it: REST and the
+    /// `cad:results:export_rigid` control only.
+    Rigid,
 }
 impl ExportKind {
     /// (flex, planar, RoboCAD's label).
@@ -130,6 +138,7 @@ impl ExportKind {
         match self {
             ExportKind::Physical => (true, false, "physical model"),
             ExportKind::Simulation => (true, true, "simulation model"),
+            ExportKind::Rigid => (false, false, "rigid physical model"),
         }
     }
 }
@@ -482,6 +491,7 @@ pub(crate) fn controls_of(doc: &CadDocument) -> Vec<(String, String, CadAction, 
         ("cad:results:overlay".to_string(), if r.overlay { "Hide stress overlay" } else { "Show stress overlay" }.to_string(), CadAction::CadResults(ResultsArgs { op: ResultsOp::Overlay, open: Some(!r.overlay), ..Default::default() }), Ok(())),
         ("cad:results:export_physical".to_string(), "Export physical model…".to_string(), ResultsArgs::export(ExportKind::Physical), connected()),
         ("cad:results:export".to_string(), "Export simulation model…".to_string(), ResultsArgs::export(ExportKind::Simulation), connected()),
+        ("cad:results:export_rigid".to_string(), "Export rigid physical model…".to_string(), ResultsArgs::export(ExportKind::Rigid), connected()),
     ];
     if let Some(running) = &r.exports.running {
         out.push(("cad:results:export_cancel".to_string(), format!("Cancel export: {}", running.request.label), ResultsArgs::of(ResultsOp::ExportCancel), Ok(())));
@@ -503,7 +513,7 @@ pub(in crate::cad) fn specs() -> Vec<Spec> {
         CAD,
         json!({"op": "load", "path": "/tmp/robot.simresult.json"}),
         format!(
-            "CAD mode: RoboCAD's simulation results, identification, actuator profiles, the stress overlay, physical export and the live link. op: state (this part's state), load (POST /results/load {{path}}: RoboCAD hangs each link, joint and motor block on its node; then the robot reads (GET /results/nodes margins) are taken again and the stress overlay turns on, as RoboCAD's \"Robot: load simulation results…\"), identify (POST /identification/apply {{path}}: fitted joint parameters stored for the next export; RoboCAD's error verbatim), profiles (profiles: the actuator profiles JSON object, POST /actuator-profiles, validated by RoboCAD through Rust, one undo step; or path: a JSON file holding it, read off the UI thread and then sent; the current profiles are read-only in the state), print_overlay (RoboCAD's print.overlay, \"Strength overlay on/off\": the same toggle as overlay), overlay (open true | false, absent toggles: per-vertex stress colours on the drawn bodies from each node's results hotspot, display only; {SCALE}; RoboCAD's own window colours linearly from blue 0 to red at yield; yield is the node material's yield strength, else the largest cell stress; cells are in the link frame, placed at the block's com, else the node's mass centroid; a print study block (results section print, from print.strength or print.plan) colours its whole body by its governing failure index 1 / safety factor on the same scale, red at failure, deliberately unlike RoboCAD's per-voxel field, with its staleness from the block's cad_revision: current until the document changes after the result was published), export (kind physical: flexible links, RoboCAD's \"export physical model\"; kind simulation: the same with the x–z planar hint; GET /physical on a job, written atomically to path (.simrobot.json appended unless it ends in .json; never the .rcad); one at a time: a second is refused \"a model export is already running\"; progress \"exporting … n s\" in the status line; leaving CAD mode or opening another document is refused while one runs or is queued), export_cancel (requests cancellation and retains the running job until its terminal outcome; RoboCAD's request runs to the end; a rename after the final cancellation check cannot be revoked), link (open true | false, absent toggles: RoboCAD's live link; needs a saved document; on: the document's <stem>.simrobot.json is exported (no flexible links, the planar hint) now and after every successful save, a save during an export queues the latest; the first export switches this window to Robot mode on it (when that switch would be refused, e.g. by another export running, the request is kept and the status line says why; it is made after the next export of the link's model), later ones make Robot mode reload it when shown), show_robot (switch to Robot mode on the live link's model, else the last export written; refused while an export runs: wait for it or cancel it), form_set (text: the open path form's path), form_submit, form_cancel. Without path, load, identify, profiles and export open the path form. Edits are one RoboCAD call each through the edit path, refused by name while another is in flight; REST callers of load, identify and profiles wait for RoboCAD's answer. system_ui lists cad:results:load, cad:results:identify, cad:results:profiles, cad:results:overlay, cad:results:export_physical, cad:results:export, cad:results:export_cancel (while one runs), cad:results:link, cad:results:show_robot and cad:results:form_cancel (while the form is open)."
+            "CAD mode: RoboCAD's simulation results, identification, actuator profiles, the stress overlay, physical export and the live link. op: state (this part's state), load (POST /results/load {{path}}: RoboCAD hangs each link, joint and motor block on its node; then the robot reads (GET /results/nodes margins) are taken again and the stress overlay turns on, as RoboCAD's \"Robot: load simulation results…\"), identify (POST /identification/apply {{path}}: fitted joint parameters stored for the next export; RoboCAD's error verbatim), profiles (profiles: the actuator profiles JSON object, POST /actuator-profiles, validated by RoboCAD through Rust, one undo step; or path: a JSON file holding it, read off the UI thread and then sent; the current profiles are read-only in the state), print_overlay (RoboCAD's print.overlay, \"Strength overlay on/off\": the same toggle as overlay), overlay (open true | false, absent toggles: per-vertex stress colours on the drawn bodies from each node's results hotspot, display only; {SCALE}; RoboCAD's own window colours linearly from blue 0 to red at yield; yield is the node material's yield strength, else the largest cell stress; cells are in the link frame, placed at the block's com, else the node's mass centroid; a print study block (results section print, from print.strength or print.plan) colours its whole body by its governing failure index 1 / safety factor on the same scale, red at failure, deliberately unlike RoboCAD's per-voxel field, with its staleness from the block's cad_revision: current until the document changes after the result was published), export (kind physical: flexible links, RoboCAD's \"export physical model\"; kind simulation: the same with the x–z planar hint; kind rigid: no flexible links and no planar hint, GET /physical?flex=0, as export_physical_model(doc, flex=False) writes it; GET /physical on a job, written atomically to path (.simrobot.json appended unless it ends in .json; never the .rcad); the answer is {{started, path, seq, message}} at once, or {{queued, seq, message}} for a live-link export queued behind a running one (seq is unique in the process; a queued export keeps it when it starts, and lands ok false when it is replaced, dropped or fails to start); poll cad_state.results.exports.recent for your seq (the last 8 outcomes; last is the newest), each {{seq, label, path, ok, message, cad_sha256, cad_sha256_reason}}; source.cad_sha256 is the sha256 of RoboCAD's saved .rcad, recorded only when RoboCAD's GET / names an absolute file without unsaved edits at the same revision before and after the export (else cad_sha256 is null and cad_sha256_reason says why; save first); one at a time: a second is refused \"a model export is already running\"; progress \"exporting … n s\" in the status line; leaving CAD mode or opening another document is refused while one runs or is queued), export_cancel (requests cancellation and retains the running job until its terminal outcome; RoboCAD's request runs to the end; a rename after the final cancellation check cannot be revoked), link (open true | false, absent toggles: RoboCAD's live link; needs a saved document; on: the document's <stem>.simrobot.json is exported (no flexible links, the planar hint) now and after every successful save, a save during an export queues the latest; the first export switches this window to Robot mode on it (when that switch would be refused, e.g. by another export running, the request is kept and the status line says why; it is made after the next export of the link's model), later ones make Robot mode reload it when shown), show_robot (switch to Robot mode on the live link's model, else the last export written; refused while an export runs: wait for it or cancel it), form_set (text: the open path form's path), form_submit, form_cancel. Without path, load, identify, profiles and export open the path form. Edits are one RoboCAD call each through the edit path, refused by name while another is in flight; REST callers of load, identify and profiles wait for RoboCAD's answer. system_ui lists cad:results:load, cad:results:identify, cad:results:profiles, cad:results:overlay, cad:results:export_physical, cad:results:export, cad:results:export_rigid, cad:results:export_cancel (while one runs), cad:results:link, cad:results:show_robot and cad:results:form_cancel (while the form is open)."
         ),
     )]
 }

@@ -217,3 +217,68 @@ impl CadClient {
         self.op("set_joint_physics", &[json!(joint_id)], overrides)
     }
 }
+
+// ---- The saved file an export stands for ------------------------------------
+
+/// RoboCAD's document file when the document is that file as saved
+/// (`health` from `GET /`): a RoboCAD service, a path, absolute (a relative
+/// one would resolve against RoboCAD's working directory, not this
+/// process's), and no unsaved edits. Otherwise why not, by name.
+pub fn saved_file(health: &super::Health) -> Result<&std::path::Path, String> {
+    if !health.ok || health.app != "robocad" {
+        return Err("the service that answered is not RoboCAD (GET / has no ok:true from app robocad)".into());
+    }
+    let Some(path) = health.path.as_deref().filter(|p| !p.is_empty()) else {
+        return Err("RoboCAD's document has never been saved (no file path)".into());
+    };
+    let path = std::path::Path::new(path);
+    if !path.is_absolute() {
+        return Err(format!("RoboCAD's document path {} is relative (it resolves against RoboCAD's working directory)", path.display()));
+    }
+    if health.dirty {
+        return Err(format!("RoboCAD's document has unsaved edits, so {} is not the model exported: save first", path.display()));
+    }
+    Ok(path)
+}
+
+/// Stamps `model["source"]["cad_sha256"]` with the hash of the `.rcad`
+/// the model was derived from, only when that file is RoboCAD's document
+/// as saved for the whole export: `before` (`GET /` read before `GET
+/// /physical`) names a saved file ([`saved_file`]) that the model's
+/// `source.file` names exactly as RoboCAD wrote it; `hash` of that file
+/// (read after the model was derived) succeeds; and `after` (`GET /` read
+/// after the hash) shows the same file and document, still without unsaved
+/// edits, at the same revision. Returns the recorded hash, or why none was
+/// recorded (the model is then left as RoboCAD answered it). Never stamps
+/// unsaved or moving state: an edit, an undo, a save to another path or a
+/// reload between the reads is a reason, not a hash.
+pub fn stamp_saved_source(
+    model: &mut Value,
+    before: Result<super::Health, String>,
+    hash: impl FnOnce(&std::path::Path) -> Result<String, String>,
+    after: impl FnOnce() -> Result<super::Health, String>,
+) -> Result<String, String> {
+    let before = before.map_err(|e| format!("RoboCAD's document state could not be read before the export: {e}"))?;
+    let path = saved_file(&before)?;
+    if !model.get("source").is_some_and(Value::is_object) {
+        return Err("RoboCAD's model has no source block to record the file's hash in".into());
+    }
+    // The hash stands for `source.file` as RoboCAD wrote it: only that file.
+    let file = model["source"].get("file").and_then(Value::as_str);
+    if file != before.path.as_deref() {
+        return Err(format!("the model's source.file ({}) is not RoboCAD's document file {}", file.unwrap_or("absent"), path.display()));
+    }
+    let sha256 = hash(path).map_err(|e| format!("{}: could not be hashed: {e}", path.display()))?;
+    let after = after().map_err(|e| format!("RoboCAD's document state could not be read after the export: {e}"))?;
+    if after.path != before.path || after.document_id != before.document_id {
+        return Err(format!("RoboCAD's document changed from {} to {} while the model was exported", path.display(), after.path.as_deref().unwrap_or("an unsaved document")));
+    }
+    if after.dirty {
+        return Err(format!("RoboCAD's document was edited while the model was exported, so {} may not be the model exported", path.display()));
+    }
+    if after.revision != before.revision {
+        return Err(format!("RoboCAD's document moved from revision {} to {} while the model was exported", before.revision, after.revision));
+    }
+    model["source"]["cad_sha256"] = Value::String(sha256.clone());
+    Ok(sha256)
+}

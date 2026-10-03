@@ -28,7 +28,7 @@ fn request(link: bool, label: &str) -> ExportRequest {
 
 /// A finished export of `request` (as `export::start` would leave it once RoboCAD answered).
 fn landed(request: ExportRequest, generation: u64) -> Running {
-    Running { request, job: crate::jobs::Job::finished(generation, Ok(Written { links: 4, flexible: 0 })), started: Instant::now(), shown: 0, cancel_requested: false, revision: 0 }
+    Running { seq: 1, request, job: crate::jobs::Job::finished(generation, Ok(Written { links: 4, flexible: 0, cad_sha256: None, cad_sha256_reason: None })), started: Instant::now(), shown: 0, cancel_requested: false, revision: 0 }
 }
 
 /// The live link's export, once written: the first after toggling on asks
@@ -188,7 +188,7 @@ fn an_export_writes_atomically() {
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("robot.simrobot.json");
     let model = json!({"version": 4, "links": [{"name": "a", "flex": {"modes": 2}}, {"name": "b", "flex": null}, {"name": "c"}]});
-    assert_eq!(export::write_model(&path, &model, &|| false), Ok(Written { links: 3, flexible: 1 }));
+    assert_eq!(export::write_model(&path, &model, &|| false), Ok(Written { links: 3, flexible: 1, cad_sha256: None, cad_sha256_reason: None }));
     let back: serde_json::Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
     assert_eq!(back, model);
     let left: Vec<_> = std::fs::read_dir(&dir).unwrap().filter_map(Result::ok).map(|e| e.file_name()).collect();
@@ -274,7 +274,7 @@ fn cancel_keeps_export_owned_until_terminal_and_reports_late_write() {
     let landed = export::poll(&mut doc).unwrap();
     assert_eq!(landed.path, first.path);
     assert_eq!(doc.results.exports.written.as_ref(), Some(&first.path));
-    assert!(doc.results.exports.last.as_ref().unwrap().2.as_ref().unwrap().contains("could not revoke"));
+    assert!(doc.results.exports.last.as_ref().unwrap().outcome.as_ref().unwrap().contains("could not revoke"));
 }
 
 #[test]
@@ -288,7 +288,7 @@ fn cancelled_export_failure_remains_observable_and_preserves_previous_write() {
     export::cancel(&mut doc).unwrap();
     assert!(export::poll(&mut doc).is_none());
     assert_eq!(doc.results.exports.written.as_ref(), Some(&prior));
-    assert!(doc.results.exports.last.as_ref().unwrap().2.as_ref().unwrap_err().contains("cancelled"));
+    assert!(doc.results.exports.last.as_ref().unwrap().outcome.as_ref().unwrap_err().contains("cancelled"));
 }
 
 /// A job cancelled before its closure ran (`crate::jobs`' own text) is a
@@ -302,7 +302,7 @@ fn an_export_cancelled_before_it_started_reads_as_cancelled() {
     doc.results.exports.running = Some(running);
     export::cancel(&mut doc).unwrap();
     assert!(export::poll(&mut doc).is_none());
-    let message = doc.results.exports.last.as_ref().unwrap().2.clone().unwrap_err();
+    let message = doc.results.exports.last.as_ref().unwrap().outcome.clone().unwrap_err();
     assert!(message.starts_with("physical model export cancelled: nothing was written to "), "{message}");
     assert!(message.ends_with(&format!("({before})")), "{message}");
     assert!(doc.results.exports.written.is_none());
@@ -319,7 +319,7 @@ fn an_export_of_an_older_document_is_reported_but_not_shown() {
     doc.generation += 1;
     assert!(export::poll(&mut doc).is_none());
     assert_eq!(doc.results.exports.written.as_ref(), Some(&prior));
-    let message = doc.results.exports.last.as_ref().unwrap().2.clone().unwrap();
+    let message = doc.results.exports.last.as_ref().unwrap().outcome.clone().unwrap();
     assert!(message.contains("Robot mode does not follow it"), "{message}");
 }
 
@@ -376,4 +376,70 @@ fn profiles_completion_emits_captured_revision_and_retains_input() {
     assert!(error.contains("captured revision changed"), "{error}");
     assert!(cx.doc.edit.is_none());
     assert_eq!(cx.doc.results.profiles_retained.as_ref().unwrap().0, "/work/profiles.json");
+}
+
+/// A REST caller learns its export's outcome by sequence (unexecuted):
+/// `cad_state.results.exports.last` carries the answer's `seq` and the
+/// recorded `cad_sha256` or why none was recorded; `kind: rigid` is
+/// `GET /physical?flex=0` without the planar hint.
+#[test]
+fn an_exports_outcome_names_its_sequence_and_the_saved_files_hash() {
+    let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
+    let mut running = landed(request(false, "rigid physical model"), doc.generation);
+    running.seq = 3;
+    running.job = crate::jobs::Job::finished(doc.generation, Ok(Written { links: 4, flexible: 0, cad_sha256: Some("ab12".into()), cad_sha256_reason: None }));
+    doc.results.exports.running = Some(running);
+    assert!(export::poll(&mut doc).is_some());
+    let exports = doc.results.exports.json();
+    let last = &exports["last"];
+    assert_eq!((last["seq"].clone(), last["ok"].clone(), last["cad_sha256"].clone(), last["cad_sha256_reason"].clone()), (json!(3), json!(true), json!("ab12"), json!(null)));
+    assert!(last["message"].as_str().unwrap().contains("source.cad_sha256 ab12"));
+    let mut running = landed(request(false, "rigid physical model"), doc.generation);
+    running.seq = 4;
+    running.job = crate::jobs::Job::finished(doc.generation, Ok(Written { links: 4, flexible: 0, cad_sha256: None, cad_sha256_reason: Some("RoboCAD's document has unsaved edits".into()) }));
+    doc.results.exports.running = Some(running);
+    assert!(export::poll(&mut doc).is_some());
+    let exports = doc.results.exports.json();
+    let last = &exports["last"];
+    assert_eq!((last["seq"].clone(), last["cad_sha256"].clone()), (json!(4), json!(null)));
+    assert!(last["cad_sha256_reason"].as_str().unwrap().contains("unsaved edits"));
+    // The first caller's outcome survives the newer landing in `recent`.
+    let recent = exports["recent"].as_array().unwrap();
+    assert_eq!(recent.iter().map(|r| r["seq"].clone()).collect::<Vec<_>>(), [json!(3), json!(4)]);
+    assert_eq!(recent[0]["cad_sha256"], "ab12");
+    for seq in 5..15 {
+        let mut running = landed(request(false, "rigid physical model"), doc.generation);
+        running.seq = seq;
+        doc.results.exports.running = Some(running);
+        export::poll(&mut doc);
+    }
+    assert_eq!(doc.results.exports.recent.len(), export::RECENT);
+    assert_eq!(doc.results.exports.recent.front().map(|l| l.seq), Some(15 - export::RECENT as u64));
+    assert_eq!(ExportKind::Rigid.shape(), (false, false, "rigid physical model"));
+    let rigid: ResultsArgs = serde_json::from_value(json!({"op": "export", "kind": "rigid", "path": "/w/robot.simrobot.json"})).unwrap();
+    assert_eq!(rigid.kind, Some(ExportKind::Rigid));
+}
+
+/// A queued live-link export answers with its seq and keeps it (unexecuted):
+/// replaced by a newer one, it lands as not started; when its own start
+/// fails (here: not connected) that lands too, so no seq goes unanswered.
+#[test]
+fn a_queued_exports_seq_always_lands() {
+    let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
+    doc.results.exports.running = Some(landed(request(false, "physical model"), doc.generation));
+    let first = export::request(&mut doc, request(true, "live one")).unwrap();
+    let second = export::request(&mut doc, request(true, "live two")).unwrap();
+    assert_eq!((first["queued"].clone(), second["queued"].clone()), (json!(true), json!(true)));
+    let (s1, s2) = (first["seq"].as_u64().unwrap(), second["seq"].as_u64().unwrap());
+    assert!(s2 > s1);
+    let replaced = doc.results.exports.recent.back().unwrap().clone();
+    assert_eq!(replaced.seq, s1);
+    assert!(replaced.outcome.unwrap_err().contains("replaced by a newer live-link export"));
+    assert_eq!(doc.results.exports.json()["queued"]["seq"], json!(s2));
+    // The running export lands; the queued one cannot start (not connected) and lands as not started.
+    export::poll(&mut doc);
+    assert!(doc.results.exports.running.is_none() && doc.results.exports.queued.is_none());
+    let failed = doc.results.exports.last.clone().unwrap();
+    assert_eq!(failed.seq, s2);
+    assert!(failed.outcome.unwrap_err().contains("not started: not connected"));
 }

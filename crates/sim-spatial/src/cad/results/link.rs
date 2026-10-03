@@ -71,7 +71,7 @@ pub(crate) fn toggle(doc: &mut CadDocument, open: Option<bool>) -> Result<Value,
         doc.results.link_switch = false;
         // A queued link export is no longer wanted; a running one ends (RoboCAD's stop does not cancel it).
         if doc.results.exports.queued.as_ref().is_some_and(|q| q.link) {
-            doc.results.exports.queued = None;
+            export::drop_queued(&mut doc.results.exports, "the simulation link was stopped");
         }
         let message = "Simulation link stopped".to_string();
         doc.show(Ok(message.clone()));

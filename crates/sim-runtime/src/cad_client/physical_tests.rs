@@ -141,3 +141,61 @@ fn material_and_joint_physics_ops_send_the_python_signature() {
     assert_request(&seen[4], "POST /ops/set_joint_physics HTTP/1.1", port, Some(r#"{"args":["j1"],"kwargs":{"friction":{"coulomb":0.004}}}"#));
     assert_request(&seen[5], "POST /ops/set_material_props HTTP/1.1", port, Some(r#"{"args":["petg"],"kwargs":{"stiffness":1.0}}"#));
 }
+
+/// `GET /` of a headless RoboCAD serving `/work/rover/robot.rcad`.
+fn saved_health(dirty: bool, revision: u64) -> Health {
+    Health { ok: true, app: "robocad".into(), path: Some("/work/rover/robot.rcad".into()), dirty, revision, document_id: Some("doc-1".into()), ..Health::default() }
+}
+
+/// The export's `source.cad_sha256` rule (unexecuted): stamped only when
+/// RoboCAD's document is its saved file before and after the model was
+/// derived; every other case leaves the model as RoboCAD answered it and
+/// names why, without hashing a file that does not stand for the model.
+#[test]
+fn an_export_records_the_saved_files_hash_only_for_unchanged_saved_state() {
+    let model = || json!({"source": {"file": "/work/rover/robot.rcad"}, "links": []});
+    let hashed = |p: &std::path::Path| -> Result<String, String> {
+        assert_eq!(p, std::path::Path::new("/work/rover/robot.rcad"));
+        Ok("ab12".to_string())
+    };
+    // Saved and unchanged: stamped.
+    let mut m = model();
+    assert_eq!(stamp_saved_source(&mut m, Ok(saved_health(false, 7)), hashed, || Ok(saved_health(false, 7))), Ok("ab12".to_string()));
+    assert_eq!(m["source"]["cad_sha256"], "ab12");
+    assert_eq!(m["source"]["file"], "/work/rover/robot.rcad");
+    // Unsaved edits before: refused before hashing.
+    let never = |_: &std::path::Path| -> Result<String, String> { panic!("an unsaved document's file is never hashed") };
+    let mut m = model();
+    let e = stamp_saved_source(&mut m, Ok(saved_health(true, 7)), never, || Ok(saved_health(true, 7))).unwrap_err();
+    assert!(e.contains("unsaved edits"), "{e}");
+    assert_eq!(m, model());
+    // Never saved, or a relative path: refused by name.
+    let mut fresh = saved_health(false, 1);
+    fresh.path = None;
+    assert!(stamp_saved_source(&mut model(), Ok(fresh), never, || Ok(saved_health(false, 1))).unwrap_err().contains("never been saved"));
+    let mut relative = saved_health(false, 1);
+    relative.path = Some("robot.rcad".into());
+    assert!(stamp_saved_source(&mut model(), Ok(relative), never, || Ok(saved_health(false, 1))).unwrap_err().contains("relative"));
+    // Edited, moved or saved elsewhere while exporting: no hash.
+    let mut m = model();
+    assert!(stamp_saved_source(&mut m, Ok(saved_health(false, 7)), hashed, || Ok(saved_health(true, 8))).unwrap_err().contains("edited while"));
+    assert!(m["source"].get("cad_sha256").is_none());
+    assert!(stamp_saved_source(&mut model(), Ok(saved_health(false, 7)), hashed, || Ok(saved_health(false, 9))).unwrap_err().contains("revision 7 to 9"));
+    let mut moved = saved_health(false, 7);
+    moved.path = Some("/work/rover/copy.rcad".into());
+    assert!(stamp_saved_source(&mut model(), Ok(saved_health(false, 7)), hashed, || Ok(moved)).unwrap_err().contains("copy.rcad"));
+    // A health read or the hash failing: no hash, the reason kept.
+    assert!(stamp_saved_source(&mut model(), Err("timed out".into()), never, || Ok(saved_health(false, 7))).unwrap_err().contains("before the export: timed out"));
+    assert!(stamp_saved_source(&mut model(), Ok(saved_health(false, 7)), |_| Err("gone".into()), || Ok(saved_health(false, 7))).unwrap_err().contains("could not be hashed: gone"));
+    assert!(stamp_saved_source(&mut model(), Ok(saved_health(false, 7)), hashed, || Err("refused".into())).unwrap_err().contains("after the export: refused"));
+    // source.file naming another file (or none): no hash for it.
+    let mut other = json!({"source": {"file": "/work/rover/other.rcad"}, "links": []});
+    assert!(stamp_saved_source(&mut other, Ok(saved_health(false, 7)), never, || Ok(saved_health(false, 7))).unwrap_err().contains("other.rcad"));
+    assert!(other["source"].get("cad_sha256").is_none());
+    let mut unnamed = json!({"source": {}, "links": []});
+    assert!(stamp_saved_source(&mut unnamed, Ok(saved_health(false, 7)), never, || Ok(saved_health(false, 7))).unwrap_err().contains("absent"));
+    // No source block: nothing invented.
+    let mut bare = json!({"links": []});
+    assert!(stamp_saved_source(&mut bare, Ok(saved_health(false, 7)), never, || Ok(saved_health(false, 7))).is_err());
+    assert_eq!(bare, json!({"links": []}));
+}

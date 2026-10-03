@@ -1,6 +1,6 @@
 //! The catalogue's tests (cad-modify): the data is well formed, every
 //! entry builds calls to its route, the argument shapes are what RoboCAD's
-//! `ArgConverter` reads (cad/robocad/api.py:146-244), and the selection
+//! `ArgConverter` reads (cad/robocad/api.py:173-287), and the selection
 //! and run refusals hold. Windowless: std and serde_json only.
 use super::args::{Built, build, edge_ref};
 use super::form::form_json;

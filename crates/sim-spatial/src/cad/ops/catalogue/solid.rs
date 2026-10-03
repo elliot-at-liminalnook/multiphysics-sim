@@ -53,10 +53,10 @@ pub(in crate::cad::ops) const ENTRIES: &[OpEntry] = &[
         flow: Flow::Form,
         route: "sweep",
         // `sweep(profile, path, options)`: ArgConverter turns the third
-        // positional argument into `SweepOptions(**v)` by its name `options` (api.py:250-251).
+        // positional argument into `SweepOptions(**v)` by its name `options` (api.py:261-262).
         args: &[Arg::Target, Arg::Second, Arg::Keyed("twist_deg", "twist")],
         refusal: "Select the profile sketch, then the path sketch",
-        source: "ui/app.py:334, ui/app.py:801-809 (getDouble \"Sweep\", \"Twist (degrees):\" 0.0, -3600..3600, 1 decimal; sweep(ids[0], ids[1], SweepOptions(twist_deg=twist))), commands.py:493-496, api.py:250-251",
+        source: "ui/app.py:334, ui/app.py:801-809 (getDouble \"Sweep\", \"Twist (degrees):\" 0.0, -3600..3600, 1 decimal; sweep(ids[0], ids[1], SweepOptions(twist_deg=twist))), commands.py:493-496, api.py:261-262",
         ..BASE
     },
     OpEntry {

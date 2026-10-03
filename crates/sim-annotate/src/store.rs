@@ -18,6 +18,13 @@ pub trait Revisioned: Clone + Serialize + DeserializeOwned + Send + 'static {
     fn revision(&self) -> u64;
     fn validate(&self, context: &Self::Context) -> Result<(), String>;
     fn apply(&mut self, command: Self::Command, context: &Self::Context) -> Result<(), String>;
+    /// A check of the file's bytes before the typed parse (a format whose
+    /// structs deny unknown fields names a newer version here, before the
+    /// first field it does not know). `read` prefixes an error with the
+    /// file's path. Default: no check.
+    fn check_raw(_bytes: &[u8]) -> Result<(), String> {
+        Ok(())
+    }
 }
 
 /// Largest sidecar accepted or written.
@@ -64,6 +71,7 @@ mod native {
         if bytes.len() > MAX_BYTES {
             return Err("annotation file exceeds 4 MiB".into());
         }
+        D::check_raw(&bytes).map_err(|e| format!("{}: {e}", path.display()))?;
         let doc: D = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
         doc.validate(context)?;
         Ok(doc)

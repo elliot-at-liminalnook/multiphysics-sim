@@ -335,12 +335,14 @@ impl Plugin for SpatialViewerPlugin {
     fn build(&self, app: &mut App) {
         app::actions::register::<inspect::InspectAction>(app);
         configure_sets(app);
+        // The notes panel's state and its composer and author fields.
+        notes::build(app);
         app.init_resource::<physics_view::Labels>()
             .init_resource::<view::PartHover>()
             .add_systems(OnEnter(ModeScope::Inspect), (setup_scene, setup_ui))
             .add_systems(OnEnter(ModeScope::Builder), (setup_scene, setup_ui))
             // Buttons, keys, the notes panel and the overlay bar write the view's actions.
-            .add_systems(Update, (inspect::input, notes::clicks, physics_view::overlay_clicks).chain().in_set(crate::app::InputSet::Window).run_if(in_state(SpatialScreen)))
+            .add_systems(Update, (inspect::input, notes::clicks, notes::compose, physics_view::overlay_clicks).chain().in_set(crate::app::InputSet::Window).run_if(in_state(SpatialScreen)))
             .add_systems(Update, inspect::apply.in_set(ViewerSet::Actions).run_if(in_state(SpatialScreen)))
             // Inspect's shared selection, shown (and re-checked after a
             // reload): after the notes' navigation, before the link's

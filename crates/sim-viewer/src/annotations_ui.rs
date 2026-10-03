@@ -169,12 +169,15 @@ impl Viewer {
                     view: self.saved_note_view(id, label),
                 },
                 notes::Request::RestoreView { id } => notes::Command::FollowView { id },
-                notes::Request::FollowLink { note, index } => {
-                    let link = doc
-                        .notes
-                        .get(&note)
-                        .and_then(|n| n.links.get(index))
-                        .ok_or("unknown annotation link")?;
+                notes::Request::FollowLink { note, index, reply } => {
+                    let note = doc.notes.get(&note);
+                    let link = match &reply {
+                        None => note.and_then(|n| n.links.get(index)),
+                        Some(r) => note
+                            .and_then(|n| n.replies.iter().find(|c| &c.id == r))
+                            .and_then(|c| c.links.get(index)),
+                    }
+                    .ok_or("unknown annotation link")?;
                     match &link.target {
                         notes::LinkTarget::Selection { target } => {
                             self.api_select(target.clone())?;
@@ -184,6 +187,26 @@ impl Viewer {
                             notes::Command::FollowView { id: id.clone() }
                         }
                     }
+                }
+                // Replies are written in the native viewer (sim-spatial), which
+                // stamps their ids and times; this viewer shows them, resolves,
+                // deletes a reply and edits a note's own text.
+                notes::Request::Resolve { note, resolved } => {
+                    notes::Command::Resolve { note, resolved }
+                }
+                notes::Request::DeleteComment { note, comment } => {
+                    if comment == note {
+                        return Err("delete the note to remove its text".into());
+                    }
+                    notes::Command::DeleteReply { note, reply: comment }
+                }
+                notes::Request::EditComment { note, comment, body } if comment == note => {
+                    let mut n = doc.notes.get(&note).cloned().ok_or("unknown annotation")?;
+                    n.text = body;
+                    notes::Command::PutNote { note: n }
+                }
+                notes::Request::Reply { .. } | notes::Request::EditComment { .. } => {
+                    return Err("replies are written and edited in the native viewer (sim-spatial); this viewer shows them".into());
                 }
                 notes::Request::Edit {
                     change,
@@ -264,6 +287,8 @@ impl Viewer {
                     target: notes::LinkTarget::Selection { target: selection },
                 }],
                 color: [30, 155, 160],
+                replies: vec![],
+                resolved: false,
             });
         }
         self.note_pointer_hover = SelectionTarget::None;
@@ -302,6 +327,7 @@ impl Viewer {
                                 notes::Request::FollowLink {
                                     note: note.id.clone(),
                                     index,
+                                    reply: None,
                                 },
                                 &mut Value::Null,
                             );

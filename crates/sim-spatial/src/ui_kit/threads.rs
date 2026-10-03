@@ -169,6 +169,12 @@ pub(crate) fn messages<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k
 /// Inspect's notes): a card framed in the thread's colour, its title
 /// (pressing it opens the thread) and every message.
 pub(crate) fn card<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k: &Kit, host: &H, thread: &Thread<A>) {
+    card_with(body, k, host, thread, None, |_| {});
+}
+
+/// [`card`] with a comment's menu open (`menu`) and the host's own rows
+/// after the messages (`footer`: an open thread's Resolve, composer, …).
+pub(crate) fn card_with<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k: &Kit, host: &H, thread: &Thread<A>, menu: Option<&str>, footer: impl FnOnce(&mut ChildSpawnerCommands)) {
     let color = host.color(&thread.id).unwrap_or(ACCENT);
     body.spawn((
         Node { border_radius: BorderRadius::all(Val::Px(6.)), flex_direction: FlexDirection::Column, padding: UiRect::all(Val::Px(10.)), row_gap: Val::Px(5.), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., ..default() },
@@ -190,7 +196,8 @@ pub(crate) fn card<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k: &K
         .with_children(|b| {
             b.spawn(k.text(&thread.title, 15., color, 2));
         });
-        messages(card, k, host, thread, None);
+        messages(card, k, host, thread, menu);
+        footer(card);
     });
 }
 
@@ -205,7 +212,7 @@ pub(crate) enum Shown {
     All,
 }
 impl Shown {
-    pub(crate) const ALL: [Shown; 3] = [Shown::Open, Shown::Resolved, Shown::All];
+    pub(crate) const ALL: [Shown; 3] = [Shown::Open, Shown::All, Shown::Resolved];
     pub(crate) fn label(self) -> &'static str {
         match self {
             Shown::Open => "Open",

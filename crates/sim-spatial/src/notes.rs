@@ -4,18 +4,22 @@
 //! `annotations` request (REST and the notes panel's buttons). The panel is
 //! `notes/panel.rs`.
 //!
-//! A note is shown as a one-message thread: its label is the title, its
-//! target the thread's anchor, its text the message and its links the
-//! message's links ([`NoteAnchor`]). The note format on disk is unchanged
-//! ([`as_note`] turns the thread back into the same note).
+//! A note is shown as a thread: its label is the title, its target the
+//! thread's anchor, its text the first message (no author or time; its id
+//! is the note's) with the note's links, then its replies with theirs
+//! ([`NoteAnchor`]), and its `resolved` the thread's. [`as_note`] turns the
+//! thread back into the same note. Replies and resolves are the sidecar's
+//! version 2 (`sim_inspect::annotations`, written only while used).
 use super::*;
-use crate::annotations::{Committed, ThreadSource};
+use crate::annotations::{Committed, ThreadOp, ThreadSource};
 use crate::inspect::Owner;
 use serde_json::{Value, json};
 use sim_annotate::{Comment, Thread, ThreadCommand};
 use sim_inspect::annotations as notes;
 
+mod compose;
 mod panel;
+pub(crate) use compose::{build, compose};
 pub(crate) use panel::{NotesPanel, clicks, guides, update};
 
 /// A new note's colour (the notes panel's, as before).
@@ -41,15 +45,18 @@ impl SpatialScene {
 }
 
 /// What an Inspect note points at, as the thread panel shows it: the note's
-/// own target (`link` None) or one of its links. A presentation of the
-/// note, never written to disk in this shape.
+/// own target (`link` None), one of its links, or one of a reply's links
+/// (`reply`). A presentation of the note, never written to disk in this shape.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub(crate) struct NoteAnchor {
     pub label: String,
     /// The note it belongs to.
     pub note: String,
-    /// Which of the note's links (None: the note's own target).
+    /// Which link (None: the note's own target).
     pub link: Option<usize>,
+    /// The reply whose link it is (None: the note's own).
+    #[serde(default)]
+    pub reply: Option<String>,
     pub target: notes::LinkTarget,
     pub missing: bool,
 }
@@ -91,16 +98,40 @@ fn target_label(d: &sim_inspect::SystemDescription, target: &SelectionTarget) ->
     }
 }
 
-/// A note as a thread: one message (its text, no author or time) whose
-/// links are the note's.
-pub(crate) fn as_thread(note: &notes::Note, d: &sim_inspect::SystemDescription) -> Thread<NoteAnchor> {
-    let own = NoteAnchor { label: target_label(d, &note.targets), note: note.id.clone(), link: None, target: notes::LinkTarget::Selection { target: note.targets.clone() }, missing: note.targets.validate(d).is_err() };
-    let links = note.links.iter().enumerate().map(|(i, l)| NoteAnchor { label: l.label.clone(), note: note.id.clone(), link: Some(i), target: l.target.clone(), missing: false }).collect();
-    let text = Comment { id: note.id.clone(), author: String::new(), body: note.text.clone(), created_at: String::new(), edited_at: None, links };
-    Thread { id: note.id.clone(), title: note.label.clone(), resolved: false, targets: vec![own], comments: vec![text], pin_m: None, view: None }
+/// A link of a note (`reply` None) or of one of its replies, as an anchor.
+fn link_anchor(note: &str, reply: Option<&str>, index: usize, link: &notes::Link) -> NoteAnchor {
+    NoteAnchor { label: link.label.clone(), note: note.to_string(), link: Some(index), reply: reply.map(str::to_string), target: link.target.clone(), missing: false }
 }
 
-/// The note a thread shows (`color`: the note's own, kept as it was).
+/// An anchor's link as stored.
+fn anchor_link(a: &NoteAnchor) -> notes::Link {
+    notes::Link { label: a.label.clone(), target: a.target.clone() }
+}
+
+/// A note as a thread: its text first (no author or time; the note's id
+/// and links), then each reply as stored; resolved as the note is.
+pub(crate) fn as_thread(note: &notes::Note, d: &sim_inspect::SystemDescription) -> Thread<NoteAnchor> {
+    let own = NoteAnchor { label: target_label(d, &note.targets), note: note.id.clone(), link: None, reply: None, target: notes::LinkTarget::Selection { target: note.targets.clone() }, missing: note.targets.validate(d).is_err() };
+    let links = note.links.iter().enumerate().map(|(i, l)| link_anchor(&note.id, None, i, l)).collect();
+    let mut comments = vec![Comment { id: note.id.clone(), author: String::new(), body: note.text.clone(), created_at: String::new(), edited_at: None, links }];
+    comments.extend(note.replies.iter().map(|r| Comment {
+        id: r.id.clone(),
+        author: r.author.clone(),
+        body: r.body.clone(),
+        created_at: r.created_at.clone(),
+        edited_at: r.edited_at.clone(),
+        links: r.links.iter().enumerate().map(|(i, l)| link_anchor(&note.id, Some(r.id.as_str()), i, l)).collect(),
+    }));
+    Thread { id: note.id.clone(), title: note.label.clone(), resolved: note.resolved, targets: vec![own], comments, pin_m: None, view: None }
+}
+
+/// A thread's comment as a stored reply.
+fn as_reply(c: &Comment<NoteAnchor>) -> notes::Reply {
+    Comment { id: c.id.clone(), author: c.author.clone(), body: c.body.clone(), created_at: c.created_at.clone(), edited_at: c.edited_at.clone(), links: c.links.iter().map(anchor_link).collect() }
+}
+
+/// The note a thread shows (`color`: the note's own, kept as it was): the
+/// first comment is its text and links, the others its replies.
 pub(crate) fn as_note(t: &Thread<NoteAnchor>, color: [u8; 3]) -> Result<notes::Note, String> {
     let targets = match t.targets.first().map(|a| &a.target) {
         Some(notes::LinkTarget::Selection { target }) => target.clone(),
@@ -112,8 +143,10 @@ pub(crate) fn as_note(t: &Thread<NoteAnchor>, color: [u8; 3]) -> Result<notes::N
         label: t.title.clone(),
         text: text.map(|c| c.body.clone()).unwrap_or_default(),
         targets,
-        links: text.map(|c| c.links.iter().map(|a| notes::Link { label: a.label.clone(), target: a.target.clone() }).collect()).unwrap_or_default(),
+        links: text.map(|c| c.links.iter().map(anchor_link).collect()).unwrap_or_default(),
         color,
+        replies: t.comments.iter().skip(1).map(as_reply).collect(),
+        resolved: t.resolved,
     })
 }
 
@@ -142,15 +175,30 @@ impl ThreadSource for InspectNotes<'_> {
                 notes::Command::PutNote { note: as_note(&thread, color)? }
             }
             ThreadCommand::DeleteThread { id } => notes::Command::DeleteNote { id },
-            ThreadCommand::EditComment { thread, body, .. } => notes::Command::PutNote { note: notes::Note { text: body, ..note(&thread)? } },
+            // The first comment is the note's text (its id is the note's).
+            ThreadCommand::EditComment { thread, comment, body, .. } if comment == thread => notes::Command::PutNote { note: notes::Note { text: body, ..note(&thread)? } },
+            ThreadCommand::EditComment { thread, comment, body, edited_at } => notes::Command::EditReply { note: thread, reply: comment, body, edited_at },
+            ThreadCommand::AddComment { thread, comment } => notes::Command::AddReply { note: thread, reply: as_reply(&comment) },
+            ThreadCommand::DeleteComment { thread, comment } => {
+                if comment == thread {
+                    return Err("delete the note to remove its text".into());
+                }
+                notes::Command::DeleteReply { note: thread, reply: comment }
+            }
+            ThreadCommand::Resolve { thread, resolved } => notes::Command::Resolve { note: thread, resolved },
             ThreadCommand::Undo => notes::Command::Undo,
             ThreadCommand::Redo => notes::Command::Redo,
-            ThreadCommand::AddComment { .. } | ThreadCommand::DeleteComment { .. } | ThreadCommand::Resolve { .. } => {
-                return Err("an Inspect note has one text: it takes no replies and is not resolved".into());
-            }
+        };
+        // Reply and resolve commands touch one field of one note and
+        // commute with other windows' edits: no revision check (the Store
+        // applies them to the file as it is). A whole-note put, a delete,
+        // undo and redo are checked against the revision shown.
+        let expected = match &change {
+            notes::Command::AddReply { .. } | notes::Command::EditReply { .. } | notes::Command::DeleteReply { .. } | notes::Command::Resolve { .. } => None,
+            notes::Command::Undo | notes::Command::Redo | notes::Command::PutNote { .. } | notes::Command::DeleteNote { .. } | notes::Command::PutView { .. } | notes::Command::DeleteView { .. } | notes::Command::FollowView { .. } => Some(doc.revision),
         };
         let store = self.scene.annotations.as_mut().ok_or("annotation store not connected")?;
-        store.submit(change, Some(doc.revision)).map(Committed::Pending)
+        store.submit(change, expected).map(Committed::Pending)
     }
 }
 
@@ -190,6 +238,20 @@ fn store(scene: &mut SpatialScene) -> Result<&mut notes::native::Store, String> 
     scene.annotations.as_mut().ok_or_else(|| "annotation store not connected".to_string())
 }
 
+/// One thread op on the notes (`crate::annotations::apply`); the sidecar's
+/// request id goes into the continuation, so the caller waits for the
+/// Store's result like any other edit.
+fn thread_op(scene: &mut SpatialScene, continuation: &mut Value, label: &str, op: ThreadOp<NoteAnchor>) -> Result<Option<Value>, String> {
+    let applied = crate::annotations::apply(&mut InspectNotes { scene: &mut *scene }, label, op)?;
+    match applied.committed {
+        Committed::Pending(request) => {
+            *continuation = json!(request);
+            Ok(None)
+        }
+        Committed::Done => Ok(Some(json!(scene.note_document()))),
+    }
+}
+
 /// The `annotations` request (REST, and the panel's buttons as the same
 /// action). Edits go to the sidecar's worker; the continuation keeps the
 /// request id until its result arrives.
@@ -227,8 +289,13 @@ pub(crate) fn api(scene: &mut SpatialScene, camera: &mut Orbit, mut owner: Optio
                 (notes::Command::PutView { view: notes::SavedView { id, label, selection, schematic: None, physical: Some(physical) } }, None)
             }
             notes::Request::RestoreView { id } => (notes::Command::FollowView { id }, None),
-            notes::Request::FollowLink { note, index } => {
-                let link = doc.notes.get(&note).and_then(|n| n.links.get(index)).ok_or("unknown annotation link")?;
+            notes::Request::FollowLink { note, index, reply } => {
+                let n = doc.notes.get(&note).ok_or("unknown annotation")?;
+                let links = match &reply {
+                    None => &n.links,
+                    Some(reply) => &n.replies.iter().find(|r| &r.id == reply).ok_or("unknown annotation reply")?.links,
+                };
+                let link = links.get(index).ok_or("unknown annotation link")?;
                 match &link.target {
                     notes::LinkTarget::Selection { target } => {
                         let selected = select(scene, owner.as_deref_mut(), target.clone())?;
@@ -238,6 +305,17 @@ pub(crate) fn api(scene: &mut SpatialScene, camera: &mut Orbit, mut owner: Optio
                 }
             }
             notes::Request::Edit { change, expected_revision } => (change, expected_revision),
+            // Replies, comment edits and resolves go through the one
+            // annotations service, as the panel's buttons and keys do.
+            notes::Request::Reply { note, body, author, id: None } => return thread_op(scene, continuation, "Reply", ThreadOp::Reply { thread: note, body, author, links: vec![] }),
+            // The caller's id (the panel's draft): the same comment a new reply is, with that id.
+            notes::Request::Reply { note, body, author, id: Some(id) } => {
+                let comment = Comment { id, author, body, created_at: sim_annotate::stamp(), edited_at: None, links: vec![] };
+                return thread_op(scene, continuation, "Reply", ThreadOp::Post { thread: note, comment });
+            }
+            notes::Request::EditComment { note, comment, body } => return thread_op(scene, continuation, "Edit comment", ThreadOp::EditComment { thread: note, comment, body, links: None }),
+            notes::Request::DeleteComment { note, comment } => return thread_op(scene, continuation, "Delete comment", ThreadOp::DeleteComment { thread: note, comment }),
+            notes::Request::Resolve { note, resolved } => return thread_op(scene, continuation, if resolved { "Resolve" } else { "Reopen" }, ThreadOp::Resolve { thread: note, resolved }),
         };
         *continuation = json!(store(scene)?.submit(change, expected)?);
         Ok(None)

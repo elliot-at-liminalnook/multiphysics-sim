@@ -81,10 +81,14 @@ pub(crate) const DRAFTING: &str = "Post or cancel your current draft first";
 /// A thread another mode asked CAD mode to show (Robot mode's "Open in
 /// CAD", `robot::threads`): kept here, in state rather than a message, until
 /// CAD mode's document for `target` has read its threads (the switch and
-/// RoboCAD's start take many frames). Then the Comments dock opens on the
-/// thread (filter All), or the status line says it is gone; a document for
-/// another target drops the request. One writer each way: the asking mode
-/// sets it, [`read`]'s `sync` takes it.
+/// RoboCAD's start take many frames). The Comments dock is opened once
+/// (closing it afterwards drops the request); once read, the thread opens
+/// (filter All) as `ops::open` opens it (an open draft on another thread
+/// keeps its thread, and the status line says why), or the status line
+/// says it is gone. A read that failed at the current revision, or a lost
+/// connection, ends the request with a status line; a document for another
+/// target drops it. One writer each way: the asking mode sets it
+/// ([`Reveal::new`]), [`read`]'s `sync` takes it.
 #[derive(Resource, Default, Clone, Debug, PartialEq)]
 pub(crate) struct RevealThread(pub Option<Reveal>);
 #[derive(Clone, Debug, PartialEq)]
@@ -92,6 +96,14 @@ pub(crate) struct Reveal {
     /// The CAD document it is in (the switch's target).
     pub target: crate::cad::CadTarget,
     pub thread: String,
+    /// The Comments dock was opened for it (it is opened only once).
+    pub opened: bool,
+}
+impl Reveal {
+    /// A request to show `thread` of the document for `target`.
+    pub(crate) fn new(target: crate::cad::CadTarget, thread: impl Into<String>) -> Self {
+        Reveal { target, thread: thread.into(), opened: false }
+    }
 }
 
 /// The thread list's filter (RoboCAD's combo box).
@@ -242,6 +254,47 @@ impl ThreadsState {
         self.error = None;
         self.release = true;
     }
+}
+
+/// Why a stale pin is not posted ([`draft_gone`]); the draft's text is kept.
+pub(crate) const STALE_PIN: &str = "RoboCAD's document changed since the pin was placed: Annotate again to place it on the current model";
+
+/// The revision a placed pin was clicked at, when the shown document has
+/// moved past it (a remote edit, an undo) and the pin is not being posted:
+/// its face index may name another face now, so it is never sent. Annotate
+/// re-places it and keeps the text ([`may_replace_pin`]).
+pub(crate) fn stale_pin(doc: &CadDocument) -> Option<u64> {
+    let st = &doc.threads;
+    st.pending.as_ref().filter(|p| st.sending.is_none() && p.revision != doc.shown_revision()).map(|p| p.revision)
+}
+
+/// Annotate may start, and its click land, although a draft is open: the
+/// draft is a new annotation whose pin is stale ([`stale_pin`]).
+pub(crate) fn may_replace_pin(doc: &CadDocument) -> bool {
+    doc.threads.editing.is_none() && stale_pin(doc).is_some()
+}
+
+/// Why the composer's draft cannot be posted as it stands (it is kept):
+/// its pin is stale, or, in a list read at RoboCAD's current revision, the
+/// message being edited or the thread being replied to is gone (deleted or
+/// undone in RoboCAD's window, or by an undo here). None while the list is
+/// being read again: then nothing is claimed gone.
+pub(crate) fn draft_gone(doc: &CadDocument) -> Option<String> {
+    let st = &doc.threads;
+    if stale_pin(doc).is_some() {
+        return Some(STALE_PIN.to_string());
+    }
+    if st.pending.is_some() || !read::current(doc) {
+        return None;
+    }
+    let listed = read::listed(doc)?;
+    if let Some(comment) = &st.editing {
+        let there = listed.iter().any(|t| t.comments.iter().any(|c| c.id == *comment));
+        return (!there).then(|| "The message being edited is no longer in RoboCAD's comments (deleted or undone); nothing can be saved: copy your text, then Cancel".to_string());
+    }
+    let id = st.current.as_deref()?;
+    let there = listed.iter().any(|t| t.id == id);
+    (st.drafting() && !there).then(|| "This thread is no longer in RoboCAD's comments (deleted or undone); the reply cannot be posted: copy your text, then Cancel".to_string())
 }
 
 /// What `cad_threads` does.

@@ -2,7 +2,10 @@
 //! 326-346 `begin`, 488-489 `reattach`).
 //!
 //! - **Start** ([`start`]): refused while a draft is open (RoboCAD's
-//!   "Post or cancel your current draft before placing another pin"); the
+//!   "Post or cancel your current draft before placing another pin"),
+//!   except a new annotation whose pin went stale (`threads::stale_pin`:
+//!   the shown revision moved past the click), whose next click replaces
+//!   the pin and keeps the text; the
 //!   Select tool replaces any other tool or catalogue interaction (RoboCAD's
 //!   `set_tool`), then Annotate takes the 3D view's clicks
 //!   (`threads::takes_clicks`: the selection's click stands aside) and the
@@ -46,7 +49,9 @@ pub(crate) const MISSED: &str = "Click a visible surface to place the annotation
 
 /// Start Annotate, or Reattach for thread `reattach` (see the module doc).
 pub(super) fn start(cx: &mut Cx, call: &mut Call, reattach: Option<String>) -> Outcome {
-    if cx.doc.threads.drafting() {
+    // A new annotation whose pin went stale is re-placed (its text kept).
+    let replace = reattach.is_none() && super::may_replace_pin(cx.doc);
+    if cx.doc.threads.drafting() && !replace {
         return Outcome::Done(Err("Post or cancel your current draft before placing another pin".into()));
     }
     if let Some(id) = &reattach
@@ -88,10 +93,12 @@ pub(super) fn place(args: &ThreadsArgs, call: &mut Call, cx: &mut Cx) -> Outcome
     if !cx.doc.doc.as_ref().is_some_and(|d| d.nodes.iter().any(|n| n.id == node)) {
         return done(Err("annotation part does not exist".into()));
     }
+    // A stale pin of a new annotation is replaced by this click (`draft_gone`).
+    let replace = tool.thread.is_none() && super::may_replace_pin(cx.doc);
     // `begin`: the Select tool comes back first, whatever follows.
     cx.doc.threads.tool = None;
     cx.doc.touch();
-    if cx.doc.threads.drafting() {
+    if cx.doc.threads.drafting() && !replace {
         cx.doc.threads.claim = Some(super::Field::Compose);
         return done(Err("Post or cancel your current draft before placing another pin".into()));
     }

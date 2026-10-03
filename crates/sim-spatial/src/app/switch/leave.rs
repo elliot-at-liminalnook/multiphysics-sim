@@ -86,7 +86,8 @@ pub(super) fn leave_robot(world: &mut World) {
 /// with a self-started document's unsaved edits, or edits whose saved state
 /// can't be confirmed, is refused (`leaving_blockers`); if edits appear
 /// between that check and this exit, the service is left running instead
-/// and CAD mode reattaches to its URL next time, so they are not lost.
+/// and CAD mode reattaches to its URL next time, so they are not lost. A
+/// pending thread reveal (`cad::threads::RevealThread`) is dropped.
 pub(super) fn leave_cad(world: &mut World) {
     if let Some(mut doc) = world.remove_resource::<CadDocument>() {
         let target = match doc.release_child("leaving CAD mode") {
@@ -97,6 +98,11 @@ pub(super) fn leave_cad(world: &mut World) {
         sources::left(world, ViewerMode::Cad, Some(sources::cad_source(&target)));
     } else {
         sources::left(world, ViewerMode::Cad, None);
+    }
+    // A thread another mode asked to reveal that had not landed belongs to
+    // this visit: it must not open on a later one.
+    if let Some(mut reveal) = world.get_resource_mut::<crate::cad::threads::RevealThread>() {
+        reveal.set_if_neq(crate::cad::threads::RevealThread(None));
     }
     crate::cad::clear(world);
 }

@@ -267,7 +267,8 @@ pub(crate) fn move_plan(doc: &CadDocument, ids: &[String], parent: Option<&str>,
         // RoboCAD's check walks the new parent's ancestors for a moved node.
         let moving = with_descendants(state, ids);
         if moving.contains(p) {
-            return Err(format!("cannot move a group into itself or its descendants ({})", doc.node_name(p)));
+            // RoboCAD's text (commands.py `move_nodes`), with the group named.
+            return Err(format!("Cannot move a group into itself or its descendants ({})", doc.node_name(p)));
         }
     }
     Ok((parent, index))

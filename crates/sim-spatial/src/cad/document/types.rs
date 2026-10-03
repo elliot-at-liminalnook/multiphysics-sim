@@ -84,7 +84,9 @@ pub struct EditDone {
 
 /// The poll worker's command (`sync`).
 pub enum PollCommand {
-    /// Fetch `/doc` (and `/commands`, `/autosave`) now, whatever the revision.
+    /// Fetch `/doc` (and `/commands`) now, whatever the revision. (`/autosave`
+    /// is read every poll tick from a desktop window: its state changes
+    /// without the revision moving.)
     Refresh,
 }
 
@@ -103,7 +105,8 @@ pub struct PollSnapshot {
     pub doc_error: Option<String>,
     /// `GET /commands` (RoboCAD's GUI command registry; `{}` headless).
     pub commands: Option<Result<BTreeMap<String, CommandInfo>, String>>,
-    /// `GET /autosave` (GUI only; headless answers 409, kept as the error).
+    /// `GET /autosave`, read every poll tick from a desktop window (`health.gui`;
+    /// None from a headless service, which has no autosave).
     pub autosave: Option<Result<Autosave, String>>,
     /// `GET /selection`, fetched every poll (RoboCAD's selection changes do
     /// not bump the document revision), with the instant the request was

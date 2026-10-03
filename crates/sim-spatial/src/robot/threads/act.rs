@@ -121,7 +121,9 @@ pub(crate) fn reveal_target(document: &Document) -> Option<CadTarget> {
 }
 
 /// Open in CAD: the switch to CAD mode on the CAD source, with `thread` to
-/// reveal there once CAD mode has read its threads.
+/// reveal there once CAD mode has read its threads. The switch is applied
+/// later (`app::switch::handle`, this frame or the next); if it is refused
+/// the reveal is dropped there (`drop_reveal`), so none stays pending.
 fn open_in_cad(st: &RobotThreads, view: &RobotView, registry: &DocumentRegistry, reveal: Option<&mut RevealThread>, window: &mut MessageWriter<Act<WindowAction>>, thread: Option<String>) -> Result<(), String> {
     // The draft would be lost with the switch.
     if st.drafting() {

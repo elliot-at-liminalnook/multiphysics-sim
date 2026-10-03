@@ -156,6 +156,10 @@ pub enum CadKeySet {
     Keys,
     /// The Select tool's keys (`transform::keys`).
     ToolKeys,
+    /// The numeric bar's entry (`numeric::entry`), inside [`CadKeySet::Focus`]:
+    /// the surfaces' form Tab runs before it, the Select tool's keys and the
+    /// 3D view's pick after it (its Tab may take the keyboard first).
+    NumericEntry,
     /// Escape for a tool that holds the pointer (the reference calibrate
     /// tool, `references::calibrate::escape`): after the gate, before
     /// RoboCAD's shortcuts and before [`CadKeySet::Escape`].
@@ -176,7 +180,8 @@ pub(crate) fn configure_sets(app: &mut App) {
         .configure_sets(Update, CadKeySet::Gate.before(CadKeySet::Keys).before(CadKeySet::ToolKeys))
         .configure_sets(Update, CadKeySet::Focus.before(CadKeySet::Keys))
         .configure_sets(Update, (CadKeySet::Gate, CadKeySet::EscapeTool, CadKeySet::Escape, CadKeySet::ToolKeys).chain())
-        .configure_sets(Update, CadKeySet::EscapeTool.before(CadKeySet::Keys));
+        .configure_sets(Update, CadKeySet::EscapeTool.before(CadKeySet::Keys))
+        .configure_sets(Update, CadKeySet::NumericEntry.in_set(CadKeySet::Focus));
 }
 
 /// What CAD mode needs without a window (the switch test runs it with

@@ -587,7 +587,8 @@ pub(in crate::cad) fn build(app: &mut App) {
     app.add_systems(OnEnter(ModeScope::Cad), |mut commands: Commands| commands.insert_resource(CadFiles::default())).add_systems(
         Update,
         (
-            form::input.in_set(crate::cad::CadKeySet::Focus),
+            // Before the public Escape steps (and so the Select tool's keys): its Escape closes the form and is consumed.
+            form::input.in_set(crate::cad::CadKeySet::Focus).before(crate::cad::CadKeySet::EscapeTool),
             // Before the edits' results: a finished edit's status line (`sync::finish_edit`) is
             // the one `views::sync` reads as a view save's answer (found by review).
             jobs::receive.before(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults),

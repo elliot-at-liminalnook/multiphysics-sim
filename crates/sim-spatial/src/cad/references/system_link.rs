@@ -128,7 +128,9 @@ pub(crate) fn open_builder(doc: &mut CadDocument, windowed: bool) -> Result<Valu
         return Err(format!("Not opening {} in Build mode: {why}", path.display()));
     }
     doc.references.switch_to = Some(path.clone());
-    let message = format!("Switching to Build mode on {}", path.display());
+    // The switch is applied later by the window's handler, which may still
+    // refuse it (e.g. the builder holds another file): its line says so.
+    let message = format!("Switching to Build mode on {} (the mode switcher's line says if the switch is refused)", path.display());
     doc.show(Ok(message.clone()));
     Ok(json!({"switching": "build", "path": path, "message": message}))
 }

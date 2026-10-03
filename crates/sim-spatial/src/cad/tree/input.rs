@@ -138,6 +138,13 @@ impl RowLookup<'_, '_> {
     /// of it in the top band of its row), in front of any other row, or the
     /// top level under the rows.
     fn target(&self, doc: &CadDocument, ids: &[String], entity: Entity, at: Vec2) -> Option<DropTarget> {
+        self.plan(doc, ids, entity, at)?.ok()
+    }
+
+    /// [`Self::target`] with the refusal: None when `entity` is not in the
+    /// tree, Err naming why RoboCAD would refuse the move (a group onto
+    /// itself or one of its descendants).
+    fn plan(&self, doc: &CadDocument, ids: &[String], entity: Entity, at: Vec2) -> Option<Result<DropTarget, String>> {
         let target = match self.find(entity)? {
             Hit::End => DropTarget::TopLevel,
             Hit::Row(e, row) => {
@@ -153,7 +160,7 @@ impl RowLookup<'_, '_> {
             DropTarget::Before(id) => (None, Some(id.as_str())),
             DropTarget::TopLevel => (None, None),
         };
-        move_plan(doc, ids, parent, before).ok().map(|_| target)
+        Some(move_plan(doc, ids, parent, before).map(|_| target))
     }
 }
 
@@ -302,14 +309,24 @@ pub(super) fn rows(
             doc.touch();
         }
     }
-    // The drop: one move, as RoboCAD's `_drop` builds it.
+    // The drop: one move, as RoboCAD's `_drop` builds it; a drop RoboCAD
+    // would refuse (a group onto itself or its descendants) is refused by
+    // name in the status line, with nothing sent.
     let mut dropped = false;
     for ev in msgs.drop.read() {
         if dropped || ev.button != PointerButton::Primary || !armed {
             continue;
         }
         let Some((ids, began)) = doc.tree.drag.as_ref().map(|d| (d.ids.clone(), d.began)) else { continue };
-        let Some(target) = look.target(&doc, &ids, ev.entity, ev.pointer_location.position) else { continue };
+        let target = match look.plan(&doc, &ids, ev.entity, ev.pointer_location.position) {
+            None => continue,
+            Some(Ok(target)) => target,
+            Some(Err(why)) => {
+                doc.show(Err(why));
+                dropped = true;
+                continue;
+            }
+        };
         let mut a = TreeArgs::of(TreeOp::Move);
         (a.ids, a.revision) = (Some(ids), Some(began));
         match target {

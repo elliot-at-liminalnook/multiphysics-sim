@@ -212,7 +212,12 @@ pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<Standar
                 (
                     k.scroll_area(Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, ..default() }, 0.0),
                     InspectorScroll,
-                    children![(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, GaitRoot), (k.text("Select a link in the list or the 3D view.", size::BODY, TEXT, 0), Inspector)],
+                    children![
+                        (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, GaitRoot),
+                        (k.text("Select a link in the list or the 3D view.", size::BODY, TEXT, 0), Inspector),
+                        // The Comments section (`threads::draw`; empty in the other sections).
+                        (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(6.0), flex_shrink: 0.0, ..default() }, super::threads::ThreadsRoot)
+                    ],
                 )
             ],
         ))

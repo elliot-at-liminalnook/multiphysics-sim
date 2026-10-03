@@ -91,7 +91,7 @@ mod snap;
 mod specs;
 mod surfaces;
 mod sync;
-mod threads;
+pub(crate) mod threads;
 mod topology;
 mod transform;
 mod tree;

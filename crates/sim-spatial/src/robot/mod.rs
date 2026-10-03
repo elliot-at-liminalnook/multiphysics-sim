@@ -122,15 +122,18 @@ pub enum Section {
     Joints,
     Drives,
     Source,
+    /// RoboCAD's comment threads on the CAD source (`threads`).
+    Comments,
 }
 impl Section {
-    const ALL: [Section; 4] = [Section::Link, Section::Joints, Section::Drives, Section::Source];
+    const ALL: [Section; 5] = [Section::Link, Section::Joints, Section::Drives, Section::Source, Section::Comments];
     fn label(self) -> &'static str {
         match self {
             Section::Link => "Link",
             Section::Joints => "Joints",
             Section::Drives => "Drives",
             Section::Source => "Source",
+            Section::Comments => "Comments",
         }
     }
 }
@@ -160,6 +163,7 @@ mod sections;
 mod state;
 #[cfg(test)]
 mod tests;
+mod threads;
 mod ui;
 pub use loader::{FileNotes, LinkGeometry, Loaded, Opened, PLANAR_POSE, load, load_bytes, load_file, load_file_bytes, load_preset, load_recorded, loaded, physical_format_name};
 use controls::{GAIT_SCALES, GAIT_SEEK, OVERLAYS, RECORDED_TRANSPORT, STRESS_PRESET, gait_panel, gait_seek, jog_joints, jog_panel, motion_buttons, motion_panel, motion_text, overlay_on, recorded_panel, replay_line};
@@ -204,6 +208,7 @@ impl Plugin for RobotPlugin {
         configure_sets(app);
         hardware::build(app);
         panel_ui::add_field(app);
+        threads::build(app);
         app.insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
             .init_resource::<RobotPanelUi>()
             .add_systems(OnEnter(ModeScope::Robot), setup)
@@ -219,8 +224,8 @@ impl Plugin for RobotPlugin {
                 Update,
                 (
                     // Keys and buttons write robot actions after REST's, as the old chain applied them.
-                    // The gait path field first: a press that focuses it this frame already stops robot keys (`ui_kit::text::Typing`).
-                    (panel_ui::gait_path_input, panel_ui::toggles, panel_ui::recorded_seek, actions::motion_keys, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons)
+                    // The gait path field and the comment composer first: a press that focuses one this frame already stops robot keys (`ui_kit::text::Typing`).
+                    (panel_ui::gait_path_input, threads::input, panel_ui::toggles, panel_ui::recorded_seek, actions::motion_keys, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons)
                         .chain()
                         .in_set(crate::app::InputSet::Window),
                     actions::apply.in_set(RobotSet::Actions),

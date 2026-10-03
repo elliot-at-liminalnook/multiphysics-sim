@@ -121,6 +121,14 @@ impl RobotView {
         }
         self.model.as_ref()?.links.get(i).map(|l| l.name.as_str())
     }
+    /// `robot_state` as REST and the snapshot answer it: [`Self::state_json`]
+    /// with `cad_threads`, RoboCAD's comment threads on the CAD source as
+    /// robot mode shows them (`threads::state_json`).
+    pub(crate) fn state_with_threads(&self, link: Option<usize>, cad_threads: Value) -> Value {
+        let mut out = self.state_json(link);
+        out["cad_threads"] = cad_threads;
+        out
+    }
     /// `robot_state`; `link` is the selected link (`picked::link`).
     pub fn state_json(&self, link: Option<usize>) -> Value {
         let (status, error, seconds) = match &self.status {

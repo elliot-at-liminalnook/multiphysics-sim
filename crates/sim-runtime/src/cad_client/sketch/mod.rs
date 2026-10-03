@@ -370,19 +370,20 @@ pub struct SketchGeometry {
 
 impl SketchGeometry {
     /// A sketch from `Sketch.to_json`, tolerant (a malformed curve is
-    /// dropped and counted in `dropped`; a missing name reads as
-    /// `Sketch.from_json`'s "Sketch"; missing or non-list `curves` as
-    /// none). Err when `v` is not an object.
-    pub fn from_value(v: &Value) -> Result<(SketchGeometry, usize), String> {
+    /// dropped and its index in RoboCAD's list kept in `dropped`, so a
+    /// refusal can name it; a missing name reads as `Sketch.from_json`'s
+    /// "Sketch"; missing or non-list `curves` as none). Err when `v` is not
+    /// an object.
+    pub fn from_value(v: &Value) -> Result<(SketchGeometry, Vec<usize>), String> {
         let obj = v.as_object().ok_or_else(|| format!("a sketch is an object {{name, plane, curves}} (got {v})"))?;
         let name = obj.get("name").and_then(Value::as_str).unwrap_or("Sketch").to_string();
         let plane = obj.get("plane").and_then(PlaneFrame::from_value);
         let mut curves = Vec::new();
-        let mut dropped = 0;
-        for c in obj.get("curves").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default() {
+        let mut dropped = Vec::new();
+        for (i, c) in obj.get("curves").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default().iter().enumerate() {
             match SketchCurve::from_value(c) {
                 Some(c) => curves.push(c),
-                None => dropped += 1,
+                None => dropped.push(i),
             }
         }
         Ok((SketchGeometry { name, plane, curves }, dropped))

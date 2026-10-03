@@ -20,9 +20,9 @@
 //! - **Dropped curves**: a sketch is read as `SketchGeometry::from_value`
 //!   reads it (from `GET /nodes/{id}`'s `sketch`, the same `Sketch.to_json`
 //!   as `GET /nodes/{id}/sketch`, whose client method discards the count):
-//!   curves without a kind are dropped and counted ([`CadSketches::dropped`]),
-//!   so the edits that name curves by index refuse instead of indexing a
-//!   shortened list.
+//!   curves without a kind are dropped and their indices in RoboCAD's list
+//!   kept ([`CadSketches::dropped`]), so the edits that name curves by index
+//!   refuse, naming them, instead of indexing a shortened list.
 //! - **How**: one `Pool::Dedicated` job per node (network), at most
 //!   [`MAX_FETCHES`] at once. A failure is kept with its error and retried
 //!   on the next revision, `cad_refresh` or a reconnection. Everything goes
@@ -48,15 +48,16 @@ pub enum Geometry {
 
 #[derive(Clone, Debug)]
 enum Slot {
-    /// `dropped`: a sketch's curves the read dropped (no kind); 0 for a plane.
-    Ready { revision: u64, geometry: Geometry, dropped: usize },
+    /// `dropped`: the indices (in RoboCAD's list) of a sketch's curves the
+    /// read dropped (no kind); none for a plane.
+    Ready { revision: u64, geometry: Geometry, dropped: Vec<usize> },
     Failed { revision: u64, error: String },
 }
 
 struct Fetch {
     id: String,
     revision: u64,
-    job: Job<(Geometry, usize)>,
+    job: Job<(Geometry, Vec<usize>)>,
 }
 
 /// The cache (inserted on entering CAD mode, removed on leaving).
@@ -106,12 +107,13 @@ impl CadSketches {
             _ => None,
         }
     }
-    /// How many of sketch `id`'s curves the read at the shown revision
-    /// dropped (no kind): its curve indices do not match RoboCAD's when non-zero.
-    pub fn dropped(&self, id: &str) -> usize {
+    /// The curves of sketch `id` the read at the shown revision dropped (no
+    /// kind), by their index in RoboCAD's list: its curve indices do not
+    /// match RoboCAD's when there are any.
+    pub fn dropped(&self, id: &str) -> &[usize] {
         match self.entries.get(id) {
-            Some(Slot::Ready { revision, dropped, .. }) if *revision == self.revision => *dropped,
-            _ => 0,
+            Some(Slot::Ready { revision, dropped, .. }) if *revision == self.revision => dropped.as_slice(),
+            _ => &[],
         }
     }
     /// The last read sketch of node `id`, possibly of an older revision (display only).
@@ -145,10 +147,10 @@ impl CadSketches {
     }
     /// Put geometry in directly at `revision` (tests and callers that hold one).
     pub fn insert(&mut self, id: &str, revision: u64, geometry: Geometry) {
-        self.insert_read(id, revision, geometry, 0);
+        self.insert_read(id, revision, geometry, Vec::new());
     }
-    /// [`Self::insert`] with the count of curves the read dropped.
-    pub fn insert_read(&mut self, id: &str, revision: u64, geometry: Geometry, dropped: usize) {
+    /// [`Self::insert`] with the indices of the curves the read dropped.
+    pub fn insert_read(&mut self, id: &str, revision: u64, geometry: Geometry, dropped: Vec<usize>) {
         self.revision = revision;
         self.last.insert(id.to_string(), geometry.clone());
         self.entries.insert(id.to_string(), Slot::Ready { revision, geometry, dropped });
@@ -162,14 +164,14 @@ pub fn wanted(doc: &CadDocument) -> HashMap<String, bool> {
     state.nodes.iter().filter(|n| n.kind == "sketch" || n.kind == "plane").map(|n| (n.id.clone(), n.kind == "sketch")).collect()
 }
 
-/// One node's geometry and, for a sketch, the curves its read dropped (on
+/// One node's geometry and, for a sketch, the indices of the curves its read dropped (on
 /// a Dedicated job). Both kinds read `GET /nodes/{id}`: its `sketch` is
 /// `Sketch.to_json`, exactly `GET /nodes/{id}/sketch`'s answer (api.py
-/// `node_detail`), read here with the dropped count kept.
-fn fetch(client: &CadClient, id: &str, sketch: bool) -> Result<(Geometry, usize), String> {
+/// `node_detail`), read here with the dropped curves' indices kept.
+fn fetch(client: &CadClient, id: &str, sketch: bool) -> Result<(Geometry, Vec<usize>), String> {
     let detail = client.node(id).map_err(|e| e.to_string())?;
     if !sketch {
-        return Ok((Geometry::Plane(plane_of(&detail)), 0));
+        return Ok((Geometry::Plane(plane_of(&detail)), Vec::new()));
     }
     let value = detail.sketch.as_ref().filter(|v| !v.is_null()).ok_or_else(|| format!("{id} is not a sketch"))?;
     let (g, dropped) = SketchGeometry::from_value(value).map_err(|m| format!("GET /nodes/{id}: unexpected sketch: {m}"))?;

@@ -9,8 +9,9 @@
 //!   to sketch:", takes the keyboard (RoboCAD asks with its `getText`
 //!   dialog before the tool starts; here that dialog is the tool form's
 //!   first field, so the form and the clicks are one interaction).
-//! - **Pointer** ([`pointer`], SimSync, after the camera snapshot and the
-//!   mesh sync): while the active op is `Flow::Sketch(shape)` the cursor is
+//! - **Pointer** ([`pointer`], SimSync, after the camera snapshot, the
+//!   mesh sync and `CadSet::Plane`, so the sketch cache and the active
+//!   plane are the shown revision's): while the active op is `Flow::Sketch(shape)` the cursor is
 //!   snapped as RoboCAD's sketch tools snap, always with the active plane
 //!   (`snap::snap_on` with its frame, else XY: RoboCAD's `activate` turns
 //!   `plane_snapping` on and `press`/`hover` pass `plane=active_plane()`;
@@ -101,8 +102,13 @@ pub(crate) const DOUBLE_DISTANCE: f32 = 5.0;
 pub(in crate::cad) fn build(app: &mut App) {
     app.add_systems(
         Update,
-        // After the camera snapshot (this frame's view) and the mesh sync (the drawn bodies the snap reads).
-        pointer.after(crate::cad::CadSet::View).after(crate::cad::CadSet::Mesh).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
+        // After the camera snapshot (this frame's view), the mesh sync (the
+        // drawn bodies the snap reads) and the sketch cache and active plane
+        // (`cache::sync` then `plane::sync`, `CadSet::Plane`): a press stamps
+        // this frame's shown revision as `began`, so the plane frame and the
+        // sketches it decides with must be that revision's too (as
+        // `extrude::pointer` and `plane::picks` are ordered).
+        pointer.after(crate::cad::CadSet::View).after(crate::cad::CadSet::Mesh).after(crate::cad::CadSet::Plane).in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Cad)),
     )
     .add_systems(Update, super::preview::draw.in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }

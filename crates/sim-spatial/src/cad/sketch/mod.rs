@@ -219,7 +219,7 @@ pub enum Finish {
 pub struct SketchSpec {
     pub shape: SketchShape,
     pub finish: Finish,
-    /// Lines chain: the last point starts the next shape (tools.py:766).
+    /// Lines chain: the last point starts the next shape (tools.py:768).
     pub chains: bool,
     /// The readout RoboCAD shows while drawing (tools.py:720-726).
     pub readout: Readout,

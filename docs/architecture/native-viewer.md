@@ -324,6 +324,25 @@ physical-source acceptance follows.
   `Escape`; the numeric bar in `CadKeySet::NumericEntry`). Nothing was
   compiled, run or compared side by side; the ledger records the
   differences found.
+  **cad-parts-a-f-retrace** (2026-10-02): Parts A to F (CAD-01 to
+  CAD-130) are traced by reading, unexecuted, against the current code
+  ("Reading traces — Parts A and B" to "— Part F"), so **Parts A to J of
+  the CAD checklist are all traced by reading, unexecuted, and goal 3 of
+  the current focus (the CAD editor, with annotations) is complete by
+  reading**. Gaps fixed: Open in CAD's reveal travels with its own switch
+  request (`ModeSwitch::reveal`, installed only when that switch is
+  accepted), the port race refuses a desktop RoboCAD, leaving CAD names a
+  service left running, window patches are revision-checked, locked nodes
+  are left out of or refuse a transform and face edit as RoboCAD's do,
+  Measure picks through the select click's search, the surfaces' Escape is
+  consumed (one press ends one thing), the palette's Enter is stamped,
+  sketch refusals use RoboCAD's words and name dropped curves, a REST
+  sketch naming curve indices needs `revision`, the sketch pointer runs
+  after `CadSet::Plane`, export and render have a Cancel that says what was
+  written, a saved view's restore ends a part view, the CAD camera starts
+  at RoboCAD's iso view and 40° field of view, and the orbit toggle writes
+  RoboCAD's "Orbit: …" line. No executed evidence is claimed; the ledger's
+  Counts were recounted by script.
 - **Phenomena mode and planar v2 robot files** (see
   [Fold in sim-app](#fold-in-sim-app-2026-09-30)), written 2026-09-30 and
   verified at 80b5997e (sim-spatial lib tests 172 passed, 1 ignored;
@@ -3931,9 +3950,15 @@ another crate.
   - `edit.preferences` and `inspect.draft`;
   - SpaceMouse: Bevy 0.19.1 has no 6-DoF input and the lockfile has no
     HID crate.
-- **Export and render are not cancellable once sent.** api.py has no
-  cancel route; a REST caller's cancel stops waiting only, and the outcome
-  still lands in `cad_state.files.last`.
+- **A cancel of a sent export or render says what was written**
+  (cad-parts-a-f-retrace, 2026-10-02). api.py has no cancel route, so
+  RoboCAD runs a sent request to its end. The job strip's Cancel (and
+  `cad_file {op: cancel, job?}`, `cad:file:cancel-<job>`) asks the job to
+  stop (`cad/files/jobs.rs:cancel`): a render's PNG is the viewer's to
+  write and is not written once the cancel is seen; an export's file is
+  RoboCAD's, so its outcome says the cancel did not stop it. A REST
+  caller's cancel still stops waiting only, and the outcome lands in
+  `cad_state.files.last`.
 
 ### Key clashes
 
@@ -4555,7 +4580,7 @@ Paths are under `crates/sim-spatial/src/` unless named.
 | Persistence | RoboCAD's document (`.rcad` manifest), saved by `cad_file` save or autosave; the viewer never writes it | The system file, with the builder's save | The `*.annotations.json` sidecar through `sim_annotate::store::Store`'s worker | The lesson sidecar through the Store | RoboCAD's document only; Rust never writes a `.rcad` |
 | Undo | RoboCAD's undo (`cad_undo`, one step per thread edit); `ThreadOp::Undo` is refused with `UNDO_IS_ROBOCADS` | The system's undo | Sidecar inverse commands (`sim-inspect/src/annotations.rs:309`) | Sidecar inverse commands | Refused with `UNDO_IS_ROBOCADS`: undo in CAD mode |
 | Remote refresh | `cad/threads/read.rs:129` re-reads at each new RoboCAD revision; the draft is kept | The builder's file watch `builder/background.rs:42` | The Store's idle re-read; a draft settles only on its own result (`notes/compose.rs`) | The Store's idle re-read | A 2 s probe while shown (`robot/threads/read.rs:22`, `:174`); the draft is kept |
-| When it can't act | Refused by name when stale, in flight or disconnected | — | Refused by name (unknown note or reply, the note's text) | — | "<file> is not open in CAD mode: open it there to reply", with **Open in CAD** (`robot/threads/act.rs:125`), which keeps the thread to show in `cad::threads::RevealThread` (state, not a message) until CAD mode has read it (`cad/threads/read.rs:219-243`) |
+| When it can't act | Refused by name when stale, in flight or disconnected | — | Refused by name (unknown note or reply, the note's text) | — | "<file> is not open in CAD mode: open it there to reply", with **Open in CAD** (`robot/threads/act.rs:130`), whose switch request carries the thread to show (`ModeSwitch::reveal`); the switch installs it in `cad::threads::RevealThread` (state, not a message) only when accepted, and it stays until CAD mode has read it (`cad/threads/read.rs:243-277`) |
 
 Remaining differences, each justified in its cell: Robot creates no
 threads, deletes none, has no pins and no undo of its own. CAD's undo is

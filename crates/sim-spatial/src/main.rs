@@ -16,6 +16,11 @@ struct Args {
     /// anything else is an error. Presets stay on --robot-preset.
     #[arg(value_name = "FILE", conflicts_with_all = ["system", "robot", "robot_preset", "lessons", "place", "description", "spatial", "live", "animation", "selection_link", "cad_url", "phenomena"])]
     file: Option<PathBuf>,
+    /// Open a robot project (a `*.robot.json`, or the folder holding one):
+    /// CAD mode on its design, its steps (Design → Model → Test → Learn →
+    /// Make) in the bottom strip of every mode.
+    #[arg(long, conflicts_with_all = ["file", "system", "robot", "robot_preset", "lessons", "place", "description", "spatial", "cad_url", "phenomena"])]
+    project: Option<PathBuf>,
     /// Shared discussion and saved-view sidecar.
     #[arg(long)]
     annotations: Option<PathBuf>,
@@ -238,12 +243,12 @@ fn launch(mode: sim_spatial::ViewerMode, api: sim_api::Server, documents: Docume
     } else if given {
         registry.remember(ViewerMode::Phenomena, kind(ViewerMode::Phenomena), source);
     }
-    sim_spatial::Launch { mode, api, documents: config, registry, models, scene: None, link: None, builder: None, learn: None, robot: None, place: None, cad: None }
+    sim_spatial::Launch { mode, api, documents: config, registry, models, scene: None, link: None, builder: None, learn: None, robot: None, place: None, cad: None, project: None, start: false }
 }
 
 /// CAD mode: a local archive. The typed open applies after mode entry;
 /// validation-only reports the planned local path without querying the kernel.
-fn cad_mode(args: &Args, target: sim_spatial::cad::CadTarget) -> Result<(), Box<dyn std::error::Error>> {
+fn cad_mode(args: &Args, target: sim_spatial::cad::CadTarget, project: Option<PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
     use sim_spatial::cad::CadTarget;
     if matches!(&target, CadTarget::Service(_)) {
         return Err("CAD service attachment awaiting Rust migration; open a local .rcad archive".into());
@@ -258,7 +263,7 @@ fn cad_mode(args: &Args, target: sim_spatial::cad::CadTarget) -> Result<(), Box<
     documents.open(sim_spatial::ViewerMode::Cad, sim_spatial::app::switch::sources::cad_source(&target));
     let models = model_library(args);
     let cad = sim_spatial::cad::CadDocument::new(target);
-    open_window(args, |api| sim_spatial::Launch { cad: Some(cad), ..launch(sim_spatial::ViewerMode::Cad, api, documents, models) })
+    open_window(args, |api| sim_spatial::Launch { cad: Some(cad), project, ..launch(sim_spatial::ViewerMode::Cad, api, documents, models) })
 }
 
 /// Phenomena mode: the built-in exhibits; nothing to load before the window
@@ -437,6 +442,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ] {
         if supplied { return Err(format!("{name} is obsolete: native hardware runs in process; use {replacement}. No hardware server was contacted.").into()); }
     }
+    if let Some(path) = args.project.clone() {
+        let project = sim_runtime::robot_project::Project::open(&path)?;
+        sim_spatial::workspace::init(args.workspace.as_deref(), Some(&project.path));
+        return cad_mode(&args, sim_spatial::cad::CadTarget::File(project.cad()), Some(project.path));
+    }
     let cad_file = take_file(&mut args)?;
     if args.lesson.is_some() && args.lessons.is_none() {
         return Err("--lesson requires lessons mode (--lessons DIR or a lessons directory as FILE)".into());
@@ -452,10 +462,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .or(args.robot_presets.as_deref());
     sim_spatial::workspace::init(args.workspace.as_deref(), opened);
     if let Some(path) = cad_file {
-        return cad_mode(&args, sim_spatial::cad::CadTarget::File(path));
+        return cad_mode(&args, sim_spatial::cad::CadTarget::File(path), None);
     }
     if let Some(url) = args.cad_url.clone() {
-        return cad_mode(&args, sim_spatial::cad::CadTarget::Service(url));
+        return cad_mode(&args, sim_spatial::cad::CadTarget::Service(url), None);
     }
     if args.phenomena {
         return phenomena_mode(&args);
@@ -576,9 +586,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         sim_spatial::rest::headless(scene, link, api, (description_path.clone(), spatial_path.clone()));
     }
     let mut documents = documents(&args);
+    // No document named at all: the window offers to start a robot (the project card's Start).
+    let start = args.description.is_none() && args.spatial.is_none() && args.select.is_none();
     documents.open(sim_spatial::ViewerMode::Inspect, sim_spatial::document::Source::Assembly { description: description_path, spatial: spatial_path });
     let models = model_library(&args);
-    open_window(&args, |api| sim_spatial::Launch { scene: Some(scene), link, ..launch(sim_spatial::ViewerMode::Inspect, api, documents, models) })
+    open_window(&args, |api| sim_spatial::Launch { scene: Some(scene), link, start, ..launch(sim_spatial::ViewerMode::Inspect, api, documents, models) })
 }
 
 #[cfg(test)]

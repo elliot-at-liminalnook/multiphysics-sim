@@ -51,6 +51,7 @@ pub(crate) mod wire {
         RobotPresets,
         RobotGuide { topic: Option<String> },
         RobotPreset { id: String },
+        RobotOpen { path: std::path::PathBuf },
         RobotInput { channels: Option<std::collections::BTreeMap<String, f64>>, key: Option<String> },
         RobotInputs { values: std::collections::BTreeMap<String, f64> },
         RobotDrive { forward: Option<f64>, lateral: Option<f64>, yaw: Option<f64>, action: Option<String>, stop: Option<bool> },

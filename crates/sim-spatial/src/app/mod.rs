@@ -210,12 +210,16 @@ pub struct Launch {
     pub place: Option<crate::place_view::PlaceView>,
     /// CAD mode's document (the RoboCAD service to attach to or start).
     pub cad: Option<crate::cad::CadDocument>,
+    /// A robot project to open at launch (`--project`).
+    pub project: Option<std::path::PathBuf>,
+    /// Show the project card's Start view at launch (no document was given).
+    pub start: bool,
 }
 
 /// The one app: every mode's plugin under its state, the core, and the
 /// initial mode's documents. Returns when the window closes.
 pub fn run(launch: Launch) {
-    let Launch { mode, api, documents, registry, models, scene, link, builder, learn, robot, place, cad } = launch;
+    let Launch { mode, api, documents, registry, models, scene, link, builder, learn, robot, place, cad, project, start } = launch;
     let compact = scene.as_ref().is_some_and(|s| s.compact);
     let mut app = App::new();
     // A panel rebuilt in the same frame its mode tears it down queues commands for
@@ -250,6 +254,7 @@ pub fn run(launch: Launch) {
     if let Some(cad) = cad {
         app.insert_resource(cad);
     }
+    app.insert_resource(crate::project::LaunchProject { path: project, start });
     app.add_plugins((
         ModesPlugin { initial: mode },
         // The one orbit/fly camera every mode's 3D view uses.
@@ -263,6 +268,8 @@ pub fn run(launch: Launch) {
         crate::place_view::PlacePlugin,
         crate::cad::CadPlugin,
         crate::phenomena::PhenomenaPlugin,
+        // The robot project every mode shares (its strip chips and card).
+        crate::project::ProjectPlugin,
     ))
     .run();
 }

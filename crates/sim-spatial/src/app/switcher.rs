@@ -40,6 +40,8 @@ pub(crate) fn spawn_switcher(mut commands: Commands, fonts: Res<UiFonts>, mode: 
             GlobalZIndex(40),
         ))
         .with_children(|strip| {
+            // The robot project's button and step chips (`crate::project`), filled when it changes.
+            strip.spawn((Node { flex_direction: FlexDirection::Row, align_items: AlignItems::Center, column_gap: Val::Px(6.0), flex_shrink: 0.0, ..default() }, crate::project::ProjectStripRoot));
             // The message box: the free width, at most two lines, clipped.
             strip
                 .spawn((Node { flex_grow: 1.0, flex_shrink: 1.0, flex_basis: Val::Px(0.0), min_width: Val::Px(0.0), max_height: Val::Px(MESSAGE_HEIGHT), overflow: Overflow::clip(), ..default() }, Pickable::IGNORE))

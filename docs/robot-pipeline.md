@@ -67,6 +67,41 @@ A step that is not ready says why (and what to do) instead of opening.
 8. **Make**: part files (STL/3MF) exported from the tested CAD revision;
    print studies remain unported and are said to be.
 
-## Status
+## Status (2026-10-04)
 
-Tracked below as it lands.
+Built and exercised end to end over REST (`examples/robot-pipeline/lift_arm.py`
+from a blank window; details in its README):
+
+| Piece | Where | State |
+| --- | --- | --- |
+| Project file and its folders | `sim_runtime::robot_project` | done, tested |
+| Project context in every mode, steps, strip chips, project card, `--project`, Start card on a blank launch | `crates/sim-spatial/src/project/` | done; verified over REST (the screen was locked, so the drawn card has not been seen) |
+| Following the modes: CAD or Robot opening another project's file adopts that project | `project::actions::follow_documents` | done |
+| Rust physical export in CAD's export job and live link | `sim_cad::physical`, `sim_cad::materials` | done; an arm built from an empty archive exports, builds, lifts and passes (test `physical_export`) |
+| Engineering material defaults with registry values (also fixes CAD's materials dialog source) | `sim_cad::materials` | done |
+| `set_joint_physics` stored where RoboCAD stores it (`robot.physics`) | `sim_cad::ops` | fixed |
+| New documents get RoboCAD's stock materials | `sim_cad::edit::empty_archive` | fixed |
+| Acceptance tests (pass / fail / not assessed; never a pass when unassessed) | `sim_runtime::acceptance` | done, tested |
+| Honest margins in `PhysicalRobot::metrics`/`success` (Monte Carlo) | `sim_runtime::physical` | fixed |
+| Printed-part strength from the run's peak loads (layer-aware voxel check) | `sim_runtime::part_strength`, `project::strength` | done |
+| Design assistant from an empty design (`project_new` with a description, `project_chat`) | `project::chat` | done; verified live: it lengthened the arm, remade the model, re-ran the test and reported |
+| Lessons for this robot (suggestions, AI-written lesson validated by the lesson parser, figure rendered from CAD) | `project::lessons` | done; verified live: a 210-line lesson with the arm's real numbers |
+| Make: STL of each printed part and `parts.json` tied to the tested CAD hash | `project::make` | done |
+| `robot_open` (a robot file in place, for the Test step) | `robot::actions` | done |
+| Mode guides point at `project_guide` | `cad_guide`, `robot_guide` | done |
+
+Not done or not modelled (each said where it shows):
+
+- Flexible links and link-to-link contact in the export (rigid links;
+  `source.not_modelled`); bearing inference from cylinder pairs (estimated
+  from the motor shaft unless set in CAD).
+- Print studies (splitting, plates) remain unported; Make says so.
+- The part check's loads are a stated equivalent of the measured peak motor
+  torque, not a full load history.
+- Lessons for a robot have no live builder system (figures, numbers and
+  quizzes); Lessons mode cannot switch folders in place, so a lesson written
+  while Lessons shows another folder is opened from the Learn step later.
+- The controller under test is the model's servo firmware following a
+  commanded trajectory; the project does not yet test a user's own
+  controller program or realistic sensing (the robot's seam and drive
+  profile paths exist in Robot mode but are not wired to the project test).

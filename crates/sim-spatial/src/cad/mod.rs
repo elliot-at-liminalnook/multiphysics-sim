@@ -273,3 +273,50 @@ pub(crate) fn clear(world: &mut World) {
     world.remove_resource::<files::CadFiles>();
     world.remove_resource::<mesh::CadMaterials>();
 }
+
+/// What a robot project asks of CAD mode (`crate::project`), through CAD's
+/// own actions and state, so its validation and refusals stay CAD's.
+pub(crate) mod for_project {
+    use super::{CadAction, CadDocument, CadTarget};
+    use std::path::Path;
+
+    /// The file CAD mode has open or is opening (None: a service).
+    pub(crate) fn file(doc: &CadDocument) -> Option<&Path> {
+        match &doc.target {
+            CadTarget::File(p) => Some(p.as_path()),
+            CadTarget::Service(_) => None,
+        }
+    }
+    /// The document has loaded (its snapshot is in the window).
+    pub(crate) fn loaded(doc: &CadDocument) -> bool {
+        doc.local.is_some()
+    }
+    /// The open document has edits the file does not.
+    pub(crate) fn unsaved(doc: &CadDocument) -> bool {
+        doc.local.as_ref().is_some_and(|l| doc.history.saved.as_deref() != Some(l.archive.identity()))
+    }
+    /// An edit is in flight (a save or an export now would describe the old state).
+    pub(crate) fn busy(doc: &CadDocument) -> Option<String> {
+        doc.edit_label().map(str::to_string)
+    }
+    /// A simulation-model export is running or queued.
+    pub(crate) fn exporting(doc: &CadDocument) -> bool {
+        doc.results.exports.running.is_some() || doc.results.exports.queued.is_some()
+    }
+    /// The last export's outcome: (path, Ok(message) | Err(why)).
+    pub(crate) fn last_export(doc: &CadDocument) -> Option<(std::path::PathBuf, Result<String, String>)> {
+        doc.results.exports.last.as_ref().map(|l| (l.path.clone(), l.outcome.clone()))
+    }
+    /// CAD's Open of `path` (refused by CAD with unsaved edits).
+    pub(crate) fn open(path: &Path) -> CadAction {
+        CadAction::CadFile(super::files::FileArgs { op: super::files::FileOp::Open, path: Some(path.display().to_string()), ..Default::default() })
+    }
+    /// CAD's Save (to its own file).
+    pub(crate) fn save() -> CadAction {
+        CadAction::CadSave { path: None }
+    }
+    /// The rigid simulation-model export to `path` (the in-process export).
+    pub(crate) fn export(path: &Path) -> CadAction {
+        CadAction::CadResults(super::results::ResultsArgs { op: super::results::ResultsOp::Export, path: Some(path.display().to_string()), kind: Some(super::results::ExportKind::Rigid), ..Default::default() })
+    }
+}

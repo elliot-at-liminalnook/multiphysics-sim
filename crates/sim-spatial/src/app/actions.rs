@@ -362,6 +362,7 @@ pub fn registry() -> &'static [Feature] {
             feature::<super::close::CloseAction>("close", <super::close::CloseAction as Action>::commands),
             feature::<super::settings::actions::SettingsAction>("settings", <super::settings::actions::SettingsAction as Action>::commands),
             feature::<WindowAction>("window", <WindowAction as Action>::commands),
+            feature::<crate::project::ProjectAction>("project", <crate::project::ProjectAction as Action>::commands),
             feature::<crate::inspect::InspectAction>("inspect", <crate::inspect::InspectAction as Action>::commands),
             feature::<crate::builder::system_actions::SystemAction>("build", <crate::builder::system_actions::SystemAction as Action>::commands),
             feature::<crate::builder::calibration::study::StudyAction>("measured_study", <crate::builder::calibration::study::StudyAction as Action>::commands),

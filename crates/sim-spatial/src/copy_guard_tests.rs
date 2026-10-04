@@ -26,10 +26,10 @@
 //! inside a `spec(` or (in [`C_SPEC_FILES`]) `c(` call.
 
 /// The registries' description tables and the modes' agent guides
-/// (`cad_guide`, `robot_guide`: answered only over REST), skipped whole
+/// (`cad_guide`, `robot_guide`, `project_guide`: answered only over REST), skipped whole
 /// (their text answers REST callers; robot/actions/commands.rs also converts
 /// wire commands, whose errors go back to the REST caller only).
-const DESCRIPTION_FILES: [&str; 4] = ["cad/specs.rs", "robot/actions/commands.rs", "cad/guide.rs", "robot/guide.rs"];
+const DESCRIPTION_FILES: [&str; 5] = ["cad/specs.rs", "robot/actions/commands.rs", "cad/guide.rs", "robot/guide.rs", "project/guide.rs"];
 
 /// (file under src/, snippet of the literal, reason).
 const ALLOWLIST: &[(&str, &str, &str)] = &[
@@ -43,6 +43,11 @@ const ALLOWLIST: &[(&str, &str, &str)] = &[
     ("lesson/actions.rs", "REST note", "origin label of a lesson note command (where the note came from)"),
     ("builder/system_actions.rs", "command(s) via REST", "origin label of a system batch sent without a label (where the edit came from, as undo history shows it)"),
     ("cad/surfaces/registry.rs", "REST API: show address", "RoboCAD's own command name (api.address shows RoboCAD's API address): a command label, not an instruction to use REST"),
+    // Instructions sent to the AI agent (sim_agent), never drawn in the window.
+    ("cad/threads/ai.rs", "You are the design assistant inside a CAD editor", "the CAD AI's developer instructions, sent to the agent"),
+    ("cad/threads/ai.rs", "The viewer's REST API is at", "the CAD AI's turn instructions (how the agent reaches the viewer), sent to the agent"),
+    ("project/chat.rs", "You are the robot design assistant", "the design assistant's developer instructions, sent to the agent"),
+    ("project/chat.rs", "The viewer's REST API is at", "the design assistant's turn instructions (how the agent reaches the viewer), sent to the agent"),
     // Answers only a REST or system_ui caller receives (the window never shows them).
     ("robot/preset.rs", "robot_state.run.error", "OPENABLE_RULE: the openable_rule field of the preset listing JSON and the robot_presets description"),
     ("robot/graphs.rs", "system_ui graphs:toggle", "the toggle field of robot_state.graphs (REST JSON)"),

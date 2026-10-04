@@ -50,7 +50,8 @@
 //! Reads are tolerant: unknown fields are ignored, missing ones take their
 //! defaults.
 use super::{CadClient, CadError, OpResult, node_route, null_non_finite};
-use crate::hardware_client::{encode_uri_component, lenient, lenient_items};
+use crate::hardware::protocol::{lenient, lenient_items};
+use crate::hardware_client::encode_uri_component;
 use crate::loopback_http::{self, Request};
 use serde::de::{DeserializeOwned, MapAccess, Visitor};
 use serde::ser::SerializeMap;

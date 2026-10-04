@@ -4,7 +4,7 @@
 //! RoboCAD leaves open (transforms, joints, sketches, views, materials) are
 //! `serde_json::Value`. Lengths are millimetres, masses grams, as RoboCAD
 //! writes them.
-use crate::hardware_client::{lenient, lenient_items};
+use crate::hardware::protocol::{lenient, lenient_items};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 

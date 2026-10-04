@@ -22,7 +22,7 @@
 //! A reference image node's placement is `NodeDetail::image` ([`ImagePlacement::of`]):
 //! `node_detail` strips the bytes and writes the plane as `Plane.to_json`.
 use super::{CadClient, CadError, NodeDetail, OpResult, node_route};
-use crate::hardware_client::lenient;
+use crate::hardware::protocol::lenient;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 

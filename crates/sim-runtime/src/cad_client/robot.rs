@@ -19,7 +19,7 @@
 //! RoboCAD's own default applies. Every write is one RoboCAD undo step: call
 //! it through a client with [`super::EDIT_TIMEOUT`].
 use super::{CadClient, CadError, NodeDetail};
-use crate::hardware_client::{lenient, lenient_items};
+use crate::hardware::protocol::{lenient, lenient_items};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};

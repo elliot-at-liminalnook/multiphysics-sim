@@ -149,6 +149,10 @@ pub struct CadError {
     pub message: String,
 }
 impl CadError {
+    /// A refusal or failure of the in-process CAD editor (no request was sent anywhere).
+    pub fn local(message: impl Into<String>) -> CadError {
+        CadError { method: "local", route: String::new(), status: None, message: message.into() }
+    }
     /// A transport timeout of a request that may edit the document (any
     /// method but `GET`, after connecting: a connect timeout sent nothing)
     /// adds that RoboCAD may still apply it.
@@ -190,6 +194,9 @@ fn may_have_arrived(method: &str, message: &str) -> bool {
 }
 impl std::fmt::Display for CadError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.method == "local" {
+            return write!(f, "{}", self.message);
+        }
         write!(f, "RoboCAD {} {}: {}", self.method, self.route, self.message)?;
         if let Some(status) = self.status {
             if !self.message.contains(&format!("HTTP {status}")) {

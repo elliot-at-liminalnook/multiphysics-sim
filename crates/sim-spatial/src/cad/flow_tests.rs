@@ -18,6 +18,7 @@ fn document() -> CadDocument {
         revision: 7,
         ..default()
     });
+    d.open_fixture();
     d
 }
 fn render(mut commands: Commands, doc: Res<CadDocument>) {
@@ -78,13 +79,13 @@ fn common_source_guard_blocks_all_source_callers_but_auxiliary_keeps_revision_gu
     assert!(d.edit_refusal().unwrap().contains("read-only"));
     assert!(d.commit_refusal(Some(7)).is_some());
     assert!(d.commit_refusal_for(Some(7), true).is_none());
-    d.health.as_mut().unwrap().revision = 8;
+    d.doc_key.as_mut().unwrap().1 = 8;
     assert!(
         d.commit_refusal_for(Some(7), true)
             .unwrap()
             .contains("revision 7, now 8")
     );
-    d.health.as_mut().unwrap().revision = 7;
+    d.doc_key.as_mut().unwrap().1 = 7;
     d.uncertain_edit = Some("answer lost".into());
     assert!(
         d.commit_refusal_for(Some(7), true)

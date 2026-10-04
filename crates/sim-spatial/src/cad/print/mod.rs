@@ -57,6 +57,10 @@ mod tracker_tests;
 
 pub(crate) use jobs_tracker::PrintJobTracker;
 
+/// Why print studies, split, coupons, print jobs and the wall/thin checks
+/// refuse: they ran in RoboCAD's print service, which has no in-process port yet.
+pub(crate) const PRINT_UNPORTED: &str = "RoboCAD's print service (studies, split, coupons, print jobs, wall and thin checks) is not ported to the in-process editor yet";
+
 use super::actions::{CadAction, Cx};
 use super::document::CadDocument;
 use super::ops::{Built, Env, OpEntry, Resolved};

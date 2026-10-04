@@ -75,6 +75,8 @@ pub(in crate::cad) fn rest_form(action: &CadAction) -> Value {
         CadAction::CadPrint(a) => tagged("cad_print", a),
         CadAction::CadTree(a) => tagged("cad_tree", a),
         CadAction::CadThreads(a) => tagged("cad_threads", a),
+        CadAction::CadModel(a) => tagged("cad_model", a),
+        CadAction::CadGuide { topic } => json!({"command": "cad_guide", "topic": topic}),
         CadAction::CadReferences(a) => tagged("cad_references", a),
         CadAction::CadComponents(a) => tagged("cad_components", a),
         CadAction::CadComposition(a) => tagged("cad_composition", a),

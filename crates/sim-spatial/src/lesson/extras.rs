@@ -54,7 +54,7 @@ pub(crate) struct TaskState {
 pub(crate) struct LabState {
     pub ticks: [bool; 4],
     pub prediction: String,
-    job: Option<crate::jobs::Job<serde_json::Value>>,
+    pub(super) job: Option<crate::jobs::Job<serde_json::Value>>,
     pub running: bool,
     pub(super) control: Option<std::sync::Arc<super::lab::Control>>,
     pub result: Option<Result<serde_json::Value, String>>,

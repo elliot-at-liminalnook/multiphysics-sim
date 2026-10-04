@@ -192,7 +192,7 @@ pub(crate) fn ready(doc: &CadDocument, selection: &[SelectionItem]) -> Result<()
         return Err("nothing measurable is selected (bodies, sheets and instances are)".into());
     }
     if !doc.connected() {
-        return Err(format!("not connected to RoboCAD: {}", doc.connection_line().0));
+        return Err(format!("no CAD document is open: {}", doc.connection_line().0));
     }
     Ok(())
 }
@@ -205,9 +205,9 @@ pub(crate) fn start(doc: &mut CadDocument, selection: &[SelectionItem]) -> Resul
         doc.physical_edit.exact.run = None;
     }
     ready(doc, selection)?;
-    let client = doc.client.clone().ok_or("not connected to RoboCAD")?;
+    let local = doc.local.clone().ok_or("no CAD document is open")?;
     let ids = stamp.nodes.clone();
-    let job = Job::spawn(Pool::Dedicated, doc.generation, "cad-exact-measurement", move |ctx| measure(&client, &ids, ctx));
+    let job = Job::spawn(Pool::Compute, doc.generation, "cad-exact-measurement", move |ctx| measure(&local, &ids, ctx));
     let nodes = stamp.nodes.clone();
     doc.physical_edit.exact = ExactState { run: Some(ExactRun::new(stamp, job)), result: None, status: None };
     doc.touch();
@@ -225,21 +225,15 @@ pub(crate) fn cancel(doc: &mut CadDocument) -> Result<Value, String> {
     Ok(json!({"message": message}))
 }
 
-/// The job: one `GET /nodes/{id}` per node within RoboCAD's limit.
-fn measure(client: &CadClient, ids: &[String], ctx: &Ctx) -> Result<Measured, String> {
-    let deadline = Instant::now() + LIMIT;
-    let expired = || format!("stopped waiting at RoboCAD's {} s limit (the request already sent finishes in RoboCAD); try a smaller selection", LIMIT.as_secs());
+/// The job: each node's exact mass block from the open archive's geometry.
+fn measure(local: &crate::cad::sync::LocalSnapshot, ids: &[String], ctx: &Ctx) -> Result<Measured, String> {
     let mut blocks = Vec::new();
     for id in ids {
         if ctx.cancelled() {
             return Err("cancelled".into());
         }
-        let left = deadline.saturating_duration_since(Instant::now());
-        if left.is_zero() {
-            return Err(expired());
-        }
-        let detail = client.clone().with_timeout(left).node(id).map_err(|e| if Instant::now() >= deadline { expired() } else { e.to_string() })?;
-        blocks.push((detail.summary.name, detail.mass));
+        let name = local.archive.node(id).and_then(|n| n["name"].as_str()).unwrap_or(id).to_string();
+        blocks.push((name, crate::cad::local::mass_block(local, id)));
     }
     combine(&blocks)
 }

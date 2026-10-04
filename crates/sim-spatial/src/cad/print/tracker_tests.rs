@@ -133,6 +133,7 @@ fn running(id: &str, kind: &str, fraction: f64, message: &str) -> Value {
 }
 
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn a_watched_job_shows_its_progress_then_robocads_done_text_and_refreshes() {
     let fake = Fake::start(json!([running("a1", "analyze", 0.42, "meshing")]));
     let mut doc = document(&fake);
@@ -169,6 +170,7 @@ fn a_watched_job_shows_its_progress_then_robocads_done_text_and_refreshes() {
 }
 
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn cancel_asks_first_then_sends_exactly_one_delete_per_running_job() {
     let done = json!({"id": "b2", "kind": "split", "state": "done", "fraction": 1.0, "message": "", "result": {"piece_nodes": ["p1", "p2"], "hardware": []}});
     let fake = Fake::start(json!([done, running("a1", "plan", 0.1, "")]));
@@ -235,6 +237,7 @@ fn robocads_texts_for_each_kind() {
 }
 
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn a_list_polled_before_a_jobs_adoption_does_not_end_it() {
     let fake = Fake::start(json!([]));
     let mut doc = document(&fake);
@@ -256,6 +259,7 @@ fn a_list_polled_before_a_jobs_adoption_does_not_end_it() {
 }
 
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn cancel_before_any_list_was_read_refuses_and_polls_once() {
     let fake = Fake::start(json!([running("a1", "plan", 0.1, "")]));
     let mut doc = document(&fake);

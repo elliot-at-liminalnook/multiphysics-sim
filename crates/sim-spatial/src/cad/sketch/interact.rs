@@ -206,7 +206,7 @@ pub(crate) enum Step {
     /// Refused for now (see the module doc): nothing added, the points
     /// kept, nothing sent; the message to show.
     Wait(String),
-    /// RoboCAD's revision moved since the shape's first click: its points
+    /// The document's revision moved since the shape's first click: its points
     /// were dropped; the message to show.
     Dropped(String),
 }
@@ -221,15 +221,15 @@ fn refusal(shape: SketchShape, s: &mut SketchState, began: u64, stamps: bool, co
         // `began` stamped now, or a passing refusal (an edit in flight, stale): it catches up.
         if stamps || doc.commit_refusal(None).is_some() {
             let what = if completes { "not sent" } else { "point not taken" };
-            return Some(Step::Wait(format!("Sketch {name} {what}: {why}; click again when RoboCAD has caught up")));
+            return Some(Step::Wait(format!("Sketch {name} {what}: {why}; click again in a moment")));
         }
         s.points.clear();
         s.chained = false;
-        let now = doc.health.as_ref().map_or_else(|| doc.shown_revision().to_string(), |h| h.revision.to_string());
-        return Some(Step::Dropped(format!("Sketch {name} not sent: RoboCAD's document changed since its first point was clicked (revision {began}, now {now}); its points are dropped: click the {name} again")));
+        let now = doc.shown_revision();
+        return Some(Step::Dropped(format!("Sketch {name} not sent: the document changed since its first point was clicked (revision {began}, now {now}); its points are dropped: click the {name} again")));
     }
     if completes && let Err(why) = super::edits::shape_target(plane_arg.as_str(), doc, env) {
-        return Some(Step::Wait(format!("Sketch {name} not sent: {why}; click again when RoboCAD has caught up")));
+        return Some(Step::Wait(format!("Sketch {name} not sent: {why}; click again in a moment")));
     }
     None
 }

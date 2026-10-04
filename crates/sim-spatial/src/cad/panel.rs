@@ -442,19 +442,15 @@ fn refresh(
                     p.spawn(k.caption("Choose a local .rcad archive in the document picker. File → Open… loads another archive in process."));
                 }
             }
-            Some(doc) if doc.client.is_none() && matches!(part, Part::Comments | Part::References | Part::Components | Part::Composition | Part::Robot | Part::Materials | Part::Print) => {
+            Some(doc) if doc.client.is_none() && matches!(part, Part::Components | Part::Composition | Part::Print) => {
                 let label = match part {
-                    Part::Comments => "Annotation editing",
-                    Part::References => "Reference inspection",
                     Part::Components => "Component library editing",
                     Part::Composition => "Assembly authoring",
-                    Part::Robot => "Physical robot inspection/export",
-                    Part::Materials => "Material editing",
                     Part::Print => "Print analysis/jobs",
                     _ => unreachable!("guarded migration section"),
                 };
                 p.spawn(k.section(label));
-                p.spawn(k.caption(format!("{label} awaits Rust migration. No RoboCAD request is pending; archived metadata remains available in the node inspector.")));
+                p.spawn(k.caption(format!("{label} is not available in the in-process editor yet. The archived metadata is shown in the node inspector.")));
             }
             Some(doc) => match part {
                 Part::Top => top(p, &k, doc, &selection, plane),

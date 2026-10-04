@@ -15,6 +15,7 @@ fn document() -> CadDocument {
         revision: 23,
         ..Default::default()
     });
+    doc.open_fixture();
     doc
 }
 #[test]

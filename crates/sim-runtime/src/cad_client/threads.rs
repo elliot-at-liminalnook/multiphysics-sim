@@ -26,7 +26,8 @@
 //! list; a malformed field reads as its default. Every write is a RoboCAD
 //! edit (one undo step there): use a client with [`super::EDIT_TIMEOUT`].
 use super::{CadClient, CadError};
-use crate::hardware_client::{encode_uri_component, lenient, lenient_items};
+use crate::hardware::protocol::{lenient, lenient_items};
+use crate::hardware_client::encode_uri_component;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 

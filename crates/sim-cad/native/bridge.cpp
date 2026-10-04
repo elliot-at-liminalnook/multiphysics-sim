@@ -26,7 +26,27 @@
 #include <Standard_Failure.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Ax2.hxx>
+#include <BRepAlgoAPI_Fuse.hxx>
+#include <BRepAlgoAPI_Cut.hxx>
+#include <BRepAlgoAPI_Common.hxx>
+#include <BRepAlgoAPI_Section.hxx>
+#include <BRepFilletAPI_MakeFillet.hxx>
+#include <BRepFilletAPI_MakeChamfer.hxx>
+#include <BRepPrimAPI_MakeSphere.hxx>
+#include <BRepPrimAPI_MakeCone.hxx>
+#include <BRepPrimAPI_MakePrism.hxx>
+#include <BRepBuilderAPI_MakePolygon.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepAdaptor_Curve.hxx>
+#include <BRepCheck_Analyzer.hxx>
+#include <TopExp.hxx>
+#include <TopTools_IndexedMapOfShape.hxx>
+#include <TopTools_ListOfShape.hxx>
+#include <gp_Pln.hxx>
+#include <GeomAbs_CurveType.hxx>
+#include <GeomAbs_SurfaceType.hxx>
 #include <sstream>
+#include <vector>
 #include <string>
 #include <cstring>
 #include <exception>
@@ -93,6 +113,143 @@ extern "C" int sim_cad_query(const unsigned char* bytes,size_t size,int primitiv
    }
    for(int i=1;i<=mesh->NbTriangles();i++){int a,b,c;mesh->Triangle(i).Get(a,b,c);if(reversed)std::swap(b,c);triangle(context,base+a-1,base+b-1,base+c-1,fi);}
    base+=mesh->NbNodes();
+  }
+  return 0;
+ } catch(const Standard_Failure& e) { if(error_size){std::strncpy(error,e.GetMessageString()?e.GetMessageString():"OCCT Standard_Failure",error_size-1);error[error_size-1]=0;} }
+ catch(const std::exception& e){if(error_size){std::strncpy(error,e.what(),error_size-1);error[error_size-1]=0;}}
+ catch(...){if(error_size){std::strncpy(error,"unknown native OCCT exception",error_size-1);error[error_size-1]=0;}}
+ return 1;
+}
+
+// ---- Building: each call reads its input B-reps, makes one shape and hands
+// it back as BRepTools text (RoboCAD's `serialize` format). Face and edge
+// indices are TopExp::MapShapes order: RoboCAD's `occ_faces`/`occ_edges`
+// (explorer order, shared sub-shapes once).
+extern "C" {
+typedef void (*BytesCallback)(void*, const unsigned char*, size_t);
+typedef void (*PolylineCallback)(void*, const double*, size_t);
+typedef void (*FaceCallback)(void*, uint32_t, int32_t, const double*);
+typedef void (*EdgeCallback)(void*, uint32_t, int32_t, const double*);
+}
+static TopoDS_Shape read_shape(const unsigned char* bytes,size_t size) {
+  std::string payload(reinterpret_cast<const char*>(bytes),size);std::istringstream stream(payload);
+  TopoDS_Shape shape;BRep_Builder builder;BRepTools::Read(shape,stream,builder);
+  if(shape.IsNull()||stream.bad())throw std::runtime_error("could not read the B-rep data");
+  return shape;
+}
+static void need(bool ok,const char* why){ if(!ok) throw std::runtime_error(why); }
+static void valid(const TopoDS_Shape& shape,const char* why){ need(!shape.IsNull(),"the operation produced no geometry"); need(BRepCheck_Analyzer(shape).IsValid(),why); }
+static TopoDS_Shape boolean(int op,const std::vector<TopoDS_Shape>& in) {
+  need(in.size()>=2,"a boolean needs at least two bodies");
+  TopTools_ListOfShape args,tools; args.Append(in[0]); for(size_t i=1;i<in.size();i++) tools.Append(in[i]);
+  BRepAlgoAPI_BooleanOperation* algo; BRepAlgoAPI_Fuse fuse; BRepAlgoAPI_Cut cut; BRepAlgoAPI_Common common;
+  algo = op==6 ? static_cast<BRepAlgoAPI_BooleanOperation*>(&fuse) : op==7 ? static_cast<BRepAlgoAPI_BooleanOperation*>(&cut) : static_cast<BRepAlgoAPI_BooleanOperation*>(&common);
+  algo->SetArguments(args); algo->SetTools(tools); algo->Build();
+  need(algo->IsDone() && !algo->HasErrors(),"the boolean failed: the bodies may only touch, or one is not a closed solid");
+  if(op==6) algo->SimplifyResult();
+  TopoDS_Shape out=algo->Shape();
+  need(!(op==8 && TopExp_Explorer(out,TopAbs_SOLID).More()==false),"the bodies do not overlap: their common part is empty");
+  valid(out,"the boolean produced an invalid solid");
+  return out;
+}
+extern "C" int sim_cad_build(int op,const unsigned char* const* inputs,const size_t* sizes,size_t input_count,
+ const double* args,size_t arg_count,const int32_t* ints,size_t int_count,void* context,BytesCallback out,
+ char* error,size_t error_size) noexcept {
+ try {
+  std::vector<TopoDS_Shape> in; for(size_t i=0;i<input_count;i++) in.push_back(read_shape(inputs[i],sizes[i]));
+  auto arg=[&](size_t i){ need(i<arg_count,"missing numeric argument"); return args[i]; };
+  TopoDS_Shape shape;
+  switch(op) {
+  case 1: need(arg(3)>0&&arg(4)>0&&arg(5)>0,"box sizes must be positive");
+   shape=BRepPrimAPI_MakeBox(gp_Pnt(arg(0),arg(1),arg(2)),arg(3),arg(4),arg(5)).Shape(); break;
+  case 2: need(arg(6)>0&&arg(7)>0,"cylinder radius and height must be positive");
+   shape=BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(arg(0),arg(1),arg(2)),gp_Dir(arg(3),arg(4),arg(5))),arg(6),arg(7)).Shape(); break;
+  case 3: need(arg(3)>0,"sphere radius must be positive");
+   shape=BRepPrimAPI_MakeSphere(gp_Pnt(arg(0),arg(1),arg(2)),arg(3)).Shape(); break;
+  case 4: need(arg(6)>=0&&arg(7)>=0&&(arg(6)>0||arg(7)>0)&&arg(8)>0,"cone radii must be nonnegative (one positive) and its height positive");
+   shape=BRepPrimAPI_MakeCone(gp_Ax2(gp_Pnt(arg(0),arg(1),arg(2)),gp_Dir(arg(3),arg(4),arg(5))),arg(6),arg(7),arg(8)).Shape(); break;
+  case 5: { need(in.size()==1,"a transform takes one body"); gp_Trsf tr; tr.SetValues(arg(0),arg(1),arg(2),arg(3),arg(4),arg(5),arg(6),arg(7),arg(8),arg(9),arg(10),arg(11));
+   BRepBuilderAPI_Transform t(in[0],tr,true); need(t.IsDone(),"OCCT transform failed"); shape=t.Shape(); break; }
+  case 6: case 7: case 8: shape=boolean(op,in); break;
+  case 9: { need(in.size()==1,"a fillet takes one body"); double r=arg(0); need(r>0,"fillet radius must be positive");
+   BRepFilletAPI_MakeFillet mk(in[0]); TopTools_IndexedMapOfShape edges; TopExp::MapShapes(in[0],TopAbs_EDGE,edges);
+   if(int_count==0) { for(int i=1;i<=edges.Extent();i++){ BRepAdaptor_Curve c(TopoDS::Edge(edges(i))); if(c.GetType()==GeomAbs_Line||c.GetType()==GeomAbs_Circle) mk.Add(r,TopoDS::Edge(edges(i))); } }
+   else for(size_t i=0;i<int_count;i++){ need(ints[i]>=0&&ints[i]<edges.Extent(),"fillet edge does not exist"); mk.Add(r,TopoDS::Edge(edges(ints[i]+1))); }
+   try { mk.Build(); } catch(const Standard_Failure&) {}
+   need(mk.IsDone(),"the fillet is too large for that edge: it would consume a neighbouring face. Try a smaller radius, or fillet the neighbours first.");
+   shape=mk.Shape(); valid(shape,"the fillet produced an invalid solid; try a smaller radius"); break; }
+  case 10: { need(in.size()==1,"a chamfer takes one body"); double d=arg(0); need(d>0,"chamfer distance must be positive");
+   BRepFilletAPI_MakeChamfer mk(in[0]); TopTools_IndexedMapOfShape edges; TopExp::MapShapes(in[0],TopAbs_EDGE,edges);
+   if(int_count==0) for(int i=1;i<=edges.Extent();i++) mk.Add(d,TopoDS::Edge(edges(i)));
+   else for(size_t i=0;i<int_count;i++){ need(ints[i]>=0&&ints[i]<edges.Extent(),"chamfer edge does not exist"); mk.Add(d,TopoDS::Edge(edges(ints[i]+1))); }
+   try { mk.Build(); } catch(const Standard_Failure&) {}
+   need(mk.IsDone(),"the chamfer is too large for that edge"); shape=mk.Shape(); valid(shape,"the chamfer produced an invalid solid"); break; }
+  case 11: { // Extrude closed polygon loops (outer first, then holes) along a vector.
+   gp_Vec dir(arg(0),arg(1),arg(2)); need(dir.Magnitude()>1e-9,"extrusion distance must be nonzero");
+   size_t points=(arg_count-3)/3; need(arg_count>=12&&(arg_count-3)%3==0,"a profile needs at least three points");
+   std::vector<size_t> loops; if(int_count==0) loops.push_back(points); else for(size_t i=0;i<int_count;i++){ need(ints[i]>=3,"each loop needs at least three points"); loops.push_back(size_t(ints[i])); }
+   size_t at=0; TopoDS_Face face;
+   for(size_t l=0;l<loops.size();l++) {
+    need(at+loops[l]<=points,"loop sizes exceed the profile's points");
+    BRepBuilderAPI_MakePolygon poly; for(size_t i=0;i<loops[l];i++){ const double* p=args+3+3*(at+i); poly.Add(gp_Pnt(p[0],p[1],p[2])); } poly.Close();
+    need(poly.IsDone(),"the profile loop is degenerate (repeated or collinear points)"); at+=loops[l];
+    if(l==0){ BRepBuilderAPI_MakeFace mf(poly.Wire(),true); need(mf.IsDone(),"the profile is not planar"); face=mf.Face(); }
+    else { TopoDS_Wire hole=poly.Wire(); BRepBuilderAPI_MakeFace mf(face); mf.Add(TopoDS::Wire(hole.Reversed())); need(mf.IsDone(),"a hole loop could not be added to the profile"); face=mf.Face(); }
+   }
+   BRepPrimAPI_MakePrism prism(face,dir); need(prism.IsDone(),"the extrusion failed"); shape=prism.Shape(); valid(shape,"the extrusion produced an invalid solid (a self-intersecting profile?)"); break; }
+  default: throw std::runtime_error("unknown build operation");
+  }
+  std::ostringstream stream; BRepTools::Write(shape,stream); std::string text=stream.str();
+  need(!text.empty(),"OCCT wrote no B-rep data");
+  out(context,reinterpret_cast<const unsigned char*>(text.data()),text.size());
+  return 0;
+ } catch(const Standard_Failure& e) { if(error_size){std::strncpy(error,e.GetMessageString()?e.GetMessageString():"OCCT Standard_Failure",error_size-1);error[error_size-1]=0;} }
+ catch(const std::exception& e){if(error_size){std::strncpy(error,e.what(),error_size-1);error[error_size-1]=0;}}
+ catch(...){if(error_size){std::strncpy(error,"unknown native OCCT exception",error_size-1);error[error_size-1]=0;}}
+ return 1;
+}
+static void sample(const TopoDS_Edge& e,std::vector<double>& pts) {
+  BRepAdaptor_Curve c(e); double f=c.FirstParameter(),l=c.LastParameter(); int n=c.GetType()==GeomAbs_Line?2:24;
+  for(int i=0;i<n;i++){ gp_Pnt p=c.Value(f+(l-f)*i/(n-1)); pts.push_back(p.X());pts.push_back(p.Y());pts.push_back(p.Z()); }
+}
+// The exact plane section as polylines (RoboCAD's `section`: a line edge's
+// two ends, any other edge 24 samples).
+extern "C" int sim_cad_section(const unsigned char* bytes,size_t size,const double* plane,void* context,PolylineCallback line,
+ char* error,size_t error_size) noexcept {
+ try {
+  TopoDS_Shape shape=read_shape(bytes,size);
+  BRepAlgoAPI_Section sec(shape,gp_Pln(gp_Pnt(plane[0],plane[1],plane[2]),gp_Dir(plane[3],plane[4],plane[5])),false);
+  sec.ComputePCurveOn1(true); sec.Approximation(true); sec.Build();
+  if(!sec.IsDone()) return 0;
+  TopTools_IndexedMapOfShape edges; TopExp::MapShapes(sec.Shape(),TopAbs_EDGE,edges);
+  for(int i=1;i<=edges.Extent();i++){ std::vector<double> pts; sample(TopoDS::Edge(edges(i)),pts); line(context,pts.data(),pts.size()/3); }
+  return 0;
+ } catch(const Standard_Failure& e) { if(error_size){std::strncpy(error,e.GetMessageString()?e.GetMessageString():"OCCT Standard_Failure",error_size-1);error[error_size-1]=0;} }
+ catch(const std::exception& e){if(error_size){std::strncpy(error,e.what(),error_size-1);error[error_size-1]=0;}}
+ catch(...){if(error_size){std::strncpy(error,"unknown native OCCT exception",error_size-1);error[error_size-1]=0;}}
+ return 1;
+}
+// Faces (type, centre, normal at the centre's parameters, area) and edges
+// (type, midpoint, length, ends) by index, so a REST caller can name the
+// face or edge an operation takes.
+extern "C" int sim_cad_topology(const unsigned char* bytes,size_t size,void* context,FaceCallback face,EdgeCallback edge,
+ char* error,size_t error_size) noexcept {
+ try {
+  TopoDS_Shape shape=read_shape(bytes,size);
+  TopTools_IndexedMapOfShape faces; TopExp::MapShapes(shape,TopAbs_FACE,faces);
+  for(int i=1;i<=faces.Extent();i++){
+   TopoDS_Face f=TopoDS::Face(faces(i)); GProp_GProps p; BRepGProp::SurfaceProperties(f,p); gp_Pnt c=p.CentreOfMass();
+   BRepAdaptor_Surface s(f); double u=(s.FirstUParameter()+s.LastUParameter())*0.5,v=(s.FirstVParameter()+s.LastVParameter())*0.5;
+   double out[7]={c.X(),c.Y(),c.Z(),0,0,0,p.Mass()};
+   BRepLProp_SLProps props(s,u,v,1,1e-6); if(props.IsNormalDefined()){ gp_Dir n=props.Normal(); double k=f.Orientation()==TopAbs_REVERSED?-1:1; out[3]=k*n.X();out[4]=k*n.Y();out[5]=k*n.Z(); }
+   face(context,uint32_t(i-1),int32_t(s.GetType()),out);
+  }
+  TopTools_IndexedMapOfShape edges; TopExp::MapShapes(shape,TopAbs_EDGE,edges);
+  for(int i=1;i<=edges.Extent();i++){
+   TopoDS_Edge e=TopoDS::Edge(edges(i)); BRepAdaptor_Curve c(e); GProp_GProps p; BRepGProp::LinearProperties(e,p);
+   double f0=c.FirstParameter(),l0=c.LastParameter(); gp_Pnt m=c.Value((f0+l0)*0.5),a=c.Value(f0),b=c.Value(l0);
+   double out[10]={m.X(),m.Y(),m.Z(),p.Mass(),a.X(),a.Y(),a.Z(),b.X(),b.Y(),b.Z()};
+   edge(context,uint32_t(i-1),int32_t(c.GetType()),out);
   }
   return 0;
  } catch(const Standard_Failure& e) { if(error_size){std::strncpy(error,e.GetMessageString()?e.GetMessageString():"OCCT Standard_Failure",error_size-1);error[error_size-1]=0;} }

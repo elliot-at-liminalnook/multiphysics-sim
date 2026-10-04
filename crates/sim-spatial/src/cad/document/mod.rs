@@ -25,6 +25,8 @@ pub struct CadDocument {
     pub(crate) local_load: Option<super::sync::LocalLoad>,
     pub(crate) load_sequence: u64,
     pub(crate) load_outcomes: HashMap<u64, Result<Value, String>>,
+    /// In-process edits' undo and redo stacks and the saved identity (`local`).
+    pub(crate) history: super::local::History,
     /// Bumped on every (re)connect and open: results of an older generation
     /// are dropped.
     pub generation: u64,
@@ -185,7 +187,7 @@ impl CadDocument {
             CadTarget::Service(url) => format!("connecting to RoboCAD at {url}"),
         };
         Self {
-            local: None, local_load: None, load_sequence: 0, load_outcomes: HashMap::new(),
+            local: None, local_load: None, load_sequence: 0, load_outcomes: HashMap::new(), history: Default::default(),
             generation: next_generation(),
             target,
             client: None,

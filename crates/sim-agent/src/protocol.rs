@@ -232,7 +232,7 @@ impl Client {
             params["excludeTurns"] = json!(true);
             self.call("thread/resume", params, run, state, stop)?
         } else {
-            params["developerInstructions"] = json!(instructions);
+            params["developerInstructions"] = json!(run.input.developer.as_deref().unwrap_or(instructions));
             params["ephemeral"] = json!(false);
             self.call("thread/start", params, run, state, stop)?
         };
@@ -255,7 +255,9 @@ impl Client {
         );
         checkpoint(config, state)?;
         let schema = json!({"type":"object","properties":{"body":{"type":"string"},"links":{"type":"array","items":{"type":"string"}}},"required":["body","links"],"additionalProperties":false});
-        let prompt = if let Some(instructions) = &run.input.instructions {
+        let prompt = if let (Some(instructions), Some(_)) = (&run.input.instructions, &run.input.developer) {
+            format!("{instructions}\nRepository: {}\nTask: {}\nContext:\n{}", config.cwd.display(), run.input.question, run.input.context)
+        } else if let Some(instructions) = &run.input.instructions {
             format!("{instructions}\nRepository: {}\nWork read-only: return your result in `body`; the host validates it and applies it itself.\nTask: {}\nContext:\n{}", config.cwd.display(), run.input.question, run.input.context)
         } else { format!(
             "Answer the annotation question below. Repository: {}\nSource document revision: {}. This context is a snapshot; inspect current files for changes and mention relevant differences. Start with model_context: its focus and connected neighbors identify the annotated systems. Use resolved values, authored parameter bindings/provenance, typed ports, merged nets, component equations/limits, source definitions and findings to answer the actual engineering question. Cite concrete values and sources when relevant. Never infer physical properties from display geometry. Resolution is not a successful simulation; check viewer_status and freshness before interpreting runtime measurements. For further inspection you may POST the read-only system_context command to viewer_rest/v1/commands with args {{targets:[\"path\"]}} or {{discussion:\"id\"}}, then GET the returned job URL. This inspection command does not mutate the model or UI. Do not call mutation commands. Missing metadata is unknown, not evidence of a default physical property.\nQuestion: {}\nContext:\n{}",

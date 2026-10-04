@@ -28,6 +28,20 @@ pub struct BodyGeometry {
 /// Global serialization is conservative: OCCT mutates internal query caches.
 /// Only owned numeric buffers escape this mutex and their creating job thread.
 static KERNEL: Mutex<()> = Mutex::new(());
+
+/// Wait for the one OCCT owner (polling `cancelled`).
+pub(crate) fn kernel_lock(cancelled: &dyn Fn() -> bool) -> Result<std::sync::MutexGuard<'static, ()>, String> {
+    loop {
+        if cancelled() {
+            return Err("cancelled waiting for OCCT owner".into());
+        }
+        match KERNEL.try_lock() {
+            Ok(g) => return Ok(g),
+            Err(std::sync::TryLockError::WouldBlock) => std::thread::sleep(std::time::Duration::from_millis(5)),
+            Err(_) => return Err("OCCT owner mutex poisoned".into()),
+        }
+    }
+}
 unsafe extern "C" {
     fn sim_cad_kernel_version() -> *const c_char;
     fn sim_cad_kernel_images(
@@ -375,26 +389,63 @@ fn resolve<'a>(
     })
 }
 
+/// What node `id`'s exact geometry is made from (its B-rep bytes, a
+/// component recipe's primitive and arguments, and every placement), hashed:
+/// equal fingerprints are equal geometry. Tessellation tolerance is not part
+/// of it. Comment pins store it as their geometry stamp (`sim-cad:` prefix).
+pub fn fingerprint(doc: &ArchiveDocument, id: &str) -> Result<String, String> {
+    Ok(hash_input(&resolve(doc, id, &mut HashSet::new())?))
+}
+
+/// The fingerprint a plain body (a `brep/<id>.brep` entry) with these bytes has.
+pub fn body_fingerprint(bytes: &[u8], solid: bool) -> String {
+    hash_input(&Input { bytes, primitive: 0, args: [0.; 8], matrices: vec![], volume: solid, content: String::new() })
+}
+
+fn hash_input(input: &Input) -> String {
+    use sha2::{Digest, Sha256};
+    let mut h = Sha256::new();
+    h.update((input.bytes.len() as u64).to_le_bytes());
+    h.update(input.bytes);
+    h.update(input.primitive.to_le_bytes());
+    for v in input.args.iter().chain(input.matrices.iter().flatten()) {
+        h.update(v.to_le_bytes());
+    }
+    h.update([u8::from(input.volume)]);
+    format!("sim-cad:{:x}", h.finalize())
+}
+
+/// Every geometry node's fingerprint (nodes whose source cannot be resolved
+/// are left out; `load_geometry` names their error).
+pub fn fingerprints(doc: &ArchiveDocument) -> std::collections::HashMap<String, String> {
+    doc.manifest["nodes"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|n| matches!(n["kind"].as_str(), Some("body" | "sheet" | "curve" | "instance")))
+        .filter_map(|n| n["id"].as_str())
+        .filter_map(|id| fingerprint(doc, id).ok().map(|f| (id.to_string(), f)))
+        .collect()
+}
+
 pub fn load_geometry(
     doc: &ArchiveDocument,
     cancelled: &dyn Fn() -> bool,
     progress: &dyn Fn(&str),
 ) -> Result<Vec<BodyGeometry>, String> {
-    let _guard = loop {
-        if cancelled() {
-            return Err(format!(
-                "{}: cancelled waiting for OCCT owner",
-                doc.path.display()
-            ));
-        }
-        match KERNEL.try_lock() {
-            Ok(g) => break g,
-            Err(std::sync::TryLockError::WouldBlock) => {
-                std::thread::sleep(std::time::Duration::from_millis(5))
-            }
-            Err(_) => return Err(format!("{}: OCCT owner mutex poisoned", doc.path.display())),
-        }
-    };
+    load_geometry_reusing(doc, &std::collections::HashMap::new(), cancelled, progress)
+}
+
+/// [`load_geometry`], taking a body from `reuse` (keyed by fingerprint and
+/// tessellation tolerance, [`reuse_key`]) instead of asking the kernel again:
+/// an edit re-tessellates only the bodies it changed.
+pub fn load_geometry_reusing(
+    doc: &ArchiveDocument,
+    reuse: &std::collections::HashMap<String, BodyGeometry>,
+    cancelled: &dyn Fn() -> bool,
+    progress: &dyn Fn(&str),
+) -> Result<Vec<BodyGeometry>, String> {
+    let _guard = kernel_lock(cancelled).map_err(|e| format!("{}: {e}", doc.path.display()))?;
     let mut out = Vec::new();
     let nodes = doc.manifest["nodes"]
         .as_array()
@@ -421,6 +472,13 @@ pub fn load_geometry(
                 "{}: node {id}: invalid tessellation_tolerance",
                 doc.path.display()
             ));
+        }
+        if !reuse.is_empty()
+            && let Ok(f) = fingerprint(doc, id)
+            && let Some(body) = reuse.get(&reuse_key(&f, tolerance))
+        {
+            out.push(BodyGeometry { node_id: id.into(), ..body.clone() });
+            continue;
         }
         let mut ctx = Context {
             body: BodyGeometry {
@@ -475,6 +533,11 @@ pub fn load_geometry(
     Ok(out)
 }
 
+/// The key [`load_geometry_reusing`] looks a body up by.
+pub fn reuse_key(fingerprint: &str, tolerance: f64) -> String {
+    format!("{fingerprint}@{tolerance}")
+}
+
 fn component_input<'a>(doc: &'a ArchiveDocument, n: &Value) -> Result<Input<'a>, String> {
     let id = n["id"].as_str().ok_or("component member id missing")?;
     let recipe = doc
@@ -494,4 +557,42 @@ fn component_input<'a>(doc: &'a ArchiveDocument, n: &Value) -> Result<Input<'a>,
         volume: n["body_kind"].as_str().unwrap_or("solid") == "solid",
         content: recipe.content.clone(),
     })
+}
+
+/// Node `id`'s world-placed B-rep: a body's own entry; an instance's source
+/// mirrored and placed; a component member's recipe (primitive or entry)
+/// with its placements. What the viewer's topology, sections and exports read.
+pub fn resolved_brep(doc: &ArchiveDocument, id: &str) -> Result<Vec<u8>, String> {
+    let input = resolve(doc, id, &mut HashSet::new())?;
+    let a = input.args;
+    let mut bytes = match input.primitive {
+        0 => input.bytes.to_vec(),
+        1 => crate::kernel::build(&crate::kernel::Shape::Box { corner: [a[0], a[1], a[2]], size: [a[3], a[4], a[5]] }, &|| false)?,
+        2 => crate::kernel::build(&crate::kernel::Shape::Cylinder { base: [a[0], a[1], a[2]], axis: [a[3], a[4], a[5]], radius: a[6], height: a[7] }, &|| false)?,
+        other => return Err(format!("unknown component primitive {other}")),
+    };
+    for m in &input.matrices {
+        bytes = crate::kernel::build(&crate::kernel::Shape::Transform { body: &bytes, matrix: *m }, &|| false)?;
+    }
+    Ok(bytes)
+}
+
+/// Node `id` tessellated at `tolerance` (mm) instead of its own (an export's chord tolerance).
+pub fn tessellate_node(doc: &ArchiveDocument, id: &str, tolerance: f64, cancelled: &dyn Fn() -> bool) -> Result<BodyGeometry, String> {
+    if !(tolerance.is_finite() && tolerance > 0.) {
+        return Err("tolerance must be a positive length".into());
+    }
+    let input = resolve(doc, id, &mut HashSet::new())?;
+    let _guard = kernel_lock(cancelled)?;
+    let mut ctx = Context { body: BodyGeometry { node_id: id.into(), ..Default::default() }, cancelled };
+    let mut error = [0 as c_char; 1024];
+    let matrices: Vec<f64> = input.matrices.iter().flat_map(|m| m.iter().copied()).collect();
+    // Synchronous: as `load_geometry_reusing`.
+    let result = unsafe {
+        sim_cad_query(input.bytes.as_ptr(), input.bytes.len(), input.primitive, input.args.as_ptr(), matrices.as_ptr(), input.matrices.len(), input.volume, tolerance, &mut ctx as *mut _ as *mut c_void, property, vertex, triangle, cancel, error.as_mut_ptr(), error.len())
+    };
+    if result != 0 {
+        return Err(format!("node {id}: {}", unsafe { CStr::from_ptr(error.as_ptr()) }.to_string_lossy()));
+    }
+    Ok(ctx.body)
 }

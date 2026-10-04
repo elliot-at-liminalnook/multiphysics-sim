@@ -196,15 +196,12 @@ pub(super) fn paint(
             }
         }
         let Some(positions) = assets.get(id).and_then(|m| m.try_attribute_option(Mesh::ATTRIBUTE_POSITION).ok().flatten()).and_then(|a| a.as_float3()).map(<[[f32; 3]]>::to_vec) else { continue };
-        let client = doc.client.clone().filter(|_| doc.connected());
+        // The body's exact volume centroid (mm → m); the origin for a node
+        // without a body, as RoboCAD falls back.
+        let local_com = doc.local.as_ref().and_then(|l| l.geometry.iter().find(|b| b.node_id == body.id)).map(|b| b.properties.centroid_mm.map(|v| v * 1e-3));
         let (node, job_inputs) = (body.id.clone(), inputs.clone());
-        // The centroid read is a request (Dedicated); the colouring alone is Compute.
-        let pool = if inputs.com_m.is_some() { Pool::Compute } else { Pool::Dedicated };
-        let job = Job::spawn(pool, doc.generation, "cad stress colours", move |ctx| {
-            let com = match job_inputs.com_m {
-                Some(c) => c,
-                None => centroid_m(client.as_ref(), &node)?,
-            };
+        let job = Job::spawn(Pool::Compute, doc.generation, "cad stress colours", move |ctx| {
+            let com = job_inputs.com_m.or(local_com).unwrap_or([0.0; 3]);
             if ctx.cancelled() {
                 return Err(format!("node {node}: superseded"));
             }
@@ -222,20 +219,6 @@ pub(super) fn paint(
             }
         }
     }
-}
-
-/// Node `id`'s mass centroid (m) from `GET /nodes/{id}` (mm); the origin
-/// when RoboCAD's answer has no mass centroid (a node without a body, as
-/// RoboCAD falls back). Not connected, or the read failed: an error naming
-/// the node (the body stays uncoloured; the paint is tried again on reconnect).
-fn centroid_m(client: Option<&sim_runtime::cad_client::CadClient>, id: &str) -> Result<[f64; 3], String> {
-    let client = client.ok_or_else(|| format!("node {id}'s centre of mass could not be read: not connected to RoboCAD; it is coloured once the window reconnects"))?;
-    let detail = client.node(id).map_err(|e| format!("node {id}'s centre of mass could not be read from RoboCAD: {e}"))?;
-    let centroid = detail.mass.map(|m| m.centroid).filter(|c| c.len() == 3);
-    Ok(match centroid {
-        Some(c) => [c[0].unwrap_or(0.0) * 1e-3, c[1].unwrap_or(0.0) * 1e-3, c[2].unwrap_or(0.0) * 1e-3],
-        None => [0.0; 3],
-    })
 }
 
 /// The results panel's root.

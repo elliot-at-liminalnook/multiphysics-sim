@@ -141,7 +141,7 @@ impl Read {
 /// picks were made at. Answers `{"reading", "read", "revision"}`.
 pub(super) fn start(doc: &mut CadDocument, read: Read, revision: u64) -> Result<Value, String> {
     let label = read.label();
-    let client = doc.client.clone().filter(|_| doc.connected()).ok_or_else(|| format!("{label}: not connected to RoboCAD: {}", doc.connection_line().0))?;
+    let local = doc.local.clone().filter(|_| doc.connected()).ok_or_else(|| format!("{label}: no CAD document is open: {}", doc.connection_line().0))?;
     // A read of an older document generation (replaced or reconnected) is
     // not this document's: `receive` would drop its answer, so it does not
     // block a new read (dropping the job cancels it).
@@ -159,14 +159,50 @@ pub(super) fn start(doc: &mut CadDocument, read: Read, revision: u64) -> Result<
         return Err(format!("{label}: the document changed since the selection was made (revision {revision}, now {shown}); nothing was sent: select again"));
     }
     let ask = read.clone();
-    let job = Job::spawn(Pool::Dedicated, doc.generation, format!("cad-{}", read.name()), move |_| {
-        let landed = match ask {
-            Read::Copy { ids } => client.copy_nodes(&ids).map(Landed::Copied),
-            Read::ControlPoints { node, face } => client.control_points(&node, face).map(Landed::ControlPoints),
-            Read::CurvatureComb { node } => client.curvature_comb(&node).map(Landed::CurvatureComb),
-            Read::Continuity { node } => client.continuity(&node).map(Landed::Continuity),
-        };
-        landed.map_err(|e| e.to_string())
+    let job = Job::spawn(Pool::Compute, doc.generation, format!("cad-{}", read.name()), move |_| {
+        // Read from the open archive's exact B-reps (`sim_cad::kernel`).
+        let archive = &local.archive;
+        match ask {
+            Read::Copy { ids } => {
+                let mut items = Vec::new();
+                for id in &ids {
+                    let n = archive.node(id).cloned().ok_or_else(|| format!("no node {id}"))?;
+                    let brep = sim_cad::geometry::resolved_brep(archive, id).ok().map(|b| b.iter().map(|x| format!("{x:02x}")).collect::<String>());
+                    items.push(json!({"node": n, "brep": brep, "sketch": n.get("sketch").cloned().unwrap_or(Value::Null)}));
+                }
+                Ok(Landed::Copied(json!({"robocad_clipboard": true, "items": items})))
+            }
+            Read::ControlPoints { node, face } => {
+                let b = sim_cad::geometry::resolved_brep(archive, &node)?;
+                let v = sim_cad::kernel::measure(sim_cad::kernel::Measure::ControlPoints, &[&b], &[], &[face as i32])?;
+                let (nu, nv) = (v[0] as usize, v[1] as usize);
+                let rows = (0..nu).map(|i| (0..nv).map(|j| { let k = 2 + 3 * (i * nv + j); [v[k], v[k + 1], v[k + 2]] }).collect()).collect();
+                Ok(Landed::ControlPoints(sim_runtime::cad_client::ControlPoints { node, face, rows }))
+            }
+            Read::CurvatureComb { node } => {
+                // A sketch holds no body: no comb lines (as RoboCAD's GUI).
+                let lines = match sim_cad::geometry::resolved_brep(archive, &node) {
+                    Ok(b) => sim_cad::kernel::measure(sim_cad::kernel::Measure::CurvatureComb, &[&b], &[5.0], &[48])?.chunks_exact(6).map(|c| [[c[0], c[1], c[2]], [c[3], c[4], c[5]]]).collect(),
+                    Err(_) => Vec::new(),
+                };
+                Ok(Landed::CurvatureComb(sim_runtime::cad_client::CurvatureComb { node, lines }))
+            }
+            Read::Continuity { node } => {
+                let b = sim_cad::geometry::resolved_brep(archive, &node)?;
+                let topo = sim_cad::kernel::full_topology(&b, 16)?;
+                let mut edges = Vec::new();
+                let mut counts = std::collections::BTreeMap::new();
+                for e in topo["edges"].as_array().into_iter().flatten() {
+                    let index = e["index"].as_i64().unwrap_or(0);
+                    let code = sim_cad::kernel::measure(sim_cad::kernel::Measure::Continuity, &[&b], &[], &[index as i32])?;
+                    let grade = match code.first().copied().unwrap_or(0.) as i64 { 1 => "G0", 2 => "G1", 3 => "G2", _ => "boundary" };
+                    *counts.entry(grade.to_string()).or_insert(0u64) += 1;
+                    let points = e["points"].as_array().into_iter().flatten().filter_map(|p| serde_json::from_value(p.clone()).ok()).collect();
+                    edges.push(sim_runtime::cad_client::EdgeContinuity { index, continuity: grade.into(), points });
+                }
+                Ok(Landed::Continuity(sim_runtime::cad_client::Continuity { node, edges, counts }))
+            }
+        }
     });
     let answer = json!({"reading": read.name(), "read": read.json(), "revision": revision});
     doc.ops.analysis.pending = Some(Pending { read, revision, job });

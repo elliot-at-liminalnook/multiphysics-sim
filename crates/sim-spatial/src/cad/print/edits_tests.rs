@@ -100,6 +100,7 @@ fn the_forms_open_with_the_remembered_values() {
 }
 
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn a_refused_edit_sends_nothing_and_remembers_nothing() {
     let mut doc = document();
     doc.client = None;
@@ -178,6 +179,7 @@ fn apply(action: &CadAction, doc: &mut CadDocument, f: &mut Fixture) -> Outcome 
 }
 
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn a_click_pick_is_one_fastener_run_refused_with_nothing_sent() {
     let mut doc = document();
     let mut f = Fixture::at(4);

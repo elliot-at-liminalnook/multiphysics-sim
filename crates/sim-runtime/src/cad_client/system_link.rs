@@ -15,7 +15,7 @@
 //!
 //! The other three are RoboCAD edits: use a client with [`super::EDIT_TIMEOUT`].
 use super::{CadClient, CadError, OpResult};
-use crate::hardware_client::lenient;
+use crate::hardware::protocol::lenient;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, json};
 

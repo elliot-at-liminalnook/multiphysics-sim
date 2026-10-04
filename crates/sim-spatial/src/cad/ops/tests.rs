@@ -33,6 +33,7 @@ fn document() -> CadDocument {
         ..Default::default()
     });
     doc.doc_key = Some((None, 4));
+    doc.open_fixture();
     doc
 }
 
@@ -319,7 +320,7 @@ fn runs_are_refused_in_flight_stale_or_with_unknown_parameters() {
     assert!(err.contains("in flight") && err.contains("Patch Bracket"), "{err}");
     doc.edit = None;
     let err = prepare(&doc, &Env::default(), union, &Map::new(), Some(&items), Some(3)).unwrap_err();
-    assert!(err.contains("revision 3") && err.contains("nothing was sent"), "{err}");
+    assert!(err.contains("revision 3") && err.contains("nothing was changed"), "{err}");
     let fillet = op("tool.fillet");
     let edges = [item("b1", "edge", 0)];
     let err = prepare(&doc, &Env::default(), fillet, &given(&[("bogus", json!(1))]), Some(&edges), Some(4)).unwrap_err();
@@ -340,7 +341,7 @@ fn explicit_face_and_edge_items_need_their_revision() {
     assert_eq!(err, "pass revision: the RoboCAD revision the face and edge indices in items were read at");
     assert_eq!(prepare(&doc, &Env::default(), points, &Map::new(), Some(&faces), Some(4)), Ok(Built::Read(Read::ControlPoints { node: "b1".into(), face: 2 })));
     let err = prepare(&doc, &Env::default(), points, &Map::new(), Some(&faces), Some(3)).unwrap_err();
-    assert!(err.contains("revision 3") && err.contains("nothing was sent") && err.contains("the form"), "{err}");
+    assert!(err.contains("revision 3") && err.contains("nothing was changed") && err.contains("the form"), "{err}");
     let edges = [item("b1", "edge", 0)];
     assert!(prepare(&doc, &Env::default(), op("tool.fillet"), &Map::new(), Some(&edges), None).unwrap_err().starts_with("pass revision"));
     // Body items name no indices; the selection carries its own revision.
@@ -356,7 +357,7 @@ fn extract_components_sends_the_revision_its_caller_read_at() {
     let err = prepare(&doc, &Env::default(), extract, &components, Some(&body), None).unwrap_err();
     assert!(err.contains("pass revision"), "{err}");
     let err = prepare(&doc, &Env::default(), extract, &components, Some(&body), Some(3)).unwrap_err();
-    assert!(err.contains("revision 3") && err.contains("nothing was sent"), "{err}");
+    assert!(err.contains("revision 3") && err.contains("nothing was changed"), "{err}");
     let sent = calls(prepare(&doc, &Env::default(), extract, &components, Some(&body), Some(4)).unwrap());
     assert_eq!(sent[0].kwargs.get("expected_revision"), Some(&json!(4)));
 }

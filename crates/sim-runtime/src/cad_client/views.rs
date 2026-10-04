@@ -42,6 +42,17 @@ pub struct SavedView {
     pub name: String,
     #[serde(default)]
     pub state: ViewState,
+    /// Why the view matters (the in-process editor's addition; RoboCAD carries it along).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    /// The parts the view shows alone (empty: the whole model).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub parts: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub author: Option<String>,
+    /// `person` or `agent`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub author_kind: Option<String>,
 }
 
 /// A section plane in a view state (`Plane.to_json`: model mm; unit

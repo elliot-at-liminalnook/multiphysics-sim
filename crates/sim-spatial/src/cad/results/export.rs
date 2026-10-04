@@ -251,9 +251,9 @@ pub(crate) fn request(doc: &mut CadDocument, request: ExportRequest) -> Result<V
 /// `cad_client::stamp_saved_source`'s rule (see the module doc).
 fn start(doc: &mut CadDocument, request: ExportRequest, seq: u64) -> Result<(), String> {
     if !doc.connected() {
-        return Err(format!("not connected to RoboCAD: {}", doc.connection_line().0));
+        return Err(format!("no CAD document is open: {}", doc.connection_line().0));
     }
-    let client = doc.client.clone().ok_or("not connected to RoboCAD")?.with_timeout(EXPORT_TIMEOUT);
+    let client = doc.client.clone().ok_or(super::SIM_EXPORT_UNPORTED)?.with_timeout(EXPORT_TIMEOUT);
     let (path, flex, planar) = (request.path.clone(), request.flex, request.planar);
     let job = Job::spawn(Pool::Dedicated, doc.generation, format!("RoboCAD export: {}", request.label), move |ctx| {
         let before = client.health().map_err(|e| e.to_string());

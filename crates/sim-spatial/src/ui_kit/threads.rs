@@ -139,7 +139,17 @@ pub(crate) fn messages<A: Anchor, H: Host<A>>(body: &mut ChildSpawnerCommands, k
         body.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(7.), padding: UiRect::bottom(Val::Px(8.)), flex_shrink: 0., ..default() }).with_children(|message| {
             if !c.author.is_empty() {
                 message.spawn(Node { justify_content: JustifyContent::SpaceBetween, align_items: AlignItems::Center, ..default() }).with_children(|r| {
-                    r.spawn(k.text(&c.author, size::ITEM, TEXT, 2));
+                    if c.is_agent() {
+                        // An agent's reply: its name in the accent colour with an "AI" tag.
+                        r.spawn(Node { column_gap: Val::Px(6.), align_items: AlignItems::Center, ..default() }).with_children(|who| {
+                            who.spawn(k.text(&c.author, size::ITEM, ACCENT, 2));
+                            who.spawn((Node { padding: UiRect::axes(Val::Px(5.), Val::Px(1.)), border: UiRect::all(Val::Px(1.)), border_radius: BorderRadius::all(Val::Px(4.)), ..default() }, BorderColor::all(ACCENT))).with_children(|tag| {
+                                tag.spawn(k.text("AI", size::SECTION, ACCENT, 2));
+                            });
+                        });
+                    } else {
+                        r.spawn(k.text(&c.author, size::ITEM, TEXT, 2));
+                    }
                     if let Some(action) = host.menu(&c.id) {
                         r.spawn(k.button("···", action, Look::Ghost, true));
                     }

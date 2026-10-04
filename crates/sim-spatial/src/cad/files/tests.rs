@@ -10,9 +10,9 @@ use super::jobs;
 use super::formats::{self, Context, FORMAT_IDS, FORMATS};
 use super::*;
 use crate::app::actions::{self, Action};
-use crate::cad::document::{Connection, Edit, EditDone};
+use crate::cad::document::{Edit, EditDone};
 use crate::cad::rest_form::rest_form;
-use sim_runtime::cad_client::{CadClient, Health};
+use sim_runtime::cad_client::{DocState, Health};
 
 /// The formats `Service.export` takes (api.py: stl, 3mf, step, iges, obj,
 /// svg, drawing) with the settings io/exporters.py's dataclasses and
@@ -108,12 +108,14 @@ fn paths_imports_and_renders_are_checked_before_anything_is_sent() {
     }
 }
 
-/// A connected document whose saved state RoboCAD reports as `dirty`.
+/// An open document with (`dirty`) or without unsaved edits.
 fn document(dirty: bool) -> CadDocument {
-    let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
-    doc.client = Some(CadClient::new("http://127.0.0.1:8420").unwrap());
-    doc.connection = Connection::Connected;
+    let mut doc = CadDocument::new(CadTarget::File("/work/turntable.rcad".into()));
     doc.health = Some(Health { ok: true, app: "robocad".into(), dirty, path: Some("/work/turntable.rcad".into()), revision: 3, ..Default::default() });
+    doc.doc = Some(DocState { revision: 3, ..Default::default() });
+    doc.doc_key = Some((None, 3));
+    doc.open_fixture();
+    doc.doc.as_mut().unwrap().dirty = dirty;
     doc
 }
 
@@ -123,9 +125,9 @@ fn new_and_open_use_cad_opens_rule_and_never_discard() {
     let open = FileForm::new(Kind::File(FileOp::Open), "/work/", "turntable", None, &Context::default(), &none).unwrap();
     // A clean document: nothing to say.
     assert_eq!(form::open_rule(&open, &document(false)), None);
-    // An attached RoboCAD with unsaved edits keeps them: a note, not a refusal.
-    let note = form::open_rule(&open, &document(true)).unwrap().unwrap();
-    assert!(note.contains("keeps the unsaved edits to turntable.rcad"), "{note}");
+    // Unsaved edits are never discarded: opening another file is refused until they are saved.
+    let why = form::open_rule(&open, &document(true)).unwrap().unwrap_err();
+    assert!(why.contains("unsaved work"), "{why}");
     // An edit in flight: cad_open's refusal, shown before OK.
     let mut busy = document(false);
     busy.edit = Some(Edit { label: "Patch Bracket: visible".into(), job: crate::jobs::Job::finished(0, Ok(EditDone { message: String::new(), result: Value::Null })), started: std::time::Instant::now(), clear_selection: None, activates_plane: false, retarget: None });

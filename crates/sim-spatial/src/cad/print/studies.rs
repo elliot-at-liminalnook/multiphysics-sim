@@ -103,8 +103,8 @@ pub(super) fn registry(doc: &CadDocument) -> Result<&PrintRegistry, String> {
     match doc.print.studies.registry.as_ref().filter(|(k, _)| k.0 == doc.generation) {
         Some((_, Ok(r))) => Ok(r),
         Some((_, Err(e))) => Err(format!("RoboCAD's printing registry could not be read: {e}")),
-        None if doc.connected() => Err(REGISTRY_READING.to_string()),
-        None => Err("the printing registry cannot be read: not connected to RoboCAD".to_string()),
+        None if doc.connected() && doc.client.is_some() => Err(REGISTRY_READING.to_string()),
+        None => Err(super::PRINT_UNPORTED.to_string()),
     }
 }
 
@@ -114,8 +114,8 @@ pub(super) fn study(doc: &CadDocument) -> Result<&PrintStudy, String> {
     match doc.print.studies.study.as_ref().filter(|(k, _, _)| *k == now) {
         Some((_, _, Ok(s))) => Ok(s),
         Some((_, _, Err(e))) => Err(format!("RoboCAD's print study could not be read: {e}")),
-        None if doc.connected() => Err(format!("the print study is still being read (revision {}); try again in a moment", now.1)),
-        None => Err("the print study cannot be read: not connected to RoboCAD".to_string()),
+        None if doc.connected() && doc.client.is_some() => Err(format!("the print study is still being read (revision {}); try again in a moment", now.1)),
+        None => Err(super::PRINT_UNPORTED.to_string()),
     }
 }
 

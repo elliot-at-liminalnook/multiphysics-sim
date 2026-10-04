@@ -40,7 +40,6 @@
 use super::{ADD, DELETE_COMMENT, DELETE_THREAD, EDIT_COMMENT, REPLY, UPDATE};
 use crate::annotations::{Committed, ThreadSource};
 use crate::app::actions::Call;
-use crate::cad::actions::edit_auxiliary_at;
 use crate::cad::document::{CadDocument, EditDone};
 use crate::cad::sync::value;
 use serde::{Deserialize, Serialize};
@@ -278,6 +277,61 @@ pub(crate) enum Request {
     DeleteComment { id: String },
 }
 impl Request {
+    /// Apply it to the archive being edited (`local::Workspace`): the new
+    /// thread's or comment's id, the thread changed, or `{"deleted": id}`.
+    /// `kind`: who writes a new thread's first comment or a reply.
+    pub(crate) fn apply(self, ws: &mut crate::cad::local::Workspace, kind: sim_cad::annotations::AuthorKind) -> Result<Value, String> {
+        use sim_cad::annotations as a;
+        Ok(match self {
+            Request::Create(t) => {
+                let new = a::NewThread {
+                    node_id: Some(t.node_id),
+                    point: Some(serde_json::json!(t.point)),
+                    face: t.face,
+                    body: t.body,
+                    author: t.author,
+                    author_kind: Some(kind.name().into()),
+                    view: t.view.map(Value::Object),
+                    part_refs: t.part_refs.map(|p| value(&p)),
+                    ..a::NewThread::default()
+                };
+                let (id, comment) = a::create(&mut ws.edit, ws.archive, ws.stamps, new)?;
+                serde_json::json!({"id": id, "comment": comment})
+            }
+            Request::Evidence(t) => {
+                if ws.archive.manifest["document_id"].as_str().is_some_and(|d| d != t.document_id) {
+                    return Err("evidence.document_id: names another document".into());
+                }
+                let new = a::NewThread { body: t.body, author: t.author, author_kind: Some(kind.name().into()), evidence: Some(value(&t.evidence)), ..a::NewThread::default() };
+                let (id, comment) = a::create(&mut ws.edit, ws.archive, ws.stamps, new)?;
+                serde_json::json!({"id": id, "comment": comment})
+            }
+            Request::Update { id, patch } => {
+                let p = a::ThreadPatch {
+                    status: patch.status,
+                    node_id: patch.node_id,
+                    point: patch.point.map(|p| serde_json::json!(p)),
+                    face: patch.face,
+                    view: patch.view.map(Value::Object),
+                    part_refs: patch.part_refs.map(|p| value(&p)),
+                    ..a::ThreadPatch::default()
+                };
+                a::update(&mut ws.edit, ws.archive, ws.stamps, &id, p)?;
+                serde_json::json!({"id": id})
+            }
+            Request::DeleteThread { id } => {
+                a::delete(&mut ws.edit, &id)?;
+                serde_json::json!({"deleted": id})
+            }
+            Request::Reply { thread, body, author } => {
+                let id = a::reply(&mut ws.edit, &thread, &body, &author, kind)?;
+                serde_json::json!({"id": id, "thread": thread})
+            }
+            Request::EditComment { id, body } => serde_json::json!({"id": id, "thread": a::change_comment(&mut ws.edit, &id, Some(&body))?}),
+            Request::DeleteComment { id } => serde_json::json!({"deleted": id, "thread": a::change_comment(&mut ws.edit, &id, None)?}),
+        })
+    }
+
     /// Send it; RoboCAD's answer as the edit's result (a thread, a comment
     /// or `{"deleted": id}`).
     pub(crate) fn send(self, c: &CadClient) -> Result<Value, CadError> {
@@ -325,7 +379,8 @@ impl<'a, 'c> CadThreadSource<'a, 'c> {
             other => format!("{other} · Ctrl+Z undoes"),
         };
         self.sent = Some(request.clone());
-        let outcome = edit_auxiliary_at(self.doc, self.call, self.began, label.to_string(), move |c| request.send(c).map(|result| EditDone { message, result }));
+        let kind = self.doc.threads.kind;
+        let outcome = crate::cad::actions::local_edit_at(self.doc, self.call, self.began, label.to_string(), true, move |ws| request.apply(ws, kind).map(|result| EditDone { message, result }));
         if let Outcome::Done(Err(e)) = outcome {
             return Err(e);
         }

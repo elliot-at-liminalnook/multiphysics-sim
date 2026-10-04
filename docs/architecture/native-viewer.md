@@ -6528,6 +6528,16 @@ on memory.
 
 ## Default epic order
 
+**Current focus (the user, 2026-10-03), ahead of everything below:**
+everything in Rust, in one process. The viewer must not rely on the RoboCAD
+server or on a robot driver server. First the leg driven in process (the
+calibration and motor-bench server logic moves into shared libraries, with
+every safety rule unchanged), then CAD in Rust (§9: derivations, then the
+geometry kernel from Rust, `.rcad` compatible). This supersedes keeping
+RoboCAD available until a parity harness passes; its source stays the
+reference for behaviour. The earlier focus (calibration, sim and leg, CAD
+editor and annotations, the REST-built rover) is complete by reading.
+
 The Director re-ranks with evidence, but this is the default:
 
 1. **Upgrade to Bevy 0.19.1.** *Done 2026-09-30 (batch bevy-0-19-upgrade; see

@@ -31,7 +31,7 @@ use super::CadActivePlane;
 use crate::cad::document::CadDocument;
 use crate::jobs::{Job, Pool};
 use bevy::prelude::*;
-use sim_runtime::cad_client::{CadClient, PlaneFrame, SketchGeometry, plane_of};
+use sim_runtime::cad_client::{PlaneFrame, SketchGeometry, plane_of};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -168,8 +168,9 @@ pub fn wanted(doc: &CadDocument) -> HashMap<String, bool> {
 /// a Dedicated job). Both kinds read `GET /nodes/{id}`: its `sketch` is
 /// `Sketch.to_json`, exactly `GET /nodes/{id}/sketch`'s answer (api.py
 /// `node_detail`), read here with the dropped curves' indices kept.
-fn fetch(client: &CadClient, id: &str, sketch: bool) -> Result<(Geometry, Vec<usize>), String> {
-    let detail = client.node(id).map_err(|e| e.to_string())?;
+fn fetch(archive: &sim_cad::ArchiveDocument, id: &str, sketch: bool) -> Result<(Geometry, Vec<usize>), String> {
+    let node = archive.node(id).cloned().ok_or_else(|| format!("no node {id}"))?;
+    let detail: sim_runtime::cad_client::NodeDetail = serde_json::from_value(node).map_err(|e| format!("node {id}: {e}"))?;
     if !sketch {
         return Ok((Geometry::Plane(plane_of(&detail)), Vec::new()));
     }
@@ -236,14 +237,14 @@ pub(in crate::cad) fn sync(doc: Option<Res<CadDocument>>, cache: Option<ResMut<C
         c.entries.insert(id, slot);
         c.epoch += 1;
     }
-    if let Some(client) = doc.client.clone().filter(|_| doc.connected() && doc.stale.is_none()) {
+    if let Some(local) = doc.local.clone().filter(|_| doc.connected() && doc.stale.is_none()) {
         let fetching: HashSet<&String> = c.fetching.iter().map(|f| &f.id).collect();
         let mut ids: Vec<(&String, bool)> = wanted.iter().filter(|(id, _)| !c.entries.contains_key(*id) && !fetching.contains(id)).map(|(id, s)| (id, *s)).collect();
         ids.sort_unstable();
         let starts: Vec<(String, bool)> = ids.into_iter().take(MAX_FETCHES.saturating_sub(c.fetching.len())).map(|(id, s)| (id.clone(), s)).collect();
         for (id, sketch) in starts {
-            let (client, node) = (client.clone(), id.clone());
-            let job = Job::spawn(Pool::Dedicated, doc.generation, "cad-sketch-fetch", move |_| fetch(&client, &node, sketch));
+            let (local, node) = (local.clone(), id.clone());
+            let job = Job::spawn(Pool::Compute, doc.generation, "cad-sketch-read", move |_| fetch(&local.archive, &node, sketch));
             c.fetching.push(Fetch { id, revision, job });
         }
     }

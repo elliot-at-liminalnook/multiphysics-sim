@@ -45,6 +45,9 @@ fn document(connected: bool) -> CadDocument {
     doc.doc_key = Some((None, 4));
     doc.doc = Some(DocState { nodes: vec![node("i1", "image", "plan.png"), node("i2", "image", "side.webp"), node("b1", "body", "Bracket")], revision: 4, ..Default::default() });
     doc.references.reads.placements.insert("i1".into(), Placed { revision: 4, placement: Ok(front()) });
+    if connected {
+        doc.open_fixture();
+    }
     reads::follow_form(&mut doc);
     doc
 }

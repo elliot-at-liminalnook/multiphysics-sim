@@ -606,7 +606,7 @@ pub(in crate::cad) fn controls_of(doc: &crate::cad::document::CadDocument, selec
             return Err("select the node to section".to_string());
         }
         if !doc.connected() {
-            return Err("not connected to RoboCAD".to_string());
+            return Err("no CAD document is open".to_string());
         }
         exact_query(&d.section.plane.expect("checked"), context).map(|_| ())
     });

@@ -27,7 +27,30 @@ are `TKMesh`, `TKPrim`, `TKTopAlgo`, `TKBRep`, `TKGeomBase`, `TKG3d`, `TKG2d`,
 `TKMath`, and `TKernel`, plus their distributor's transitive dependencies and the
 platform C++ runtime. Packaging must carry the corresponding shared libraries
 and loader paths, and comply with OCCT's LGPL 2.1 plus exception or commercial
-license. These headers/libraries were not installed or built for this review.
+license.
+
+### Installing OCCT (no package manager needed)
+
+`build.rs` looks in `~/.local/occt-7.7.2` first. To build it there (about
+30 minutes; only the modelling modules, no graphics):
+
+```sh
+B=~/.local/occt-build; mkdir -p $B && cd $B
+python3 -m venv tools && tools/bin/pip install cmake ninja
+curl -sSLO https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_7_2.tar.gz && tar xzf V7_7_2.tar.gz
+mkdir build && cd build
+PATH="$B/tools/bin:$PATH" cmake ../OCCT-7_7_2 -G Ninja -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+  -DCMAKE_BUILD_TYPE=Release -DINSTALL_DIR=$HOME/.local/occt-7.7.2 \
+  -DCMAKE_INSTALL_NAME_DIR=$HOME/.local/occt-7.7.2/lib -DCMAKE_MACOSX_RPATH=OFF \
+  -DBUILD_MODULE_Visualization=OFF -DBUILD_MODULE_ApplicationFramework=OFF \
+  -DBUILD_MODULE_DataExchange=OFF -DBUILD_MODULE_Draw=OFF -DBUILD_MODULE_DETools=OFF \
+  -DUSE_FREETYPE=OFF -DUSE_TBB=OFF -DUSE_FREEIMAGE=OFF -DUSE_RAPIDJSON=OFF -DUSE_OPENGL=OFF -DUSE_TK=OFF
+PATH="$B/tools/bin:$PATH" ninja && PATH="$B/tools/bin:$PATH" ninja install
+```
+
+The absolute install name means binaries find the libraries without an rpath.
+STEP and other exchange formats need `-DBUILD_MODULE_DataExchange=ON` (and its
+dependencies) when the CAD export work reaches them.
 OCCT 8.x is refused at compile time until its APIs and archives are requalified.
 `OCC_VERSION_COMPLETE` is labelled as the compilation header version, never the
 runtime library version. `kernel_identity_with` independently fingerprints the

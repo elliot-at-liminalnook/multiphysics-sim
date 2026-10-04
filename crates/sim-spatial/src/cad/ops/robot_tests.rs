@@ -51,6 +51,7 @@ fn document() -> CadDocument {
     let mut lib = BTreeMap::new();
     lib.insert("ds3218".to_string(), MotorSpec { id: "ds3218".into(), name: "DS3218 servo".into(), kind: "servo".into(), stall_torque: 2.0, mass_g: 60.0, ..Default::default() });
     doc.robot.data.motors = Some((doc.generation, Ok(lib)));
+    doc.open_fixture();
     doc
 }
 

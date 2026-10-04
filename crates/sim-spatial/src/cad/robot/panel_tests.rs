@@ -92,11 +92,13 @@ fn the_panel_shows_robocads_summary_tree_margins_and_validity() {
     // RoboCAD's buttons in its order (the four non-catalogue ones once their actions exist).
     let labels: Vec<&str> = v.buttons.iter().map(|b| b.label).collect();
     assert_eq!(&labels[..10], ["Add joint…", "Add motor…", "Joint from selection…", "Infer joints", "Assign motor…", "Fix together", "Toggle ground", "Add sensor…", "Add cable…", "Battery / control…"]);
-    // Not connected: every edit says so; the stress overlay (display only) does not.
+    // No document open: every edit says so; the stress overlay (display only) does not;
+    // the simulator export says it is not ported.
     for b in &v.buttons {
         match b.id {
             "view.stress" => assert!(b.ready.is_ok()),
-            _ => assert!(b.ready.as_ref().is_err_and(|e| e.contains("not connected")), "{}: {:?}", b.id, b.ready),
+            "sim.export" => assert_eq!(b.ready, Err(crate::cad::results::SIM_EXPORT_UNPORTED.to_string())),
+            _ => assert!(b.ready.as_ref().is_err_and(|e| e.contains("no CAD document is open")), "{}: {:?}", b.id, b.ready),
         }
     }
     // A failed read is named, never shown as a value.

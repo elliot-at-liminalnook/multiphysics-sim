@@ -155,6 +155,7 @@ fn document() -> CadDocument {
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
     doc.doc_key = Some((None, 4));
+    doc.open_fixture();
     doc
 }
 
@@ -164,7 +165,7 @@ fn document() -> CadDocument {
 fn controls_fit_the_pattern_and_round_trip_through_rest() {
     let doc = document();
     let mut views = CadViews::default();
-    views.listed = Some(((doc.generation, 4), vec![SavedView { id: "a1b2c3d4e5f6".into(), name: "Cutaway".into(), state: ViewState::default() }]));
+    views.listed = Some(((doc.generation, 4), vec![SavedView { id: "a1b2c3d4e5f6".into(), name: "Cutaway".into(), state: ViewState::default(), ..SavedView::default() }]));
     views.camera = Some(turntable(-35.0, 28.0));
     views.new_name = "Top detail".into();
     let controls = controls_of(&doc, Some(&views));
@@ -200,7 +201,7 @@ fn cad_views_example_parses_and_unknown_fields_are_refused() {
     let spec = specs().into_iter().find(|s| s.name == "cad_views").expect("cad_views");
     let parsed = <CadAction as Action>::parse(&sim_api::Command { command: "cad_views".into(), args: spec.example.clone() }).unwrap();
     assert_eq!(parsed, ViewsArgs::of(ViewsOp::Save, None, Some("Worm drive cutaway")));
-    let bad = <CadAction as Action>::parse(&sim_api::Command { command: "cad_views".into(), args: serde_json::json!({"op": "restore", "id": "a1", "state": {}}) });
+    let bad = <CadAction as Action>::parse(&sim_api::Command { command: "cad_views".into(), args: serde_json::json!({"op": "restore", "id": "a1", "camera": {}}) });
     assert!(bad.is_err());
     let default = <CadAction as Action>::parse(&sim_api::Command { command: "cad_views".into(), args: serde_json::json!({}) }).unwrap();
     assert_eq!(default, CadAction::CadViews(ViewsArgs::default()), "op defaults to list");

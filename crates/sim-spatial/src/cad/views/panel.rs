@@ -53,6 +53,10 @@ const PANEL_Z: i32 = 30;
 #[derive(Component)]
 pub(super) struct ViewsRoot;
 
+/// The panel's scrolling list (its offset kept across redraws).
+#[derive(Component)]
+pub(super) struct ViewsScroll;
+
 /// A field of the panel: a press gives it the keyboard.
 #[derive(Component, Clone, Debug)]
 pub(super) struct ViewInput(ViewField);
@@ -90,6 +94,19 @@ fn submit(t: &Typing, doc: &CadDocument, views: &CadViews) -> Result<Option<Subm
                 return Err(why);
             }
             Ok(Some(Submit::Cad(ViewsArgs::of(ViewsOp::Rename, Some(id.as_str()), Some(name.as_str())))))
+        }
+        ViewField::Describe(id) => {
+            let text = t.draft.text.trim().to_string();
+            if text.chars().count() > 1000 {
+                return Err("A description is at most 1000 characters".into());
+            }
+            if views.shown(doc).iter().any(|v| v.id == *id && v.description.as_deref().unwrap_or("") == text) {
+                return Ok(None);
+            }
+            if let Some(why) = blocked() {
+                return Err(why);
+            }
+            Ok(Some(Submit::Cad(CadAction::CadViews(ViewsArgs { op: ViewsOp::Update, id: Some(id.clone()), description: Some(text), ..ViewsArgs::default() }))))
         }
         ViewField::Fov => match evaluate(&FOV, &t.draft.text) {
             // The dialog's one decimal.
@@ -191,6 +208,7 @@ pub(super) fn input(
             ViewField::New => (views.new_name.clone(), false),
             ViewField::Rename(id) => (views.shown(&doc).iter().find(|v| v.id == *id).map(|v| v.name.clone()).unwrap_or_default(), true),
             ViewField::Fov => (views.camera.map(|c| fov_text(c.fov.to_degrees())).unwrap_or_default(), true),
+            ViewField::Describe(id) => (views.shown(&doc).iter().find(|v| v.id == *id).and_then(|v| v.description.clone()).unwrap_or_default(), false),
         };
         let draft = TextDraft::new(shown, select_all);
         if text.focus_draft(VIEWS, draft.clone()) {
@@ -220,13 +238,15 @@ fn panel_key(views: &CadViews, doc: &CadDocument) -> Option<String> {
     if !views.open && !fov {
         return None;
     }
-    let list: Vec<(&str, &str, String)> = views.shown(doc).iter().map(|v| (v.id.as_str(), v.name.as_str(), convert::details(&v.state))).collect();
+    let list: Vec<(&str, &str, String, Option<&String>, usize, Option<&String>)> = views.shown(doc).iter().map(|v| (v.id.as_str(), v.name.as_str(), convert::details(&v.state), v.description.as_ref(), v.parts.len(), v.author_kind.as_ref())).collect();
     let ready: Vec<bool> = controls_of(doc, Some(views)).iter().map(|c| c.3.is_ok()).collect();
-    Some(format!("{:?}", (views.open, &views.typing, &views.new_name, list, &views.selected, &views.feedback, views.error.as_ref().map(|e| &e.1), ready, doc.connected())))
+    let parts: Vec<&Vec<String>> = views.shown(doc).iter().map(|v| &v.parts).collect();
+    let slices: Vec<(bool, Option<[f64; 3]>)> = views.shown(doc).iter().map(|v| (v.state.section.enabled, v.state.section.plane.map(|p| p.normal))).collect();
+    Some(format!("{:?}", (views.open, &views.typing, &views.new_name, list, parts, slices, &views.editing, &views.selected, &views.feedback, views.error.as_ref().map(|e| &e.1), ready, doc.connected())))
 }
 
 /// Present: the panel, rebuilt when what it shows changes.
-pub(super) fn draw(mut commands: Commands, views: Option<Res<CadViews>>, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, roots: Query<Entity, With<ViewsRoot>>, mut shown: Local<Option<String>>) {
+pub(super) fn draw(mut commands: Commands, views: Option<Res<CadViews>>, doc: Option<Res<CadDocument>>, fonts: Res<UiFonts>, roots: Query<Entity, With<ViewsRoot>>, scrolls: Query<&ScrollPosition, With<ViewsScroll>>, mut shown: Local<Option<String>>) {
     let want = match (views.as_deref(), doc.as_deref()) {
         (Some(v), Some(d)) => panel_key(v, d).map(|key| format!("{key}|source={}", crate::cad::activation::render_key(d))),
         _ => None,
@@ -235,6 +255,7 @@ pub(super) fn draw(mut commands: Commands, views: Option<Res<CadViews>>, doc: Op
     if *shown == want && present == want.is_some() {
         return;
     }
+    let offset = scrolls.iter().next().map_or(0.0, |s| s.0.y);
     for root in &roots {
         commands.entity(root).despawn();
     }
@@ -251,7 +272,7 @@ pub(super) fn draw(mut commands: Commands, views: Option<Res<CadViews>>, doc: Op
                 right: Val::Px(RIGHT_WIDTH + 8.0),
                 bottom: above_strip(STATUSBAR + 8.0),
                 width: Val::Px(320.0),
-                max_height: Val::Percent(70.0),
+                max_height: Val::Percent(85.0),
                 flex_direction: FlexDirection::Column,
                 row_gap: Val::Px(6.0),
                 padding: UiRect::all(Val::Px(12.0)),
@@ -268,7 +289,7 @@ pub(super) fn draw(mut commands: Commands, views: Option<Res<CadViews>>, doc: Op
             ViewsRoot,
             DespawnOnExit(ModeScope::Cad),
         ))
-        .with_children(|p| body(p, &k, views, doc));
+        .with_children(|p| body(p, &k, views, doc, offset));
 }
 
 /// A field: its text (the draft while typed), focused or not.
@@ -291,7 +312,7 @@ fn button(p: &mut ChildSpawnerCommands, k: &Kit, controls: &Controls, id: &str, 
     }
 }
 
-fn body(p: &mut ChildSpawnerCommands, k: &Kit, views: &CadViews, doc: &CadDocument) {
+fn body(p: &mut ChildSpawnerCommands, k: &Kit, views: &CadViews, doc: &CadDocument, offset: f32) {
     let controls = controls_of(doc, Some(views));
     let controls = controls.as_slice();
     if views.typing.as_ref().is_some_and(|t| t.field == ViewField::Fov) {
@@ -319,23 +340,78 @@ fn body(p: &mut ChildSpawnerCommands, k: &Kit, views: &CadViews, doc: &CadDocume
     if list.is_empty() {
         p.spawn(k.caption("No saved views yet. Position the model, enter a name, then save."));
     }
+    // The views scroll (the wheel over the panel, `scroll`); the header and field stay put.
+    p.spawn((k.scroll_area(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(6.0), flex_shrink: 1.0, min_height: Val::Px(0.0), ..default() }, offset), ViewsScroll)).with_children(|p| {
     for v in list {
         let selected = views.selected.as_deref() == Some(v.id.as_str());
         p.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), padding: UiRect::vertical(Val::Px(4.0)), border: UiRect::top(Val::Px(1.0)), ..default() }).insert(BorderColor::all(BORDER)).with_children(|row| {
             row.spawn(k.text(v.name.clone(), size::ITEM, if selected { TEXT } else { SUBTLE }, if selected { 2 } else { 1 }));
-            row.spawn(k.text(convert::details(&v.state), size::CAPTION, FAINT, 0));
-            if views.typing.as_ref().is_some_and(|t| t.field == ViewField::Rename(v.id.clone())) {
-                field(row, k, views, ViewField::Rename(v.id.clone()), &v.name, "View name");
-                row.spawn(k.note("Enter renames it in RoboCAD (one undo step); Escape cancels."));
+            let mut details = convert::details(&v.state);
+            if !v.parts.is_empty() {
+                details.push_str(&format!(" · {} part{} alone", v.parts.len(), if v.parts.len() == 1 { "" } else { "s" }));
             }
+            if v.author_kind.as_deref() == Some("agent") {
+                details.push_str(&format!(" · saved by {}", v.author.as_deref().unwrap_or("an agent")));
+            }
+            row.spawn(k.text(details, size::CAPTION, FAINT, 0));
+            if let Some(d) = v.description.as_ref().filter(|d| !d.is_empty()) {
+                row.spawn(k.text(d.clone(), size::SMALL, SUBTLE, 0));
+            }
+            let editing = views.editing.as_deref() == Some(v.id.as_str());
             row.spawn(wrap()).with_children(|r| {
                 button(r, k, controls, &format!("cad:view:{}", v.id), "Restore view", Look::Secondary);
-                button(r, k, controls, &format!("cad:view:replace-{}", v.id), "Replace with current", Look::Secondary);
-                r.spawn(k.button("Rename…", ViewInput(ViewField::Rename(v.id.clone())), Look::Ghost, doc.edit_refusal().is_none()));
+                button(r, k, controls, &format!("cad:view:edit-{}", v.id), if editing { "Done editing" } else { "Edit…" }, if editing { Look::Primary } else { Look::Ghost });
                 button(r, k, controls, &format!("cad:view:delete-{}", v.id), "Delete", Look::Danger);
+            });
+            if !editing {
+                return;
+            }
+            // The edit section: every change is one undo step, as the REST `update`.
+            row.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(5.0), padding: UiRect::new(Val::Px(8.0), Val::Px(0.0), Val::Px(4.0), Val::Px(2.0)), border: UiRect::left(Val::Px(2.0)), ..default() }).insert(BorderColor::all(BORDER)).with_children(|e| {
+                e.spawn(k.caption("Name (Enter saves)"));
+                field(e, k, views, ViewField::Rename(v.id.clone()), &v.name, "View name");
+                e.spawn(k.caption("What this view shows (Enter saves)"));
+                field(e, k, views, ViewField::Describe(v.id.clone()), v.description.as_deref().unwrap_or(""), "e.g. Bore clearance around the left axle");
+                e.spawn(k.caption("Camera"));
+                e.spawn(wrap()).with_children(|r| button(r, k, controls, &format!("cad:view:replace-{}", v.id), "Use the current camera and display", Look::Secondary));
+                let on = v.state.section.enabled;
+                let axis = v.state.section.plane.map(|p| p.normal).and_then(|n| n.iter().position(|c| c.abs() > 0.999)).filter(|_| on);
+                e.spawn(k.caption("Slice (through the view's centre)"));
+                e.spawn(wrap()).with_children(|r| {
+                    for (i, (key, label)) in [("off", "Off"), ("x", "X"), ("y", "Y"), ("z", "Z")].into_iter().enumerate() {
+                        let active = if i == 0 { !on } else { axis == Some(i - 1) };
+                        button(r, k, controls, &format!("cad:view:slice-{key}-{}", v.id), label, Look::Segment(active));
+                    }
+                });
+                if on && axis.is_none() {
+                    e.spawn(k.note("This view's slice is at an angle; choosing an axis replaces it."));
+                }
+                e.spawn(k.caption(if v.parts.is_empty() { "Parts: the whole model".to_string() } else { format!("Parts: {} shown alone", v.parts.len()) }));
+                e.spawn(wrap()).with_children(|r| {
+                    button(r, k, controls, &format!("cad:view:parts-selected-{}", v.id), "Show only the selected parts", Look::Secondary);
+                    if !v.parts.is_empty() {
+                        button(r, k, controls, &format!("cad:view:parts-all-{}", v.id), "Show the whole model", Look::Ghost);
+                    }
+                });
             });
         });
     }
+    });
     let feedback = views.feedback.clone().unwrap_or_else(|| "Saved inside this CAD file · edits support Undo".into());
     p.spawn(k.note(feedback));
+}
+
+/// The wheel over the panel scrolls its list (the camera ignores a wheel over UI).
+pub(super) fn scroll(mut wheel: MessageReader<bevy::input::mouse::MouseWheel>, windows: Query<&Window, With<bevy::window::PrimaryWindow>>, roots: Query<(&ComputedNode, &UiGlobalTransform), With<ViewsRoot>>, mut areas: Query<&mut ScrollPosition, With<ViewsScroll>>) {
+    let delta = crate::ui_kit::wheel_delta(&mut wheel, crate::ui_kit::WHEEL_LINE);
+    if delta == 0.0 {
+        return;
+    }
+    let Some(p) = windows.single().ok().and_then(Window::physical_cursor_position) else { return };
+    if !roots.iter().any(|(node, at)| node.contains_point(*at, p)) {
+        return;
+    }
+    for mut position in &mut areas {
+        position.0.y = (position.0.y - delta).max(0.0);
+    }
 }

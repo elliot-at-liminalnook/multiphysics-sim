@@ -34,6 +34,7 @@ fn document(url: &str, nodes: Vec<NodeSummary>) -> CadDocument {
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
     doc.doc = Some(DocState { nodes, revision: 4, ..Default::default() });
     doc.doc_key = Some((None, 4));
+    doc.open_fixture();
     doc
 }
 
@@ -454,7 +455,7 @@ fn a_press_that_cannot_be_sent_is_not_taken_and_keeps_the_points() {
     doc.stale = Some("refetching revision 5".into());
     let kept = s.clone();
     let Step::Wait(why) = press(line, &mut s, [20.0, 0.0, 0.0], &doc, &env, &xy) else { panic!("the press was taken") };
-    assert!(why.starts_with("Sketch line not sent: the shown document is behind RoboCAD's") && why.ends_with("; click again when RoboCAD has caught up"), "{why}");
+    assert!(why.starts_with("Sketch line not sent: the shown document is behind RoboCAD's") && why.ends_with("; click again in a moment"), "{why}");
     assert_eq!(s, kept, "the point is not added; the chained point and its chain stay");
     assert!(doc.edit.is_none(), "no edit started");
     // Caught up: the same press is taken, at the shown revision, and finishes the line.
@@ -474,11 +475,11 @@ fn a_press_that_cannot_be_sent_is_not_taken_and_keeps_the_points() {
     assert_eq!(r.points, vec![[0.0; 3]]);
     // RoboCAD's revision moved since the first click: that point is gone for good, said by name.
     doc.stale = None;
-    doc.health.as_mut().unwrap().revision = 5;
+    doc.doc_key = Some((None, 5));
     let Step::Dropped(why) = press(rect, &mut r, [5.0, 5.0, 0.0], &doc, &env, &xy) else { panic!("not dropped") };
     assert!(why.contains("changed since") && why.contains("click the rectangle again"), "{why}");
     assert!(r.points.is_empty() && !r.unsent());
-    doc.health.as_mut().unwrap().revision = 4;
+    doc.doc_key = Some((None, 4));
 
     // The target sketch not read at the shown revision: the text click waits.
     let doc = document("http://127.0.0.1:8420", vec![node("k1", "sketch", "Profile", true)]);

@@ -14,6 +14,7 @@ fn document() -> CadDocument {
         revision: 7,
         ..Default::default()
     });
+    d.open_fixture();
     d
 }
 fn state(d: &CadDocument) -> ExperimentsState {

@@ -70,7 +70,7 @@ impl CadDocument {
             return (format!("Opening locally: {}", load.job.progress().message), false);
         }
         match &self.connection {
-            Connection::Connected => ("Local archive ready · exact OCCT properties · source read only".into(), false),
+            Connection::Connected => (format!("In-process CAD · exact OCCT · {}", if self.unsaved() == Some(true) { "unsaved changes" } else { "saved" }), false),
             Connection::Connecting { what, .. } => (what.clone(), false),
             Connection::Lost { error, .. } => (error.clone(), true),
         }
@@ -120,9 +120,9 @@ impl CadDocument {
         if let Some(stale) = &self.stale {
             return Some(format!("the shown document is behind RoboCAD's ({stale}); nothing was sent"));
         }
-        match (began, self.health.as_ref().map(|h| h.revision)) {
-            (Some(began), Some(now)) if began != now || began != self.shown_revision() => {
-                Some(format!("the document changed since these values were taken (revision {began}, now {now}); nothing was sent: redo the drag, the entry or the form"))
+        match began {
+            Some(began) if began != self.shown_revision() => {
+                Some(format!("the document changed since these values were taken (revision {began}, now {}); nothing was changed: redo the drag, the entry or the form", self.shown_revision()))
             }
             _ => None,
         }
@@ -146,8 +146,25 @@ impl CadDocument {
         self.edit_refusal_for(false)
     }
     pub(crate) fn edit_refusal_for(&self, auxiliary: bool) -> Option<String> {
-        let _ = auxiliary;
-        Some("CAD source editing awaiting Rust migration (CD1–CD4 provides local opening, display, selection and mass inspection)".into())
+        if let Some(error) = &self.uncertain_edit {
+            return Some(format!("Unknown source edit outcome: {error}; inspect fresh source/history and explicitly acknowledge; no automatic retry"));
+        }
+        if self.preview_read_only && !auxiliary {
+            return Some("Return to live CAD before editing the physical source; captured and kinematic previews are read-only".into());
+        }
+        if let Some(label) = &self.component_busy {
+            return Some(format!("a component rebuild is in progress: {label}; wait or cancel it in Components"));
+        }
+        if let Some(label) = self.edit_label() {
+            return Some(format!("another CAD edit is in flight: {label}"));
+        }
+        if self.local_load.is_some() {
+            return Some("a document is opening; edits wait until it is shown".into());
+        }
+        if !self.connected() {
+            return Some(format!("no CAD document is open: {}", self.connection_line().0));
+        }
+        None
     }
 
     /// What leaving CAD mode (or replacing this document) would lose: an

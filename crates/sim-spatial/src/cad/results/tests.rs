@@ -263,6 +263,8 @@ fn commands_and_the_spec_map_to_actions() {
 #[test]
 fn cancel_keeps_export_owned_until_terminal_and_reports_late_write() {
     let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
+    // The in-process export reads the open snapshot: the queued export starts from it once the first lands.
+    doc.open_fixture();
     let first = request(false, "physical model");
     doc.results.exports.running = Some(landed(first.clone(), doc.generation));
     doc.results.exports.queued = Some(request(true, "queued link"));

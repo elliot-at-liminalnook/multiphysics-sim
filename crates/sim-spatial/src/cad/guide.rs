@@ -13,6 +13,7 @@ pub(crate) fn guide(topic: Option<&str>) -> Result<Value, String> {
         "how_to_call": {
             "batch": "POST /v1/batch {\"commands\":[{\"command\":NAME,\"args\":{...}}]} → {\"job_id\"}; GET /v1/jobs/{job_id} until status is succeeded | failed | cancelled; results[i].ok, results[i].value or results[i].error. Commands in one batch run in order.",
             "resources": "GET /v1/cad_state (the document now), /v1/cad_threads (comment feed), /v1/cad_guide (this), /v1/capabilities (every command with its description).",
+            "projects": "Building a robot end to end (design → model → test → learn → make)? Start with GET /v1/project_guide: a robot project points every mode at one robot and makes its simulation model and tests from this editor's saved design.",
             "one_at_a_time": "The REST queue runs one job at a time; a cad_threads watch holds it while it waits (stream GET /v1/events/cad_threads instead to wait without holding it).",
         },
         "concepts": {

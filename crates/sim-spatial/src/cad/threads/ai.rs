@@ -106,7 +106,7 @@ fn last_person(doc: &CadDocument, id: &str) -> Option<(String, String)> {
 
 fn input(doc: &CadDocument, thread: &str, key: String, question: String) -> Result<Input, String> {
     let ai = &doc.threads.ai;
-    let rest = ai.endpoint.clone().ok_or("this window has no REST server for the AI to use")?;
+    let rest = ai.endpoint.clone().ok_or("this window has no command server for the AI to use")?;
     let detail = super::agent::get(doc, thread)?;
     let views: Vec<Value> = doc.local.as_ref().map(|l| sim_cad::saved_views::list(&l.archive)).unwrap_or_default().into_iter().map(|v| json!({"id": v["id"], "name": v["name"], "description": v["description"]})).collect();
     let summary = json!({"thread": thread, "part": detail["part"]["name"]});

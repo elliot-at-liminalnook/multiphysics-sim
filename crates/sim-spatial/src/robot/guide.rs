@@ -14,6 +14,7 @@ pub(crate) fn guide(topic: Option<&str>) -> Result<Value, String> {
             "batch": "POST /v1/batch {\"commands\":[{\"command\":NAME,\"args\":{...}}]} → {\"job_id\"}; GET /v1/jobs/{job_id} until status is succeeded | failed | cancelled; results[i].ok, results[i].value or results[i].error. Commands in one batch run in order.",
             "resources": "GET /v1/robot_state (everything shown: model, run, readouts, inputs, graphs, history, overlays, recordings, leaderboard, video, comments), /v1/robot_guide (this), /v1/capabilities (every command with its full description and refusals).",
             "entering": "viewer_mode {mode: robot, path: /abs/x.simrobot.json} or {mode: robot, preset: ID}; once in robot mode, robot_preset {id} opens another preset in place.",
+            "projects": "A robot designed in CAD is tested through its project (GET /v1/project_guide): project_step test opens its exported model here and project_test runs its acceptance test.",
             "ui_parity": "Every button is also a system_ui control: system_ui {action: {operation: controls}} lists them with ui_revision; {operation: activate, id, ui_revision} presses one through the same handler as a click.",
         },
         "concepts": {
@@ -53,6 +54,7 @@ pub(crate) fn guide(topic: Option<&str>) -> Result<Value, String> {
             "system_ui": {"example": {"action": {"operation": "controls"}}, "does": "List or activate the window's controls by id (the same handler as a click)."},
             "robot_presets": {"example": {}, "does": "The declared presets with mode, paths and whether each opens."},
             "robot_preset": {"example": {"id": "pendulum-live"}, "does": "Open a preset in place of the current robot."},
+            "robot_open": {"example": {"path": "/abs/arm.simrobot.json"}, "does": "Open a robot file (a CAD export) in place of the current robot."},
             "robot_run": {"example": {"action": "start"}, "actions": "start, pause, step, reset"},
             "robot_speed": {"example": {"scale": 4}, "does": "Pacing (× real time): 0.125, 0.25, 0.5, 1, 2, 4, 8; or action up | down."},
             "robot_inputs": {"example": {"values": {"position.target": 0.4}}, "does": "Typed session inputs of a preset (bounds enforced)."},

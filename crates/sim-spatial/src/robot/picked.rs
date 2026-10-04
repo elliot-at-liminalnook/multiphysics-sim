@@ -67,6 +67,15 @@ pub(super) fn reloaded(selection: &mut Selection, registry: &mut DocumentRegistr
 /// REST `robot_preset` replaced the view in this mode: the Robot document is
 /// now that preset (the previous document's items go) and, as a new view,
 /// it starts with nothing selected.
+/// A robot file opened in place (`robot_open`): the Robot document is that file.
+pub(super) fn opened_file(selection: &mut Selection, registry: &mut DocumentRegistry, path: &std::path::Path) {
+    let opened = registry.open(ViewerMode::Robot, DocumentKind::Robot, Source::path(path.to_path_buf()));
+    if let Some(old) = opened.replaced {
+        selection.forget(old);
+    }
+    let _ = selection.apply(registry, &SelectionAction::clear(opened.id));
+}
+
 pub(super) fn opened_preset(selection: &mut Selection, registry: &mut DocumentRegistry, id: &str) {
     let opened = registry.open(ViewerMode::Robot, DocumentKind::Robot, Source::Preset { id: id.to_string() });
     if let Some(old) = opened.replaced {

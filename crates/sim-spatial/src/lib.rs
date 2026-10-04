@@ -22,6 +22,7 @@ mod linked;
 pub mod models;
 pub mod phenomena;
 pub mod place_view;
+pub mod project;
 pub mod robot;
 pub mod markdown;
 pub(crate) mod physics_view;

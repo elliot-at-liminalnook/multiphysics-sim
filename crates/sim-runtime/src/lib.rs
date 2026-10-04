@@ -73,6 +73,8 @@ pub mod predictive_control;
 pub mod lift;
 pub mod physical;
 pub mod acceptance;
+pub mod robot_project;
+pub mod part_strength;
 pub mod planning;
 pub mod motion_tracking;
 pub mod posture;

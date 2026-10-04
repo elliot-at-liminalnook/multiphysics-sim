@@ -48,6 +48,10 @@ pub enum Criterion {
     /// Every link's stress margin to yield is at least `min` (needs stress:
     /// flexible links; a rigid model cannot assess it).
     YieldMargin { min: f64 },
+    /// Every printed part's layer-aware safety factor under the run's peak
+    /// loads is at least `min_safety_factor` (`part_strength`; judged after
+    /// the run from the CAD's part meshes: a bare model cannot assess it).
+    PartStrength { min_safety_factor: f64 },
     /// A free-standing robot stays upright.
     NoFall,
     /// No joint runs past its travel limits.
@@ -63,6 +67,7 @@ impl Criterion {
             Criterion::WindingTemperature { margin_c } => format!("every motor winding stays at least {margin_c} °C below its rated maximum"),
             Criterion::BearingMargin { min } => format!("every joint bearing keeps a pressure margin of at least {min}"),
             Criterion::YieldMargin { min } => format!("every part keeps a stress margin to yield of at least {min}"),
+            Criterion::PartStrength { min_safety_factor } => format!("every printed part keeps a safety factor of at least {min_safety_factor} under the run's peak loads"),
             Criterion::NoFall => "the robot stays upright".into(),
             Criterion::NoLimitHits => "no joint runs past its travel limits".into(),
         }
@@ -128,6 +133,7 @@ impl Test {
                 Criterion::TorqueMargin { min } => !(min.is_finite() && (0.0..1.0).contains(min)),
                 Criterion::WindingTemperature { margin_c } => !(margin_c.is_finite() && *margin_c >= 0.0),
                 Criterion::BearingMargin { min } | Criterion::YieldMargin { min } => !min.is_finite(),
+                Criterion::PartStrength { min_safety_factor } => !(min_safety_factor.is_finite() && *min_safety_factor > 0.0),
                 Criterion::NoFall | Criterion::NoLimitHits => false,
             };
             if bad {
@@ -234,37 +240,57 @@ pub fn run(model_json: &Value, test: &Test, cancelled: &dyn Fn() -> bool, progre
     }
     let results = robot.results("acceptance");
     let outcomes: Vec<Outcome> = test.criteria.iter().map(|c| judge(c, test, &results, &t_trace, &angles, &commands, failure.as_deref())).collect();
-    let verdict = if outcomes.iter().any(|o| o.status == Status::Fail) || failure.is_some() {
-        "failed"
-    } else if outcomes.iter().all(|o| o.status == Status::Pass) {
-        "passed"
-    } else {
-        "incomplete"
-    };
-    let assumptions = model_json["source"]["assumptions"].as_array().cloned().unwrap_or_default();
-    let blocking: Vec<&Value> = assumptions.iter().filter(|a| a["blocking"] == json!(true)).collect();
-    let evidence = verdict == "passed" && blocking.is_empty();
-    let summary = match (verdict, evidence) {
-        ("passed", true) => format!("Passed all {} criteria.", outcomes.len()),
-        ("passed", false) => format!("Passed all {} criteria, but the model has {} blocking assumption(s), so this is not evidence yet.", outcomes.len(), blocking.len()),
-        ("failed", _) => format!("Failed: {}.", outcomes.iter().filter(|o| o.status == Status::Fail).map(|o| o.description.clone()).chain(failure.clone()).collect::<Vec<_>>().join("; ")),
-        _ => format!("Incomplete: {} could not be assessed.", outcomes.iter().filter(|o| o.status == Status::NotAssessed).map(|o| o.description.clone()).collect::<Vec<_>>().join("; ")),
-    };
     // Traces at most ~500 points.
     let stride = (t_trace.len() / 500).max(1);
     let thin = |v: &Vec<f64>| v.iter().step_by(stride).copied().collect::<Vec<f64>>();
-    Ok(json!({
-        "test": test, "verdict": verdict, "evidence": evidence, "summary": summary, "verdict_rule": VERDICT_RULE,
+    let assumptions = model_json["source"]["assumptions"].as_array().cloned().unwrap_or_default();
+    let blocking = assumptions.iter().filter(|a| a["blocking"] == json!(true)).count();
+    let motor_t: Vec<f64> = results["trace"]["t"].as_array().map(|a| a.iter().filter_map(Value::as_f64).collect()).unwrap_or_default();
+    let motor_stride = (motor_t.len() / 500).max(1);
+    let thin_value = |v: &Value| -> Value { json!(v.as_array().map(|a| a.iter().step_by(motor_stride).cloned().collect::<Vec<_>>()).unwrap_or_default()) };
+    let mut report = json!({
+        "test": test, "verdict_rule": VERDICT_RULE,
         "outcomes": outcomes,
         "failure": failure,
         "model": {"cad_revision": model_json["source"]["cad_revision"], "cad_sha256": model_json["source"]["cad_sha256"], "archive_identity": model_json["source"]["archive_identity"], "exporter": model_json["source"]["exporter"], "file": model_json["source"]["file"]},
-        "assumptions": assumptions, "blocking_assumptions": blocking.len(),
+        "assumptions": assumptions, "blocking_assumptions": blocking,
         "not_modelled": model_json["source"]["not_modelled"],
         "control_override": control_override,
         "sample_s": SAMPLE_S,
         "results": {"joints": results["joints"], "motors": results["motors"], "links": results["links"].as_object().map(|l| l.iter().map(|(k, v)| (k.clone(), json!({"peak_stress_pa": v["peak_stress_pa"], "yield_margin": v["yield_margin"], "max_deflection_m": v["max_deflection_m"]}))).collect::<serde_json::Map<_, _>>()), "base": {"fell": results["base"]["fell"]}, "warnings": results["warnings"], "wall_s": results["wall_s"], "steps": results["steps"], "duration_s": results["duration_s"]},
         "trace": {"t": thin(&t_trace), "joints": angles.iter().map(|(k, v)| (k.clone(), json!(thin(v)))).collect::<serde_json::Map<_, _>>(), "commands": commands.iter().map(|(k, v)| (k.clone(), json!(thin(v)))).collect::<serde_json::Map<_, _>>()},
-    }))
+        "motor_trace": {"t": motor_t.iter().step_by(motor_stride).copied().collect::<Vec<f64>>(), "torque_nm": results["trace"]["motors"].as_object().map(|m| m.iter().map(|(k, v)| (k.clone(), thin_value(&v["torque_nm"]))).collect::<serde_json::Map<_, _>>())},
+    });
+    conclude(&mut report);
+    Ok(report)
+}
+
+/// The report's verdict, evidence and summary from its outcomes, its
+/// failure and its model's blocking assumptions ([`VERDICT_RULE`]); called
+/// again by a caller that judges a criterion after the run (part strength).
+pub fn conclude(report: &mut Value) {
+    let outcomes = report["outcomes"].as_array().cloned().unwrap_or_default();
+    let status = |o: &Value| o["status"].as_str().unwrap_or("not_assessed").to_string();
+    let described = |want: &str| outcomes.iter().filter(|o| status(o) == want).filter_map(|o| o["description"].as_str().map(str::to_string)).collect::<Vec<_>>();
+    let failure = report["failure"].as_str().map(str::to_string);
+    let verdict = if !described("fail").is_empty() || failure.is_some() {
+        "failed"
+    } else if outcomes.iter().all(|o| status(o) == "pass") {
+        "passed"
+    } else {
+        "incomplete"
+    };
+    let blocking = report["blocking_assumptions"].as_u64().unwrap_or(0);
+    let evidence = verdict == "passed" && blocking == 0;
+    let summary = match (verdict, evidence) {
+        ("passed", true) => format!("Passed all {} criteria.", outcomes.len()),
+        ("passed", false) => format!("Passed all {} criteria, but the model has {blocking} blocking assumption(s), so this is not evidence yet.", outcomes.len()),
+        ("failed", _) => format!("Failed: {}.", described("fail").into_iter().chain(failure).collect::<Vec<_>>().join("; ")),
+        _ => format!("Incomplete: {} could not be assessed.", described("not_assessed").join("; ")),
+    };
+    report["verdict"] = json!(verdict);
+    report["evidence"] = json!(evidence);
+    report["summary"] = json!(summary);
 }
 
 fn pass_if(ok: bool) -> Status {
@@ -309,7 +335,18 @@ fn judge(c: &Criterion, test: &Test, results: &Value, t: &[f64], angles: &BTreeM
             }
             let (name, worst) = margins.iter().map(|(n, m)| (n.clone(), m.unwrap())).min_by(|a, b| a.1.total_cmp(&b.1)).expect("nonempty");
             let peak = results["motors"][&name]["peak_torque_nm"].as_f64().unwrap_or(f64::NAN);
-            out(pass_if(worst >= *min && complete), json!({"worst_margin": worst, "motor": name, "peak_torque_nm": peak}), format!("{name} used {:.0} % of its stall torque (peak {:.3} N·m), leaving {:.0} % (needed {:.0} %)", (1.0 - worst) * 100.0, peak, worst * 100.0, min * 100.0))
+            // When the peak happened, and the torque while holding at the end (the move's start often dominates).
+            let times: Vec<f64> = results["trace"]["t"].as_array().map(|a| a.iter().filter_map(Value::as_f64).collect()).unwrap_or_default();
+            let torque: Vec<f64> = results["trace"]["motors"][&name]["torque_nm"].as_array().map(|a| a.iter().filter_map(Value::as_f64).collect()).unwrap_or_default();
+            let at = torque.iter().enumerate().max_by(|a, b| a.1.abs().total_cmp(&b.1.abs())).and_then(|(i, _)| times.get(i).copied());
+            let tail: Vec<f64> = times.iter().zip(&torque).filter(|(t, _)| **t >= ended - 0.25).map(|(_, x)| x.abs()).collect();
+            let holding = (!tail.is_empty()).then(|| tail.iter().sum::<f64>() / tail.len() as f64);
+            let when = match (at, holding) {
+                (Some(at), Some(h)) => format!("; the peak came at t = {at:.2} s, and holding at the end took {h:.3} N·m"),
+                (Some(at), None) => format!("; the peak came at t = {at:.2} s"),
+                _ => String::new(),
+            };
+            out(pass_if(worst >= *min && complete), json!({"worst_margin": worst, "motor": name, "peak_torque_nm": peak, "peak_at_s": at, "holding_torque_nm": holding}), format!("{name} used {:.0} % of its stall torque (peak {:.3} N·m), leaving {:.0} % (needed {:.0} %){when}", (1.0 - worst) * 100.0, peak, worst * 100.0, min * 100.0))
         }
         Criterion::WindingTemperature { margin_c } => {
             let motors: Vec<(String, f64, f64)> = results["motors"].as_object().into_iter().flatten().filter_map(|(k, m)| Some((k.clone(), m["winding_margin_c"].as_f64()?, m["peak_winding_c"].as_f64()?))).collect();
@@ -332,6 +369,7 @@ fn judge(c: &Criterion, test: &Test, results: &Value, t: &[f64], angles: &BTreeM
             };
             out(pass_if(worst >= *min && complete), json!({"worst_margin": worst, "link": name}), format!("{name}'s stress margin to yield was {worst:.2} (needed {min})"))
         }
+        Criterion::PartStrength { .. } => out(Status::NotAssessed, Value::Null, "printed-part strength is checked after the run against the CAD's part meshes (a project test does this); this run had none".into()),
         Criterion::NoFall => {
             let fell = results["base"]["fell"].as_bool().unwrap_or(false);
             out(pass_if(!fell && complete), json!({"fell": fell}), if fell { "the robot tipped over".into() } else { format!("upright for {ended:.1} s") })

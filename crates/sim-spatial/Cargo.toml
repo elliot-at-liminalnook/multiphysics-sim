@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 sim-cad = { path = "../sim-cad" }
+sim-print = { path = "../sim-print" }
 bevy-settings = "=0.19.1"
 image = { version = "=0.25.10", default-features = false, features = ["png"] }
 sim-model-context = { path = "../sim-model-context" }

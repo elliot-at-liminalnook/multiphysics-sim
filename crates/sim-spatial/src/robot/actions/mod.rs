@@ -91,6 +91,8 @@ pub(crate) enum RobotAction {
     Guide { topic: Option<String> },
     /// REST `robot_preset`: open a declared preset in this window.
     OpenPreset { id: String },
+    /// REST `robot_open`: open a `*.simrobot.json` in this window in place of the current robot.
+    Open { path: std::path::PathBuf },
     /// REST `system_ui` controls: the control list with each control's action.
     Controls,
     /// REST `system_ui` activate: the listed control's action, through this handler.
@@ -184,7 +186,7 @@ fn dispatch_planar(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Sele
         // Refused by `check_planar` (named); listed so a new action is not silently accepted.
         RobotAction::Motion { .. } | RobotAction::Inputs { .. } | RobotAction::Drive { .. } | RobotAction::SaveRecording { .. } | RobotAction::Replay { .. } | RobotAction::CancelReplay | RobotAction::RefreshRecordings
         | RobotAction::Gait { .. } | RobotAction::Recorded { .. } | RobotAction::ToggleGraphs => return Err("refused for a planar v2 file".into()),
-        RobotAction::State | RobotAction::RobotState | RobotAction::Presets | RobotAction::Guide { .. } | RobotAction::OpenPreset { .. } | RobotAction::Controls | RobotAction::Activate { .. } | RobotAction::Camera { .. } => unreachable!("answered by `handle`"),
+        RobotAction::State | RobotAction::RobotState | RobotAction::Presets | RobotAction::Guide { .. } | RobotAction::OpenPreset { .. } | RobotAction::Open { .. } | RobotAction::Controls | RobotAction::Activate { .. } | RobotAction::Camera { .. } => unreachable!("answered by `handle`"),
         RobotAction::Threads { .. } => return Err(THREADS_IN_APPLY.into()),
     }
     Ok(())
@@ -221,7 +223,7 @@ fn dispatch(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, 
     check(view, &action)?;
     match action {
         RobotAction::Motion { .. } | RobotAction::Inputs { .. } | RobotAction::SaveRecording { .. } | RobotAction::Drive { .. } => unreachable!("handled above"),
-        RobotAction::State | RobotAction::RobotState | RobotAction::Presets | RobotAction::Guide { .. } | RobotAction::OpenPreset { .. } | RobotAction::Controls | RobotAction::Activate { .. } | RobotAction::Camera { .. } => unreachable!("answered by `handle`"),
+        RobotAction::State | RobotAction::RobotState | RobotAction::Presets | RobotAction::Guide { .. } | RobotAction::OpenPreset { .. } | RobotAction::Open { .. } | RobotAction::Controls | RobotAction::Activate { .. } | RobotAction::Camera { .. } => unreachable!("answered by `handle`"),
         RobotAction::Threads { .. } => return Err(THREADS_IN_APPLY.into()),
         RobotAction::Replay { file, path } => {
             view.run.as_mut().ok_or("the robot has not loaded")?.replay(file.as_deref(), path.as_deref())?;
@@ -359,6 +361,10 @@ fn handle(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, re
             picked::opened_preset(selection, registry, id);
             Ok(None)
         }
+        RobotAction::Open { path } => {
+            open_file(view, selection, registry, path)?;
+            Ok(None)
+        }
         RobotAction::Controls => {
             let items: Vec<Value> = controls(view, link).into_iter().map(|(id, label, action)| json!({"id": id, "label": label, "enabled": check(view, &action).is_ok(), "disabled_reason": check(view, &action).err(), "action": action})).collect();
             Ok(Some(json!({"ui_revision": view.ui_revision, "ready": view.panels_ready, "controls": items, "state": view.state_json(link)})))
@@ -384,6 +390,29 @@ fn handle(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, re
         }
         control => dispatch(view, orbit, selection, registry, control.clone()).map(|()| None),
     }
+}
+
+/// `robot_open`: `path` (a `*.simrobot.json`) replaces the robot in this
+/// window, as `robot_preset` replaces it with a preset; refused while a
+/// recording is written or a replay runs (the mode switch's blockers).
+pub(crate) fn open_file(view: &mut RobotView, selection: &mut Selection, registry: &mut DocumentRegistry, path: &std::path::Path) -> Result<(), String> {
+    if !path.to_string_lossy().ends_with(".simrobot.json") {
+        return Err(format!("{}: robot mode opens a *.simrobot.json file", path.display()));
+    }
+    if !path.is_file() {
+        return Err(format!("{}: no such file", path.display()));
+    }
+    let blockers = view.switch_blockers();
+    if !blockers.is_empty() {
+        return Err(format!("not opening {}: {}", path.display(), blockers.join("; ")));
+    }
+    let mut next = RobotView::open(path.to_path_buf()).with_presets(view.presets.clone().ok());
+    next.ui_revision = view.ui_revision + 1;
+    next.picks = view.picks.clone();
+    next.display_hz = view.display_hz;
+    crate::jobs::drop_off_thread(std::mem::replace(view, next), "the robot view");
+    picked::opened_file(selection, registry, path);
+    Ok(())
 }
 
 /// Actions: robot mode's one apply system. A click's or key's refusal is

@@ -93,11 +93,11 @@ fn the_panel_shows_robocads_summary_tree_margins_and_validity() {
     let labels: Vec<&str> = v.buttons.iter().map(|b| b.label).collect();
     assert_eq!(&labels[..10], ["Add joint…", "Add motor…", "Joint from selection…", "Infer joints", "Assign motor…", "Fix together", "Toggle ground", "Add sensor…", "Add cable…", "Battery / control…"]);
     // No document open: every edit says so; the stress overlay (display only) does not;
-    // the simulator export says it is not ported.
+    // the simulator export says there is no document to export.
     for b in &v.buttons {
         match b.id {
             "view.stress" => assert!(b.ready.is_ok()),
-            "sim.export" => assert_eq!(b.ready, Err(crate::cad::results::SIM_EXPORT_UNPORTED.to_string())),
+            "sim.export" => assert_eq!(b.ready, Err(crate::cad::results::NO_DOCUMENT.to_string())),
             _ => assert!(b.ready.as_ref().is_err_and(|e| e.contains("no CAD document is open")), "{}: {:?}", b.id, b.ready),
         }
     }

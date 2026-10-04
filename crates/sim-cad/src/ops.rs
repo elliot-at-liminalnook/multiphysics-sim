@@ -1318,15 +1318,48 @@ pub fn run(cx: &mut Ctx, name: &str, args: &[Value], kwargs: &Map<String, Value>
         }
         "set_joint_physics" => {
             let id = args.first().and_then(Value::as_str).or_else(|| kwargs.get("joint_id").and_then(Value::as_str)).ok_or("set_joint_physics: missing joint_id")?.to_string();
-            let n = cx.node(&id)?;
+            let n = cx.node(&id)?.clone();
             if n["kind"] != "joint" {
                 return Err(format!("{} is not a joint", cx.name(&id)));
             }
-            let mut phys = n["joint_physics"].as_object().cloned().unwrap_or_default();
+            // RoboCAD keeps the overrides in `robot.physics` (commands.py set_joint_physics):
+            // nested blocks merge, a scalar `backlash` declares an estimated drive gap.
+            let mut meta = cx.robot_meta(&id);
+            let mut phys = meta.get("physics").and_then(Value::as_object).cloned().unwrap_or_default();
+            // Values an earlier in-process edit stored under `joint_physics` move over.
+            phys.extend(n["joint_physics"].as_object().cloned().unwrap_or_default());
             for (k, v) in kwargs.iter().filter(|(k, _)| k.as_str() != "joint_id") {
-                if v.is_null() { phys.remove(k); } else { phys.insert(k.clone(), v.clone()); }
+                match (phys.get_mut(k).and_then(Value::as_object_mut), v.as_object()) {
+                    _ if v.is_null() => {
+                        phys.remove(k);
+                    }
+                    (Some(old), Some(new)) => old.extend(new.clone()),
+                    _ => {
+                        phys.insert(k.clone(), v.clone());
+                    }
+                }
             }
-            cx.set(&id, "joint_physics", Value::Object(phys))?;
+            if kwargs.contains_key("backlash") && !kwargs.contains_key("drive_backlash")
+                && let Some(w) = kwargs["backlash"].as_f64()
+            {
+                phys.insert("drive_backlash".into(), json!({"width_rad": w, "provenance": "estimated", "reference": "legacy scalar backlash override; interpreted as an estimated drive-connection gap"}));
+            }
+            if let Some(db) = phys.get("drive_backlash") {
+                let width = db["width_rad"].as_f64();
+                let provenance = db["provenance"].as_str().unwrap_or("");
+                let valid = matches!(provenance, "unmeasured" | "estimated" | "measured" | "derived")
+                    && db["reference"].as_str().is_some_and(|r| !r.trim().is_empty())
+                    && width.is_none_or(|w| w.is_finite() && w >= 0.0)
+                    && (provenance == "unmeasured") == width.is_none();
+                if !valid {
+                    return Err("drive_backlash needs {width_rad, provenance, reference}: provenance unmeasured | estimated | measured | derived, a nonempty reference, and finite nonnegative radians exactly when not unmeasured".into());
+                }
+            }
+            meta.insert("physics".into(), Value::Object(phys));
+            cx.set(&id, "robot", Value::Object(meta))?;
+            if !n["joint_physics"].is_null() {
+                cx.set(&id, "joint_physics", Value::Null)?;
+            }
             Ok(json!(id))
         }
         other => Err(format!("{other}: not an operation of the in-process editor (it implements {})", METHODS.len())),

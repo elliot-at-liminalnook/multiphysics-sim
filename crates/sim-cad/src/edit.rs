@@ -69,14 +69,14 @@ pub fn material<'m>(manifest: &'m Value, id: &str) -> Option<&'m Value> {
 
 /// The bytes of a new, empty archive (RoboCAD's `Document.save` of a new
 /// document): the manifest only, revision 0, the stock materials of `like`
-/// (another document's) when given.
+/// (another document's) when given, else RoboCAD's stock library.
 pub fn empty_archive(like: Option<&Value>) -> Result<Vec<u8>, String> {
     let secs = SystemTime::now().duration_since(UNIX_EPOCH).map_or(0., |d| d.as_secs_f64());
     let mut h = Sha256::new();
     h.update(secs.to_le_bytes());
     h.update(new_id().as_bytes());
     let document_id = format!("{:x}", h.finalize())[..32].to_string();
-    let materials = like.map(|m| m["materials"].clone()).filter(Value::is_array).unwrap_or_else(|| serde_json::json!([]));
+    let materials = like.map(|m| m["materials"].clone()).filter(Value::is_array).unwrap_or_else(crate::materials::default_library);
     let manifest = serde_json::json!({
         "format": "robocad", "version": 1, "saved": secs, "document_id": document_id, "revision": 0,
         "roots": [], "active_group": null, "view": {}, "saved_views": {}, "materials": materials, "nodes": [],

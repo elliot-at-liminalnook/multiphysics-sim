@@ -1034,7 +1034,8 @@ impl PhysicalRobot {
         })
     }
 
-    /// Scalar metrics for Monte Carlo statistics.
+    /// Scalar metrics for Monte Carlo statistics. `stall_margin`,
+    /// `yield_margin` and `bearing_margin` are present only when assessed.
     pub fn metrics(&self) -> BTreeMap<String, f64> {
         let mut out = BTreeMap::new();
         let mut stall = f64::INFINITY;
@@ -1063,9 +1064,14 @@ impl PhysicalRobot {
                 bearing = bearing.min(j.allowable_pressure / pressure - 1.0);
             }
         }
-        out.insert("stall_margin".into(), if stall.is_finite() { stall } else { 1.0 });
-        out.insert("yield_margin".into(), if yield_margin.is_finite() { yield_margin } else { 10.0 });
-        out.insert("bearing_margin".into(), if bearing.is_finite() { bearing } else { 10.0 });
+        // A margin that was not assessed (no stall torque declared, no
+        // flexible link to stress, no loaded bearing) is left out, never
+        // replaced by a comfortable number.
+        for (key, margin) in [("stall_margin", stall), ("yield_margin", yield_margin), ("bearing_margin", bearing)] {
+            if margin.is_finite() {
+                out.insert(key.into(), margin);
+            }
+        }
         out.insert("peak_winding_c".into(), winding);
         out.insert("peak_mount_c".into(), mount);
         out.insert("peak_contact_n".into(), self.contact_peak);
@@ -1076,9 +1082,14 @@ impl PhysicalRobot {
         out
     }
 
+    /// Did not fall, and the yield and stall margins were both assessed
+    /// and positive. A margin that was not assessed is not a success (a rigid
+    /// model has no stress, so it never succeeds here: judge it with
+    /// `acceptance::evaluate` and its own criteria instead).
     pub fn success(&self) -> bool {
         let m = self.metrics();
-        !self.fell && m["yield_margin"] > 0.0 && m["stall_margin"] > 0.0
+        let positive = |k: &str| m.get(k).is_some_and(|x| *x > 0.0);
+        !self.fell && positive("yield_margin") && positive("stall_margin")
     }
 }
 
@@ -1374,7 +1385,9 @@ pub fn run_monte_carlo(model: &PhysicalModel, samples: usize, seed: u64, seconds
     for (k, v) in &metrics {
         out.insert(k.clone(), stats(v));
     }
-    Ok(json!({"samples": samples, "seed": seed, "metrics": out, "success_rate": successes as f64 / samples.max(1) as f64, "failures": failures}))
+    // How many samples assessed each margin: a margin absent from every sample was never assessed.
+    let assessed: serde_json::Map<String, Value> = ["stall_margin", "yield_margin", "bearing_margin"].iter().map(|k| (k.to_string(), json!(metrics.get(*k).map_or(0, Vec::len)))).collect();
+    Ok(json!({"samples": samples, "seed": seed, "metrics": out, "assessed": assessed, "success_rate": successes as f64 / samples.max(1) as f64, "success_rule": "did not fall, and the yield and stall margins were both assessed and positive (an unassessed margin is not a success)", "failures": failures}))
 }
 
 // ---- Identification -------------------------------------------------------------

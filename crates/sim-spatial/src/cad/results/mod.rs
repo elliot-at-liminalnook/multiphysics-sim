@@ -73,10 +73,8 @@ use sim_domain_robot::stress_results::SCALE;
 use std::path::{Path, PathBuf};
 
 /// What RoboCAD's own window draws instead (`viewport._stress_colors`).
-/// Why the simulator export (and its live link) refuses: it was RoboCAD's
-/// `export_physical_model` (collision meshes, joint physics, flex), which has
-/// no in-process port yet.
-pub(crate) const SIM_EXPORT_UNPORTED: &str = "The simulator export (RoboCAD's physical model: collision meshes, joint physics, flex) is not ported to the in-process editor yet";
+/// Why the simulator export (and its live link) refuses with nothing open.
+pub(crate) const NO_DOCUMENT: &str = "no CAD document is open: open or create one to export its simulation model";
 pub(crate) const ROBOCAD_SCALE: &str = "RoboCAD's own window colours linearly, blue 0 → red at yield; this window uses the rule Robot mode uses";
 
 /// What `cad_results` does.

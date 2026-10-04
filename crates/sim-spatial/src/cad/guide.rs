@@ -56,7 +56,7 @@ pub(crate) fn guide(topic: Option<&str>) -> Result<Value, String> {
             "Face/edge indices change after geometry edits: read topology again.",
             "Refusals name their reason (a locked part, a too-large fillet, a stale revision): fix the cause, do not retry blindly.",
             "Masses are exact geometry × catalogue density, provisional until measured; say so when it matters.",
-            "Not in the in-process editor yet (refused by name): print studies/split/jobs/wall checks, the simulator export (physical model), components and composition, experiments and captured-run review, results load, mesh import.",
+            "Not in the in-process editor yet (refused by name): print studies/split/jobs/wall checks, flexible links and link-to-link contact in the simulator export (it writes rigid links), components and composition, experiments and captured-run review, results load, mesh import.",
         ],
     });
     match topic {

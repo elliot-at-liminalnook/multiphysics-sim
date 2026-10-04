@@ -359,8 +359,8 @@ fn buttons(doc: &CadDocument, selection: &[SelectionItem]) -> Vec<PanelButton> {
             // Display only.
             "view.stress" => Ok(()),
             // Writes a file, not the document.
-            "sim.export" if doc.client.is_some() && doc.connected() => Ok(()),
-            "sim.export" => Err(crate::cad::results::SIM_EXPORT_UNPORTED.to_string()),
+            "sim.export" if doc.local.is_some() => Ok(()),
+            "sim.export" => Err(crate::cad::results::NO_DOCUMENT.to_string()),
             // Loading results and identification change RoboCAD's document.
             _ => doc.edit_refusal().map_or(Ok(()), Err),
         };

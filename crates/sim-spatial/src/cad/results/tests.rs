@@ -261,7 +261,6 @@ fn commands_and_the_spec_map_to_actions() {
 }
 
 #[test]
-#[ignore = "the simulator export needs RoboCAD's physical model, not ported (cad::results::SIM_EXPORT_UNPORTED)"]
 fn cancel_keeps_export_owned_until_terminal_and_reports_late_write() {
     let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
     let first = request(false, "physical model");

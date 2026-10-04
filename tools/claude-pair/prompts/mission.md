@@ -27,11 +27,12 @@ browser the primary interaction surface. Preserve browser compatibility until
 the corresponding native workflow is demonstrated. This is a user-facing
 consolidation that now extends to CAD and hardware (user decision
 2026-09-30): the browser's calibration and hardware pages move into the native
-viewer over the existing Rust hardware layer, and RoboCAD moves to Rust in the
-phases of the architecture document §8–§9, with exact feature parity proven by
-a parity harness against RoboCAD. Until a phase is proven, the Python and
-browser paths stay and remain the reference. Explain any remaining external UI
-requirement honestly.
+viewer, and CAD moves to Rust (architecture document §8–§9). Since 2026-10-03
+everything runs in Rust, in the viewer's own process (AGENTS.md, and "Current
+focus" below): RoboCAD's Python and the calibration and motor-bench servers
+are references for behaviour, never started or called. Exact feature parity
+with them is the bar, shown by tracing code paths. Explain any remaining
+external UI requirement honestly.
 
 Architectural constraints:
 - CAD remains the physical source of truth. Display layout is not geometry or
@@ -46,6 +47,76 @@ Architectural constraints:
   timestamps, schema versions and stale-frame handling truthful.
 - Do not delete legacy implementations until parity and migration are proven.
   Do not weaken tests or fidelity gates to pass a migration.
+
+## Current focus (the user, 2026-10-03): everything in Rust, in one process
+
+The earlier focus (leg calibration, sim and leg side by side, the CAD editor
+with annotations, the REST-built rover) is complete by reading. The user's
+next requirement: **nothing the viewer does may rely on the RoboCAD server
+or on a robot driver server.** Every workflow runs in Rust, in the viewer's
+own process, on shared Rust libraries, as AGENTS.md now says. RoboCAD's
+Python source stays readable as the reference for behaviour, but the viewer
+never starts, calls or waits for it.
+
+Until the user lifts this, choose, assign and do only work that removes a
+server dependency, plus what it strictly needs. In order:
+
+1. **The leg, driven in process.** The viewer's Leg calibration panel and
+   gait playback (Sim, Leg, Both) talk to the leg through the shared Rust
+   hardware layer directly, not over HTTP to `serve_actuator_calibration` or
+   `serve_motor_bench`. Move their logic (about 3,000 lines that live only
+   in `crates/sim-runtime/examples/serve_actuator_calibration.rs`, and the
+   motor bench) into library modules the viewer calls through the jobs
+   module. The examples become thin wrappers over that library, or are
+   deleted once nothing needs them. **Every safety rule the server enforced
+   moves with it unchanged**: one front end owns a motion session, STOP
+   from every section, hold-to-move releases on focus loss and panel close,
+   taught travel windows, watchdogs, recorded limits. The FPGA supervisor
+   stays independent of all of it.
+2. **CAD in Rust.** CAD mode opens, edits, saves and exports `.rcad`
+   documents with no RoboCAD process: the document model and history,
+   sketches and features, booleans, fillets and the rest of the modelling
+   operations, topology naming and selection, mass and physical
+   derivations, simrobot export, STEP/STL/3MF export, and annotations.
+   Follow `docs/architecture/native-viewer.md` §9: derivations in Rust,
+   then the geometry kernel from Rust. Choose the kernel (OCCT through Rust
+   bindings, or a Rust B-rep kernel) on evidence, record the decision and
+   its reasons, and keep the `.rcad` format compatible with existing files.
+   Port one area at a time behind the same typed actions, and delete each
+   `cad_client` path once its Rust replacement serves every caller.
+
+Each epic names the server dependency it removes, and is done when that
+workflow's code path, traced by reading, never reaches RoboCAD's REST
+client (`sim_runtime::cad_client`) or a hardware server's HTTP client for
+that workflow, and does what the reference did.
+
+**Verify by reading, not by building or testing.** Don't compile, run the
+viewer or run tests. Trace each workflow from the control a person uses to
+its effect, compare it with the reference (RoboCAD's Python, the server
+examples), and cite path:line. **Hardware stays a hard boundary: never
+drive the real leg.** For steps that need it, leave the user a short run
+sheet.
+
+## Every screen is usable by an AI (the user, 2026-10-03)
+
+Whatever you build in any mode, an AI must be able to drive it over REST, and
+benefit from it, the same day. In the same change as the feature:
+
+- typed REST commands that go through the same action, validation, undo and
+  refusals as the UI (never a parallel handler), listed in `GET
+  /v1/capabilities` with a working example;
+- the mode's guide (`cad_guide` / `GET /v1/cad_guide` is the model: concepts,
+  workflows in order, every command with an example, the rules) updated, or
+  created for a mode that has none, so an agent starting cold begins at the
+  right point;
+- the reads an AI needs to work without seeing the screen (state, topology,
+  renders, feeds), with a non-blocking way to wait (published resources,
+  `/v1/events/…`);
+- AI-facing features where the screen would benefit: the in-window assistant
+  (CAD threads answer through `sim_agent`; reuse that pattern), agent-authored
+  comments and links, named views or captures the AI makes for the person.
+
+A feature without its REST surface and guide entry is not done.
 
 ## Freedom and hard boundaries
 
@@ -91,6 +162,6 @@ other work, and record that. A blocked part of the work never stops the rest.
 Completion means the agreed inventory is verified end to end in the native
 viewer with recorded evidence, a clear launch path, and no hidden required
 Python/browser UI detours. Compilation, test exit codes and an attractive
-animation alone do not establish workflow parity. **No screenshots** (unless "This run" says screenshots are on). Don't run ui_capture, launch the viewer to look at it, or take screenshots, even if an assignment or an older document asks for them. The binary isn't rebuilt during normal work, so a screenshot would show stale code. Behavior, including what the UI shows, is established by reading the code and documentation.
+animation alone do not establish workflow parity. **No screenshots** (unless "This run" says screenshots are on). Don't run ui_capture, launch the viewer to look at it, or take screenshots, even if an assignment or an older document asks for them. The binary isn't rebuilt, so a screenshot would show stale code. Behavior, including what the UI shows, is established by reading the code and documentation.
 Workflow parity is shown by tracing the code paths end to end. Never invent
 evidence.

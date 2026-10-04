@@ -1,14 +1,21 @@
 #!/bin/bash
-# Codex has no per-command time limit (Claude Code stops every shell command
-# itself), so Codex agents get this cargo first on their PATH: the real cargo,
-# stopped by `within` after PAIR_SHELL_SECONDS. A timeout is unverified, not failed.
+# Agents' cargo. Two jobs:
+# - One cargo command at a time across the worker and its subagents. Cargo
+#   locks the build directory anyway, but check, test and build of the same
+#   crate invalidate each other's artifacts and the test runs oversubscribe
+#   the cores; queued in turn, each command reuses the last one's work.
+# - Codex has no per-command time limit (Claude Code stops every shell command
+#   itself): with PAIR_SHELL_SECONDS set, the real cargo runs inside `within`.
+#   A timeout is unverified, not failed.
 here="$(cd "$(dirname "$0")" && pwd)"
 path=":$PATH:"
 path="${path//:$here:/:}"
 path="${path#:}"
 export PATH="${path%:}"
 real="$(command -v cargo)" || { echo "cargo: not found on PATH" >&2; exit 127; }
-if [ -z "$PAIR_SHELL_SECONDS" ] || [ "$PAIR_SHELL_SECONDS" = "0" ]; then
-  exec "$real" "$@"
+if [ -n "$PAIR_SHELL_SECONDS" ] && [ "$PAIR_SHELL_SECONDS" != "0" ]; then
+  set -- "$here/../bin/within" "$PAIR_SHELL_SECONDS" "$real" "$@"
+else
+  set -- "$real" "$@"
 fi
-exec "$here/../bin/within" "$PAIR_SHELL_SECONDS" "$real" "$@"
+exec python3 "$here/one_at_a_time.py" "${PAIR_STATE:-${TMPDIR:-/tmp}}/cargo.lock" "$@"

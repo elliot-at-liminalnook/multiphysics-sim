@@ -5,6 +5,31 @@ history and the journal; any command that builds or runs code must
 finish within 10 seconds (`within 10 ...`). Leave product changes to the
 worker.
 
+## The current focus comes first
+
+The mission's "Current focus" overrides the default epic order below:
+**everything in Rust, in one process.** Choose only epics that remove a
+dependency on the RoboCAD server or a robot driver server, in the mission's
+order: the leg driven in process first, then CAD in Rust. Everything else
+is frozen; frozen candidates may stay in the hopper as deferred. Strongly
+prefer the candidate that removes the most server reliance for real users.
+
+- An epic names the server dependency it removes (for example "Leg
+  calibration's teach and sweep run in process" or "CAD sketches and
+  extrude without RoboCAD") and the workflows that stop needing a server.
+- Its `done_when` outcomes are checkable by reading: those workflows'
+  code paths never reach `sim_runtime::cad_client` or a hardware server's
+  HTTP client, the logic lives in a shared Rust library the viewer calls
+  through the jobs module, the replaced client path is deleted, and the
+  behaviour matches the reference (RoboCAD's Python, the server examples).
+- For hardware, every safety rule the server enforced must move with the
+  logic; an epic that loosens one is rejected.
+- For CAD, the geometry kernel choice is a recorded decision made on
+  evidence early, and `.rcad` compatibility with existing files is kept.
+- Fix a broken build or a crash first when it blocks the focus; that is not
+  a separate feature area.
+- When a goal's steps all pass, say so in your rationale and move to the next.
+
 ## The direction is opinionated
 
 The goal is one coherent native Rust viewer on current Bevy, backed by strong
@@ -19,14 +44,19 @@ preferences:
 - one UI kit on Bevy's own widgets
 - one document, selection and annotation model
 
+Judge every candidate also by what an AI can do with it: its REST commands,
+its mode's guide (`cad_guide` is the model) and any AI-facing feature the
+screen would benefit from (mission "Every screen is usable by an AI"). An epic
+that adds UI without that surface is incomplete.
+
 Judge every candidate by whether it makes the system more unified. A feature
 built as a new island (its own thread code, its own widgets, its own handler
 style) counts against the candidate, however useful the feature.
 
 The document ends with a default epic order: the structural epics (Bevy
 upgrade, jobs, one app, action layer, UI kit), then the hardware front end, the
-CAD mode, the CAD parity harness, the Rust derivations, OCCT from Rust, and
-folding in `sim-app`. Follow it unless evidence says otherwise, and record the
+CAD mode, the CAD parity harness (done), the Rust derivations, the geometry
+kernel from Rust, and folding in `sim-app`. Follow it unless evidence says otherwise, and record the
 reason when you depart from it. For the hardware and CAD epics, exact feature
 parity with the browser pages and RoboCAD is the bar. Until those structural epics are done, choose a feature
 epic only if it's urgent to the user or it is built on (and extends) the target
@@ -86,9 +116,9 @@ and the mission's hard boundaries. Return only the required structured decision.
 ## Cost and disk
 
 Nothing is built or tested: code is written and verified by reading.
-Screenshots are off; plan none. Write milestone `done_when` outcomes that can be
-checked by reading the code, and don't plan milestones whose main work is
-building, testing or measuring. Keep every epic focused on writing the code. Use the fresh
+Nothing is built, run or tested: code is written and verified by reading.
+Screenshots are off; plan none. Write milestone `done_when` outcomes as
+checklist steps whose code paths can be traced by reading. Keep every epic focused on writing the code. Use the fresh
 disk measurement in the prompt; when headroom is short for the builds an epic
 needs, make freeing regenerable build output its first milestone.
 

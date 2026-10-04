@@ -420,6 +420,30 @@ def view(root):
             "usage": usage_view(root, state)}
 
 
+def call_summary(record):
+    """One line for the timeline: the result's summary, the error, or the prompt's first line."""
+    result = record.get("result") if isinstance(record.get("result"), dict) else {}
+    text = result.get("summary") or record.get("error") or next((l for l in (record.get("prompt") or "").splitlines() if l.strip()), "")
+    return str(text)[:400]
+
+
+def slim(data):
+    """The state a poll needs: every turn's summary, and full detail (prompt,
+    activity, result) only for each role's latest turn, which the live view and
+    header show. A run's history otherwise grows every poll by megabytes;
+    /api/call/<id> serves any turn's detail on demand."""
+    detailed = {next((c["id"] for c in reversed(data["calls"]) if c["role"] == role), None)
+                for role in ("director", "orchestrator", "worker")}
+    detailed |= {c["id"] for c in data["calls"] if c.get("live")}
+    calls = []
+    for record in data["calls"]:
+        record = {**record, "summary": call_summary(record), "detail": record["id"] in detailed}
+        if not record["detail"]:
+            record.update(prompt=None, activity=[], result=None, stderr="", error=record.get("error", "")[:400])
+        calls.append(record)
+    return {**data, "calls": calls}
+
+
 class Dashboard(ThreadingHTTPServer):
     daemon_threads = True
 
@@ -429,16 +453,34 @@ class Dashboard(ThreadingHTTPServer):
         self.control_lock = threading.Lock()
         self.child = None
         self.relaunch = False  # set by a legacy restart: Continue once the stop has landed
+        self.view_lock = threading.Lock()
+        self.latest_view = (0.0, -1, None)  # (computed at, generation it started from, data)
+        self.view_generation = 0  # bumped by every action
         super().__init__(address, Handler)
         threading.Thread(target=self.watch_limits, daemon=True).start()
         # Read every turn's transcript once now, so the first page load doesn't wait for it.
         threading.Thread(target=self.warm, daemon=True).start()
 
+    def invalidate(self):
+        self.view_generation += 1
+
     def warm(self):
         try:
-            view(self.root)
+            self.snapshot()
         except Exception:
             pass  # a request will report the problem
+
+    def snapshot(self, fresh_for=1.0):
+        """The full view, computed once for any number of concurrent requests
+        (several tabs, a slow poll) and reused for `fresh_for` seconds, unless
+        an action happened after its computation started."""
+        with self.view_lock:
+            at, generation, data = self.latest_view
+            if data is None or generation != self.view_generation or time.monotonic() - at > fresh_for:
+                generation = self.view_generation
+                data = view(self.root)
+                self.latest_view = (time.monotonic(), generation, data)
+            return data
 
     def busy(self):
         return running(self.root) or bool(self.child and self.child.poll() is None)
@@ -522,7 +564,11 @@ class Handler(BaseHTTPRequestHandler):
                     return self.send(404, {"error": "Not found"})
                 return self.send(200, target.read_bytes(), "image/png")
             if path == "/api/state":
-                return self.send(200, view(self.server.root))
+                return self.send(200, slim(self.server.snapshot()))
+            if path.startswith("/api/call/"):
+                wanted = unquote(path[len("/api/call/"):])
+                record = next((c for c in self.server.snapshot()["calls"] if c["id"] == wanted), None)
+                return self.send(200, record) if record else self.send(404, {"error": "No such turn"})
             return self.send(404, {"error": "Not found"})
         except Exception as e:
             self.send(500, {"error": str(e)})
@@ -538,6 +584,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(413, {"error": "Request too large"})
             data = json.loads(self.rfile.read(size) or b"{}")
             root = self.server.root
+            self.server.invalidate()  # an action changes what the next refresh should show
             with self.server.control_lock:
                 path = urlparse(self.path).path
                 if path == "/api/stop":
@@ -650,6 +697,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send(400, {"error": str(e)})
         except Exception as e:
             self.send(500, {"error": str(e)})
+        finally:
+            self.server.invalidate()  # the action may have changed state or config
 
 
 def main():

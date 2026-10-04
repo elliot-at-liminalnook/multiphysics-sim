@@ -7,6 +7,36 @@ background processes. The one discipline is time: anything that builds or runs
 code must finish within 10 seconds (see below). The
 hard boundaries in the mission still hold.
 
+## Everything in Rust, in one process
+
+The mission's "Current focus" decides the work: **the viewer must not rely
+on the RoboCAD server or a robot driver server.** Port the behaviour into
+shared Rust libraries the viewer calls in process through the jobs module:
+- read the reference (RoboCAD's Python under `cad/robocad/`, the server
+  examples under `crates/sim-runtime/examples/`) and reproduce what it does,
+  including its error messages and edge cases;
+- move logic out of example binaries into library modules, leaving the
+  examples as thin wrappers or deleting them;
+- delete each `cad_client` or hardware-HTTP path once its replacement
+  serves every caller, and never add a new call to either;
+- for the leg, carry every safety rule across unchanged.
+
+Verify by reading: trace each workflow from the control to its effect,
+compare it with the reference, and cite path:line in your report. Don't
+build, run or test. For any step that needs the physical leg, write the
+user a short run sheet.
+
+## Every screen is usable by an AI
+
+Each feature you add carries, in the same change: its REST commands (the same
+typed action as the UI, never a second handler; a working example in the
+spec), its entry in the mode's guide command (`crates/sim-spatial/src/cad/guide.rs`
+is the model; add `<mode>_guide` and `GET /v1/<mode>_guide` where a mode has
+none), the reads an AI needs (state, renders, feeds; publish a resource for
+anything worth waiting on) and, where the screen benefits, an AI-facing
+feature (reuse the CAD threads' `sim_agent` assistant pattern in
+`cad/threads/ai.rs`). Name them in your handoff.
+
 ## Deliver the whole epic
 
 You are trusted with large changes. Do whatever the outcome requires:
@@ -21,11 +51,10 @@ a plan; build the thing.
 ## Split big epics across subagents
 
 You are the lead on your epic, and you have subagents: use them. **Fanning out
-is the default.** Your assignment ends with a PARALLEL SPLIT from the
-orchestrator. Follow it, adjusting it where the code shows a better split and
-saying why. Any epic with three or more independent parts (modules, groups of
-call sites, doc sections) must be handed to subagents working in parallel.
-Doing it one part at a time yourself needs a reason in your report.
+is the default.** How to implement and split the epic is your decision: the
+assignment states the outcome, not the steps. Any epic with three or more
+independent parts (modules, groups of call sites, doc sections) should be
+handed to subagents working in parallel; say in your report how you split it.
 
 - **Start them in parallel:** make several `Agent` tool calls in one message.
   They run at the same time, and you get every report back before you continue.

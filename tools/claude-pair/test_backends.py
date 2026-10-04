@@ -535,7 +535,9 @@ class CommandContracts(Base):
                      "--strict-mcp-config", "--no-chrome", "--session-id", "--agents", "--dangerously-skip-permissions"):
             self.assertIn(flag, argv)
         self.assertNotIn("exec", argv)
-        self.assertNotIn(str(HERE / "shims"), self.last()["env"]["PATH"])
+        env = self.last()["env"]
+        self.assertTrue(env["PATH"].startswith(str(HERE / "shims")), "one cargo at a time on Claude too")
+        self.assertNotIn("PAIR_SHELL_SECONDS", env, "Claude Code enforces its own shell limit")
 
     def test_the_codex_command_contract(self):
         config = pair.read_json(self.root / "config.json")
@@ -548,7 +550,8 @@ class CommandContracts(Base):
         resumed = self.last()["argv"]
         for argv in (new, resumed):
             for flag in ("--json", "--ignore-user-config", "--output-schema", "--dangerously-bypass-approvals-and-sandbox",
-                         'service_tier="priority"', "allow_login_shell=false", "features.memories=false"):
+                         'service_tier="priority"', "allow_login_shell=false", "features.memories=false",
+                         "features.shell_snapshot=false"):
                 self.assertIn(flag, argv)
             self.assertEqual(argv[argv.index("-m") + 1], "gpt-6-sol")
             self.assertIn('model_reasoning_effort="high"', argv)
@@ -594,7 +597,8 @@ class CommandContracts(Base):
         self.runner.state["verification"] = {"since": "x", "head": "y", "commits": 1, "queued_plan": first_plan(), "reason": "test"}
         self.call("worker", scope="assignment:2")
         env = self.last()["env"]
-        self.assertFalse(env["PATH"].startswith(str(HERE / "shims")))
+        self.assertTrue(env["PATH"].startswith(str(HERE / "shims")), "still one cargo at a time")
+        self.assertNotIn("PAIR_SHELL_SECONDS", env, "but no time limit in a verification pass")
         self.assertIn("This turn has no shell time limit.", next(a for a in self.last()["argv"] if a.startswith("developer_instructions=")))
 
     def test_audit_only_is_read_only_on_codex_too(self):
@@ -610,12 +614,27 @@ class CommandContracts(Base):
         self.assertIn("features.multi_agent=false", argv)
         self.assertFalse(any(a.startswith("agents.") for a in argv))
 
+    def test_cargo_commands_run_one_at_a_time(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake = Path(tmp) / "cargo"
+            fake.write_text("#!/bin/bash\necho start $1 $(python3 -c 'import time;print(time.time())')\nsleep 1\necho end $1 $(python3 -c 'import time;print(time.time())')\n")
+            fake.chmod(0o755)
+            env = dict(os.environ, PATH=f"{HERE / 'shims'}{os.pathsep}{tmp}{os.pathsep}{os.environ['PATH']}", PAIR_STATE=tmp)
+            env.pop("PAIR_SHELL_SECONDS", None)
+            runs = [subprocess.Popen(["cargo", name], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    for name in ("a", "b", "c")]
+            outs = [r.communicate() for r in runs]
+            spans = sorted((float(o.split()[2]), float(o.split()[5])) for o, _ in outs)
+            for (s1, e1), (s2, _) in zip(spans, spans[1:]):
+                self.assertGreaterEqual(s2, e1 - 0.05, "a second cargo started before the first ended")
+            self.assertEqual(sum("waiting for it to finish" in err for _, err in outs), 2)
+
     def test_the_cargo_shim_stops_a_slow_cargo(self):
         with tempfile.TemporaryDirectory() as tmp:
             fake = Path(tmp) / "cargo"
             fake.write_text("#!/bin/bash\nsleep 8\necho finished\n")
             fake.chmod(0o755)
-            env = dict(os.environ, PATH=f"{HERE / 'shims'}{os.pathsep}{tmp}{os.pathsep}{os.environ['PATH']}", PAIR_SHELL_SECONDS="1")
+            env = dict(os.environ, PATH=f"{HERE / 'shims'}{os.pathsep}{tmp}{os.pathsep}{os.environ['PATH']}", PAIR_SHELL_SECONDS="1", PAIR_STATE=tmp)
             started = time.monotonic()
             done = subprocess.run(["cargo", "build"], env=env, capture_output=True, text=True)
             self.assertEqual(done.returncode, 124)
@@ -749,6 +768,27 @@ class DashboardCompatibility(Base):
             calls = dashboard.view(self.root)["calls"]
         self.assertIn("corrupt transcript", calls[0]["activity"][0]["text"])
         self.assertEqual(calls[1]["result"]["summary"], "Created proof")
+
+    def test_polls_carry_summaries_and_detail_only_for_each_roles_latest_turn(self):
+        for _ in range(3):
+            self.call("worker", scope=f"assignment:{_}")
+        self.call("orchestrator", scope="batch:mission")
+        server = dashboard.Dashboard(("127.0.0.1", 0), self.root)
+        self.addCleanup(server.server_close)
+        import threading
+        import urllib.request
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.shutdown)
+        base = f"http://127.0.0.1:{server.server_port}"
+        state = json.load(urllib.request.urlopen(base + "/api/state"))
+        workers = [c for c in state["calls"] if c["role"] == "worker"]
+        self.assertEqual([c["detail"] for c in workers], [False, False, True])
+        self.assertEqual((workers[0]["prompt"], workers[0]["activity"], workers[0]["result"]), (None, [], None))
+        self.assertEqual(workers[0]["summary"], "Created proof", "the timeline still has a line for every turn")
+        self.assertIsNotNone(workers[-1]["prompt"])
+        full = json.load(urllib.request.urlopen(base + "/api/call/" + workers[0]["id"]))
+        self.assertEqual(full["result"]["summary"], "Created proof")
+        self.assertTrue(full["prompt"])
 
     def test_the_dashboard_switch_endpoint_drives_the_next_call(self):
         server = dashboard.Dashboard(("127.0.0.1", 0), self.root)

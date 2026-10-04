@@ -500,12 +500,15 @@ function renderTimeline() {
   if (!data.calls.length) return html('timeline', '<div class="card card-body empty">Every agent turn will be listed here, newest first.</div>');
   html('timeline', [...data.calls].reverse().map(c => {
     const role = ROLES[c.role], title = c.live ? ({ assign: 'Writing the assignment', review: 'Reviewing the result', worker: 'Implementing', director: 'Choosing the next batch' })[c.stage] : STAGE_DONE[c.stage] || role.name;
-    const summary = c.result?.summary || c.error || c.prompt.split('\n').find(l => l.trim()) || '';
+    const summary = c.summary || c.result?.summary || c.error || (c.prompt || '').split('\n').find(l => l.trim()) || '';
     return `<button class="turn" data-call="${esc(c.id)}" style="--role:${role.color}"><span class="stripe"></span><span class="avatar">${role.letter}</span><span style="min-width:0"><span class="turn-title">${esc(title)} <span class="num">#${c.number} · ${esc(role.name)}</span></span><div class="turn-sum">${esc(summary)}</div></span><span class="turn-meta">${c.subagents?.length ? `<span title="subagents">⇉ ${c.subagents.length}</span>` : ''}${c.cost_usd != null ? `<span>${money(c.cost_usd)}</span>` : c.tokens ? `<span title="Codex reports tokens, not dollars">${tokens(c.tokens)}</span>` : ''}<span>${dur(c.elapsed_seconds)}</span>${callStatus(c)}</span></button>`;
   }).join(''));
 }
-function openCall(id) {
-  const c = data.calls.find(x => x.id === id); if (!c) return;
+async function openCall(id) {
+  let c = data.calls.find(x => x.id === id); if (!c) return;
+  if (!c.detail) {  // the poll carries only summaries for older turns
+    try { const r = await fetch('/api/call/' + encodeURIComponent(id), { cache: 'no-store' }); if (r.ok) c = await r.json(); } catch {}
+  }
   // Label this turn's subagent actions with this turn's subagents (not the live feed's).
   subagentNames = Object.fromEntries((c.subagents || []).map(s => [s.id, `${s.type}${s.description ? ': ' + s.description : ''}`]));
   const act = c.activity?.length ? `<div class="section-label">Activity</div>${c.activity.map(e => eventHTML(e, c.role)).join('')}` : '';
@@ -718,5 +721,5 @@ applyTheme(theme);
 $('theme').onclick = () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; applyTheme(theme); try { localStorage.setItem('pair-theme', theme); } catch {} };
 
 try { const v = localStorage.getItem('pair-view'); if (v && document.querySelector(`[data-panel="${v}"]`)) setView(v); } catch {}
-refresh();
-setInterval(refresh, 2000);
+// Poll again 2 s after each refresh finishes, so slow responses never stack up.
+(async function poll() { await refresh(); setTimeout(poll, 2000); })();

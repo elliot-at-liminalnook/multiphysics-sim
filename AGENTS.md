@@ -8,15 +8,23 @@ robot design and eventual sim-to-real learning.
   the CAD model. Declare units, coordinate frames, provenance, and uncertainty;
   distinguish measured, derived, and estimated values. Geometry-to-physics
   derivations must be explicit.
-- **Rust owns simulation, environments, the user interface and, over time,
-  CAD.** Use Rust controllers or Rhai scripts backed by Rust library
-  components. CAD is moving from Python (RoboCAD) to Rust: a CAD mode in the
-  native viewer, derivations ported to Rust, and the OpenCascade kernel called
-  from Rust. RoboCAD remains the reference and stays available until a parity
-  harness shows the Rust path matches it on real models; only then is the
-  Python path retired. Hardware calibration and driving UI also moves into the
-  native viewer, over the same Rust hardware layer. Other external-language
-  integrations are compatibility surfaces, not the default architecture for new
+- **Everything runs in Rust, in the viewer's own process.** Rust owns
+  simulation, environments, the user interface, CAD and hardware driving. Use
+  Rust controllers or Rhai scripts backed by Rust library components. Nothing
+  the viewer does may rely on a separate server:
+  - **CAD** runs in Rust inside the native viewer: the document model and
+    history, modelling operations, derivations, export and annotations, on a
+    geometry kernel called from Rust (chosen on evidence and recorded). Keep
+    `.rcad` files compatible. RoboCAD's Python source is the reference for
+    behaviour only; the viewer never starts, calls or waits for it, and each
+    path through its REST client is deleted once Rust serves every caller.
+  - **Hardware** calibration and driving run in the viewer's process through
+    the shared Rust hardware layer, not over HTTP to a calibration or
+    motor-bench server. Server logic moves into library modules; example
+    binaries are thin wrappers over them or are deleted.
+
+  Other external-language integrations (the controller seam's clients, the
+  browser) are compatibility surfaces, not the default architecture for new
   work.
 - **Contribute to the shared library first.** Reuse an existing component, extend
   it, or add a reusable component with a focused example. Keep robot-specific
@@ -44,6 +52,9 @@ robot design and eventual sim-to-real learning.
   there. Promote new measurements into it; never hand-copy numbers into configs.
 - **Hardware safety is independent and never bypassed.** The FPGA supervisor,
   taught travel windows, watchdogs and STOP must hold even if host code is wrong.
+  Moving driver logic into the viewer's process carries every host-side rule
+  across unchanged: one front end owns a motion session, STOP works from every
+  section, hold-to-move releases on focus loss and panel close.
   Load FPGA images only with motor power off and record a deployment receipt.
   Drive motors only with the operator present and the fixture supported. Record
   every raised limit, with the reason and the previous value.
@@ -57,6 +68,17 @@ robot design and eventual sim-to-real learning.
   commands, and undo semantics. Prefer reusable inspection and batch APIs over
   one-off automation shortcuts. Human- and LLM-editable files (gaits, poses) must
   convert exactly to shared library types and fail with errors that name the path.
+- **Every screen is usable by an AI.** New functionality in any mode ships with
+  its REST commands in the same change: typed actions shared with the UI (same
+  validation, undo and refusals), described in `GET /v1/capabilities` with a
+  working example, and covered by that mode's guide command (like `cad_guide`,
+  also `GET /v1/<mode>_guide`): concepts, workflows in order, every command, the
+  rules, so an agent starting cold begins at the right point. Expose what an AI
+  needs to see as well as to change (state, topology, renders, feeds of
+  comments), give long waits a non-blocking path (published resources and
+  `/v1/events/…`), and add AI-facing features (an in-window assistant, agent
+  comments, saved views it can make for the person) wherever a screen would
+  benefit.
 - **Prove behavior, not just animation.** Check analytic cases, conservation where
   applicable, constraint closure, contact, controller behavior, and timestep
   sensitivity. Set explicit accuracy and performance expectations and enforce

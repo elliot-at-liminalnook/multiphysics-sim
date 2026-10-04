@@ -361,10 +361,10 @@ class UsageLimitTests(unittest.TestCase):
 
 
 class HandoffRuleTests(unittest.TestCase):
-    def test_a_new_assignment_without_a_parallel_split_goes_back(self):
+    def test_a_new_assignment_needs_no_plan_section_the_worker_decides(self):
         with tempfile.TemporaryDirectory() as tmp:
             runner = ControlTests().runner(tmp, max_rounds=1)
-            plans = iter([dict(fixtures.plan(), worker_prompt="Do the epic."), fixtures.plan()])
+            plans = iter([dict(fixtures.plan(), worker_prompt="Do the epic.")])
             seen = []
 
             def fake_call(runner_, role, prompt, scope=None):
@@ -375,8 +375,8 @@ class HandoffRuleTests(unittest.TestCase):
                 return next(plans, fixtures.plan(review="accept"))
             with patch.object(pair.Runner, "call", fake_call):
                 pair.Runner(runner.root).run()
-            self.assertIn("PARALLEL SPLIT", seen[1][1], "the rejection is sent back to the orchestrator")
-            self.assertEqual(seen[2][0], "worker")
+            self.assertEqual(seen[1][0], "worker", "the epic goes straight to the worker")
+            self.assertIn("Do the epic.", seen[1][1])
 
     def test_a_done_report_with_blockers_for_later_work_can_be_accepted(self):
         report = dict(fixtures.REPORT, blockers=["T11.2 needs a decision about the stored controller hash"])
@@ -623,8 +623,30 @@ class VerificationPassTests(unittest.TestCase):
     def test_agents_have_within_on_their_path(self):
         with tempfile.TemporaryDirectory() as tmp:
             runner = ControlTests().runner(tmp)
-            self.assertTrue(runner.env()["PATH"].startswith(str(HERE / "bin")))
+            parts = runner.env()["PATH"].split(os.pathsep)
+            self.assertEqual(parts[:2], [str(HERE / "shims"), str(HERE / "bin")], "one-at-a-time cargo, then within")
             self.assertTrue(os.access(HERE / "bin" / "within", os.X_OK))
+
+
+class LeftoverProcessTests(unittest.TestCase):
+    def test_processes_a_call_detaches_are_stopped_when_it_ends(self):
+        """Codex runs long commands in their own sessions; they must not outlive the call."""
+        with tempfile.TemporaryDirectory() as tmp:
+            runner = ControlTests().runner(tmp)
+            marker = Path(tmp) / "orphan.pid"
+            script = ("import os, subprocess, sys, time\n"
+                      "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(120)  # pair-orphan-test'], start_new_session=True)\n"
+                      f"open({str(marker)!r}, 'w').write(str(child.pid))\n"
+                      "time.sleep(4)\n")
+            prefix = runner.root / "logs" / "0001-worker"
+            code, _, _ = runner.process([sys.executable, "-c", script], prefix)
+            self.assertEqual(code, 0)
+            pid = int(marker.read_text())
+            time.sleep(0.5)
+            with self.assertRaises(OSError, msg="the detached child outlived the call"):
+                os.kill(pid, 0)
+            kinds = [e["kind"] for e in pair.shared_notebook.entries(runner.root)] if (runner.root / "shared").exists() else []
+            self.assertTrue(not kinds or "Leftover processes stopped" in kinds)
 
 
 class RetryNowTests(unittest.TestCase):

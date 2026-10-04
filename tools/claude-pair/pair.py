@@ -194,6 +194,53 @@ def limit_reset(info, text, now, fallback_seconds=900):
     return max(future) if future else now + fallback_seconds
 
 
+def process_table():
+    """pid -> (ppid, command) for every process, from `ps`."""
+    try:
+        out = subprocess.run(["ps", "-axo", "pid=,ppid=,command="], capture_output=True, text=True, timeout=10).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return {}
+    table = {}
+    for line in out.splitlines():
+        parts = line.strip().split(None, 2)
+        if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
+            table[int(parts[0])] = (int(parts[1]), parts[2] if len(parts) > 2 else "")
+    return table
+
+
+def descendants(root, table):
+    """Every process below `root`, with its command (to recognise it later)."""
+    children = {}
+    for pid, (ppid, _) in table.items():
+        children.setdefault(ppid, []).append(pid)
+    found, stack = {}, list(children.get(root, []))
+    while stack:
+        pid = stack.pop()
+        if pid not in found and pid in table:
+            found[pid] = table[pid][1]
+            stack.extend(children.get(pid, []))
+    return found
+
+
+def stop_leftovers(seen):
+    """Stop processes an agent call started that outlived it (Codex runs long
+    commands in detached sessions, outside the call's process group). Only a
+    pid still running the same command is touched, so a reused pid is safe."""
+    table = process_table()
+    alive = [pid for pid, command in seen.items() if pid in table and table[pid][1] == command]
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        for pid in alive:
+            try:
+                os.kill(pid, sig)
+            except OSError:
+                pass
+        if sig == signal.SIGTERM and alive:
+            time.sleep(3)
+            table = process_table()
+            alive = [pid for pid in alive if pid in table and table[pid][1] == seen[pid]]
+    return [seen[pid] for pid in seen if pid in alive] or alive
+
+
 def cargo_path(path):
     cargo = Path.home() / ".cargo" / "bin"
     parts = [p for p in (path or "").split(os.pathsep) if p]
@@ -328,8 +375,11 @@ class Runner:
         self.deadline = 0
 
     def env(self, **extra):
-        """Environment for agents and checks: cargo on PATH and the run's paths."""
-        env = dict(os.environ, PATH=str(HERE / "bin") + os.pathsep + cargo_path(os.environ.get("PATH")), CARGO_TERM_COLOR="never",
+        """Environment for agents and checks: the run's tools and cargo on PATH, and
+        the run's paths. shims/cargo runs one cargo command at a time across the
+        worker and its subagents (and, for a capped Codex turn, inside `within`)."""
+        tools = os.pathsep.join([str(HERE / "shims"), str(HERE / "bin")])
+        env = dict(os.environ, PATH=tools + os.pathsep + cargo_path(os.environ.get("PATH")), CARGO_TERM_COLOR="never",
                    PAIR_STATE=str(self.root), PAIR_WORKSPACE=str(self.repo), PAIR_SOURCE=str(self.config["repo"]),
                    PAIR_TOOLS=str(HERE), PAIR_CAPTURES=str(self.root / "captures"),
                    PAIR_BASELINE=self.config["baseline"])
@@ -367,6 +417,7 @@ class Runner:
                                  stdout=of, stderr=ef, start_new_session=True, env=env or self.env())
             self.state["child_pid"] = p.pid
             self.save()
+            seen, scanned = {}, 0.0  # everything the call starts, so nothing outlives it
             try:
                 if stdin:
                     p.stdin.write(stdin.encode())
@@ -377,15 +428,27 @@ class Runner:
                         raise InterruptedError("Stop requested or per-turn/run time limit reached")
                     if shutil.disk_usage(self.repo).free < 2 * 1024**3:
                         raise InterruptedError("Less than 2 GiB disk space remains; progress saved")
+                    if time.monotonic() - scanned > 3:
+                        seen.update(descendants(p.pid, process_table()))
+                        scanned = time.monotonic()
                     time.sleep(0.2)
             finally:
                 if p.poll() is None:
+                    seen.update(descendants(p.pid, process_table()))
                     os.killpg(p.pid, signal.SIGTERM)
                     try:
                         p.wait(timeout=10)
                     except subprocess.TimeoutExpired:
                         os.killpg(p.pid, signal.SIGKILL)
                         p.wait()
+                stopped = stop_leftovers(seen)
+                if stopped and (self.root / "shared").exists():
+                    shared_notebook.append(self.root, {"id": f"leftovers-{prefix.name}", "author": "coordinator",
+                        "kind": "Leftover processes stopped",
+                        "summary": f"{len(stopped)} process(es) started during {prefix.name} were still running after it "
+                                   "ended (outside its process group) and were stopped, so they can't hold the build "
+                                   "directory or the CPU. Leave nothing running unless the orchestrator needs it.",
+                        "notes": [str(c)[:200] for c in stopped[:8]], "source": str(prefix.with_suffix(".stdout"))})
                 self.state.pop("child_pid", None)
                 self.save()
         return p.returncode, out, err
@@ -503,7 +566,8 @@ class Runner:
                  f"directory. Edit here and commit to the current branch ({self.config.get('branch') or 'detached HEAD'}).\n"
                  f"- Run state, logs and receipts: {self.root} (git-ignored; do not edit)\n"
                  + (f"- Screenshots are ON for this run: python3 {HERE / 'ui_capture.py'} --help; save them under "
-                    f"{self.root / 'captures'} and view them with Read.\n" if self.config.get("screenshots")
+                    f"{self.root / 'captures'} and view them with Read.\n"
+                    if self.config.get("screenshots") or (role == "worker" and self.state.get("verification"))
                     else "- Screenshots are OFF for this run: don't run ui_capture, launch the viewer to look at it, "
                          "or take screenshots.\n") +
                  f"- Baseline (the folder as it was when the run started, including the user's "
@@ -720,7 +784,6 @@ class Runner:
         env = self.env(**limits)
         if limits:
             # Codex has no per-command timeout: cargo, the slow one, runs inside `within`.
-            env["PATH"] = str(HERE / "shims") + os.pathsep + env["PATH"]
             env["PAIR_SHELL_SECONDS"] = str(self.config.get("shell_seconds", 10))
         for name, value, why in (("dollar-caps", cap is not None, "Codex reports tokens, not dollars, so the dollar "
                                   "ceilings don't stop Codex calls; the turn time limit and Codex's own usage limits still apply."),
@@ -1098,11 +1161,7 @@ class Runner:
                         batch = (self.state.get("outer", {}).get("current_batch") or {}).get("id", "mission")
                         def guard(plan):
                             guard_plan(plan, self.state, self.config["checks"])
-                            if (plan["action"] == "work" and plan["review"] != "revise"
-                                    and "PARALLEL SPLIT" not in plan["worker_prompt"]):
-                                raise ValueError("A new assignment's worker_prompt must end with a PARALLEL SPLIT section: the "
-                                                 "parts subagents can build in parallel and the files each owns, or "
-                                                 "'PARALLEL SPLIT: none' with the reason")
+                            # How to build and split the epic is the worker's decision (no required plan section).
                             outer_loop.guard_contract(self, plan)
                             if self.config["audit_only"] and set(plan["checks"]) - {"diff"}:
                                 raise ValueError("Audit-only run cannot request builds")

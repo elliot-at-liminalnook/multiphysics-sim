@@ -43,7 +43,11 @@ HERE = Path(__file__).resolve().parent
 # Built-in features a run never needs. Like Claude Code's --no-chrome and empty
 # MCP config, they keep the user's personal setup out of the run. Set through
 # -c, so a feature a later Codex removes is ignored instead of refused.
-DISABLED_FEATURES = ("memories", "browser_use", "browser_use_external", "computer_use", "in_app_browser", "apps")
+DISABLED_FEATURES = ("memories", "browser_use", "browser_use_external", "computer_use", "in_app_browser", "apps",
+                     # A session snapshots its shell environment when it starts and a
+                     # resumed session reuses it, so PATH (the cargo queue and time
+                     # limit) and PAIR_* changes would never reach it.
+                     "shell_snapshot")
 
 ROLE_NOTE = """# This backend: Codex CLI
 

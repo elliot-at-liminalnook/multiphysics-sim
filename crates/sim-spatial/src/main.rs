@@ -347,7 +347,7 @@ fn robot_preset_mode(args: &Args, id: &str) -> Result<(), Box<dyn std::error::Er
         }
         let (loaded, run) = sim_spatial::robot::load_preset(preset, root)?;
         let drawn = loaded.geometry.iter().filter(|g| g.is_some()).count();
-        println!("Validated preset {id}: {} with {} links ({drawn} with collision geometry); chunk {} steps × {} s; seed {}.", run.kind(), loaded.model.links.len(), run.chunk_steps(), run.config.step_s, run.seed);
+        println!("Validated preset {id}: {} with {} links ({drawn} with collision geometry); chunk {} steps × {} s; seed {}.", run.kind(), loaded.model.links.len(), run.chunk_steps(), run.step_s(), run.seed);
         return Ok(());
     }
     let view = sim_spatial::robot::RobotView::open_preset(&presets(args)?, id)?;

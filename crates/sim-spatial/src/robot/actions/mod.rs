@@ -38,6 +38,9 @@ pub(crate) enum RobotAction {
     /// A motion request through the preset's Rust controller (physical keys,
     /// the W/A/S/D/Stop buttons, `system_ui` motion:*, REST `robot_input`).
     Motion { request: MotionRequest },
+    /// Set named session inputs of a preset's held action (the Inputs block's
+    /// sliders and buttons, `system_ui` inputs:*, REST `robot_inputs`).
+    Inputs { values: std::collections::BTreeMap<String, f64> },
     /// Save the preset run's shared recording (the Save recording button,
     /// `system_ui` recording:save, REST `robot_save_recording`).
     SaveRecording { path: Option<String>, note: Option<String> },
@@ -50,6 +53,19 @@ pub(crate) enum RobotAction {
     RefreshRecordings,
     /// Show or hide the graph dock (the Graphs button, key G, `system_ui` graphs:toggle).
     ToggleGraphs,
+    /// Record video of the 3D view (`video`): on, off, or the flip (None; the header button, REST `robot_video`).
+    Video { on: Option<bool> },
+    /// The controller leaderboard (`leaderboard`): the dialog's controls and REST `robot_leaderboard`.
+    Leaderboard { op: crate::robot::leaderboard::BoardOp },
+    /// Review the run's frame history at time `t` (None: back to live): the
+    /// Timeline block's slider and Live button, `system_ui` history:live, REST `robot_history`.
+    History { t: Option<f64> },
+    /// Pick (`on`) or remove a channel of the graph dock's Picked chart
+    /// (the dock's channel chips, `system_ui` pick:<key>, REST `robot_graphs`).
+    Pick { channel: String, on: bool },
+    /// The view tools (`view_tools`): Fit selected, Follow robot and the
+    /// display cap (the view-tool chips, `system_ui` view:*, REST `robot_view`).
+    View { fit_selected: bool, follow: Option<bool>, display_hz: Option<u32> },
     /// The kinematic gait preview: open, play, pause, seek, speed, stop, list (REST `robot_gait`).
     Gait { action: GaitAction },
     /// Re-read `--robot FILE` on a worker (`robot_source`): the watch (a changed
@@ -71,6 +87,8 @@ pub(crate) enum RobotAction {
     RobotState,
     /// REST `robot_presets`: the declared presets.
     Presets,
+    /// REST `robot_guide` (also `GET /v1/robot_guide`): how robot mode works, for an agent starting cold.
+    Guide { topic: Option<String> },
     /// REST `robot_preset`: open a declared preset in this window.
     OpenPreset { id: String },
     /// REST `system_ui` controls: the control list with each control's action.
@@ -103,132 +121,6 @@ pub(crate) const NOT_CONTROLLED: &str = "this robot has no drive profile";
 /// A planar (v2) file has no drive profile or controller.
 const PLANAR_DRIVE: &str = "drive (robot_drive, drive:*) is refused for a planar v2 file: it has no controller binding or sim.drive/1 profile";
 
-/// The twist a drive request asks the run thread for, and whether it is a
-/// halt (zero at once): the shared interpretation (`DriveRequest::interpret`,
-/// the same one Build mode's robot systems use) against the run's binding,
-/// with this mode's refusal for a run without one; for [`check`] and
-/// `dispatch` alike.
-fn drive_request(run: &RunController, request: &DriveRequest) -> Result<(BodyTwist, bool), String> {
-    let c = run.controlled().ok_or_else(|| match run.check_drive() {
-        Err(why) => format!("{NOT_CONTROLLED}; {why}"),
-        Ok(()) => format!("{NOT_CONTROLLED}; driving needs a controller binding (<model stem>.controller.json beside the model) naming a sim.drive/1 profile"),
-    })?;
-    request.interpret(&c.controlled)
-}
-
-/// The action that flips one overlay from its current requested value.
-pub(super) fn overlay_toggle(view: &RobotView, kind: &str) -> RobotAction {
-    let flip = Some(!overlay_on(view, kind));
-    match kind {
-        "contacts" => RobotAction::Overlay { contacts: flip, joints: None, deflections: None, stress: None },
-        "joints" => RobotAction::Overlay { contacts: None, joints: flip, deflections: None, stress: None },
-        "stress" => RobotAction::Overlay { contacts: None, joints: None, deflections: None, stress: flip },
-        _ => RobotAction::Overlay { contacts: None, joints: None, deflections: flip, stress: None },
-    }
-}
-/// Why the stress overlay cannot be set now.
-pub(super) fn check_stress(view: &RobotView) -> Result<(), String> {
-    if view.planar.is_some() {
-        return Err(planar::STRESS.into());
-    }
-    view.source.as_ref().ok_or(STRESS_PRESET)?;
-    view.model.as_ref().ok_or("the robot has not loaded")?;
-    Ok(())
-}
-/// The absolute target a jog action asks for (file validation happens in `check_jog`).
-fn jog_target(run: &RunController, joint: &str, delta: f64) -> Result<f64, String> {
-    if let Some(r) = run.recorded() {
-        // Named before the joint lookup, as check_jog would.
-        return Err(r.refusal(&format!("servo-target jog of `{joint}`")));
-    }
-    let servo = crate::robot::run::servo(run.model(), joint)?;
-    Ok(run.requested_target(&servo) + delta)
-}
-/// Why a control is unavailable now for a planar (v2) file: its run, joint
-/// targets, speed, contacts and reload; every action without a v2 meaning is
-/// refused naming it (`robot_planar`'s refusals).
-fn check_planar(view: &RobotView, p: &PlanarView, action: &RobotAction) -> Result<(), String> {
-    match action {
-        RobotAction::Run { action } => {
-            if let Some(refused) = super::hardware::mirror::refuse_run(*action, view.mirror.is_some()) {
-                return Err(refused);
-            }
-            p.run.check(*action)
-        }
-        RobotAction::Jog { joint, delta } => p.run.check_joint(joint, *delta).map(|_| ()),
-        RobotAction::JogTo { joint, target } => p.run.check_joint(joint, *target).map(|_| ()),
-        RobotAction::SelectJoint { index } => match p.joint_names().len() {
-            n if *index < n => Ok(()),
-            n => Err(format!("joint index {index} is out of range: this planar v2 file simulates {n} joint(s)")),
-        },
-        RobotAction::Speed { speed } => p.run.check_speed(*speed).map(|_| ()),
-        RobotAction::Reload { .. } => view.source.as_ref().ok_or("a preset is not reloaded; reload is for --robot FILE")?.check_reload(),
-        RobotAction::Overlay { joints, deflections, stress, .. } => {
-            // Switching an overlay on that a planar file cannot draw is refused by name; off is a no-op.
-            if *joints == Some(true) {
-                return Err(planar::JOINT_FRAMES.into());
-            }
-            if *deflections == Some(true) {
-                return Err(planar::DEFLECTIONS.into());
-            }
-            if *stress == Some(true) {
-                return Err(planar::STRESS.into());
-            }
-            Ok(())
-        }
-        RobotAction::Motion { .. } => Err(planar::MOTION.into()),
-        RobotAction::Drive { .. } => Err(PLANAR_DRIVE.into()),
-        RobotAction::SaveRecording { .. } => Err(planar::SAVE_RECORDING.into()),
-        RobotAction::Replay { .. } | RobotAction::CancelReplay | RobotAction::RefreshRecordings => Err(planar::REPLAY.into()),
-        RobotAction::Gait { .. } => Err(planar::GAIT.into()),
-        RobotAction::Recorded { .. } => Err(planar::RECORDED.into()),
-        RobotAction::ToggleGraphs => Err(planar::GRAPHS.into()),
-        _ => Ok(()),
-    }
-}
-/// Why a control is unavailable now (`Ok` when enabled).
-pub(super) fn check(view: &RobotView, action: &RobotAction) -> Result<(), String> {
-    if let Some(p) = &view.planar {
-        return check_planar(view, p, action);
-    }
-    match action {
-        RobotAction::SelectJoint { .. } => Err("joint selection (←/→) is for a planar v2 file; select a link to jog its joints".into()),
-        RobotAction::Run { action } => {
-            if let Some(refused) = super::hardware::mirror::refuse_run(*action, view.mirror.is_some()) {
-                return Err(refused);
-            }
-            view.run.as_ref().ok_or("the robot has not loaded")?.check(*action)
-        }
-        RobotAction::Jog { joint, delta } => {
-            let run = view.run.as_ref().ok_or("the robot has not loaded")?;
-            run.check_jog(joint, jog_target(run, joint, *delta)?).map(|_| ())
-        }
-        RobotAction::JogTo { joint, target } => view.run.as_ref().ok_or("the robot has not loaded")?.check_jog(joint, *target).map(|_| ()),
-        RobotAction::Motion { request } => view.run.as_ref().ok_or("the robot has not loaded")?.check_motion_request(request),
-        RobotAction::Drive { request } => {
-            let run = view.run.as_ref().ok_or("the robot has not loaded")?;
-            drive_request(run, request)?;
-            run.check_drive()
-        }
-        RobotAction::SaveRecording { .. } => view.run.as_ref().ok_or("the robot has not loaded")?.check_save().map(|_| ()),
-        RobotAction::Replay { .. } => view.run.as_ref().ok_or("the robot has not loaded")?.check_replay().map(|_| ()),
-        RobotAction::CancelReplay => view.run.as_ref().ok_or("the robot has not loaded")?.check_cancel(),
-        RobotAction::Gait { action } => view.run.as_ref().ok_or("the robot has not loaded")?.check_gait(action),
-        RobotAction::Speed { speed } => view.run.as_ref().ok_or("the robot has not loaded")?.check_speed(*speed).map(|_| ()),
-        RobotAction::Recorded { action } => view.run.as_ref().ok_or("the robot has not loaded")?.check_recorded(action),
-        RobotAction::Reload { .. } => view.source.as_ref().ok_or("a preset is not reloaded; reload is for --robot FILE")?.check_reload(),
-        RobotAction::Overlay { contacts, joints, deflections, stress } => {
-            if contacts.is_some() || joints.is_some() || deflections.is_some() {
-                view.run.as_ref().ok_or("the robot has not loaded")?.check_overlays()?;
-            }
-            if stress.is_some() {
-                check_stress(view)?;
-            }
-            Ok(())
-        }
-        _ => Ok(()),
-    }
-}
 /// Thread acts need the thread state, which only [`apply`] holds.
 const THREADS_IN_APPLY: &str = "comment thread actions are applied by robot mode's apply system (threads::handle)";
 /// The planar view, for a handler that `check_planar` already accepted.
@@ -277,15 +169,22 @@ fn dispatch_planar(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Sele
             view.scroll_to = Some(0.0);
         }
         RobotAction::ScrollInspector { delta } => view.scroll_to = Some((view.scroll + delta).clamp(0.0, view.scroll_max)),
+        RobotAction::View { display_hz, .. } => {
+            if let Some(hz) = display_hz {
+                view.display_hz = hz;
+            }
+        }
+        RobotAction::History { .. } | RobotAction::Pick { .. } => return Err("refused for a planar v2 file".into()),
+        RobotAction::Leaderboard { .. } | RobotAction::Video { .. } => unreachable!("answered by `apply`"),
         RobotAction::Fit => {
             // Frame the latest outlines again (front view), as an open does.
             planar(view)?.frame_camera = Some(true);
             orbit.home = true;
         }
         // Refused by `check_planar` (named); listed so a new action is not silently accepted.
-        RobotAction::Motion { .. } | RobotAction::Drive { .. } | RobotAction::SaveRecording { .. } | RobotAction::Replay { .. } | RobotAction::CancelReplay | RobotAction::RefreshRecordings
+        RobotAction::Motion { .. } | RobotAction::Inputs { .. } | RobotAction::Drive { .. } | RobotAction::SaveRecording { .. } | RobotAction::Replay { .. } | RobotAction::CancelReplay | RobotAction::RefreshRecordings
         | RobotAction::Gait { .. } | RobotAction::Recorded { .. } | RobotAction::ToggleGraphs => return Err("refused for a planar v2 file".into()),
-        RobotAction::State | RobotAction::RobotState | RobotAction::Presets | RobotAction::OpenPreset { .. } | RobotAction::Controls | RobotAction::Activate { .. } | RobotAction::Camera { .. } => unreachable!("answered by `handle`"),
+        RobotAction::State | RobotAction::RobotState | RobotAction::Presets | RobotAction::Guide { .. } | RobotAction::OpenPreset { .. } | RobotAction::Controls | RobotAction::Activate { .. } | RobotAction::Camera { .. } => unreachable!("answered by `handle`"),
         RobotAction::Threads { .. } => return Err(THREADS_IN_APPLY.into()),
     }
     Ok(())
@@ -299,6 +198,10 @@ fn dispatch(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, 
     if let RobotAction::Motion { request } = action {
         // Validated (and a refusal recorded) inside the one motion handler.
         return view.run.as_mut().ok_or("the robot has not loaded")?.motion(request);
+    }
+    if let RobotAction::Inputs { values } = &action {
+        // Validated (and a refusal recorded) inside the one input handler.
+        return view.run.as_mut().ok_or("the robot has not loaded")?.set_inputs_named(values);
     }
     if let RobotAction::SaveRecording { path, note } = action {
         // Validated (and a refusal recorded) inside the one save handler.
@@ -317,8 +220,8 @@ fn dispatch(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, 
     }
     check(view, &action)?;
     match action {
-        RobotAction::Motion { .. } | RobotAction::SaveRecording { .. } | RobotAction::Drive { .. } => unreachable!("handled above"),
-        RobotAction::State | RobotAction::RobotState | RobotAction::Presets | RobotAction::OpenPreset { .. } | RobotAction::Controls | RobotAction::Activate { .. } | RobotAction::Camera { .. } => unreachable!("answered by `handle`"),
+        RobotAction::Motion { .. } | RobotAction::Inputs { .. } | RobotAction::SaveRecording { .. } | RobotAction::Drive { .. } => unreachable!("handled above"),
+        RobotAction::State | RobotAction::RobotState | RobotAction::Presets | RobotAction::Guide { .. } | RobotAction::OpenPreset { .. } | RobotAction::Controls | RobotAction::Activate { .. } | RobotAction::Camera { .. } => unreachable!("answered by `handle`"),
         RobotAction::Threads { .. } => return Err(THREADS_IN_APPLY.into()),
         RobotAction::Replay { file, path } => {
             view.run.as_mut().ok_or("the robot has not loaded")?.replay(file.as_deref(), path.as_deref())?;
@@ -349,8 +252,41 @@ fn dispatch(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, 
         }
         RobotAction::ScrollInspector { delta } => view.scroll_to = Some((view.scroll + delta).clamp(0.0, view.scroll_max)),
         // The bounds at 3.2 × extent from the current heading, focus on their
-        // centre (`camera::place`; see the variant's doc).
-        RobotAction::Fit => orbit.home = true,
+        // centre (`camera::place`; see the variant's doc); after a Fit selected, the whole robot's again.
+        RobotAction::Fit => {
+            if let Some((lo, hi)) = view.bounds {
+                orbit.extent = ((hi - lo).length() / 2.0).max(0.02);
+                orbit.centre = (lo + hi) / 2.0;
+            }
+            orbit.home = true;
+        }
+        RobotAction::Leaderboard { .. } | RobotAction::Video { .. } => unreachable!("answered by `apply`"),
+        RobotAction::History { t } => {
+            view.run.as_mut().ok_or("the robot has not loaded")?.review(t)?;
+            view.pose_dirty = true;
+        }
+        RobotAction::Pick { channel, on } => {
+            if on {
+                view.picks.push(channel);
+            } else {
+                view.picks.retain(|p| *p != channel);
+            }
+        }
+        RobotAction::View { fit_selected, follow, display_hz } => {
+            if fit_selected {
+                picked::link(selection, registry).ok_or("Fit selected: select a link first (the list or the 3D view)")?;
+                view.fit_selected = true;
+            }
+            if let Some(on) = follow {
+                if on && view_tools::follow_target(view, picked::link(selection, registry)).is_none() {
+                    return Err("Follow robot needs a link to follow: this robot declares no follow_link, so select one".into());
+                }
+                view.follow = on;
+            }
+            if let Some(hz) = display_hz {
+                view.display_hz = hz;
+            }
+        }
         RobotAction::ToggleGraphs => view.graphs_visible = !view.graphs_visible,
         RobotAction::Speed { speed } => view.run.as_mut().ok_or("the robot has not loaded")?.speed(speed)?,
         RobotAction::Recorded { action } => view.run.as_mut().ok_or("the robot has not loaded")?.recorded_act(action)?,
@@ -383,168 +319,6 @@ fn dispatch(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, 
     }
     Ok(())
 }
-/// The `system_ui` controls: (id, label, action), the table `Activate` resolves ids in.
-/// `link`: the selected link (`picked::link`), whose joints get jog controls.
-pub(super) fn controls(view: &RobotView, link: Option<usize>) -> Vec<(String, String, RobotAction)> {
-    if let Some(p) = &view.planar {
-        return planar_controls(view, p);
-    }
-    let mut out: Vec<(String, String, RobotAction)> = view
-        .model
-        .iter()
-        .flat_map(|m| m.links.iter().enumerate())
-        .map(|(index, l)| (format!("link:{index}"), l.name.clone(), RobotAction::SelectLink { index, name: l.name.clone() }))
-        .collect();
-    if view.panels_ready {
-        out.push(("clear_selection".into(), "Clear selection".into(), RobotAction::ClearSelection));
-        for section in Section::ALL {
-            out.push((format!("section:{}", section.label().to_lowercase()), section.label().into(), RobotAction::ShowSection { section }));
-        }
-        out.push(("inspector:scroll_down".into(), "Scroll inspector down".into(), RobotAction::ScrollInspector { delta: 400.0 }));
-        out.push(("inspector:scroll_up".into(), "Scroll inspector up".into(), RobotAction::ScrollInspector { delta: -400.0 }));
-        out.push(("fit".into(), "Fit".into(), RobotAction::Fit));
-        if view.source.is_some() {
-            out.push(("robot:reload".into(), "Reload file".into(), RobotAction::Reload { trigger: ReloadTrigger::Manual }));
-        }
-        out.push(("graphs:toggle".into(), (if view.graphs_visible { "Hide graphs (G)" } else { "Show graphs (G)" }).into(), RobotAction::ToggleGraphs));
-        for (kind, name, key) in OVERLAYS {
-            let key = format!("{key:?}").trim_start_matches("Key").to_string();
-            out.push((format!("overlay:{kind}"), format!("{} {name} overlay ({key})", if overlay_on(view, kind) { "Hide" } else { "Show" }), overlay_toggle(view, kind)));
-        }
-        for action in RunAction::ALL {
-            out.push((format!("run:{}", action.name()), action.label().into(), RobotAction::Run { action }));
-        }
-        out.push(("run:speed_down".into(), "Run speed down (−)".into(), RobotAction::Speed { speed: SpeedRequest::Down }));
-        out.push(("run:speed_up".into(), "Run speed up (=/+)".into(), RobotAction::Speed { speed: SpeedRequest::Up }));
-        for scale in SPEED_SCALES {
-            out.push((format!("run:speed:{scale}"), format!("Run speed ×{scale}"), RobotAction::Speed { speed: SpeedRequest::Set { scale } }));
-        }
-        if view.run.as_ref().is_some_and(|r| r.playback().is_some()) {
-            for (id, label, action) in recorded_controls() {
-                out.push((id, label, RobotAction::Recorded { action }));
-            }
-        }
-        for (joint, step) in jog_joints(view, link) {
-            let unit = if step == JOG_STEP_M { "m" } else { "rad" };
-            out.push((format!("jog:{joint}:-"), format!("Jog {joint} servo target −{step} {unit}"), RobotAction::Jog { joint: joint.clone(), delta: -step }));
-            out.push((format!("jog:{joint}:+"), format!("Jog {joint} servo target +{step} {unit}"), RobotAction::Jog { joint, delta: step }));
-        }
-        let controlled = view.run.as_ref().and_then(|r| r.controlled());
-        if let Some(c) = controlled {
-            out.extend(drive_controls(&c.controlled.profile, c.controlled.resolved.deadman.timeout_s));
-        }
-        if view.preset.is_some() {
-            for (id, label, request) in motion_buttons() {
-                out.push((id.into(), label.into(), RobotAction::Motion { request }));
-            }
-        }
-        // A preset's session and a controlled run's drive Session both record
-        // and replay (the same handlers as REST robot_save_recording / robot_replay).
-        if view.preset.is_some() || controlled.is_some() {
-            out.push(("recording:save".into(), "Save recording".into(), RobotAction::SaveRecording { path: None, note: None }));
-            if let Some(r) = view.run.as_ref() {
-                for l in r.recordings() {
-                    out.push((format!("replay:{}", l.file), format!("Replay {}", l.file), RobotAction::Replay { file: Some(l.file.clone()), path: None }));
-                }
-            }
-            out.push(("replay:cancel".into(), "Cancel replay".into(), RobotAction::CancelReplay));
-            out.push(("replay:refresh".into(), "Refresh recordings".into(), RobotAction::RefreshRecordings));
-        }
-        if view.preset.is_some() {
-            for (id, label, action) in gait_controls(view) {
-                out.push((id, label, RobotAction::Gait { action }));
-            }
-        }
-    }
-    out
-}
-/// A controlled robot's `system_ui` drive controls: forward, back and the
-/// two turns at full axis for one request (momentary: the deadman stops it
-/// `timeout_s` later), stop, and each of the profile's named actions.
-fn drive_controls(profile: &sim_domain_control::drive::profile::DriveProfile, timeout_s: f64) -> Vec<(String, String, RobotAction)> {
-    let axes = |forward: f64, yaw: f64| RobotAction::Drive { request: DriveRequest::Axes { forward, lateral: 0.0, yaw } };
-    let momentary = format!("(momentary, deadman {timeout_s} s)");
-    let mut out = vec![
-        ("drive:forward".to_string(), format!("Drive forward {momentary}"), axes(1.0, 0.0)),
-        ("drive:back".to_string(), format!("Drive back {momentary}"), axes(-1.0, 0.0)),
-        ("drive:left".to_string(), format!("Turn left {momentary}"), axes(0.0, 1.0)),
-        ("drive:right".to_string(), format!("Turn right {momentary}"), axes(0.0, -1.0)),
-        ("drive:stop".to_string(), "Stop driving".to_string(), RobotAction::Drive { request: DriveRequest::Stop }),
-    ];
-    for a in &profile.actions {
-        out.push((format!("drive:action:{}", a.name), format!("Drive action {}", a.name), RobotAction::Drive { request: DriveRequest::Action { name: a.name.clone() } }));
-    }
-    out
-}
-/// The `system_ui` controls of a planar (v2) file: bodies, sections, view,
-/// reload, run, speed, joint selection and target moves (ids by built joint
-/// index), the contacts overlay, and the controls it shows but cannot use
-/// (graphs, joint frames, deflections, stress), listed disabled with the reason.
-fn planar_controls(view: &RobotView, p: &PlanarView) -> Vec<(String, String, RobotAction)> {
-    let mut out: Vec<(String, String, RobotAction)> =
-        p.loaded.model.bodies.iter().enumerate().map(|(index, b)| (format!("link:{index}"), b.name.clone(), RobotAction::SelectLink { index, name: b.name.clone() })).collect();
-    if !view.panels_ready {
-        return out;
-    }
-    out.push(("clear_selection".into(), "Clear selection".into(), RobotAction::ClearSelection));
-    for section in Section::ALL {
-        out.push((format!("section:{}", section.label().to_lowercase()), section.label().into(), RobotAction::ShowSection { section }));
-    }
-    out.push(("inspector:scroll_down".into(), "Scroll inspector down".into(), RobotAction::ScrollInspector { delta: 400.0 }));
-    out.push(("inspector:scroll_up".into(), "Scroll inspector up".into(), RobotAction::ScrollInspector { delta: -400.0 }));
-    out.push(("fit".into(), "Fit".into(), RobotAction::Fit));
-    if view.source.is_some() {
-        out.push(("robot:reload".into(), "Reload file".into(), RobotAction::Reload { trigger: ReloadTrigger::Manual }));
-    }
-    out.push(("graphs:toggle".into(), "Show graphs (G)".into(), RobotAction::ToggleGraphs));
-    for (kind, name, key) in OVERLAYS {
-        let key = format!("{key:?}").trim_start_matches("Key").to_string();
-        out.push((format!("overlay:{kind}"), format!("{} {name} overlay ({key})", if overlay_on(view, kind) { "Hide" } else { "Show" }), overlay_toggle(view, kind)));
-    }
-    for action in RunAction::ALL {
-        out.push((format!("run:{}", action.name()), action.label().into(), RobotAction::Run { action }));
-    }
-    out.push(("run:speed_down".into(), "Run speed down (−)".into(), RobotAction::Speed { speed: SpeedRequest::Down }));
-    out.push(("run:speed_up".into(), "Run speed up (=/+)".into(), RobotAction::Speed { speed: SpeedRequest::Up }));
-    for scale in SPEED_SCALES {
-        out.push((format!("run:speed:{scale}"), format!("Run speed ×{scale}"), RobotAction::Speed { speed: SpeedRequest::Set { scale } }));
-    }
-    for (index, joint) in p.joint_names().iter().enumerate() {
-        out.push((format!("joint:{index}"), format!("Select joint {joint} (←/→)"), RobotAction::SelectJoint { index }));
-        out.push((format!("jog:{index}:-"), format!("Move {joint} target −{JOG_STEP_RAD} rad"), RobotAction::Jog { joint: joint.clone(), delta: -JOG_STEP_RAD }));
-        out.push((format!("jog:{index}:+"), format!("Move {joint} target +{JOG_STEP_RAD} rad"), RobotAction::Jog { joint: joint.clone(), delta: JOG_STEP_RAD }));
-    }
-    out
-}
-/// The gait preview controls (system_ui id, label, action), all through `RobotAction::Gait`
-/// as the inspector's Gait preview buttons and REST `robot_gait`: one open per offered
-/// tracked report, then the transport. Seek steps are relative to the latest pose's gait
-/// time, resolved when listed or clicked.
-fn gait_controls(view: &RobotView) -> Vec<(String, String, GaitAction)> {
-    let Some(g) = view.run.as_ref().and_then(|r| r.gait_preview()) else { return Vec::new() };
-    let mut out: Vec<(String, String, GaitAction)> = g.reports().iter().map(|r| (format!("gait:open:{}", r.name), format!("Open gait {}", r.name), GaitAction::Open { source: GaitSource::Report(r.name.clone()) })).collect();
-    out.push(("gait:play".into(), "Play gait preview".into(), GaitAction::Play));
-    out.push(("gait:pause".into(), "Pause gait preview".into(), GaitAction::Pause));
-    out.push(("gait:stop".into(), "Stop gait preview (live frame again)".into(), GaitAction::Stop));
-    for (step, id, label) in GAIT_SEEK {
-        out.push((format!("gait:seek:{id}"), label.into(), gait_seek(view, step)));
-    }
-    for scale in GAIT_SCALES {
-        out.push((format!("gait:speed:{scale}"), format!("Gait speed ×{scale}"), GaitAction::Speed { scale }));
-    }
-    out.push(("gait:list".into(), "List gait reports again".into(), GaitAction::List));
-    out
-}
-/// The recorded timeline controls (system_ui id, label, action), all through
-/// `RobotAction::Recorded` as the inspector Recorded buttons and REST `robot_recorded`.
-fn recorded_controls() -> Vec<(String, String, RecordedAction)> {
-    let mut out: Vec<(String, String, RecordedAction)> = RECORDED_TRANSPORT.iter().map(|(id, label, a)| (format!("recorded:{id}"), label.to_string(), *a)).collect();
-    for scale in SPEED_SCALES {
-        out.push((format!("recorded:speed:{scale}"), format!("Recorded playback speed ×{scale}"), RecordedAction::Speed { scale }));
-    }
-    out
-}
-
 /// The one handler of robot mode's actions: REST reads and the view's own
 /// requests here, control actions through `dispatch` (validated by
 /// `check`). `Ok(None)`: the answer is `robot_state`. The selected link is
@@ -554,10 +328,21 @@ fn handle(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, re
     match action {
         RobotAction::State => Ok(Some(json!({"robot_state": view.state_json(link)}))),
         RobotAction::RobotState => Ok(None),
+        RobotAction::Guide { topic } => crate::robot::guide::guide(topic.as_deref()).map(Some),
         RobotAction::Presets => {
             let (file, root) = (view.presets.clone()?, view.root.clone()?);
             let presets = crate::robot::preset::list(&file)?;
-            let rows: Vec<Value> = presets.iter().map(|p| p.discovery(&root)).collect();
+            let mut rows: Vec<Value> = presets.iter().map(|p| p.discovery(&root)).collect();
+            // The leaderboard's tested recipes, as the browser packages them (tested-<id>, mode embedded).
+            if let Ok(catalog) = crate::workspace::path(sim_runtime::controller_leaderboard::CATALOG).and_then(|p| sim_runtime::controller_leaderboard::read(&p)) {
+                for e in &catalog.entries {
+                    let p = sim_runtime::controller_leaderboard::tested_preset(e);
+                    let preset = crate::robot::preset::Preset { id: p["id"].as_str().unwrap_or("").into(), mode: "embedded".into(), label: p["label"].as_str().unwrap_or("").into(), scene: p["scene"].as_str().map(Into::into), config: p["config"].as_str().map(Into::into), task: p["task"].as_str().map(Into::into), capture: None, entry: p };
+                    let mut row = preset.discovery(&root);
+                    row["leaderboard_entry"] = e["id"].clone();
+                    rows.push(row);
+                }
+            }
             Ok(Some(json!({"presets_file": file, "root": root, "workspace": crate::workspace::json(), "count": rows.len(), "presets": rows,
                 "current": view.preset.as_ref().map(|p| &p.id)})))
         }
@@ -565,6 +350,9 @@ fn handle(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, re
             // Refused here (naming the id) before anything is replaced; the old run thread stops when its controller drops.
             let mut next = RobotView::open_preset(&view.presets.clone()?, id)?;
             next.ui_revision = view.ui_revision + 1;
+            // Pinned picks and the display cap carry over to the next robot.
+            next.picks = view.picks.clone();
+            next.display_hz = view.display_hz;
             // The old view's run and playback threads are joined off the UI thread, as leave_robot does.
             crate::jobs::drop_off_thread(std::mem::replace(view, next), "the robot view");
             // The Robot document is now the preset; the old one's link goes with it.
@@ -640,6 +428,7 @@ pub(super) fn apply(
     closing: Option<Res<crate::app::close::CloseOwner>>,
     (mut threads, reveal, mut window): (ResMut<crate::robot::threads::RobotThreads>, Option<Res<crate::cad::threads::RevealThread>>, MessageWriter<Act<crate::app::switch::WindowAction>>),
     (mut drive_input, bindings, mut disarm, mut devices): (Option<ResMut<crate::drive_input::DriveInput>>, Option<Res<crate::drive_input::DriveBindings>>, MessageWriter<crate::drive_input::Disarm>, MessageReader<Act<crate::drive_input::DriveDevice>>),
+    (mut board, mut video): (ResMut<crate::robot::leaderboard::Leaderboard>, ResMut<crate::robot::video::VideoRecorder>),
 ) {
     // Read every frame this runs, before any return: a device request is for this frame only.
     let from_devices: Vec<Act<RobotAction>> = devices.read().filter_map(device_action).collect();
@@ -656,6 +445,45 @@ pub(super) fn apply(
     // Whether the call being handled is a device request (no `Disarm` echo).
     let device = std::cell::Cell::new(false);
     let mut on_action = handler(|action, call| {
+        // Record video: the recorder's own state.
+        if let RobotAction::Video { on } = action {
+            let want = on.unwrap_or(!video.recording());
+            let result = match (want, video.recording()) {
+                (true, false) => crate::robot::video::target(&view).and_then(|p| video.start(p)),
+                (false, true) => video.stop(),
+                (true, true) => Err("already recording video".to_string()),
+                (false, false) => Err("not recording video".to_string()),
+            };
+            if let (Err(e), Origin::Ui) = (&result, call.origin) {
+                view.run_message = Some(e.clone());
+            }
+            return match call.origin {
+                Origin::Rest(_) => Outcome::Done(result.map(|()| video.json())),
+                _ => Outcome::Done(Ok(Value::Null)),
+            };
+        }
+        // The leaderboard: its own state; a run or replay opens a tested recipe in place of this robot.
+        if let RobotAction::Leaderboard { op } = action {
+            let result = crate::robot::leaderboard::handle(op, &mut board, &view).map(|(answer, next)| {
+                if let Some(mut next) = next {
+                    next.ui_revision = view.ui_revision + 1;
+                    next.picks = view.picks.clone();
+                    next.display_hz = view.display_hz;
+                    let id = next.preset.as_ref().map(|p| p.id.clone()).unwrap_or_default();
+                    crate::jobs::drop_off_thread(std::mem::replace(&mut *view, next), "the robot view");
+                    picked::opened_preset(&mut selection, &mut registry, &id);
+                }
+                answer
+            });
+            if let Err(e) = &result {
+                board.notice = Some(Err(e.clone()));
+                board.revision += 1;
+            }
+            return match call.origin {
+                Origin::Rest(_) => Outcome::Done(result),
+                _ => Outcome::Done(Ok(Value::Null)),
+            };
+        }
         // RoboCAD's comment threads: their own handler, outcome and REST wait.
         if let RobotAction::Threads { act } = action {
             return crate::robot::threads::handle(act, call, &mut threads, &view, &registry, &mut selection, reveal.is_some(), &mut window);
@@ -741,7 +569,7 @@ pub(super) fn apply(
             Origin::Rest(_) => Outcome::Done(result.map(|answer| {
                 // `robot_state.cad_threads`, and the device layer's `bindings` and
                 // `drive_input` (`with_drive_input`): every answer that carries the state carries them.
-                let cad_threads = || crate::robot::threads::state_json(&view, &registry, &threads);
+                let cad_threads = || crate::robot::threads::state_json(&view, &threads);
                 let devices = |state: Value| view.with_drive_input(state, bindings.as_deref(), drive_input.as_deref());
                 match (answer, action) {
                     (None, _) => devices(view.state_with_threads(picked::link(&selection, &registry), cad_threads())),
@@ -852,7 +680,7 @@ const SYNC_REMOTE_REFUSAL: &str = "live motor sync is streaming this run's targe
 /// each ends the sync session (`hardware::sync`'s stop rules).
 fn moves_synced_motors(view: &RobotView, link: Option<usize>, action: &RobotAction) -> bool {
     match action {
-        RobotAction::Motion { .. } | RobotAction::Jog { .. } | RobotAction::JogTo { .. } | RobotAction::Speed { .. } => true,
+        RobotAction::Motion { .. } | RobotAction::Inputs { .. } | RobotAction::Jog { .. } | RobotAction::JogTo { .. } | RobotAction::Speed { .. } => true,
         // Driving moves the run; a stop or a profile action (stop | halt) does not.
         RobotAction::Drive { request } => matches!(request, DriveRequest::Axes { .. }),
         RobotAction::Run { action } => matches!(action, RunAction::Start | RunAction::Step),
@@ -861,64 +689,18 @@ fn moves_synced_motors(view: &RobotView, link: Option<usize>, action: &RobotActi
     }
 }
 
+mod checks;
 mod commands;
 mod keys;
+mod listing;
+mod rest_form;
 #[cfg(test)]
 mod tests;
 
+use checks::*;
+pub(crate) use rest_form::wire;
+pub(super) use checks::{check, check_stress, overlay_toggle};
+pub(super) use listing::{controls, input_controls};
+pub(super) use rest_form::publish;
+
 pub(super) use keys::{buttons, graph_key, motion_keys, overlay_keys, pick_link, planar_keys, speed_keys};
-
-/// Present: `/v1/robot_state` (with `cad_threads`), at most every 100 ms.
-#[allow(clippy::too_many_arguments)]
-pub(super) fn publish(
-    rest: Option<ResMut<crate::rest::Rest>>,
-    view: Res<RobotView>,
-    selection: Res<Selection>,
-    registry: Res<DocumentRegistry>,
-    threads: Res<crate::robot::threads::RobotThreads>,
-    bindings: Option<Res<crate::drive_input::DriveBindings>>,
-    drive_input: Option<Res<crate::drive_input::DriveInput>>,
-) {
-    let Some(mut rest) = rest else { return };
-    if rest.0.snapshot_due() {
-        let cad_threads = crate::robot::threads::state_json(&view, &registry, &threads);
-        let state = view.state_with_threads(picked::link(&selection, &registry), cad_threads);
-        rest.0.publish("robot_state", view.with_drive_input(state, bindings.as_deref(), drive_input.as_deref()));
-    }
-}
-
-/// The REST form of robot mode's commands: `RobotAction` deserializes
-/// through it, so each command keeps its JSON shape (fields, tags, unknown
-/// fields refused) and its argument errors. It carries no intent of its own.
-pub(crate) mod wire {
-    use serde::Deserialize;
-    #[derive(Deserialize)]
-    #[serde(tag = "operation", rename_all = "snake_case", deny_unknown_fields)]
-    pub(crate) enum Ui {
-        Controls,
-        Activate { id: String, ui_revision: u64 },
-    }
-    #[derive(Deserialize)]
-    #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
-    pub(crate) enum Command {
-        State,
-        RobotState,
-        SystemUi { action: Ui },
-        Camera { focus: [f32; 3], radius: f32, yaw: f32, pitch: f32 },
-        Fit,
-        RobotRun { action: String },
-        RobotJog { joint: String, target: Option<f64>, delta: Option<f64> },
-        RobotPresets,
-        RobotPreset { id: String },
-        RobotInput { channels: Option<std::collections::BTreeMap<String, f64>>, key: Option<String> },
-        RobotDrive { forward: Option<f64>, lateral: Option<f64>, yaw: Option<f64>, action: Option<String>, stop: Option<bool> },
-        RobotSaveRecording { path: Option<String>, note: Option<String> },
-        RobotReplay { file: Option<String>, path: Option<String>, action: Option<String> },
-        RobotGait { action: Option<String>, report: Option<String>, path: Option<String>, t: Option<f64>, scale: Option<f64> },
-        RobotReload,
-        RobotOverlay { contacts: Option<bool>, joints: Option<bool>, deflections: Option<bool>, stress: Option<bool> },
-        RobotSpeed { action: Option<String>, scale: Option<f64> },
-        RobotRecorded { action: String, t: Option<f64>, scale: Option<f64>, delta: Option<i64> },
-        RobotThreads { op: Option<String>, thread: Option<String>, comment: Option<String>, body: Option<String>, author: Option<String>, resolved: Option<bool> },
-    }
-}

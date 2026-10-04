@@ -107,8 +107,14 @@ pub(super) fn graph_dock(
     mut handles: Local<Vec<Handle<Image>>>,
     mut drawn: Local<Option<(String, f64)>>,
     mut redraw: MessageWriter<bevy::window::RequestRedraw>,
+    picker: Query<&ScrollPosition, With<PickerScroll>>,
+    mut picker_offset: Local<f32>,
 ) {
     let (entity, mut node) = dock.into_inner();
+    // The channel list keeps its scroll offset across the dock's rebuilds.
+    if let Some(p) = picker.iter().next() {
+        *picker_offset = p.0.y;
+    }
     let display = if view.graphs_visible { Display::Flex } else { Display::None };
     if node.display != display {
         node.display = display;
@@ -120,7 +126,9 @@ pub(super) fn graph_dock(
     let h = run.graphs();
     let gait = run.gait_preview().is_some_and(|g| g.loaded().is_some());
     let link = picked::link(&selection, &registry);
-    let stamp = format!("{:?}|{}|{}|{}|{:?}|{:?}|{gait}", link, h.generation(), h.frames(), run.graphs_mode(), h.window(), run.frame().map(|f| (f.time, f.steps)));
+    let links: Vec<String> = view.model.as_ref().map(|m| m.links.iter().map(|l| l.name.clone()).collect()).unwrap_or_default();
+    let candidates = run.frame().map(|f| crate::robot::graphs::candidates(f, run.preset_drive().map(|d| &**d), &links)).unwrap_or_default();
+    let stamp = format!("{:?}|{}|{}|{}|{:?}|{:?}|{gait}|{:?}|{:?}|{}", link, h.generation(), h.frames(), run.graphs_mode(), h.window(), run.frame().map(|f| (f.time, f.steps)), view.picks, run.review_time(), candidates.len());
     let now = time.elapsed_secs_f64();
     match drawn.as_ref() {
         Some((s, _)) if *s == stamp => return,
@@ -172,14 +180,22 @@ pub(super) fn graph_dock(
                 let bottom = commands.spawn(k.chart_label(with_unit(range.0), Corner::BottomLeft)).id();
                 let x = commands.spawn(k.chart_label(format!("{:.2} – {:.2} s sim time", window.0, window.1), Corner::BottomRight)).id();
                 commands.entity(plot).add_children(&[top, bottom, x]);
+                // The review cursor (run::history): a line at the reviewed time.
+                if let Some(t) = run.review_time().filter(|t| window.1 > window.0 && *t >= window.0 && *t <= window.1) {
+                    let at = ((t - window.0) / (window.1 - window.0)) as f32;
+                    let line = commands.spawn((Node { position_type: PositionType::Absolute, left: Val::Percent(at * 100.0), top: Val::Px(0.0), bottom: Val::Px(0.0), width: Val::Px(2.0), ..default() }, BackgroundColor(WARN), Pickable::IGNORE)).id();
+                    commands.entity(plot).add_child(line);
+                }
             }
             commands.entity(card).add_child(plot);
             for (i, t) in c.traces.iter().enumerate() {
                 let [r, g, b] = crate::chart::COLORS[i % crate::chart::COLORS.len()];
-                let value = match (t.points.last(), &t.absent_reason) {
-                    (Some(p), _) => format!("{} {}", num(p[1]), t.unit),
-                    (None, Some(why)) => why.clone(),
-                    (None, None) => "–".into(),
+                let at_cursor = run.review_time().and_then(|time| crate::robot::graphs::History::value_at(&t.points, time));
+                let value = match (at_cursor, t.points.last(), &t.absent_reason) {
+                    (Some(v), _, _) => format!("{} {} at the cursor", num(v), t.unit),
+                    (None, Some(p), _) => format!("{} {}", num(p[1]), t.unit),
+                    (None, None, Some(why)) => why.clone(),
+                    (None, None, None) => "–".into(),
                 };
                 let source = if t.source.starts_with("request") { "request (held input in frame)" } else if t.source.starts_with(crate::robot::graphs::WORLD_FRAME) { crate::robot::graphs::WORLD_FRAME } else { t.source.split(" (").next().unwrap_or(&t.source) };
                 let color = Color::srgb_u8(r, g, b);
@@ -190,6 +206,41 @@ pub(super) fn graph_dock(
             }
         }
         commands.entity(entity).add_child(card);
+    }
+    // The channel picker (graphs::PICK_RULE): every number the latest frame carries, picked ones on.
+    if !candidates.is_empty() {
+        let column = commands.spawn(Node { flex_direction: FlexDirection::Column, width: Val::Px(210.0), flex_shrink: 0.0, row_gap: Val::Px(3.0), ..default() }).id();
+        let title = commands.spawn(k.text(format!("Channels · {} picked of {} (click to chart)", view.picks.len(), crate::robot::graphs::MAX_PICKS), size::DETAIL, SUBTLE, 0)).id();
+        let list = commands.spawn((k.scroll_area(Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), ..default() }, *picker_offset), PickerScroll)).id();
+        let mut chips = Vec::new();
+        for c in &candidates {
+            let on = view.picks.contains(&c.key);
+            let action = RobotAction::Pick { channel: c.key.clone(), on: !on };
+            let enabled = check(&view, &action).is_ok();
+            chips.push(commands.spawn(k.chip(&clip(&c.label, 30), action, on, enabled)).id());
+        }
+        commands.entity(list).add_children(&chips);
+        commands.entity(column).add_children(&[title, list]);
+        commands.entity(entity).add_child(column);
+    }
+}
+
+/// The graph dock's channel list (a kit scroll area, scrolled by [`picker_scroll`]).
+#[derive(Component)]
+pub(super) struct PickerScroll;
+
+/// The wheel over the channel list scrolls it (the kit scroll area does not read the wheel itself).
+pub(super) fn picker_scroll(mut wheel: MessageReader<MouseWheel>, windows: Query<&Window, With<bevy::window::PrimaryWindow>>, mut areas: Query<(&ComputedNode, &bevy::ui::UiGlobalTransform, &mut ScrollPosition), With<PickerScroll>>) {
+    let delta = wheel_delta(&mut wheel, crate::ui_kit::WHEEL_LINE);
+    if delta == 0.0 {
+        return;
+    }
+    let Some(p) = windows.single().ok().and_then(Window::physical_cursor_position) else { return };
+    for (node, at, mut position) in &mut areas {
+        if node.contains_point(*at, p) {
+            let max = ((node.content_size().y - node.size().y) * node.inverse_scale_factor()).max(0.0);
+            position.0.y = (position.0.y - delta).clamp(0.0, max);
+        }
     }
 }
 
@@ -238,6 +289,23 @@ pub(super) fn draw(view: Res<RobotView>, selection: Res<Selection>, registry: Re
                     overlay.line(p, p + vector(&c.force, run::FORCE_SCALE_M_PER_N), color);
                 }
             }
+            // A preset frame's contacts (the browser's force arrows): green against the ground, orange between links.
+            if let Some(contacts) = f.extra.as_deref().and_then(|x| x["contacts"].as_array()).filter(|_| flags.contacts && run.preset().is_some()) {
+                for c in contacts {
+                    let (Some(p), Some(force)) = (c["point_m"].as_array(), c["force_n"].as_array()) else { continue };
+                    let v = |a: &Vec<Value>| [a.first().and_then(Value::as_f64).unwrap_or(0.0), a.get(1).and_then(Value::as_f64).unwrap_or(0.0), a.get(2).and_then(Value::as_f64).unwrap_or(0.0)];
+                    let (p, force) = (v(p), v(force));
+                    let magnitude = (force[0] * force[0] + force[1] * force[1] + force[2] * force[2]).sqrt();
+                    if magnitude < 1e-7 {
+                        continue;
+                    }
+                    let length = (magnitude * inspector::PRESET_ARROW_M_PER_N).min(inspector::PRESET_ARROW_MAX_M);
+                    let color = if c["other"].is_null() { Color::srgb_u8(0x8c, 0xf1, 0xce) } else { Color::srgb_u8(0xff, 0xa7, 0x85) };
+                    let start = point(&p);
+                    let end = start + vector(&force, length / magnitude);
+                    overlay.arrow(start, end, color);
+                }
+            }
             if let Some(deflections) = f.overlays.deflections.as_ref().filter(|_| flags.deflections) {
                 for d in deflections {
                     let p = point(&d.point);
@@ -247,7 +315,11 @@ pub(super) fn draw(view: Res<RobotView>, selection: Res<Selection>, registry: Re
         }
     }
     let floor = model.world.floor_z as f32;
-    gizmos.grid(Isometry3d::new(Vec3::new(0.0, floor, 0.0), Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)), UVec2::splat(20), Vec2::splat(0.05), Color::srgba(0.45, 0.50, 0.58, 0.35));
+    // The browser's grid: max(0.3 m, 2.5 × the robot's extent, the preset's view_grid_size_m), cells of about 0.1 m (at least 30).
+    let extent = view.bounds.map_or(0.0, |(lo, hi)| (hi - lo).length());
+    let size = (0.3f32).max(extent * 2.5).max(view.grid_size_m().unwrap_or(0.0) as f32);
+    let cells = ((size / 0.1).round() as u32).max(30);
+    gizmos.grid(Isometry3d::new(Vec3::new(0.0, floor, 0.0), Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)), UVec2::splat(cells), Vec2::splat(size / cells as f32), Color::srgba(0.45, 0.50, 0.58, 0.35));
     if let Some(l) = link.and_then(|i| model.links.get(i)) {
         let com = Vec3::new(l.com[0] as f32, l.com[2] as f32, -l.com[1] as f32);
         gizmos.sphere(Isometry3d::from_translation(com), 0.006, ACCENT);

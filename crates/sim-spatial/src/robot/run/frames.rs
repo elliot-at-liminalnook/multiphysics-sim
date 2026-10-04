@@ -41,6 +41,13 @@ pub struct Frame {
     /// browser's hardware sync streams, viewer.js:428); None for `--robot
     /// FILE` and recorded frames.
     pub motor_targets: Option<MotorTargets>,
+    /// Preset frames: the runtime frame as published, without its poses
+    /// (`policy` observations and references, `learning`, `motion_progress`,
+    /// `environment_load`, `contacts`, `servo_targets_rad`,
+    /// `reference_targets_rad`, `joint_positions`, `telemetry`, `done`,
+    /// `error`, …): what the browser's readouts show (`viewer.js` showFrame).
+    /// Shared, never copied per reader. None for `--robot FILE` and recorded frames.
+    pub extra: Option<Arc<Value>>,
 }
 
 /// A live preset frame's motor targets by name: the session frame's
@@ -149,7 +156,7 @@ pub(super) fn frame(robot: &sim_runtime::physical::PhysicalRobot, generation: u6
         })
         .collect();
     let targets = robot.targets.lock().unwrap_or_else(|p| p.into_inner()).clone();
-    Frame { generation, time: robot.time(), steps, completed_steps: None, poses, velocities: Vec::new(), unmatched: Vec::new(), joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets, inputs: Vec::new(), overlays: overlays(robot, flags), motor_targets: None }
+    Frame { generation, time: robot.time(), steps, completed_steps: None, poses, velocities: Vec::new(), unmatched: Vec::new(), joint_names: robot.joint_names.clone(), joint_angles: robot.joint_angles(), targets, inputs: Vec::new(), overlays: overlays(robot, flags), motor_targets: None, extra: None }
 }
 
 /// A row-major 3×3 rotation (as frames and mirror poses publish it) as a unit quaternion.
@@ -187,7 +194,28 @@ pub(super) fn preset_frame(v: &Value, links: &[String], generation: u64, steps: 
     let raw = v.get("poses").and_then(Value::as_array).ok_or("session frame has no poses")?;
     let parsed = raw.iter().enumerate().map(|(k, pose)| CapturePose::deserialize(pose).map_err(|e| format!("session frame poses[{k}] ({}): {e}", pose.get("name").and_then(Value::as_str).unwrap_or("no name")))).collect::<Result<Vec<_>, _>>()?;
     let (poses, velocities, unmatched) = map_poses(&parsed, links);
-    Ok(Frame { generation, time: completed as f64 * step_s, steps, completed_steps: Some(completed), poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: inputs.to_vec(), overlays: Overlays::default(), motor_targets: motor_targets(v, names) })
+    Ok(Frame { generation, time: completed as f64 * step_s, steps, completed_steps: Some(completed), poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: inputs.to_vec(), overlays: Overlays::default(), motor_targets: motor_targets(v, names), extra: Some(Arc::new(extra(v))) })
+}
+
+/// The runtime frame without its poses (the frame's `extra`).
+fn extra(v: &Value) -> Value {
+    match v {
+        Value::Object(m) => Value::Object(m.iter().filter(|(k, _)| k.as_str() != "poses").map(|(k, x)| (k.clone(), x.clone())).collect()),
+        other => other.clone(),
+    }
+}
+
+/// A live preset's frame: the shared `Session`'s `EpisodeFrame` (the browser
+/// worker's `Simulation.frame()`), its poses mapped by [`map_poses`];
+/// `completed` is the periods stepped, `held` the held action.
+pub(super) fn live_frame(e: &sim_runtime::session::EpisodeFrame, links: &[String], generation: u64, steps: u64, completed: u64, held: &[f64]) -> Result<Frame, String> {
+    let v = serde_json::to_value(e).map_err(|e| format!("session frame: {e}"))?;
+    let raw = v.get("poses").and_then(Value::as_array).ok_or("session frame has no poses")?;
+    let parsed = raw.iter().enumerate().map(|(k, pose)| CapturePose::deserialize(pose).map_err(|e| format!("session frame poses[{k}]: {e}"))).collect::<Result<Vec<_>, _>>()?;
+    let (poses, velocities, unmatched) = map_poses(&parsed, links);
+    let mut x = extra(&v);
+    x["completed_steps"] = json!(completed);
+    Ok(Frame { generation, time: e.time_s, steps, completed_steps: Some(completed), poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: e.joint_positions.clone(), targets: Vec::new(), inputs: held.to_vec(), overlays: Overlays::default(), motor_targets: None, extra: Some(Arc::new(x)) })
 }
 
 /// The frame's `servo_targets_rad` (every entry a number) with the session's
@@ -209,7 +237,7 @@ pub(super) fn environment_names(env: &sim_runtime::environment::EmbeddedEnvironm
 /// `time` is the frame's recorded time_s and `steps` its index in the capture.
 pub fn recorded_frame(f: &CaptureFrame, links: &[String], generation: u64, index: u64) -> Frame {
     let (poses, velocities, unmatched) = map_poses(&f.poses, links);
-    Frame { generation, time: f.time_s, steps: index, completed_steps: None, poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: Vec::new(), overlays: Overlays::default(), motor_targets: None }
+    Frame { generation, time: f.time_s, steps: index, completed_steps: None, poses, velocities, unmatched, joint_names: Vec::new(), joint_angles: Vec::new(), targets: Vec::new(), inputs: Vec::new(), overlays: Overlays::default(), motor_targets: None, extra: None }
 }
 
 /// A frame's time, step count and link poses as JSON (the sidecar's final frame).

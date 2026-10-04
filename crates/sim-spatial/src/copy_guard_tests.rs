@@ -25,10 +25,11 @@
 //! and lifetimes, and tracks open parentheses to know whether a literal is
 //! inside a `spec(` or (in [`C_SPEC_FILES`]) `c(` call.
 
-/// The registries' description tables, skipped whole (their text answers
-/// REST callers; robot/actions/commands.rs also converts wire commands,
-/// whose errors go back to the REST caller only).
-const DESCRIPTION_FILES: [&str; 2] = ["cad/specs.rs", "robot/actions/commands.rs"];
+/// The registries' description tables and the modes' agent guides
+/// (`cad_guide`, `robot_guide`: answered only over REST), skipped whole
+/// (their text answers REST callers; robot/actions/commands.rs also converts
+/// wire commands, whose errors go back to the REST caller only).
+const DESCRIPTION_FILES: [&str; 4] = ["cad/specs.rs", "robot/actions/commands.rs", "cad/guide.rs", "robot/guide.rs"];
 
 /// (file under src/, snippet of the literal, reason).
 const ALLOWLIST: &[(&str, &str, &str)] = &[

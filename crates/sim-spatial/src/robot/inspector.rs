@@ -22,6 +22,10 @@ pub(super) fn panels(
         }
     }
     let heading = match &view.preset {
+        None if view.drive_preset.is_some() => {
+            let p = view.drive_preset.as_ref().expect("checked");
+            format!("Robot preset — {} ({})  ·  drive · {}  ·  files read-only", p.label, p.id, super::controls::DRIVE_CONTROLLER)
+        }
         Some(p) if p.is_recorded() => format!("Robot preset — {} ({})  ·  {}", p.label, p.id, crate::robot::preset::RECORDED_LABEL),
         Some(p) => format!("Robot preset — {} ({})  ·  files read-only", p.label, p.id),
         None if view.planar.is_some() => format!("Robot — {}  ·  {}  ·  file read-only", view.path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default(), planar::HEADER_LABEL),
@@ -111,6 +115,7 @@ pub(super) fn panels(
             planar::inspector_text(p, &view.section.label().to_lowercase(), link, &watch)
         }),
         Some(m) => match view.section {
+            Section::Run => readouts::text(&view),
             Section::Link => link_text(&view, m, link),
             Section::Joints => joints_text(&view, m, link),
             Section::Drives => drives_text(&view, m),
@@ -167,7 +172,7 @@ fn preset_text(view: &RobotView) -> String {
     if let Some(run) = view.run.as_ref().and_then(|r| r.preset()) {
         let f = view.run.as_ref().and_then(|r| r.frame());
         t += &format!("{} · seed {} · step {} s · chunk {} steps ({} s) · {} / {} steps\n",
-            run.kind(), run.seed, run.config.step_s, run.chunk_steps(), run.chunk_s(), f.and_then(|f| f.completed_steps).map_or("—".into(), |n| n.to_string()), run.config.steps);
+            run.kind(), run.seed, run.step_s(), run.chunk_steps(), run.chunk_s(), f.and_then(|f| f.completed_steps).map_or("—".into(), |n| n.to_string()), run.requested_steps());
         if let Some(f) = f.filter(|f| !f.unmatched.is_empty()) {
             t += &format!("frame links matching no loaded link: {}\n", f.unmatched.join(", "));
         }
@@ -263,6 +268,10 @@ pub(super) fn speed_panel(view: Res<RobotView>, mut buttons: Query<(&RobotAction
     }
 }
 
+/// A preset contact arrow's length per newton and its cap (the browser's ArrowHelper: `min(0.10, |f| × 0.004)`).
+pub(super) const PRESET_ARROW_M_PER_N: f64 = 0.004;
+pub(super) const PRESET_ARROW_MAX_M: f64 = 0.10;
+
 /// The overlay block: each button carries the flip of its current flag and
 /// shows on/off; the line under it gives the accepted frame's counts and the scales.
 pub(super) fn overlay_panel(
@@ -273,9 +282,11 @@ pub(super) fn overlay_panel(
 ) {
     let run = view.run.as_ref();
     let available = run.is_some_and(|r| r.check_overlays().is_ok());
+    // A preset's frames carry contacts (the browser's force arrows); the other run-thread overlays are FILE only.
+    let preset_contacts = run.is_some_and(|r| r.preset().is_some() && r.check_contacts().is_ok());
     for (b, l, mut action, mut look, mut node, children) in &mut buttons {
         // A planar file: only the contacts chip (chain tips) has a meaning; the others are hidden (their refusals are in system_ui and REST).
-        let available = if view.planar.is_some() { b.0 == "contacts" } else { available };
+        let available = if view.planar.is_some() { b.0 == "contacts" } else if b.0 == "contacts" && preset_contacts { true } else { available };
         let next = overlay_toggle(&view, b.0);
         if *action != next {
             *action = next;
@@ -303,6 +314,10 @@ pub(super) fn overlay_panel(
             let tips = p.run.frame().filter(|f| f.built).map_or("—".into(), |f| f.tips.len().to_string());
             format!("Overlays · planar v2: {tips} chain-tip contact points (red dots; C) · joint frames, deflections and stress need a v3 export")
         }),
+        Some(r) if r.preset().is_some() && r.check_contacts().is_ok() => {
+            let n = r.frame().and_then(|f| f.extra.as_deref()).and_then(|x| x["contacts"].as_array()).map(Vec::len);
+            format!("Overlays · preset frame: {} contacts (force arrows, at most {PRESET_ARROW_MAX_M} m, {PRESET_ARROW_M_PER_N} m/N; green on the ground, orange between links) · joint frames and deflections are --robot FILE overlays", n.map_or("—".into(), |n| n.to_string()))
+        }
         Some(r) => match r.check_overlays() {
             Err(_) => "Overlays (contacts, joint frames, deflections): not available for presets".into(),
             Ok(()) => match r.frame() {

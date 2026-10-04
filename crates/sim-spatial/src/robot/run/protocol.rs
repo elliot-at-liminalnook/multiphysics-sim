@@ -88,12 +88,22 @@ pub struct Drive {
     pub inputs: Vec<InputChannel>,
     pub motion: Option<Motion>,
     pub heartbeat: Option<MotionChannel>,
+    /// The session's metadata as the browser worker returns it at load
+    /// (`coordinate_names`, `joint_indices`, `policy_contract`, and an
+    /// environment's `environment_contract`): what its readouts read.
+    pub metadata: Value,
 }
 impl Drive {
     /// As the browser does on load: an invalid declaration fails the build, naming it.
-    pub(super) fn resolve(run: &PresetRun, policy_contract: &Value, inputs: &[InputChannel]) -> Result<Self, String> {
+    pub(super) fn resolve(run: &PresetRun, metadata: Value, inputs: &[InputChannel]) -> Result<Self, String> {
         let entry = &run.preset.entry;
-        Ok(Self { inputs: inputs.to_vec(), motion: motion::config(entry, policy_contract, inputs)?, heartbeat: motion::heartbeat(entry, inputs)? })
+        let (motion, heartbeat) = (motion::config(entry, &metadata["policy_contract"], inputs)?, motion::heartbeat(entry, inputs)?);
+        Ok(Self { inputs: inputs.to_vec(), motion, heartbeat, metadata })
+    }
+    /// An embedded session's metadata, as sim-web's `EmbeddedSimulation.metadata()`.
+    pub(super) fn session_metadata(s: &sim_runtime::embedded::EmbeddedSession) -> Value {
+        let c = s.config();
+        serde_json::json!({"coordinate_names": s.coordinate_names(), "joint_indices": s.joint_indices(), "step_s": c.step_s, "steps": c.steps, "report_every": c.report_every, "policy_contract": s.policy_metadata()})
     }
 }
 
@@ -120,6 +130,12 @@ pub(super) enum Command {
     Jog { joint: String, target: f64 },
     /// Validated motion values for the three motion channels (in `Motion::channels` order).
     Motion { values: [f64; 3] },
+    /// Validated values for named session inputs (index, value), merged into
+    /// the held action (the browser's input sliders, REST `robot_inputs`).
+    Inputs { values: Vec<(usize, f64)> },
+    /// Build the session now if none is built (a preset's open, as the
+    /// browser worker builds at load), publishing its t = 0 frame paused.
+    Prepare,
     /// A drive session's fresh twist request (checked against the profile on
     /// the UI thread): heartbeat + 1 at the current sim time; `halt` zeroes
     /// the request and the commanded twist at once.

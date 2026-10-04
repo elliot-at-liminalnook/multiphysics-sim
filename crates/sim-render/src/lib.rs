@@ -5,6 +5,7 @@ mod canvas;
 pub mod diagram;
 pub mod graphs;
 pub mod physical;
+pub mod video;
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]

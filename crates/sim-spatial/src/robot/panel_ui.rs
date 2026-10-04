@@ -60,6 +60,10 @@ pub(super) struct GaitPathDraft {
 pub(super) struct RobotPanelUi {
     /// The Replay block lists every recording, not only the five most recent.
     pub recordings_expanded: bool,
+    /// The Inputs block's motor-correction group is open.
+    pub residuals_open: bool,
+    /// The links list's search text.
+    pub link_search: String,
     pub gait_path: GaitPathDraft,
     listing: Latest<Listing>,
     listed: Option<Listing>,
@@ -79,6 +83,8 @@ impl RobotPanelUi {
 pub(super) enum PanelToggle {
     /// "More recordings…" / "Fewer recordings".
     Recordings,
+    /// The Inputs block's "Motor corrections" group.
+    Residuals,
 }
 
 /// A part of the gait path field.
@@ -146,6 +152,7 @@ pub(super) fn toggles(presses: Query<&PanelToggle, With<crate::ui_kit::activatio
     for toggle in &presses {
         match toggle {
             PanelToggle::Recordings => ui.recordings_expanded = !ui.recordings_expanded,
+            PanelToggle::Residuals => ui.residuals_open = !ui.residuals_open,
         }
     }
 }

@@ -25,7 +25,7 @@ const WAIT_READ: &str = "robot_threads_read";
 pub(crate) enum ThreadsAct {
     /// The threads as `robot_state.cad_threads` shows them.
     State,
-    /// Read RoboCAD's threads again now.
+    /// Read the CAD source's threads again now.
     Refresh,
     Filter { shown: Shown },
     /// Show a thread; its link is selected.
@@ -52,9 +52,6 @@ pub(crate) enum ThreadsAct {
     /// inspector's scroll so the section stays where it was read).
     SelectLink { index: usize, name: String },
 }
-
-/// Open in CAD before the attached service's answer is known.
-pub(crate) const READING: &str = "Reading the CAD source's comments… try again";
 
 /// REST `robot_threads`'s arguments as an act (errors name the op and the argument).
 pub(crate) fn from_rest(op: Option<&str>, thread: Option<String>, comment: Option<String>, body: Option<String>, author: Option<String>, resolved: Option<bool>) -> Result<ThreadsAct, String> {
@@ -104,18 +101,14 @@ pub(crate) fn from_rest(op: Option<&str>, thread: Option<String>, comment: Optio
     })
 }
 
-/// The CAD document Open in CAD switches to: the attached service when it
-/// has the CAD source open (`attached`), else the CAD file.
-pub(crate) fn cad_document(attached: Option<&str>, cad: &Path) -> Document {
-    match attached {
-        Some(url) => Document::Url(url.to_string()),
-        None => Document::Path(cad.to_path_buf()),
-    }
+/// The CAD document Open in CAD switches to: the CAD file.
+pub(crate) fn cad_document(cad: &Path) -> Document {
+    Document::Path(cad.to_path_buf())
 }
 
-/// The CAD target that switch makes (`app::switch` builds `CadTarget::Service(url)`
-/// from a URL and `CadTarget::File(path)` from a path, unchanged), so CAD
-/// mode's reveal finds its document.
+/// The CAD target that switch makes (`app::switch` builds
+/// `CadTarget::File(path)` from a path, unchanged), so CAD mode's reveal
+/// finds its document.
 pub(crate) fn reveal_target(document: &Document) -> Option<CadTarget> {
     cad_target(&document_source(document))
 }
@@ -127,15 +120,14 @@ pub(crate) fn reveal_target(document: &Document) -> Option<CadTarget> {
 /// accepted, so a refused request (a second Open in CAD while the first is
 /// still being entered) goes away with its reveal and cannot change what the
 /// landing switch reveals. `cad_mode`: CAD mode is part of this window.
-fn open_in_cad(st: &RobotThreads, view: &RobotView, registry: &DocumentRegistry, cad_mode: bool, window: &mut MessageWriter<Act<WindowAction>>, thread: Option<String>) -> Result<(), String> {
+fn open_in_cad(st: &RobotThreads, view: &RobotView, cad_mode: bool, window: &mut MessageWriter<Act<WindowAction>>, thread: Option<String>) -> Result<(), String> {
     // The draft would be lost with the switch.
     if st.drafting() {
         return Err(DRAFTING.into());
     }
     let status = view.cad_link.as_ref().ok_or("the robot has not loaded: its CAD source is not known yet")?;
     let cad = cad_path(status).ok_or_else(|| format!("{}: there is no CAD file to open", source_line(status)))?;
-    let attached = attached_document(st, base_of(view, registry).as_ref())?;
-    let document = cad_document(attached.as_deref(), cad);
+    let document = cad_document(cad);
     let target = reveal_target(&document).ok_or("no CAD target for this document")?;
     if !cad_mode {
         return Err("CAD mode is not part of this window".into());
@@ -146,24 +138,10 @@ fn open_in_cad(st: &RobotThreads, view: &RobotView, registry: &DocumentRegistry,
     Ok(())
 }
 
-/// The attached service's URL when Open in CAD is to attach to it (it has
-/// the CAD source open), None when the CAD file is to be opened (no
-/// attached service, or it answered with another document or not at all:
-/// a closed RoboCAD remembered by URL), or why it cannot be decided yet.
-fn attached_document(st: &RobotThreads, base: Option<&Base>) -> Result<Option<String>, String> {
-    let Some(base) = base else { return Ok(None) };
-    match st.read.reach(base) {
-        None => Err(READING.into()),
-        Some(read::Reach::Open) if st.read.listed_for(base).is_some() => Ok(Some(base.url.clone())),
-        Some(read::Reach::Open) => Err(READING.into()),
-        Some(read::Reach::Elsewhere(_) | read::Reach::Failed(_)) => Ok(None),
-    }
-}
-
 /// One change through the annotations service (None: nothing pending).
-fn commit(st: &mut RobotThreads, view: &RobotView, registry: &DocumentRegistry, op: ThreadOp<CadAnchor>) -> Result<Option<u64>, String> {
+fn commit(st: &mut RobotThreads, view: &RobotView, op: ThreadOp<CadAnchor>) -> Result<Option<u64>, String> {
     let file = source_file(view.cad_link.as_ref());
-    let mut source = RobotCadThreads { st, base: base_of(view, registry), file };
+    let mut source = RobotCadThreads { st, base: base_of(view), file };
     Ok(match annotations::apply(&mut source, "", op)?.committed {
         Committed::Pending(seq) => Some(seq),
         Committed::Done => None,
@@ -183,7 +161,7 @@ fn owner(st: &RobotThreads, base: Option<&Base>, thread: Option<&String>, commen
 
 /// One act; `Ok(Some(seq))` when a change was sent.
 fn act_on(act: &ThreadsAct, st: &mut RobotThreads, view: &RobotView, registry: &DocumentRegistry, selection: &mut Selection, cad_mode: bool, window: &mut MessageWriter<Act<WindowAction>>) -> Result<Option<u64>, String> {
-    let base = base_of(view, registry);
+    let base = base_of(view);
     match act {
         ThreadsAct::State => Ok(None),
         ThreadsAct::Refresh => {
@@ -201,7 +179,7 @@ fn act_on(act: &ThreadsAct, st: &mut RobotThreads, view: &RobotView, registry: &
             }
             let links = LinkKeys::of(view);
             let listed = st.open_listed(base.as_ref()).ok_or_else(|| not_open(&source_file(view.cad_link.as_ref())))?;
-            let t = listed.threads.iter().find(|t| t.id == *thread).ok_or_else(|| format!("no comment thread {thread} in RoboCAD's comments as last read"))?;
+            let t = listed.threads.iter().find(|t| t.id == *thread).ok_or_else(|| format!("no comment thread {thread} in the CAD source's comments as last read"))?;
             let link = place(&thread_of(t), &links, &listed.parents, None).link;
             st.current = Some(thread.clone());
             st.menu = None;
@@ -251,7 +229,7 @@ fn act_on(act: &ThreadsAct, st: &mut RobotThreads, view: &RobotView, registry: &
                 Some(comment) => ThreadOp::EditComment { thread, comment, body: body.clone(), links: None },
                 None => ThreadOp::Reply { thread, body: body.clone(), author: st.author.clone(), links: Vec::new() },
             };
-            let seq = commit(st, view, registry, op)?;
+            let seq = commit(st, view, op)?;
             if let Some(seq) = seq {
                 st.sending = Some((seq, body));
                 st.error = None;
@@ -261,18 +239,18 @@ fn act_on(act: &ThreadsAct, st: &mut RobotThreads, view: &RobotView, registry: &
         ThreadsAct::Reply { thread, body, author } => {
             let thread = thread.clone().or_else(|| st.current.clone()).ok_or("robot_threads reply needs thread (no thread is shown)")?;
             let author = author.clone().unwrap_or_else(|| st.author.clone());
-            commit(st, view, registry, ThreadOp::Reply { thread, body: body.clone(), author, links: Vec::new() })
+            commit(st, view, ThreadOp::Reply { thread, body: body.clone(), author, links: Vec::new() })
         }
         ThreadsAct::Edit { thread, comment, body } => {
             let thread = owner(st, base.as_ref(), thread.as_ref(), comment)?;
-            commit(st, view, registry, ThreadOp::EditComment { thread, comment: comment.clone(), body: body.clone(), links: None })
+            commit(st, view, ThreadOp::EditComment { thread, comment: comment.clone(), body: body.clone(), links: None })
         }
         ThreadsAct::Delete { thread, comment } => {
             if st.drafting() {
                 return Err(DRAFTING.into());
             }
             let thread = owner(st, base.as_ref(), thread.as_ref(), comment)?;
-            commit(st, view, registry, ThreadOp::DeleteComment { thread, comment: comment.clone() })
+            commit(st, view, ThreadOp::DeleteComment { thread, comment: comment.clone() })
         }
         ThreadsAct::Resolve { thread, resolved } => {
             let thread = thread.clone().or_else(|| st.current.clone()).ok_or("robot_threads resolve needs thread (no thread is shown)")?;
@@ -280,13 +258,13 @@ fn act_on(act: &ThreadsAct, st: &mut RobotThreads, view: &RobotView, registry: &
                 Some(r) => *r,
                 None => {
                     let listed = st.open_listed(base.as_ref()).ok_or_else(|| not_open(&source_file(view.cad_link.as_ref())))?;
-                    !listed.threads.iter().find(|t| t.id == thread).ok_or_else(|| format!("no comment thread {thread} in RoboCAD's comments as last read"))?.resolved()
+                    !listed.threads.iter().find(|t| t.id == thread).ok_or_else(|| format!("no comment thread {thread} in the CAD source's comments as last read"))?.resolved()
                 }
             };
-            commit(st, view, registry, ThreadOp::Resolve { thread, resolved })
+            commit(st, view, ThreadOp::Resolve { thread, resolved })
         }
         ThreadsAct::OpenInCad { thread } => {
-            open_in_cad(st, view, registry, cad_mode, window, thread.clone())?;
+            open_in_cad(st, view, cad_mode, window, thread.clone())?;
             Ok(None)
         }
         ThreadsAct::SelectLink { index, name } => {
@@ -302,8 +280,8 @@ fn act_on(act: &ThreadsAct, st: &mut RobotThreads, view: &RobotView, registry: &
 }
 
 /// The read at the current key has answered (or there is nothing to read).
-fn settled(view: &RobotView, registry: &DocumentRegistry, st: &RobotThreads) -> bool {
-    base_of(view, registry).is_none_or(|b| st.read.current(&b))
+fn settled(view: &RobotView, st: &RobotThreads) -> bool {
+    base_of(view).is_none_or(|b| st.read.current(&b))
 }
 
 /// A REST call's end: its answer, and REST no longer asks for reads.
@@ -313,8 +291,8 @@ fn finish(st: &mut RobotThreads, result: Result<Value, String>) -> Outcome {
 }
 
 /// `{cad_threads}` as a REST answer.
-fn answer(st: &mut RobotThreads, view: &RobotView, registry: &DocumentRegistry) -> Outcome {
-    let value = json!({"cad_threads": state_json(view, registry, st)});
+fn answer(st: &mut RobotThreads, view: &RobotView) -> Outcome {
+    let value = json!({"cad_threads": state_json(view, st)});
     finish(st, Ok(value))
 }
 
@@ -322,7 +300,7 @@ fn answer(st: &mut RobotThreads, view: &RobotView, registry: &DocumentRegistry) 
 /// RobotSet::Actions). A click's refusal shows under the composer. A REST
 /// call first waits for the read at the current key (so a change made
 /// before the first read is not refused as "not open"), then acts; a REST
-/// change then waits for RoboCAD's answer.
+/// change then waits for the file to be written.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn handle(act: &ThreadsAct, call: &mut Call, st: &mut RobotThreads, view: &RobotView, registry: &DocumentRegistry, selection: &mut Selection, cad_mode: bool, window: &mut MessageWriter<Act<WindowAction>>) -> Outcome {
     if !call.rest() {
@@ -331,18 +309,23 @@ pub(crate) fn handle(act: &ThreadsAct, call: &mut Call, st: &mut RobotThreads, v
         }
         return Outcome::Done(Ok(Value::Null));
     }
-    // A change sent: wait for RoboCAD's answer.
+    // A change sent: wait for the write.
     if let Some(seq) = call.continuation.get(WAIT_COMMIT).and_then(Value::as_u64) {
         if st.in_flight.waits(seq) {
             if call.cancelled {
-                return finish(st, Err("cancelled waiting for RoboCAD's answer: the change may still be applied".into()));
+                return finish(st, Err("cancelled waiting for the CAD file to be written: the change may still be saved".into()));
             }
             return Outcome::Pending;
         }
         return match st.answers.remove(&seq) {
-            Some(Ok(_)) => answer(st, view, registry),
+            // Written: answer with the threads read again after the write (the landing moved the epoch).
+            Some(Ok(_)) => {
+                st.asked = true;
+                *call.continuation = json!({ "robot_threads_read": "answer" });
+                if settled(view, st) { answer(st, view) } else { Outcome::Pending }
+            }
             Some(Err(e)) => finish(st, Err(e)),
-            None => finish(st, Err("RoboCAD's answer to this change is no longer waited for (the robot document or Robot mode was left)".into())),
+            None => finish(st, Err("this change's write is no longer waited for (the robot document or Robot mode was left)".into())),
         };
     }
     // Wait for the read at the current key: then answer (`state`, `refresh`) or act.
@@ -350,9 +333,9 @@ pub(crate) fn handle(act: &ThreadsAct, call: &mut Call, st: &mut RobotThreads, v
     let acts = match stage {
         Some(stage) => {
             if call.cancelled {
-                return finish(st, Err("cancelled waiting for RoboCAD's comments".into()));
+                return finish(st, Err("cancelled waiting for the CAD source's comments".into()));
             }
-            if !settled(view, registry, st) {
+            if !settled(view, st) {
                 st.asked = true;
                 return Outcome::Pending;
             }
@@ -365,7 +348,7 @@ pub(crate) fn handle(act: &ThreadsAct, call: &mut Call, st: &mut RobotThreads, v
                 st.read.again();
                 st.error = None;
             }
-            if !settled(view, registry, st) {
+            if !settled(view, st) {
                 let then = if acts { "act" } else { "answer" };
                 *call.continuation = json!({ "robot_threads_read": then });
                 return Outcome::Pending;
@@ -374,14 +357,14 @@ pub(crate) fn handle(act: &ThreadsAct, call: &mut Call, st: &mut RobotThreads, v
         }
     };
     if !acts {
-        return answer(st, view, registry);
+        return answer(st, view);
     }
     match act_on(act, st, view, registry, selection, cad_mode, window) {
         Ok(Some(seq)) => {
             *call.continuation = json!({ "robot_threads_wait": seq });
             Outcome::Pending
         }
-        Ok(None) => answer(st, view, registry),
+        Ok(None) => answer(st, view),
         Err(e) => finish(st, Err(e)),
     }
 }

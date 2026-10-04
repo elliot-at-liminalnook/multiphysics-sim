@@ -259,9 +259,11 @@ fn preset(id: &str) -> Result<(crate::robot::Loaded, PresetRun), String> {
 
 #[test]
 fn preset_session_steps_one_chunk_ends_at_its_horizon_and_resets() {
-    // Refusals name the id (and the mode).
-    let e = preset("pendulum-live").err().unwrap();
-    assert!(e.contains("`pendulum-live`") && e.contains("mode `live`"), "{e}");
+    // A live preset opens as the scene's own controller session (no config).
+    let (_, live) = preset("pendulum-live").unwrap();
+    assert_eq!(live.kind(), "Session");
+    assert!(live.config.is_none() && live.chunk_steps() == 1 && live.step_s() == live.scene.period_s);
+    // Refusals name the id.
     let e = preset("no-such-preset").err().unwrap();
     assert!(e.contains("unknown robot preset `no-such-preset`"), "{e}");
     // The smallest embedded preset: pendulum scene + embedded config, no task → EmbeddedSession.
@@ -269,14 +271,14 @@ fn preset_session_steps_one_chunk_ends_at_its_horizon_and_resets() {
     assert_eq!((run.kind(), run.seed), ("EmbeddedSession", 0));
     assert!(loaded.geometry.iter().any(|g| g.is_some()));
     let chunk = run.chunk_steps() as u64;
-    assert_eq!(chunk, run.config.report_every.clamp(1, 40) as u64);
-    let horizon = run.config.steps as u64 / chunk;
+    assert_eq!(chunk, run.config.as_ref().unwrap().report_every.clamp(1, 40) as u64);
+    let horizon = run.requested_steps() as u64 / chunk;
     let mut c = RunController::spawn_preset(Arc::new(run));
     assert!(c.jog("pivot", 0.0).unwrap_err().contains("declared controller recipe"));
     c.act(RunAction::Step).unwrap();
     wait(&mut c, "first step", |c| c.frame().is_some_and(|f| f.steps == 1));
     let f = c.frame().unwrap();
-    let step_s = c.preset().unwrap().config.step_s;
+    let step_s = c.preset().unwrap().step_s();
     assert_eq!(f.completed_steps, Some(chunk));
     assert!((f.time - c.chunk_s()).abs() < 1e-12 && (f.time - chunk as f64 * step_s).abs() < 1e-12, "t = {}", f.time);
     // Every frame link maps to a loaded link by name.
@@ -572,7 +574,7 @@ fn measure_full_robot_preset() {
     let t0 = Instant::now();
     let (loaded, run) = preset(&id).unwrap();
     let parse = t0.elapsed().as_secs_f64();
-    println!("parse+load: {parse:.2} s, {} links, {} chunk steps × {} s = {} s, {}", loaded.model.links.len(), run.chunk_steps(), run.config.step_s, run.chunk_s(), run.kind());
+    println!("parse+load: {parse:.2} s, {} links, {} chunk steps × {} s = {} s, {}", loaded.model.links.len(), run.chunk_steps(), run.step_s(), run.chunk_s(), run.kind());
     let run = Arc::new(run);
     let t1 = Instant::now();
     let mut sim = match Sim::build(&Source::Preset(run.clone()), &mut None) {

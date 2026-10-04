@@ -38,6 +38,8 @@ pub enum Snapshot {
     /// A drive session's `Session::recording()`; `failure` is the session's
     /// latched error (the recording itself has no failure field).
     Drive { recording: Recording, failure: Option<String> },
+    /// A live preset's `Session::recording()` (the browser `Simulation.recording()`).
+    Live { recording: Recording, failure: Option<String> },
 }
 impl Snapshot {
     pub fn kind(&self) -> &str {
@@ -45,26 +47,27 @@ impl Snapshot {
             Snapshot::Environment(r) => &r.kind,
             Snapshot::Session(r) => &r.kind,
             Snapshot::Drive { .. } => DRIVE_KIND,
+            Snapshot::Live { .. } => LIVE_KIND,
         }
     }
     pub fn version(&self) -> u32 {
         match self {
             Snapshot::Environment(r) => r.version,
             Snapshot::Session(r) => r.version,
-            Snapshot::Drive { recording, .. } => recording.version,
+            Snapshot::Drive { recording, .. } | Snapshot::Live { recording, .. } => recording.version,
         }
     }
     fn runtime(&self) -> Option<&EmbeddedRecording> {
         match self {
             Snapshot::Environment(r) => Some(&r.runtime),
             Snapshot::Session(r) => Some(r),
-            Snapshot::Drive { .. } => None,
+            Snapshot::Drive { .. } | Snapshot::Live { .. } => None,
         }
     }
     /// Nominal steps (presets) or seam periods (one action each, a drive session).
     pub fn completed_steps(&self) -> usize {
         match self {
-            Snapshot::Drive { recording, .. } => recording.actions.len(),
+            Snapshot::Drive { recording, .. } | Snapshot::Live { recording, .. } => recording.actions.len(),
             _ => self.runtime().map_or(0, |r| r.completed_steps),
         }
     }
@@ -73,7 +76,7 @@ impl Snapshot {
         match self {
             Snapshot::Environment(r) => r.error.as_deref().or(r.runtime.failure.as_deref()),
             Snapshot::Session(r) => r.failure.as_deref(),
-            Snapshot::Drive { failure, .. } => failure.as_deref(),
+            Snapshot::Drive { failure, .. } | Snapshot::Live { failure, .. } => failure.as_deref(),
         }
     }
     /// `Err(reason)` when the runtime's prepare_replay refuses this kind of record (REPLAYABLE_RULE).
@@ -87,6 +90,8 @@ impl Snapshot {
             Snapshot::Session(_) => Ok(()),
             Snapshot::Drive { failure: Some(e), .. } => Err(format!("the drive session had failed ({e}): its last recorded period ended in that error, so a replay re-executes to it and reports it as an error (Session has no expected-failure mode)")),
             Snapshot::Drive { .. } => Ok(()),
+            Snapshot::Live { failure: Some(e), .. } => Err(format!("the live session had failed ({e}): a replay re-executes to it and reports it as an error (Session has no expected-failure mode)")),
+            Snapshot::Live { .. } => Ok(()),
         }
     }
     /// The shared recording JSON, compact.
@@ -94,7 +99,7 @@ impl Snapshot {
         match self {
             Snapshot::Environment(r) => serde_json::to_string(r),
             Snapshot::Session(r) => serde_json::to_string(r),
-            Snapshot::Drive { recording, .. } => serde_json::to_string(recording),
+            Snapshot::Drive { recording, .. } | Snapshot::Live { recording, .. } => serde_json::to_string(recording),
         }
         .map_err(|e| format!("serialising the {} recording: {e}", self.kind()))
     }
@@ -225,7 +230,7 @@ pub fn meta(snapshot: &Snapshot, run: &crate::robot::preset::PresetRun, recordin
     json!({"schema": META_SCHEMA, "schema_version": META_VERSION,
         "recording_file": recording_file.file_name().map(|n| n.to_string_lossy()), "recording_kind": snapshot.kind(), "recording_version": snapshot.version(),
         "recording_rule": FILE_RULE,
-        "completed_steps": snapshot.completed_steps(), "sim_time_s": snapshot.completed_steps() as f64 * run.config.step_s, "requested_steps": run.config.steps,
+        "completed_steps": snapshot.completed_steps(), "sim_time_s": snapshot.completed_steps() as f64 * run.step_s(), "requested_steps": run.requested_steps(),
         "replayable": replayable.is_ok(), "not_replayable_reason": replayable.err(), "failure": snapshot.failure(), "replayable_rule": REPLAYABLE_RULE,
         "runtime_identity": identity, "runtime_identity_note": "copied from the recording's runtime_identity (library sources/features); binary and host attestations are not included",
         "preset": {"id": p.id, "label": p.label, "mode": p.mode, "scene": p.scene, "config": p.config, "task": p.task, "presets_file": crate::robot::preset::PRESETS, "runs_as": run.kind()},
@@ -332,6 +337,9 @@ pub fn measured(recorded: &Value, replayed: &Value) -> Option<Value> {
         "recorded_completed_steps": recorded["completed_steps"], "replayed_completed_steps": replayed["completed_steps"],
         "per_link_m": per.iter().map(|(l, d)| json!({"link": l, "diff_m": d})).collect::<Vec<_>>()}))
 }
+
+/// The viewer's kind name for a live preset's recording (the shared `Recording` has no kind field).
+pub const LIVE_KIND: &str = "live_session";
 
 /// Drive sessions (`run::ControlledRun`): where saves go, relative to the workspace root.
 pub const DRIVE_DIR: &str = "runs/robot-drive";

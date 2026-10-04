@@ -320,6 +320,7 @@ impl RunController {
         self.twist_error = None;
         self.replay = ReplayState::new(self.replay.seq + 1, self.generation, Some(source.clone()), ReplayPhase::Replaying);
         self.graphs.clear(self.generation);
+        self.clear_history();
         self.thread.send(Command::Replay { generation: self.generation, seq: self.replay.seq, path: source.clone() }).map_err(|_| "the run thread has stopped".to_string())?;
         Ok(source)
     }
@@ -396,6 +397,6 @@ impl RunController {
     }
     /// The link poses to draw: the gait preview's while a gait is loaded, else the latest accepted frame's.
     pub fn display_poses(&self) -> Option<&[Option<([f64; 3], DQuat)>]> {
-        self.gait.as_ref().and_then(GaitPreview::poses).or_else(|| self.frame.as_ref().map(|f| f.poses.as_slice()))
+        self.gait.as_ref().and_then(GaitPreview::poses).or_else(|| self.shown_frame().map(|f| f.poses.as_slice()))
     }
 }

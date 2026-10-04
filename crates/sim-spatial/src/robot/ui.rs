@@ -194,6 +194,14 @@ pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<Standar
     let graphs = commands.spawn(k.button("Graphs (G)", RobotAction::ToggleGraphs, Look::Secondary, true)).id();
     commands.entity(graphs).entry::<Node>().and_modify(|mut node| node.margin = UiRect::left(Val::Px(8.0)));
     row.push(graphs);
+    // Record video (the browser's transport button).
+    let video = commands.spawn((k.button("Record video", RobotAction::Video { on: None }, Look::Secondary, true), super::video::VideoButton)).id();
+    commands.entity(video).entry::<Node>().and_modify(|mut node| node.margin = UiRect::left(Val::Px(8.0)));
+    row.push(video);
+    // The controller leaderboard (the browser's header button).
+    let board = commands.spawn(k.button("Leaderboard", RobotAction::Leaderboard { op: super::leaderboard::BoardOp::Open }, Look::Secondary, true)).id();
+    commands.entity(board).entry::<Node>().and_modify(|mut node| node.margin = UiRect::left(Val::Px(8.0)));
+    row.push(board);
     // The Leg calibration panel (robot::hardware): the page's header toggle.
     let hardware = commands.spawn(k.button("Leg calibration", hardware::HardwareAction::TogglePanel, Look::Secondary, true)).id();
     commands.entity(hardware).entry::<Node>().and_modify(|mut node| node.margin = UiRect::left(Val::Px(8.0)));
@@ -207,20 +215,23 @@ pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<Standar
     commands.spawn((
         k.dock(Dock::Left { top: TOP, bottom: 0.0, width: LEFT }, Node { padding: UiRect::all(Val::Px(14.0)), flex_direction: FlexDirection::Column, row_gap: Val::Px(4.0), overflow: Overflow::clip_y(), ..default() }),
         ListRoot,
-        children![k.title("Links")],
+        children![k.title("Links"), (Node { flex_direction: FlexDirection::Column, flex_shrink: 0.0, margin: UiRect::bottom(Val::Px(4.0)), ..default() }, super::view_tools::LinkSearchRoot)],
     ));
     let tabs = Section::ALL.map(|section| commands.spawn((k.tab(section.label(), RobotAction::ShowSection { section }, view.section == section), TabButton(section))).id());
     let tab_strip = commands.spawn(k.tab_strip()).add_children(&tabs).id();
     // Run-thread overlay toggles (each shows its on/off state) and counts (`overlay_panel`).
     let overlays: Vec<Entity> = (0..OVERLAYS.len()).map(|i| commands.spawn(overlay_button(&k, i)).id()).collect();
     let overlay_row = commands.spawn(wrap()).add_children(&overlays).id();
+    // The view tools (`view_tools::tools_panel` labels them): Fit selected, Follow robot, display cap.
+    let tools: Vec<Entity> = super::view_tools::TOOLS.iter().map(|t| commands.spawn((k.chip(t.label(), t.action(false, 0), false, true), *t)).id()).collect();
+    let tools_row = commands.spawn(wrap()).add_children(&tools).id();
     let overlay_root = commands
         .spawn((
             Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() },
             OverlayRoot,
             children![(k.text("", size::CAPTION, SUBTLE, 0), OverlayText), (k.text("", size::CAPTION, SUBTLE, 0), StressText)],
         ))
-        .insert_children(0, &[overlay_row])
+        .insert_children(0, &[overlay_row, tools_row])
         .id();
     commands
         .spawn((
@@ -233,6 +244,8 @@ pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<Standar
                 (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, MotionRoot),
                 // The recorded timeline for a recorded preset (spawned by `recorded_panel`).
                 (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, RecordedRoot),
+                // A live run's history timeline (spawned by `timeline::timeline_panel`).
+                (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, super::timeline::TimelineRoot),
                 // Servo-target jog rows for the selected link's joints (rebuilt by `jog_panel`).
                 (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, JogRoot),
                 (
@@ -241,6 +254,8 @@ pub(super) fn setup(mut commands: Commands, mut materials: ResMut<Assets<Standar
                     children![
                         // The Drive block's details (controller, profile, geometry, limits, bindings).
                         (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, DriveDetailRoot),
+                        // The preset's session inputs (`inputs_panel`).
+                        (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, super::inputs_panel::InputsRoot),
                         (Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }, GaitRoot),
                         (k.text("Select a link in the list or the 3D view.", size::BODY, TEXT, 0), Inspector),
                         // The Comments section (`threads::draw`; empty in the other sections).

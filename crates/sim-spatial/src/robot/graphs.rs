@@ -19,6 +19,110 @@ pub const REQUEST_SOURCE: &str = "request: the session input held in the frame (
 pub const CHASSIS_RULE: &str = "chassis = the loaded model's root link as the shared articulation builds it (sim-domain-robot articulated.rs): a `ground` link is pinned (no moving chassis, so no measured traces); otherwise the one link that is no non-loop joint's child. When several links qualify the runtime picks the heaviest; the viewer refuses to plot rather than repeat that choice";
 pub const SAMPLING_RULE: &str = "one sample per frame applied by RunController::poll whose generation equals the controller's; a sample at the same frame time replaces the previous one (a paused jog or motion request republishes the frame); cleared on Reset, replay start (both bump the generation) and any other generation change; each trace keeps the last WINDOW_S s of sim time, at most MAX_SAMPLES points";
 
+/// Channels picked at once (the Picked chart's traces).
+pub const MAX_PICKS: usize = 8;
+pub const PICK_RULE: &str = "picked channels are numbers the published frames already carry: input:<name> (the held session input), target:<coordinate> and actual:<coordinate> (servo_targets_rad and joint_positions at the coordinate's joint index), reference:<coordinate> (reference_targets_rad), obs:<key> (the controller's policy.observations), learning:reward and learning:travel_m (the learning environment's transition), and link:<name>:speed (|velocity_m_s| of a link's published velocity); for --robot FILE, joint:<name>:target and joint:<name>:measured. Each is sampled from every applied frame of the current generation from the moment it is picked (same window and cap as the fixed charts); picks are kept across Reset, reload and preset changes (pinned) until removed; at most MAX_PICKS.";
+
+/// A pickable channel: its key, a short label and its unit.
+pub struct Candidate {
+    pub key: String,
+    pub label: String,
+    pub unit: String,
+}
+
+/// The channels a frame carries (PICK_RULE), in a stable order.
+pub fn candidates(frame: &Frame, drive: Option<&crate::robot::run::Drive>, links: &[String]) -> Vec<Candidate> {
+    let mut out = Vec::new();
+    let mut push = |key: String, label: String, unit: &str| out.push(Candidate { key, label, unit: unit.into() });
+    if let Some(d) = drive {
+        for (i, c) in d.inputs.iter().enumerate() {
+            if frame.inputs.get(i).is_some() {
+                push(format!("input:{}", c.name), format!("input {}", c.name), c.kind.unit());
+            }
+        }
+    }
+    let x = frame.extra.as_deref();
+    let names: Vec<String> = drive.and_then(|d| d.metadata["coordinate_names"].as_array()).map(|a| a.iter().map(|n| n.as_str().unwrap_or("").trim_start_matches("joint.").to_string()).collect()).unwrap_or_default();
+    if let Some(targets) = x.and_then(|x| x["servo_targets_rad"].as_array()) {
+        for i in 0..targets.len() {
+            let n = names.get(i).cloned().unwrap_or_else(|| format!("coordinate {}", i + 1));
+            push(format!("target:{n}"), format!("{n} target"), "rad");
+            push(format!("actual:{n}"), format!("{n} actual"), "rad");
+            if x.is_some_and(|x| x["reference_targets_rad"].get(i).is_some()) {
+                push(format!("reference:{n}"), format!("{n} plan"), "rad");
+            }
+        }
+    }
+    if let Some(l) = x.map(|x| &x["learning"]).filter(|l| l.is_object()) {
+        push("learning:reward".into(), "learning reward".into(), "score");
+        if l["speed"].is_object() {
+            push("learning:travel_m".into(), "net travel".into(), "m");
+        }
+    }
+    for (i, name) in links.iter().enumerate() {
+        if frame.velocities.get(i).is_some_and(Option::is_some) {
+            push(format!("link:{name}:speed"), format!("{name} speed"), "m/s");
+        }
+    }
+    for name in &frame.joint_names {
+        let n = short(name);
+        push(format!("joint:{n}:target"), format!("{n} target"), "");
+        push(format!("joint:{n}:measured"), format!("{n} measured"), "");
+    }
+    if let Some(obs) = x.and_then(|x| x["policy"]["observations"].as_object()) {
+        for (k, v) in obs {
+            if v.is_number() {
+                push(format!("obs:{k}"), format!("obs {k}"), "");
+            }
+        }
+    }
+    out
+}
+
+/// A picked channel's value in `frame` (PICK_RULE), when the frame carries it.
+pub fn pick_value(frame: &Frame, drive: Option<&crate::robot::run::Drive>, links: &[String], key: &str) -> Option<f64> {
+    let x = frame.extra.as_deref();
+    let coordinate = |n: &str| -> Option<usize> {
+        let names = drive?.metadata["coordinate_names"].as_array()?;
+        names.iter().position(|c| c.as_str().is_some_and(|c| c.trim_start_matches("joint.") == n)).or_else(|| n.strip_prefix("coordinate ").and_then(|k| k.parse::<usize>().ok()).map(|k| k - 1))
+    };
+    if let Some(name) = key.strip_prefix("input:") {
+        let i = drive?.inputs.iter().position(|c| c.name == name)?;
+        return frame.inputs.get(i).copied();
+    }
+    if let Some(n) = key.strip_prefix("target:") {
+        return x?["servo_targets_rad"].get(coordinate(n)?)?.as_f64();
+    }
+    if let Some(n) = key.strip_prefix("reference:") {
+        return x?["reference_targets_rad"].get(coordinate(n)?)?.as_f64();
+    }
+    if let Some(n) = key.strip_prefix("actual:") {
+        let i = coordinate(n)?;
+        let j = drive?.metadata["joint_indices"].get(i)?.as_u64()? as usize;
+        return x?["joint_positions"].get(j)?.as_f64();
+    }
+    if key == "learning:reward" {
+        return x?["learning"]["reward"].as_f64();
+    }
+    if key == "learning:travel_m" {
+        return x?["learning"]["speed"]["net_distance_m"].as_f64();
+    }
+    if let Some(k) = key.strip_prefix("obs:") {
+        return x?["policy"]["observations"].get(k)?.as_f64();
+    }
+    if let Some(rest) = key.strip_prefix("link:").and_then(|r| r.strip_suffix(":speed")) {
+        let i = links.iter().position(|l| l == rest)?;
+        let (v, _) = (*frame.velocities.get(i)?)?;
+        return Some((v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt());
+    }
+    if let Some(rest) = key.strip_prefix("joint:") {
+        let (n, which) = rest.rsplit_once(':')?;
+        let (t, m) = frame.servo(n)?;
+        return Some(if which == "target" { t } else { m });
+    }
+    None
+}
+
 /// The chassis link index, or why no chassis velocity can be plotted.
 pub fn chassis(model: &PhysicalModel) -> Result<usize, String> {
     if let Some(g) = model.links.iter().find(|l| l.ground) {
@@ -97,6 +201,34 @@ impl History {
         self.frames += 1;
         true
     }
+    /// Samples the picked channels of one applied frame (PICK_RULE), under the same
+    /// generation, window and cap as [`Self::sample`] (which counts the frame).
+    pub fn sample_picks(&mut self, current: u64, frame: &Frame, picks: &[String], drive: Option<&crate::robot::run::Drive>, links: &[String]) {
+        if frame.generation != current || self.generation != current {
+            return;
+        }
+        let t = frame.time;
+        for key in picks {
+            let Some(y) = pick_value(frame, drive, links, key).filter(|y| y.is_finite()) else { continue };
+            let ring = self.series.entry(format!("pick:{key}")).or_default();
+            match ring.back_mut() {
+                Some(last) if last[0] == t => *last = [t, y],
+                Some(last) if last[0] > t => {
+                    ring.clear();
+                    ring.push_back([t, y]);
+                }
+                _ => ring.push_back([t, y]),
+            }
+            while ring.len() > MAX_SAMPLES || ring.front().is_some_and(|p| p[0] < t - WINDOW_S) {
+                ring.pop_front();
+            }
+        }
+    }
+    /// A trace's value at time `t` (the last sample at or before it), for the review cursor.
+    pub fn value_at(points: &[[f64; 2]], t: f64) -> Option<f64> {
+        let i = points.partition_point(|p| p[0] <= t + 1e-12);
+        points.get(i.checked_sub(1)?).map(|p| p[1])
+    }
     /// [first, last] sample time over every trace (None before a sample).
     pub fn window(&self) -> Option<[f64; 2]> {
         let t0 = self.series.values().filter_map(|r| r.front()).map(|p| p[0]).reduce(f64::min)?;
@@ -120,6 +252,8 @@ pub struct Context<'a> {
     pub links: &'a [String],
     /// The selected link's name, and its servo joints (name, unit) or why it has none.
     pub selected: Option<(&'a str, Result<Vec<(String, &'static str)>, String>)>,
+    /// The picked channels with their labels and units (the Picked chart).
+    pub picks: Vec<(String, String, String)>,
 }
 
 pub struct TraceView {
@@ -176,6 +310,10 @@ pub fn charts(h: &History, cx: &Context) -> Vec<ChartView> {
         ),
     };
     out.push(ChartView { id: "joints", title, absent_reason, traces });
+    if !cx.picks.is_empty() {
+        let traces = cx.picks.iter().map(|(key, label, unit)| h.trace(&format!("pick:{key}"), label.clone(), format!("picked: {key} (sampled since picked)"), unit)).collect();
+        out.push(ChartView { id: "picked", title: "Picked channels".into(), absent_reason: None, traces });
+    }
     out
 }
 

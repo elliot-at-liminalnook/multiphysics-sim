@@ -5,8 +5,8 @@
 //!
 //! Top to bottom: the section title; the status line (where the comments
 //! are, the revision they were read at, or why they cannot be read here);
-//! Open in CAD and Read again; then, only while the CAD source is open in
-//! the attached RoboCAD, the Open / Resolved / All filter, the thread list
+//! Open in CAD and Read again; then, once the CAD source's `.rcad` is read
+//! (in process), the Open / Resolved / All filter, the thread list
 //! (RoboCAD's "n · part", each with its warning line), and the shown
 //! thread: its location, All comments, Resolve/Reopen, the messages (part
 //! chips and part links select their link), the composer (Reply or Save
@@ -18,8 +18,8 @@
 //! opens, the section is left or no thread is shown.
 use super::{LinkKeys, Parents, Placed, RobotThreads, ThreadsAct, anchor_link, base_of, cad_path, line, link_note, placements, shown};
 use crate::app::actions::Act;
-use crate::cad::threads::{CadAnchor, UNDO_IS_ROBOCADS, attachment, thread_of};
-use crate::document::DocumentRegistry;
+use super::NO_UNDO;
+use crate::cad::threads::{CadAnchor, attachment, thread_of};
 use crate::robot::{RobotAction, RobotView};
 use crate::ui_kit::activation::Activated;
 use crate::ui_kit::text::{EnterKey, FieldEvent, FieldId, FieldMsg, TextDraft, TextField, TextFocus};
@@ -54,7 +54,7 @@ fn threads_action(act: ThreadsAct) -> RobotAction {
     RobotAction::Threads { act }
 }
 
-/// RoboCAD's threads drawn with the shared thread panel in Robot mode.
+/// The CAD source's threads drawn with the shared thread panel in Robot mode.
 struct RobotHost<'a> {
     st: &'a RobotThreads,
     links: &'a [LinkKeys],
@@ -122,13 +122,13 @@ impl Host<CadAnchor> for RobotHost<'_> {
 /// Present: the section, rebuilt when the thread state changes or what it
 /// is drawn from (the section, the subject, the loaded model) does.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn draw(mut commands: Commands, view: Res<RobotView>, registry: Res<DocumentRegistry>, st: Res<RobotThreads>, fonts: Res<UiFonts>, roots: Query<Entity, With<ThreadsRoot>>, mut last: Local<Option<(Entity, String)>>) {
+pub(crate) fn draw(mut commands: Commands, view: Res<RobotView>, st: Res<RobotThreads>, fonts: Res<UiFonts>, roots: Query<Entity, With<ThreadsRoot>>, mut last: Local<Option<(Entity, String)>>) {
     let Ok(root) = roots.single() else {
         *last = None;
         return;
     };
     let on = shown(&view);
-    let key = format!("{on}|{:?}|{:?}|{}", base_of(&view, &registry), link_note(view.cad_link.as_ref()), view.ui_revision);
+    let key = format!("{on}|{:?}|{:?}|{}", base_of(&view), link_note(view.cad_link.as_ref()), view.ui_revision);
     if !st.is_changed() && last.as_ref().is_some_and(|(e, k)| *e == root && *k == key) {
         return;
     }
@@ -138,15 +138,15 @@ pub(crate) fn draw(mut commands: Commands, view: Res<RobotView>, registry: Res<D
         return;
     }
     let k = Kit { f: &fonts };
-    commands.entity(root).with_children(|p| body(p, &k, &view, &registry, &st));
+    commands.entity(root).with_children(|p| body(p, &k, &view, &st));
 }
 
 /// The section's contents (see the module doc).
-fn body(p: &mut ChildSpawnerCommands, k: &Kit, view: &RobotView, registry: &DocumentRegistry, st: &RobotThreads) {
+fn body(p: &mut ChildSpawnerCommands, k: &Kit, view: &RobotView, st: &RobotThreads) {
     p.spawn(k.section("Comments"));
-    let base = base_of(view, registry);
+    let base = base_of(view);
     let listed = st.open_listed(base.as_ref());
-    p.spawn(k.text(line(view, registry, st), size::DETAIL, if listed.is_some() { SUBTLE } else { WARN }, 0));
+    p.spawn(k.text(line(view, st), size::DETAIL, if listed.is_some() { SUBTLE } else { WARN }, 0));
     if view.cad_link.as_ref().and_then(cad_path).is_some() {
         p.spawn(wrap()).with_children(|r| {
             r.spawn(k.button("Open in CAD", threads_action(ThreadsAct::OpenInCad { thread: st.current.clone() }), Look::Secondary, true));
@@ -213,9 +213,9 @@ fn body(p: &mut ChildSpawnerCommands, k: &Kit, view: &RobotView, registry: &Docu
         },
     );
     if st.sending.is_some() {
-        p.spawn(k.text("Sending to RoboCAD…", size::DETAIL, SUBTLE, 0));
+        p.spawn(k.text("Saving to the CAD file…", size::DETAIL, SUBTLE, 0));
     }
-    p.spawn(k.text(UNDO_IS_ROBOCADS, size::DETAIL, FAINT, 0));
+    p.spawn(k.text(NO_UNDO, size::DETAIL, FAINT, 0));
 }
 
 /// The composer's post: its draft, unless empty or another change is being sent.
@@ -236,7 +236,6 @@ pub(crate) fn input(
     mut msgs: MessageReader<FieldMsg>,
     mut text: TextFocus,
     view: Res<RobotView>,
-    registry: Res<DocumentRegistry>,
     hardware: Option<Res<crate::robot::hardware::Hardware>>,
     picker: Option<Res<crate::app::picker::Picker>>,
     mut out: MessageWriter<Act<RobotAction>>,
@@ -250,7 +249,7 @@ pub(crate) fn input(
     let picking = picker.is_some_and(|p| p.open.is_some());
     // No field to type into: the section is hidden, or the shown thread is
     // not in the open list (none, gone after a re-read, or the source closed).
-    let listed = st.open_listed(base_of(&view, &registry).as_ref());
+    let listed = st.open_listed(base_of(&view).as_ref());
     let gone = !shown(&view) || !st.current.as_ref().is_some_and(|id| listed.is_some_and(|l| l.threads.iter().any(|t| t.id == *id)));
     let focused = text.focused(COMPOSE);
     // Read first: a `ResMut` deref would mark the state changed every frame.

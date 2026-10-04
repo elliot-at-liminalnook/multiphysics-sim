@@ -17,6 +17,8 @@ pub mod export;
 pub mod import;
 pub mod stamp;
 pub mod mass;
+pub mod materials;
+pub mod physical;
 
 /// Hash the actual production source bytes, rather than a hand-maintained label.
 pub fn production_source_identity() -> String {
@@ -39,6 +41,10 @@ pub fn production_source_identity() -> String {
         include_bytes!("stamp.rs").as_slice(),
         include_bytes!("import.rs").as_slice(),
         include_bytes!("component.rs").as_slice(),
+        include_bytes!("materials.rs").as_slice(),
+        include_bytes!("physical/mod.rs").as_slice(),
+        include_bytes!("physical/motors.rs").as_slice(),
+        include_bytes!("physical/collision.rs").as_slice(),
         include_bytes!("../native/bridge.cpp").as_slice(),
         include_bytes!("../native/ops.cpp").as_slice(),
         include_bytes!("../build.rs").as_slice(),

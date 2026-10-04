@@ -49,7 +49,6 @@ use crate::cad::document::CadDocument;
 use crate::jobs::{Job, Pool};
 use serde_json::{Value, json};
 use sim_domain_robot::cad_link::sha256_file;
-use sim_runtime::cad_client::stamp_saved_source;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
@@ -245,24 +244,38 @@ pub(crate) fn request(doc: &mut CadDocument, request: ExportRequest) -> Result<V
     }
 }
 
-/// Starts `request` now as export `seq` (nothing may be running).
-/// The job reads RoboCAD's `GET /` before the model and after hashing the
-/// saved file, and records `source.cad_sha256` only under
-/// `cad_client::stamp_saved_source`'s rule (see the module doc).
+/// Starts `request` now as export `seq` (nothing may be running): the
+/// in-process physical export (`sim_cad::physical::export`) of the open
+/// document's current snapshot (archive, exact geometry, exact masses) on a
+/// dedicated job, written atomically. `source.cad_sha256` is recorded only
+/// when the snapshot is the saved file ([`saved_hash`]); otherwise the
+/// reason is kept, and Robot mode's `cad_link` reports no recorded hash.
+/// Flexible links are not ported: every export is rigid and says so in
+/// `source.not_modelled` (a `physical` or `simulation` request too).
 fn start(doc: &mut CadDocument, request: ExportRequest, seq: u64) -> Result<(), String> {
-    if !doc.connected() {
-        return Err(format!("no CAD document is open: {}", doc.connection_line().0));
-    }
-    let client = doc.client.clone().ok_or(super::SIM_EXPORT_UNPORTED)?.with_timeout(EXPORT_TIMEOUT);
-    let (path, flex, planar) = (request.path.clone(), request.flex, request.planar);
-    let job = Job::spawn(Pool::Dedicated, doc.generation, format!("RoboCAD export: {}", request.label), move |ctx| {
-        let before = client.health().map_err(|e| e.to_string());
-        let mut model = client.physical_model(flex, planar).map_err(|e| e.to_string())?;
-        // A cancel before the write leaves no file (RoboCAD's request had run to the end).
+    let local = doc.local.clone().ok_or_else(|| format!("no CAD document is open: {}", doc.connection_line().0))?;
+    let saved = doc.history.saved.clone();
+    let file = match &doc.target {
+        crate::cad::CadTarget::File(p) => Some(p.clone()),
+        crate::cad::CadTarget::Service(_) => None,
+    };
+    let (path, planar) = (request.path.clone(), request.planar);
+    let job = Job::spawn(Pool::Dedicated, doc.generation, format!("Physical export: {}", request.label), move |ctx| {
+        ctx.message("Deriving the physical model");
+        let registry = registry_json();
+        let opts = sim_cad::physical::Options {
+            planar: planar.then_some(([0.0, -1.0, 0.0], [0.0, 0.0, 0.0])),
+            registry: registry.as_ref().map(|(json, sha)| sim_cad::materials::Registry { json, sha256: sha }),
+            exported_at: crate::robot::recording::stamp(crate::robot::recording::now_ms()),
+        };
+        let mut model = sim_cad::physical::export(&local.archive, &local.geometry, &local.masses, &opts)?;
         if ctx.cancelled() {
             return Err("cancelled".into());
         }
-        let stamp = stamp_saved_source(&mut model, before, |p| sha256_file(p).map_err(|e| e.to_string()), || client.health().map_err(|e| e.to_string()));
+        let stamp = saved_hash(&local.archive, saved.as_deref(), file.as_deref());
+        if let Ok(hash) = &stamp {
+            model["source"]["cad_sha256"] = json!(hash);
+        }
         let mut written = write_model(&path, &model, &|| ctx.cancelled())?;
         match stamp {
             Ok(hash) => written.cad_sha256 = Some(hash),
@@ -274,6 +287,29 @@ fn start(doc: &mut CadDocument, request: ExportRequest, seq: u64) -> Result<(), 
     let revision = doc.shown_revision();
     doc.results.exports.running = Some(Running { seq, request, job, started: Instant::now(), shown: 0, cancel_requested: false, revision });
     Ok(())
+}
+
+/// The saved `.rcad`'s SHA-256 when the exported snapshot is that file's
+/// content (no unsaved edits, and the bytes on disk still match), or why not.
+pub(crate) fn saved_hash(archive: &sim_cad::ArchiveDocument, saved: Option<&str>, file: Option<&Path>) -> Result<String, String> {
+    let file = file.ok_or("the document has no file yet: save it so the export can name the file it came from")?;
+    if saved != Some(archive.identity()) {
+        return Err(format!("{} has unsaved edits: save it so the export can name the file it came from", file.display()));
+    }
+    let hash = sha256_file(file).map_err(|e| format!("{}: could not be hashed: {e}", file.display()))?;
+    if archive.identity().trim_start_matches("sha256:") != hash.trim_start_matches("sha256:") {
+        return Err(format!("{} changed on disk since it was opened or saved here", file.display()));
+    }
+    Ok(hash)
+}
+
+/// The print registry (`library/printing/registry.json` under the workspace
+/// root) and its SHA-256, for filament engineering values; None without one.
+fn registry_json() -> Option<(Value, String)> {
+    let path = crate::workspace::root().ok()?.join("library/printing/registry.json");
+    let bytes = std::fs::read(&path).ok()?;
+    let json = serde_json::from_slice(&bytes).ok()?;
+    Some((json, sha256_file(&path).ok()?))
 }
 
 /// Python's truthiness of a JSON value (`export_worker`'s `l.get("flex")`).

@@ -56,6 +56,7 @@ fn document() -> CadDocument {
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
     doc.doc = Some(tree());
     doc.doc_key = Some((None, 4));
+    doc.open_fixture();
     doc
 }
 
@@ -63,6 +64,7 @@ fn document() -> CadDocument {
 fn offline() -> CadDocument {
     let mut doc = document();
     doc.client = None;
+    doc.local = None;
     doc.connection = Connection::Lost { error: "RoboCAD GET /: connect: refused".into(), since: std::time::Instant::now() };
     doc
 }

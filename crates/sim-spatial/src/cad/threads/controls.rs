@@ -79,8 +79,10 @@ pub(crate) fn controls_of(doc: &CadDocument, selection: &[SelectionItem]) -> Vec
     }
     let show_ready = current.map_or(Ok(()), |t| {
         if t.anchor_status == AnchorStatus::Evidence {
-            if t.evidence.as_ref().and_then(|e| e["run_id"].as_str()).is_some() && doc.client.is_some() { Ok(()) }
-            else { Err("Captured evidence requires a run_id and a connected service".into()) }
+            if t.evidence.as_ref().and_then(|e| e["run_id"].as_str()).is_none() { Err("Captured evidence requires a run_id".into()) }
+            // The captured run opens in experiment review, which reads RoboCAD's experiment service.
+            else if doc.client.is_none() { Err(crate::cad::threads::EVIDENCE_UNPORTED.into()) }
+            else { Ok(()) }
         } else if t.anchor.node_id.is_none() { Err("This annotation has no model pin".into()) }
         else { Ok(()) }
     });
@@ -111,6 +113,12 @@ pub(crate) fn controls_of(doc: &CadDocument, selection: &[SelectionItem]) -> Vec
         }
     }
     c("delete_thread".into(), "Delete thread", ThreadsArgs::thread(ThreadsOp::DeleteThread, id), need(edits.clone()));
+    // The AI (`ai`): ask about the open thread; automatic answers on or off.
+    let busy = current.and_then(|t| doc.threads.ai.latest(&t.id)).is_some_and(|r| r.status.active());
+    let ask_ready = if busy { Err("The AI is already working on this thread".to_string()) } else { Ok(()) };
+    c("ask".into(), "Ask AI", ThreadsArgs::thread(ThreadsOp::Ask, id), need(ask_ready));
+    let auto = doc.threads.ai.auto();
+    c("ai_auto".into(), "AI answers new comments", CadAction::CadThreads(ThreadsArgs { op: ThreadsOp::Ai, on: Some(!auto), ..ThreadsArgs::default() }), Ok(()));
     c("pins".into(), "Toggle comment pins", command_action("view.comment_pins").unwrap_or(CadAction::State), Ok(()));
     if let Some((action, label)) = submit_action(doc) {
         let ready = match draft_gone(doc) {

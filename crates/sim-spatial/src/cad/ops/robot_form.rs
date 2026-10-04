@@ -126,7 +126,7 @@ fn reading(doc: &CadDocument) -> String {
 pub(super) fn description(doc: &CadDocument) -> Result<&RobotSummary, String> {
     let data = &doc.robot.data;
     if !data.current(doc) {
-        return Err(if doc.connected() { reading(doc) } else { "the robot description cannot be read: not connected to RoboCAD".to_string() });
+        return Err(if doc.connected() { reading(doc) } else { "the robot description cannot be read: no CAD document is open".to_string() });
     }
     match data.bundle.as_ref().map(|b| &b.summary) {
         Some(Ok(s)) => Ok(s),

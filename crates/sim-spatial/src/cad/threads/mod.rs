@@ -33,6 +33,8 @@
 //!
 //! Window text never names REST routes; RoboCAD's labels and messages are
 //! its own (comments.py, annotations.py).
+pub(crate) mod agent;
+pub(crate) mod ai;
 mod annotate;
 mod controls;
 pub(in crate::cad) mod dock;
@@ -218,6 +220,13 @@ pub struct ThreadsState {
     pub(crate) error: Option<String>,
     pub(crate) tool: Option<Tool>,
     pub(crate) isolation: Option<isolation::Isolation>,
+    /// Who the commit being made writes as (`author_kind`; the window is a person).
+    pub(crate) kind: sim_cad::annotations::AuthorKind,
+    /// The AI in the threads (`ai`): its service, state and status.
+    pub(crate) ai: ai::CadAi,
+    /// Per reader: the newest comment time each has seen (`cad_threads
+    /// {op: "watch" | "seen", reader}`), in viewer memory.
+    pub(crate) seen: std::collections::BTreeMap<String, String>,
 }
 impl Default for ThreadsState {
     fn default() -> Self {
@@ -242,6 +251,9 @@ impl Default for ThreadsState {
             error: None,
             tool: None,
             isolation: None,
+            kind: sim_cad::annotations::AuthorKind::Person,
+            ai: Default::default(),
+            seen: Default::default(),
         }
     }
 }
@@ -365,6 +377,24 @@ pub enum ThreadsOp {
     Draft,
     /// The author (`text`).
     Author,
+    /// One thread with what an agent needs to discuss it: the stored
+    /// thread (`thread_detail`), its part (kind, material, exact mass), its
+    /// pin's camera, inspection view and linked parts, and the saved views
+    /// that show its part.
+    Get,
+    /// Wait (up to `timeout_s`, default 20, at most 120 seconds) for
+    /// comments newer than `since` (else `reader`'s seen mark), only those
+    /// by `author_kind` when given; answers them (oldest first) and moves
+    /// `reader`'s seen mark to the newest. Holds the REST queue while it
+    /// waits: `GET /v1/events/cad_threads` streams the same feed without.
+    Watch,
+    /// Move `reader`'s seen mark to `since` (else the newest comment).
+    Seen,
+    /// Ask the AI about `thread` now (`text`: the question; else its newest
+    /// comment by a person). It may edit the model; its reply is posted.
+    Ask,
+    /// Automatic AI answers to new comments on (`on: true`) or off.
+    Ai,
 }
 
 /// `cad_threads`' arguments.
@@ -409,6 +439,19 @@ pub struct ThreadsArgs {
     /// RoboCAD's revision the threads, the face or the pin were read at.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub revision: Option<u64>,
+    /// Who writes (`person`, the default, or `agent`: shown as an agent's
+    /// reply); for `watch`, only comments by this kind.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub author_kind: Option<String>,
+    /// `watch` / `seen`: whose unread mark (default "agent").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reader: Option<String>,
+    /// `watch` / `seen`: a comment time (ISO 8601, as comments carry it).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub since: Option<String>,
+    /// `watch`: how long to wait, in seconds.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout_s: Option<f64>,
 }
 impl ThreadsArgs {
     pub(crate) fn of(op: ThreadsOp) -> ThreadsArgs {
@@ -512,6 +555,10 @@ pub(crate) fn plain(e: &str) -> String {
     }
 }
 
+/// Why a captured-experiment pin cannot be shown: experiment review reads
+/// RoboCAD's experiment service, which has no in-process port yet.
+pub(crate) const EVIDENCE_UNPORTED: &str = "Captured experiment review is not available in the in-process editor yet (it reads RoboCAD's experiment service)";
+
 /// `sync::start` (a reconnect, a new document): commits sent on the old
 /// connection will not land here, and what was read and picked on it goes.
 pub(crate) fn restarted(doc: &mut CadDocument) {
@@ -564,6 +611,7 @@ pub(in crate::cad) fn state_json(doc: &CadDocument) -> Value {
         "annotate": st.tool.as_ref().map(|t| json!({"reattach": t.thread})),
         "isolation": isolation::state_json(doc),
         "in_flight": st.in_flight.busy(),
+        "ai": st.ai.json(),
     })
 }
 
@@ -573,7 +621,7 @@ pub(in crate::cad) fn specs() -> Vec<Spec> {
         "cad_threads",
         CAD,
         json!({"op": "create", "node": "b1", "point": [10.0, 0.0, 5.0], "face": 2, "body": "Too thin here", "author": "You"}),
-        "CAD mode: RoboCAD's comment threads (cad_state.threads: each thread with its number, part, status, attachment, messages and linked parts; read with GET /threads at each revision). op: state; list (waits for the threads at RoboCAD's current revision); dock (open true | false, absent toggles the Comments section); open (thread); create (node, point [x, y, z] mm, face? index at revision, view? RoboCAD's camera {target, distance, yaw, pitch, fov, orthographic, mode, rot}, body, author? default the dock's author \"You\"; without node, the pin placed by Annotate: POST /threads, undo step \"Add annotation\"); reply (thread? default the open one, body, author?: POST /threads/{id}/comments, \"Reply to annotation\"); edit (comment, body: PATCH /comments/{id}, \"Edit comment\"); delete (comment: DELETE /comments/{id}; RoboCAD refuses a thread's last message); delete_thread (thread); resolve (thread, resolved? absent toggles: PATCH status); reattach (thread, node, point, face?, view?: PATCH with the new pin; without node it starts Annotate for that thread); link (thread, ids? default the selected nodes: PATCH part_refs); label (thread, node, label: a linked part's plain-language label, at most 120 characters); annotate, place, cancel (the window's Annotate tool and its clicks); discard (the composer's Cancel); filter (filter open | all | resolved); selected_only (on); edit_message, menu, draft (text), author (text), insert_link (part links of the selected nodes into the draft); show (the thread's saved camera on the native camera, its part selected), fit (its linked parts framed and selected), show_parts (thread or ids: only those parts drawn, display only, RoboCAD's visibility unchanged), return (the view, selection and section before show_parts), part (a linked part and its children selected), part_link (node: selects it as cad_select {ids: [node]} does, then shows it alone). Commits take revision? (default the revision the threads were read at) and are refused by name when RoboCAD's document moved since, while another CAD edit is in flight or when disconnected; a REST caller waits for RoboCAD's answer. Undo is RoboCAD's (cad_undo). system_ui lists cad:threads:*.",
+        "CAD mode: RoboCAD's comment threads (cad_state.threads: each thread with its number, part, status, attachment, messages and linked parts; read with GET /threads at each revision). op: state; list (waits for the threads at RoboCAD's current revision); dock (open true | false, absent toggles the Comments section); open (thread); create (node, point [x, y, z] mm, face? index at revision, view? RoboCAD's camera {target, distance, yaw, pitch, fov, orthographic, mode, rot}, body, author? default the dock's author \"You\"; without node, the pin placed by Annotate: POST /threads, undo step \"Add annotation\"); reply (thread? default the open one, body, author?: POST /threads/{id}/comments, \"Reply to annotation\"); edit (comment, body: PATCH /comments/{id}, \"Edit comment\"); delete (comment: DELETE /comments/{id}; RoboCAD refuses a thread's last message); delete_thread (thread); resolve (thread, resolved? absent toggles: PATCH status); reattach (thread, node, point, face?, view?: PATCH with the new pin; without node it starts Annotate for that thread); link (thread, ids? default the selected nodes: PATCH part_refs); label (thread, node, label: a linked part's plain-language label, at most 120 characters); annotate, place, cancel (the window's Annotate tool and its clicks); discard (the composer's Cancel); filter (filter open | all | resolved); selected_only (on); edit_message, menu, draft (text), author (text), insert_link (part links of the selected nodes into the draft); show (the thread's saved camera on the native camera, its part selected), fit (its linked parts framed and selected), show_parts (thread or ids: only those parts drawn, display only, RoboCAD's visibility unchanged), return (the view, selection and section before show_parts), part (a linked part and its children selected), part_link (node: selects it as cad_select {ids: [node]} does, then shows it alone). Commits take revision? (default the revision the threads were read at) and are refused by name when RoboCAD's document moved since, while another CAD edit is in flight or when disconnected; a REST caller waits for RoboCAD's answer. Undo is the document's (cad_undo). ask (thread, text?: the AI answers, may edit the model through REST, and its reply is posted as an agent comment) and ai (on: automatic AI answers to new comments) drive the in-window AI; cad_state.threads.ai shows it. system_ui lists cad:threads:*.",
     )]
 }
 

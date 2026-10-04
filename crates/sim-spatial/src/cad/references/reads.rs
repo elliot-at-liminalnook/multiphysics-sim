@@ -157,7 +157,7 @@ pub(crate) fn tick(doc: &mut CadDocument) -> bool {
     let now: Key = (doc.generation, doc.shown_revision());
     let at = (now, doc.mesh_retry);
     let mut changed = false;
-    let client = doc.client.clone().filter(|_| doc.connected());
+    let client = doc.local.clone().filter(|_| doc.connected());
     let ids: Vec<String> = images(doc).into_iter().map(|n| n.id.clone()).collect();
     let reads = &mut doc.references.reads;
     // Placements.
@@ -189,7 +189,8 @@ pub(crate) fn tick(doc: &mut CadDocument) -> bool {
                     if ctx.cancelled() {
                         return Err("superseded by a newer revision".to_string());
                     }
-                    let p = c.node(&id).map_err(|e| e.to_string()).and_then(|d| ImagePlacement::of(&d).ok_or_else(|| format!("{} has no image placement", d.summary.name)));
+                    let node = c.archive.node(&id).cloned().ok_or_else(|| format!("no node {id}"));
+                    let p = node.and_then(|n| serde_json::from_value::<sim_runtime::cad_client::NodeDetail>(n).map_err(|e| e.to_string())).and_then(|d| ImagePlacement::of(&d).ok_or_else(|| format!("{} has no image placement", d.summary.name)));
                     out.push((id, p));
                 }
                 Ok(out)
@@ -224,7 +225,10 @@ pub(crate) fn tick(doc: &mut CadDocument) -> bool {
         && let Some(c) = client
     {
         reads.status_retry = doc.mesh_retry;
-        reads.status_job = Some((now, Job::spawn(Pool::Dedicated, now.0, "cad system status", move |_| c.system_status().map_err(|e| e.to_string()))));
+        reads.status_job = Some((now, Job::spawn(Pool::Compute, now.0, "cad system status", move |_| {
+            let status = sim_cad::references::status(&c.archive.path, &c.archive.manifest["robot_settings"]["system"]);
+            serde_json::from_value(status).map_err(|e| e.to_string())
+        })));
         // A re-read at the same key shows nothing new until it answers differently.
         changed |= unread;
     }

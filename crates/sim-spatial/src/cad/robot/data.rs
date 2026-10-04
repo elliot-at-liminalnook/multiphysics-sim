@@ -187,25 +187,31 @@ pub(crate) fn sync(doc: Option<ResMut<CadDocument>>) {
     if data.key == Some(now) || data.job.is_some() || !doc.connected() || doc.doc_key.is_none() {
         return;
     }
-    let Some(client) = doc.client.clone() else { return };
+    let Some(local) = doc.local.clone() else { return };
     let library = data.motors.as_ref().is_none_or(|(g, r)| *g != now.0 || r.is_err());
-    let job = Job::spawn(Pool::Dedicated, now.0, "cad-robot-description", move |ctx| {
-        let e = |e: sim_runtime::cad_client::CadError| e.to_string();
-        let stop = || if ctx.cancelled() { Err("superseded by a newer revision".to_string()) } else { Ok(()) };
-        let summary = client.robot().map_err(e);
-        stop()?;
-        let results = client.results_nodes().map_err(e);
-        stop()?;
-        let sensors = client.sensors().map_err(e);
-        let cables = client.cables().map_err(e);
-        stop()?;
-        let battery = client.battery().map_err(e);
-        let control = client.control().map_err(e);
-        let uncertainty = client.uncertainty().map_err(e);
-        let profiles = client.actuator_profiles().map_err(e);
-        stop()?;
-        let motors = library.then(|| client.motors().map_err(e));
-        Ok(Bundle { summary, results, sensors, cables, battery, control, uncertainty, profiles, motors })
+    let revision = doc.shown_revision();
+    // Read from the open archive (`sim_cad::robotics`; no service).
+    let job = Job::spawn(Pool::Compute, now.0, "cad-robot-description", move |_| {
+        let archive = &local.archive;
+        let m = &archive.manifest;
+        fn parse<T: serde::de::DeserializeOwned>(v: Value) -> Result<T, String> {
+            serde_json::from_value(v).map_err(|e| e.to_string())
+        }
+        let summary = parse(sim_cad::robotics::summary(archive));
+        let nodes_of = |kind: &str| -> Result<Vec<NodeDetail>, String> { m["nodes"].as_array().into_iter().flatten().filter(|n| n["kind"] == kind).map(|n| parse(n.clone())).collect() };
+        let res = &m["results"];
+        let node_results: serde_json::Map<String, Value> = m["nodes"].as_array().into_iter().flatten().filter(|n| n["results"].is_object()).map(|n| (n["id"].as_str().unwrap_or("").to_string(), json!({"results": n["results"], "yield_strength_pa": null}))).collect();
+        let results = parse(json!({"revision": revision, "path": res["path"], "loaded": res["loaded"], "stale": if res.is_object() { json!(false) } else { Value::Null }, "provenance": res["provenance"], "margins": {}, "nodes": node_results}));
+        let setting = |k: &str| m["robot_settings"].get(k).cloned().unwrap_or(Value::Null);
+        let battery = parse(setting("battery"));
+        let control = parse(setting("control"));
+        let uncertainty = parse(setting("uncertainty"));
+        let profiles = Ok(setting("actuator_profiles"));
+        let motors = library.then(|| {
+            let lib = sim_cad::robotics::library_json();
+            Ok(lib.as_object().into_iter().flatten().filter_map(|(k, v)| serde_json::from_value(v.clone()).ok().map(|v| (k.clone(), v))).collect())
+        });
+        Ok(Bundle { summary, results, sensors: nodes_of("sensor"), cables: nodes_of("cable"), battery, control, uncertainty, profiles, motors })
     });
     doc.robot.data.job = Some((now, job));
 }

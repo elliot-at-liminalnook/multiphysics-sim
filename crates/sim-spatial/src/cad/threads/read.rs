@@ -121,7 +121,7 @@ fn needs_work(doc: &CadDocument, pins: bool) -> Option<Option<Landed>> {
         None => {}
     }
     let have = r.listed.as_ref().is_some_and(|(k, _)| *k == now) || r.error.as_ref().is_some_and(|(k, _)| *k == now);
-    (!have && wanted(doc, pins)).then_some(None)
+    (!have && (wanted(doc, pins) || doc.local.is_some() && doc.connected())).then_some(None)
 }
 
 /// A job for another key dropped, a `landed` answer kept, a read started.
@@ -130,6 +130,7 @@ pub(crate) fn tick(doc: &mut CadDocument, pins: bool, landed: Option<Landed>) ->
     let now = key(doc);
     let want = wanted(doc, pins);
     let client = doc.client.clone().filter(|_| doc.connected());
+    let local = doc.local.clone().filter(|_| doc.connected());
     let generation = doc.generation;
     let r = &mut doc.threads.read;
     let mut touched = false;
@@ -151,6 +152,18 @@ pub(crate) fn tick(doc: &mut CadDocument, pins: bool, landed: Option<Landed>) ->
         touched = true;
     }
     let have = r.listed.as_ref().is_some_and(|(k, _)| *k == now) || r.error.as_ref().is_some_and(|(k, _)| *k == now);
+    // The open archive's threads are read in place (no job: a manifest walk).
+    if !have && r.job.is_none() && let Some(local) = &local {
+        match local_list(local) {
+            Ok(list) => {
+                r.listed = Some((now, list));
+                r.error = None;
+                r.asked = false;
+            }
+            Err(e) => r.error = Some((now, e)),
+        }
+        return true;
+    }
     if !have && r.job.is_none() && want && let Some(client) = client {
         let job = Job::spawn(Pool::Dedicated, generation, "cad-threads", move |ctx| {
             if ctx.cancelled() {
@@ -163,6 +176,14 @@ pub(crate) fn tick(doc: &mut CadDocument, pins: bool, landed: Option<Landed>) ->
         touched = true;
     }
     touched
+}
+
+/// The open archive's threads as `thread_detail` answers them.
+pub(crate) fn local_list(local: &crate::cad::sync::LocalSnapshot) -> Result<Vec<CadThread>, String> {
+    sim_cad::annotations::list(&local.archive, &local.pin_stamps, None, None, None)?
+        .into_iter()
+        .map(|t| serde_json::from_value(t).map_err(|e| format!("comment thread: {e}")))
+        .collect()
 }
 
 /// Whether a REST caller should wait for the threads at the current key
@@ -189,7 +210,7 @@ pub(crate) fn wait(doc: &mut CadDocument, call: &mut Call) -> Result<bool, Strin
         return Err(format!("RoboCAD's comments could not be read (GET /threads): {e}"));
     }
     if !doc.connected() {
-        return Err(format!("not connected to RoboCAD: {}", doc.connection_line().0));
+        return Err(format!("no CAD document is open: {}", doc.connection_line().0));
     }
     if doc.doc_key.is_none() {
         return Err("RoboCAD's document has not been read yet; try again".into());
@@ -304,5 +325,5 @@ fn sync(doc: Option<ResMut<CadDocument>>, display: Option<Res<CadDisplay>>, redr
 
 /// CadCorePlugin: the read (JobResults, after `sync::receive`).
 pub(super) fn build_core(app: &mut App) {
-    app.add_systems(Update, sync.after(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
+    app.add_systems(Update, (sync, super::ai::tick).after(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
 }

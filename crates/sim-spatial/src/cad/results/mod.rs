@@ -73,6 +73,10 @@ use sim_domain_robot::stress_results::SCALE;
 use std::path::{Path, PathBuf};
 
 /// What RoboCAD's own window draws instead (`viewport._stress_colors`).
+/// Why the simulator export (and its live link) refuses: it was RoboCAD's
+/// `export_physical_model` (collision meshes, joint physics, flex), which has
+/// no in-process port yet.
+pub(crate) const SIM_EXPORT_UNPORTED: &str = "The simulator export (RoboCAD's physical model: collision meshes, joint physics, flex) is not ported to the in-process editor yet";
 pub(crate) const ROBOCAD_SCALE: &str = "RoboCAD's own window colours linearly, blue 0 → red at yield; this window uses the rule Robot mode uses";
 
 /// What `cad_results` does.
@@ -273,7 +277,7 @@ pub(in crate::cad) fn note_save(doc: &mut CadDocument, path: Option<&str>) {
 }
 
 /// One edit through `edit_at`, remembered when it started.
-fn edit_noted(doc: &mut CadDocument, call: &mut Call, label: String, what: Waiting, work: impl FnOnce(&sim_runtime::cad_client::CadClient) -> Result<EditDone, sim_runtime::cad_client::CadError> + Send + 'static) -> Outcome {
+fn edit_noted(doc: &mut CadDocument, call: &mut Call, label: String, what: Waiting, work: impl FnOnce(&mut crate::cad::local::Workspace) -> Result<EditDone, sim_runtime::cad_client::CadError> + Send + 'static) -> Outcome {
     let before = doc.edit_seq;
     let outcome = edit_at(doc, call, None, label, work);
     if doc.edit_seq != before {
@@ -483,7 +487,7 @@ pub(in crate::cad) fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Resul
 /// The controls for `doc` (the panel's buttons write the same actions).
 pub(crate) fn controls_of(doc: &CadDocument) -> Vec<(String, String, CadAction, Result<(), String>)> {
     let r = &doc.results;
-    let connected = || if doc.connected() { Ok(()) } else { Err(format!("not connected to RoboCAD: {}", doc.connection_line().0)) };
+    let connected = || if doc.connected() { Ok(()) } else { Err(format!("no CAD document is open: {}", doc.connection_line().0)) };
     let mut out = vec![
         ("cad:results:load".to_string(), "Load simulation results…".to_string(), ResultsArgs::of(ResultsOp::Load), connected()),
         ("cad:results:identify".to_string(), "Apply identified joint parameters…".to_string(), ResultsArgs::of(ResultsOp::Identify), connected()),

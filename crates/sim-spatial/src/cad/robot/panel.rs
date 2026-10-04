@@ -207,7 +207,7 @@ fn read_line(doc: &CadDocument) -> Line {
         Some(at) if data.reading() => Line::new(format!("At revision {at}; reading revision {shown}…"), Tone::Quiet),
         Some(at) => Line::new(format!("At revision {at}; the document shows revision {shown}"), Tone::Warn),
         None if data.reading() => Line::new("Reading RoboCAD's robot description…", Tone::Quiet),
-        None if !doc.connected() => Line::new(format!("No robot description: not connected to RoboCAD ({})", doc.connection_line().0), Tone::Warn),
+        None if !doc.connected() => Line::new(format!("No robot description: no CAD document is open ({})", doc.connection_line().0), Tone::Warn),
         None => Line::new("Waiting for RoboCAD's document…", Tone::Quiet),
     }
 }
@@ -359,8 +359,8 @@ fn buttons(doc: &CadDocument, selection: &[SelectionItem]) -> Vec<PanelButton> {
             // Display only.
             "view.stress" => Ok(()),
             // Writes a file, not the document.
-            "sim.export" if doc.connected() => Ok(()),
-            "sim.export" => Err(format!("not connected to RoboCAD: {}", doc.connection_line().0)),
+            "sim.export" if doc.client.is_some() && doc.connected() => Ok(()),
+            "sim.export" => Err(crate::cad::results::SIM_EXPORT_UNPORTED.to_string()),
             // Loading results and identification change RoboCAD's document.
             _ => doc.edit_refusal().map_or(Ok(()), Err),
         };

@@ -29,6 +29,16 @@ impl ArchiveDocument {
     ) -> Result<Self, String> {
         progress("Reading archive");
         let bytes = std::fs::read(path).map_err(|e| format!("{}: archive: {e}", path.display()))?;
+        Self::from_bytes(path, bytes, cancelled, progress)
+    }
+    /// An archive from its bytes, as if read from `path` (edits and undo
+    /// rebuild documents this way without touching the file).
+    pub fn from_bytes(
+        path: &Path,
+        bytes: Vec<u8>,
+        cancelled: &dyn Fn() -> bool,
+        progress: &dyn Fn(&str),
+    ) -> Result<Self, String> {
         let model_identity = format!("sha256:{:x}", Sha256::digest(&bytes));
         let mut z = zip::ZipArchive::new(Cursor::new(&bytes))
             .map_err(|e| format!("{}: zip: {e}", path.display()))?;

@@ -41,6 +41,7 @@ fn document() -> CadDocument {
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
     doc.doc = Some(DocState { nodes: vec![node("g1", None, "Frame"), node("b1", Some("g1"), "Bracket"), node("b2", Some("g1"), "Plate"), node("b3", None, "Base")], revision: 4, ..Default::default() });
     doc.doc_key = Some((None, 4));
+    doc.open_fixture();
     doc
 }
 
@@ -74,13 +75,13 @@ fn a_commit_is_refused_by_name_when_stale_and_pending_otherwise() {
     listed(&mut doc);
     doc.threads.current = Some("a1".into());
     let reply = ThreadsArgs { op: ThreadsOp::Reply, body: Some("Looks fine now".into()), ..ThreadsArgs::default() }.action();
-    // RoboCAD moved on to revision 5 since the threads were read at 4.
-    doc.health.as_mut().unwrap().revision = 5;
+    // The document moved on to revision 5 since the threads were read at 4.
+    doc.doc_key = Some((None, 5));
     let out = apply(&reply, &mut doc, &mut f);
-    assert!(matches!(&out, Outcome::Done(Err(e)) if e.contains("revision 4, now 5") && e.contains("nothing was sent")), "the stale reply was not refused by name");
+    assert!(matches!(&out, Outcome::Done(Err(e)) if e.contains("read at revision 4, the document is at 5") && e.contains("nothing was sent")), "the stale reply was not refused by name");
     assert!(doc.edit.is_none() && !doc.threads.in_flight.busy());
     // A landed commit makes the list stale until it is read again.
-    doc.health.as_mut().unwrap().revision = 4;
+    doc.doc_key = Some((None, 4));
     doc.threads.read.again();
     assert!(matches!(apply(&reply, &mut doc, &mut f), Outcome::Done(Err(e)) if e.contains("being read again") && e.contains("nothing was sent")));
     assert!(doc.edit.is_none());
@@ -347,11 +348,10 @@ fn unknown_mutation_requires_fresh_explicit_ack_and_retains_receipt() {
 fn evidence_navigation_uses_captured_run_instead_of_a_model_pin() {
     let mut doc=document();listed(&mut doc);
     doc.threads.current=Some("e1".into());
-    let controls=controls_of(&doc,&[]);
-    assert!(controls.iter().find(|c|c.id=="cad:threads:show").unwrap().ready.is_ok());
+    // Experiment review reads RoboCAD's experiment service: refused by name in process.
     doc.client=None;
     let controls=controls_of(&doc,&[]);
-    assert!(controls.iter().find(|c|c.id=="cad:threads:show").unwrap().ready.is_err());
+    assert_eq!(controls.iter().find(|c|c.id=="cad:threads:show").unwrap().ready, Err(super::EVIDENCE_UNPORTED.to_string()));
 }
 
 /// A pin placed at revision 4 is never posted once the shown document is
@@ -367,8 +367,7 @@ fn a_stale_pin_is_never_sent_and_annotate_replaces_it_keeping_the_text() {
     doc.threads.pending = Some(super::Pending { node: "b2".into(), point: [1.0, 2.0, 3.0], face: Some(4), view: Default::default(), revision: 4 });
     doc.threads.compose = "Chamfer this edge".into();
     assert_eq!(super::stale_pin(&doc), None);
-    // RoboCAD's window edited something: the shown document is at revision 5, read again.
-    doc.health.as_mut().unwrap().revision = 5;
+    // Another edit landed: the shown document is at revision 5, read again.
     doc.doc_key = Some((None, 5));
     listed(&mut doc);
     assert_eq!(super::stale_pin(&doc), Some(4));

@@ -577,7 +577,7 @@ fn variant(
         stack.remove(id);
         return result;
     }
-    let mut parts = HashMap::new();
+    let mut parts: HashMap<String, Part> = HashMap::new();
     for n in d["nodes"].as_array().ok_or("definition nodes missing")? {
         let nid = n["id"].as_str().ok_or("definition node id missing")?;
         let recipe = if n["component_member"].is_null() && !n["body_kind"].is_null() {

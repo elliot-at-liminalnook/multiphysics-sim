@@ -57,6 +57,7 @@ fn fixture() -> (CadDocument, ComponentsState) {
         ..Default::default()
     });
     st.selected = Some("child".into());
+    doc.open_fixture();
     (doc, st)
 }
 
@@ -133,11 +134,12 @@ fn typed_port_and_stale_submit_refuse_before_network() {
             .unwrap_err()
             .contains("components.bindings.mount")
     );
-    doc.health.as_mut().unwrap().revision = 5;
+    // The document moved on: the catalogue read at 4 no longer applies, so the submit is refused and the draft kept.
+    doc.doc_key.as_mut().unwrap().1 = 5;
     assert!(
         submit(&mut st, &mut doc, None, None)
             .unwrap_err()
-            .contains("document changed")
+            .contains("at the shown document revision")
     );
     assert!(st.active.is_none());
     assert_eq!(st.draft().unwrap().fields["binding.mount"], "part");

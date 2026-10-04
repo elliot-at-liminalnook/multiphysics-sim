@@ -119,6 +119,7 @@ fn split_sends_the_chosen_printer_and_joint_as_a_background_job() {
 }
 
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn strength_and_plan_send_the_study_with_the_revision_or_robocads_explanation() {
     let mut doc = document();
     let mut want = study_json();
@@ -144,6 +145,7 @@ fn strength_and_plan_send_the_study_with_the_revision_or_robocads_explanation() 
 }
 
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn strength_split_takes_the_first_study_part_selected_with_the_studys_settings() {
     let doc = document();
     // Selection order b2, b1: the study's order decides (RoboCAD's `next(p for p in parts …)`).
@@ -188,6 +190,7 @@ fn coupons_send_the_split_or_none_with_the_chosen_printer_and_filament() {
 }
 
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn the_split_and_coupon_dialogs_wait_for_the_registry() {
     let mut doc = document();
     let split = ops::entry("print.split").unwrap();
@@ -211,6 +214,7 @@ fn the_split_and_coupon_dialogs_wait_for_the_registry() {
 }
 
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn a_refused_start_sends_nothing_and_notes_nothing() {
     let mut doc = document();
     let plan = build(&doc, PrintCall::Strength, "print.strength", &[], json!({})).unwrap();

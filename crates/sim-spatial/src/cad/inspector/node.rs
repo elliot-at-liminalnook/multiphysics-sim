@@ -125,14 +125,6 @@ fn sub_body(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection:
     if selection.len() > 1 {
         field(p, k, "Selected items", &selection.len().to_string(), "");
     }
-    if doc.client.is_none() {
-        if matches!(kind.as_str(), "face" | "point") {
-            p.spawn(k.note("This selection names a face from local display triangles. Exact face, edge and vertex details await Rust topology migration; no topology fetch is pending."));
-        } else {
-            p.spawn(k.note("This sub-body selection requires exact topology, which awaits Rust migration; no topology fetch is pending."));
-        }
-        return;
-    }
     let Some(topology) = topology else {
         p.spawn(k.caption("This window holds no topology (no 3D view)."));
         return;
@@ -148,7 +140,7 @@ fn sub_body(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection:
         }
         return;
     };
-    p.spawn(k.note(format!("RoboCAD's topology of {name} at revision {} (mm)", topo.revision)));
+    p.spawn(k.note(format!("Exact topology of {name} at revision {} (mm)", topo.revision)));
     let missing = |what: &str| format!("RoboCAD listed no {what} {index} for {name} at revision {}.", topo.revision);
     match kind.as_str() {
         "edge" => match topo.edges.iter().find(|e| e.index == *index) {
@@ -211,7 +203,7 @@ fn waiting(doc: &CadDocument) -> Option<(String, bool)> {
     }
     Some(match &doc.connection {
         Connection::Connecting { what, .. } => (format!("Waiting for the connection to RoboCAD: {what}."), false),
-        Connection::Lost { error, .. } => (format!("No detail: not connected to RoboCAD: {error}"), true),
+        Connection::Lost { error, .. } => (format!("No detail: no CAD document is open: {error}"), true),
         Connection::Connected => ("Waiting for the connection to RoboCAD.".to_string(), false),
     })
 }

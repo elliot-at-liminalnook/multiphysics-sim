@@ -34,6 +34,7 @@ fn document() -> CadDocument {
         ..Default::default()
     });
     doc.commands = Some(Ok([("view.fit".to_string(), CommandInfo { label: "Fit view".into(), category: "View".into(), keys: json!("Home") })].into_iter().collect()));
+    doc.open_fixture();
     doc
 }
 

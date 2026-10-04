@@ -133,6 +133,7 @@ pub(in crate::cad) fn key(doc: &CadDocument, selection: &[SelectionItem]) -> Str
             (read::listed(doc), read::line(doc), st.filter, st.selected_only, &st.current, &st.part, &st.menu),
             (&st.compose, &st.pending, &st.editing, &st.author, &st.label, st.focus, &st.error, st.sending.as_ref().map(|s| s.0)),
             (st.tool.is_some(), st.isolation.as_ref().map(|i| &i.parts), selection.nodes(), doc.doc.as_ref().map(|d| d.nodes.len()), ready, super::draft_gone(doc)),
+            (st.current.as_deref().and_then(|t| st.ai.line(t)), st.ai.auto()),
         )
     )
 }
@@ -239,6 +240,14 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
             }
         }
         threads::messages(p, k, &host, &shown, st.menu.as_deref());
+        // The AI: what it is doing on this thread, Ask AI and the automatic answers.
+        if let Some(line) = st.ai.line(&t.id) {
+            p.spawn(k.text(line, size::DETAIL, ACCENT, 0));
+        }
+        p.spawn(wrap()).with_children(|r| {
+            button(r, k, &all, "ask", Look::Secondary);
+            chip(r, k, &all, "ai_auto", st.ai.auto());
+        });
     }
     let drafting = st.drafting() || st.focus == Some(Field::Compose);
     // A draft stays drawn (with its Cancel) when its thread or message is
@@ -272,7 +281,7 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
             },
         );
         if st.sending.is_some() {
-            p.spawn(k.text("Sending to RoboCAD…", size::DETAIL, SUBTLE, 0));
+            p.spawn(k.text("Saving…", size::DETAIL, SUBTLE, 0));
         }
     }
     if current.is_some() {

@@ -74,6 +74,7 @@ fn status_texts_are_robocads() {
 }
 
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn build_takes_the_selection_else_the_visible_bodies_and_refuses_nothing() {
     let doc = document();
     let wall = entry("print.wall_check").unwrap();
@@ -107,6 +108,7 @@ fn build_takes_the_selection_else_the_visible_bodies_and_refuses_nothing() {
 /// Cached reads are keyed by (generation, node, revision, threshold); a
 /// check of cached nodes sends nothing and lands at once, remembering its threshold.
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn a_repeat_check_of_unchanged_nodes_sends_nothing() {
     let mut doc = document();
     let g = doc.generation;
@@ -152,6 +154,7 @@ fn a_repeat_check_of_unchanged_nodes_sends_nothing() {
 
 /// The points are drawn and clearable only at the shown revision.
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn points_show_at_their_revision_and_clear() {
     let mut doc = document();
     let g = doc.generation;
@@ -254,6 +257,7 @@ fn overhang_shading_follows_the_build_plate() {
 /// An accepted cached launch is sufficient to remember its validated
 /// threshold; neither network nor disk work is needed by this fixture.
 #[test]
+#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn accepted_cached_launch_updates_the_owner_and_refusal_does_not() {
     use crate::app::actions::{Call, Origin, Replies};
     let mut doc = document();

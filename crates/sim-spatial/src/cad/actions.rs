@@ -9,7 +9,7 @@ use crate::app::ViewerMode;
 use super::document::{CadTool, SelectMode};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
-use sim_runtime::cad_client::{CadClient, SelectionItem};
+use sim_runtime::cad_client::SelectionItem;
 use std::path::PathBuf;
 
 /// One end of a measurement (RoboCAD's `MeasureTool` pick): the picked item
@@ -325,11 +325,19 @@ pub(crate) enum CadAction {
     CadMotion(super::motion::MotionArgs),
     /// `system_ui` in CAD mode: `{action: {operation: controls | activate, id?, ui_revision?}}`.
     SystemUi(Map<String, Value>),
+    /// Direct modelling in process (`model`): primitives, extrude, booleans,
+    /// fillet, chamfer, move, groups, and the topology listing.
+    CadModel(super::model::ModelArgs),
+    /// How the editor works, for an agent starting cold (`guide`); also `GET /v1/cad_guide`.
+    CadGuide {
+        #[serde(default)]
+        topic: Option<String>,
+    },
 }
 
 // ---- The one handler -------------------------------------------------------
 
-use super::document::{CadDocument, CadTarget, EditDone};
+use super::document::{CadDocument, EditDone};
 use super::mesh::CadMeshes;
 use super::sketch::{CadActivePlane, CadSketches};
 use super::sync::{self, value};
@@ -344,6 +352,7 @@ use bevy::ecs::message::Messages;
 use bevy::prelude::*;
 use sim_api::Outcome;
 pub(super) use super::edit::{edit, edit_at, edit_auxiliary_at};
+pub(crate) use super::edit::local_edit_at;
 use std::collections::HashSet;
 
 /// Actions: CAD mode's one apply system. A click's or key's refusal is the
@@ -479,18 +488,6 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
         if !super::activation::current(source, doc) || !super::activation::files_current(source, cx.files.as_deref()) { return done(Err("CAD control belongs to a replaced source or form".into())); }
         return handle(action, call, cx);
     }
-    let supported = matches!(action,
-        CadAction::State | CadAction::CadState | CadAction::CadOpen { .. }
-        | CadAction::CadSelect { .. } | CadAction::CadSelectMode { .. }
-        | CadAction::CadHover { .. } | CadAction::CadBoxSelect { .. }
-        | CadAction::CadCandidates { .. } | CadAction::CadSelectAll
-        | CadAction::CadInvertSelection | CadAction::CadSelectSameMaterial | CadAction::CadEdgesToFaces
-        | CadAction::CadRefresh | CadAction::CadFit { .. } | CadAction::CadPhysical
-        | CadAction::CadCancel | CadAction::SystemUi(_) | CadAction::CadTree(_)
-        | CadAction::CadFile(_) | CadAction::CadDisplay(_) | CadAction::CadSurface { .. });
-    if !supported {
-        return done(Err(format!("{action:?}: awaiting Rust migration; local opening, body display/selection and mass inspection are available")));
-    }
     match action {
         CadAction::Captured { .. } => unreachable!("captured intent handled above"),
         CadAction::State | CadAction::CadState => done(Ok(state_json(doc, &cx.shared.items(), cx.meshes.as_deref(), Some(&*cx.plane), Parts::of(cx.display.as_deref(), cx.views.as_deref(), cx.files.as_deref()).authoring(cx.components, cx.composition).experiments(cx.experiments, cx.review, cx.motion).defaults(&cx.settings.cad)))),
@@ -526,14 +523,13 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
             let name = doc.node_name(id);
             let keys = attrs.keys().cloned().collect::<Vec<_>>().join(", ");
             let (id, attrs) = (id.clone(), attrs.clone());
-            let message = format!("Patched {name}: {keys}");
             // A chip, name or transform field clicked in the window computed
-            // its value from the shown tree (a toggle sends the opposite of
-            // the shown flag): sent only while that is RoboCAD's revision. A
-            // REST `cad_patch` names its values; a `system_ui` activation has
-            // the REST origin and is checked by its listing's `ui_revision`.
+            // its value from the shown tree: applied only at that revision.
             let began = (!call.rest()).then(|| doc.shown_revision());
-            edit_at(doc, call, began, format!("Patch {name}: {keys}"), move |c| c.patch(&id, &attrs).map(|d| EditDone { message, result: value(&d) }))
+            local_edit_at(doc, call, began, format!("Patch {name}: {keys}"), false, move |ws| {
+                let changed = sim_cad::nodes::patch(&mut ws.edit, &id, &attrs)?;
+                Ok(EditDone { message: format!("Patched {name}: {}", changed.join(", ")), result: json!({"id": id, "changed": changed}) })
+            })
         }
         CadAction::CadDelete { id } => {
             if !doc.has_node(id) {
@@ -541,22 +537,40 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
             }
             let name = doc.node_name(id);
             let id = id.clone();
-            let message = format!("Deleted {name}");
-            edit(doc, call, format!("Delete {name}"), move |c| c.delete(&id).map(|d| EditDone { message, result: value(&d) }))
+            local_edit_at(doc, call, None, format!("Delete {name}"), false, move |ws| {
+                let deleted = sim_cad::nodes::delete(&mut ws.edit, std::slice::from_ref(&id))?;
+                Ok(EditDone { message: format!("Deleted {name}"), result: json!({"deleted": deleted}) })
+            })
         }
-        CadAction::CadUndo => edit(doc, call, "Undo".into(), |c| {
-            c.undo().map(|u| EditDone { message: u.undone.as_ref().map_or_else(|| "Nothing to undo".to_string(), |l| format!("Undid {l}")), result: value(&u) })
-        }),
-        CadAction::CadRedo => edit(doc, call, "Redo".into(), |c| {
-            c.redo().map(|r| EditDone { message: r.redone.as_ref().map_or_else(|| "Nothing to redo".to_string(), |l| format!("Redid {l}")), result: value(&r) })
-        }),
+        CadAction::CadUndo | CadAction::CadRedo => {
+            let redo = matches!(action, CadAction::CadRedo);
+            match super::local::step(doc, redo) {
+                Err(e) => done(Err(e)),
+                Ok(label) => {
+                    if let Some(tree) = doc.doc.clone() {
+                        super::selection::follow_tree(&mut cx.shared, tree.revision, &tree, true);
+                    }
+                    let message = match (&label, redo) {
+                        (None, false) => "Nothing to undo".to_string(),
+                        (None, true) => "Nothing to redo".to_string(),
+                        (Some(l), false) => format!("Undid {l}"),
+                        (Some(l), true) => format!("Redid {l}"),
+                    };
+                    let doc = &mut *cx.doc;
+                    doc.show(Ok(message.clone()));
+                    done(Ok(json!({"message": message, if redo { "redone" } else { "undone" }: label, "history": doc.history.labels(), "revision": doc.shown_revision(), "unsaved": doc.unsaved()})))
+                }
+            }
+        }
         // POST /save/thumbnail, as RoboCAD's desktop saves (`files::save`).
         // A path is absolute (~/ expanded): RoboCAD would resolve a relative
         // one against its own working directory, and the document follows it.
         CadAction::CadSave { path } => match path.as_deref().map(|p| super::files::absolute(p, "cad_save")).transpose() {
-            Ok(path) => super::files::save(doc, call, path),
+            Ok(path) => done(super::local::save(doc, path.map(PathBuf::from))),
             Err(e) => done(Err(e)),
         },
+        CadAction::CadModel(args) => super::model::handle(args, call, cx),
+        CadAction::CadGuide { topic } => done(super::guide::guide(topic.as_deref())),
         CadAction::CadCommand { id } => {
             if let Some(action) = super::surfaces::registry::organize_action(id) {
                 return handle(&action, call, cx);

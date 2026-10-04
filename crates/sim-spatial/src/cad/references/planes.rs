@@ -183,17 +183,19 @@ fn sync(
         }
     }
     let reading = d.references.pixels.values().filter(|p| matches!(p.state, PixelState::Reading(_))).count();
-    let client = d.client.clone().filter(|_| d.connected());
-    if let Some(client) = client {
+    let local = d.local.clone().filter(|_| d.connected());
+    if let Some(local) = local {
         let new: Vec<String> = wanted.iter().map(|(id, _)| id.clone()).filter(|id| !d.references.pixels.contains_key(id)).take(MAX_READS.saturating_sub(reading)).collect();
         for id in new {
-            let c = client.clone();
+            let local = local.clone();
             let node = id.clone();
-            let job = Job::spawn(Pool::Dedicated, generation, "cad reference image", move |_| {
-                let read = c.reference_image(&node).map_err(|e| e.to_string())?;
-                let bytes = read.decode()?;
-                let image = decode(&read.format, &bytes)?;
-                Ok(Decoded { format: read.format, size: (read.width_px, read.height_px), image })
+            // The image's bytes are the archive entry `image/<id>`.
+            let job = Job::spawn(Pool::Compute, generation, "cad reference image", move |_| {
+                let bytes = local.archive.entry(&format!("image/{node}")).ok_or_else(|| format!("{node}: the archive holds no image bytes"))?.to_vec();
+                let (w, h) = sim_cad::references::image_size(&bytes)?;
+                let format = match bytes.get(..4) { Some(b"\x89PNG") => "png", Some([0xff, 0xd8, ..]) => "jpeg", Some(b"RIFF") => "webp", Some([b'B', b'M', ..]) => "bmp", _ => "gif" }.to_string();
+                let image = decode(&format, &bytes)?;
+                Ok(Decoded { format, size: (w, h), image })
             });
             d.references.pixels.insert(id, Pixels { generation, state: PixelState::Reading(job) });
             changed = true;

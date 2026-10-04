@@ -25,8 +25,8 @@
 //!   plate toggle also sets): RoboCAD's `printing.overhangs` at 45°, drawn
 //!   in its 0.9, 0.35, 0.3 as a separate tint mesh; the body's mesh and
 //!   RoboCAD's document are never changed.
-//! - **The exact section** ([`exact_jobs`], JobResults): `GET
-//!   /nodes/{id}/section` on a `jobs::Latest` (`Pool::Dedicated`, network),
+//! - **The exact section** ([`exact_jobs`], JobResults): the body's B-rep
+//!   cut by OCCT in process (`sim_cad::kernel::section`) on a `jobs::Latest`,
 //!   keyed by (node, RoboCAD revision, plane); an answer for a superseded
 //!   request is dropped, and `ExactSection::drawn` draws only an answer for
 //!   the current revision and plane. While the section stays on the
@@ -543,13 +543,19 @@ pub(super) fn exact_jobs(doc: Option<Res<CadDocument>>, display: Option<ResMut<C
         Some(key) => {
             let answered = display.exact.result.as_ref().is_some_and(|(k, _)| *k == key);
             if !answered && job.running.as_ref() != Some(&key) {
-                match doc.client.clone().filter(|_| doc.connected()) {
-                    Some(client) => {
-                        let (node, query) = (key.node.clone(), key.query.clone());
-                        job.latest.start(Pool::Dedicated, "cad-section-exact", move |_| client.section(&node, &query).map_err(|e| e.to_string()));
+                // The open archive's B-rep, cut by OCCT in process (RoboCAD's
+                // `Kernel.section`: a line edge's ends, any other 24 samples).
+                match doc.local.clone().filter(|_| doc.connected()) {
+                    Some(local) => {
+                        let (node, plane) = (key.node.clone(), key.plane);
+                        job.latest.start(Pool::Dedicated, "cad-section-exact", move |ctx| {
+                            let bytes = sim_cad::nodes::body_bytes(&local.archive, &node)?;
+                            let polylines = sim_cad::kernel::section(bytes, plane.origin, plane.normal, &|| ctx.cancelled())?;
+                            Ok(SectionCurves { polylines, dropped: 0 })
+                        });
                         job.running = Some(key);
                     }
-                    None => display.exact.result = Some((key, Err("not connected to RoboCAD".into()))),
+                    None => display.exact.result = Some((key, Err("no CAD document is open".into()))),
                 }
             }
         }

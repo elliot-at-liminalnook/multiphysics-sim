@@ -30,6 +30,7 @@
 //!   panel (`view.saved_views` toggles it), and the field-of-view entry
 //!   RoboCAD's `view.fov` opens.
 pub(in crate::cad) mod convert;
+mod compose;
 mod panel;
 #[cfg(test)]
 mod tests;
@@ -38,7 +39,7 @@ pub use convert::ViewCamera;
 
 use crate::app::actions::{Call, Spec, spec};
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
-use crate::cad::actions::{CAD, CadAction, Cx, edit};
+use crate::cad::actions::{CAD, CadAction, Cx, local_edit_at};
 use crate::cad::display::CadDisplay;
 use crate::cad::document::{CadDocument, EditDone};
 use crate::cad::sync::value;
@@ -66,6 +67,8 @@ pub(crate) enum ViewField {
     Rename(String),
     /// RoboCAD's `view.fov` dialog: degrees, 5–120, one decimal.
     Fov,
+    /// A saved view's description (the row's edit section).
+    Describe(String),
 }
 
 /// The field being typed (while the kit's field `panel::VIEWS` has the
@@ -97,6 +100,8 @@ pub struct CadViews {
     /// `typing` was opened by the handler (`open_fov`): the panel's input
     /// gives it the kit's keyboard.
     pub(crate) focus_request: bool,
+    /// The saved view whose edit section is open in the panel.
+    pub(crate) editing: Option<String>,
     /// The view last restored or saved (RoboCAD's current list item).
     pub(crate) selected: Option<String>,
     /// RoboCAD's panel feedback line ("Showing: …").
@@ -126,6 +131,11 @@ pub enum ViewsOp {
     Restore,
     /// Show (`open: true`), hide (`false`) or toggle the Saved Views panel.
     Panel,
+    /// Change view `id`'s name, description, parts or state (composed as
+    /// save composes it, over the view's own state): only what is given.
+    Update,
+    /// Open (or close) view `id`'s edit section in the panel (display only).
+    Edit,
 }
 
 /// `cad_views`' arguments.
@@ -143,11 +153,46 @@ pub struct ViewsArgs {
     /// The panel shown or hidden (panel; absent toggles).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub open: Option<bool>,
+    /// Why the view matters (save, update; empty removes it).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    /// The parts the view shows alone when restored (save, update; empty: all).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parts: Option<Vec<String>>,
+    /// A whole view state (RoboCAD's schema) instead of the window's camera.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<Value>,
+    /// Frame these parts (and what is under them); `[]`: every shown body.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fit: Option<Vec<String>>,
+    /// front | back | left | right | top | bottom | iso.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub direction: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub yaw: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pitch: Option<f64>,
+    /// A slice: `{axis: "x" | "y" | "z", offset?: mm, flip?}` through the
+    /// framed parts' centre, or `{origin: [x, y, z], normal: [x, y, z]}`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub section: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub display_mode: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub orthographic: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub author: Option<String>,
+    /// `person` (default) or `agent`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub author_kind: Option<String>,
+    /// save, update: the view's parts are the selected parts (`parts` wins).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub use_selection: Option<bool>,
 }
 
 impl ViewsArgs {
     pub(crate) fn of(op: ViewsOp, id: Option<&str>, name: Option<&str>) -> CadAction {
-        CadAction::CadViews(ViewsArgs { op, id: id.map(str::to_string), name: name.map(str::to_string), open: None })
+        CadAction::CadViews(ViewsArgs { op, id: id.map(str::to_string), name: name.map(str::to_string), ..ViewsArgs::default() })
     }
 }
 
@@ -166,6 +211,32 @@ impl CadViews {
     }
     fn name_of(&self, doc: &CadDocument, id: &str) -> String {
         self.shown(doc).iter().find(|v| v.id == id).map_or_else(|| id.to_string(), |v| v.name.clone())
+    }
+    /// The state a save, replace or update writes: the window's camera and
+    /// display, with what `args` composes over it (`compose`).
+    fn compose(&self, display: Option<&CadDisplay>, doc: &CadDocument, args: &ViewsArgs) -> Result<Value, String> {
+        self.compose_over(display, doc, args, None)
+    }
+    /// [`Self::compose`] over `own` (a saved view's state) instead of the window's camera.
+    fn compose_over(&self, display: Option<&CadDisplay>, doc: &CadDocument, args: &ViewsArgs, own: Option<Value>) -> Result<Value, String> {
+        let local = doc.local.as_ref().ok_or("no CAD document is open")?;
+        let c = compose::Compose {
+            state: args.state.as_ref(),
+            fit: args.fit.as_deref(),
+            direction: args.direction.as_deref(),
+            yaw: args.yaw,
+            pitch: args.pitch,
+            section: args.section.as_ref(),
+            display_mode: args.display_mode.as_deref(),
+            orthographic: args.orthographic,
+        };
+        let base = match (own, self.capture(display)) {
+            (Some(own), _) => Some(own),
+            (None, Ok(state)) => Some(value(&state)),
+            (None, Err(_)) if c.any() => None,
+            (None, Err(e)) => return Err(e),
+        };
+        compose::compose(local, base, &c)
     }
     /// The native camera and display as a view state (`capture_view`).
     fn capture(&self, display: Option<&CadDisplay>) -> Result<ViewState, String> {
@@ -189,7 +260,7 @@ fn listing(views: &CadViews, doc: &CadDocument) -> Result<bool, String> {
         return Err(format!("RoboCAD's saved views could not be listed (GET /views): {e}"));
     }
     if !doc.connected() {
-        return Err(format!("not connected to RoboCAD: {}", doc.connection_line().0));
+        return Err(format!("no CAD document is open: {}", doc.connection_line().0));
     }
     if doc.doc_key.is_none() {
         return Err("RoboCAD's document has not been read yet; try again".into());
@@ -223,7 +294,7 @@ fn wait(views: &mut CadViews, doc: &CadDocument, call: &mut Call) -> Result<bool
 
 /// The list as `cad_views` answers it.
 fn list_json(views: &CadViews, doc: &CadDocument) -> Value {
-    let list: Vec<Value> = views.shown(doc).iter().map(|v| json!({"id": v.id, "name": v.name, "details": convert::details(&v.state), "state": v.state})).collect();
+    let list: Vec<Value> = views.shown(doc).iter().map(|v| json!({"id": v.id, "name": v.name, "details": convert::details(&v.state), "description": v.description, "parts": v.parts, "author": v.author, "author_kind": v.author_kind, "state": v.state})).collect();
     json!({
         "views": list,
         "listed_at_revision": views.listed.as_ref().map(|(k, _)| k.1),
@@ -295,6 +366,15 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
             let restored = restore(&view, views, display.as_deref_mut(), camera, doc);
             done(restored.map(|mut answer| {
                 answer["returned_to_assembly"] = json!(end_part_view(doc, shared));
+                // A view of some parts shows them alone (display only; Return to
+                // assembly or Escape ends it, as a thread's part view does).
+                if !view.parts.is_empty() {
+                    let ids = crate::cad::threads::isolation::expand(doc, &view.parts);
+                    doc.threads.isolation = Some(crate::cad::threads::isolation::Isolation { ids: ids.into_iter().collect(), parts: view.parts.clone(), thread: None, camera: None, selection: shared.items(), display: None });
+                    doc.touch();
+                    answer["showing_only"] = json!(view.parts);
+                }
+                answer["description"] = json!(view.description);
                 answer
             }))
         }
@@ -303,43 +383,67 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
                 Ok(n) => n,
                 Err(e) => return done(Err(e)),
             };
-            let state = match views.capture(display.as_deref()) {
+            let state = match views.compose(display.as_deref(), doc, args) {
                 Ok(s) => s,
                 Err(e) => return done(Err(e)),
             };
-            let n = name.clone();
-            let outcome = edit(doc, call, format!("Save view {name}"), move |c| c.save_view(&n, &state).map(|v| EditDone { message: format!("Saved view {}", v.name), result: value(&v) }));
+            let parts = args.parts.clone().or_else(|| args.use_selection.filter(|u| *u).map(|_| selected_parts(shared)));
+            let fields = sim_cad::saved_views::ViewFields { name: Some(name.clone()), state: Some(state), description: args.description.clone(), parts, author: args.author.clone(), author_kind: args.author_kind.clone() };
+            let outcome = local_edit_at(doc, call, None, format!("Save view {name}"), true, move |ws| {
+                let id = sim_cad::saved_views::save(&mut ws.edit, ws.archive, fields)?;
+                let view = ws.edit.manifest["saved_views"][&id].clone();
+                Ok(EditDone { message: format!("Saved view {}", view["name"].as_str().unwrap_or("")), result: view })
+            });
             if !matches!(outcome, Outcome::Done(Err(_))) {
-                // The typed name is kept until RoboCAD's answer lands (`settle_save`).
+                // The typed name is kept until the save lands (`settle_save`).
                 views.saving = Some((doc.generation, doc.edit_seq, name.clone()));
                 views.feedback = Some(format!("Saving: {name}"));
             }
             outcome
         }
-        ViewsOp::Rename => {
-            let id = match id_of(args, "rename") {
+        ViewsOp::Rename | ViewsOp::Replace | ViewsOp::Update => {
+            let op = match args.op { ViewsOp::Rename => "rename", ViewsOp::Replace => "replace", _ => "update" };
+            let id = match id_of(args, op) {
                 Ok(id) => id.to_string(),
                 Err(e) => return done(Err(e)),
             };
-            let name = match check_view_name(args.name.as_deref().unwrap_or("")) {
-                Ok(n) => n,
-                Err(e) => return done(Err(e)),
+            let name = match (&args.name, args.op) {
+                (Some(n), _) => match check_view_name(n) {
+                    Ok(n) => Some(n),
+                    Err(e) => return done(Err(e)),
+                },
+                (None, ViewsOp::Rename) => return done(Err("rename needs name".into())),
+                (None, _) => None,
+            };
+            let composes = args.op == ViewsOp::Replace || args.state.is_some() || args.fit.is_some() || args.direction.is_some() || args.yaw.is_some() || args.pitch.is_some() || args.section.is_some() || args.display_mode.is_some() || args.orthographic.is_some();
+            // Update composes over the view's own state; Replace takes the window's camera.
+            let own = (args.op == ViewsOp::Update).then(|| views.shown(doc).iter().find(|v| v.id == id).map(|v| value(&v.state))).flatten();
+            let state = if composes && args.op != ViewsOp::Rename {
+                match views.compose_over(display.as_deref(), doc, args, own) {
+                    Ok(s) => Some(s),
+                    Err(e) => return done(Err(e)),
+                }
+            } else {
+                None
             };
             let old = views.name_of(doc, &id);
-            let n = name.clone();
-            edit(doc, call, format!("Rename saved view {old} to {name}"), move |c| c.update_view(&id, Some(n.as_str()), None).map(|v| EditDone { message: format!("Renamed saved view {old} to {}", v.name), result: value(&v) }))
+            let parts = args.parts.clone().or_else(|| args.use_selection.filter(|u| *u).map(|_| selected_parts(shared)));
+            let fields = sim_cad::saved_views::ViewFields { name, state, description: args.description.clone(), parts, author: None, author_kind: None };
+            let label = match args.op { ViewsOp::Rename => format!("Rename saved view {old}"), _ => format!("Update saved view {old}") };
+            local_edit_at(doc, call, None, label, true, move |ws| {
+                sim_cad::saved_views::update(&mut ws.edit, ws.archive, &id, fields)?;
+                let view = ws.edit.manifest["saved_views"][&id].clone();
+                Ok(EditDone { message: format!("Updated: {} · Undo to revert", view["name"].as_str().unwrap_or("")), result: view })
+            })
         }
-        ViewsOp::Replace => {
-            let id = match id_of(args, "replace") {
+        ViewsOp::Edit => {
+            let id = match id_of(args, "edit") {
                 Ok(id) => id.to_string(),
                 Err(e) => return done(Err(e)),
             };
-            let state = match views.capture(display.as_deref()) {
-                Ok(s) => s,
-                Err(e) => return done(Err(e)),
-            };
-            let name = views.name_of(doc, &id);
-            edit(doc, call, format!("Update saved view {name}"), move |c| c.update_view(&id, None, Some(&state)).map(|v| EditDone { message: format!("Updated: {} · Undo to revert", v.name), result: value(&v) }))
+            views.open = true;
+            views.editing = if views.editing.as_deref() == Some(id.as_str()) { None } else { Some(id) };
+            done(Ok(json!({"editing": views.editing})))
         }
         ViewsOp::Delete => {
             let id = match id_of(args, "delete") {
@@ -347,9 +451,23 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
                 Err(e) => return done(Err(e)),
             };
             let name = views.name_of(doc, &id);
-            edit(doc, call, format!("Delete saved view {name}"), move |c| c.delete_view(&id).map(|v| EditDone { message: format!("Deleted saved view {name} · Undo to restore"), result: v }))
+            local_edit_at(doc, call, None, format!("Delete saved view {name}"), true, move |ws| {
+                sim_cad::saved_views::delete(&mut ws.edit, &id)?;
+                Ok(EditDone { message: format!("Deleted saved view {name} · Undo to restore"), result: json!({"deleted": id}) })
+            })
         }
     }
+}
+
+/// The selected parts (node ids, each once, in selection order).
+fn selected_parts(shared: &Shared) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for item in shared.items() {
+        if !out.contains(&item.0) {
+            out.push(item.0);
+        }
+    }
+    out
 }
 
 /// Apply a saved view to the native camera and display (`restore_view`,
@@ -456,6 +574,18 @@ pub(super) fn sync(doc: Option<Res<CadDocument>>, views: Option<ResMut<CadViews>
     if have || views.job.is_some() || !doc.connected() || doc.doc_key.is_none() {
         return;
     }
+    // The open archive's views are read in place (a manifest walk).
+    if let Some(local) = &doc.local {
+        let listed: Result<Vec<SavedView>, String> = sim_cad::saved_views::list(&local.archive).into_iter().map(|v| serde_json::from_value(v).map_err(|e| format!("saved view: {e}"))).collect();
+        match listed {
+            Ok(list) => {
+                views.listed = Some((now, list));
+                views.error = None;
+            }
+            Err(e) => views.error = Some((now, e)),
+        }
+        return;
+    }
     let Some(client) = doc.client.clone() else { return };
     let job = Job::spawn(Pool::Dedicated, doc.generation, "cad-saved-views", move |_| client.views().map_err(|e| e.to_string()));
     views.job = Some((now, job));
@@ -485,6 +615,7 @@ pub(in crate::cad) fn build(app: &mut App) {
                     ,
                 sync.after(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults),
                 snapshot.after(crate::camera::CameraSet::Place).in_set(ViewerSet::SimSync),
+                panel::scroll.in_set(ViewerSet::Present).before(panel::draw),
                 panel::draw.in_set(ViewerSet::Present),
             )
                 .run_if(in_state(ViewerMode::Cad)),
@@ -523,6 +654,14 @@ pub(crate) fn controls_of(doc: &CadDocument, views: Option<&CadViews>) -> Vec<(S
         out.push((format!("cad:view:{}", v.id), format!("Restore view: {}", v.name), ViewsArgs::of(ViewsOp::Restore, Some(v.id.as_str()), None), Ok(())));
         out.push((format!("cad:view:replace-{}", v.id), format!("Replace with current: {}", v.name), ViewsArgs::of(ViewsOp::Replace, Some(v.id.as_str()), None), edit_ready.clone().and_then(|()| camera_ready())));
         out.push((format!("cad:view:delete-{}", v.id), format!("Delete saved view: {}", v.name), ViewsArgs::of(ViewsOp::Delete, Some(v.id.as_str()), None), edit_ready.clone()));
+        out.push((format!("cad:view:edit-{}", v.id), format!("Edit saved view: {}", v.name), ViewsArgs::of(ViewsOp::Edit, Some(v.id.as_str()), None), Ok(())));
+        let update = |extra: ViewsArgs| CadAction::CadViews(ViewsArgs { op: ViewsOp::Update, id: Some(v.id.clone()), ..extra });
+        for (axis, label) in [("off", "No slice"), ("x", "Slice across X"), ("y", "Slice across Y"), ("z", "Slice across Z")] {
+            let section = if axis == "off" { json!({"enabled": false}) } else { json!({"axis": axis, "offset": 0.0}) };
+            out.push((format!("cad:view:slice-{axis}-{}", v.id), format!("{label}: {}", v.name), update(ViewsArgs { section: Some(section), ..ViewsArgs::default() }), edit_ready.clone()));
+        }
+        out.push((format!("cad:view:parts-selected-{}", v.id), format!("Show only the selected parts: {}", v.name), update(ViewsArgs { use_selection: Some(true), ..ViewsArgs::default() }), edit_ready.clone()));
+        out.push((format!("cad:view:parts-all-{}", v.id), format!("Show the whole model: {}", v.name), update(ViewsArgs { parts: Some(Vec::new()), ..ViewsArgs::default() }), edit_ready.clone()));
     }
     out
 }

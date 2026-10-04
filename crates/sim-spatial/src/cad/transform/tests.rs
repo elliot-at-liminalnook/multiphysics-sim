@@ -25,6 +25,7 @@ fn document() -> CadDocument {
     doc.health = Some(Health { ok: true, app: "robocad".into(), nodes: 2, revision: 4, ..Default::default() });
     doc.doc = Some(DocState { nodes: vec![node("b1", "Bracket"), node("b2", "Plate")], revision: 4, ..Default::default() });
     doc.doc_key = Some((None, 4));
+    doc.open_fixture();
     doc
 }
 

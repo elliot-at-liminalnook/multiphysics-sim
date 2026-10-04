@@ -121,7 +121,7 @@ impl Learn {
             None => {}
         }
         let key = format!("manual/{thread}/{}", sim_annotate::uid("ask"));
-        Ok(Input { discussion: thread.into(), key, revision: self.notes_doc.revision, context, question, instructions: None })
+        Ok(Input { discussion: thread.into(), key, revision: self.notes_doc.revision, context, question, instructions: None, developer: None })
     }
 }
 

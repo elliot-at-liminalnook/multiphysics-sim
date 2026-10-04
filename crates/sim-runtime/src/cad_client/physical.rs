@@ -18,7 +18,7 @@
 //! Writes are RoboCAD edits: use a client with [`super::EDIT_TIMEOUT`].
 use super::robot::lenient_map;
 use super::{CadClient, CadError, OpResult};
-use crate::hardware_client::{lenient, lenient_items};
+use crate::hardware::protocol::{lenient, lenient_items};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 use std::collections::BTreeMap;

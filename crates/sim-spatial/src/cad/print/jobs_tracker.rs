@@ -269,8 +269,8 @@ pub(super) fn cancel(doc: &mut CadDocument, _call: &mut Call, job: Option<&str>,
     // read; ask RoboCAD once (even with the section closed) and refuse.
     // Otherwise the latest list (and the watched jobs) decide.
     if !doc.print.jobs.listed {
-        if !doc.connected() {
-            return done(Err(format!("RoboCAD's print jobs have not been read yet and cannot be now: not connected to RoboCAD: {}", doc.connection_line().0)));
+        if !doc.connected() || doc.client.is_none() {
+            return done(Err(super::PRINT_UNPORTED.to_string()));
         }
         let t = &mut doc.print.jobs;
         t.once = true;
@@ -297,7 +297,7 @@ pub(super) fn cancel(doc: &mut CadDocument, _call: &mut Call, job: Option<&str>,
         return done(Err("the running print jobs are already being cancelled".into()));
     }
     let Some(client) = doc.client.clone().filter(|_| doc.connected()) else {
-        return done(Err(format!("not connected to RoboCAD: {}", doc.connection_line().0)));
+        return done(Err(super::PRINT_UNPORTED.to_string()));
     };
     let sent = ids.clone();
     let job = Job::spawn(Pool::Dedicated, doc.generation, "cad print cancel", move |_| {

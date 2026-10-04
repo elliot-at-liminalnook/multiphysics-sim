@@ -105,12 +105,9 @@ pub(super) fn cancel(files: &mut CadFiles, seq: Option<u64>) -> Result<Value, St
     Ok(json!({"cancelled": asked, "message": notes.join("; ")}))
 }
 
-/// The document's client with the file timeout, or why there is none.
-pub(super) fn client(doc: &CadDocument) -> Result<CadClient, String> {
-    match &doc.client {
-        Some(c) if doc.connected() => Ok(c.clone().with_timeout(FILE_TIMEOUT)),
-        _ => Err(format!("not connected to RoboCAD: {}", doc.connection_line().0)),
-    }
+/// The open archive's snapshot, or why there is none.
+pub(super) fn local(doc: &CadDocument) -> Result<std::sync::Arc<crate::cad::sync::LocalSnapshot>, String> {
+    doc.local.clone().filter(|_| doc.connected()).ok_or_else(|| format!("no CAD document is open: {}", doc.connection_line().0))
 }
 
 /// A failed request as a named refusal: "{label}: RoboCAD answered 422:
@@ -204,8 +201,20 @@ pub(super) fn wait(cx: &mut Cx, call: &mut Call, seq: u64) -> Outcome {
 fn open_created(cx: &mut Cx, call: &mut Call, path: String) -> Outcome {
     let open = CadAction::CadOpen { path: Some(path.clone().into()), url: None };
     match crate::cad::actions::handle(&open, call, cx) {
+        // The load runs on; `files::handle` forwards the wait to cad_open.
+        Outcome::Pending => {
+            call.continuation["created"] = json!(path);
+            Outcome::Pending
+        }
+        other => created(other, &path),
+    }
+}
+
+/// New's answer once the created file's open has landed (or was refused).
+pub(super) fn created(outcome: Outcome, path: &str) -> Outcome {
+    match outcome {
         Outcome::Done(Ok(v)) => {
-            let message = format!("Created {path}; {}", v.get("message").and_then(Value::as_str).unwrap_or("opening it"));
+            let message = format!("Created {path}; {}", v.get("message").and_then(Value::as_str).unwrap_or("opened it"));
             Outcome::Done(Ok(json!({"created": path, "opened": v.get("opened"), "generation": v.get("generation"), "message": message})))
         }
         Outcome::Done(Err(e)) => Outcome::Done(Err(format!("Created {path}, but did not open it: {e}"))),

@@ -70,6 +70,10 @@ thiserror = "2.0.17"
 
 [profile.dev]
 opt-level = 1
+# File and line numbers in backtraces, without full variable and type debug
+# info: much faster links and far less disk. For a debugger session with
+# full info, build with CARGO_PROFILE_DEV_DEBUG=true.
+debug = "line-tables-only"
 
 [profile.dev.package."*"]
 opt-level = 2

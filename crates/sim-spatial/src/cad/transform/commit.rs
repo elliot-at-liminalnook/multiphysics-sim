@@ -246,6 +246,25 @@ pub(super) fn op_for(doc: &CadDocument, selection: &[SelectionItem], topology: O
 fn send(doc: &mut CadDocument, call: &mut Call, op: OpCall, extra: Option<(&'static str, Value)>) -> Outcome {
     let OpCall { name, args, kwargs, label } = op;
     let message = label.clone();
+    // The transform runs in process (`sim_cad::nodes::transform`, RoboCAD's
+    // `Ops.transform`: bodies baked about their centroid or `center`).
+    if name == "transform" {
+        let ids: Vec<String> = args.first().and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
+        let get3 = |k: &str| kwargs.get(k).and_then(|v| serde_json::from_value::<[f64; 3]>(v.clone()).ok());
+        let (translation, axis, center) = (get3("translation").unwrap_or([0.; 3]), get3("axis"), get3("center"));
+        let angle = kwargs.get("angle_deg").and_then(Value::as_f64).unwrap_or(0.);
+        let scale = kwargs.get("scale").and_then(Value::as_f64).unwrap_or(1.);
+        return crate::cad::actions::local_edit_at(doc, call, None, label, false, move |ws| {
+            let centers: Vec<[f64; 3]> = ids.iter().map(|id| center.or_else(|| ws.centroid(id)).unwrap_or([0.; 3])).collect();
+            let (archive, stamps) = (ws.archive, ws.stamps);
+            let moved = sim_cad::nodes::transform(&mut ws.edit, archive, stamps, &ids, &centers, translation, axis, angle, scale)?;
+            let mut result = json!({"moved": moved});
+            if let (Some((key, v)), Some(object)) = (extra, result.as_object_mut()) {
+                object.insert(key.to_string(), v);
+            }
+            Ok(EditDone { message, result })
+        });
+    }
     crate::cad::actions::edit(doc, call, label, move |c| {
         c.op(name, &args, &kwargs).map(|r| {
             let mut result = value(&r);

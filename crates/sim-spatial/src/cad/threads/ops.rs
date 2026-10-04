@@ -53,8 +53,8 @@ fn began(args: &ThreadsArgs, doc: &mut CadDocument, call: &mut Call, thread: Opt
     if !read::current(doc) {
         let now = doc.shown_revision();
         return Err(done(Err(match read::read_at(doc) {
-            Some(at) => format!("RoboCAD's comments are being read again (they were read at revision {at}, the document is at {now}); nothing was sent: try again in a moment"),
-            None => "RoboCAD's comments have not been read yet; nothing was sent: try again in a moment".to_string(),
+            Some(at) => format!("The comments are being read again (they were read at revision {at}, the document is at {now}); nothing was sent: try again in a moment"),
+            None => "The comments have not been read yet; nothing was sent: try again in a moment".to_string(),
         })));
     }
     if let Some(t) = thread.filter(|_| !holds(&*doc)) {
@@ -166,7 +166,29 @@ fn refuse_draft(doc: &mut CadDocument) -> Option<Outcome> {
 /// `CadThreads`, from any entry point.
 pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcome {
     let CadAction::CadThreads(args) = action else { return done(Err("not a comment-threads action".into())) };
+    // Who the commits of this call write as (the window's composer: a person).
+    cx.doc.threads.kind = match args.op {
+        ThreadsOp::Watch => sim_cad::annotations::AuthorKind::Person,
+        _ => match sim_cad::annotations::AuthorKind::parse(args.author_kind.as_deref()) {
+            Ok(k) => k,
+            Err(e) => return done(Err(e)),
+        },
+    };
     match args.op {
+        ThreadsOp::Get => match thread_arg(args, cx.doc) {
+            Ok(id) => done(super::agent::get(cx.doc, &id)),
+            Err(e) => done(Err(e)),
+        },
+        ThreadsOp::Watch => super::agent::watch(args, call, cx.doc),
+        ThreadsOp::Seen => done(super::agent::seen(args, cx.doc)),
+        ThreadsOp::Ask => match thread_arg(args, cx.doc) {
+            Ok(id) => done(super::ai::ask(cx.doc, &id, args.text.clone())),
+            Err(e) => done(Err(e)),
+        },
+        ThreadsOp::Ai => {
+            let on = args.on.unwrap_or(!cx.doc.threads.ai.auto());
+            done(super::ai::set_auto(cx.doc, on))
+        }
         ThreadsOp::State => done(Ok(state_json(cx.doc))),
         ThreadsOp::List => match read::wait(cx.doc, call) {
             Err(e) => done(Err(e)),
@@ -375,6 +397,13 @@ pub(crate) fn open(doc: &mut CadDocument, id: &str) -> Result<Value, String> {
         st.part = None;
         st.menu = None;
         st.label = None;
+    }
+    // The person has read this thread: their seen mark covers its newest comment.
+    let newest = doc.local.as_ref().and_then(|l| l.archive.manifest["annotations"][id]["comments"].as_array()?.iter().filter_map(|c| c["created_at"].as_str()).max().map(str::to_string));
+    if let Some(newest) = newest
+        && doc.threads.seen.get("you").is_none_or(|s| *s < newest)
+    {
+        doc.threads.seen.insert("you".into(), newest);
     }
     doc.touch();
     Ok(json!({"thread": id}))

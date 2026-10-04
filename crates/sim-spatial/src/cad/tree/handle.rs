@@ -198,9 +198,6 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
         return Outcome::Done(Err(e));
     }
     let done = Outcome::Done;
-    if !matches!(args.op, TreeOp::State | TreeOp::Search | TreeOp::Expand | TreeOp::Collapse | TreeOp::Toggle | TreeOp::ExpandAll | TreeOp::CollapseAll | TreeOp::Select | TreeOp::Menu | TreeOp::EndRename) {
-        return done(Err(format!("Outliner {:?}: source editing awaiting Rust migration", args.op)));
-    }
     match args.op {
         TreeOp::State => done(Ok(state_json(cx.doc))),
         TreeOp::Search => {

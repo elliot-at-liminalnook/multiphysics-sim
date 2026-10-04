@@ -43,14 +43,10 @@ pub(super) fn build(app: &mut App) {
 }
 
 /// One availability contract for native controls and every typed selection action.
-/// Local triangle face ids support face/point picks; exact edges and vertices
-/// need topology that has not migrated to Rust. No service request is pending.
-pub(super) fn mode_available(doc: &CadDocument, mode: SelectMode) -> Result<(), String> {
-    if doc.client.is_none() && matches!(mode, SelectMode::Edge | SelectMode::Vertex) {
-        Err(format!("Select {}: exact topology awaits Rust migration; local body, face and point picking are available", mode.label()))
-    } else {
-        Ok(())
-    }
+/// Every mode is available: picks use the exact in-process topology.
+pub(super) fn mode_available(_doc: &CadDocument, _mode: SelectMode) -> Result<(), String> {
+    // Faces, edges and vertices come from the open archive's exact topology (`topology`).
+    Ok(())
 }
 
 /// The selection actions (`actions::handle` forwards them here).
@@ -118,8 +114,6 @@ fn validate(doc: &CadDocument, items: &[SelectionItem]) -> Result<(), String> {
     for SelectionItem(node, kind, index) in items {
         if let Some(mode) = SelectMode::parse(kind) {
             mode_available(doc, mode)?;
-        } else if doc.client.is_none() && kind == "curve" {
-            return Err(format!("[{node}, {kind}, {index}]: curve picking awaits Rust migration"));
         }
         if !KINDS.contains(&kind.as_str()) {
             return Err(format!("[{node}, {kind}, {index}]: the kind must be one of body, face, edge, vertex, point, curve"));

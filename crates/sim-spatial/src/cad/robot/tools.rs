@@ -192,7 +192,7 @@ fn validate(call: &mut Call, doc: &mut CadDocument) -> Outcome {
         return Outcome::Done(done);
     }
     if !doc.connected() {
-        return Outcome::Done(Err("Robot: validate: not connected to RoboCAD".into()));
+        return Outcome::Done(Err("Robot: validate: no CAD document is open".into()));
     }
     if call.rest() {
         *call.continuation = json!({"robot_validate": generation});
@@ -450,7 +450,7 @@ pub(crate) fn state_json(doc: &CadDocument) -> Value {
 
 /// The tools' `system_ui` controls: `cad:robot:validate`, `cad:robot:library`.
 pub(crate) fn controls(doc: &CadDocument) -> Vec<(String, String, CadAction, Result<(), String>)> {
-    let connected = if doc.connected() { Ok(()) } else { Err("not connected to RoboCAD".to_string()) };
+    let connected = if doc.connected() { Ok(()) } else { Err("no CAD document is open".to_string()) };
     let open = doc.robot.tools.library_open;
     vec![
         ("cad:robot:validate".into(), "Robot: validate".into(), RobotArgs::of(RobotOp::Validate, None), connected),

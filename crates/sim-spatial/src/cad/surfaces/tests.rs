@@ -27,6 +27,7 @@ fn document() -> CadDocument {
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), gui: false, nodes: 3, revision: 4, ..Default::default() });
     doc.doc = Some(DocState { nodes: vec![node("b1", "body", "Bracket"), node("b2", "body", "Plate"), node("i1", "instance", "Bracket copy")], history: History { undo: vec!["Move".into()], redo: vec![] }, revision: 4, ..Default::default() });
+    doc.open_fixture();
     doc
 }
 

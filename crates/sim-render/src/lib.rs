@@ -1,5 +1,6 @@
 //! Deterministic CPU PNG rendering of immutable presentation snapshots.
 //! No windows, GPU, physics stepping, filesystem writes or source mutation.
+pub mod cad;
 mod canvas;
 pub mod diagram;
 pub mod graphs;

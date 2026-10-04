@@ -1,8 +1,10 @@
 //! Local path-picker Open shares CadAction::CadOpen with REST and startup.
 //! Archive replacement is jobs-owned; failures/cancellation preserve the source.
-//! The legacy save/import/export catalogue is retained as migration scaffolding
-//! and refuses by name; no selected opening path calls its client adapters.
-mod form;
+//! New, Save As, Import (`sim_cad::import`: STEP, IGES, SVG, images; meshes
+//! refused by name), Export (`sim_cad::export`) and Render (`sim_render::cad`)
+//! all run in process on the open archive.
+pub(super) mod form;
+mod formats;
 mod jobs;
 #[cfg(test)]
 mod tests;
@@ -219,6 +221,20 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
     if let Some(seq) = call.continuation.get("file_job").and_then(Value::as_u64) {
         return jobs::wait(cx, call, seq);
     }
+    // Open and New hand their REST caller to cad_open, which waits for the
+    // load under its own key: keep forwarding there, never re-run the op.
+    if call.continuation.get("local_open").is_some() {
+        let created = call.continuation.get("created").and_then(Value::as_str).map(str::to_string);
+        let open = CadAction::CadOpen { path: None, url: None };
+        return match (crate::cad::actions::handle(&open, call, cx), created) {
+            (Outcome::Pending, Some(path)) => {
+                call.continuation["created"] = json!(path);
+                Outcome::Pending
+            }
+            (outcome, None) => outcome,
+            (outcome, Some(path)) => jobs::created(outcome, &path),
+        };
+    }
     let ui = matches!(call.origin, crate::app::actions::Origin::Ui);
     let outcome = match action {
         CadAction::CadFile(args) => file(args, call, cx),
@@ -242,9 +258,6 @@ fn files<'a>(cx: &'a mut Cx) -> Result<&'a mut CadFiles, String> {
 
 fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
     let done = Outcome::Done;
-    if !matches!(args.op, FileOp::Open | FileOp::Close | FileOp::Cancel) {
-        return done(Err(format!("{}: file workflow awaiting Rust migration", args.op.label())));
-    }
     if args.op == FileOp::Cancel && cx.doc.local_load.is_some() {
         let seq = cx.doc.local_load.as_ref().map(|load| load.sequence).unwrap();
         crate::cad::sync::cancel_load(cx.doc, seq);
@@ -293,15 +306,18 @@ fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
             if !blockers.is_empty() {
                 return done(Err(format!("Not creating {path}: {}", blockers.join("; "))));
             }
-            let client = match jobs::client(cx.doc) {
-                Ok(c) => c,
-                Err(e) => return done(Err(format!("Not creating {path}: {e}"))),
-            };
+            if std::path::Path::new(&path).exists() {
+                return done(Err(format!("Not creating {path}: a file is already there (open it, or choose another name)")));
+            }
+            // The open document's stock materials carry over (RoboCAD's new document has its library's).
+            let like = cx.doc.local.as_ref().map(|l| l.archive.manifest.clone());
             let label = format!("Create {path}");
             let (p, l) = (path.clone(), label.clone());
             let then = jobs::Then::Open { path: path.clone() };
             jobs::start(cx, call, "new", label, true, then, move |_| {
-                jobs::logged(&l, client.new_file(&p).map(|n| json!({"created": n.created, "message": format!("Created {}; opening it", n.created)})).map_err(|e| jobs::named(&l, &e)))
+                let bytes = sim_cad::edit::empty_archive(like.as_ref()).map_err(|e| format!("{l}: {e}"))?;
+                std::fs::write(&p, bytes).map_err(|e| format!("{l}: {e}"))?;
+                jobs::logged(&l, Ok(json!({"created": p, "message": format!("Created {p}; opening it")})))
             })
         }
         FileOp::SaveAs => {
@@ -325,7 +341,7 @@ fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
                 None => format!("Import {name}"),
             };
             let outcome = crate::cad::actions::edit(cx.doc, call, label, move |c| {
-                c.clone().with_timeout(FILE_TIMEOUT).import(&path, unit.as_deref()).map(|i| EditDone { message: format!("Imported {name}: {} new node(s)", i.imported.len()), result: value(&i) })
+                c.import(&path, unit.as_deref()).map(|i| EditDone { message: format!("Imported {name}: {} new node(s)", i.imported.len()), result: value(&i) })
             });
             close_unless_refused(cx, outcome)
         }
@@ -335,13 +351,8 @@ fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
                 Ok(p) => return done(Err(format!("{p}: not a mesh file ({}); only meshes ask for units", MESH_EXTENSIONS.join(", ")))),
                 Err(e) => return done(Err(e)),
             };
-            let client = match jobs::client(cx.doc) {
-                Ok(c) => c,
-                Err(e) => return done(Err(format!("Not guessing the unit of {path}: {e}"))),
-            };
-            let label = format!("Guess the unit of {path}");
-            let (p, l) = (path.clone(), label.clone());
-            jobs::start(cx, call, "guess_unit", label, false, jobs::Then::Guess { path }, move |_| client.mesh_units(&p).map(|u| value(&u)).map_err(|e| jobs::named(&l, &e)))
+            let _ = path;
+            done(Err("mesh import (and its unit guess) is not available in the in-process editor yet; STEP and IGES import are".into()))
         }
         FileOp::Close | FileOp::Cancel => unreachable!("handled above"),
     }
@@ -359,22 +370,10 @@ pub(in crate::cad) fn save(doc: &mut CadDocument, call: &mut Call, path: Option<
     // {path}` too, or the document would follow a path cad_open refuses.
     let path = path.map(|p| if p.ends_with(".rcad") { p } else { format!("{p}.rcad") });
     let label = path.as_ref().map_or_else(|| "Save".to_string(), |p| format!("Save as {p}"));
-    let sent = path.clone();
-    let before = doc.edit_seq;
-    let outcome = crate::cad::actions::edit(doc, call, label, move |c| {
-        c.clone().with_timeout(FILE_TIMEOUT).save_with_thumbnail(sent.as_deref()).map(|s| EditDone {
-            message: if s.thumbnail { format!("Saved {} with its thumbnail", s.saved) } else { format!("Saved {} (without a thumbnail: RoboCAD could not draw one)", s.saved) },
-            result: value(&s),
-        })
-    });
-    if doc.edit_seq != before {
-        // cad-physical-inspect: the live link re-exports once this save succeeds.
-        crate::cad::results::note_save(doc, path.as_deref());
-        if let (Some(edit), Some(path)) = (doc.edit.as_mut(), path) {
-            edit.retarget = Some(PathBuf::from(path));
-        }
-    }
-    outcome
+    let _ = (label, call);
+    // The open archive's bytes, written atomically in process (`local::save`;
+    // a save to a path makes it the document's file). No thumbnail is drawn.
+    Outcome::Done(crate::cad::local::save(doc, path.as_ref().map(PathBuf::from)))
 }
 
 /// Closes the path form once its action was accepted (a refusal keeps it
@@ -441,7 +440,7 @@ fn export(args: &ExportArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
         Ok(s) => s,
         Err(e) => return done(Err(format!("{what} to {path}: {e}"))),
     };
-    let client = match jobs::client(cx.doc) {
+    let local = match jobs::local(cx.doc) {
         Ok(c) => c,
         Err(e) => return done(Err(format!("{what} to {path}: {e}"))),
     };
@@ -453,16 +452,12 @@ fn export(args: &ExportArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
     let l = label.clone();
     let format_label = fmt.label;
     jobs::start(cx, call, "export", label, true, jobs::Then::Nothing, move |ctx| {
-        let answer = client.export(&request).map_err(|e| jobs::named(&l, &e)).map(|x| {
-            // The status line shows the message: the warnings themselves (the first few), not a pointer elsewhere.
-            let listed: Vec<String> = x.warnings.as_array().into_iter().flatten().map(|w| w.as_str().map_or_else(|| w.to_string(), str::to_string)).collect();
-            let shown: Vec<&str> = listed.iter().take(3).map(String::as_str).collect();
-            let more = if listed.len() > shown.len() { format!("; … {} more", listed.len() - shown.len()) } else { String::new() };
-            let note = if listed.is_empty() { String::new() } else { format!(" ({} warning(s): {}{more})", listed.len(), shown.join("; ")) };
-            // RoboCAD writes the file itself (no cancel route): a cancel asked meanwhile stopped nothing.
-            let cancelled = ctx.cancelled();
-            let late = if cancelled { "; the cancel did not stop it (api.py has no cancel route for /export)" } else { "" };
-            json!({"exported": x.exported, "format": request.format, "warnings": x.warnings, "settings": request.settings, "cancel_asked": cancelled, "message": format!("Exported {format_label} to {}{note}{late}", x.exported)})
+        // Written in process from the open archive's exact geometry (`sim_cad::export`).
+        let settings = request.settings.clone().unwrap_or(Value::Null);
+        let answer = sim_cad::export::export(&local.archive, &local.geometry, &request.format, std::path::Path::new(&request.path), &settings, request.ids.as_deref(), &|| ctx.cancelled()).map_err(|e| format!("{l}: {e}")).map(|x| {
+            let listed: Vec<String> = x["warnings"].as_array().into_iter().flatten().filter_map(|w| w.as_str().map(str::to_string)).collect();
+            let note = if listed.is_empty() { String::new() } else { format!(" ({} note(s): {})", listed.len(), listed.join("; ")) };
+            json!({"exported": request.path, "format": request.format, "warnings": listed, "settings": request.settings, "bodies": x["bodies"], "message": format!("Exported {format_label} to {}{note}", request.path)})
         });
         jobs::logged(&l, answer)
     })
@@ -527,26 +522,71 @@ fn render(args: &RenderArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
         Ok(r) => r,
         Err(e) => return done(Err(e)),
     };
-    let client = match jobs::client(cx.doc) {
+    let local = match jobs::local(cx.doc) {
         Ok(c) => c,
         Err(e) => return done(Err(format!("Render to {path}: {e}"))),
     };
     let label = format!("Render to {path}");
     let l = label.clone();
     jobs::start(cx, call, "render", label, true, jobs::Then::Nothing, move |ctx| {
-        let answer = client.render(&request).map_err(|e| jobs::named(&l, &e)).and_then(|png| {
-            // The PNG is this window's to write: a cancel seen by now writes nothing.
+        let answer = render_local(&local, &request).map_err(|e| format!("{l}: {e}")).and_then(|png| {
             if ctx.cancelled() {
-                return Err(format!("{l}: cancelled; RoboCAD drew the image ({} KB, it has no cancel route for /render) but nothing was written to {path}", png.len().div_ceil(1024)));
+                return Err(format!("{l}: cancelled; nothing was written to {path}"));
             }
             std::fs::write(&path, &png).map_err(|e| format!("{l}: could not write {path}: {e}"))?;
-            // A cancel seen only now came too late to stop the write: said, not hidden.
-            let cancelled = ctx.cancelled();
-            let late = if cancelled { "; the cancel came too late to stop the write" } else { "" };
-            Ok(json!({"rendered": path, "bytes": png.len(), "query": request.route(), "cancel_asked": cancelled, "message": format!("Rendered {path} ({} KB){late}", png.len().div_ceil(1024))}))
+            Ok(json!({"rendered": path, "bytes": png.len(), "query": request.route(), "message": format!("Rendered {path} ({} KB)", png.len().div_ceil(1024))}))
         });
         jobs::logged(&l, answer)
     })
+}
+
+/// A render of the open archive's exact tessellation (`sim_render::cad`):
+/// the shown bodies (or `ids`), RoboCAD's view presets or "dx,dy,dz",
+/// shaded | xray | wireframe, an "x|y|z:value" section, highlights, edges,
+/// labels, a framed node and a title.
+fn render_local(local: &crate::cad::sync::LocalSnapshot, r: &RenderRequest) -> Result<Vec<u8>, String> {
+    let doc = &local.archive;
+    let ids = sim_cad::export::bodies(doc, r.ids.as_deref());
+    let tol = r.tolerance;
+    let mut bodies = Vec::new();
+    for id in &ids {
+        let g = match (tol, local.geometry.iter().find(|b| &b.node_id == id)) {
+            (None, Some(g)) => g.clone(),
+            (t, _) => sim_cad::geometry::tessellate_node(doc, id, t.unwrap_or(0.05), &|| false)?,
+        };
+        let n = doc.node(id);
+        let color = n.and_then(|n| sim_cad::ops::v3(&n["color"])).or_else(|| n.and_then(|n| n["material"].as_str()).and_then(|m| sim_cad::edit::material(&doc.manifest, m).and_then(|x| sim_cad::ops::v3(&x["color"])))).map_or([0.66, 0.70, 0.76], |c| c.map(|v| v as f32));
+        bodies.push(sim_render::cad::Body { id: id.clone(), name: n.and_then(|n| n["name"].as_str()).unwrap_or(id).to_string(), vertices: g.vertices_mm, triangles: g.triangles, triangle_face: g.triangle_faces, color });
+    }
+    let view = match r.view.as_deref().unwrap_or("iso") {
+        v if v.contains(',') => {
+            let p: Vec<f64> = v.split(',').filter_map(|x| x.trim().parse().ok()).collect();
+            [p[0], p[1], p[2]]
+        }
+        v => sim_render::cad::preset(v).ok_or_else(|| format!("unknown view {v}"))?,
+    };
+    let section = match r.section.as_deref() {
+        None => None,
+        Some(s) => {
+            let (axis, value) = s.split_once(':').ok_or("section is \"x|y|z:value\"")?;
+            let a = ["x", "y", "z"].iter().position(|x| *x == axis).ok_or("section axis is x, y or z")?;
+            let v = if value.is_empty() { 0. } else { value.trim().parse::<f64>().map_err(|e| e.to_string())? };
+            Some((a, v))
+        }
+    };
+    let o = sim_render::cad::Options {
+        width: r.w.unwrap_or(1200),
+        height: r.h.unwrap_or(900),
+        view,
+        mode: r.mode.clone().unwrap_or_else(|| "shaded".into()),
+        section,
+        highlight: r.highlight.clone().unwrap_or_default(),
+        labels: r.labels.unwrap_or(false),
+        edges: r.edges.unwrap_or(true),
+        focus: r.focus.clone().into_iter().collect(),
+        title: r.title.clone(),
+    };
+    sim_render::cad::render(&bodies, &o)
 }
 
 // ---- Wiring -------------------------------------------------------------------
@@ -602,9 +642,9 @@ pub(in crate::cad) fn specs() -> Vec<Spec> {
             "cad_export",
             CAD,
             json!({"format": "step", "path": "/tmp/turntable.step", "settings": {"schema": "AP214"}}),
-            format!("CAD mode: POST /export on a job: RoboCAD writes format to path (absolute; its extension must be the format's) with settings (checked here with the desktop dialog's ranges; absent ones take RoboCAD's defaults and are sent explicitly; the sent settings are remembered per format for the form) for ids (all visible bodies when absent). Formats and settings: {}. The sketch SVG's sketch defaults to the selected sketch; the drawing's title to the document's file name and its section to the section tool's plane while it is on. Without format or path, the export form opens (file.export; file.export_drawing opens it on the drawing). A failure is a named refusal (\"Export STEP to …: RoboCAD answered 422: …\"). RoboCAD runs a sent export to the end (api.py has no cancel route for /export): cad_file {op: cancel, job} (the job strip's Cancel) cannot stop it, and the outcome then says the file was written regardless; REST callers wait (cancelling the request only stops the wait), and the job completes even if CAD mode closes. Progress: cad_state.files.jobs and the window's job strip.", formats.join(" | ")),
+            format!("CAD mode: POST /export on a job: RoboCAD writes format to path (absolute; its extension must be the format's) with settings (checked here with the desktop dialog's ranges; absent ones take RoboCAD's defaults and are sent explicitly; the sent settings are remembered per format for the form) for ids (all visible bodies when absent). Formats and settings: {}. The sketch SVG's sketch defaults to the selected sketch; the drawing's title to the document's file name and its section to the section tool's plane while it is on. Without format or path, the export form opens (file.export; file.export_drawing opens it on the drawing). A failure is a named refusal (\"Export STEP to …: RoboCAD answered 422: …\"). RoboCAD runs a sent export to the end (api.py has no cancel route for /export): cad_file {{op: cancel, job}} (the job strip's Cancel) cannot stop it, and the outcome then says the file was written regardless; REST callers wait (cancelling the request only stops the wait), and the job completes even if CAD mode closes. Progress: cad_state.files.jobs and the window's job strip.", formats.join(" | ")),
         ),
-        spec("cad_render", CAD, json!({"path": "/tmp/turntable-iso.png", "view": "iso", "w": 1200, "h": 900}), format!("CAD mode: GET /render on a job, the PNG written to path (absolute, .png). Query as RoboCAD's: view ({} or \"dx,dy,dz\"), w and h (16…{MAX_RENDER} px; RoboCAD's default 1200×900), mode ({}), section (\"x|y|z:value\" mm), ids, highlight, labels, edges, focus (a node to frame), tolerance (mm), title; absent ones take RoboCAD's defaults. Works headless (the snapshot renderer); with RoboCAD's window a plain shaded view (no ids, highlight, labels or other mode) is drawn by its GPU viewport at the viewport's size, and w, h, edges, tolerance and title then do not apply (api.py render_request). Without path, the render form opens. RoboCAD has no cancel route for /render, so a sent render is drawn to the end; cad_file {op: cancel, job} (the job strip's Cancel) keeps this window from writing the PNG once the cancel is seen (the outcome is a refusal saying nothing was written, or says the cancel came too late to stop the write); REST callers wait. /capture and /screenshot are not used: they need RoboCAD's window and capture its own viewport.", RENDER_VIEWS.join(", "), RENDER_MODES.join(", "))),
+        spec("cad_render", CAD, json!({"path": "/tmp/turntable-iso.png", "view": "iso", "w": 1200, "h": 900}), format!("CAD mode: GET /render on a job, the PNG written to path (absolute, .png). Query as RoboCAD's: view ({} or \"dx,dy,dz\"), w and h (16…{MAX_RENDER} px; RoboCAD's default 1200×900), mode ({}), section (\"x|y|z:value\" mm), ids, highlight, labels, edges, focus (a node to frame), tolerance (mm), title; absent ones take RoboCAD's defaults. Works headless (the snapshot renderer); with RoboCAD's window a plain shaded view (no ids, highlight, labels or other mode) is drawn by its GPU viewport at the viewport's size, and w, h, edges, tolerance and title then do not apply (api.py render_request). Without path, the render form opens. RoboCAD has no cancel route for /render, so a sent render is drawn to the end; cad_file {{op: cancel, job}} (the job strip's Cancel) keeps this window from writing the PNG once the cancel is seen (the outcome is a refusal saying nothing was written, or says the cancel came too late to stop the write); REST callers wait. /capture and /screenshot are not used: they need RoboCAD's window and capture its own viewport.", RENDER_VIEWS.join(", "), RENDER_MODES.join(", "))),
     ]
 }
 
@@ -616,11 +656,12 @@ pub(in crate::cad) fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Resul
 
 /// [`controls`] from the document and the file state.
 fn control_list(doc: &CadDocument, files: Option<&CadFiles>) -> Vec<(String, String, CadAction, Result<(), String>)> {
-    let connected = || Err("File export/render/new awaiting Rust migration".to_string());
+    // Export and render read the open archive; New writes a file and opens it.
+    let connected = || if doc.local.is_some() { Ok(()) } else { Err("no CAD document is open".to_string()) };
     let editable = || doc.edit_refusal().map_or(Ok(()), Err);
     let file = |op| CadAction::CadFile(FileArgs { op, ..Default::default() });
     let mut out = vec![
-        ("cad:file:new".to_string(), "New".to_string(), file(FileOp::New), connected()),
+        ("cad:file:new".to_string(), "New".to_string(), file(FileOp::New), Ok(())),
         ("cad:file:open".to_string(), "Open…".to_string(), file(FileOp::Open), Ok(())),
         ("cad:file:save_as".to_string(), "Save As…".to_string(), file(FileOp::SaveAs), editable()),
         ("cad:file:import".to_string(), "Import…".to_string(), file(FileOp::Import), editable()),

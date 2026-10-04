@@ -196,12 +196,12 @@ fn take_fetched(fetching: &mut Vec<(String, Job<Vec<Vec<[f64; 3]>>>)>, into: &mu
 
 /// A sampled-edges fetch of `node` on `Pool::Dedicated`; its generation is
 /// the revision it reads, checked on arrival.
-fn fetch_edges(client: sim_runtime::cad_client::CadClient, node: String, samples: u32, revision: u64) -> Job<Vec<Vec<[f64; 3]>>> {
-    Job::spawn(Pool::Dedicated, revision, "cad-display-edges", move |_| match client.edges(&node, Some(samples)) {
-        Ok(list) => Ok(list.into_iter().map(|e| e.points).filter(|p| p.len() >= 2).collect()),
-        // RoboCAD: "<name> has no geometry" (a mesh node): no B-rep edges.
-        Err(err) if err.not_found() => Ok(Vec::new()),
-        Err(err) => Err(err.to_string()),
+fn fetch_edges(local: std::sync::Arc<crate::cad::sync::LocalSnapshot>, node: String, samples: u32, revision: u64) -> Job<Vec<Vec<[f64; 3]>>> {
+    Job::spawn(Pool::Compute, revision, "cad-display-edges", move |_| {
+        // A node without B-rep geometry (a mesh node) has no edges.
+        let Ok(bytes) = sim_cad::geometry::resolved_brep(&local.archive, &node) else { return Ok(Vec::new()) };
+        let t = sim_cad::kernel::full_topology(&bytes, samples as i32)?;
+        Ok(t["edges"].as_array().into_iter().flatten().map(|e| e["points"].as_array().into_iter().flatten().filter_map(|p| serde_json::from_value::<[f64; 3]>(p.clone()).ok()).collect::<Vec<_>>()).filter(|p| p.len() >= 2).collect())
     })
 }
 
@@ -234,7 +234,7 @@ pub(super) fn edges_sync(
     if take_fetched(&mut e.curve_fetching, &mut e.curves, key.2) {
         e.epoch += 1;
     }
-    let client = doc.client.clone().filter(|_| doc.connected() && doc.stale.is_none());
+    let client = doc.local.clone().filter(|_| doc.connected() && doc.stale.is_none());
     if let Some(client) = &client {
         let mut curves: Vec<&str> = curve_nodes(&doc).map(|n| n.id.as_str()).collect();
         curves.sort_unstable();
@@ -265,7 +265,7 @@ pub(super) fn edges_sync(
 }
 
 /// Start edge fetches for the drawn bodies `CadTopology` does not hold.
-fn start_body_edges(e: &mut DisplayEdges, meshes: &CadMeshes, topology: Option<&CadTopology>, state: &sim_runtime::cad_client::DocState, client: &sim_runtime::cad_client::CadClient, revision: u64) {
+fn start_body_edges(e: &mut DisplayEdges, meshes: &CadMeshes, topology: Option<&CadTopology>, state: &sim_runtime::cad_client::DocState, client: &std::sync::Arc<crate::cad::sync::LocalSnapshot>, revision: u64) {
     let mut ids: Vec<&str> = state.nodes.iter().filter(|n| n.effective_visible && BODY_KINDS.contains(&n.kind.as_str()) && meshes.shown(&n.id)).map(|n| n.id.as_str()).collect();
     ids.sort_unstable();
     for id in ids {

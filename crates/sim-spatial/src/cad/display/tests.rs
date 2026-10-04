@@ -330,6 +330,7 @@ fn display_controls_fit_a_pattern_and_round_trip_through_rest() {
     doc.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.doc_key = Some((None, 4));
+    doc.open_fixture();
     let selection = [SelectionItem("b1".into(), "body".into(), 0)];
     // The section on XZ through the origin: RoboCAD's route names it (plane=xz), so exact is ready.
     let d = CadDisplay { section: Section { enabled: true, plane: Some(SectionPlane::on_axis(SectionAxis::Y, 0.0)) }, ..CadDisplay::default() };

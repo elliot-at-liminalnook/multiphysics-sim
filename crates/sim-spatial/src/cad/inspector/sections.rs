@@ -144,15 +144,10 @@ pub(in crate::cad) fn attributes(p: &mut ChildSpawnerCommands, k: &Kit, doc: &Ca
 /// RoboCAD's undo and redo labels, most recent first (read-only).
 pub(in crate::cad) fn history(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
     p.spawn(k.section("History"));
-    if doc.client.is_none() {
-        p.spawn(k.caption("Native modelling and undo history await Rust migration; archived source is read only."));
-        return;
-    }
-    let Some(d) = &doc.doc else {
-        p.spawn(k.caption("RoboCAD has not sent its history yet."));
-        return;
-    };
-    for (title, labels, empty) in [("Undo (most recent first)", &d.history.undo, "Nothing to undo."), ("Redo (most recent first)", &d.history.redo, "Nothing to redo.")] {
+    // In-process edits (`local::History`): each is one undo step.
+    let undo: Vec<String> = doc.history.undo.iter().map(|(l, _)| l.clone()).collect();
+    let redo: Vec<String> = doc.history.redo.iter().map(|(l, _)| l.clone()).collect();
+    for (title, labels, empty) in [("Undo (most recent first)", &undo, "Nothing to undo."), ("Redo (most recent first)", &redo, "Nothing to redo.")] {
         p.spawn(k.text(title, size::BODY, TEXT, 1));
         if labels.is_empty() {
             p.spawn(k.note(empty));
@@ -171,7 +166,7 @@ pub(in crate::cad) fn commands_key(doc: &CadDocument) -> String {
 pub(in crate::cad) fn commands(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem]) {
     if doc.client.is_none() {
         p.spawn(k.section("Modelling commands"));
-        p.spawn(k.caption("The modelling command registry awaits Rust migration. No RoboCAD service is started or awaited."));
+        p.spawn(k.caption("Every modelling operation runs in process: the menus, the command palette (Ctrl+K) and cad_run/cad_model over REST."));
         return;
     }
     p.spawn(k.section("RoboCAD commands"));

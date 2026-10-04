@@ -20,6 +20,12 @@ pub(crate) struct LocalSnapshot {
     pub geometry: Vec<sim_cad::geometry::BodyGeometry>,
     pub meshes: HashMap<String, Arc<MeshData>>,
     pub masses: sim_cad::mass::MassResults,
+    /// Every geometry node's fingerprint (`sim_cad::geometry::fingerprint`):
+    /// comment pins' stamps, and what an edit's rebuild reuses bodies by.
+    pub fingerprints: HashMap<String, String>,
+    /// The current stamps of the nodes that carry comment pins (RoboCAD's
+    /// exact stamp, `sim_cad::stamp`): what pins are checked against.
+    pub pin_stamps: sim_cad::annotations::Stamps,
 }
 pub(crate) struct LocalLoad {
     pub sequence: u64,
@@ -30,7 +36,7 @@ pub(crate) struct LocalLoad {
 }
 
 /// Archive summaries are display projections, never the source owner.
-fn tree(archive: &sim_cad::ArchiveDocument) -> Result<DocState, String> {
+pub(crate) fn tree(archive: &sim_cad::ArchiveDocument) -> Result<DocState, String> {
     let manifest = &archive.manifest;
     let mut nodes = Vec::new();
     for raw in manifest["nodes"].as_array().ok_or_else(|| format!("{}: manifest nodes must be an array", archive.path.display()))? {
@@ -92,12 +98,11 @@ pub(crate) fn request_load(doc: &mut CadDocument, path: PathBuf) -> u64 {
         let masses = sim_cad::mass::derive_document_with(&archive, &geometry, &|| ctx.cancelled(), &|stage| ctx.message(stage))?;
         if ctx.cancelled() { return Err("Local open cancelled after mass derivation".into()); }
         ctx.message("Preparing local display snapshot");
-        let meshes = geometry.iter().map(|body| {
-            let faces: Vec<i64> = body.triangle_faces.iter().map(|f| i64::from(*f)).collect();
-            let data = MeshData { vertices: body.vertices_mm.clone(), triangles: body.triangles.clone(), face_count: faces.iter().max().map_or(0, |f| (*f + 1) as u64), triangle_face: faces };
-            (body.node_id.clone(), Arc::new(data))
-        }).collect();
-        Ok(LocalSnapshot { archive, tree, geometry, meshes, masses })
+        let meshes = geometry.iter().map(|body| (body.node_id.clone(), super::local::mesh(body))).collect();
+        let fingerprints = sim_cad::geometry::fingerprints(&archive);
+        ctx.message("Checking comment pins");
+        let pin_stamps = sim_cad::annotations::pinned_stamps(&archive);
+        Ok(LocalSnapshot { archive, tree, geometry, meshes, masses, fingerprints, pin_stamps })
     });
     doc.local_load = Some(LocalLoad { sequence, source_generation, source_revision, target: path, job });
     doc.show(Ok("Opening locally; current document retained until success (Escape cancels)".into()));
@@ -134,6 +139,9 @@ pub(crate) fn receive(doc: Option<ResMut<CadDocument>>, mut selection: ResMut<Se
     let Some(mut doc) = doc else { return };
     super::selection::ensure_registered(&mut registry, &mut selection, &doc.target);
     super::selection::publish_changes(&mut doc, View { selection: &selection, registry: &registry });
+    if doc.edit.is_some() {
+        finish_edit(&mut doc, &mut Shared { selection: &mut selection, registry: &mut registry });
+    }
     if let Some(load) = &doc.local_load {
         if let Some(result) = load.job.poll() {
             let load = doc.local_load.take().expect("load still owned in this system");
@@ -159,7 +167,8 @@ pub(crate) fn receive(doc: Option<ResMut<CadDocument>>, mut selection: ResMut<Se
                     doc.target = target.clone();
                     doc.doc_key = Some((snapshot.tree.document_id.clone(), snapshot.tree.revision));
                     doc.doc = Some(snapshot.tree.clone());
-                    doc.physical = Some((snapshot.tree.revision, Ok(value(&snapshot.masses))));
+                    doc.physical = Some((snapshot.tree.revision, Ok(super::local::physical_json(&snapshot))));
+                    doc.history = super::local::History::opened(snapshot.archive.identity());
                     let old = doc.local.replace(Arc::new(snapshot));
                     crate::jobs::drop_off_thread(old, "the previous local CAD snapshot");
                     doc.connection = Connection::Connected;
@@ -189,11 +198,44 @@ pub(crate) fn receive(doc: Option<ResMut<CadDocument>>, mut selection: ResMut<Se
 pub(crate) fn refresh(doc: &mut CadDocument, _after_edit: bool) { start(doc); }
 pub(crate) fn fetch_physical(doc: &mut CadDocument) -> Result<(), String> {
     let local = doc.local.as_ref().ok_or("Local CAD archive is not loaded")?;
-    doc.physical = Some((doc.shown_revision(), Ok(value(&local.masses))));
+    doc.physical = Some((doc.shown_revision(), Ok(super::local::physical_json(local))));
     doc.touch(); Ok(())
 }
-pub(crate) fn start_edit(_doc: &mut CadDocument, label: String, _waited: bool, _auxiliary: bool, _work: impl FnOnce(&CadClient) -> Result<EditDone, sim_runtime::cad_client::CadError> + Send + 'static) -> Result<u64, String> {
-    Err(format!("{label}: CAD source editing awaiting Rust migration"))
+/// A finished edit lands (ported from the service-era `finish_edit`): its
+/// next snapshot is shown (the previous one goes on the undo stack), the
+/// parts that tracked it hear its answer, and a REST caller gets it.
+fn finish_edit(doc: &mut CadDocument, shared: &mut Shared) {
+    let Some(edit) = &doc.edit else { return };
+    let Some(result) = edit.job.poll() else { return };
+    let generation = edit.job.generation();
+    let Some(edit) = doc.edit.take() else { return };
+    let seq = doc.edit_seq;
+    let next = super::local::take_pending(doc);
+    if generation != doc.generation {
+        crate::jobs::drop_off_thread(next, "a replaced document's edit");
+        return;
+    }
+    let answer = result.map(|EditDone { message, result }| (message, result));
+    if let (Ok(_), Some(next)) = (&answer, next) {
+        super::local::landed(doc, edit.label.clone(), next);
+        let tree = doc.doc.clone().expect("installed tree");
+        super::selection::follow_tree(shared, tree.revision, &tree, true);
+    }
+    // cad-print / cad-organize: the parts that track an edit hear its answer.
+    crate::cad::print::edit_answered(doc, seq, answer.as_ref().ok().map(|(_, r)| r));
+    crate::cad::threads::edit_answered(doc, seq, answer.as_ref().map(|(_, r)| r).map_err(Clone::clone));
+    crate::cad::references::edit_answered(doc, seq, answer.as_ref().map(|(_, r)| r));
+    doc.status = Some(answer.as_ref().map(|(m, _)| m.clone()).map_err(Clone::clone));
+    if answer.is_ok()
+        && let Some(path) = edit.retarget
+    {
+        doc.target = CadTarget::File(path);
+    }
+    if std::mem::take(&mut doc.edit_waited) {
+        doc.edit_results.retain(|s, _| *s + 8 > seq);
+        doc.edit_results.insert(seq, answer.map(|(message, result)| json!({"message": message, "result": result, "revision": doc.shown_revision()})));
+    }
+    doc.touch();
 }
 pub(crate) fn value<T: serde::Serialize>(answer: &T) -> Value { serde_json::to_value(answer).unwrap_or_else(|e| json!({"serialization_error": e.to_string()})) }
 pub(crate) fn on_exit(mut exits: MessageReader<AppExit>, doc: Option<ResMut<CadDocument>>) {

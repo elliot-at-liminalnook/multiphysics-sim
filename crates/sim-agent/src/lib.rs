@@ -82,6 +82,12 @@ pub struct Input {
     /// task (e.g. drafting a lesson for the host to validate and write).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub instructions: Option<String>,
+    /// Replaces the conversation's developer instructions when it starts (a
+    /// host whose agent may act through the host's own validated commands,
+    /// e.g. CAD edits over the viewer's REST API, says so here). With
+    /// `instructions`, the turn is not told to work read-only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub developer: Option<String>,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -226,6 +232,7 @@ impl Supervisor {
                         revision: r.input.revision,
                         question: String::new(),
                         instructions: None,
+                        developer: None,
                         context: if r.status == Status::Ready {
                             r.input.context.clone()
                         } else {
@@ -643,6 +650,7 @@ mod tests {
             context: json!({}),
             question: "Explain this part".into(),
             instructions: None,
+            developer: None,
         }
     }
     fn wait(service: &Supervisor, p: impl Fn(&State) -> bool) -> State {

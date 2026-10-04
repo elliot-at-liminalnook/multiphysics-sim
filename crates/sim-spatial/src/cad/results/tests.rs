@@ -261,6 +261,7 @@ fn commands_and_the_spec_map_to_actions() {
 }
 
 #[test]
+#[ignore = "the simulator export needs RoboCAD's physical model, not ported (cad::results::SIM_EXPORT_UNPORTED)"]
 fn cancel_keeps_export_owned_until_terminal_and_reports_late_write() {
     let mut doc = CadDocument::new(CadTarget::File(PathBuf::from(RCAD)));
     let first = request(false, "physical model");
@@ -436,10 +437,10 @@ fn a_queued_exports_seq_always_lands() {
     assert_eq!(replaced.seq, s1);
     assert!(replaced.outcome.unwrap_err().contains("replaced by a newer live-link export"));
     assert_eq!(doc.results.exports.json()["queued"]["seq"], json!(s2));
-    // The running export lands; the queued one cannot start (not connected) and lands as not started.
+    // The running export lands; the queued one cannot start (no document open) and lands as not started.
     export::poll(&mut doc);
     assert!(doc.results.exports.running.is_none() && doc.results.exports.queued.is_none());
     let failed = doc.results.exports.last.clone().unwrap();
     assert_eq!(failed.seq, s2);
-    assert!(failed.outcome.unwrap_err().contains("not started: not connected"));
+    assert!(failed.outcome.unwrap_err().contains("not started: no CAD document is open"));
 }

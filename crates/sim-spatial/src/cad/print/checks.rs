@@ -244,7 +244,7 @@ pub(super) fn split_cached(state: &ChecksState, generation: u64, revision: u64, 
 /// Start a wall check (or land it at once from the cache).
 pub(super) fn start_wall(doc: &mut CadDocument, threshold: f64, nodes: Vec<String>) -> Result<Value, String> {
     const LABEL: &str = "Wall thickness check";
-    let client = doc.client.clone().filter(|_| doc.connected()).ok_or_else(|| format!("{LABEL}: not connected to RoboCAD: {}", doc.connection_line().0))?;
+    let client = doc.client.clone().filter(|_| doc.connected()).ok_or_else(|| format!("{LABEL}: {}", super::PRINT_UNPORTED))?;
     let (generation, revision) = (doc.generation, doc.shown_revision());
     let (known, missing) = split_cached(&doc.print.checks, generation, revision, threshold, &nodes);
     let answer = json!({"reading": "thin", "nodes": nodes, "threshold": threshold, "revision": revision, "cached": known.len(), "sent": missing.len()});
@@ -279,7 +279,7 @@ pub(super) fn start_wall(doc: &mut CadDocument, threshold: f64, nodes: Vec<Strin
 /// Start a validation of `bodies` (id, name).
 fn start_validate(doc: &mut CadDocument, bodies: Vec<(String, String)>) -> Result<Value, String> {
     const LABEL: &str = "Validate for printing";
-    let client = doc.client.clone().filter(|_| doc.connected()).ok_or_else(|| format!("{LABEL}: not connected to RoboCAD: {}", doc.connection_line().0))?;
+    let client = doc.client.clone().filter(|_| doc.connected()).ok_or_else(|| format!("{LABEL}: {}", super::PRINT_UNPORTED))?;
     let (generation, revision) = (doc.generation, doc.shown_revision());
     let answer = json!({"reading": "validate", "bodies": bodies.iter().map(|(id, _)| id).collect::<Vec<_>>(), "revision": revision});
     let meta = ValidateMeta { revision, generation, bodies: bodies.len() };

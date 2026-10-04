@@ -91,7 +91,7 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem],
         "inspected": doc.detail.as_ref().map(|(id, revision, r)| json!({"id": id, "revision": revision, "detail": result(&r.as_ref().map(value).map_err(Clone::clone))})),
         "physical": doc.physical.as_ref().map(|(revision, r)| json!({"revision": revision, "result": result(r)})).unwrap_or(Value::Null),
         "physical_pending": doc.physical_job.is_some(),
-        "history": doc.doc.as_ref().map(|d| value(&d.history)),
+        "history": doc.history.labels(),
         "commands": doc.commands.as_ref().map(|c| result(&c.as_ref().map(value).map_err(Clone::clone))),
         "autosave": doc.autosave.as_ref().map(|a| result(&a.as_ref().map(value).map_err(Clone::clone))),
         "edit": doc.edit.as_ref().map(|e| json!({"label": e.label, "seconds": e.started.elapsed().as_secs()})),
@@ -154,4 +154,10 @@ pub(in crate::cad) fn publish(
         rest.0.publish("cad_state", state);
         rest.0.publish("state", shown);
     }
+    // The comment feed agents watch (`GET /v1/events/cad_threads`): on every
+    // shown revision and seen mark.
+    let key = format!("{}:{}:{:?}", doc.generation, doc.shown_revision(), doc.threads.seen);
+    rest.0.publish_changed("cad_threads", &key, || super::threads::agent::feed(&doc));
+    // The editor's guide, for an agent starting cold (`GET /v1/cad_guide`).
+    rest.0.publish_changed("cad_guide", "1", || super::guide::guide(None).unwrap_or_default());
 }

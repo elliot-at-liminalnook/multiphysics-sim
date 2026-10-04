@@ -21,7 +21,7 @@ use super::mesh::BODY_KINDS;
 use super::selection::CadItems;
 use crate::jobs::{Job, Pool};
 use bevy::prelude::*;
-use sim_runtime::cad_client::{CadError, EdgeInfo, FaceInfo, SelectionItem, VertexInfo};
+use sim_runtime::cad_client::{EdgeInfo, FaceInfo, SelectionItem, VertexInfo};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -121,17 +121,17 @@ pub fn wanted(doc: &CadDocument, selection: &[SelectionItem]) -> HashSet<String>
     out
 }
 
-/// One node's topology, fetched (on a Dedicated job).
-fn fetch(client: &sim_runtime::cad_client::CadClient, id: &str, revision: u64) -> Result<NodeTopology, String> {
-    let absent = |e: &CadError| e.not_found();
-    let faces = match client.faces(id) {
-        Ok(f) => f,
-        // RoboCAD: "<name> has no geometry" (a mesh, group or plane node).
-        Err(e) if absent(&e) => return Ok(NodeTopology { revision, ..Default::default() }),
-        Err(e) => return Err(e.to_string()),
+/// One node's topology from the open archive's exact B-rep (on a job). A
+/// node without B-rep geometry (a mesh, group or plane) has an empty topology.
+fn fetch(archive: &sim_cad::ArchiveDocument, id: &str, revision: u64) -> Result<NodeTopology, String> {
+    let Ok(bytes) = sim_cad::geometry::resolved_brep(archive, id) else {
+        return Ok(NodeTopology { revision, ..Default::default() });
     };
-    let edges = client.edges(id, Some(EDGE_SAMPLES)).map_err(|e| e.to_string())?;
-    let vertices = client.vertices(id).map_err(|e| e.to_string())?;
+    let t = sim_cad::kernel::full_topology(&bytes, EDGE_SAMPLES as i32)?;
+    let list = |key: &str| t[key].as_array().cloned().unwrap_or_default();
+    let faces: Vec<FaceInfo> = list("faces").into_iter().map(serde_json::from_value).collect::<Result<_, _>>().map_err(|e| e.to_string())?;
+    let edges: Vec<EdgeInfo> = list("edges").into_iter().map(serde_json::from_value).collect::<Result<_, _>>().map_err(|e| e.to_string())?;
+    let vertices: Vec<VertexInfo> = list("vertices").into_iter().map(serde_json::from_value).collect::<Result<_, _>>().map_err(|e| e.to_string())?;
     Ok(NodeTopology { revision, faces, edges, vertices })
 }
 
@@ -172,15 +172,15 @@ pub(super) fn sync(doc: Option<Res<CadDocument>>, topology: Option<ResMut<CadTop
         t.entries.insert(id, slot);
         t.epoch += 1;
     }
-    if let Some(client) = doc.client.clone().filter(|_| doc.connected() && doc.stale.is_none()) {
+    if let Some(local) = doc.local.clone().filter(|_| doc.connected() && doc.stale.is_none()) {
         let mut ids: Vec<&String> = wanted.iter().filter(|id| !t.entries.contains_key(*id) && !t.fetching.iter().any(|f| &f.id == *id)).collect();
         ids.sort_unstable();
         for id in ids {
             if t.fetching.len() >= MAX_FETCHES {
                 break;
             }
-            let (client, node) = (client.clone(), id.clone());
-            let job = Job::spawn(Pool::Dedicated, doc.generation, "cad-topology-fetch", move |_| fetch(&client, &node, revision));
+            let (local, node) = (local.clone(), id.clone());
+            let job = Job::spawn(Pool::Compute, doc.generation, "cad-topology", move |_| fetch(&local.archive, &node, revision));
             t.fetching.push(Fetch { id: id.clone(), revision, job });
         }
     }

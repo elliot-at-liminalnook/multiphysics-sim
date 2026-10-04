@@ -126,6 +126,7 @@ impl Builder {
                 "rest_inspection":{"command":"system_context","args":{"discussion":id},"read_only":true},
                 "rest_read_resources":["/v1/description","/v1/spatial","/v1/measurements"],"display_semantics":sim_system::display::SEMANTICS}),
             instructions: None,
+            developer: None,
         })
     }
     fn context_status(&self) -> Value {

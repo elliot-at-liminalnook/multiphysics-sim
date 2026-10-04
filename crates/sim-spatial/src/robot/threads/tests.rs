@@ -2,9 +2,11 @@
 //! link whose body or members name it, or an ancestor's, never by name; a
 //! thread on no link and an evidence thread are labelled; every thread of
 //! an export that is not current with its CAD file is labelled for that
-//! status; a change is refused by name while the CAD source is not open;
-//! a part link to a member selects the containing link; the path match is
-//! exact; Open in CAD reveals in the document the switch creates.
+//! status; a change is refused by name while the CAD source is not read;
+//! a part link to a member selects the containing link; a change is written
+//! to the `.rcad` in process and refused when the file changed on disk;
+//! Open in CAD reveals in the document the switch creates.
+use super::act::{cad_document, reveal_target};
 use super::read::{Listed, Reach};
 use super::*;
 use crate::annotations::{self, ThreadOp};
@@ -40,13 +42,13 @@ fn parents() -> Parents {
 }
 
 fn base() -> Base {
-    Base { url: "http://127.0.0.1:9".into(), simrobot: PathBuf::from("/w/robot.simrobot.json"), cad: PathBuf::from("/w/robot.rcad") }
+    Base { simrobot: PathBuf::from("/w/robot.simrobot.json"), cad: PathBuf::from("/w/robot.rcad") }
 }
 
-/// The threads read at revision 7 from a service that has the CAD source open.
+/// The threads read from the CAD source at revision 7.
 fn open_state() -> RobotThreads {
     let mut st = RobotThreads::default();
-    st.read.listed = Some(Listed { base: base(), revision: 7, document_id: Some("doc-1".into()), threads: threads(), parents: parents() });
+    st.read.listed = Some(Listed { base: base(), revision: 7, document_id: Some("doc-1".into()), identity: "bytes-1".into(), stat: (1, None), threads: threads(), parents: parents() });
     st.read.answered = Some(((base(), st.read.epoch), Reach::Open));
     st
 }
@@ -124,22 +126,22 @@ fn cases_path() -> CadLinkStatus {
 }
 
 #[test]
-fn a_change_is_refused_by_name_while_the_cad_source_is_not_open() {
+fn a_change_is_refused_by_name_while_the_cad_source_is_not_read() {
     let reply = || ThreadOp::Reply { thread: "t1".into(), body: "Fixed".into(), author: "You".into(), links: vec![] };
-    // No attached service (or none matching): nothing read.
+    // No CAD file resolved: nothing read.
     let mut st = RobotThreads::default();
     let mut source = RobotCadThreads { st: &mut st, base: None, file: "robot.rcad".into() };
-    assert_eq!(annotations::apply(&mut source, "", reply()), Err("robot.rcad is not open in CAD mode: open it there to reply".to_string()));
-    // A service that answered with another document: not open either.
+    assert_eq!(annotations::apply(&mut source, "", reply()), Err("the comments of robot.rcad are not read yet (or could not be read): refresh, or open it in CAD mode".to_string()));
+    // The file could not be read: not open either.
     let mut st = open_state();
-    st.read.answered = Some(((base(), st.read.epoch), Reach::Elsewhere(Some("/w/other.rcad".into()))));
+    st.read.answered = Some(((base(), st.read.epoch), Reach::Failed("denied".into())));
     let mut source = RobotCadThreads { st: &mut st, base: Some(base()), file: "robot.rcad".into() };
     assert_eq!(annotations::apply(&mut source, "", reply()), Err(not_open("robot.rcad")));
     assert!(!source.st.in_flight.busy(), "nothing was sent");
-    // Undo is RoboCAD's, open or not.
+    // No undo here, read or not.
     let mut st = open_state();
     let mut source = RobotCadThreads { st: &mut st, base: Some(base()), file: "robot.rcad".into() };
-    assert_eq!(annotations::apply(&mut source, "", ThreadOp::Undo), Err(UNDO_IS_ROBOCADS.to_string()));
+    assert_eq!(annotations::apply(&mut source, "", ThreadOp::Undo), Err(NO_UNDO.to_string()));
     // Open: a new thread is placed in CAD mode, an unknown thread is named; nothing is sent.
     let create = ThreadOp::Create { title: "x".into(), targets: vec![CadAnchor::part("b1", "Arm")], body: "x".into(), author: "You".into(), links: vec![], pin_m: None, view: None };
     assert_eq!(annotations::apply(&mut source, "", create), Err("a new comment thread is placed in CAD mode: Annotate model, then click a surface".to_string()));
@@ -172,26 +174,49 @@ fn a_part_link_to_a_member_selects_the_containing_link() {
 }
 
 #[test]
-fn the_service_has_the_cad_source_only_when_the_canonical_paths_are_equal() {
+fn open_in_cad_reveals_in_the_document_the_switch_creates() {
     let cad = Path::new("/w/robot.rcad");
-    assert!(same_source(Some(Path::new("/w/robot.rcad")), cad));
-    assert!(!same_source(Some(Path::new("/w/other.rcad")), cad));
-    // A new, unsaved document is not the CAD source.
-    assert!(!same_source(None, cad));
+    // `app::switch` makes `CadTarget::File(path)` of the file, unchanged.
+    let document = cad_document(cad);
+    assert_eq!(document, Document::Path(cad.to_path_buf()));
+    assert_eq!(reveal_target(&document), Some(CadTarget::File(cad.to_path_buf())));
+}
+
+/// A scratch copy of the committed REST-built quadruped (one agent thread).
+fn scratch_quadruped(name: &str) -> PathBuf {
+    let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/cad-agent-loop/quadruped.rcad");
+    let dir = std::env::temp_dir().join(format!("robot-threads-{name}-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("quadruped.rcad");
+    std::fs::copy(&source, &path).unwrap();
+    path
 }
 
 #[test]
-fn open_in_cad_reveals_in_the_document_the_switch_creates() {
-    let cad = Path::new("/w/robot.rcad");
-    // The attached service has the CAD source open: CAD mode attaches to it.
-    let document = cad_document(Some("http://127.0.0.1:8420"), cad);
-    assert_eq!(document, Document::Url("http://127.0.0.1:8420".into()));
-    // `app::switch` makes `CadTarget::Service(url)` of a URL…
-    assert_eq!(reveal_target(&document), Some(CadTarget::Service("http://127.0.0.1:8420".into())));
-    // …and `CadTarget::File(path)` of a path, unchanged.
-    let document = cad_document(None, cad);
-    assert_eq!(document, Document::Path(cad.to_path_buf()));
-    assert_eq!(reveal_target(&document), Some(CadTarget::File(cad.to_path_buf())));
+fn a_change_is_written_to_the_rcad_in_process_and_refused_when_the_file_moved() {
+    let path = scratch_quadruped("write");
+    let archive = sim_cad::ArchiveDocument::open(&path).unwrap();
+    let (threads, parents) = read::list_archive(&archive, &sim_cad::annotations::pinned_stamps(&archive)).unwrap();
+    assert_eq!(threads.len(), 1);
+    assert!(parents.len() > 10, "the manifest's nodes give the ancestor walk");
+    let thread = threads[0].id.clone();
+    let identity = archive.identity().to_string();
+    let revision = archive.manifest["revision"].as_u64().unwrap();
+    // A reply, as the composer sends it: written, saved, a person's comment.
+    let reply = Request::Reply { thread: thread.clone(), body: "Checked from Robot mode".into(), author: "You".into() };
+    let answer = commit_job(&path, &identity, reply).unwrap();
+    assert_eq!(answer["thread"], json!(thread));
+    let after = sim_cad::ArchiveDocument::open(&path).unwrap();
+    assert_eq!(after.manifest["revision"].as_u64(), Some(revision + 1));
+    let (threads, _) = read::list_archive(&after, &sim_cad::annotations::pinned_stamps(&after)).unwrap();
+    let last = threads[0].comments.last().unwrap();
+    assert_eq!((last.body.as_str(), last.author.as_str()), ("Checked from Robot mode", "You"));
+    // The same change against the bytes first read: refused, nothing written.
+    let before = std::fs::read(&path).unwrap();
+    let again = Request::Reply { thread, body: "Twice".into(), author: "You".into() };
+    assert_eq!(commit_job(&path, &identity, again), Err(changed_on_disk(&path)));
+    assert_eq!(std::fs::read(&path).unwrap(), before);
+    std::fs::remove_dir_all(path.parent().unwrap()).unwrap();
 }
 
 #[test]
@@ -219,11 +244,11 @@ fn a_landed_change_reads_again_and_ends_the_draft_it_sent() {
     assert_eq!(st.read.epoch, epoch + 1);
     assert!(st.compose.is_empty() && st.release && st.sending.is_none());
     assert_eq!(st.answers.get(&3), Some(&Ok(Some("c9".to_string()))));
-    // A refusal stays under the composer in RoboCAD's words.
+    // A refusal stays under the composer.
     st.compose = "Again".into();
     st.in_flight.submitted(4, crate::cad::threads::REPLY, Some("t1".into()));
     st.sending = Some((4, "Again".into()));
-    land(&mut st, 4, Err(moved(7, 8)));
-    assert_eq!(st.error.as_deref(), Some("RoboCAD's document moved since its comments were read (revision 7, now 8): they are read again"));
+    land(&mut st, 4, Err(changed_on_disk(Path::new("/w/robot.rcad"))));
+    assert_eq!(st.error.as_deref(), Some("/w/robot.rcad changed on disk since its comments were read: nothing was written; they are read again"));
     assert_eq!(st.compose, "Again");
 }

@@ -159,6 +159,12 @@ pub(super) fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Comm
                 }
                 Command::Jog { joint, .. } if failed => set_jog_error(Some(format!("joint `{joint}`: not applied; the run failed (Reset rebuilds)"))),
                 Command::Motion { .. } if failed || ended => set_motion_error(Some("motion request not applied: the run failed or ended (Reset rebuilds)".into())),
+                Command::Inputs { .. } if failed || ended => set_motion_error(Some("input change not applied: the run failed or ended (Reset rebuilds)".into())),
+                Command::Prepare => {
+                    if !failed && sim.is_none() {
+                        failed = !build(&mut sim, generation, &mut pending, &mut pending_twist);
+                    }
+                }
                 Command::Twist { .. } if failed || ended => set_twist_error(Some("drive request not applied: the run failed or ended (Reset rebuilds)".into())),
                 // Saved in every phase with a built simulation, failed and ended included (labelled by recording::REPLAYABLE_RULE).
                 Command::SaveRecording { seq, target, note, unix_ms } => {
@@ -269,6 +275,7 @@ pub(super) fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Comm
                     }
                 }
                 Command::Motion { .. } if replay.is_some() => set_motion_error(Some("motion request not applied: a replay is in progress".into())),
+                Command::Inputs { .. } if replay.is_some() => set_motion_error(Some("input change not applied: a replay is in progress".into())),
                 Command::Twist { .. } if replay.is_some() => set_twist_error(Some("drive request not applied: a replay is in progress (it re-sends the recorded requests)".into())),
                 Command::Overlays(f) => {
                     flags.set(f);
@@ -317,6 +324,29 @@ pub(super) fn worker(source: Source, links: Vec<String>, rx: mpsc::Receiver<Comm
                         }
                         Err(e) => set_motion_error(Some(format!("motion request not applied: {e}"))),
                     },
+                },
+                Command::Inputs { values } => match sim.as_mut() {
+                    None => set_motion_error(Some("input change not applied: no built session (opening, Run or Step builds it)".into())),
+                    Some(s) => {
+                        let mut action = s.held();
+                        let applied = values.iter().try_for_each(|(i, x)| match action.get_mut(*i) {
+                            Some(slot) => {
+                                *slot = *x;
+                                Ok(())
+                            }
+                            None => Err(format!("input index {i} is outside the action ({} inputs)", action.len())),
+                        });
+                        match applied.and_then(|()| s.set_action(action)) {
+                            Ok(()) => {
+                                set_motion_error(None);
+                                if !running {
+                                    let rtf = out.lock().unwrap_or_else(|p| p.into_inner()).status.rtf;
+                                    failed = !publish(s, Phase::Paused, generation, steps, rtf);
+                                }
+                            }
+                            Err(e) => set_motion_error(Some(format!("input change not applied: {e}"))),
+                        }
+                    }
                 },
                 // A nonzero request waits for nothing while not running: no sim time
                 // passes, so it would keep no age and drive the next Run with no

@@ -2533,3 +2533,67 @@ receipt. Legacy browser adapters remain separately available, but no native
 hardware workflow requires them, socket servers or acquisition child processes.
 CAD still uses cad_client and RoboCAD Python/OCCT; §9 is outside this batch.
 No data or earlier receipts were deleted or relabelled.
+
+## Robot viewer browser parity — RV (2026-10-03)
+
+Robot mode now covers what the browser viewer (`web/viewer`) offered for
+presets, each feature with its REST command, `robot_state` block and
+`system_ui` controls (the same `RobotAction` as the window), and a mode guide
+for agents (`robot_guide`, `GET /v1/robot_guide`, checked against the command
+table by a test).
+
+| Browser feature | Native (Robot mode) | REST |
+| --- | --- | --- |
+| Controller leaderboard dialog (`leaderboard.js`, `leaderboard-model.mjs`) | Header **Leaderboard** dialog: search, status, profile, compare, evidence cards, Load and run, Replay tested inputs, Download; ranking rule ported to `sim_runtime::controller_leaderboard` | `robot_leaderboard` |
+| Record video (`video-export.js`) | Header **Record video**: the 3D viewport to H.264 MP4 (`sim_render::video`, OpenH264) under `runs/robot-video/`; refused while the window is hidden | `robot_video` |
+| `live` and `drive` preset modes | `live` runs the scene's own controller (`sim_runtime::session::Session`); `drive` opens the declared model with its controller binding (the `--robot FILE` drive session) | `robot_preset` |
+| Input sliders, motor-correction group | Run section **Inputs** block (bounds enforced, never clamped; Reset, Clear motor corrections) | `robot_inputs` |
+| Learning, travel, walking, actuation-profile and task-observation readouts | Run section readouts (`robot/readouts.rs`), null with the reason when a run publishes none | `robot_state.readouts` |
+| Fit selected, follow, display rate | View-tool chips | `robot_view` |
+| Contact arrows on presets | Contacts overlay for presets (force arrows) | `robot_overlay` |
+| Parts search | Link list filter | (window) |
+| Space for play/pause | Space key | `robot_run` |
+| Saving teleop overrides | Save recording / replay (already native), plus the held inputs | `robot_save_recording` |
+
+New beyond the browser (it had no charts and could not scrub a live run):
+a 30 s frame history with a **Timeline** slider (`robot_history`), the graph
+dock's time cursor with each trace's value there, and a Picked chart of up to
+8 channels (`robot_graphs`).
+
+Robot mode's comment threads no longer use RoboCAD's HTTP service: they are
+read from and written to the CAD source's `.rcad` in process (the same
+`cad::threads::Request` CAD mode applies; a write is refused when the file's
+bytes changed since they were read; saves are atomic).
+
+**Verified live (2026-10-03, viewer over REST, dev profile with optimisation,
+Intel i9-9980HK):** `pendulum-live` (inputs, refusal out of bounds, history
+review, picks, reset), `rover-drive` (drive requests, stop), leaderboard list,
+inspect, run and replay (`direct-support-minute`: replay passed the runtime's
+checks, 3000 actions / 48000 steps), `robot_threads` reply written to a
+scratch `.rcad` (revision 43 → 44, answer shows the reply), `robot_guide`.
+Record video wrote a valid H.264 MP4 at the viewport size, but the screen was
+locked so every frame was blank. Hence the hidden-window refusal; recording a
+visible window has not been checked by eye.
+
+**Realtime (native, same machine and build):**
+
+| Preset | Standing at ×1 | Walking (W held) at ×1 | Ceiling at ×8 |
+| --- | --- | --- | --- |
+| robot-browser-solver | 1.00×, not compute-limited | 0.81× (7 qualified steps in 20 s) | 0.87×, compute-limited |
+| robot-reversal-crawl | 1.00× | 0.50×, compute-limited | 0.49×, compute-limited |
+| robot-paced-student | 1.00× | not measured | not measured |
+| robot-reused-student | 1.00× | not measured | not measured |
+| robot-heading-student | 1.00× | not measured | not measured |
+| rover-drive (detailed rover) | 0.11–0.13×, compute-limited while driving | — | — |
+
+The presets' readiness notes report realtime walking in the browser for
+several of these; natively, walking stays below realtime on this machine. Not
+investigated in this batch: whether the native run thread (chunking, frame
+publication) or the detailed path costs more than the browser's WASM build.
+
+Known failures outside this batch in `cargo test -p sim-spatial --lib`
+(846 pass): the switch-to-CAD-service tests (attachment awaiting migration),
+`source_files_stay_small` (robot/controls.rs and robot/hardware/*),
+`copy_guard` (builder and robot/run texts written before this batch), builder
+calibration ×2, and two timing-sensitive tests that pass when run alone
+(builder live replay, a hardware session test).

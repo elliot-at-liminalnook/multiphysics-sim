@@ -1,52 +1,51 @@
-//! RoboCAD's comment threads in Robot mode (cad-annotation-parity AN3;
+//! The CAD source's comment threads in Robot mode (cad-annotation-parity AN3;
 //! native-viewer.md §7 "one annotations service, one thread panel"): the
 //! comments of the CAD source an export names, shown beside the links they
 //! are on, through the same `annotations::ThreadSource` and the same
 //! `ui_kit::threads` panel as CAD mode.
 //!
-//! - **Where they are.** RoboCAD keeps the threads in its document. Robot
-//!   mode starts no RoboCAD and reads no `.rcad`: it reads them only from the
-//!   service the window remembers attaching to in CAD mode (the document
-//!   registry's CAD source when it is `Source::Url`), and only when that
-//!   service's document is the export's CAD source (`GET /` `path` against
-//!   `cad_link`'s resolved path, both canonicalized in the job:
-//!   [`same_source`]). Otherwise the section says where the comments live
-//!   and offers Open in CAD; no thread is shown.
-//! - **Reads** ([`read`]): health, threads and nodes on one job per
-//!   (service, export, CAD source, epoch); every 2 s while shown, a probe
-//!   re-reads when RoboCAD's revision moved, so an edit made in a RoboCAD
-//!   window appears without a refresh. The last list stays shown while a
-//!   newer one is read, labelled with the revision it was read at.
+//! - **Where they are.** In the CAD source's `.rcad` (RoboCAD's format,
+//!   kept compatible), which Robot mode reads and writes in process: no
+//!   service, no HTTP. While Robot mode is shown the file is the only copy
+//!   (CAD mode cannot be left with unsaved edits and drops its document).
+//! - **Reads** ([`read`]): one `Pool::Io` job per (export, CAD source,
+//!   epoch) lists the threads exactly as CAD mode does
+//!   (`sim_cad::annotations::list` over the file's pinned stamps); every 2 s
+//!   while shown, a probe re-reads when the file's size or modification time
+//!   moved. The last list stays shown while a newer one is read, labelled
+//!   with the archive revision it was read at.
 //! - **Mapping** ([`link_of`], [`place`]): a thread's part is on link `i` when
 //!   it is the link's CAD body (`links[i].id`) or one of its members, else
-//!   the nearest ancestor that is (RoboCAD's node parents, cycle-safe). No
+//!   the nearest ancestor that is (the manifest's node parents, cycle-safe). No
 //!   name matching. A thread on no link, an evidence thread, and every
 //!   thread of an export that is not current with its CAD file carry a
 //!   warning line ([`link_note`]).
-//! - **Changes** ([`RobotCadThreads`], Robot mode's ThreadSource; acts in `act`): reply, edit, delete a message and
-//!   resolve, each one RoboCAD call (`cad::threads::request_on`, the same
-//!   requests as CAD mode) on a job that first checks RoboCAD still has the
-//!   CAD source open at the revision the threads were read at. New threads
-//!   are placed in CAD mode; undo is RoboCAD's.
+//! - **Changes** ([`RobotCadThreads`], Robot mode's ThreadSource; acts in
+//!   `act`): reply, edit, delete a message and resolve, each the same
+//!   `cad::threads::Request` CAD mode applies, run on a job that reopens the
+//!   file, refuses when its bytes are not the ones read (changed on disk
+//!   since: nothing written, the threads are read again), applies the
+//!   request to the archive (`sim_cad::Edit`, revision + 1) and saves it
+//!   atomically. New threads are placed in CAD mode; there is no undo here
+//!   ([`NO_UNDO`]).
 //! - **Selection.** Opening a thread selects it and its link; a part chip or
 //!   a `[label](part:ID)` link whose node is on a link selects that link
 //!   (`picked::select`, the one selection, keeping the inspector's scroll).
-//! - **Open in CAD** (`act::open_in_cad`): the CAD document switch, carrying
+//! - **Open in CAD** (`act::open_in_cad`): the CAD document switch to the file, carrying
 //!   the thread to reveal (`app::switch::ModeSwitch::reveal`); the switch
 //!   installs it in CAD's state (`cad::threads::RevealThread`) only when it
 //!   is accepted, so a refused request's reveal goes with it.
 use super::{RobotView, Section};
 use crate::annotations::{Committed, InFlight, ThreadSource};
 use crate::app::ViewerMode;
-use crate::cad::threads::{CadAnchor, DELETE_COMMENT, DELETE_THREAD, Request, UNDO_IS_ROBOCADS, plain, request_on, thread_of};
-use crate::document::{DocumentRegistry, Source};
+use crate::cad::threads::{CadAnchor, DELETE_COMMENT, DELETE_THREAD, Request, plain, request_on, thread_of};
+use crate::document::DocumentRegistry;
 use crate::jobs::{Job, Pool};
 use crate::ui_kit::threads::Shown;
 use bevy::prelude::*;
 use serde_json::{Value, json};
 use sim_annotate::{Thread, ThreadCommand};
 use sim_domain_robot::cad_link::CadLinkStatus;
-use sim_runtime::cad_client::CadClient;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
@@ -56,7 +55,7 @@ mod read;
 #[cfg(test)]
 mod tests;
 
-pub(crate) use act::{ThreadsAct, cad_document, from_rest, handle, reveal_target};
+pub(crate) use act::{ThreadsAct, from_rest, handle};
 pub(super) use panel::{ThreadsRoot, input};
 
 /// The start of a thread's warning when its part is on no link of the export.
@@ -79,7 +78,7 @@ impl LinkKeys {
     }
 }
 
-/// RoboCAD's node parents (`GET /nodes`): id → parent id.
+/// The archive manifest's node parents: id → parent id.
 pub(crate) type Parents = BTreeMap<String, Option<String>>;
 
 /// The link node `node` is on: the first link whose body or members name it,
@@ -147,21 +146,6 @@ pub(crate) fn place(thread: &Thread<CadAnchor>, links: &[LinkKeys], parents: &Pa
     Placed { link, warning: (!lines.is_empty()).then(|| lines.join("\n")) }
 }
 
-/// Whether RoboCAD's document is the export's CAD source, given both paths
-/// canonical (the job canonicalizes them; None: a new, unsaved document).
-pub(crate) fn same_source(service: Option<&Path>, cad: &Path) -> bool {
-    service.is_some_and(|s| s == cad)
-}
-
-/// [`same_source`] for RoboCAD's `GET /` path. Touches the filesystem: jobs only.
-fn service_has(service: Option<&str>, cad: &Path) -> bool {
-    let Some(service) = service.filter(|s| !s.is_empty()) else { return false };
-    match (std::fs::canonicalize(service), std::fs::canonicalize(cad)) {
-        (Ok(a), Ok(b)) => same_source(Some(a.as_path()), &b),
-        _ => false,
-    }
-}
-
 /// The CAD file the export resolves to (none when missing or not named).
 pub(crate) fn cad_path(status: &CadLinkStatus) -> Option<&Path> {
     match status {
@@ -179,9 +163,9 @@ pub(crate) fn source_file(status: Option<&CadLinkStatus>) -> String {
     }
 }
 
-/// A change refused while the CAD source is not open in an attached RoboCAD.
+/// A change refused while the CAD source's comments are not read.
 pub(crate) fn not_open(file: &str) -> String {
-    format!("{file} is not open in CAD mode: open it there to reply")
+    format!("the comments of {file} are not read yet (or could not be read): refresh, or open it in CAD mode")
 }
 
 /// Where the comments are when they cannot be shown here.
@@ -189,39 +173,26 @@ pub(crate) fn lives_in(file: &str) -> String {
     format!("Comments live in the CAD source {file}: open it in CAD mode to see them")
 }
 
-/// A change refused while another is being sent.
-pub(crate) const BUSY: &str = "Another comment change is being sent to RoboCAD; wait for it";
-/// A change refused because RoboCAD's document was reopened or replaced since the threads were read.
-pub(crate) const REPLACED: &str = "RoboCAD's document was reopened or replaced since its comments were read: they are read again";
-/// A change refused because RoboCAD's document moved since the threads were read.
-pub(crate) fn moved(read: u64, now: u64) -> String {
-    format!("RoboCAD's document moved since its comments were read (revision {read}, now {now}): they are read again")
+/// A change refused while another is being written.
+pub(crate) const BUSY: &str = "Another comment change is being written to the CAD file; wait for it";
+/// A change refused because the file's bytes are not the ones the threads were read from.
+pub(crate) fn changed_on_disk(file: &Path) -> String {
+    format!("{} changed on disk since its comments were read: nothing was written; they are read again", file.display())
 }
+/// Robot mode writes each change straight to the file: no undo stack here.
+pub(crate) const NO_UNDO: &str = "Comment changes made here are saved to the CAD file at once and are not undone here; open the file in CAD mode to undo (each later change there is one undo step)";
 
-/// The RoboCAD service this window attached to in CAD mode and remembers
-/// (the registry's CAD source when it is a URL; a self-started one was
-/// stopped when CAD mode was left, unless it held unsaved edits, and is then
-/// remembered by URL too).
-pub(crate) fn attached_url(registry: &DocumentRegistry) -> Option<String> {
-    match registry.source(ViewerMode::Cad)? {
-        Source::Url { url } => Some(url.clone()),
-        _ => None,
-    }
-}
-
-/// What a read is about: the attached service, the export and its CAD source.
+/// What a read is about: the export and its CAD source.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Base {
-    pub url: String,
     pub simrobot: PathBuf,
     pub cad: PathBuf,
 }
 
-/// The read's subject now (None: no attached service, or no CAD file resolved).
-pub(crate) fn base_of(view: &RobotView, registry: &DocumentRegistry) -> Option<Base> {
+/// The read's subject now (None: no CAD file resolved).
+pub(crate) fn base_of(view: &RobotView) -> Option<Base> {
     let cad = cad_path(view.cad_link.as_ref()?)?.to_path_buf();
-    let url = attached_url(registry)?;
-    Some(Base { url, simrobot: view.path.clone(), cad })
+    Some(Base { simrobot: view.path.clone(), cad })
 }
 
 /// Robot mode's thread state (a resource, reset on leaving Robot mode):
@@ -294,7 +265,7 @@ impl RobotThreads {
         self.error = None;
         self.release = true;
     }
-    /// The threads as read for `base`, when that service has the CAD source open.
+    /// The threads as read for `base`.
     pub(crate) fn open_listed(&self, base: Option<&Base>) -> Option<&read::Listed> {
         let base = base?;
         if !self.read.open(base) {
@@ -304,25 +275,25 @@ impl RobotThreads {
     }
 }
 
-/// Robot mode's ThreadSource over RoboCAD's threads (the CAD anchor): the threads as read while the CAD source is open,
-/// each change one RoboCAD call on a job (see the module doc).
+/// Robot mode's ThreadSource over the CAD source's threads (the CAD anchor):
+/// the threads as read, each change one write of the file on a job (see the module doc).
 pub(crate) struct RobotCadThreads<'a> {
     pub st: &'a mut RobotThreads,
-    /// The attached service and the export's CAD source now.
+    /// The export's CAD source now.
     pub base: Option<Base>,
     /// The CAD source's name (the refusal names it).
     pub file: String,
 }
 impl RobotCadThreads<'_> {
-    /// The service, revision and document id the shown threads were read at, when open.
-    fn opened(&self) -> Option<(Base, u64, Option<String>)> {
+    /// The subject and the bytes' identity the shown threads were read from, when read.
+    fn opened(&self) -> Option<(Base, String)> {
         let listed = self.st.open_listed(self.base.as_ref())?;
-        Some((listed.base.clone(), listed.revision, listed.document_id.clone()))
+        Some((listed.base.clone(), listed.identity.clone()))
     }
 }
 impl ThreadSource for RobotCadThreads<'_> {
     type Anchor = CadAnchor;
-    /// Never sent: RoboCAD assigns ids.
+    /// Never written: `sim_cad::annotations` assigns ids.
     const THREAD_ID: &'static str = "new-thread";
     const COMMENT_ID: &'static str = "new-comment";
     fn threads(&self) -> BTreeMap<String, Thread<CadAnchor>> {
@@ -337,46 +308,46 @@ impl ThreadSource for RobotCadThreads<'_> {
     }
     fn commit(&mut self, label: &str, command: ThreadCommand<CadAnchor>) -> Result<Committed, String> {
         if matches!(command, ThreadCommand::Undo | ThreadCommand::Redo) {
-            return Err(UNDO_IS_ROBOCADS.into());
+            return Err(NO_UNDO.into());
         }
-        let Some((base, revision, document)) = self.opened() else { return Err(not_open(&self.file)) };
-        // One change at a time: each is checked against the revision the threads were read at.
+        let Some((base, identity)) = self.opened() else { return Err(not_open(&self.file)) };
+        // One change at a time: each is checked against the bytes the threads were read from.
         if self.st.in_flight.busy() {
             return Err(BUSY.into());
         }
         let threads = self.threads();
         let (label, thread, request) = request_on(&threads, label, command)?;
-        let client = CadClient::new(&base.url).map_err(|e| e.message)?;
         self.st.next += 1;
         let seq = self.st.next;
         let cad = base.cad;
-        // A started change runs to its end (its answer is RoboCAD's undo step either way).
-        let job = Job::spawn(Pool::Dedicated, seq, "robot-cad-thread-change", move |_| commit_job(&client, &cad, (revision, document), request)).complete_on_drop();
+        // A started change runs to its end (a half-made write is never left: the save is atomic).
+        let job = Job::spawn(Pool::Dedicated, seq, "robot-cad-thread-change", move |_| commit_job(&cad, &identity, request)).complete_on_drop();
         self.st.commits.push((seq, job));
         self.st.in_flight.submitted(seq, &label, thread);
         Ok(Committed::Pending(seq))
     }
 }
 
-/// The change's job: RoboCAD still has the CAD source open, as the same
-/// document at the revision the threads were read at, then the one call.
-/// (Messages made here never start with "RoboCAD ", so `plain` keeps them.)
-fn commit_job(client: &CadClient, cad: &Path, (revision, document): (u64, Option<String>), request: Request) -> Result<Value, String> {
-    let health = client.health().map_err(|e| e.to_string())?;
-    if !service_has(health.path.as_deref(), cad) {
-        return Err(format!("The CAD source {} is no longer open in the RoboCAD at {}: nothing was sent", cad.display(), client.url()));
+/// The change's job: the file still holds the bytes the threads were read
+/// from, the request applied to them as CAD mode applies it (a person's
+/// change), then an atomic save. (Messages made here never start with
+/// "RoboCAD ", so `plain` keeps them.)
+pub(crate) fn commit_job(cad: &Path, identity: &str, request: Request) -> Result<Value, String> {
+    let archive = sim_cad::ArchiveDocument::open(cad)?;
+    if archive.identity() != identity {
+        return Err(changed_on_disk(cad));
     }
-    if health.document_id != document {
-        return Err(REPLACED.to_string());
-    }
-    if health.revision != revision {
-        return Err(moved(revision, health.revision));
-    }
-    request.send(client).map_err(|e| e.to_string())
+    let stamps = sim_cad::annotations::pinned_stamps(&archive);
+    let no = || false;
+    let mut ws = crate::cad::local::Workspace { archive: &archive, stamps: &stamps, geometry: &[], edit: sim_cad::Edit::of(&archive), cancelled: &no };
+    let result = request.apply(&mut ws, sim_cad::annotations::AuthorKind::Person)?;
+    let next = archive.apply(ws.edit)?;
+    next.save(cad)?;
+    Ok(result)
 }
 
 /// A change's answer, landed (JobResults): the threads are read again; a
-/// post's draft ends when RoboCAD took it unchanged; an error stays under
+/// post's draft ends when it was written unchanged; an error stays under
 /// the composer.
 pub(crate) fn land(st: &mut RobotThreads, seq: u64, result: Result<Value, String>) {
     let id = result.as_ref().ok().and_then(|v| v.get("id")).and_then(Value::as_str).map(str::to_string);
@@ -418,7 +389,7 @@ fn source_line(status: &CadLinkStatus) -> String {
 }
 
 /// The section's status line: where the comments are and what was read.
-pub(crate) fn line(view: &RobotView, registry: &DocumentRegistry, st: &RobotThreads) -> String {
+pub(crate) fn line(view: &RobotView, st: &RobotThreads) -> String {
     let Some(status) = view.cad_link.as_ref() else {
         return "The export's CAD source is not known (the robot is loading, or this file has no CAD link).".to_string();
     };
@@ -426,15 +397,13 @@ pub(crate) fn line(view: &RobotView, registry: &DocumentRegistry, st: &RobotThre
         return format!("{}: its comments cannot be read.", source_line(status));
     }
     let file = source_file(Some(status));
-    let Some(base) = base_of(view, registry) else { return lives_in(&file) };
+    let Some(base) = base_of(view) else { return lives_in(&file) };
     match st.read.reach(&base) {
-        None if st.read.reading() => format!("Reading RoboCAD's comments at {}…", base.url),
+        None if st.read.reading() => format!("Reading the comments of {file}…"),
         None => lives_in(&file),
-        Some(read::Reach::Elsewhere(other)) => format!("RoboCAD at {} has {} open, not {file}. {}", base.url, other.as_deref().unwrap_or("a new document"), lives_in(&file)),
-        // `e` is RoboCAD's message or the transport's, without a request line.
-        Some(read::Reach::Failed(e)) => format!("RoboCAD at {} could not be read ({e}). {}", base.url, lives_in(&file)),
+        Some(read::Reach::Failed(e)) => format!("{file} could not be read ({e}). {}", lives_in(&file)),
         Some(read::Reach::Open) => match st.read.listed_for(&base) {
-            Some(l) => format!("Comments of {file} as read at RoboCAD revision {}", l.revision),
+            Some(l) => format!("Comments of {file} as read at revision {}", l.revision),
             None => lives_in(&file),
         },
     }
@@ -446,8 +415,8 @@ pub(crate) fn placements(listed: &read::Listed, links: &[LinkKeys], note: Option
 }
 
 /// `robot_state.cad_threads`.
-pub(crate) fn state_json(view: &RobotView, registry: &DocumentRegistry, st: &RobotThreads) -> Value {
-    let base = base_of(view, registry);
+pub(crate) fn state_json(view: &RobotView, st: &RobotThreads) -> Value {
+    let base = base_of(view);
     let listed = st.open_listed(base.as_ref());
     let links = LinkKeys::of(view);
     let note = link_note(view.cad_link.as_ref());
@@ -474,9 +443,8 @@ pub(crate) fn state_json(view: &RobotView, registry: &DocumentRegistry, st: &Rob
         .unwrap_or_default();
     let mut out = json!({
         "open": listed.is_some(),
-        "url": attached_url(registry),
         "source": view.cad_link.as_ref().and_then(cad_path),
-        "line": line(view, registry, st),
+        "line": line(view, st),
         "read_at_revision": listed.map(|l| l.revision),
         "reading": st.read.reading(),
         "threads": threads,
@@ -486,7 +454,7 @@ pub(crate) fn state_json(view: &RobotView, registry: &DocumentRegistry, st: &Rob
     out["menu"] = json!(st.menu);
     out["draft"] = json!({"text": st.compose, "editing": st.editing, "author": st.author, "sending": st.sending.as_ref().map(|s| s.0), "error": st.error});
     out["in_flight"] = json!(st.in_flight.busy());
-    out["undo"] = json!(UNDO_IS_ROBOCADS);
+    out["undo"] = json!(NO_UNDO);
     out
 }
 

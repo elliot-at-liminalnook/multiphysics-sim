@@ -35,6 +35,7 @@ pub mod contact_implicit;
 pub mod configuration_inspection;
 /// A model's bound external controller and drive profile (`<stem>.controller.json`).
 pub mod controller_binding;
+pub mod controller_leaderboard;
 /// The one place a driven session is stepped: twist requests, the shared limiter and deadman on sim time, `Session::step`.
 pub mod drive_host;
 /// Device bindings (`sim.drive-bindings/1`): one parser and one set of defaults for the native viewer and the browser.

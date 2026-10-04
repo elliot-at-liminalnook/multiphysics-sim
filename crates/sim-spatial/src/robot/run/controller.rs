@@ -77,6 +77,12 @@ pub struct RunController {
     pub(super) twist_requested: Option<(BodyTwist, bool)>,
     pub(super) twist_refusal: Option<String>,
     pub(super) twist_error: Option<String>,
+    /// The applied frames of this generation, for review (`history`).
+    pub(super) history: std::collections::VecDeque<Frame>,
+    /// The time under review (None: live).
+    pub(super) history_view: Option<f64>,
+    /// The channels picked for the graph dock (`graphs::PICK_RULE`), sampled from every applied frame.
+    pub(super) picks: Vec<String>,
 }
 
 impl RunController {
@@ -119,7 +125,8 @@ impl RunController {
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
             replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), listing: Default::default(), recordings: Vec::new(), list_error: None,
             graphs, chassis: graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0,
-            controlled: None, unbound: None, twist: None, twist_requested: None, twist_refusal: None, twist_error: None }
+            controlled: None, unbound: None, twist: None, twist_requested: None, twist_refusal: None, twist_error: None,
+            history: Default::default(), history_view: None, picks: Vec::new() }
     }
     pub fn recorded(&self) -> Option<&Arc<RecordedRun>> {
         self.recorded.as_ref()
@@ -199,7 +206,8 @@ impl RunController {
             save_requested: 0, save_done: 0, saving: None, saved: None, save_error: None,
             replay: ReplayState::new(0, generation, None, ReplayPhase::Idle), listing: Default::default(), recordings: Vec::new(), list_error: None,
             graphs, chassis: graphs::chassis(&model), model, gait: None, overlays: OverlayFlags::default(), speed_scale: 1.0,
-            controlled, unbound, twist: None, twist_requested: None, twist_refusal: None, twist_error: None }
+            controlled, unbound, twist: None, twist_requested: None, twist_refusal: None, twist_error: None,
+            history: Default::default(), history_view: None, picks: Vec::new() }
     }
     pub fn preset(&self) -> Option<&Arc<PresetRun>> {
         self.preset.as_ref()
@@ -281,6 +289,10 @@ impl RunController {
     /// The one handler behind the buttons, `system_ui` and REST `robot_run`.
     pub fn act(&mut self, action: RunAction) -> Result<(), String> {
         self.check(action)?;
+        if matches!(action, RunAction::Start | RunAction::Step) {
+            // A run continues from its live state, never from a reviewed frame.
+            self.end_review();
+        }
         let command = match action {
             RunAction::Start => {
                 self.running = true;
@@ -312,6 +324,7 @@ impl RunController {
                 // Reset ends any replay: a fresh run.
                 self.replay = ReplayState::new(self.replay.seq, self.generation, None, ReplayPhase::Idle);
                 self.graphs.clear(self.generation);
+                self.clear_history();
                 self.status = Status { phase: Phase::Building, generation: self.generation, rtf: None, error: None, end: None };
                 Command::Reset { generation: self.generation }
             }
@@ -372,6 +385,10 @@ impl RunController {
                 // One graph sample per applied frame, only of the current generation.
                 let motion = self.drive.as_ref().and_then(|d| d.motion.as_ref());
                 self.graphs.sample(self.generation, f, motion, self.chassis.as_ref().ok().copied());
+                let links: Vec<String> = self.model.links.iter().map(|l| l.name.clone()).collect();
+                self.graphs.sample_picks(self.generation, f, &self.picks, self.drive.as_deref(), &links);
+                let f = f.clone();
+                self.record_history(&f);
                 true
             }
             None => false,
@@ -409,8 +426,22 @@ impl RunController {
             None => Ok(()),
         }
     }
+    /// Why the contacts overlay cannot be set: only a recorded preset refuses
+    /// it (a preset's session frames carry `contacts`, as the browser draws).
+    pub fn check_contacts(&self) -> Result<(), String> {
+        self.recorded_refusal("the contacts overlay")
+    }
     /// The one overlay handler behind keys C/J/F, the inspector buttons, `system_ui` overlay:* and REST `robot_overlay`.
     pub fn set_overlays(&mut self, flags: OverlayFlags) -> Result<(), String> {
+        if self.preset.is_some() {
+            // A preset's frames always carry their contacts; only the drawing changes.
+            self.check_contacts()?;
+            if flags.joints != self.overlays.joints || flags.deflections != self.overlays.deflections {
+                self.check_overlays()?;
+            }
+            self.overlays.contacts = flags.contacts;
+            return Ok(());
+        }
         self.check_overlays()?;
         self.thread.send(Command::Overlays(flags)).map_err(|_| "the run thread has stopped".to_string())?;
         self.overlays = flags;
@@ -537,12 +568,59 @@ impl RunController {
             let joints: Vec<(String, &'static str)> = self.model.joints.iter().filter(|j| j.child == l.name || j.parent.as_deref() == Some(l.name.as_str())).filter_map(|j| servo(&self.model, &j.name).ok()).map(|s| (s.joint, s.unit)).collect();
             (l.name.as_str(), if joints.is_empty() { Err("no servo joint on selected link".to_string()) } else { Ok(joints) })
         });
-        let cx = graphs::Context { preset: self.preset.is_some(), motion: self.drive.as_ref().map(|d| d.motion.as_ref()), chassis: &self.chassis, links: &links, selected };
+        let candidates = self.frame.as_ref().map(|f| graphs::candidates(f, self.drive.as_deref(), &links)).unwrap_or_default();
+        let picks = self.picks.iter().map(|k| candidates.iter().find(|c| &c.key == k).map_or((k.clone(), k.clone(), String::new()), |c| (c.key.clone(), c.label.clone(), c.unit.clone()))).collect();
+        let cx = graphs::Context { preset: self.preset.is_some(), motion: self.drive.as_ref().map(|d| d.motion.as_ref()), chassis: &self.chassis, links: &links, selected, picks };
         graphs::charts(&self.graphs, &cx)
     }
-    /// `robot_state.graphs`: visible, mode, generation, window and the charts with their traces.
+    /// `robot_state.graphs`: visible, mode, generation, window and the charts
+    /// with their traces; the picked channels, the candidates the latest frame
+    /// carries, and the review cursor (each trace's value at it).
     pub fn graphs_json(&self, selected: Option<usize>, visible: bool) -> Value {
-        graphs::json(&self.graphs, &self.graph_charts(selected), visible, self.graphs_mode())
+        let charts = self.graph_charts(selected);
+        let mut v = graphs::json(&self.graphs, &charts, visible, self.graphs_mode());
+        let cursor = self.review_time();
+        if let (Some(t), Some(list)) = (cursor, v["charts"].as_array_mut()) {
+            for (c, cv) in charts.iter().zip(list.iter_mut()) {
+                for (tr, tv) in c.traces.iter().zip(cv["traces"].as_array_mut().into_iter().flatten()) {
+                    tv["at_cursor"] = json!(graphs::History::value_at(&tr.points, t));
+                }
+            }
+        }
+        let links: Vec<String> = self.model.links.iter().map(|l| l.name.clone()).collect();
+        let candidates: Vec<Value> = self.frame.as_ref().map(|f| graphs::candidates(f, self.drive.as_deref(), &links)).unwrap_or_default().into_iter().map(|c| json!({"key": c.key, "label": c.label, "unit": c.unit})).collect();
+        v["cursor"] = json!(cursor);
+        v["picks"] = json!(self.picks);
+        v["max_picks"] = json!(graphs::MAX_PICKS);
+        v["candidates"] = json!(candidates);
+        v["pick_rule"] = json!(graphs::PICK_RULE);
+        v
+    }
+    /// The picked channels (kept in step with the view's pinned list by `scene::apply_frames`).
+    pub fn picks(&self) -> &[String] {
+        &self.picks
+    }
+    pub fn set_picks(&mut self, picks: Vec<String>) {
+        self.picks = picks;
+    }
+    /// Why picking (`on`) or removing a channel is refused now.
+    pub fn check_pick(&self, picks: &[String], channel: &str, on: bool) -> Result<(), String> {
+        if !on {
+            return if picks.iter().any(|p| p == channel) { Ok(()) } else { Err(format!("channel `{channel}` is not picked; picked: {}", if picks.is_empty() { "none".into() } else { picks.join(", ") })) };
+        }
+        if picks.iter().any(|p| p == channel) {
+            return Err(format!("channel `{channel}` is already picked"));
+        }
+        if picks.len() >= graphs::MAX_PICKS {
+            return Err(format!("at most {} channels are picked at once; remove one first", graphs::MAX_PICKS));
+        }
+        let links: Vec<String> = self.model.links.iter().map(|l| l.name.clone()).collect();
+        let f = self.frame.as_ref().ok_or("no frame yet: the channels are those the run's frames carry (Run or Step first)")?;
+        if graphs::candidates(f, self.drive.as_deref(), &links).iter().any(|c| c.key == channel) {
+            Ok(())
+        } else {
+            Err(format!("channel `{channel}` is not in this run's frames; pick one the graph dock's channel list shows"))
+        }
     }
     pub fn graphs(&self) -> &graphs::History {
         &self.graphs

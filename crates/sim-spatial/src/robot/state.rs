@@ -14,8 +14,28 @@ impl RobotView {
     /// is unknown, not embedded or missing inputs, or when no root was found;
     /// its files are parsed on a worker thread.
     pub fn open_preset(presets: &Path, id: &str) -> Result<Self, String> {
+        if id.starts_with("tested-") {
+            // A leaderboard tested recipe (the browser packages them as presets).
+            let entry = super::leaderboard::tested_entry(id)?;
+            return super::leaderboard::open_tested(presets, &entry, super::leaderboard::Then::Open);
+        }
         let root = crate::workspace::root().map_err(|e| format!("robot preset `{id}` resolves its inputs against the workspace root: {e}"))?.to_path_buf();
         let preset = crate::robot::preset::select(presets, &root, id)?;
+        if preset.is_drive() {
+            // The browser's drive path natively: the declared model opened with
+            // the binding beside it (the controlled --robot FILE run).
+            let (model, binding) = preset.drive_files().ok_or_else(|| format!("drive preset `{id}` declares no drive.model and drive.binding"))?;
+            let model_path = root.join(model);
+            let beside = sim_runtime::controller_binding::binding_path_for(&model_path);
+            if beside != root.join(binding) {
+                return Err(format!("drive preset `{id}`: its binding {binding} is not the one beside its model ({}); native robot mode loads the binding beside the model (controller_binding::binding_path_for)", beside.display()));
+            }
+            let mut view = Self::open(model_path);
+            view.follow = preset.entry.get("follow_link").is_some_and(Value::is_string);
+            view.drive_preset = Some(preset);
+            view.presets = Ok(presets.to_path_buf());
+            return Ok(view);
+        }
         let (worker, dir) = (preset.clone(), root.clone());
         let path = root.join(preset.scene.as_deref().unwrap_or_default());
         // Parse and triangulate: CPU work.
@@ -28,6 +48,8 @@ impl RobotView {
         });
         let mut view = Self::new(path, Some(load), Some(preset));
         view.presets = Ok(presets.to_path_buf());
+        // A preset run opens on its readouts (the browser's side panel).
+        view.section = Section::Run;
         Ok(view)
     }
     /// The preset list REST robot_presets/robot_preset read (None: the
@@ -76,7 +98,7 @@ impl RobotView {
     }
     /// What robot mode reopens after a switch away: the preset or the file.
     pub(crate) fn document(&self) -> crate::app::switch::Document {
-        match &self.preset {
+        match self.preset.as_ref().or(self.drive_preset.as_ref()) {
             Some(p) => crate::app::switch::Document::Preset(p.id.clone()),
             None => crate::app::switch::Document::Path(self.path.clone()),
         }
@@ -108,7 +130,22 @@ impl RobotView {
             stress: StressOverlay::default(),
             mirror: None,
             planar: None,
+            drive_preset: None,
+            follow: false,
+            display_hz: 0,
+            bounds: None,
+            fit_selected: false,
+            picks: Vec::new(),
+            after_open: None,
         }
+    }
+    /// The link Follow robot follows by name: a drive preset's `follow_link`.
+    pub(super) fn follow_link(&self) -> Option<&str> {
+        self.drive_preset.as_ref().and_then(|p| p.entry.get("follow_link")).and_then(Value::as_str)
+    }
+    /// A drive preset's declared grid size (`view_grid_size_m`).
+    pub(super) fn grid_size_m(&self) -> Option<f64> {
+        self.drive_preset.as_ref().and_then(|p| p.entry.get("view_grid_size_m")).and_then(Value::as_f64)
     }
     /// A planar (v2) file is displayed (`robot_planar`).
     pub(crate) fn is_planar(&self) -> bool {
@@ -213,6 +250,13 @@ impl RobotView {
         out["graphs"] = self.run.as_ref().map_or_else(|| json!({"visible": self.graphs_visible, "charts": []}), |r| r.graphs_json(link, self.graphs_visible));
         // Run-thread overlays (robot_overlay); null until loaded.
         out["overlays"] = self.run.as_ref().map_or(Value::Null, RunController::overlays_json);
+        // The browser's readouts (`readouts`) and the session's typed inputs (`robot_inputs`).
+        out["readouts"] = super::readouts::readouts(self);
+        out["history"] = self.run.as_ref().map_or(Value::Null, RunController::history_json);
+        out["view"] = json!({"follow": self.follow, "follow_link": self.follow_link(), "follow_target": super::view_tools::follow_target(self, link).and_then(|i| self.link_name(i)), "follow_rule": super::view_tools::FOLLOW_RULE,
+            "display_hz": self.display_hz, "display_rates": super::view_tools::DISPLAY_RATES, "display_rule": super::view_tools::DISPLAY_RULE,
+            "drive_preset": self.drive_preset.as_ref().map(|p| json!({"id": p.id, "label": p.label, "readiness": p.readiness(), "evidence": p.evidence(), "description": p.entry.get("description"), "drive": p.entry.get("drive"), "runs_as": crate::robot::preset::DRIVE_RUNS_AS}))});
+        out["inputs"] = self.run.as_ref().map_or(Value::Null, RunController::inputs_json);
         // A controlled run's drive state (RunController::drive_json: controller, profile,
         // limits with units, geometry with provenance, twists, deadman), or {bound: false,
         // binding_error} when the binding beside the model failed to load; null for any other run.

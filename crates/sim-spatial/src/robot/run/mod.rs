@@ -13,6 +13,8 @@
 mod controlled;
 mod controller;
 mod frames;
+mod history;
+mod inputs;
 mod jog;
 mod pacing;
 mod preset_ops;
@@ -29,6 +31,8 @@ pub use jog::{JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, Servo, check_t
 pub use pacing::{CHUNK_S, COMPUTE_LIMITED_FRACTION, COMPUTE_LIMITED_RULE, PACING, Pace, SPEED_SCALES, SpeedRequest, pace, speed_target};
 pub use protocol::{Drive, MotionRequest, Phase, RunAction, Source};
 pub use replay::{ReplayPhase, ReplayState};
+pub use inputs::{INPUTS_RULE, RESIDUAL_PREFIX};
+pub use history::{HISTORY_RULE, HISTORY_S};
 
 #[cfg(test)]
 mod tests;

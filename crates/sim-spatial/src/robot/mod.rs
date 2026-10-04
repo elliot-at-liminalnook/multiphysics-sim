@@ -112,6 +112,21 @@ pub struct RobotView {
     /// `--robot FILE` with a planar (v2) file: its summary and planar run
     /// (`model` and `run` are None then; a selected link indexes its bodies).
     planar: Option<PlanarView>,
+    /// A `drive` preset opened as its model with its binding (a `--robot
+    /// FILE` view underneath): its label, readiness, follow_link and grid size.
+    drive_preset: Option<Preset>,
+    /// Follow robot (`view_tools::FOLLOW_RULE`).
+    follow: bool,
+    /// The display cap in Hz, 0 automatic (`view_tools::DISPLAY_RULE`).
+    display_hz: u32,
+    /// The whole robot's drawn bounds in the display frame (Fit frames them again after a Fit selected).
+    bounds: Option<(Vec3, Vec3)>,
+    /// Fit selected is pending (`view_tools::fit_selected`).
+    fit_selected: bool,
+    /// The channels picked for the graph dock, pinned across Reset, reload and preset changes (`graphs::PICK_RULE`).
+    picks: Vec<String>,
+    /// What a tested recipe's open does once loaded (`leaderboard::AfterOpen`).
+    after_open: Option<leaderboard::AfterOpen>,
 }
 
 /// Inspector sections, switched by tab click or `system_ui`.
@@ -124,11 +139,15 @@ pub enum Section {
     Source,
     /// RoboCAD's comment threads on the CAD source (`threads`).
     Comments,
+    /// The run readouts (`readouts`): execution, performance, motion
+    /// progress, learning, travel, pushes, readings and task observations.
+    Run,
 }
 impl Section {
-    const ALL: [Section; 5] = [Section::Link, Section::Joints, Section::Drives, Section::Source, Section::Comments];
+    const ALL: [Section; 6] = [Section::Run, Section::Link, Section::Joints, Section::Drives, Section::Source, Section::Comments];
     fn label(self) -> &'static str {
         match self {
+            Section::Run => "Run",
             Section::Link => "Link",
             Section::Joints => "Joints",
             Section::Drives => "Drives",
@@ -153,10 +172,16 @@ pub mod stress;
 pub(crate) use actions::{DriveRequest, RobotAction};
 use actions::{check, check_stress, overlay_toggle};
 mod controls;
+mod guide;
+mod inputs_panel;
 mod inspector;
 mod loader;
 mod overlay_view;
+mod video;
+mod view_tools;
+mod leaderboard;
 mod panel_ui;
+mod readouts;
 mod picked;
 mod scene;
 mod sections;
@@ -164,6 +189,7 @@ mod state;
 #[cfg(test)]
 mod tests;
 mod threads;
+mod timeline;
 mod ui;
 pub use loader::{FileNotes, LinkGeometry, Loaded, Opened, PLANAR_POSE, load, load_bytes, load_file, load_file_bytes, load_preset, load_recorded, loaded, physical_format_name};
 use controls::{GAIT_SCALES, GAIT_SEEK, OVERLAYS, RECORDED_TRANSPORT, STRESS_PRESET, gait_panel, gait_seek, jog_joints, jog_panel, motion_buttons, motion_panel, motion_text, overlay_on, recorded_panel, replay_line};
@@ -208,9 +234,14 @@ impl Plugin for RobotPlugin {
         configure_sets(app);
         hardware::build(app);
         panel_ui::add_field(app);
+        view_tools::add_field(app);
+        leaderboard::add_field(app);
         threads::build(app);
         app.insert_gizmo_config(OverlayGizmos, overlay_gizmo_config())
             .init_resource::<RobotPanelUi>()
+            .init_resource::<leaderboard::Leaderboard>()
+            .init_resource::<video::VideoRecorder>()
+            .add_systems(OnExit(ModeScope::Robot), video::leave)
             .add_systems(OnEnter(ModeScope::Robot), setup)
             // Device driving (`crate::drive_input`) offers nothing once Robot mode is left.
             .add_systems(OnExit(ViewerMode::Robot), crate::drive_input::leave_mode)
@@ -229,19 +260,24 @@ impl Plugin for RobotPlugin {
                     // The gait path field and the comment composer first: a press that focuses one this frame already stops robot keys (`ui_kit::text::Typing`).
                     // Preset motion keys and drive input never both act: `motion_keys` needs a preset with a
                     // motion config, the drive target (`controls::drive_target`) a controlled run (drive profile).
-                    (panel_ui::gait_path_input, threads::input, panel_ui::toggles, panel_ui::recorded_seek, actions::motion_keys, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons)
+                    (panel_ui::gait_path_input, threads::input, view_tools::search_input, leaderboard::search_input, view_tools::run_key, panel_ui::toggles, panel_ui::recorded_seek, inputs_panel::input_sliders, timeline::timeline_seek, actions::motion_keys, actions::graph_key, actions::overlay_keys, actions::speed_keys, actions::planar_keys, actions::buttons)
                         .chain()
                         .in_set(crate::app::InputSet::Window),
                     // What the one device poller (`crate::drive_input`, InputSet::Window) may drive: written before it.
                     controls::drive_target.in_set(ViewerSet::Input).before(crate::app::InputSet::Window),
                     // Robot mode's one apply; it also reads the device poller's requests for Robot mode.
                     actions::apply.in_set(RobotSet::Actions),
-                    panel_ui::receive_listing.in_set(ViewerSet::JobResults),
+                    (panel_ui::receive_listing, leaderboard::receive, video::receive).in_set(ViewerSet::JobResults),
                     // Before the shared camera (`crate::camera`): its viewport reads the
                     // ViewArea `view_area` sets, its place step frames the bounds `receive`
                     // and `planar_sync` write.
-                    (watch.in_set(ViewerSet::SimSync), receive.in_set(ViewerSet::SimSync), stress_paint.in_set(ViewerSet::SimSync), apply_frames.in_set(RobotSet::Frames), planar_sync.in_set(ViewerSet::SimSync), scroll.in_set(ViewerSet::SimSync), view_area.in_set(ViewerSet::SimSync), highlight.in_set(ViewerSet::SimSync)).chain().before(CameraSet::Viewport),
-                    (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, controls::drive_panel, recorded_panel, gait_panel, panel_ui::gait_path_draw, graph_dock, draw, actions::publish).chain().in_set(ViewerSet::Present),
+                    (watch.in_set(ViewerSet::SimSync), receive.in_set(ViewerSet::SimSync), stress_paint.in_set(ViewerSet::SimSync), apply_frames.in_set(RobotSet::Frames), view_tools::follow.in_set(ViewerSet::SimSync), view_tools::fit_selected.in_set(ViewerSet::SimSync), planar_sync.in_set(ViewerSet::SimSync), scroll.in_set(ViewerSet::SimSync), overlay_view::picker_scroll.in_set(ViewerSet::SimSync), leaderboard::scroll.in_set(ViewerSet::SimSync), view_area.in_set(ViewerSet::SimSync), highlight.in_set(ViewerSet::SimSync)).chain().before(CameraSet::Viewport),
+                    (
+                        (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, inputs_panel::inputs_panel, controls::drive_panel, recorded_panel, timeline::timeline_panel, gait_panel).chain(),
+                        (panel_ui::gait_path_draw, view_tools::search_draw, view_tools::tools_panel, view_tools::display_rate, leaderboard::draw, video::button_label, graph_dock, draw, video::capture, actions::publish).chain(),
+                    )
+                        .chain()
+                        .in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Robot)),
             );

@@ -122,6 +122,7 @@ pub(super) fn receive(
             .id();
         commands.entity(*root).add_child(entity);
     }
+    view.bounds = lo.x.is_finite().then_some((lo, hi));
     if lo.x.is_finite() {
         // The bounds a fit frames; the focus moves only on an open (`home`).
         orbit.extent = ((hi - lo).length() / 2.0).max(0.02);
@@ -173,7 +174,12 @@ pub(super) fn receive(
     // none runs the hold controller, a loaded one the drive session, a failed one a failed run naming it.
     let controlled = loaded.controlled.take();
     let (mut run, mut run_reset) = match preset {
-        Some(Opened::Preset(run)) => (RunController::spawn_preset(std::sync::Arc::new(run)), false),
+        Some(Opened::Preset(run)) => {
+            let run = RunController::spawn_preset(std::sync::Arc::new(run));
+            // Built at open, as the browser worker builds at load: its inputs and t = 0 frame show at once.
+            run.prepare();
+            (run, false)
+        }
         Some(Opened::Recorded(run)) => (RunController::spawn_recorded(std::sync::Arc::new(run)), false),
         // Replacing a planar run: the physical run continues its generation (older frames stay stale).
         None => match (planar.as_ref(), previous) {
@@ -194,6 +200,21 @@ pub(super) fn receive(
     }
     let generation = run.generation();
     view.run = Some(run);
+    // A tested recipe's Load and run / Replay tested inputs (`leaderboard::AfterOpen`).
+    if let (Some(after), Some(run)) = (view.after_open.take(), view.run.as_mut()) {
+        let result = match after {
+            leaderboard::AfterOpen::Run { initial } => {
+                if let Some(values) = initial {
+                    run.apply_action(values);
+                }
+                run.act(RunAction::Start)
+            }
+            leaderboard::AfterOpen::Replay { path } => run.replay(None, path.to_str()).map(|_| ()),
+        };
+        if let Err(e) = result {
+            view.run_message = Some(e);
+        }
+    }
     // The selected link is kept by name across a reload (`picked::reloaded`).
     let kept = picked::reloaded(&mut selection, &mut registry, reload.is_some(), |n| loaded.model.links.iter().position(|l| l.name == n));
     view.model = Some(loaded.model);
@@ -373,6 +394,13 @@ pub(super) fn planar_sync(
 /// `RunController::poll`) and poses the link meshes from it; with no frame of
 /// the current generation the static assembly pose is shown.
 pub(super) fn apply_frames(mut view: ResMut<RobotView>, mut links: Query<(&LinkMesh, &mut Transform)>, mut redraw: MessageWriter<bevy::window::RequestRedraw>) {
+    // The pinned picks follow the view into whichever run it holds.
+    if view.run.as_ref().is_some_and(|r| r.picks() != view.picks.as_slice()) {
+        let picks = view.picks.clone();
+        if let Some(run) = view.run.as_mut() {
+            run.set_picks(picks);
+        }
+    }
     let Some(run) = view.run.as_mut() else { return };
     let changed = run.poll();
     let active = run.active();

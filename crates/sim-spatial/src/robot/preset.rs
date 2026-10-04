@@ -26,7 +26,7 @@ pub fn default_file() -> Result<std::path::PathBuf, String> {
 }
 /// The browser worker's default seed (`web/worker.js`: `data.seed ?? 0`); no preset declares one.
 pub const SEED: u64 = 0;
-pub const SEED_RULE: &str = "seed 0: the browser worker's default (web/worker.js `data.seed ?? 0`); no preset declares a seed. Reset rebuilds with the same seed.";
+pub const SEED_RULE: &str = "seed 0: the browser worker's default (web/worker.js `data.seed ?? 0`), unless the entry declares `seed` (a leaderboard tested recipe carries its evaluated seed, as the browser's `load.seed`). Reset rebuilds with the same seed.";
 /// Session work chunk: the browser worker's `clamp(report_every, 1, 40)` nominal steps (web/worker.js).
 pub const SESSION_CHUNK_MAX: usize = 40;
 
@@ -56,7 +56,12 @@ impl Preset {
     }
     /// Declared input paths (scene, config, task, capture), in that order.
     pub fn paths(&self) -> Vec<(&'static str, &str)> {
-        [("scene", &self.scene), ("config", &self.config), ("task", &self.task), ("capture", &self.capture)].into_iter().filter_map(|(k, p)| p.as_deref().map(|p| (k, p))).collect()
+        let mut out: Vec<(&'static str, &str)> = [("scene", &self.scene), ("config", &self.config), ("task", &self.task), ("capture", &self.capture)].into_iter().filter_map(|(k, p)| p.as_deref().map(|p| (k, p))).collect();
+        if let Some((model, binding)) = self.drive_files() {
+            out.push(("drive.model", model));
+            out.push(("drive.binding", binding));
+        }
+        out
     }
     /// Declared inputs missing under `root`.
     pub fn missing(&self, root: &Path) -> Vec<String> {
@@ -64,6 +69,25 @@ impl Preset {
     }
     pub fn is_recorded(&self) -> bool {
         self.mode == RECORDED
+    }
+    /// A `live` preset: a scene with its own controller, run by the shared
+    /// `sim_runtime::session::Session` (the browser worker's `Simulation`).
+    pub fn is_live(&self) -> bool {
+        self.mode == LIVE
+    }
+    /// A `drive` preset: a model with its controller binding, driven from the
+    /// keyboard and gamepad (the browser's drive-profile path).
+    pub fn is_drive(&self) -> bool {
+        self.mode == DRIVE
+    }
+    /// The seed the entry declares (a tested recipe's), else [`SEED`].
+    pub fn seed(&self) -> u64 {
+        self.entry.get("seed").and_then(Value::as_u64).unwrap_or(SEED)
+    }
+    /// A drive preset's model and binding (`drive.model`, `drive.binding`), as declared.
+    pub fn drive_files(&self) -> Option<(&str, &str)> {
+        let d = self.entry.get("drive")?;
+        Some((d.get("model")?.as_str()?, d.get("binding")?.as_str()?))
     }
     /// Why a recorded preset cannot be opened: every undeclared scene/capture
     /// and every missing declared file, named (`Ok` when it can be played back).
@@ -83,22 +107,40 @@ impl Preset {
     pub fn discovery(&self, root: &Path) -> Value {
         let missing = self.missing(root);
         let under_runs = self.paths().iter().any(|(_, p)| p.starts_with("runs/"));
-        let openable = match (self.mode.as_str(), self.config.is_some(), missing.is_empty()) {
-            ("embedded", true, true) => Ok(()),
-            ("embedded", false, _) => Err("declares no controller config".to_string()),
-            ("embedded", true, false) => Err(format!("missing inputs: {}", missing.join(", "))),
-            (RECORDED, ..) => self.recorded_openable(root),
-            (mode, ..) => Err(format!("mode `{mode}` is neither embedded nor recorded; only embedded presets run and recorded presets play back natively")),
-        };
-        let runs_as = match (self.is_recorded(), self.task.is_some()) {
-            (true, _) => RECORDED_RUNS_AS,
-            (false, true) => "EmbeddedEnvironment",
-            (false, false) => "EmbeddedSession",
+        let openable = self.openable(root);
+        let runs_as = match (self.mode.as_str(), self.task.is_some()) {
+            (RECORDED, _) => RECORDED_RUNS_AS,
+            (LIVE, _) => LIVE_RUNS_AS,
+            (DRIVE, _) => DRIVE_RUNS_AS,
+            (_, true) => "EmbeddedEnvironment",
+            (_, false) => "EmbeddedSession",
         };
         json!({"id": self.id, "label": self.label, "mode": self.mode, "scene": self.scene, "config": self.config, "task": self.task, "capture": self.capture,
             "inputs_exist": missing.is_empty(), "missing": missing, "under_ignored_runs": under_runs,
             "runs_as": runs_as,
             "openable": openable.is_ok(), "not_openable_reason": openable.err(), "openable_rule": OPENABLE_RULE})
+    }
+}
+
+impl Preset {
+    /// Why this preset cannot be opened here (`Ok` when it can): every mode's
+    /// declared inputs, named (OPENABLE_RULE).
+    pub fn openable(&self, root: &Path) -> Result<(), String> {
+        let missing = self.missing(root);
+        let missing_text = || format!("missing inputs: {}", missing.join(", "));
+        match self.mode.as_str() {
+            "embedded" if self.scene.is_none() => Err("declares no scene".into()),
+            "embedded" if self.config.is_none() => Err("declares no controller config".into()),
+            "embedded" | LIVE if !missing.is_empty() => Err(missing_text()),
+            "embedded" => Ok(()),
+            LIVE if self.scene.is_none() => Err("live preset declares no scene".into()),
+            LIVE => Ok(()),
+            RECORDED => self.recorded_openable(root),
+            DRIVE if self.drive_files().is_none() => Err("drive preset declares no drive.model and drive.binding".into()),
+            DRIVE if !missing.is_empty() => Err(missing_text()),
+            DRIVE => Ok(()),
+            mode => Err(format!("mode `{mode}` is not one of embedded, live, recorded or drive")),
+        }
     }
 }
 
@@ -128,26 +170,19 @@ pub fn select(path: &Path, root: &Path, id: &str) -> Result<Preset, String> {
         let ids = |mode: &str| presets.iter().filter(|p| p.mode == mode).map(|p| p.id.as_str()).collect::<Vec<_>>().join(", ");
         return Err(format!("unknown robot preset `{id}` in {}; embedded presets: {}; recorded presets: {}", path.display(), ids("embedded"), ids(RECORDED)));
     };
-    if p.is_recorded() {
-        return p.recorded_openable(root).map(|()| p.clone()).map_err(|why| format!("robot preset `{id}` (recorded) cannot be opened under {}: {why}", root.display()));
-    }
-    if p.mode != "embedded" {
-        return Err(format!("robot preset `{id}` has mode `{}`; only mode `embedded` (a scene + controller config run by EmbeddedSession/EmbeddedEnvironment) runs natively, and mode `recorded` (a scene + capture) plays back", p.mode));
-    }
-    if p.scene.is_none() || p.config.is_none() {
-        return Err(format!("robot preset `{id}` declares no {}", if p.scene.is_none() { "scene" } else { "config" }));
-    }
-    let missing = p.missing(root);
-    if !missing.is_empty() {
-        return Err(format!("robot preset `{id}`: declared inputs not found under {}: {}", root.display(), missing.join(", ")));
-    }
-    Ok(p.clone())
+    p.openable(root).map(|()| p.clone()).map_err(|why| format!("robot preset `{id}` ({}) cannot be opened under {}: {why}", p.mode, root.display()))
 }
 
 /// The mode of a preset played back from a capture.
 pub const RECORDED: &str = "recorded";
 pub const RECORDED_RUNS_AS: &str = "recorded playback: the capture's frames pose the scene's links by name; no physics is built or stepped";
-pub const OPENABLE_RULE: &str = "embedded: declares a scene and config and every declared input exists (the build is not attempted here and can still fail, robot_state.run.error); recorded: declares a scene and a capture and both files exist (they are parsed on a worker when opened and can still fail, robot_state.error)";
+pub const OPENABLE_RULE: &str = "embedded: declares a scene and config and every declared input exists (the build is not attempted here and can still fail, robot_state.run.error); live: declares a scene that exists (its controller is the scene's own); recorded: declares a scene and a capture and both files exist (they are parsed on a worker when opened and can still fail, robot_state.error); drive: declares drive.model and drive.binding and both exist (opened as the model with its binding, the --robot FILE drive path)";
+/// The mode of a preset whose scene carries its own controller (the browser worker's `Simulation`).
+pub const LIVE: &str = "live";
+pub const LIVE_RUNS_AS: &str = "sim_runtime::session::Session (the scene's own controller; one held action per period, as the browser worker's Simulation)";
+/// The mode of a preset driven from devices through a controller binding.
+pub const DRIVE: &str = "drive";
+pub const DRIVE_RUNS_AS: &str = "the declared drive.model opened with its controller binding (the --robot FILE drive session: DriveHost on the shared Session, keyboard and gamepad through the shared bindings)";
 /// The label of a recorded preset's view (robot_state, the header).
 pub const RECORDED_LABEL: &str = "recorded physics (played back, not simulated here)";
 
@@ -232,7 +267,8 @@ pub struct PresetRun {
     /// Absolute scene path (the CAD link resolves against it).
     pub scene_path: PathBuf,
     pub scene: Scene,
-    pub config: Config,
+    /// The controller recipe (None for a `live` preset, whose scene carries its own controller).
+    pub config: Option<Config>,
     pub task: Option<Task>,
     pub seed: u64,
     /// The root the declared paths were resolved against (saved recordings go under it).
@@ -244,30 +280,47 @@ impl PresetRun {
     /// full-robot scenes are megabytes. Errors name the file.
     pub fn load(preset: Preset, root: &Path) -> Result<(Self, Value), String> {
         let scene_rel = preset.scene.clone().ok_or_else(|| format!("robot preset `{}` declares no scene", preset.id))?;
-        let config_rel = preset.config.clone().ok_or_else(|| format!("robot preset `{}` declares no config", preset.id))?;
         let (scene, mut raw_scene): (Scene, Value) = read(root, &scene_rel)?;
-        let (config, _): (Config, Value) = read(root, &config_rel)?;
+        let config = match (&preset.config, preset.is_live()) {
+            (Some(c), _) => Some(read::<Config>(root, c)?.0),
+            (None, true) => None,
+            (None, false) => return Err(format!("robot preset `{}` declares no config", preset.id)),
+        };
         let task = match &preset.task {
             Some(t) => Some(read::<Task>(root, t)?.0),
             None => None,
         };
         let robot = raw_scene.get_mut("robot").map(Value::take).unwrap_or(Value::Null);
-        Ok((Self { scene_path: root.join(&scene_rel), preset, scene, config, task, seed: SEED, root: root.to_path_buf() }, robot))
+        let seed = preset.seed();
+        Ok((Self { scene_path: root.join(&scene_rel), preset, scene, config, task, seed, root: root.to_path_buf() }, robot))
     }
     /// Nominal steps per chunk: one whole action interval (task period ÷
     /// step) for an environment, as `EmbeddedEnvironment::step` advances;
     /// otherwise the browser worker's `clamp(report_every, 1, 40)`.
     pub fn chunk_steps(&self) -> usize {
+        let Some(config) = &self.config else { return 1 };
         match &self.task {
-            Some(t) => (t.period_s / self.config.step_s).round().max(1.0) as usize,
-            None => self.config.report_every.clamp(1, SESSION_CHUNK_MAX),
+            Some(t) => (t.period_s / config.step_s).round().max(1.0) as usize,
+            None => config.report_every.clamp(1, SESSION_CHUNK_MAX),
         }
     }
+    /// The nominal step: the config's, or a live scene's controller period.
+    pub fn step_s(&self) -> f64 {
+        self.config.as_ref().map_or(self.scene.period_s, |c| c.step_s)
+    }
+    /// The horizon in nominal steps: the config's, or a live scene's duration in periods.
+    pub fn requested_steps(&self) -> usize {
+        self.config.as_ref().map_or_else(|| (self.scene.duration_s / self.scene.period_s).round().max(0.0) as usize, |c| c.steps)
+    }
     pub fn chunk_s(&self) -> f64 {
-        self.chunk_steps() as f64 * self.config.step_s
+        self.chunk_steps() as f64 * self.step_s()
     }
     pub fn kind(&self) -> &'static str {
-        if self.task.is_some() { "EmbeddedEnvironment" } else { "EmbeddedSession" }
+        match (&self.config, &self.task) {
+            (None, _) => "Session",
+            (Some(_), Some(_)) => "EmbeddedEnvironment",
+            (Some(_), None) => "EmbeddedSession",
+        }
     }
     /// `robot_state.preset`: identity, declared paths, readiness/evidence verbatim, seed and step settings.
     pub fn state_json(&self, completed_steps: Option<u64>) -> Value {
@@ -275,10 +328,10 @@ impl PresetRun {
         json!({"id": p.id, "label": p.label, "mode": p.mode, "scene": p.scene, "config": p.config, "task": p.task,
             "readiness": p.readiness(), "evidence": p.evidence(), "description": p.entry.get("description"),
             "runs_as": self.kind(), "seed": self.seed, "seed_rule": SEED_RULE,
-            "step_s": self.config.step_s, "requested_steps": self.config.steps, "completed_steps": completed_steps,
-            "horizon_s": self.config.step_s * self.config.steps as f64,
+            "step_s": self.step_s(), "requested_steps": self.requested_steps(), "completed_steps": completed_steps,
+            "horizon_s": self.step_s() * self.requested_steps() as f64,
             "chunk": {"nominal_steps": self.chunk_steps(), "seconds": self.chunk_s(),
-                "rule": if self.task.is_some() { "one whole action interval (task period_s / step_s nominal steps) per EmbeddedEnvironment::step" } else { "clamp(report_every, 1, 40) nominal steps per EmbeddedSession::advance, as the browser worker" }},
+                "rule": match (&self.config, &self.task) { (None, _) => "one controller period per Session::step (the held action), as the browser worker's Simulation.step", (_, Some(_)) => "one whole action interval (task period_s / step_s nominal steps) per EmbeddedEnvironment::step", _ => "clamp(report_every, 1, 40) nominal steps per EmbeddedSession::advance, as the browser worker" }},
             "action_rule": "the held action is the session's own input values: InputChannel.initial at build/reset (as EmbeddedEnvironment::prepare_replay holds them); the viewer does not choose values",
             "presets_file": PRESETS})
     }

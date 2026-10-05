@@ -282,6 +282,9 @@ impl Runtime {
     /// `Simulation::run_adaptive`); returns the accepted steps of the
     /// busiest island.
     pub fn advance_adaptive(&mut self, duration: f64, h0: f64, tolerance: f64, h_min: f64, h_max: f64) -> Result<usize, RuntimeError> {
+        if !(h_min > 0.0 && h_min <= h_max && h_max.is_finite()) {
+            return Err(DynamicsError::StepBounds { h_min, h_max }.into());
+        }
         let end = self.time + duration;
         self.run_blocks()?;
         let mut most = 0;
@@ -293,7 +296,8 @@ impl Runtime {
             let until = self.next_boundary(end).unwrap_or(end);
             let segment = until - self.time;
             for island in &mut self.islands {
-                most = most.max(island.run_adaptive(segment, h0, tolerance, h_min, h_max.min(segment))?);
+                // A segment shorter than `h_min` (a tick just ahead) is one step of its own length.
+                most = most.max(island.run_adaptive(segment, h0, tolerance, h_min.min(segment), h_max.min(segment).max(h_min.min(segment)))?);
             }
             self.land(until);
             self.commit()?;

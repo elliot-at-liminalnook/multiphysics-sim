@@ -86,7 +86,7 @@ pub enum Standing {
     Stale { verdict: Verdict, changed: Vec<String> },
 }
 
-fn hash(value: &impl Serialize) -> String {
+pub(crate) fn hash(value: &impl Serialize) -> String {
     blake3::hash(&serde_json::to_vec(&serde_json::to_value(value).expect("serializes")).expect("serializes")).to_hex().to_string()
 }
 
@@ -95,7 +95,7 @@ fn sha256_file(path: &Path) -> String {
 }
 
 /// Every file a run of `document` reads, by instance path (all levels).
-fn artifacts(document: &SystemDocument, base: &Path) -> BTreeMap<String, String> {
+pub(crate) fn artifacts(document: &SystemDocument, base: &Path) -> BTreeMap<String, String> {
     let mut out = BTreeMap::new();
     fn walk(document: &SystemDocument, base: &Path, definition: &str, path: &str, out: &mut BTreeMap<String, String>, depth: usize) {
         let Some(d) = document.definitions.get(definition) else { return };

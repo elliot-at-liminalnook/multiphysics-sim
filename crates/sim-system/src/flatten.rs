@@ -33,7 +33,13 @@ pub struct Flattened {
     pub blocks: BTreeMap<String, BlockSource>,
     /// Generated instance path → what its generator reported.
     pub generated: BTreeMap<String, GeneratedReport>,
+    /// Generated instance path → the generator's own handle on what it
+    /// built (see [`Generated::detail`]).
+    pub generated_details: BTreeMap<String, GeneratedDetail>,
 }
+
+/// A generator's own handle on an assembly it built into the flat model.
+pub type GeneratedDetail = std::sync::Arc<dyn std::any::Any + Send + Sync>;
 
 /// What a generator reported for one generated instance.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -62,6 +68,10 @@ pub struct Generated {
     /// Boundary port → the element ports it joins (at least one each).
     pub boundary: BTreeMap<String, Vec<PortId>>,
     pub warnings: Vec<String>,
+    /// What the generator's own host code needs to work with the assembly
+    /// in the compiled model (the robot generator: its mechanism, motors
+    /// and sensors, for measurements). Opaque to the flattener.
+    pub detail: Option<GeneratedDetail>,
 }
 
 /// The generators a host offers and the directory relative paths resolve
@@ -175,6 +185,7 @@ struct Builder<'a> {
     generators: Option<&'a Generators>,
     blocks: BTreeMap<String, BlockSource>,
     generated: BTreeMap<String, GeneratedReport>,
+    generated_details: BTreeMap<String, GeneratedDetail>,
 }
 
 impl<'a> Builder<'a> {
@@ -317,6 +328,9 @@ impl<'a> Builder<'a> {
                             self.uf.union(alias, k);
                         }
                     }
+                    if let Some(detail) = generated.detail {
+                        self.generated_details.insert(here.clone(), detail);
+                    }
                     self.generated.insert(here.clone(), GeneratedReport { generator: generator.clone(), source: source.clone(), warnings: generated.warnings });
                 }
             }
@@ -416,6 +430,7 @@ fn flatten_inner(document: &SystemDocument, registry: &BehaviorRegistry, generat
         generators,
         blocks: BTreeMap::new(),
         generated: BTreeMap::new(),
+        generated_details: BTreeMap::new(),
     };
     builder.expand("", &document.root, &env, WorldPlacement::IDENTITY, None, 0)?;
     // Group element ports by merged net; each set with two or more element
@@ -439,6 +454,7 @@ fn flatten_inner(document: &SystemDocument, registry: &BehaviorRegistry, generat
     Ok(Flattened {
         blocks: builder.blocks,
         generated: builder.generated,
+        generated_details: builder.generated_details,
         source_hash: builder.source_hash,
         revision: document.revision,
         model: builder.model,

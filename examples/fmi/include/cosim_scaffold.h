@@ -11,6 +11,14 @@
  *   static void model_initialize(ModelState *m, double t);          initial outputs
  *   static fmi3Status model_step(ModelState *m, double t, double h, const char **why);
  *
+ * A model that reads files from the FMU's resources/ directory defines
+ * MODEL_USES_RESOURCES and
+ *
+ *   static void model_resources(ModelState *m, const char *resource_path);
+ *
+ * called after model_defaults with the importer's resourcePath (absolute,
+ * with a trailing separator; valid for the instance's whole life).
+ *
  * Every variable is exchanged as Float64 or Boolean (model_get/model_set
  * see doubles; Booleans are 0/1). All state lives in the instance: no
  * globals, so instances are independent. FMU state save/restore copies the
@@ -33,8 +41,16 @@ typedef struct {
     int logging;
     int mode;
     double time;
+    char resources[2048];
     ModelState m;
 } Instance;
+
+static void defaults(Instance *c) {
+    model_defaults(&c->m);
+#ifdef MODEL_USES_RESOURCES
+    model_resources(&c->m, c->resources);
+#endif
+}
 
 static void say(Instance *c, fmi3Status status, const char *category, const char *message) {
     if (c->log && (c->logging || status != fmi3OK)) c->log(c->environment, status, category, message);
@@ -53,7 +69,7 @@ fmi3Instance fmi3InstantiateCoSimulation(fmi3String name, fmi3String token, fmi3
                                          const fmi3ValueReference required[], size_t nRequired,
                                          fmi3InstanceEnvironment environment, fmi3LogMessageCallback log,
                                          fmi3IntermediateUpdateCallback intermediate) {
-    (void)name; (void)resources; (void)visible; (void)earlyReturnAllowed; (void)required; (void)intermediate;
+    (void)name; (void)visible; (void)earlyReturnAllowed; (void)required; (void)intermediate;
     if (strcmp(token, MODEL_TOKEN) != 0) {
         if (log) log(environment, fmi3Error, "error", "instantiation token does not match this binary");
         return NULL;
@@ -68,7 +84,8 @@ fmi3Instance fmi3InstantiateCoSimulation(fmi3String name, fmi3String token, fmi3
     c->log = log;
     c->logging = logging;
     c->mode = MODE_INSTANTIATED;
-    model_defaults(&c->m);
+    if (resources) strncpy(c->resources, resources, sizeof c->resources - 1);
+    defaults(c);
     return c;
 }
 
@@ -107,7 +124,7 @@ fmi3Status fmi3Reset(fmi3Instance instance) {
     Instance *c = instance;
     c->mode = MODE_INSTANTIATED;
     c->time = 0;
-    model_defaults(&c->m);
+    defaults(c);
     return fmi3OK;
 }
 

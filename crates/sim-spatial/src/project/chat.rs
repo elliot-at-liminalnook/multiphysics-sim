@@ -107,7 +107,7 @@ pub(crate) fn ask(st: &mut ProjectState, doc: &CadDocument, text: &str, endpoint
         "project": {"name": project.file.name, "description": project.file.description, "cad": project.cad(), "model": project.model(), "test": project.file.test},
         "steps": st.steps, "design_revision": doc.shown_revision(), "parts": parts(doc),
         "model_assumptions": st.files.as_ref().map(|f| f.assumptions.clone()),
-        "latest_test": st.files.as_ref().and_then(|f| f.report.as_ref()).map(|r| json!({"verdict": r["verdict"], "summary": r["summary"], "outcomes": r["outcomes"]})),
+        "latest_test": st.files.as_ref().and_then(|f| f.report.as_ref()).map(|r| json!({"verdict": r["verdict"], "summary": r["summary"], "outcomes": r["outcomes"], "standing": st.files.as_ref().and_then(|f| f.standing.clone()), "ran": r["system"]})),
         "conversation": project.file.chat.iter().rev().take(12).rev().collect::<Vec<_>>(),
         "viewer_rest": rest,
     });

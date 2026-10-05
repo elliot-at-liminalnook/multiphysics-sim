@@ -53,6 +53,9 @@ pub struct FmuBlock {
     fatal: bool,
     checkpoints: bool,
     _once: Option<OnceGuard>,
+    // Last: the extracted archive (the binary and `resources/`) outlives
+    // the instance and the library handle.
+    _extraction: std::sync::Arc<tempfile::TempDir>,
 }
 
 // The FMU instance is only ever called through `&mut self` (or `&self`
@@ -114,6 +117,7 @@ impl FmuBlock {
             fatal: false,
             checkpoints,
             _once: once,
+            _extraction: fmu.extraction(),
         };
         if block.instance.is_null() {
             return Err(fail(format!("fmi3InstantiateCoSimulation failed{}", block.log_tail())));

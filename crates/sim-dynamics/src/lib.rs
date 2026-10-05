@@ -224,6 +224,8 @@ pub enum DynamicsError {
     Dimension { expected: usize, actual: usize },
     #[error("step size must be positive and finite, got {0}")]
     InvalidStep(f64),
+    #[error("adaptive step bounds must satisfy 0 < h_min <= h_max (finite), got h_min = {h_min}, h_max = {h_max}")]
+    StepBounds { h_min: f64, h_max: f64 },
     #[error("integration breakpoints must be finite, nonnegative and strictly increasing")]
     InvalidBreakpoints,
     #[error("invalid scheduled event at t={time}: {reason}")]
@@ -492,6 +494,9 @@ impl<S: System> Simulation<S> {
     /// still located inside each accepted step. Returns the number of
     /// accepted steps.
     pub fn run_adaptive(&mut self, duration: f64, h0: f64, tolerance: f64, h_min: f64, h_max: f64) -> Result<usize, DynamicsError> {
+        if !(h_min > 0.0 && h_min <= h_max && h_max.is_finite()) {
+            return Err(DynamicsError::StepBounds { h_min, h_max });
+        }
         let end = self.time + duration;
         let mut h = h0.clamp(h_min, h_max);
         let mut accepted = 0;

@@ -7,6 +7,13 @@
 //! conversation, and where results, lessons and part files go. The robot
 //! itself is the CAD file; the simulation model is exported from it.
 //!
+//! The robot is tested in the project's system (`system`, a `sim.system/2`
+//! file like any other: docs/architecture/composition.md), where it is a
+//! generated assembly from the model file. A new project's system holds the
+//! robot alone, with the supply and ambient its model defines; controllers
+//! (FMU blocks), a battery or thermal parts are added to it in Build mode,
+//! and the test then runs with them ([`crate::acceptance`]).
+//!
 //! Files are written atomically; unknown fields are refused, so a misspelt
 //! field fails naming the path.
 use crate::acceptance::Test;
@@ -14,7 +21,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 
-pub const SCHEMA: &str = "sim.robot-project/1";
+pub const SCHEMA: &str = "sim.robot-project/2";
 /// The project file's name ending.
 pub const SUFFIX: &str = ".robot.json";
 
@@ -45,6 +52,9 @@ pub struct ProjectFile {
     pub cad: String,
     /// The simulation model the CAD exports to.
     pub model: String,
+    /// The system the robot is composed and tested in (the model as a
+    /// generated assembly, with whatever controllers and parts are added).
+    pub system: String,
     /// Test reports go here.
     #[serde(default = "default_results")]
     pub results: String,
@@ -83,7 +93,7 @@ impl ProjectFile {
         if s.is_empty() {
             return Err("a robot needs a name with at least one letter or digit".into());
         }
-        Ok(ProjectFile { schema: SCHEMA.into(), name: name.trim().into(), description: description.trim().into(), cad: format!("{s}.rcad"), model: format!("{s}.simrobot.json"), results: default_results(), lessons: default_lessons(), make: default_make(), test: None, chat: Vec::new() })
+        Ok(ProjectFile { schema: SCHEMA.into(), name: name.trim().into(), description: description.trim().into(), cad: format!("{s}.rcad"), model: format!("{s}.simrobot.json"), system: format!("{s}.system.json"), results: default_results(), lessons: default_lessons(), make: default_make(), test: None, chat: Vec::new() })
     }
     pub fn parse(text: &str) -> Result<Self, String> {
         let p: ProjectFile = serde_json::from_str(text).map_err(|e| format!("not a robot project ({SCHEMA}): {e}"))?;
@@ -101,7 +111,7 @@ impl ProjectFile {
         if self.name.trim().is_empty() {
             return Err("name is empty".into());
         }
-        for (field, value) in [("cad", &self.cad), ("model", &self.model), ("results", &self.results), ("lessons", &self.lessons), ("make", &self.make)] {
+        for (field, value) in [("cad", &self.cad), ("model", &self.model), ("system", &self.system), ("results", &self.results), ("lessons", &self.lessons), ("make", &self.make)] {
             let p = Path::new(value);
             if value.is_empty() || p.is_absolute() || p.components().any(|c| matches!(c, std::path::Component::ParentDir)) {
                 return Err(format!("{field} must be a path inside the project folder, not {value:?}"));
@@ -112,6 +122,12 @@ impl ProjectFile {
         }
         if !self.model.ends_with(".simrobot.json") {
             return Err(format!("model must be a .simrobot.json file, not {:?}", self.model));
+        }
+        if !self.system.ends_with(".system.json") {
+            return Err(format!("system must be a .system.json file, not {:?}", self.system));
+        }
+        if Path::new(&self.system).parent() != Path::new(&self.model).parent() {
+            return Err(format!("system ({:?}) and model ({:?}) must be in the same folder", self.system, self.model));
         }
         if let Some(t) = &self.test {
             t.validate()?;
@@ -146,6 +162,45 @@ impl Project {
     }
     pub fn model(&self) -> PathBuf {
         self.dir().join(&self.file.model)
+    }
+    pub fn system(&self) -> PathBuf {
+        self.dir().join(&self.file.system)
+    }
+    /// The project's system as it is on disk, made when there is none yet
+    /// ([`crate::acceptance::default_system`]: the robot alone), and with
+    /// the robot's recorded ports brought in step with the model file (a
+    /// re-export may add or remove joints). Needs the model file.
+    pub fn ensure_system(&self, registry: &sim_core::BehaviorRegistry) -> Result<sim_system::SystemDocument, String> {
+        let path = self.system();
+        let base = path.parent().unwrap_or(Path::new(".")).to_path_buf();
+        let model_file = Path::new(&self.file.model).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+        let store = sim_system::SystemStore::new(&path);
+        if !path.exists() {
+            let document = crate::acceptance::default_system(registry, &base, &model_file, &self.file.name)?;
+            sim_system::SystemStore::create(&path, &document).map_err(|e| e.to_string())?;
+            return Ok(document);
+        }
+        let document = store.load().map_err(|e| format!("{}: {e}", path.display()))?;
+        let root = document.definitions.get(&document.root).ok_or_else(|| format!("{}: no root definition", path.display()))?;
+        let mut refresh = Vec::new();
+        for (name, instance) in &root.instances {
+            let sim_system::InstanceKind::Generated { generator, source, ports } = &instance.kind else { continue };
+            let mut parameters = std::collections::BTreeMap::new();
+            for (key, binding) in &instance.parameters {
+                if let sim_system::ParameterBinding::Value { value, .. } = binding {
+                    parameters.insert(key.clone(), *value);
+                }
+            }
+            let now = crate::robot_generator::generators(&base).ports(registry, generator, source, &parameters).map_err(|e| format!("{}: `{name}`: {e}", path.display()))?;
+            if now != *ports {
+                refresh.push(sim_system::Command::RefreshGenerated { at: String::new(), name: name.clone(), ports: now });
+            }
+        }
+        if refresh.is_empty() {
+            return Ok(document);
+        }
+        store.apply(registry, "Refresh the robot from its model", &refresh, None).map_err(|e| format!("{}: {e}", path.display()))?;
+        store.load().map_err(|e| format!("{}: {e}", path.display()))
     }
     pub fn results(&self) -> PathBuf {
         self.dir().join(&self.file.results)
@@ -206,7 +261,7 @@ impl Project {
         Some((path, value))
     }
     pub fn json(&self) -> Value {
-        json!({"path": self.path, "dir": self.dir(), "name": self.file.name, "description": self.file.description, "cad": self.cad(), "model": self.model(), "results": self.results(), "lessons": self.lessons(), "make": self.make(), "test": self.file.test, "chat": self.file.chat})
+        json!({"path": self.path, "dir": self.dir(), "name": self.file.name, "description": self.file.description, "cad": self.cad(), "model": self.model(), "system": self.system(), "results": self.results(), "lessons": self.lessons(), "make": self.make(), "test": self.file.test, "chat": self.file.chat})
     }
 }
 
@@ -249,13 +304,14 @@ mod tests {
         let p = Project::create(&dir, ProjectFile::new("Lift Arm", "lift a 20 g payload").unwrap()).unwrap();
         assert_eq!(p.path.file_name().unwrap(), "lift-arm.robot.json");
         assert_eq!(p.cad(), dir.join("lift-arm.rcad"));
+        assert_eq!(p.system(), dir.join("lift-arm.system.json"));
         assert!(p.lessons().is_dir() && p.results().is_dir());
         let again = Project::open(&dir).unwrap();
         assert_eq!(again.file, p.file);
         assert!(Project::create(&dir, ProjectFile::new("lift arm", "").unwrap()).unwrap_err().contains("already exists"));
         // Unknown fields and paths outside the folder are refused by name.
-        assert!(ProjectFile::parse(r#"{"schema":"sim.robot-project/1","name":"x","cad":"x.rcad","model":"x.simrobot.json","colour":1}"#).unwrap_err().contains("colour"));
-        assert!(ProjectFile::parse(r#"{"schema":"sim.robot-project/1","name":"x","cad":"../x.rcad","model":"x.simrobot.json"}"#).unwrap_err().contains("inside the project folder"));
+        assert!(ProjectFile::parse(r#"{"schema":"sim.robot-project/2","name":"x","cad":"x.rcad","model":"x.simrobot.json","system":"x.system.json","colour":1}"#).unwrap_err().contains("colour"));
+        assert!(ProjectFile::parse(r#"{"schema":"sim.robot-project/2","name":"x","cad":"../x.rcad","model":"x.simrobot.json","system":"x.system.json"}"#).unwrap_err().contains("inside the project folder"));
         std::fs::remove_dir_all(&dir).unwrap();
     }
 

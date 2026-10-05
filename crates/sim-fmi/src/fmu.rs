@@ -32,12 +32,13 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
 }
 
 /// A loaded FMU: validated against the profile, extracted to a private
-/// directory that lives as long as this does.
+/// directory that lives as long as this or any instance made from it does
+/// (an instance may read `resources/` at any time in its life).
 pub struct Fmu {
     pub path: PathBuf,
     pub sha256: String,
     pub description: ModelDescription,
-    dir: tempfile::TempDir,
+    dir: std::sync::Arc<tempfile::TempDir>,
 }
 
 impl std::fmt::Debug for Fmu {
@@ -103,7 +104,7 @@ impl Fmu {
         }
         let dir = tempfile::Builder::new().prefix("sim-fmu-").tempdir().map_err(|e| archive(format!("cannot create a directory to extract into: {e}")))?;
         zip.extract(dir.path()).map_err(|e| archive(format!("cannot extract: {e}")))?;
-        Ok(Self { path, sha256, description, dir })
+        Ok(Self { path, sha256, description, dir: std::sync::Arc::new(dir) })
     }
 
     pub fn model_identifier(&self) -> &str {
@@ -113,6 +114,11 @@ impl Fmu {
     /// The extracted binary for this platform.
     pub(crate) fn binary_path(&self) -> PathBuf {
         self.dir.path().join(binary_entry(self.model_identifier()).expect("checked at load"))
+    }
+
+    /// The extraction, to keep alive beside an instance.
+    pub(crate) fn extraction(&self) -> std::sync::Arc<tempfile::TempDir> {
+        self.dir.clone()
     }
 
     /// `resourcePath` as FMI 3 defines it: the absolute path of the

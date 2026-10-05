@@ -375,3 +375,69 @@ fn checkpoints_include_blocks_or_refuse() {
     let err = rt.snapshot().unwrap_err().to_string();
     assert!(err.contains("cannot capture"), "{err}");
 }
+
+/// The ramp (angle = t) read by block `p`, whose output block `c` passes
+/// on to a torque source: p → c, declared in either order.
+fn chain(p_first: bool, p_feedthrough: bool, p_delay: usize) -> Vec<f64> {
+    let registry = registry();
+    let mut m = ModelWorld::default();
+    let shaft = m.part(&registry, "shaft", rot::INERTIA, [("inertia", 1.0), ("initial.speed", 1.0)]).unwrap();
+    let angle = m.part(&registry, "angle", rot::ANGLE_SENSOR, []).unwrap();
+    m.connect([shaft.port("shaft"), angle.port("shaft")]);
+    let load = m.part(&registry, "load", rot::INERTIA, [("inertia", 1.0)]).unwrap();
+    let torque = m.part(&registry, "torque", rot::TORQUE_SOURCE, []).unwrap();
+    m.connect([load.port("shaft"), torque.port("shaft")]);
+    let p_interface = BlockInterface { inputs: vec![BlockPort::new("x", Q::Angle)], outputs: vec![BlockPort::new("y", Q::Dimensionless).start(-1.0)], feedthrough: p_feedthrough };
+    let c_interface = BlockInterface { inputs: vec![BlockPort::new("x", Q::Dimensionless)], outputs: vec![BlockPort::new("y", Q::Torque).start(-2.0)], feedthrough: true };
+    let mut p_timing = BlockTiming::periodic(0.01);
+    p_timing.output_delay = p_delay;
+    let (p, c) = if p_first {
+        let p = m.add_block("p", p_interface.clone(), p_timing, host("p")).unwrap();
+        (p, m.add_block("c", c_interface.clone(), BlockTiming::periodic(0.01), host("c")).unwrap())
+    } else {
+        let c = m.add_block("c", c_interface.clone(), BlockTiming::periodic(0.01), host("c")).unwrap();
+        (m.add_block("p", p_interface.clone(), p_timing, host("p")).unwrap(), c)
+    };
+    m.connect([angle.port("angle"), p.port("x")]);
+    m.connect([p.port("y"), c.port("x")]);
+    m.connect([c.port("y"), torque.port("torque")]);
+    let mut rt = sim_compile::Runtime::new(m, &registry, sim_dynamics::Integrator::BackwardEuler(sim_phenomena::world::newton())).unwrap();
+    for (name, interface) in [("p", p_interface), ("c", c_interface)] {
+        rt.bind_block(name, Box::new(Probe { interface, bias: 0.0, log: Default::default(), fail_at: None, output: None })).unwrap();
+    }
+    outputs(&mut rt, &c, 0.01, 5)
+}
+
+#[test]
+fn a_connection_s_delay_does_not_depend_on_declaration_order() {
+    // What `c` passes on after the ticks at 0.01 … 0.05, whichever block
+    // was declared first.
+    for (feedthrough, delay, expected) in [
+        // Same instant: c sees what p computed at this tick.
+        (true, 0, [0.01, 0.02, 0.03, 0.04, 0.05]),
+        // One sample of output delay: c sees p's output of the tick before.
+        (true, 1, [0.0, 0.01, 0.02, 0.03, 0.04]),
+        (true, 2, [-1.0, 0.0, 0.01, 0.02, 0.03]),
+        // End of step (no feedthrough): p's step from the tick before.
+        (false, 0, [0.0, 0.01, 0.02, 0.03, 0.04]),
+        (false, 1, [0.0, 0.0, 0.01, 0.02, 0.03]),
+    ] {
+        for p_first in [true, false] {
+            assert_eq!(chain(p_first, feedthrough, delay), expected, "feedthrough {feedthrough}, output delay {delay}, p declared first: {p_first}");
+        }
+    }
+}
+
+#[test]
+fn an_adaptive_advance_ending_just_past_a_tick_takes_the_short_segment() {
+    // Ticks every 0.01 s; the advance ends 0.005 s after one, less than the
+    // smallest adaptive step asked for.
+    let (mut rt, block) = ramp(BlockTiming::periodic(0.01), true, Q::Torque).unwrap();
+    probe(&mut rt, true, 100.0);
+    rt.advance_adaptive(0.015, 1.0e-3, 1.0e-6, 8.0e-3, 1.0e-2).unwrap();
+    assert!((rt.time - 0.015).abs() < 1e-12, "{}", rt.time);
+    assert!((rt.get(rt.signal_id(block.port("y"))) - 100.01).abs() < 1e-9);
+    // Bounds that cannot hold are an error, not a panic.
+    let err = rt.advance_adaptive(0.01, 1.0e-3, 1.0e-6, 1.0e-2, 1.0e-3).unwrap_err().to_string();
+    assert!(err.contains("h_min"), "{err}");
+}

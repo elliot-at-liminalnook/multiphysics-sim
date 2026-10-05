@@ -65,11 +65,34 @@ impl Builder {
         self.add_instance(pick, at, name, spec, &format!("Add FMU {relative}"))
     }
 
-    /// Add a robot generated from the `.simrobot.json` at `source` (`system_add_robot`).
-    pub(crate) fn add_robot(&mut self, pick: Option<&mut Picked>, at: &str, name: Option<String>, source: &str, driver_control: bool) -> Result<String, String> {
+    /// Add a robot generated from the `.simrobot.json` at `source`
+    /// (`system_add_robot`); `options` are the robot generator's flags that
+    /// are set (`driver_control`, `own_supply`, `own_ambient`).
+    pub(crate) fn add_robot(&mut self, pick: Option<&mut Picked>, at: &str, name: Option<String>, source: &str, options: &[&str]) -> Result<String, String> {
         let relative = self.relative_to_system(source)?;
-        let spec = sim_runtime::system_blocks::robot_instance(&self.registry, &self.system_dir(), &relative, driver_control)?;
+        let parameters: BTreeMap<String, f64> = options.iter().map(|o| (o.to_string(), 1.0)).collect();
+        let spec = sim_runtime::system_blocks::robot_instance_with(&self.registry, &self.system_dir(), &relative, &parameters)?;
         self.add_instance(pick, at, name, spec, &format!("Add robot {relative}"))
+    }
+
+    /// Record the ports a generated instance's source offers now
+    /// (`system_refresh_generated`): after its file changed its joints.
+    pub(crate) fn refresh_generated(&mut self, at: &str, name: &str) -> Result<String, String> {
+        let definition = sim_system::Resolver::new(&self.document, &self.registry).definition_id_at(at).map_err(|e| e.to_string())?;
+        let instance = self.document.definitions.get(&definition).and_then(|d| d.instances.get(name)).ok_or_else(|| format!("no instance `{name}` here"))?;
+        let InstanceKind::Generated { generator, source, ports } = &instance.kind else { return Err(format!("`{name}` is not a generated assembly")) };
+        let parameters: BTreeMap<String, f64> = instance.parameters.iter().filter_map(|(k, b)| match b {
+            sim_system::ParameterBinding::Value { value, .. } => Some((k.clone(), *value)),
+            _ => None,
+        }).collect();
+        let now = sim_runtime::robot_generator::generators(&self.system_dir()).ports(&self.registry, generator, source, &parameters)?;
+        if now == *ports {
+            return Ok(format!("{name} already matches {source}"));
+        }
+        let (added, removed): (Vec<&String>, Vec<&String>) = (now.keys().filter(|k| !ports.contains_key(*k)).collect(), ports.keys().filter(|k| !now.contains_key(*k)).collect());
+        let message = format!("Refreshed {name} from {source}: {} port(s) added{}, {} removed{}", added.len(), if added.is_empty() { String::new() } else { format!(" ({})", added.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ")) }, removed.len(), if removed.is_empty() { String::new() } else { format!(" ({})", removed.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ")) });
+        self.apply(&format!("Refresh {name}"), vec![sim_system::Command::RefreshGenerated { at: at.to_owned(), name: name.to_owned(), ports: now }])?;
+        Ok(message)
     }
 
     /// Change a block's clock, keeping its delays and deadline.

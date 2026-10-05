@@ -72,6 +72,12 @@ pub struct Files {
     pub model_error: Option<String>,
     pub report: Option<Value>,
     pub report_path: Option<String>,
+    /// Whether the latest report still describes what a test would run now
+    /// (the system, every file it reads, the settings, the test); None
+    /// without a stated test.
+    pub standing: Option<sim_runtime::system_evidence::Standing>,
+    pub system_exists: bool,
+    pub system_error: Option<String>,
     pub lessons: Vec<(String, String)>,
     pub make: Option<Value>,
 }
@@ -80,7 +86,45 @@ pub struct Files {
 pub fn key(project: &Project) -> String {
     let stat = |p: &Path| std::fs::metadata(p).ok().map(|m| (m.len(), m.modified().ok().and_then(|t| t.duration_since(SystemTime::UNIX_EPOCH).ok()).map(|d| d.as_millis())));
     let dir = |p: &Path| std::fs::read_dir(p).map(|d| d.flatten().filter_map(|e| Some((e.file_name(), e.metadata().ok()?.modified().ok()?))).collect::<Vec<_>>()).ok();
-    format!("{:?}|{:?}|{:?}|{:?}|{:?}|{:?}", stat(&project.path), stat(&project.cad()), stat(&project.model()), dir(&project.results()), dir(&project.lessons()), stat(&project.make().join("parts.json")))
+    let judged: Vec<_> = project.file.test.iter().flat_map(|t| judged_paths(project, t)).map(|(_, p)| stat(&p)).collect();
+    format!("{:?}|{:?}|{:?}|{:?}|{:?}|{:?}|{:?}|{:?}|{:?}", stat(&project.path), stat(&project.cad()), stat(&project.model()), stat(&project.system()), system_files(project), judged, dir(&project.results()), dir(&project.lessons()), stat(&project.make().join("parts.json")))
+}
+
+/// Size and modification time of every file the project's system reads
+/// (FMU archives, generated sources), so a changed controller is noticed.
+fn system_files(project: &Project) -> Vec<(String, Option<(u64, Option<u128>)>)> {
+    let system = project.system();
+    let Ok(document) = sim_system::SystemStore::new(&system).load() else { return Vec::new() };
+    let base = system.parent().unwrap_or(Path::new(".")).to_path_buf();
+    let mut files: Vec<String> = document.definitions.values().flat_map(|d| d.instances.values()).filter_map(|i| match &i.kind {
+        sim_system::InstanceKind::Block { implementation: sim_system::BlockSource::Fmu { path, .. }, .. } => Some(path.clone()),
+        sim_system::InstanceKind::Generated { source, .. } => Some(source.clone()),
+        _ => None,
+    }).collect();
+    files.sort();
+    files.dedup();
+    files.into_iter().map(|f| {
+        let stat = std::fs::metadata(base.join(&f)).ok().map(|m| (m.len(), m.modified().ok().and_then(|t| t.duration_since(SystemTime::UNIX_EPOCH).ok()).map(|d| d.as_millis())));
+        (f, stat)
+    }).collect()
+}
+
+/// The files a judgement of `test` reads beyond the system's own: the CAD
+/// file's part meshes and the print registry, for printed-part strength.
+fn judged_paths(project: &Project, test: &sim_runtime::acceptance::Test) -> Vec<(String, std::path::PathBuf)> {
+    if !test.criteria.iter().any(|c| matches!(c, sim_runtime::acceptance::Criterion::PartStrength { .. })) {
+        return Vec::new();
+    }
+    let mut out = vec![("the design's part meshes (CAD file)".to_string(), project.cad())];
+    if let Ok(registry) = crate::workspace::path("library/printing/registry.json") {
+        out.push(("the print registry".to_string(), registry));
+    }
+    out
+}
+
+/// [`judged_paths`] with each file's SHA-256, for the test's fingerprint.
+pub(crate) fn judged_files(project: &Project, test: &sim_runtime::acceptance::Test) -> std::collections::BTreeMap<String, String> {
+    judged_paths(project, test).into_iter().map(|(name, path)| (name, sim_domain_robot::cad_link::sha256_file(&path).unwrap_or_else(|e| format!("unreadable: {e}")))).collect()
 }
 
 /// Read the files (on a job).
@@ -141,6 +185,24 @@ pub fn read(project: &Project) -> Files {
     if let Some((path, report)) = project.latest_report() {
         f.report_path = Some(path.display().to_string());
         f.report = Some(report);
+    }
+    let system = project.system();
+    f.system_exists = system.is_file();
+    if let Some(test) = &project.file.test {
+        f.standing = Some(if f.report.is_none() {
+            sim_runtime::system_evidence::Standing::NotAssessed
+        } else {
+            match sim_system::SystemStore::new(&system).load() {
+                Ok(document) => {
+                    let base = system.parent().unwrap_or(Path::new("."));
+                    sim_runtime::acceptance::standing(f.report.as_ref(), &sim_runtime::acceptance::fingerprint(&document, base, test, &judged_files(project, test)))
+                }
+                Err(e) => {
+                    f.system_error = Some(format!("{}: {e}", system.display()));
+                    sim_runtime::acceptance::stale(f.report.as_ref().expect("checked"), "the project's system file cannot be read")
+                }
+            }
+        });
     }
     f.lessons = sim_lessons(&project.lessons());
     f.make = std::fs::read_to_string(project.make().join("parts.json")).ok().and_then(|t| serde_json::from_str(&t).ok());
@@ -214,21 +276,23 @@ pub fn steps(project: &Project, f: &Files, live: Live) -> Vec<StepStatus> {
     let modelled = model.0 == State::Done;
     out.push(StepStatus { step: Step::Model, state: model.0, line: model.1, hint: model.2 });
     // 3 Test.
-    let report_current = f.report.as_ref().is_some_and(|r| r["model"]["cad_sha256"].as_str().map(|h| h.trim_start_matches("sha256:")) == f.model_cad_sha256.as_deref() && f.model_cad_sha256.is_some());
+    use sim_runtime::system_evidence::Standing;
     let test = if live.testing {
         (State::Waiting, "Running the test…".to_string(), None)
     } else if !modelled {
         (State::Waiting, "Needs a current model with nothing blocking".into(), Some("Finish step 2 first".into()))
     } else if project.file.test.is_none() {
         (State::Ready, "No test stated yet".into(), Some("Run the test: a starting test is made from the robot's joints, to edit".into()))
-    } else if !report_current {
-        (State::Ready, "Not tested since the model changed".into(), Some("Run the test".into()))
     } else {
-        let r = f.report.as_ref().expect("checked");
-        match (r["verdict"].as_str(), r["evidence"].as_bool()) {
-            (Some("passed"), Some(true)) => (State::Done, r["summary"].as_str().unwrap_or("passed").to_string(), None),
-            (Some("failed"), _) => (State::Attention, r["summary"].as_str().unwrap_or("failed").to_string(), Some("Change the design (or the test) and run it again".into())),
-            _ => (State::Attention, r["summary"].as_str().unwrap_or("incomplete").to_string(), Some("Some criteria could not be assessed; see Test".into())),
+        match (&f.standing, &f.report) {
+            (Some(Standing::Current { .. }), Some(r)) => match (r["verdict"].as_str(), r["evidence"].as_bool()) {
+                (Some("passed"), Some(true)) => (State::Done, r["summary"].as_str().unwrap_or("passed").to_string(), None),
+                (Some("failed"), _) => (State::Attention, r["summary"].as_str().unwrap_or("failed").to_string(), Some("Change the design (or the test) and run it again".into())),
+                _ => (State::Attention, r["summary"].as_str().unwrap_or("incomplete").to_string(), Some("Some criteria could not be assessed; see Test".into())),
+            },
+            // A result for something that has since changed is not a result for this.
+            (Some(Standing::Stale { changed, .. }), _) => (State::Ready, format!("Not tested since {}", changed.join("; ")), Some("Run the test again: the last result no longer describes this".into())),
+            _ => (State::Ready, "Not tested yet".into(), Some("Run the test".into())),
         }
     };
     let tested = test.0 == State::Done;
@@ -296,8 +360,18 @@ mod tests {
         let mut p2 = p.clone();
         p2.file.test = sim_runtime::robot_project::starting_test(&[("j".into(), None, Some(1.0))]);
         f.report = Some(json!({"model": {"cad_sha256": "aa"}, "verdict": "passed", "evidence": true, "summary": "Passed all 4 criteria."}));
+        // A report alone proves nothing about what is there now.
+        assert_eq!(steps(&p2, &f, Live::default())[2].state, State::Ready);
+        use sim_runtime::system_evidence::{Standing, Verdict};
+        f.standing = Some(Standing::Current { verdict: Verdict::Passed });
         let s = steps(&p2, &f, Live::default());
         assert_eq!((s[2].state, s[4].state), (State::Done, State::Ready));
         assert_eq!(next(&s), Some(Step::Make));
+        // The same passed report after the test (or a controller, or the model) changed: not a pass, and nothing to make.
+        f.standing = Some(Standing::Stale { verdict: Verdict::Passed, changed: vec!["the test changed".into()] });
+        let s = steps(&p2, &f, Live::default());
+        assert_eq!((s[2].state, s[4].state), (State::Ready, State::Waiting));
+        assert!(s[2].line.contains("the test changed"), "{}", s[2].line);
+        assert_eq!(next(&s), Some(Step::Test));
     }
 }

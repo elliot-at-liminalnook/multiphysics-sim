@@ -273,7 +273,9 @@ fn project(p: &mut ChildSpawnerCommands, k: &Kit, st: &ProjectState, d: &Drafts,
                 }
                 Some(t) => {
                     p.spawn(k.text(format!("“{}”, {} s:", t.name, t.duration_s), size::SMALL, TEXT, 1));
-                    let outcomes = f.and_then(|f| f.report.as_ref()).map(|r| r["outcomes"].as_array().cloned().unwrap_or_default()).unwrap_or_default();
+                    // Outcomes are shown against the criteria only while the report still describes what would run.
+                    let current = f.is_some_and(|f| matches!(f.standing, Some(sim_runtime::system_evidence::Standing::Current { .. })));
+                    let outcomes = f.and_then(|f| f.report.as_ref()).filter(|_| current).map(|r| r["outcomes"].as_array().cloned().unwrap_or_default()).unwrap_or_default();
                     for (i, c) in t.criteria.iter().enumerate() {
                         let o = outcomes.get(i).filter(|o| o["criterion"] == serde_json::to_value(c).unwrap_or_default());
                         let (mark, col) = match o.and_then(|o| o["status"].as_str()) {
@@ -290,8 +292,19 @@ fn project(p: &mut ChildSpawnerCommands, k: &Kit, st: &ProjectState, d: &Drafts,
                 }
             }
             if let Some(r) = f.and_then(|f| f.report.as_ref()) {
-                let col = if r["verdict"] == "passed" { OK } else if r["verdict"] == "failed" { DANGER } else { WARN };
-                p.spawn(k.text(r["summary"].as_str().unwrap_or(""), size::SMALL, col, 1));
+                let stale = f.and_then(|f| match &f.standing {
+                    Some(sim_runtime::system_evidence::Standing::Stale { changed, .. }) => Some(changed.join("; ")),
+                    _ => None,
+                });
+                let col = if stale.is_some() { WARN } else if r["verdict"] == "passed" { OK } else if r["verdict"] == "failed" { DANGER } else { WARN };
+                match &stale {
+                    Some(changed) => p.spawn(k.text(format!("The last run no longer counts: {changed}. It said: {}", r["summary"].as_str().unwrap_or("")), size::SMALL, col, 1)),
+                    None => p.spawn(k.text(r["summary"].as_str().unwrap_or(""), size::SMALL, col, 1)),
+                };
+                if let Some(c) = r["system"]["controllers"].as_array() {
+                    let ran = if c.is_empty() { "no controller blocks: the test bench commanded the robot's servo targets directly".to_string() } else { format!("with the system's controllers {}", c.iter().filter_map(|b| b["block"].as_str()).collect::<Vec<_>>().join(", ")) };
+                    p.spawn(k.text(format!("Ran the project's system, {ran}."), size::CAPTION, FAINT, 0));
+                }
                 if let Some(n) = r["not_modelled"].as_array().filter(|n| !n.is_empty()) {
                     p.spawn(k.text(format!("Not modelled: {}", n.iter().filter_map(Value::as_str).collect::<Vec<_>>().join("; ")), size::CAPTION, FAINT, 0));
                 }

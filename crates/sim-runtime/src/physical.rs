@@ -181,6 +181,11 @@ pub struct PhysicalRobot {
     fell: bool,
     /// Trajectory (time, targets) when control mode is `trajectory`.
     pub trajectory: Vec<(f64, Vec<f64>)>,
+    /// Driven joints in the order of the model's control targets.
+    joint_order: Vec<String>,
+    /// The assembly's boundary signals (`<joint>.target`, `<joint>.angle`,
+    /// …) when it was attached with its boundary (a composed system).
+    pub boundary_signals: BTreeMap<String, StateId>,
 }
 
 /// How a robot assembly meets the rest of what it is composed with.
@@ -573,8 +578,9 @@ impl PhysicalRobot {
     pub fn build_with<F>(model: PhysicalModel, registry: &BehaviorRegistry, opts: &BuildOptions, compose: F) -> Result<Self, String>
     where F: FnOnce(&mut ModelWorld, &Instance) -> Result<(), String> {
         let mut m = ModelWorld::default();
-        let RobotAssembly { robot, art, mut composition, warnings, battery, motors: motors_built, mounts, targets_order, boundary, model, power_profile } =
-            assemble(&mut m, registry, model, opts, &AssemblyOptions::default())?;
+        let mut assembly = assemble(&mut m, registry, model, opts, &AssemblyOptions::default())?;
+        let boundary = std::mem::take(&mut assembly.boundary);
+        let (model, robot) = (assembly.model.clone(), assembly.robot.clone());
         // The controller block on the boundary's signals: inputs are the
         // robot's outputs, outputs its inputs, each typed as the port it
         // joins (exact match), held at 0 until the first tick.
@@ -601,7 +607,7 @@ impl PhysicalRobot {
             let mut timing = sim_core::BlockTiming::periodic(period);
             timing.output_delay = (model.control.latency_s / period).round().max(0.0) as usize;
             let seam = m.add_block("controller", interface, timing, sim_core::ImplementationRef::Host { name: "robot_controller".into() }).map_err(|e| e.to_string())?;
-            composition.component(&seam, "composition/controller", "policy", None);
+            assembly.composition.component(&seam, "composition/controller", "policy", None);
             for (name, _, mut ports) in signals {
                 ports.push(seam.port(&name));
                 m.connect(ports);
@@ -622,6 +628,61 @@ impl PhysicalRobot {
         if opts.numerical_jacobian {
             for island in &mut runtime.islands { island.set_numerical_jacobian(true); }
         }
+        let mut result = Self::attach(runtime, assembly, opts)?;
+        // Targets: the control block's hold values (rad) in `targets_order`.
+        let initial: Vec<f64> = result.joint_order.iter().map(|p| model.control.targets.get(p.trim_start_matches("joint.").trim_start_matches("slide.")).copied().unwrap_or(0.0)).collect();
+        if !matches!(model.control.mode.as_str(), "hold" | "trajectory") {
+            return Err(format!("control mode `{}` is not supported; use `hold` or `trajectory`", model.control.mode));
+        }
+        let trajectory: Vec<(f64, Vec<f64>)> = if model.control.mode == "trajectory" {
+            // A point that omits a joint holds that joint's control target
+            // (e.g. joints absent from an identification log), not zero.
+            model.control.trajectory.iter().map(|pt| (pt.t, result.joint_order.iter().zip(&initial).map(|(p, hold)| pt.targets.get(p.trim_start_matches("joint.").trim_start_matches("slide.")).copied().unwrap_or(*hold)).collect())).collect()
+        } else {
+            Vec::new()
+        };
+        if let Some(seam) = &seam {
+            let contract = result.runtime.contract(seam.behavior);
+            let act: Vec<usize> = result.joint_order.iter().map(|p| {
+                let short = p.trim_start_matches("joint.").trim_start_matches("slide.");
+                contract.actuators.iter().position(|c| c.name == format!("{short}.target")).expect("seam actuator")
+            }).collect();
+            let held = result.targets.clone();
+            let traj = if trajectory.is_empty() { None } else {
+                Some(sim_domain_control::trajectory::Trajectory::new(sim_domain_control::trajectory::TrajectoryConfig {
+                    interpolation: Default::default(), keyframes: trajectory.iter().map(|(t,values)|
+                        sim_domain_control::trajectory::Keyframe {time_s:*t,values:values.clone()}).collect(),
+                })?)
+            };
+            // The model's own target supervisor: a pure function of time and
+            // the shared hold targets, so checkpoints may include it.
+            result.runtime
+                .bind_coupler(
+                    seam.behavior,
+                    Box::new(FnCoupler(move |t: f64, _s: &[f64], a: &mut [f64]| {
+                        let current: Vec<f64> = if let Some(traj) = &traj { traj.sample(t).expect("finite simulation time").values } else { held.lock().unwrap_or_else(|p| p.into_inner()).clone() };
+                        for (k, idx) in act.iter().enumerate() {
+                            a[*idx] = current.get(k).copied().unwrap_or(0.0);
+                        }
+                    })),
+                    true,
+                )
+                .map_err(|e| e.to_string())?;
+        }
+        *result.targets.lock().unwrap_or_else(|p| p.into_inner()) = initial;
+        result.seam = seam.map(|s| s.behavior);
+        result.trajectory = trajectory;
+        Ok(result)
+    }
+
+    /// Watch a robot assembled into `runtime` (by [`assemble`], here or by
+    /// the `robot` generator inside a composed system): the measurements,
+    /// statistics and results of [`Self::advance`] and [`Self::results`]
+    /// on whatever the runtime holds around it. The caller owns the
+    /// runtime's blocks and settings.
+    pub fn attach(runtime: Runtime, assembly: RobotAssembly, opts: &BuildOptions) -> Result<Self, String> {
+        let RobotAssembly { robot, art, composition, warnings, battery, motors: motors_built, mounts, targets_order, model, power_profile, boundary } = assembly;
+        let boundary_signals = boundary.iter().filter(|(_, (schema, ports))| !matches!(schema, sim_core::PortSchema::Acausal(_)) && !ports.is_empty()).map(|(name, (_, ports))| (name.clone(), runtime.signal_id(ports[0]))).collect();
         let art_states: Vec<StateId> = art.state_names().iter().map(|n| runtime.state_id(robot.behavior, n)).collect();
         let port_angles: Vec<StateId> = art.port_names.iter().map(|n| runtime.across_id(robot.port(leak(n.clone())))).collect();
         let temperature_ids: Vec<StateId> = art.signal_in_names.iter().map(|n| runtime.signal_id(robot.port(leak(n.clone())))).collect();
@@ -649,48 +710,7 @@ impl PhysicalRobot {
             });
         }
         let battery_ids = battery.as_ref().map(|b| (runtime.state_id(b.behavior, "soc"), runtime.across_id(b.port("p")), runtime.across_id(b.port("n")), runtime.state_id(b.behavior, "current")));
-        // Targets: the control block's hold values (rad) in `targets_order`.
-        let initial: Vec<f64> = targets_order.iter().map(|p| model.control.targets.get(p.trim_start_matches("joint.").trim_start_matches("slide.")).copied().unwrap_or(0.0)).collect();
-        let targets = Arc::new(Mutex::new(initial.clone()));
-        if !matches!(model.control.mode.as_str(), "hold" | "trajectory") {
-            return Err(format!("control mode `{}` is not supported; use `hold` or `trajectory`", model.control.mode));
-        }
-        let trajectory: Vec<(f64, Vec<f64>)> = if model.control.mode == "trajectory" {
-            // A point that omits a joint holds that joint's control target
-            // (e.g. joints absent from an identification log), not zero.
-            model.control.trajectory.iter().map(|pt| (pt.t, targets_order.iter().zip(&initial).map(|(p, hold)| pt.targets.get(p.trim_start_matches("joint.").trim_start_matches("slide.")).copied().unwrap_or(*hold)).collect())).collect()
-        } else {
-            Vec::new()
-        };
-        let mut runtime = runtime;
-        if let Some(seam) = &seam {
-            let contract = runtime.contract(seam.behavior);
-            let act: Vec<usize> = targets_order.iter().map(|p| {
-                let short = p.trim_start_matches("joint.").trim_start_matches("slide.");
-                contract.actuators.iter().position(|c| c.name == format!("{short}.target")).expect("seam actuator")
-            }).collect();
-            let held = targets.clone();
-            let traj = if trajectory.is_empty() { None } else {
-                Some(sim_domain_control::trajectory::Trajectory::new(sim_domain_control::trajectory::TrajectoryConfig {
-                    interpolation: Default::default(), keyframes: trajectory.iter().map(|(t,values)|
-                        sim_domain_control::trajectory::Keyframe {time_s:*t,values:values.clone()}).collect(),
-                })?)
-            };
-            // The model's own target supervisor: a pure function of time and
-            // the shared hold targets, so checkpoints may include it.
-            runtime
-                .bind_coupler(
-                    seam.behavior,
-                    Box::new(FnCoupler(move |t: f64, _s: &[f64], a: &mut [f64]| {
-                        let current: Vec<f64> = if let Some(traj) = &traj { traj.sample(t).expect("finite simulation time").values } else { held.lock().unwrap_or_else(|p| p.into_inner()).clone() };
-                        for (k, idx) in act.iter().enumerate() {
-                            a[*idx] = current.get(k).copied().unwrap_or(0.0);
-                        }
-                    })),
-                    true,
-                )
-                .map_err(|e| e.to_string())?;
-        }
+        let targets = Arc::new(Mutex::new(vec![0.0; targets_order.len()]));
         let nj = art.joints.len();
         let link_stats = (0..art.links.len()).map(|li| LinkStats { hotspot: vec![0.0; art.links[li].flex.as_ref().map(|f| f.stress_cells.len()).unwrap_or(0)], ..Default::default() }).collect();
         let joint_names: Vec<String> = targets_order.clone();
@@ -702,7 +722,7 @@ impl PhysicalRobot {
             art,
             joint_names,
             targets,
-            seam: seam.map(|s| s.behavior),
+            seam: None,
             warnings,
             step: opts.step,
             art_states,
@@ -729,7 +749,9 @@ impl PhysicalRobot {
             wall: 0.0,
             samples: 0,
             fell: false,
-            trajectory,
+            trajectory: Vec::new(),
+            joint_order: targets_order,
+            boundary_signals,
         };
         result.sample_battery()?;
         Ok(result)

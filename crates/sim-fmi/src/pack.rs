@@ -1,13 +1,15 @@
 //! Build an FMI 3 Co-Simulation FMU from C sources: compile `sources/*.c`
 //! into a shared library for this platform (the system C compiler, `cc`,
 //! with the standard's headers on the include path) and zip it with
-//! `modelDescription.xml`, the sources and any `documentation/` files.
+//! `modelDescription.xml`, the sources and any `documentation/` and
+//! `resources/` files.
 //!
 //! A model directory holds:
 //! ```text
 //! modelDescription.xml        the model's FMI 3 description
 //! sources/*.c                 its implementation
 //! documentation/*  (optional)
+//! resources/*      (optional: files the model reads at run time)
 //! ```
 //! The archive is reproducible for the same inputs and compiler: entries in
 //! a fixed order with a fixed timestamp.
@@ -61,7 +63,7 @@ pub fn pack(model_dir: &Path, out: &Path) -> Result<String, String> {
     let mut entries: Vec<(String, Vec<u8>)> = vec![("modelDescription.xml".into(), xml.into_bytes())];
     let platform = crate::fmu::platform()?;
     entries.push((format!("binaries/{platform}/{}{}", cs.model_identifier, std::env::consts::DLL_SUFFIX), std::fs::read(&library).map_err(|e| e.to_string())?));
-    for (folder, files) in [("sources", sources), ("documentation", sorted_files(&model_dir.join("documentation"), |_| true)?)] {
+    for (folder, files) in [("sources", sources), ("documentation", sorted_files(&model_dir.join("documentation"), |_| true)?), ("resources", sorted_files(&model_dir.join("resources"), |_| true)?)] {
         for file in files {
             let name = file.file_name().expect("a file").to_string_lossy().into_owned();
             entries.push((format!("{folder}/{name}"), std::fs::read(&file).map_err(|e| e.to_string())?));

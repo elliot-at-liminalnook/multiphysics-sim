@@ -108,6 +108,20 @@ pub(crate) enum SystemAction {
         source: String,
         #[serde(default)]
         driver_control: bool,
+        /// Keep the supply the robot's model defines (no `supply_p`/`supply_n`).
+        #[serde(default)]
+        own_supply: bool,
+        /// Keep the model's fixed ambient (no `ambient` port).
+        #[serde(default)]
+        own_ambient: bool,
+        #[serde(default)]
+        expected_revision: Option<u64>,
+    },
+    /// `system_refresh_generated {name}`: re-read a generated instance's ports from its source.
+    SystemRefreshGenerated {
+        #[serde(default)]
+        at: String,
+        name: String,
         #[serde(default)]
         expected_revision: Option<u64>,
     },
@@ -274,7 +288,8 @@ impl actions::Action for SystemAction {
             c("system_actuators", json!({"registry":"examples/actuators/hx30hm/accepted/registry.json","check":["examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json"]}), "Read-only accepted actuator registry inspector (same handler as the Actuators tab). Loads the registry (default: examples/actuators/hx30hm/accepted/registry.json under the nearest ancestor of the system file, else the workspace root (system_state.workspace); omitted = the current one) and checks each consumer file with sim_runtime::actuator_registry (omitted check = recheck the previous files, [] = none), off the UI thread (poll the job). Refused while a load is pending. A missing registry or family hash mismatch is an error naming the path; the last good load stays in system_state.actuators with its own path. Result and system_state.actuators: families (content hash, acceptance, limitations, parameters with value/unit/provenance/uncertainty (null = unknown)/evidence), roles, per-file checks (current/stale/invalid, have and accepted hashes). Writes nothing."),
             c("system_guide", json!({}), "Start here: how Build mode composes systems (elements, subsystems, generated robots, FMU blocks), the workflows in order, every command with an example and the rules, for an agent starting cold; topic narrows it (about, concepts, workflows, commands, rules). Also GET /v1/system_guide."),
             c("system_add_fmu", json!({"path":"fmus/thermostat.fmu","name":"thermostat","period":0.5,"parameters":{"setpoint":294.15}}), "Add an FMI 3 Co-Simulation FMU as a block at `at` (default the top level): its interface (every input and output variable as a typed port, units matched exactly) and SHA-256 are read from the archive; path relative to the system file's directory (or absolute under it). period/offset (s) set its clock, input_delay/output_delay whole samples, deadline_s a wall-clock budget per call; kinds names a port's quantity where its unit is ambiguous (e.g. {\"heater_power\":\"HeatFlow\"}); parameters set FMU parameter variables by name. Refused, naming the reason, for anything outside the profile (FMI 1/2, Model Exchange or Scheduled Execution only, clocks, arrays, String/Binary ports, needsExecutionTool, no binary for this platform, a structural or unknown parameter). Wire it with the system command connect; change its timing with set_block_timing. One undoable edit."),
-            c("system_add_robot", json!({"source":"rover.simrobot.json","name":"rover"}), "Add a robot generated from its .simrobot.json (relative to the system file): the same assembly Robot mode runs, with boundary ports supply_p/supply_n (motor bus: connect a battery or supply), ambient (thermal environment), per driven joint <joint>.target (servo setpoint, rad) or with driver_control <motor>.duty, and outputs <joint>.angle, <joint>.speed, imu.*. Ports are recorded; a run regenerates the assembly and refuses it if the source no longer offers them. One undoable edit."),
+            c("system_add_robot", json!({"source":"rover.simrobot.json","name":"rover"}), "Add a robot generated from its .simrobot.json (relative to the system file): the same assembly Robot mode runs, with boundary ports supply_p/supply_n (motor bus: connect a battery or supply), ambient (thermal environment), per driven joint <joint>.target (servo setpoint, rad) or with driver_control <motor>.duty, and outputs <joint>.angle, <joint>.speed, imu.*. With own_supply / own_ambient the robot keeps the supply and fixed ambient its model defines and offers no bus or ambient port. Ports are recorded; a run regenerates the assembly and refuses it if the source no longer offers them (system_refresh_generated records the new ones). One undoable edit."),
+            c("system_refresh_generated", json!({"name":"rover"}), "Record the ports a generated instance's source file offers now (a robot model re-exported with another joint): its connections are kept; a connection to a port the source no longer offers is refused by name (disconnect it first). Answers what was added and removed. One undoable edit."),
             c("system_inspect_fmu", json!({"path":"fmus/thermostat.fmu"}), "What an FMU offers before adding it: model name, FMI version, capabilities, inputs/outputs/parameters with units and the quantity each port would carry (or why not), and every reason a block could not use it (empty: it can). Reads the archive only."),
             c("system_test", json!({"action":"run","name":"comfort"}), "Acceptance tests of this system: action set {name, test: {duration_s, requirements: [{id, observable (readable key, e.g. thermometer.temperature), reduce (final, mean, max, min, peak, change, integral), window?, min?, max?}]}} saves one (undoable); delete removes it; run runs it on a background thread on the system as composed (its own controllers) and keeps the evidence in <system>.evidence.json; status answers. Answers system_state.composition: tests, standing (not_assessed | current {verdict} | stale {verdict, changed: what changed since: model, an artifact, the settings, the test}), evidence, running, last. A requirement the run cannot judge is not assessed, never a pass."),
             c("system_level", json!({"path":"regulator"}), "Drill into a subsystem instance path (\"\" is the top level)"),
@@ -385,12 +400,20 @@ fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, 
             let added = builder.add_fmu(Some(&mut *pick), at, name.clone(), path, timing, kinds, parameters)?;
             Ok(json!({"added": added, "state": pick.state(builder)}))
         })(),
-        SystemAction::SystemAddRobot { at, name, source, driver_control, expected_revision } => (|| -> sim_api::Result {
+        SystemAction::SystemAddRobot { at, name, source, driver_control, own_supply, own_ambient, expected_revision } => (|| -> sim_api::Result {
             if expected_revision.is_some_and(|r| r != builder.document.revision) {
                 return Err("stale system revision; reload system_state".into());
             }
-            let added = builder.add_robot(Some(&mut *pick), at, name.clone(), source, *driver_control)?;
+            let options: Vec<&str> = [("driver_control", *driver_control), ("own_supply", *own_supply), ("own_ambient", *own_ambient)].into_iter().filter(|(_, on)| *on).map(|(o, _)| o).collect();
+            let added = builder.add_robot(Some(&mut *pick), at, name.clone(), source, &options)?;
             Ok(json!({"added": added, "state": pick.state(builder)}))
+        })(),
+        SystemAction::SystemRefreshGenerated { at, name, expected_revision } => (|| -> sim_api::Result {
+            if expected_revision.is_some_and(|r| r != builder.document.revision) {
+                return Err("stale system revision; reload system_state".into());
+            }
+            let message = builder.refresh_generated(at, name)?;
+            Ok(json!({"refreshed": message, "state": pick.state(builder)}))
         })(),
         SystemAction::SystemInspectFmu { path } => builder.inspect_fmu(path),
         SystemAction::SystemTest { action, name, test, expected_revision } => (|| -> sim_api::Result {

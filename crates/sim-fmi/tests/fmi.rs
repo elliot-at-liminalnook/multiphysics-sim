@@ -306,3 +306,28 @@ fn packing_the_same_sources_gives_the_same_archive() {
     let b = sim_fmi::pack::pack(&examples, &fixtures().join("again-b.fmu")).unwrap();
     assert_eq!(a, b, "same sources, same compiler: same SHA-256");
 }
+
+#[test]
+fn resources_stay_readable_for_the_instance_s_whole_life() {
+    // The fixture reads resources/gain.txt at every step. The loaded `Fmu`
+    // (and the cache holding it) is gone before the first step.
+    let fmu_path = fixtures().join("table-gain.fmu");
+    sim_fmi::pack::pack(&PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/table-gain"), &fmu_path).unwrap();
+    let registry = sim_runtime::registry();
+    let mut m = ModelWorld::default();
+    let source = m.part(&registry, "source", sim_domain_control::elements::CONSTANT, [("value", 3.0)]).unwrap();
+    let block = {
+        let fmu = Fmu::load(&fmu_path).unwrap();
+        sim_fmi::add_block(&mut m, "gain", &fmu, &fmu_path.display().to_string(), &BTreeMap::new(), BlockTiming::periodic(0.1), BTreeMap::new()).unwrap()
+    };
+    m.connect([source.port("value"), block.port("u")]);
+    m.connect([block.port("y")]);
+    let mut runtime = Runtime::new(m, &registry, sim_dynamics::Integrator::BackwardEuler(sim_runtime::newton())).unwrap();
+    {
+        let mut cache = Cache::default();
+        sim_fmi::bind(&mut runtime, Path::new("/"), &mut cache).unwrap();
+    }
+    let y = runtime.signal_id(block.port("y"));
+    runtime.advance(1.0, 0.05).unwrap();
+    assert_eq!(runtime.get(y), 7.5);
+}

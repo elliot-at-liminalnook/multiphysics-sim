@@ -268,14 +268,45 @@ impl Scheduler {
         // Plant inputs: the committed state before any write at this instant.
         let plant: Vec<Vec<Option<f64>>> = self.blocks.iter().map(|b| b.inputs.iter().map(|s| match s { Source::Plant(id) => Some(read(*id)), Source::Block { .. } => None }).collect()).collect();
         let mut changed: Vec<usize> = Vec::new();
-        // 1. Apply pending end-of-step outputs (their values at this instant).
+        // 1. Every due block's output for this instant that was decided
+        //    before it: a pending end-of-step output, or the delayed output
+        //    of a feedthrough block (computed `output_delay` ticks ago).
         for &k in &due {
             if let Some(pending) = self.blocks[k].pending.take() {
                 self.emit(k, pending);
                 changed.push(k);
+                continue;
+            }
+            let b = &mut self.blocks[k];
+            if b.decl.interface.feedthrough && b.decl.timing.output_delay > 0 && b.out_fifo.len() >= b.decl.timing.output_delay {
+                b.applied = b.out_fifo.pop_front().expect("nonempty");
+                changed.push(k);
             }
         }
-        // 2. Execute in dependency order.
+        // 2. Blocks without feedthrough at their first tick give their
+        //    initial outputs (which do not depend on this instant's inputs);
+        //    each sees the other blocks as they stood after step 1, so the
+        //    result does not depend on the order the blocks were declared in.
+        let before: Vec<Vec<f64>> = self.blocks.iter().map(|b| b.applied.clone()).collect();
+        for &k in &due {
+            if self.blocks[k].initialized || self.blocks[k].decl.interface.feedthrough {
+                continue;
+            }
+            let inputs: Vec<f64> = self.blocks[k].inputs.iter().zip(&plant[k]).map(|(s, p)| match (s, p) {
+                (_, Some(v)) => *v,
+                (Source::Block { block, output }, None) => before[*block][*output],
+                (Source::Plant(_), None) => unreachable!("plant inputs were read"),
+            }).collect();
+            if let Err(message) = self.initial_outputs(k, time, &inputs) {
+                let f = BlockFault { block: self.blocks[k].decl.name.clone(), time, message };
+                self.fault = Some(f.clone());
+                return Err(f);
+            }
+            changed.push(k);
+        }
+        // 3. Execute in dependency order. From here only a feedthrough
+        //    block without output delay changes its signal, and the order
+        //    puts it before its consumers: every read is order-independent.
         for &k in &due {
             let inputs: Vec<f64> = self.blocks[k].inputs.iter().zip(&plant[k]).map(|(s, p)| match (s, p) {
                 (_, Some(v)) => *v,
@@ -290,7 +321,7 @@ impl Scheduler {
             }
             changed.push(k);
         }
-        // 3. One batch of held-state writes.
+        // 4. One batch of held-state writes.
         changed.sort_unstable();
         changed.dedup();
         let mut writes = Vec::new();
@@ -299,6 +330,20 @@ impl Scheduler {
             writes.extend(b.output_ids.iter().copied().zip(b.applied.iter().copied()));
         }
         Ok(writes)
+    }
+
+    /// The first tick of a block without feedthrough: initialize it and
+    /// emit its initial outputs. `sampled` is what its inputs read now (the
+    /// input delay line is still empty, so that is also what it sees).
+    fn initial_outputs(&mut self, k: usize, time: f64, sampled: &[f64]) -> Result<(), String> {
+        let clock = &self.blocks[k].decl.timing.clock;
+        let dt = clock.interval(self.blocks[k].next).unwrap_or(clock.nominal_period());
+        let mut outputs = self.blocks[k].applied.clone();
+        self.call(k, true, time, dt, sampled, &mut outputs)?;
+        Self::validate(&self.blocks[k], &outputs, time)?;
+        self.blocks[k].initialized = true;
+        self.emit(k, outputs);
+        Ok(())
     }
 
     /// One block's tick: input delay, the implementation call(s),
@@ -323,16 +368,21 @@ impl Scheduler {
             b.next += 1;
         }
         let dt = interval.unwrap_or(nominal);
-        if first || feedthrough {
-            // Initial and feedthrough outputs are values at this tick.
+        if feedthrough {
+            // Feedthrough outputs are values at this tick: the signal now,
+            // or after the output delay (queued; `tick` applies it).
             let mut outputs = self.blocks[k].applied.clone();
             self.call(k, first, time, dt, &seen, &mut outputs)?;
             Self::validate(&self.blocks[k], &outputs, time)?;
-            self.emit(k, outputs);
-            if feedthrough {
-                return Ok(());
+            let b = &mut self.blocks[k];
+            if b.decl.timing.output_delay == 0 {
+                b.applied = outputs;
+            } else {
+                b.out_fifo.push_back(outputs);
             }
+            return Ok(());
         }
+        debug_assert!(!first, "`tick` initializes blocks without feedthrough before executing");
         // End of step: the step from this tick (inputs held) gives the
         // values at the next tick, applied there. After a schedule's last
         // tick there is no next tick, so no step.
@@ -374,7 +424,9 @@ impl Scheduler {
         Ok(())
     }
 
-    /// An implementation output becomes the block's signal after the output delay.
+    /// An output for this instant, known before the tick's executions (a
+    /// pending end-of-step output, an initial output), becomes the block's
+    /// signal after the output delay.
     fn emit(&mut self, k: usize, outputs: Vec<f64>) {
         let b = &mut self.blocks[k];
         if b.decl.timing.output_delay == 0 {

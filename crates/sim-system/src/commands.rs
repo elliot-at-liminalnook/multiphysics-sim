@@ -200,6 +200,15 @@ pub enum Command {
         name: String,
         timing: sim_core::BlockTiming,
     },
+    /// Record the ports a generated instance's source offers now (the host
+    /// reads them with its generator, as when the instance was added). A
+    /// connection to a port the source no longer offers is refused by name.
+    RefreshGenerated {
+        #[serde(default)]
+        at: String,
+        name: String,
+        ports: BTreeMap<String, PortSchema>,
+    },
 }
 
 fn default_true() -> bool {
@@ -619,6 +628,22 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
                 other => return Err(SystemError::Invalid(format!("`{name}` is a {}, not a block", kind_label(other)))),
             }
             Ok(outcome(document, registry, &id, format!("Set the timing of block {name}")))
+        }
+        Command::RefreshGenerated { at, name, ports } => {
+            let id = at_definition(document, at)?;
+            let lost: Vec<String> = definition_mut(document, &id)?.nets.iter().flat_map(|n| &n.terminals).filter(|t| matches!(t, Terminal::Port { instance, port } if instance == name && !ports.contains_key(port))).map(|t| t.to_string()).collect();
+            if !lost.is_empty() {
+                return Err(SystemError::Invalid(format!("`{name}`'s source no longer offers {}: disconnect them first", lost.join(", "))));
+            }
+            match &mut instance_mut(document, &id, name)?.kind {
+                InstanceKind::Generated { ports: current, .. } => *current = ports.clone(),
+                other => return Err(SystemError::Invalid(format!("`{name}` is a {}, not a generated assembly", kind_label(other)))),
+            }
+            let nets = definition_mut(document, &id)?.nets.clone();
+            for net in nets.iter().filter(|n| n.terminals.iter().any(|t| t.instance() == Some(name.as_str()))) {
+                Resolver::new(document, registry).check_net(&id, net)?;
+            }
+            Ok(outcome(document, registry, &id, format!("Refreshed {name} from its source")))
         }
         Command::SetStudy { name, study } => {
             if !valid_name(name) {

@@ -298,3 +298,11 @@ fn checkpoints_include_the_fmu_state() {
     let b = run(&mut rooms, 300.0, 5.0);
     assert_eq!(a, b);
 }
+
+#[test]
+fn packing_the_same_sources_gives_the_same_archive() {
+    let examples = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/fmi/thermostat");
+    let a = sim_fmi::pack::pack(&examples, &fixtures().join("again-a.fmu")).unwrap();
+    let b = sim_fmi::pack::pack(&examples, &fixtures().join("again-b.fmu")).unwrap();
+    assert_eq!(a, b, "same sources, same compiler: same SHA-256");
+}

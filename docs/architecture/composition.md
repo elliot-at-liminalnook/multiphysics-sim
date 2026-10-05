@@ -239,6 +239,16 @@ shows blocks, tests, standing and evidence.
   battery, an enclosure on its thermal port, one joint-controller FMU per
   drive wheel, two independent instances) for 2 s. Either file opens in the
   app (`sim-spatial --system DIR/rover.system.json`) and runs there.
+- In the app: `target/debug/sim-spatial` then
+  `python3 examples/composition/thermostat_over_rest.py [DIR]` performs the
+  Build-mode workflow over REST (the same handlers as the controls): an
+  empty system, a room from thermal parts, `system_inspect_fmu`,
+  `system_add_fmu`, wiring, `set_block_timing`, a saved test run on a
+  background thread (evidence current), then the live run. The library tab's
+  "Add an FMU block" / "Add a robot" fields, the inspector's block clock and
+  the Studies tab's Tests section are the same actions by hand.
+- Headless: `sim-system check|run|test FILE …` resolve generated robots and
+  FMUs against the file's directory.
 - Tests: `sim-phenomena/tests/blocks.rs` (scheduler semantics: feedthrough
   and end-of-step timing, delays, offsets, schedules, units, interface
   mismatch, algebraic loops, faults and termination, deadlines,

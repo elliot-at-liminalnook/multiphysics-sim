@@ -171,11 +171,7 @@ impl Builder {
             let definitions=library::import(std::path::Path::new(path)).map_err(|e|e.to_string())?;
             commands.push(SystemCommand::AddDefinitions { definitions });
         }
-        let base = match &item.kind {
-            InstanceKind::Element { component_type } => component_type.rsplit('.').next().unwrap_or("part"),
-            InstanceKind::Subsystem { definition } => definition.rsplit('.').next().unwrap_or("sub"),
-        };
-        let name = self.unique_name(base);
+        let name = self.unique_name(&sim_system::kind_base_name(&item.kind));
         let spec = sim_system::snap::starter(&self.registry, &item.kind, &item.label).at(position);
         commands.push(SystemCommand::AddInstance { at: self.level.clone(), name: name.clone(), instance: spec });
         Ok((name,commands))
@@ -218,11 +214,7 @@ impl Builder {
         if let Some(conflict) = &candidate.conflict {
             return Err(conflict.clone());
         }
-        let base = match &candidate.kind {
-            InstanceKind::Element { component_type } => component_type.rsplit('.').next().unwrap_or("part").to_string(),
-            InstanceKind::Subsystem { definition } => definition.rsplit('.').next().unwrap_or("sub").to_string(),
-        };
-        let new_name = self.unique_name(&base);
+        let new_name = self.unique_name(&sim_system::kind_base_name(&candidate.kind));
         let commands = sim_system::snap::snap(&self.document, &self.registry, &self.level, name, port, candidate, &new_name).map_err(|e| e.to_string())?;
         self.apply(&format!("Snap {} to {name}.{port}", candidate.label), commands)?;
         self.preview = None;
@@ -238,6 +230,8 @@ impl Builder {
         match kind {
             InstanceKind::Element { component_type } => self.elements.iter().find(|e|&e.component_type==component_type).map(|e|e.icon.clone()).unwrap_or_else(||sim_core::icons::for_type(component_type).into()),
             InstanceKind::Subsystem { definition } => sim_core::icons::resolve(self.document.definitions.get(definition).map(|d|d.icon.as_str()).unwrap_or(""), definition).into(),
+            InstanceKind::Generated { .. } => sim_core::icons::for_type("robot.articulated").into(),
+            InstanceKind::Block { .. } => sim_core::icons::for_type("control.pi").into(),
         }
     }
     pub(super) fn palette_item(&self, kind: &InstanceKind) -> Option<PaletteItem> {

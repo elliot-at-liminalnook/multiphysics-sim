@@ -247,10 +247,7 @@ impl Builder {
         // A live run is kept, not dropped: saved to the old file's runs.
         if self.run.is_some() {
             let time = self.run.as_ref().and_then(|r| r.worker.shared().lock().ok().and_then(|s| s.snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time))).unwrap_or(0.);
-            if self.run.as_ref().is_some_and(|r| r.robot) {
-                // `save_run` refuses robot runs (robot_run::NO_RUN_RECORD): stop it without a save.
-                notes.push(format!("the robot system's run was stopped at t = {time:.3} s (a robot system's run keeps no run record yet)"));
-            } else if time >= 0.1 {
+            if time >= 0.1 {
                 match self.save_run("stopped to open another system") {
                     Ok(saved) => notes.push(format!("the live run was stopped and saved as {}", saved.display())),
                     Err(e) => {
@@ -362,7 +359,7 @@ pub(crate) fn open_build(path: PathBuf, library_dir: PathBuf, registry: Behavior
 fn load(path: PathBuf, library_dir: PathBuf, registry: BehaviorRegistry, shell: &Shell) -> Result<Box<Opened>, String> {
     let named = |e: String| if e.contains(&path.display().to_string()) { format!("Could not open {}.", e.trim_end_matches('.')) } else { format!("Could not open {}: {}.", path.display(), e.trim_end_matches('.')) };
     let builder = Builder::open(path.clone(), library_dir.clone(), registry).map_err(named)?;
-    let compiled = compile_now(builder.document.clone(), builder.registry.clone());
+    let compiled = compile_now(builder.document.clone(), builder.registry.clone(), &builder.system_dir());
     if let Err(e) = &compiled.result {
         return Err(named(format!("does not compile: {e}")));
     }
@@ -397,7 +394,7 @@ mod tests {
         std::fs::copy(root.join("examples/systems-builder/motor-driver-board/board.system.json"), &board).unwrap();
         std::fs::copy(root.join("examples/systems-builder/worm-drive/winch.system.json"), &winch).unwrap();
         let broken = dir.join("broken.system.json");
-        std::fs::write(&broken, "{\"schema\": \"sim.system/1\", \"nonsense\": true}").unwrap();
+        std::fs::write(&broken, "{\"schema\": \"sim.system/2\", \"nonsense\": true}").unwrap();
         let registry = sim_runtime::registry_with_parts(&root.join("library/parts")).0;
         let library = root.join("library/systems");
         let mut b = Builder::open(board.clone(), library.clone(), registry.clone()).unwrap();

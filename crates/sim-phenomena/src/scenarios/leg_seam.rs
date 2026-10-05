@@ -4,7 +4,7 @@
 //! library parts: a three-link `multibody.chain` in minimal coordinates,
 //! brushed motors behind PWM drivers with series current sensors, ideal
 //! gears with compliant transmissions, encoders and tachometers on the
-//! joints, heel and toe contacts on the foot, and a `control.external` seam
+//! joints, heel and toe contacts on the foot, and a controller block
 //! through which a Python process runs the same joint-space PD, gravity
 //! feed-forward and current loop the old controller had. The old harness's
 //! acceptance checks are re-run against it.
@@ -15,7 +15,6 @@ use crate::world::{registry, runtime};
 use sim_compile::Runtime;
 use sim_core::{BehaviorId, BehaviorRegistry, Coupler, ModelWorld, StateId};
 use sim_domain_bridges::elements as bridge;
-use sim_domain_control::external::EXTERNAL;
 use sim_domain_electrical::elements as el;
 use sim_domain_multibody::chain::CHAIN;
 use sim_domain_multibody::contact as ct;
@@ -142,16 +141,19 @@ impl Leg {
         }
         let ground = m.part(registry, "ground", el::GROUND, []).unwrap();
         let mount = m.part(registry, "mount", rot::GROUND, []).unwrap();
-        let mut seam_params: Vec<(&'static str, f64)> = vec![("period", self.period)];
         let channel_names: [[&'static str; 4]; 3] = [
-            ["sense.hip.angle", "sense.hip.speed", "sense.hip.current", "act.hip.duty"],
-            ["sense.knee.angle", "sense.knee.speed", "sense.knee.current", "act.knee.duty"],
-            ["sense.ankle.angle", "sense.ankle.speed", "sense.ankle.current", "act.ankle.duty"],
+            ["hip.angle", "hip.speed", "hip.current", "hip.duty"],
+            ["knee.angle", "knee.speed", "knee.current", "knee.duty"],
+            ["ankle.angle", "ankle.speed", "ankle.current", "ankle.duty"],
         ];
-        for names in &channel_names {
-            seam_params.extend(names.iter().map(|n| (*n, 0.0)));
-        }
-        let seam = m.part(registry, "controller", EXTERNAL, seam_params).unwrap();
+        let sensed = [sim_core::QuantityKind::Angle, sim_core::QuantityKind::AngularVelocity, sim_core::QuantityKind::Current];
+        let seam = crate::world::controller_block(
+            &mut m,
+            "controller",
+            self.period,
+            channel_names.iter().flat_map(|names| names[..3].iter().zip(sensed.clone()).map(|(n, k)| (n.to_string(), k))).collect(),
+            channel_names.iter().map(|names| (names[3].to_string(), sim_core::QuantityKind::Dimensionless)).collect(),
+        );
         let mut electrical_ground = vec![ground.port("pin")];
         let mut mechanical_ground = vec![mount.port("flange")];
         let mut angles = Vec::new();
@@ -256,7 +258,7 @@ pub struct Run {
 
 pub fn run_leg(leg: &Leg, registry: &BehaviorRegistry, controller: Box<dyn Coupler>, duration: f64, h: f64) -> Run {
     let mut plant = leg.model(registry);
-    plant.runtime.attach(plant.seam, controller).expect("seam");
+    plant.runtime.bind_coupler(plant.seam, controller, false).expect("seam");
     let mut ids: Vec<StateId> = plant.angles.to_vec();
     ids.extend(plant.currents);
     ids.push(plant.tip[1]);

@@ -51,8 +51,9 @@ Each `act` echoes the sample's `seq` and carries exactly as many actuators as th
 ## From the simulator side
 
 `sim_couple::python(clients_root, script, args)` spawns a script with this
-directory on `PYTHONPATH`, and `Runtime::attach_python(behavior,
-clients_root, script, args)` attaches it to a `control.external` element in
+directory on `PYTHONPATH`, and `Runtime::bind_python(behavior,
+clients_root, script, args)` binds it to a host block (a controller block
+whose implementation the host supplies; docs/architecture/composition.md) in
 one call. Give negative-valued flags as `--flag=value`.
 
 ## Drive kinematics (`simloop.drive`)
@@ -134,6 +135,8 @@ The seed `.rcad` is only used to bring CAD mode up (`--cad-seed` to change it).
 It is never edited or saved.
 
 Status: committed **unexecuted**. Its request shapes were checked by reading the
-viewer's source, and no run evidence exists yet. Build-mode `link_file` and
-`system_drive` and the export's `cad_sha256` fields come from work landing
-alongside it.
+viewer's source, and no run evidence exists yet. The export's `cad_sha256`
+fields come from work landing alongside it. (Build mode's hosted-robot
+`link_file` / `system_drive` were removed on 2026-10-04: a robot in a system
+is a generated assembly with controller blocks; see
+docs/architecture/composition.md.)

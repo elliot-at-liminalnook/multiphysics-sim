@@ -234,35 +234,20 @@ pub fn prepare(
                     ("duration", duration_s),
                 ],
             )?,
-            Drive::Feedback { period_s } => world.part(
-                &registry,
+            Drive::Feedback { period_s } => sim_domain_control::pwm_feedback::add(
+                &mut world,
                 "controller",
-                if settings.power.is_some() {
-                    sim_domain_control::pwm_feedback::ELECTRICAL_FEEDBACK
-                } else {
-                    sim_domain_control::pwm_feedback::FEEDBACK
-                },
-                [("period", period_s)],
+                settings.power.is_some(),
+                sim_core::Clock::periodic(period_s),
             )?,
-            Drive::Scheduled { times } => {
-                let mut params = std::collections::BTreeMap::new();
-                params.insert("count".to_string(), times.len() as f64);
-                for (i, t) in times.into_iter().enumerate() {
-                    params.insert(format!("time.{i}"), t);
-                }
-                world.part(
-                    &registry,
-                    "controller",
-                    if settings.power.is_some() {
-                        sim_domain_control::pwm_feedback::SCHEDULED_ELECTRICAL_FEEDBACK
-                    } else {
-                        sim_domain_control::pwm_feedback::SCHEDULED_FEEDBACK
-                    },
-                    params.iter().map(|(k, v)| (k.as_str(), *v)),
-                )?
-            }
+            Drive::Scheduled { times } => sim_domain_control::pwm_feedback::add(
+                &mut world,
+                "controller",
+                settings.power.is_some(),
+                sim_core::Clock::Times { times },
+            )?,
         };
-        let command_port = command.port(if is_feedback { "act.duty" } else { "value" });
+        let command_port = command.port(if is_feedback { "duty" } else { "value" });
         let load = world.part(
             &registry,
             "load",
@@ -319,7 +304,7 @@ pub fn prepare(
         ]);
         world.connect([load_command.port("value"), torque.port("torque")]);
         if is_feedback {
-            world.connect([angle.port("angle"), command.port("sense.angle")]);
+            world.connect([angle.port("angle"), command.port("angle")]);
         } else {
             world.connect([angle.port("angle")]);
         }
@@ -327,13 +312,13 @@ pub fn prepare(
             if is_feedback {
                 world.connect([
                     voltage.port("voltage"),
-                    command.port("sense.supply_voltage"),
+                    command.port("supply_voltage"),
                 ]);
                 world.connect([
                     current.port("current"),
-                    command.port("sense.supply_current"),
+                    command.port("supply_current"),
                 ]);
-                world.connect([part.port("current"), command.port("sense.winding_current")]);
+                world.connect([part.port("current"), command.port("winding_current")]);
             } else {
                 world.connect([voltage.port("voltage")]);
                 world.connect([current.port("current")]);

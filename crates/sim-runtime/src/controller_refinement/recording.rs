@@ -445,7 +445,7 @@ pub fn predict(
     bench.runtime.seed(recording.experiment.seed);
     bench
         .runtime
-        .attach(
+        .bind_coupler(
             bench.controller.unwrap(),
             Box::new(Adapter {
                 recording: recording.clone(),
@@ -457,7 +457,7 @@ pub fn predict(
                 commands: vec![],
                 frames: frames.clone(),
                 samples: samples.clone(),
-            }),
+            }), false,
         )
         .map_err(|e| e.to_string())?;
     let mut electrical = bench.electrical_sample(0.).into_iter().collect::<Vec<_>>();

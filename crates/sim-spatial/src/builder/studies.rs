@@ -112,11 +112,11 @@ impl Builder {
     pub fn run_study(&mut self, name: &str) -> Result<(), String> {
         let study = self.document.studies.get(name).cloned().ok_or_else(|| format!("no study `{name}`"))?;
         // Replacing the job below cancels a study already running.
-        let (document, registry, n) = (self.document.clone(), self.registry.clone(), name.to_string());
+        let (document, registry, n, base) = (self.document.clone(), self.registry.clone(), name.to_string(), self.system_dir());
         let total = sim_runtime::system_study::variant_count(&study);
         let work = crate::jobs::Job::spawn(crate::jobs::Pool::Dedicated, 0, format!("study {name}"), move |ctx| {
             let threads = std::thread::available_parallelism().map(|n| n.get().saturating_sub(1).max(1)).unwrap_or(2);
-            sim_runtime::system_study::run(&document, &registry, &n, &study, threads, Some(ctx.cancel_flag()), &|done, total| ctx.steps(done as u64, total as u64))
+            sim_runtime::system_study::run(&document, &registry, Some(&base), &n, &study, threads, Some(ctx.cancel_flag()), &|done, total| ctx.steps(done as u64, total as u64))
         });
         self.study.job = Some(StudyJob { name: name.to_string(), work, total });
         self.study.error = None;

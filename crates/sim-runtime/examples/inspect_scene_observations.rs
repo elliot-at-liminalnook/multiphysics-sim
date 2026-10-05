@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let scene: sim_runtime::session::Scene = serde_json::from_slice(&bytes)?;
     let registry = sim_runtime::registry();
     let robot = sim_runtime::PhysicalRobot::build(scene.robot, &registry, &scene.options)?;
-    let snapshot_before = serde_json::to_value(robot.runtime.snapshot())?;
+    let snapshot_before = serde_json::to_value(robot.runtime.snapshot()?)?;
     let inspection = RuntimeInspection::new(
         &robot.runtime,
         &registry,
@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     assert_eq!(
         snapshot_before,
-        serde_json::to_value(robot.runtime.snapshot())?
+        serde_json::to_value(robot.runtime.snapshot()?)?
     );
     let unavailable: Vec<_> = inspection
         .description

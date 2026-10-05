@@ -41,7 +41,7 @@ fn positive_row_scaling_preserves_motion_and_energy_in_physical_units() {
     scaled.islands[0].system.set_residual_row_scales((0..n).map(|i|if i%2==0 {1e-3}else{1e3}).collect()).unwrap();
     let energy=reference.energy();
     reference.advance(0.5,0.001).unwrap();scaled.advance(0.5,0.001).unwrap();
-    for (a,b) in reference.snapshot().islands[0].state.iter().zip(&scaled.snapshot().islands[0].state) {
+    for (a,b) in reference.snapshot().unwrap().islands[0].state.iter().zip(&scaled.snapshot().unwrap().islands[0].state) {
         assert!((a-b).abs()<1e-9);
     }
     assert!((scaled.energy()-energy).abs()<1e-9);

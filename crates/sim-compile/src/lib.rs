@@ -1,5 +1,6 @@
 //! Pure validation and graph compilation from stable authoring IDs to disposable layouts.
 
+pub mod blocks;
 pub mod island;
 
 /// Available workers for compiled numerical derivatives in the current pool.
@@ -28,6 +29,7 @@ pub mod runtime;
 pub mod observation;
 
 pub use island::Island;
+pub use blocks::{BlockFault, BlockState};
 pub use runtime::{Runtime, RuntimeError, RuntimeSnapshot};
 
 use petgraph::graph::{NodeIndex, UnGraph};
@@ -108,6 +110,8 @@ pub enum CompileError {
     Equations { behavior: BehaviorId, message: String },
     #[error("state registration failed: {0}")]
     State(String),
+    #[error("block `{block}`: signal `{port}` is {expected}, but its connection carries {found}: block signals connect only to the same quantity (no conversion)")]
+    BlockSignalKind { block: String, port: String, expected: String, found: String },
 }
 
 /// Validate, then build one integrable island per connected component,
@@ -204,6 +208,17 @@ pub fn compile(
                         if *kind != QuantityKind::Dimensionless => Some(kind),
                     _ => None,
                 }).unwrap_or(expected);
+                // Block signals are typed exactly: no wildcard on either side.
+                for port in &ports {
+                    if let (Some(block), PortSchema::SignalIn(kind) | PortSchema::SignalOut(kind)) = (model.block_of(port.owner), &port.schema) {
+                        if let Some(other) = ports.iter().find_map(|p| match &p.schema {
+                            PortSchema::SignalIn(k) | PortSchema::SignalOut(k) if k != kind => Some(k),
+                            _ => None,
+                        }) {
+                            return Err(CompileError::BlockSignalKind { block: block.name.clone(), port: port.name.clone(), expected: format!("{kind:?}"), found: format!("{other:?}") });
+                        }
+                    }
+                }
                 let compatible = |kind: &QuantityKind| {
                     kind == expected || *kind == QuantityKind::Dimensionless
                 };
@@ -290,6 +305,13 @@ fn validate_behaviors_and_ports(
             .iter()
             .filter(|(_, port)| port.owner == behavior_id)
             .collect::<Vec<_>>();
+        // A block's shadow element carries the block's own typed ports.
+        if descriptor.dynamic_ports {
+            if model.block_of(behavior_id).is_none() {
+                return Err(CompileError::State(format!("a `{}` element exists only as a block's shadow (ModelWorld::add_block)", behavior.kind.0)));
+            }
+            continue;
+        }
         for (port_id, port) in &instance_ports {
             if !model.behaviors.contains_key(port.owner) {
                 return Err(CompileError::MissingOwner { port: *port_id });
@@ -382,7 +404,7 @@ mod tests {
             type_id: BehaviorTypeId::from(name),
             display_name: "test",
             equations: None,
-            notes: None,
+            notes: None, dynamic_ports: false,
             parameters: None,
             ports: vec![PortDeclaration {
                 name: "pin",
@@ -422,7 +444,7 @@ mod tests {
                 type_id: BehaviorTypeId::from("load"),
                 display_name: "load",
                 equations: None,
-                notes: None,
+                notes: None, dynamic_ports: false,
                 parameters: None,
                 ports: vec![PortDeclaration {
                     name: "pin",

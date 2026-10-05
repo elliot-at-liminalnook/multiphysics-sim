@@ -64,7 +64,7 @@ free-running speed, because the limiter does not cap combined wheel speed.
 
 `baseline/robot.controller.json` (`sim.controller-binding/1`) attaches
 `clients/python/examples/diff_drive_rover.py` as the controller on the
-`control.external` seam:
+model's controller block (a host block bound by the session):
 
     cargo run -p sim-spatial -- --robot examples/wheeled-robot/baseline/robot.simrobot.json
 
@@ -115,9 +115,10 @@ runs it in the shared embedded session; the limiter and deadman are the
 shared `kinematics::step` on simulation time, in Rust. This is a
 compatibility path: the Python program stays the reference controller.
 
-In Build mode, a system file that hosts this robot (`system_drive`) is now
-also driven by the bound keys and gamepad, through the same one device
-poller as Robot mode (`docs/rover-checklist.md` RV-41 to RV-43).
+In a system file this robot is a generated assembly (`system_add_robot`),
+its joints driven by controller blocks such as FMUs
+(docs/architecture/composition.md). Keyboard and gamepad teleoperation is
+Robot mode's; Build mode's hosted-robot drive path was removed on 2026-10-04.
 
 Motor rating ambient (by reading, unexecuted): `robot.simrobot.json` states
 25 °C in each motor's `thermal.ambient_c` (the datasheet rating ambient,

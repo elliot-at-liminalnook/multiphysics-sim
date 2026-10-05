@@ -191,17 +191,15 @@ pub enum Command {
     SetRealtime { realtime: Option<RealtimeProfile> },
     /// Name (or clear) a definition's realtime counterpart.
     SetRealtimeCounterpart { definition: String, realtime: Option<String> },
-    /// Host a root instance from a file (`path`, relative to the system
-    /// file), or unlink it (`null`). Only robot.articulated
-    /// (`.simrobot.json`), control.external (`.controller.json`) and
-    /// control.drive_limiter (`.drive.json`) elements can be hosted; see
-    /// [`FileLink`]. Removing or renaming the instance drops or renames its link.
-    /// `Connect` is checked when it is applied, so in a batch `link_file`
-    /// must come before any `connect` on a hosted port (a hosted net joins
-    /// only hosted instances and is not type-checked; before the link it is
-    /// an ordinary net and is). An instance whose ports are still connected
-    /// cannot be unlinked: disconnect it first.
-    LinkFile { instance: String, path: Option<String> },
+    /// Save (Some) or delete (None) an acceptance test.
+    SetTest { name: String, test: Option<SystemTest> },
+    /// Set a block's clock, delays and deadline.
+    SetBlockTiming {
+        #[serde(default)]
+        at: String,
+        name: String,
+        timing: sim_core::BlockTiming,
+    },
 }
 
 fn default_true() -> bool {
@@ -309,9 +307,7 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
                 net.terminals.retain(|t| t.instance() != Some(name));
             }
             d.nets.retain(|n| n.terminals.len() >= 2);
-            // A removed root instance takes its link with it.
-            let unlinked = id == document.root && document.links.remove(name).is_some();
-            Ok(outcome(document, registry, &id, format!("Removed {name}{}", if unlinked { " and its link" } else { "" })))
+            Ok(outcome(document, registry, &id, format!("Removed {name}")))
         }
         Command::RenameInstance { at, name, new_name } => {
             name_ok(new_name)?;
@@ -327,12 +323,6 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
                     if instance == name {
                         *instance = new_name.clone();
                     }
-                }
-            }
-            // A renamed root instance keeps its link under the new name.
-            if id == document.root {
-                if let Some(link) = document.links.remove(name) {
-                    document.links.insert(new_name.clone(), link);
                 }
             }
             Ok(outcome(document, registry, &id, format!("Renamed {name} to {new_name}")))
@@ -474,9 +464,14 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
                 if !valid_definition_id(id) {
                     return Err(SystemError::Invalid(format!("invalid definition id `{id}`")));
                 }
-                // Same contents from another library file (or version tag) is the same definition.
+                // Same contents from another library file (or version tag) is the
+                // same definition; display identities (assigned on every edit) are not contents.
                 let same = |a: &Definition, b: &Definition| {
-                    let strip = |x: &Definition| Definition { source: None, version: None, ..x.clone() };
+                    let strip = |x: &Definition| {
+                        let mut d = Definition { source: None, version: None, ..x.clone() };
+                        d.instances.values_mut().for_each(|i| i.display_id.clear());
+                        d
+                    };
                     strip(a) == strip(b)
                 };
                 match document.definitions.get(id) {
@@ -514,6 +509,7 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
                     let p = document.definitions.get(child).and_then(|c| c.parameters.get(inner)).ok_or_else(|| SystemError::Invalid(format!("`{child}` has no parameter `{inner}`")))?;
                     (p.unit.clone(), p.default)
                 }
+                other => return Err(SystemError::Invalid(format!("{instance} is a {}: its parameters carry no declared unit to expose (bind them directly)", kind_label(other)))),
             };
             let current = match spec.parameters.get(inner) {
                 Some(ParameterBinding::Value { value, .. }) => Some(*value),
@@ -601,27 +597,28 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
             definition_mut(document, definition)?.realtime = realtime.clone();
             Ok(outcome(document, registry, definition, format!("Realtime model of {definition}: {}", realtime.as_deref().unwrap_or("itself"))))
         }
-        Command::LinkFile { instance, path } => {
+        Command::SetTest { name, test } => {
             let root = document.root.clone();
-            match path {
-                Some(path) => {
-                    Resolver::new(document, registry).check_link(instance, path)?;
-                    let previous = document.links.insert(instance.clone(), FileLink { path: path.clone() });
-                    let message = match previous {
-                        Some(p) if p.path != *path => format!("Linked {instance} to {path} (was {})", p.path),
-                        _ => format!("Linked {instance} to {path}"),
-                    };
-                    Ok(outcome(document, registry, &root, message))
+            match test {
+                Some(test) => {
+                    test.validate(name).map_err(SystemError::Invalid)?;
+                    document.tests.insert(name.clone(), test.clone());
+                    Ok(outcome(document, registry, &root, format!("Saved test {name}")))
                 }
                 None => {
-                    let wired: Vec<String> = document.definitions.get(&root).map(|d| d.nets.iter().flat_map(|n| &n.terminals).filter(|t| t.instance() == Some(instance.as_str())).map(|t| t.to_string()).collect()).unwrap_or_default();
-                    if document.links.contains_key(instance) && !wired.is_empty() {
-                        return Err(SystemError::Invalid(format!("`{instance}` cannot be unlinked while {} {} connected (a hosted instance's nets join only hosted instances); disconnect it first", wired.join(", "), if wired.len() == 1 { "is" } else { "are" })));
-                    }
-                    let removed = document.links.remove(instance).ok_or_else(|| SystemError::Invalid(format!("`{instance}` has no linked file")))?;
-                    Ok(outcome(document, registry, &root, format!("Unlinked {instance} from {}", removed.path)))
+                    document.tests.remove(name).ok_or_else(|| SystemError::Invalid(format!("no test `{name}`")))?;
+                    Ok(outcome(document, registry, &root, format!("Deleted test {name}")))
                 }
             }
+        }
+        Command::SetBlockTiming { at, name, timing } => {
+            let id = at_definition(document, at)?;
+            timing.validate().map_err(|e| SystemError::Invalid(format!("block `{name}`: {e}")))?;
+            match &mut instance_mut(document, &id, name)?.kind {
+                InstanceKind::Block { timing: current, .. } => *current = timing.clone(),
+                other => return Err(SystemError::Invalid(format!("`{name}` is a {}, not a block", kind_label(other)))),
+            }
+            Ok(outcome(document, registry, &id, format!("Set the timing of block {name}")))
         }
         Command::SetStudy { name, study } => {
             if !valid_name(name) {
@@ -865,6 +862,9 @@ fn swap(document: &mut SystemDocument, registry: &BehaviorRegistry, at: &str, na
         InstanceKind::Subsystem { definition } => Some(
             document.definitions.get(definition).ok_or_else(|| SystemError::Invalid(format!("unknown definition `{definition}`")))?.parameters.keys().cloned().collect(),
         ),
+        // An FMU's parameters are its own; a host block takes none.
+        InstanceKind::Block { implementation: BlockSource::Host { .. }, .. } => Some(BTreeSet::new()),
+        InstanceKind::Block { .. } | InstanceKind::Generated { .. } => None,
     };
     if let Some(declared) = declared {
         replacement.parameters.retain(|k, _| declared.contains(k));
@@ -905,9 +905,30 @@ pub fn describe(schema: &PortSchema) -> String {
     }
 }
 
+/// A short base for naming a new instance of `kind` (`resistor`, `winch`,
+/// `robot`, the FMU's file stem, the host implementation's name).
+pub fn kind_base_name(kind: &InstanceKind) -> String {
+    let stem = |s: &str| s.rsplit(['.', '/']).next().unwrap_or(s).to_owned();
+    let name = match kind {
+        InstanceKind::Element { component_type } => stem(component_type),
+        InstanceKind::Subsystem { definition } => stem(definition),
+        InstanceKind::Generated { generator, .. } => generator.clone(),
+        InstanceKind::Block { implementation: BlockSource::Fmu { path, .. }, .. } => {
+            let file = path.rsplit('/').next().unwrap_or(path);
+            file.strip_suffix(".fmu").unwrap_or(file).to_owned()
+        }
+        InstanceKind::Block { implementation: BlockSource::Host { name }, .. } => name.clone(),
+    };
+    let clean: String = name.chars().map(|c| if c.is_ascii_alphanumeric() || c == '_' || c == '-' { c } else { '_' }).collect();
+    if clean.is_empty() || clean.starts_with('-') { "part".into() } else { clean }
+}
+
 pub fn kind_label(kind: &InstanceKind) -> String {
     match kind {
         InstanceKind::Element { component_type } => component_type.clone(),
         InstanceKind::Subsystem { definition } => format!("subsystem {definition}"),
+        InstanceKind::Generated { generator, source, .. } => format!("{generator} assembly from {source}"),
+        InstanceKind::Block { implementation: BlockSource::Fmu { path, .. }, .. } => format!("FMU block {path}"),
+        InstanceKind::Block { implementation: BlockSource::Host { name }, .. } => format!("host block {name}"),
     }
 }

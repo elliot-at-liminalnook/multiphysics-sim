@@ -4,7 +4,7 @@ Build hierarchical multiphysics systems from the component library, drill into
 any subsystem and implement it further, group parts into new subsystems, use
 reference images, and run the result on the shared Rust runtime.
 
-A **system file** (`*.system.json`, schema `sim.system/1`) is the source of
+A **system file** (`*.system.json`, schema `sim.system/2`) is the source of
 truth. The physical viewer, the schematic, their REST APIs and the `sim-system`
 CLI all edit it through one command set with the same validation and one
 shared undo history. A CAD file can link to it (path + SHA-256); CAD keeps

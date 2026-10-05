@@ -15,7 +15,6 @@ use nalgebra::DMatrix;
 use sim_compile::Runtime;
 use sim_core::{BehaviorId, BehaviorRegistry, FnCoupler, ModelWorld, StateId};
 use sim_domain_bridges::elements as bridge;
-use sim_domain_control::external::EXTERNAL;
 use sim_domain_electrical::elements as el;
 use sim_domain_rotational::elements as rot;
 
@@ -99,16 +98,14 @@ impl Loop {
         let rotor = m.part(registry, "rotor", rot::INERTIA, [("inertia", self.inertia), ("damping", self.viscous_drag), ("initial.speed", 1.0)]).unwrap();
         let mount = m.part(registry, "mount", rot::GROUND, []).unwrap();
         let tacho = m.part(registry, "tacho", rot::SPEED_SENSOR, []).unwrap();
-        let controller = m.part(registry, "controller", EXTERNAL, [("period", self.period), ("input_delay", self.latency as f64), ("sense.speed", 0.0), ("act.voltage", 0.0)]).unwrap();
         m.connect([source.port("p"), motor.port("p")]);
         m.connect([source.port("n"), motor.port("n"), ground.port("pin")]);
         m.connect([motor.port("shaft"), rotor.port("shaft"), tacho.port("shaft")]);
         m.connect([motor.port("case"), mount.port("flange")]);
-        m.connect([tacho.port("speed"), controller.port("sense.speed")]);
-        m.connect([controller.port("act.voltage"), source.port("voltage")]);
+        let controller = m.add_wired_block("controller", { let mut t = sim_core::BlockTiming::periodic(self.period); t.input_delay = (self.latency as f64) as usize; t }, true, sim_core::ImplementationRef::Host { name: "controller".into() }, &[("speed", tacho.port("speed"))], &[("voltage", source.port("voltage"))]).unwrap();
         let mut runtime = runtime(m, registry);
         let kp = self.kp();
-        runtime.attach(controller.behavior, Box::new(FnCoupler(move |_t: f64, s: &[f64], a: &mut [f64]| a[0] = -kp * s[0]))).unwrap();
+        runtime.bind_coupler(controller.behavior, Box::new(FnCoupler(move |_t: f64, s: &[f64], a: &mut [f64]| a[0] = -kp * s[0])), false).unwrap();
         let speed = runtime.state_id(rotor.behavior, "speed");
         let angle = runtime.across_id(rotor.port("shaft"));
         Plant { runtime, controller: controller.behavior, speed, angle }

@@ -92,7 +92,7 @@ fn live_run_step_and_reset_share_the_session_and_keep_work() {
     b.last_description = Some(compiled.description.clone());
     assert!(b.run_step().is_err() && b.run_reset().is_err(), "no run: refused");
     assert_eq!(b.state_json(&Default::default())["live_run"], serde_json::Value::Null);
-    b.run = Some(LiveRun::spawn(document.clone(), registry.clone(), observed, compiled.description.id.clone(), Fidelity::Detailed));
+    b.run = Some(LiveRun::spawn(document.clone(), PathBuf::new(), registry.clone(), observed, compiled.description.id.clone(), Fidelity::Detailed));
     let shared = b.run.as_ref().unwrap().worker.shared().clone();
     let status = || shared.lock().unwrap().snapshot.as_ref().and_then(|x| x.status.clone());
     let time = || status().map(|x| x.time).unwrap_or(0.);
@@ -176,7 +176,7 @@ fn grab_swap_keeps_the_run_fidelity_and_marks_it_edited() {
         _ => None,
     }).expect("the winch has a load the grab pushes on");
     b.last_description = Some(compiled.description.clone());
-    b.run = Some(LiveRun::spawn(profile.clone(), registry.clone(), Vec::new(), compiled.description.id.clone(), Fidelity::Realtime));
+    b.run = Some(LiveRun::spawn(profile.clone(), PathBuf::new(), registry.clone(), Vec::new(), compiled.description.id.clone(), Fidelity::Realtime));
     let shared = b.run.as_ref().unwrap().worker.shared().clone();
     let time = || shared.lock().unwrap().snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.);
     let started = std::time::Instant::now();
@@ -237,7 +237,7 @@ fn realtime_runs_save_the_profile_they_ran_and_replay_exactly() {
     b.last_description = Some(compiled.description.clone());
     // What start_run launches with Realtime on.
     b.realtime = true;
-    b.run = Some(LiveRun::spawn(profile.clone(), registry.clone(), observed, compiled.description.id.clone(), Fidelity::Realtime));
+    b.run = Some(LiveRun::spawn(profile.clone(), PathBuf::new(), registry.clone(), observed, compiled.description.id.clone(), Fidelity::Realtime));
     let shared = b.run.as_ref().unwrap().worker.shared().clone();
     let time = || shared.lock().unwrap().snapshot.as_ref().and_then(|x| x.status.as_ref()).map(|x| x.time).unwrap_or(0.);
     let started = std::time::Instant::now();

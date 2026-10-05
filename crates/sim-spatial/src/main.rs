@@ -55,7 +55,7 @@ struct Args {
     selection_link: Option<PathBuf>,
     #[arg(long)]
     compact: bool,
-    /// Build mode: edit and run this `sim.system/1` file.
+    /// Build mode: edit and run this `sim.system/2` file.
     #[arg(long, conflicts_with_all = ["description", "spatial", "live", "animation", "selection_link"])]
     system: Option<PathBuf>,
     /// Saved subsystem definitions offered in the palette (build and lesson

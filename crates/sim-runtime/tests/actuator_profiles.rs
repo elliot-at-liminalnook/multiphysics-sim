@@ -224,11 +224,11 @@ fn driven_current(resistance: f64) -> f64 {
         .unwrap();
     robot
         .runtime
-        .attach(
+        .bind_coupler(
             seam,
             Box::new(sim_core::FnCoupler(
                 move |_: f64, _: &[f64], a: &mut [f64]| a[index] = 0.1,
-            )),
+            )), false,
         )
         .unwrap();
     let behavior = robot
@@ -482,11 +482,11 @@ fn detailed_reference_uses_the_same_cad_power_branch_resistance() {
             .unwrap();
         robot
             .runtime
-            .attach(
+            .bind_coupler(
                 seam,
                 Box::new(sim_core::FnCoupler(
                     move |_: f64, _: &[f64], actions: &mut [f64]| actions[index] = 0.25,
-                )),
+                )), false,
             )
             .unwrap();
         let behavior = robot

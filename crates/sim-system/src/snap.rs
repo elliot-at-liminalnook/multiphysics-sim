@@ -90,7 +90,7 @@ pub fn suggestions(document: &SystemDocument, registry: &BehaviorRegistry, libra
     let top: Vec<(&String, &Option<PortSchema>)> = ports.iter().filter(|(p, _)| !ports.keys().any(|q| q != *p && p.starts_with(&format!("{q}.")))).collect();
     let source_type = match &spec.kind {
         InstanceKind::Element { component_type } => Some(component_type.clone()),
-        InstanceKind::Subsystem { .. } => None,
+        _ => None,
     };
     let source_notes = source_type.as_deref().and_then(|t| notes_of(registry, t));
 
@@ -174,7 +174,7 @@ pub fn suggestions(document: &SystemDocument, registry: &BehaviorRegistry, libra
         for offer in &offers {
             let rank_type = match &offer.kind {
                 InstanceKind::Element { component_type } => Some(component_type.as_str()),
-                InstanceKind::Subsystem { .. } => None,
+                _ => None,
             };
             let mut fitting: Vec<&String> = offer.ports.iter().filter(|(_, s)| joinable(schema, s)).map(|(p, _)| p).collect();
             if fitting.is_empty() {
@@ -198,6 +198,7 @@ pub fn suggestions(document: &SystemDocument, registry: &BehaviorRegistry, libra
             let t = match &c.kind {
                 InstanceKind::Element { component_type } => component_type.clone(),
                 InstanceKind::Subsystem { definition } => definition.clone(),
+                other => crate::commands::kind_label(other),
             };
             let curated = source_notes.and_then(|n| n.pairs_with.iter().position(|p| *p == t)).unwrap_or(usize::MAX);
             (c.conflict.is_some(), !c.recommended, curated, c.label.clone())

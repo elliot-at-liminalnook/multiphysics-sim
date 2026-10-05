@@ -1,0 +1,35 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.dowel_pin",
+  "label": "Alignment (dowel) pin",
+  "kind": "generic",
+  "parameters": {
+    "clearance": 0.0001,
+    "damping": 300000000.0,
+    "diameter": 0.003,
+    "engaged": 0.006,
+    "wall_modulus": 3500000000.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -0.0002493630182555462,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 6.500e-3 J → change -2.494e-4 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 1.6e-1, 1.5e-1, 5.4e-3 (1 → 0.125 ms); observed order 4.8"
+    }
+  ],
+  "source_hash": "367b9a70639422f103c774b71f1f6ee8b4c117ab1f9e3c7a9bbf403288954253"
+}

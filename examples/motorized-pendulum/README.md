@@ -46,7 +46,7 @@ target/release/sim-cad run runs/motorized-pendulum/pendulum.simrobot.json \
   --out runs/motorized-pendulum/manual.simresult.json
 ```
 
-`--controller` replaces the model's target supervisor through `control.external`.
+`--controller` replaces the model's target supervisor on its controller block.
 The script uses the normal `simloop` protocol. Repeated `--controller-arg=...`
 arguments are passed literally, without a shell. The model's servo firmware still
 closes its position loop. Without `--controller`, `sim-cad` uses the model's

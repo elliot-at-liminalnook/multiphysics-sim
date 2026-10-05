@@ -17,7 +17,7 @@ fn plant(q: &quadruped_gait::Quadruped) -> quadruped_gait::Plant {
     let registry = registry();
     let mut plant = q.model(&registry);
     let controller = q.controller_in(q.stride, quadruped_gait::Lang::Dylib).expect("dylib controller");
-    plant.runtime.attach(plant.seam, controller).expect("seam");
+    plant.runtime.bind_coupler(plant.seam, controller, false).expect("seam");
     plant
 }
 

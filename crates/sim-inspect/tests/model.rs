@@ -275,6 +275,7 @@ fn process_local_factory_handles_are_not_physical_parameters_or_identity() {
             ports: vec![],
             equations: None,
             notes: None,
+            dynamic_ports: false,
             parameters: Some(vec![
                 sim_core::ParameterDeclaration::required("reference", "handle")
                     .implementation_reference(),

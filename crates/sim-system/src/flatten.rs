@@ -29,24 +29,65 @@ pub struct Flattened {
     /// Subsystem instance path → world placement.
     pub subsystems: BTreeMap<String, WorldPlacement>,
     pub findings: Vec<Finding>,
-    /// Hosted root instances (`SystemDocument::links`), left out of `model`:
-    /// the host runs them from their linked files.
-    pub hosted: BTreeMap<String, Hosted>,
-    /// The root nets that join hosted instances (the authored wiring the
-    /// host checks against what it runs); not connections in `model`.
-    pub hosted_nets: Vec<Net>,
+    /// Block instance path → its source (the model's `blocks` hold the rest).
+    pub blocks: BTreeMap<String, BlockSource>,
+    /// Generated instance path → what its generator reported.
+    pub generated: BTreeMap<String, GeneratedReport>,
 }
 
-/// A hosted instance as authored: its type, linked file and the parameter
-/// values the document gives it (for `control.external`, the `sense.*` /
-/// `act.*` names that declare its port members).
-#[derive(Debug, Clone, PartialEq)]
-pub struct Hosted {
-    pub component_type: String,
-    pub label: String,
-    /// `FileLink::path`, relative to the system file's directory.
-    pub path: String,
-    pub parameters: BTreeMap<String, f64>,
+/// What a generator reported for one generated instance.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct GeneratedReport {
+    pub generator: String,
+    pub source: String,
+    pub warnings: Vec<String>,
+}
+
+/// Builds an assembly from a source file into the flat model: the robot
+/// generator (sim-runtime) turns a `.simrobot.json` into its mechanism,
+/// motors, drivers, sensors and thermal paths. A generator adds elements to
+/// `world` (object names prefixed with `prefix`), makes its internal
+/// connections, and returns, per boundary port, the element ports that port
+/// joins, left unconnected: the flattener joins them with whatever the
+/// document connects to the port.
+pub trait Generator: Send + Sync {
+    /// The ports an assembly from `source` offers (recorded in the document
+    /// when it is added, re-checked when it is flattened).
+    fn ports(&self, registry: &BehaviorRegistry, source: &std::path::Path, parameters: &BTreeMap<String, f64>) -> Result<BTreeMap<String, sim_core::PortSchema>, String>;
+    fn generate(&self, world: &mut ModelWorld, registry: &BehaviorRegistry, prefix: &str, source: &std::path::Path, parameters: &BTreeMap<String, f64>) -> Result<Generated, String>;
+}
+
+/// One generated assembly in the flat model.
+pub struct Generated {
+    /// Boundary port → the element ports it joins (at least one each).
+    pub boundary: BTreeMap<String, Vec<PortId>>,
+    pub warnings: Vec<String>,
+}
+
+/// The generators a host offers and the directory relative paths resolve
+/// against (the system file's).
+#[derive(Clone, Default)]
+pub struct Generators {
+    pub base: std::path::PathBuf,
+    pub by_name: BTreeMap<String, std::sync::Arc<dyn Generator>>,
+}
+
+impl Generators {
+    pub fn new(base: impl Into<std::path::PathBuf>) -> Self {
+        Self { base: base.into(), by_name: BTreeMap::new() }
+    }
+    pub fn with(mut self, name: &str, generator: std::sync::Arc<dyn Generator>) -> Self {
+        self.by_name.insert(name.to_owned(), generator);
+        self
+    }
+    fn get(&self, name: &str) -> Result<&std::sync::Arc<dyn Generator>, String> {
+        self.by_name.get(name).ok_or_else(|| format!("no `{name}` generator is available here (known: {:?})", self.by_name.keys().collect::<Vec<_>>()))
+    }
+    /// The ports of an assembly `generator` builds from `source`.
+    pub fn ports(&self, registry: &BehaviorRegistry, generator: &str, source: &str, parameters: &BTreeMap<String, f64>) -> Result<BTreeMap<String, sim_core::PortSchema>, String> {
+        check_relative_path(source)?;
+        self.get(generator)?.ports(registry, &self.base.join(source), parameters)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -131,10 +172,12 @@ struct Builder<'a> {
     parts: Vec<SpatialPart>,
     subsystems: BTreeMap<String, WorldPlacement>,
     source_hash: String,
-    hosted: BTreeMap<String, Hosted>,
+    generators: Option<&'a Generators>,
+    blocks: BTreeMap<String, BlockSource>,
+    generated: BTreeMap<String, GeneratedReport>,
 }
 
-impl Builder<'_> {
+impl<'a> Builder<'a> {
     fn key(&mut self, key: String) -> usize {
         if let Some(k) = self.keys.get(&key) {
             return *k;
@@ -151,7 +194,7 @@ impl Builder<'_> {
             Terminal::Port { instance, port } => {
                 let child = join_path(path, instance);
                 match definition.instances.get(instance).map(|i| &i.kind) {
-                    Some(InstanceKind::Subsystem { .. }) => format!("{child}@{port}"),
+                    Some(InstanceKind::Subsystem { .. } | InstanceKind::Generated { .. }) => format!("{child}@{port}"),
                     _ => format!("{child}#{port}"),
                 }
             }
@@ -166,21 +209,14 @@ impl Builder<'_> {
         for (name, instance) in &definition.instances {
             let here = join_path(path, name);
             let world = frame.then(&instance.placement);
-            // A hosted root instance is not compiled: the host runs it from its linked file.
-            if let (Some(link), InstanceKind::Element { component_type }) = (self.resolver.document.links.get(name).filter(|_| definition_id == self.resolver.document.root), &instance.kind) {
-                let mut parameters = BTreeMap::new();
+            let mut values = BTreeMap::new();
+            if !matches!(instance.kind, InstanceKind::Subsystem { .. }) {
                 for (parameter, binding) in &instance.parameters {
-                    parameters.insert(parameter.clone(), resolve_binding(binding, env, &here, parameter)?);
+                    values.insert(parameter.clone(), resolve_binding(binding, env, &here, parameter)?);
                 }
-                self.hosted.insert(name.clone(), Hosted { component_type: component_type.clone(), label: instance.label.clone(), path: link.path.clone(), parameters });
-                continue;
             }
             match &instance.kind {
                 InstanceKind::Element { component_type } => {
-                    let mut values = Vec::new();
-                    for (parameter, binding) in &instance.parameters {
-                        values.push((parameter.clone(), resolve_binding(binding, env, &here, parameter)?));
-                    }
                     let object = self.model.add_object(if instance.label.is_empty() { name.clone() } else { instance.label.clone() });
                     let created = self
                         .model
@@ -229,6 +265,59 @@ impl Builder<'_> {
                         self.key(format!("{here}@{port}"));
                     }
                     self.expand(&here, child, &child_env, world, Some(here.clone()), depth + 1)?;
+                }
+                InstanceKind::Block { implementation, interface, timing } => {
+                    let reference = match implementation {
+                        BlockSource::Fmu { path, sha256 } => sim_core::ImplementationRef::Fmi3 { path: path.clone(), sha256: sha256.clone(), parameters: values.clone() },
+                        BlockSource::Host { name: host } => sim_core::ImplementationRef::Host { name: host.clone() },
+                    };
+                    let created = self.model.add_block(&here, interface.clone(), timing.clone(), reference).map_err(|e| SystemError::Invalid(format!("{here}: {e}")))?;
+                    self.identities.components.insert(created.behavior, ComponentIdentity { id: here.clone(), persistent: true, source: None, cad: None, group: group.clone() });
+                    self.components.insert(here.clone(), created.behavior);
+                    for (port, id) in &created.ports {
+                        let key = format!("{here}#{port}");
+                        self.key(key.clone());
+                        self.ports.insert(key, *id);
+                    }
+                    self.blocks.insert(here.clone(), implementation.clone());
+                }
+                InstanceKind::Generated { generator, source, ports } => {
+                    let generators = self.generators.ok_or_else(|| SystemError::Invalid(format!("{here} is generated by `{generator}`; flatten it where generators are available (flatten_with)")))?;
+                    let invalid = |m: String| SystemError::Invalid(format!("{here} ({generator} from `{source}`): {m}"));
+                    let g = generators.get(generator).map_err(invalid)?.clone();
+                    let first_behavior = self.model.behaviors.len();
+                    let generated = g.generate(&mut self.model, self.registry, &format!("{here}/"), &generators.base.join(source), &values).map_err(invalid)?;
+                    // The recorded signature must still hold: same port names.
+                    let offered: Vec<&String> = generated.boundary.keys().collect();
+                    let recorded: Vec<&String> = ports.keys().collect();
+                    if offered != recorded {
+                        return Err(invalid(format!("the source now offers ports {offered:?}, the document recorded {recorded:?}; refresh the instance")));
+                    }
+                    self.identities.groups.insert(here.clone(), GroupDescription { id: here.clone(), label: format!("{} · {generator}", if instance.label.is_empty() { name } else { &instance.label }), parent: group.clone() });
+                    self.subsystems.insert(here.clone(), world);
+                    let created: Vec<BehaviorId> = self.model.behaviors.keys().skip(first_behavior).collect();
+                    for behavior in created {
+                        let object = &self.model.objects[self.model.behaviors[behavior].object].name;
+                        let local = object.strip_prefix(&format!("{here}/")).unwrap_or(object).to_owned();
+                        let path = join_path(&here, &local);
+                        self.identities.components.insert(behavior, ComponentIdentity { id: path.clone(), persistent: true, source: None, cad: None, group: Some(here.clone()) });
+                        self.components.insert(path.clone(), behavior);
+                        for (pid, port) in self.model.ports.iter().filter(|(_, p)| p.owner == behavior && p.member_of.is_none()) {
+                            self.ports.insert(format!("{path}#{}", port.name), pid);
+                        }
+                    }
+                    // Boundary aliases: each joins its element ports.
+                    for (port, element_ports) in &generated.boundary {
+                        let alias = self.key(format!("{here}@{port}"));
+                        for pid in element_ports {
+                            let Some(key) = self.ports.iter().find(|(_, p)| **p == *pid).map(|(k, _)| k.clone()) else {
+                                return Err(invalid(format!("boundary `{port}` joins a port the generator did not create")));
+                            };
+                            let k = self.key(key);
+                            self.uf.union(alias, k);
+                        }
+                    }
+                    self.generated.insert(here.clone(), GeneratedReport { generator: generator.clone(), source: source.clone(), warnings: generated.warnings });
                 }
             }
         }
@@ -293,7 +382,17 @@ pub fn default_appearance(component_type: &str) -> Appearance {
     Appearance { shape, color_srgb: color, model: None }
 }
 
+/// Flatten a document without generators: a generated instance is refused.
 pub fn flatten(document: &SystemDocument, registry: &BehaviorRegistry) -> Result<Flattened, SystemError> {
+    flatten_inner(document, registry, None)
+}
+
+/// Flatten with the host's generators (and their base directory).
+pub fn flatten_with(document: &SystemDocument, registry: &BehaviorRegistry, generators: &Generators) -> Result<Flattened, SystemError> {
+    flatten_inner(document, registry, Some(generators))
+}
+
+fn flatten_inner(document: &SystemDocument, registry: &BehaviorRegistry, generators: Option<&Generators>) -> Result<Flattened, SystemError> {
     let resolver = Resolver::new(document, registry);
     resolver.validate()?;
     let findings = resolver.findings();
@@ -314,7 +413,9 @@ pub fn flatten(document: &SystemDocument, registry: &BehaviorRegistry) -> Result
         parts: Vec::new(),
         subsystems: BTreeMap::new(),
         source_hash: document.content_hash(),
-        hosted: BTreeMap::new(),
+        generators,
+        blocks: BTreeMap::new(),
+        generated: BTreeMap::new(),
     };
     builder.expand("", &document.root, &env, WorldPlacement::IDENTITY, None, 0)?;
     // Group element ports by merged net; each set with two or more element
@@ -335,12 +436,9 @@ pub fn flatten(document: &SystemDocument, registry: &BehaviorRegistry) -> Result
     for (i, _) in builder.model.connections.iter().enumerate() {
         builder.identities.connections.insert(i, format!("net/{i}"));
     }
-    // Root nets on hosted instances join hosted instances only (`Resolver::check_net`):
-    // their terminals have no element port above, so they made no connection.
-    let hosted_nets = root.nets.iter().filter(|n| n.terminals.iter().any(|t| t.instance().is_some_and(|i| document.hosted(&document.root, i)))).cloned().collect();
     Ok(Flattened {
-        hosted: builder.hosted,
-        hosted_nets,
+        blocks: builder.blocks,
+        generated: builder.generated,
         source_hash: builder.source_hash,
         revision: document.revision,
         model: builder.model,

@@ -17,7 +17,6 @@ use nalgebra::Complex;
 use sim_compile::Runtime;
 use sim_core::{BehaviorId, BehaviorRegistry, FnCoupler, ModelWorld, StateId};
 use sim_domain_bridges::elements as bridge;
-use sim_domain_control::external::EXTERNAL;
 use sim_domain_electrical::elements as el;
 use sim_domain_rotational::elements as rot;
 use sim_domain_sensing as sense;
@@ -115,22 +114,20 @@ impl Hunt {
         let rotor = m.part(registry, "rotor", rot::INERTIA, [("inertia", self.inertia), ("damping", self.viscous_drag), ("initial.angle", self.start_angle)]).unwrap();
         let mount = m.part(registry, "mount", rot::GROUND, []).unwrap();
         let encoder = m.part(registry, "encoder", sense::ENCODER, [("counts", self.counts), ("period", if self.counts > 0.0 { self.period } else { 0.0 })]).unwrap();
-        let controller = m.part(registry, "controller", EXTERNAL, [("period", self.period), ("sense.angle", 0.0), ("act.voltage", 0.0)]).unwrap();
         m.connect([source.port("p"), motor.port("p")]);
         m.connect([source.port("n"), motor.port("n"), ground.port("pin")]);
         m.connect([motor.port("shaft"), rotor.port("shaft"), encoder.port("shaft")]);
         m.connect([motor.port("case"), mount.port("flange")]);
-        m.connect([encoder.port("angle"), controller.port("sense.angle")]);
-        m.connect([controller.port("act.voltage"), source.port("voltage")]);
+        let controller = m.add_wired_block("controller", sim_core::BlockTiming::periodic(self.period), true, sim_core::ImplementationRef::Host { name: "controller".into() }, &[("angle", encoder.port("angle"))], &[("voltage", source.port("voltage"))]).unwrap();
         let mut runtime = runtime(m, registry);
         let (kp, ki, period, setpoint) = (self.kp, self.ki, self.period, self.setpoint());
         let mut integral = 0.0;
         runtime
-            .attach(controller.behavior, Box::new(FnCoupler(move |_t: f64, s: &[f64], a: &mut [f64]| {
+            .bind_coupler(controller.behavior, Box::new(FnCoupler(move |_t: f64, s: &[f64], a: &mut [f64]| {
                 let error = setpoint - s[0];
                 integral += ki * period * error;
                 a[0] = kp * error + integral;
-            })))
+            })), false)
             .unwrap();
         let angle = runtime.across_id(rotor.port("shaft"));
         let measured = runtime.signal_id(encoder.port("angle"));

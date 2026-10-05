@@ -59,8 +59,9 @@ pub struct PreparedSystem {
 }
 type Factory = Box<dyn FnMut(&SessionConfig) -> Result<PreparedSystem, String>>;
 
-/// Captured Rust/Rhai ModelWorlds use the same general compiler path. CAD adapters
-/// can supply a factory that retains their existing controller/coupler setup.
+/// Captured Rust/Rhai ModelWorlds use the same general compiler path. Every
+/// build makes fresh implementation instances for the model's blocks
+/// (`crate::system_blocks::bind`), so a reset is a new, reproducible run.
 #[derive(Clone)]
 pub struct ModelSource {
     pub model: ModelWorld,
@@ -68,12 +69,15 @@ pub struct ModelSource {
     pub identities: IdentityBindings,
     pub source_hash: String,
     pub revision: u64,
+    /// The system file's directory: FMU paths are relative to it.
+    pub base: Option<std::path::PathBuf>,
 }
 impl ModelSource {
     pub fn build(&self, config: &SessionConfig) -> Result<PreparedSystem, String> {
         config.validate()?;
-        let runtime = Runtime::new(self.model.clone(), &self.registry, config.integrator)
+        let mut runtime = Runtime::new(self.model.clone(), &self.registry, config.integrator)
             .map_err(|e| e.to_string())?;
+        crate::system_blocks::bind(&mut runtime, self.base.as_deref())?;
         let inspection = RuntimeInspection::new(
             &runtime,
             &self.registry,
@@ -534,8 +538,10 @@ impl SystemSession {
         let mut factory: Factory = Box::new(factory);
         let mut system = factory(&self.config)?;
         Self::initialize(&mut system, &self.config)?;
-        let snapshot = self.system.runtime.snapshot();
-        let preserved = system.runtime.restore(&snapshot).is_ok();
+        let preserved = match self.system.runtime.snapshot() {
+            Ok(snapshot) => system.runtime.restore(&snapshot).is_ok(),
+            Err(_) => false,
+        };
         if !preserved {
             // A failed restore may have partially written state: rebuild clean.
             system = factory(&self.config)?;

@@ -233,19 +233,14 @@ pub fn prepare_group(setup: &GroupSetup) -> Result<PreparedGroup, String> {
                 angle.port("shaft"),
             ]);
             w.connect([load_command.port("value"), torque.port("torque")]);
-            let mut p =
-                BTreeMap::from([("count".into(), a.command_and_sample_times_s.len() as f64)]);
-            for (i, t) in a.command_and_sample_times_s.iter().enumerate() {
-                p.insert(format!("time.{i}"), *t);
-            }
-            let controller = w.part(
-                &registry,
+            let controller = sim_domain_control::pwm_feedback::add(
+                &mut w,
                 &name("controller"),
-                sim_domain_control::pwm_feedback::SCHEDULED_FEEDBACK,
-                p.iter().map(|(k, v)| (k.as_str(), *v)),
+                false,
+                sim_core::Clock::Times { times: a.command_and_sample_times_s.clone() },
             )?;
-            w.connect([angle.port("angle"), controller.port("sense.angle")]);
-            w.connect([controller.port("act.duty"), bridge.port("command")]);
+            w.connect([angle.port("angle"), controller.port("angle")]);
+            w.connect([controller.port("duty"), bridge.port("command")]);
             for port in [
                 amps.port("current"),
                 volts.port("voltage"),
@@ -271,7 +266,7 @@ pub fn prepare_group(setup: &GroupSetup) -> Result<PreparedGroup, String> {
                 let axis = GroupAxis {
                     controller: controller.behavior,
                     angle: runtime.signal_id(angle.port("angle")),
-                    duty: runtime.signal_id(controller.port("act.duty")),
+                    duty: runtime.signal_id(controller.port("duty")),
                     power: PowerChannels {
                         supply_voltage: runtime.signal_id(volts.port("voltage")),
                         supply_current: runtime.signal_id(amps.port("current")),

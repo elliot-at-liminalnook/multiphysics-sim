@@ -35,9 +35,9 @@ fn run(n: usize, resistance: f64, step: f64) -> (f64, f64, f64) {
     for axis in bench.axes.values() {
         bench
             .runtime
-            .attach(
+            .bind_coupler(
                 axis.controller,
-                Box::new(FnCoupler(|_t: f64, _s: &[f64], a: &mut [f64]| a[0] = 0.1)),
+                Box::new(FnCoupler(|_t: f64, _s: &[f64], a: &mut [f64]| a[0] = 0.1)), false,
             )
             .unwrap();
     }
@@ -106,11 +106,11 @@ fn zero_resistance_group_matches_existing_single_motor_fixture() {
         (&mut single.runtime, single.controller.unwrap()),
     ] {
         runtime
-            .attach(
+            .bind_coupler(
                 controller,
                 Box::new(FnCoupler(|t: f64, _s: &[f64], a: &mut [f64]| {
                     a[0] = if t < 0.009 { 0.1 } else { -0.1 }
-                })),
+                })), false,
             )
             .unwrap();
     }

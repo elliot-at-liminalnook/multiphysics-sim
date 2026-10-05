@@ -1,17 +1,24 @@
-//! The versioned, hierarchical system document (`sim.system/1`).
+//! The versioned, hierarchical system document (`sim.system/2`).
 //!
 //! A document holds named subsystem *definitions*. Each definition declares
-//! typed boundary ports and parameters, and contains *instances* (registry
-//! elements or other definitions) joined by *nets*. Placing a definition many
-//! times shares it, like a linked CAD component; editing its contents edits
-//! every placement until it is made unique.
+//! typed boundary ports and parameters, and contains *instances* joined by
+//! *nets*. An instance is one of (docs/architecture/composition.md):
+//!
+//! - an **element**: a registered component with equations;
+//! - a **subsystem**: another definition. Placing a definition many times
+//!   shares it, like a linked CAD component; editing its contents edits
+//!   every placement until it is made unique;
+//! - a **generated** assembly: a subsystem a registered generator builds
+//!   from a source file (a robot from its `.simrobot.json`);
+//! - a **block**: an executable implementation (an FMU, a host controller)
+//!   with typed signal ports, run by the runtime at clock ticks.
 use serde::{Deserialize, Serialize};
 use sim_core::PortSchema;
 use sim_inspect::Provenance;
 use sim_inspect::spatial::SpatialShape;
 use std::collections::BTreeMap;
 
-pub const SCHEMA: &str = "sim.system/1";
+pub const SCHEMA: &str = "sim.system/2";
 pub const LIBRARY_SCHEMA: &str = "sim.system-library/1";
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -40,37 +47,77 @@ pub struct SystemDocument {
     /// The realtime (interactive/browser) profile and its measured error.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub realtime: Option<RealtimeProfile>,
-    /// Hosted instances: a root-definition element whose implementation
-    /// comes from a file, keyed by its instance name (see [`FileLink`] and
-    /// [`HOSTED_TYPES`]). Set with `Command::LinkFile`.
+    /// Acceptance tests: requirements on this system's observables, judged
+    /// on a run of the system as composed (its own controllers, no
+    /// substitutes). Evidence is kept beside the file, bound to what it ran.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub links: BTreeMap<String, FileLink>,
+    pub tests: BTreeMap<String, SystemTest>,
 }
 
-/// A file a hosted instance runs from. A hosted instance's implementation
-/// parameters (the robot's model handle, the external seam's period, the
-/// drive limiter's limits) are never typed into the document: the host reads
-/// them from the linked file at run time, so measured and derived values have
-/// one source. Hosted instances are left out of the flattened model
-/// ([`crate::Flattened::hosted`] lists them) and run on the shared drive host
-/// (`sim_runtime::system_robot`); their nets join only other hosted instances
-/// and are kept as the authored wiring.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// A test of a system: run it for `duration_s` and judge every requirement.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct FileLink {
-    /// Relative to the system file's directory, `/`-separated; never absolute.
-    pub path: String,
+pub struct SystemTest {
+    pub duration_s: f64,
+    pub requirements: Vec<Requirement>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub description: String,
 }
 
-/// The component types an instance can be hosted as, with the file suffix
-/// its link must have: the robot model, its controller binding and its
-/// drive profile.
-pub const HOSTED_TYPES: [(&str, &str); 3] = [("robot.articulated", ".simrobot.json"), ("control.external", ".controller.json"), ("control.drive_limiter", ".drive.json")];
+/// One requirement: a number reduced from an observable over a window must
+/// lie within `[min, max]`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Requirement {
+    pub id: String,
+    /// The observable by its readable key (`path.port`, `path.state`),
+    /// matching exactly one.
+    pub observable: String,
+    pub reduce: Reduce,
+    /// Seconds from the start (None: the whole run).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window: Option<[f64; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<f64>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub description: String,
+}
 
-/// The file suffix a hosted instance of `component_type` links to, or None
-/// when that type cannot be hosted.
-pub fn hosted_suffix(component_type: &str) -> Option<&'static str> {
-    HOSTED_TYPES.iter().find(|(t, _)| *t == component_type).map(|(_, s)| *s)
+impl SystemTest {
+    pub fn validate(&self, name: &str) -> Result<(), String> {
+        if !valid_name(name) {
+            return Err(format!("invalid test name `{name}`"));
+        }
+        if !(self.duration_s.is_finite() && self.duration_s > 0.0) {
+            return Err(format!("test `{name}`: duration_s must be finite and positive"));
+        }
+        if self.requirements.is_empty() {
+            return Err(format!("test `{name}`: state at least one requirement"));
+        }
+        let mut ids = std::collections::BTreeSet::new();
+        for r in &self.requirements {
+            if !valid_name(&r.id) || !ids.insert(r.id.as_str()) {
+                return Err(format!("test `{name}`: requirement ids must be unique valid names (`{}`)", r.id));
+            }
+            if r.observable.trim().is_empty() {
+                return Err(format!("test `{name}`, requirement `{}`: name the observable", r.id));
+            }
+            if r.min.is_none() && r.max.is_none() {
+                return Err(format!("test `{name}`, requirement `{}`: give min, max or both", r.id));
+            }
+            if r.min.is_some_and(|v| !v.is_finite()) || r.max.is_some_and(|v| !v.is_finite()) || matches!((r.min, r.max), (Some(a), Some(b)) if a > b) {
+                return Err(format!("test `{name}`, requirement `{}`: bounds must be finite with min <= max", r.id));
+            }
+            if let Some([a, b]) = r.window {
+                if !(a.is_finite() && b.is_finite() && 0.0 <= a && a < b && b <= self.duration_s) {
+                    return Err(format!("test `{name}`, requirement `{}`: the window must lie within [0, duration_s] with start < end", r.id));
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 /// How this system runs in realtime: every part's realtime model (notes
@@ -305,6 +352,12 @@ impl InstanceSpec {
     pub fn subsystem(definition: &str) -> Self {
         Self::new(InstanceKind::Subsystem { definition: definition.into() })
     }
+    pub fn block(implementation: BlockSource, interface: sim_core::BlockInterface, timing: sim_core::BlockTiming) -> Self {
+        Self::new(InstanceKind::Block { implementation, interface, timing })
+    }
+    pub fn generated(generator: &str, source: &str, ports: BTreeMap<String, PortSchema>) -> Self {
+        Self::new(InstanceKind::Generated { generator: generator.into(), source: source.into(), ports })
+    }
     pub fn with(mut self, parameter: &str, value: f64) -> Self {
         self.parameters.insert(parameter.into(), ParameterBinding::value(value));
         self
@@ -323,13 +376,36 @@ impl InstanceSpec {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum InstanceKind {
     /// A registered behavior (resistor, motor unit, thermal capacitance, …).
     Element { component_type: String },
     /// Another definition in this document.
     Subsystem { definition: String },
+    /// An assembly a registered generator builds from `source` (relative
+    /// to the document's directory, `/`-separated). `ports` is the
+    /// signature recorded when it was added; flattening regenerates the
+    /// assembly and refuses it if the source no longer offers those ports.
+    Generated { generator: String, source: String, ports: BTreeMap<String, PortSchema> },
+    /// An executable implementation joined by typed signals and run at its
+    /// clock's ticks. `interface` is recorded from the implementation when
+    /// it was added (for an FMU, from its model description) and checked
+    /// against it again before every run. Parameters (for an FMU, its
+    /// parameter variables by name) are the instance's parameter bindings.
+    Block { implementation: BlockSource, interface: sim_core::BlockInterface, timing: sim_core::BlockTiming },
+}
+
+/// What runs a block.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+pub enum BlockSource {
+    /// An FMI 3 Co-Simulation FMU: `path` relative to the document's
+    /// directory, `sha256` of the archive the interface was recorded from.
+    Fmu { path: String, sha256: String },
+    /// Supplied by the host that runs the system (a teleoperation policy,
+    /// a learning agent): the host binds it by `name`.
+    Host { name: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -506,17 +582,45 @@ impl SystemDocument {
     pub fn new(title: &str) -> Self {
         let mut definitions = BTreeMap::new();
         definitions.insert("root".to_string(), Definition::new(title));
-        Self { discussions: Default::default(), schema: SCHEMA.into(), title: title.into(), revision: 0, root: "root".into(), definitions, assets: BTreeMap::new(), run: None, studies: BTreeMap::new(), realtime: None, links: BTreeMap::new() }
+        Self { discussions: Default::default(), schema: SCHEMA.into(), title: title.into(), revision: 0, root: "root".into(), definitions, assets: BTreeMap::new(), run: None, studies: BTreeMap::new(), realtime: None, tests: BTreeMap::new() }
     }
 
-    /// The file a root instance is hosted from, when it is linked.
-    pub fn link(&self, instance: &str) -> Option<&FileLink> {
-        self.links.get(instance)
-    }
-
-    /// Whether `instance` of definition `definition` is hosted: links name root instances only.
-    pub fn hosted(&self, definition: &str, instance: &str) -> bool {
-        definition == self.root && self.links.contains_key(instance)
+    /// Hash of what a run of this system computes: the document without its
+    /// display-only content (placements, appearances, labels, threads,
+    /// reference images), its tests, studies and realtime profile. Evidence
+    /// is bound to it (with the artifacts' own bytes and the run settings).
+    pub fn physics_hash(&self) -> String {
+        let mut copy = self.clone();
+        copy.revision = 0;
+        copy.title.clear();
+        copy.discussions = Default::default();
+        copy.assets.clear();
+        copy.studies.clear();
+        copy.realtime = None;
+        copy.tests.clear();
+        copy.run = None;
+        for d in copy.definitions.values_mut() {
+            d.grid = Default::default();
+            d.icon.clear();
+            d.label.clear();
+            d.description.clear();
+            d.references.clear();
+            d.appearance = None;
+            for p in d.ports.values_mut() {
+                p.label.clear();
+            }
+            for i in d.instances.values_mut() {
+                i.display_id.clear();
+                i.label.clear();
+                i.placement = Placement::default();
+                i.appearance = None;
+            }
+            for n in &mut d.nets {
+                n.label.clear();
+            }
+        }
+        let value = serde_json::to_value(&copy).expect("documents serialize");
+        blake3::hash(&serde_json::to_vec(&value).expect("values serialize")).to_hex().to_string()
     }
 
     /// Canonical content hash, independent of pretty printing and revision.
@@ -544,6 +648,22 @@ pub fn valid_name(name: &str) -> bool {
         && name.len() <= 64
         && name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
         && !name.starts_with('-')
+}
+
+/// A path a document refers to (an FMU, a generator's source): relative to
+/// the document's directory, `/`-separated, non-empty.
+pub fn check_relative_path(path: &str) -> Result<(), String> {
+    if path.trim().is_empty() {
+        return Err("the path is empty".into());
+    }
+    let bytes = path.as_bytes();
+    if path.starts_with('/') || path.starts_with('\\') || (bytes.len() >= 2 && bytes[1] == b':') {
+        return Err(format!("`{path}` is absolute; give it relative to the system file's directory"));
+    }
+    if path.contains('\\') {
+        return Err(format!("`{path}` uses `\\`; separate directories with `/`"));
+    }
+    Ok(())
 }
 
 /// Definition IDs may be namespaced with dots (`drivers.h_bridge_mosfet`).

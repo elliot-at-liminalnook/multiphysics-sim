@@ -662,13 +662,13 @@ pub fn simulate(
     bench.runtime.seed(experiment.seed);
     bench
         .runtime
-        .attach(
+        .bind_coupler(
             bench.controller.unwrap(),
             Box::new(SimulationAdapter {
                 controller,
                 observations: VecDeque::new(),
                 frames: frames.clone(),
-            }),
+            }), false,
         )
         .map_err(|e| e.to_string())?;
     let count = (experiment.duration_s / experiment.timing.period_s).ceil() as usize;

@@ -234,7 +234,7 @@ fn run(args: &[String]) -> Result<i32, String> {
             let cwd = std::env::current_dir().map_err(|e| e.to_string())?;
             let agent = sim_agent::Supervisor::open(sim_agent::Config::from_env(cwd, PathBuf::from("runs/lessons/agents/draft").join(&slug).join("state.json")));
             let outcome = sim_runtime::lesson_draft::draft(&req, &registry, |instructions, question, context| {
-                let id = agent.ask(sim_agent::Input { discussion: format!("draft/{slug}"), key: format!("draft/{slug}/{}", sim_agent::now()), revision: 0, context: context.clone(), question: question.into(), instructions: Some(instructions.into()) })?;
+                let id = agent.ask(sim_agent::Input { discussion: format!("draft/{slug}"), key: format!("draft/{slug}/{}", sim_agent::now()), revision: 0, context: context.clone(), question: question.into(), instructions: Some(instructions.into()), developer: None })?;
                 eprintln!("asked Codex (run {id}); waiting…");
                 let started = std::time::Instant::now();
                 loop {

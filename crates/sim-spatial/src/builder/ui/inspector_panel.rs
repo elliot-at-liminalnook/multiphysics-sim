@@ -101,7 +101,7 @@ fn instance_inspector(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name
     col.spawn(k.section("Identity"));
     k.property(col, "Name", &shown_name, "", Some(BuildAction::Rename), rename_focus);
     k.property(col, "Path", &b.full_path(name), "", None::<BuildAction>, false);
-    about_section(col, k, b, &spec);
+    about_section(col, k, b, name, &spec);
 
     // Parameters.
     let declared: Vec<(String, String, Option<f64>)> = match &spec.kind {
@@ -116,6 +116,8 @@ fn instance_inspector(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name
             .map(|p| (p.name, p.unit, p.default))
             .collect(),
         InstanceKind::Subsystem { definition } => b.document.definitions.get(definition).map(|d| d.parameters.iter().map(|(k, p)| (k.clone(), p.unit.clone(), p.default)).collect()).unwrap_or_default(),
+        // An FMU's parameters are its own variables: the ones this instance sets.
+        InstanceKind::Block { .. } | InstanceKind::Generated { .. } => spec.parameters.keys().map(|k| (k.clone(), String::new(), None)).collect(),
     };
     if !declared.is_empty() {
         col.spawn(k.section("Parameters"));
@@ -214,8 +216,9 @@ fn instance_inspector(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name
             }
             for (i, alt) in list.iter().enumerate().take(24) {
                 let tag = match &alt.kind {
-                    InstanceKind::Subsystem { .. } => "Subsystems",
+                    InstanceKind::Subsystem { .. } | InstanceKind::Generated { .. } => "Subsystems",
                     InstanceKind::Element { component_type } => category(component_type.split('.').next().unwrap_or("")),
+                    InstanceKind::Block { .. } => "Blocks",
                 };
                 let subtitle = format!("{}{}", if alt.same_interface { "Same interface  ·  " } else { "" }, sim_system::commands::kind_label(&alt.kind));
                 col.spawn(k.item(sim_core::icons::for_type(&subtitle), &alt.label, &subtitle, tag, BuildAction::SwapTo(i), false));
@@ -297,7 +300,7 @@ fn derived_rows(col: &mut ChildSpawnerCommands, k: &Kit, derived: &[sim_core::De
 
 /// What the selected component is, its derived values at the current
 /// parameters, and (expanded) how it works and what it trades off.
-fn about_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, spec: &InstanceSpec) {
+fn about_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, name: &str, spec: &InstanceSpec) {
     match &spec.kind {
         InstanceKind::Element { component_type } => {
             let Some(notes) = b.registry.get(&component_type.as_str().into()).ok().and_then(|d| d.notes) else { return };
@@ -323,6 +326,33 @@ fn about_section(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, spec: &In
                 col.spawn(k.section("About"));
                 col.spawn(k.text(&d.description, size::SMALL, Color::srgb(0.80, 0.83, 0.87), 0));
             }
+        }
+        InstanceKind::Generated { generator, source, ports } => {
+            col.spawn(k.section("Generated assembly"));
+            k.property(col, "Generator", generator, "", None::<BuildAction>, false);
+            k.property(col, "Source", source, "", None::<BuildAction>, false);
+            col.spawn(k.text(format!("Built from its source when the system runs: {} boundary ports ({}).", ports.len(), ports.keys().take(8).cloned().collect::<Vec<_>>().join(", ")), size::DETAIL, FAINT, 0));
+        }
+        InstanceKind::Block { implementation, interface, timing } => {
+            col.spawn(k.section("Block"));
+            let (what, detail) = match implementation {
+                sim_system::BlockSource::Fmu { path, sha256 } => ("FMI 3 FMU", format!("{path} · sha256 {}…", &sha256[..sha256.len().min(12)])),
+                sim_system::BlockSource::Host { name } => ("Host implementation", name.clone()),
+            };
+            k.property(col, "Runs", what, "", None::<BuildAction>, false);
+            k.property(col, "Artifact", &detail, "", None::<BuildAction>, false);
+            let clock = match &timing.clock {
+                sim_core::Clock::Periodic { period, offset } => format!("every {} s from {} s", num(*period), num(*offset)),
+                sim_core::Clock::Times { times } => format!("{} scheduled ticks", times.len()),
+            };
+            let editing = b.input.as_ref().is_some_and(|i| i.purpose == Purpose::BlockClock(name.to_string()));
+            let clock = if editing { format!("{}|", b.input.as_ref().unwrap().buffer) } else { clock };
+            k.property(col, "Clock", &clock, "", Some(BuildAction::BlockClock(name.to_string())), editing);
+            k.property(col, "Delays", &format!("input {} · output {} samples{}", timing.input_delay, timing.output_delay, timing.deadline_s.map(|d| format!(" · deadline {} ms", num(d * 1e3))).unwrap_or_default()), "", None::<BuildAction>, false);
+            let ports = |ports: &[sim_core::BlockPort]| ports.iter().map(|p| format!("{} ({})", p.name, p.kind.unit())).collect::<Vec<_>>().join(", ");
+            k.property(col, "Inputs", &ports(&interface.inputs), "", None::<BuildAction>, false);
+            k.property(col, "Outputs", &ports(&interface.outputs), "", None::<BuildAction>, false);
+            col.spawn(k.text(if interface.feedthrough { "Answers at each tick (feedthrough)." } else { "Outputs computed at a tick apply at the next (co-simulation step)." }, size::DETAIL, FAINT, 0));
         }
     }
 }
@@ -463,6 +493,9 @@ fn library_card(col: &mut ChildSpawnerCommands, k: &Kit, b: &Builder, item: &Pal
         InstanceKind::Subsystem { definition } => {
             let description = b.document.definitions.get(definition).map(|d| d.description.clone()).filter(|d| !d.is_empty()).unwrap_or_else(|| item.detail.clone());
             col.spawn(k.text(description, size::BODY, Color::srgb(0.80, 0.83, 0.87), 0));
+        }
+        other => {
+            col.spawn(k.text(sim_system::kind_label(other), size::BODY, Color::srgb(0.80, 0.83, 0.87), 0));
         }
     }
 }

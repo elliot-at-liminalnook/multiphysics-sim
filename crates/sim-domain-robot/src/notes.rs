@@ -70,13 +70,6 @@ static ROBOT_SERVO_FIRMWARE: Notes = Notes {
     ..Notes::new("A servo’s microcontroller loop: sampled PID with latency, dead band and sensor resolution.")
 };
 
-static ROBOT_THERMAL_PROBE: Notes = Notes {
-    category: "Sensing",
-    explanation: "Outputs the node temperature so a controller can derate or shut down a hot motor.",
-    pairs_with: &["thermal.capacitance", "robot.motor_unit"],
-    ..Notes::new("Reads a temperature as a signal (a thermistor or thermocouple, ideal).")
-};
-
 /// Attach the notes to every registered type this crate annotates.
 pub fn annotate(registry: &mut BehaviorRegistry) {
     registry.annotate("robot.battery", &ROBOT_BATTERY);
@@ -85,5 +78,4 @@ pub fn annotate(registry: &mut BehaviorRegistry) {
     registry.annotate("robot.motor_unit", &ROBOT_MOTOR_UNIT);
     registry.annotate("robot.effective_servo", &ROBOT_EFFECTIVE_SERVO);
     registry.annotate("robot.servo_firmware", &ROBOT_SERVO_FIRMWARE);
-    registry.annotate("robot.thermal_probe", &ROBOT_THERMAL_PROBE);
 }

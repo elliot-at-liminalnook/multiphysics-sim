@@ -1,7 +1,7 @@
 {
-  "schema": "sim.system/1",
+  "schema": "sim.system/2",
   "title": "Gearmotor winch",
-  "revision": 2,
+  "revision": 4,
   "root": "root",
   "definitions": {
     "dc_motor_12v": {
@@ -33,6 +33,7 @@
       },
       "instances": {
         "mount": {
+          "display_id": "11b2fbc367fbf0f87bd57385",
           "label": "Mount",
           "kind": {
             "kind": "element",
@@ -53,6 +54,7 @@
           }
         },
         "rotor": {
+          "display_id": "766acfdd90295635d93c8956",
           "label": "Rotor",
           "kind": {
             "kind": "element",
@@ -82,6 +84,7 @@
           }
         },
         "winding": {
+          "display_id": "4663800ce53000a23c203d92",
           "label": "Brushed motor",
           "kind": {
             "kind": "element",
@@ -181,6 +184,7 @@
       "label": "Gearmotor winch",
       "instances": {
         "drum": {
+          "display_id": "a533410e2d5250885c2a0db8",
           "label": "Drum and 2 kg load",
           "kind": {
             "kind": "element",
@@ -210,6 +214,7 @@
           }
         },
         "gearmotor": {
+          "display_id": "3fdcfdec5f1b3665969e4409",
           "label": "Gearmotor",
           "kind": {
             "kind": "subsystem",
@@ -230,6 +235,7 @@
           }
         },
         "gnd": {
+          "display_id": "d659d40d8c8b02cf6862d0fa",
           "kind": {
             "kind": "element",
             "component_type": "electrical.ground"
@@ -249,6 +255,7 @@
           }
         },
         "supply": {
+          "display_id": "f4dab463b4e1a755700d5cb9",
           "label": "12 V supply",
           "kind": {
             "kind": "element",
@@ -277,6 +284,7 @@
           }
         },
         "weight": {
+          "display_id": "ff8b696eb1e62f4688f80252",
           "label": "2 kg on the drum",
           "kind": {
             "kind": "element",
@@ -367,6 +375,7 @@
       },
       "instances": {
         "coupling": {
+          "display_id": "5c40be43462805ca28ccac1b",
           "label": "Shaft coupling",
           "kind": {
             "kind": "element",
@@ -408,6 +417,7 @@
           }
         },
         "mesh": {
+          "display_id": "bcd21586a9bf8e0bbb027eaf",
           "label": "Worm-wheel mesh",
           "kind": {
             "kind": "element",
@@ -437,6 +447,7 @@
           }
         },
         "worm": {
+          "display_id": "810ce0af62c29d7797ded17b",
           "label": "Worm",
           "kind": {
             "kind": "element",
@@ -545,6 +556,7 @@
       },
       "instances": {
         "gearbox": {
+          "display_id": "b65f1b5a75ad450b5961072d",
           "label": "Gearbox",
           "kind": {
             "kind": "subsystem",
@@ -552,6 +564,7 @@
           }
         },
         "motor": {
+          "display_id": "0da67bb6f84983bd372e25f8",
           "label": "Motor",
           "kind": {
             "kind": "subsystem",
@@ -642,13 +655,13 @@
     "bound": 0.05,
     "notes": "Realtime models: motor winding inductance dropped (current algebraic), friction smoothing 0.05 rad/s; 2 ms step.",
     "measured": {
-      "content_hash": "2b4e0cd584d606209fdaa7e654def054ac313cc6b1ce36a605496d0525f1c631",
+      "content_hash": "5dd3652ae24a7c43a46b123800f61ed7d0d18a10966c7a4273735078e1a2a402",
       "errors": {
         "drum.shaft.angle": 0.000343807242306323,
         "drum.shaft.speed": 0.007185545911988576
       },
-      "detailed_speed": 3.8163022164835216,
-      "realtime_speed": 23.014848489800162,
+      "detailed_speed": 3.181788086441686,
+      "realtime_speed": 18.58897590078692,
       "host": "x86_64 macos (release build)"
     }
   }

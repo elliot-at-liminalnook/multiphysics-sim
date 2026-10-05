@@ -134,7 +134,7 @@ fn accepted_flows_have_matching_rates_and_stage_times_without_extra_evaluations(
             r.observe_through(drain, 5),
             Err(ObservationError::UnknownLane)
         );
-        let snapshot = r.snapshot();
+        let snapshot = r.snapshot().unwrap();
         r.restore(&snapshot).unwrap();
         assert_eq!(
             r.observe_through(storage, 0),
@@ -155,7 +155,7 @@ fn accepted_flows_have_matching_rates_and_stage_times_without_extra_evaluations(
                     let b = r.observe_through(drain, 0).unwrap();
                     assert!((a.value + b.value).abs() < 1e-8, "{}", a.value + b.value);
                 }
-                snapshots.push(r.snapshot());
+                snapshots.push(r.snapshot().unwrap());
             }
             (snapshots, CALLS.load(Ordering::Relaxed) - count)
         };

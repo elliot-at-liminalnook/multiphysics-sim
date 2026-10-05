@@ -1,0 +1,67 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.belt_drive",
+  "label": "Timing belt drive (two pulleys)",
+  "kind": "gear",
+  "parameters": {
+    "damping": 60.0,
+    "pretension": 25.0,
+    "radius_driven": 0.0891,
+    "radius_driver": 0.00955,
+    "stiffness": 300000.0
+  },
+  "conditions": {
+    "drive torque (N·m)": 0.05
+  },
+  "values": [
+    {
+      "name": "ratio (measured)",
+      "value": 0.1071829405162924,
+      "unit": "1"
+    },
+    {
+      "name": "forward efficiency",
+      "value": 0.9999999999998181,
+      "unit": "1"
+    },
+    {
+      "name": "backdrive efficiency",
+      "value": 0.040464765166790845,
+      "unit": "1"
+    },
+    {
+      "name": "self-locking",
+      "value": 0.0,
+      "unit": "yes=1"
+    },
+    {
+      "name": "backdrive output speed",
+      "value": 188.76495595035138,
+      "unit": "rad/s"
+    },
+    {
+      "name": "audit energy change",
+      "value": -0.03305915292785863,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "efficiency within (0, 1]",
+      "passed": true,
+      "detail": "forward 100.00 %"
+    },
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 1.945e-1 J → change -3.306e-2 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 3.8e-15, 8.0e-15, 3.6e-14 (1 → 0.125 ms); observed order -2.2"
+    }
+  ],
+  "source_hash": "47f90b383fcd5e47f11a61ce599ebcdd384a4e82c791c3b8cb1057c40b6c9f92"
+}

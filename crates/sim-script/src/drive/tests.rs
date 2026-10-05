@@ -15,7 +15,7 @@ fn floats(result: Array) -> Vec<f64> {
     result.into_iter().map(|v| v.as_float().unwrap()).collect()
 }
 /// Evaluate `script` with the named Dynamic variables in scope.
-fn eval<T: rhai::Variant + Clone>(script: &str, vars: Vec<(&str, Dynamic)>) -> Result<T, String> {
+fn eval<T: Clone + Send + Sync + 'static>(script: &str, vars: Vec<(&str, Dynamic)>) -> Result<T, String> {
     let engine = engine(Sources::default(), Map::new(), 0);
     let mut scope = Scope::new();
     for (name, value) in vars {

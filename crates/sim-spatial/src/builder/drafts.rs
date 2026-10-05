@@ -64,6 +64,20 @@ impl Builder {
             }
             Purpose::ImportImage => self.import_image(PathBuf::from(text)),
             Purpose::OpenSystem => self.open_system(PathBuf::from(text)).map(|_| ()),
+            Purpose::AddFmu => self.add_fmu_from_text(pick.as_deref_mut(), &text),
+            Purpose::AddRobot if text.is_empty() => Err("Type the path of a .simrobot.json next to the system file".into()),
+            Purpose::AddRobot => {
+                let level = self.level.clone();
+                self.add_robot(pick.as_deref_mut(), &level, None, &text, false).map(|name| self.status = format!("Added robot {name}: connect supply_p/supply_n, ambient and its joint targets, then Run."))
+            }
+            Purpose::BlockClock(name) => {
+                let p: Vec<f64> = text.split_whitespace().filter_map(|t| t.parse().ok()).collect();
+                match p[..] {
+                    [period] => self.set_block_clock(&name, period, 0.0),
+                    [period, offset] => self.set_block_clock(&name, period, offset),
+                    _ => Err("Enter the period in seconds, optionally followed by the offset".into()),
+                }
+            }
             Purpose::ActuatorRegistry if text.is_empty() => Err("Type the path of an actuator registry.json".into()),
             Purpose::ActuatorRegistry => self.actuators_request(Some(PathBuf::from(text)), None).map(|_| ()),
             Purpose::ActuatorConsumer if text.is_empty() => Err("Type the path of a file that embeds a robot model".into()),

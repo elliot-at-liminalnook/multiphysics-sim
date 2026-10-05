@@ -48,10 +48,29 @@ static THERMAL_HEAT_SOURCE: Notes = Notes {
     ..Notes::new("Injects a constant heating power.")
 };
 
+static THERMAL_CONTROLLED_HEAT_SOURCE: Notes = Notes {
+    category: "Thermal",
+    explanation: "Adds the commanded power to its node: a heater driven by a controller (a thermostat block, a PWM stage you are not modelling in detail).",
+    equations: &["heat in = power (signal, W)"],
+    pairs_with: &["thermal.capacitance", "thermal.temperature_sensor"],
+    active: true,
+    ..Notes::new("Injects the heating power its input signal commands.")
+};
+
+static THERMAL_TEMPERATURE_SENSOR: Notes = Notes {
+    category: "Sensing",
+    explanation: "Outputs the node temperature so a controller can regulate it, derate or shut down a hot motor.",
+    equations: &["temperature = T_node"],
+    pairs_with: &["thermal.capacitance", "thermal.controlled_heat_source", "robot.motor_unit"],
+    ..Notes::new("Reads a temperature as a signal (a thermistor or thermocouple, ideal).")
+};
+
 /// Attach the notes to every registered type this crate annotates.
 pub fn annotate(registry: &mut BehaviorRegistry) {
     registry.annotate("thermal.capacitance", &THERMAL_CAPACITANCE);
     registry.annotate("thermal.conductance", &THERMAL_CONDUCTANCE);
     registry.annotate("thermal.ambient", &THERMAL_AMBIENT);
     registry.annotate("thermal.heat_source", &THERMAL_HEAT_SOURCE);
+    registry.annotate("thermal.controlled_heat_source", &THERMAL_CONTROLLED_HEAT_SOURCE);
+    registry.annotate("thermal.temperature_sensor", &THERMAL_TEMPERATURE_SENSOR);
 }

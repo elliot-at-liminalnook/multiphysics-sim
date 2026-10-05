@@ -16,7 +16,7 @@ fn workspace(tag: &str) -> PathBuf {
     let _ = std::fs::remove_dir_all(&dir);
     for sub in ["library/systems", "examples/systems-builder/parts-from-parts"] {
         std::fs::create_dir_all(dir.join(sub)).unwrap();
-        for e in std::fs::read_dir(repo().join(sub)).unwrap().flatten() {
+        for e in std::fs::read_dir(repo().join(sub)).unwrap().flatten().filter(|e| e.path().is_file()) {
             std::fs::copy(e.path(), dir.join(sub).join(e.file_name())).unwrap();
         }
     }

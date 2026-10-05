@@ -1,11 +1,13 @@
 //! Stable authoring identities, typed ports, the behavior registry, and transactional state.
 
+pub mod block;
 pub mod couple;
 pub mod definitions;
 pub mod equations;
 pub mod parameters;
 pub mod primitive;
 pub use parameters::ParameterDeclaration;
+pub use block::{BLOCK, BlockDecl, BlockImplementation, BlockInterface, BlockPort, BlockTiming, Checkpoint, Clock, CouplerBlock, ImplementationRef};
 pub use couple::{Channel, Contract, Coupler, CouplerError, FnCoupler};
 pub use equations::{linearization_batch_columns, Behavior, Branch, Context, EquationError, Equations, Input, Lane, LocalJacobian, Output, PreparedResidual, Provision, StateDeclaration, View, param, param_or};
 
@@ -93,6 +95,9 @@ pub struct ModelWorld {
     pub ports: SlotMap<PortId, Port>,
     pub connections: Vec<Connection>,
     pub state: StateStore,
+    /// Executable blocks, each with its shadow element in `behaviors`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub blocks: Vec<BlockDecl>,
 }
 
 impl Default for ModelWorld {
@@ -103,6 +108,7 @@ impl Default for ModelWorld {
             ports: SlotMap::with_key(),
             connections: Vec::new(),
             state: StateStore::default(),
+            blocks: Vec::new(),
         }
     }
 }
@@ -242,6 +248,71 @@ impl ModelWorld {
         self.instantiate(registry, object, kind, parameters)
     }
 
+    /// Add a block named `name` on a fresh object: its shadow element (type
+    /// [`BLOCK`]) with one signal input per interface input and one signal
+    /// output per interface output, named as the interface names them (an
+    /// input and an output may not share a name). Returns the shadow's ports.
+    pub fn add_block(&mut self, name: &str, interface: BlockInterface, timing: BlockTiming, implementation: ImplementationRef) -> Result<Instance, RegistryError> {
+        let invalid = |message: String| RegistryError::Invalid(format!("block `{name}`: {message}"));
+        timing.validate().map_err(invalid)?;
+        let mut seen = std::collections::BTreeSet::new();
+        for port in interface.inputs.iter().chain(&interface.outputs) {
+            if !seen.insert(port.name.as_str()) {
+                return Err(invalid(format!("two signals are named `{}`", port.name)));
+            }
+        }
+        if self.blocks.iter().any(|b| b.name == name) {
+            return Err(invalid("another block has this name".into()));
+        }
+        let object = self.add_object(name);
+        let behavior = self.add_behavior(object, BLOCK);
+        let parameters = &mut self.behaviors[behavior].parameters;
+        parameters.insert("outputs".into(), Quantity::new(interface.outputs.len() as f64, QuantityKind::Dimensionless));
+        for (k, port) in interface.outputs.iter().enumerate() {
+            if let Some(start) = port.start {
+                parameters.insert(format!("start.{k}"), Quantity::new(start, QuantityKind::Dimensionless));
+            }
+        }
+        let mut ports = BTreeMap::new();
+        for port in &interface.inputs {
+            ports.insert(port.name.clone(), self.add_port(behavior, port.name.clone(), PortSchema::SignalIn(port.kind.clone())));
+        }
+        for port in &interface.outputs {
+            ports.insert(port.name.clone(), self.add_port(behavior, port.name.clone(), PortSchema::SignalOut(port.kind.clone())));
+        }
+        self.blocks.push(BlockDecl { name: name.to_owned(), behavior, interface, timing, implementation });
+        Ok(Instance { behavior, ports })
+    }
+
+    /// The quantity a signal port carries (None for an acausal port).
+    pub fn signal_kind(&self, port: PortId) -> Option<QuantityKind> {
+        match &self.ports.get(port)?.schema {
+            PortSchema::SignalIn(kind) | PortSchema::SignalOut(kind) => Some(kind.clone()),
+            PortSchema::Acausal(_) => None,
+        }
+    }
+
+    /// Add a block wired to plant ports: an input per `(name, port)` of
+    /// `inputs` reading that signal, an output per `(name, port)` of
+    /// `outputs` driving that signal input, each typed as the port it joins
+    /// (outputs start at 0). The connections are made here, one per pair.
+    pub fn add_wired_block(&mut self, name: &str, timing: BlockTiming, feedthrough: bool, implementation: ImplementationRef, inputs: &[(&str, PortId)], outputs: &[(&str, PortId)]) -> Result<Instance, RegistryError> {
+        let typed = |pairs: &[(&str, PortId)]| -> Result<Vec<BlockPort>, RegistryError> {
+            pairs.iter().map(|(n, p)| self.signal_kind(*p).map(|k| BlockPort::new(*n, k)).ok_or_else(|| RegistryError::Invalid(format!("block `{name}`: `{n}` is wired to a port that carries no signal")))).collect()
+        };
+        let interface = BlockInterface { inputs: typed(inputs)?, outputs: typed(outputs)?.into_iter().map(|p| p.start(0.0)).collect(), feedthrough };
+        let block = self.add_block(name, interface, timing, implementation)?;
+        for (n, p) in inputs.iter().chain(outputs) {
+            self.connect([block.ports[*n], *p]);
+        }
+        Ok(block)
+    }
+
+    /// The block whose shadow element is `behavior`.
+    pub fn block_of(&self, behavior: BehaviorId) -> Option<&BlockDecl> {
+        self.blocks.iter().find(|b| b.behavior == behavior)
+    }
+
     /// Scalar parameters of a behavior, as its equations read them.
     pub fn parameters_of(&self, behavior: BehaviorId) -> BTreeMap<String, f64> {
         self.behaviors[behavior]
@@ -282,11 +353,14 @@ pub struct BehaviorDescriptor {
     /// Learning notes: what the component is, its equations, trade-offs and
     /// derived values. Shared by every inspector, the library and exports.
     pub notes: Option<&'static ComponentNotes>,
+    /// Ports are created per instance (a block's shadow element), so the
+    /// compiler does not check them against `ports`.
+    pub dynamic_ports: bool,
 }
 
 impl BehaviorDescriptor {
     pub fn new(type_id: &str, display_name: &'static str, ports: Vec<PortDeclaration>, equations: Equations) -> Self {
-        Self { type_id: BehaviorTypeId::from(type_id), display_name, ports, equations: Some(equations), parameters: None, notes: None }
+        Self { type_id: BehaviorTypeId::from(type_id), display_name, ports, equations: Some(equations), parameters: None, notes: None, dynamic_ports: false }
     }
     pub fn with_notes(mut self, notes: &'static ComponentNotes) -> Self {
         self.notes = Some(notes);
@@ -424,6 +498,8 @@ pub enum RegistryError {
     Missing(String),
     #[error(transparent)]
     Definition(#[from] definitions::DefinitionError),
+    #[error("{0}")]
+    Invalid(String),
 }
 
 #[derive(Debug, Default, Clone)]

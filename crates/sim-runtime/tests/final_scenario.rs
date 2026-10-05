@@ -105,7 +105,7 @@ fn a_new_motor_from_idea_to_library() {
         observe: vec!["drum.shaft.speed".into()],
         metrics: vec![sim_system::Metric { label: "lift".into(), observable: "drum.shaft.speed".into(), reduce: sim_system::Reduce::Mean, window: Some([0.8, 1.0]) }],
     });
-    let compare = system_study::run(&doc, &registry, "vs_brushed", &doc.studies["vs_brushed"], 2, None, &|_, _| {}).unwrap();
+    let compare = system_study::run(&doc, &registry, None, "vs_brushed", &doc.studies["vs_brushed"], 2, None, &|_, _| {}).unwrap();
     assert!(compare.variants.iter().all(|v| v.error.is_none()), "{:?}", compare.variants.iter().map(|v| &v.error).collect::<Vec<_>>());
     lap("5 compare with the brushed motor");
 
@@ -118,7 +118,7 @@ fn a_new_motor_from_idea_to_library() {
         observe: vec!["drum.shaft.speed".into(), "gearmotor/motor.p.current".into()],
         metrics: vec![sim_system::Metric { label: "lift".into(), observable: "drum.shaft.speed".into(), reduce: sim_system::Reduce::Mean, window: Some([0.8, 1.0]) }],
     });
-    let sweep = system_study::run(&doc, &registry, "magnet", &doc.studies["magnet"], 4, None, &|_, _| {}).unwrap();
+    let sweep = system_study::run(&doc, &registry, None, "magnet", &doc.studies["magnet"], 4, None, &|_, _| {}).unwrap();
     let lifts: Vec<f64> = sweep.variants.iter().map(|v| v.metrics[0].1).collect();
     eprintln!("{}", system_study::table(&sweep));
     assert!(lifts.windows(2).all(|w| w[1] < w[0]), "stronger magnet, slower lift: {lifts:?}");

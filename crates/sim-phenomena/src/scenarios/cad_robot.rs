@@ -16,7 +16,6 @@ pub use sim_domain_robot::PhysicalModel;
 use serde::Deserialize;
 use sim_compile::Runtime;
 use sim_core::{BehaviorId, BehaviorRegistry, FnCoupler, ModelWorld, StateId};
-use sim_domain_control::external::EXTERNAL;
 use sim_domain_multibody::chain::CHAIN;
 use sim_domain_multibody::contact as ct;
 use sim_domain_sensing as sense;
@@ -335,7 +334,11 @@ impl CadRobot {
             chains_built.push(links);
         }
         m.connect(body_ports);
-        let seam = if joint_names.is_empty() { None } else { Some(m.part(registry, "controller", EXTERNAL, seam_params).unwrap()) };
+        let seam = if joint_names.is_empty() { None } else {
+            let kind = |n: &str| if n.ends_with(".angle") { sim_core::QuantityKind::Angle } else if n.ends_with(".speed") { sim_core::QuantityKind::AngularVelocity } else { sim_core::QuantityKind::Torque };
+            let channels = |prefix: &str| seam_params.iter().filter_map(|(n, _)| n.strip_prefix(prefix)).map(|n| (n.to_owned(), kind(n))).collect();
+            Some(crate::world::controller_block(&mut m, "controller", 2.0e-3, channels("sense."), channels("act.")))
+        };
         let mut across_ids: Vec<Vec<sim_core::PortId>> = Vec::new();
         for (chain, joint_ports) in &wiring {
             let mut ids = Vec::new();
@@ -345,9 +348,9 @@ impl CadRobot {
                 let tacho = m.part(registry, &format!("{name}.tacho"), sense::TACHOMETER, []).unwrap();
                 m.connect([*port, servo.port("shaft"), encoder.port("shaft"), tacho.port("shaft")]);
                 let seam = seam.as_ref().unwrap();
-                m.connect([encoder.port("angle"), seam.port(Box::leak(format!("sense.{name}.angle").into_boxed_str()))]);
-                m.connect([tacho.port("speed"), seam.port(Box::leak(format!("sense.{name}.speed").into_boxed_str()))]);
-                m.connect([seam.port(Box::leak(format!("act.{name}.torque").into_boxed_str())), servo.port("command")]);
+                m.connect([encoder.port("angle"), seam.port(&format!("{name}.angle"))]);
+                m.connect([tacho.port("speed"), seam.port(&format!("{name}.speed"))]);
+                m.connect([seam.port(&format!("{name}.torque")), servo.port("command")]);
                 m.connect([servo.port("current")]);
                 ids.push(*port);
             }
@@ -376,7 +379,7 @@ impl CadRobot {
             let caps = caps.clone();
             let home: Vec<f64> = initial.clone();
             runtime
-                .attach(
+                .bind_coupler(
                     seam.behavior,
                     Box::new(FnCoupler(move |_t: f64, s: &[f64], a: &mut [f64]| {
                         let t = held.lock().unwrap_or_else(|p| p.into_inner());
@@ -419,7 +422,7 @@ impl CadRobot {
                             }
                             a[torque[j]] = torque_cmd.clamp(-500.0, 500.0);
                         }
-                    })),
+                    })), false,
                 )
                 .map_err(|e| e.to_string())?;
         }

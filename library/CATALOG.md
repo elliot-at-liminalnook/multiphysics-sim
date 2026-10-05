@@ -111,6 +111,14 @@ A screw and nut: rotation to linear travel, with thread friction.
 - Pairs with: `bridge.brushed_motor`, `translational.mass`, `translational.force_source`, `translational.damper`, `translational.position_sensor`, `rotational.inertia`
 - Datasheet: ratio (measured) 3141.5927 rad/m; forward efficiency 0.3615 ; backdrive efficiency 0 ; self-locking yes 
 
+### Timing belt drive (two pulleys) — `part.belt_drive`
+
+A toothed belt from a small driving pulley to a larger driven pulley: reduction by the radius ratio, with a springy belt between them.
+
+- Ports: driven (rotational), driver (rotational), hub_load (signal out Force), transmitted (signal out Force)
+- Pairs with: `part.index_move`, `control.sampled_fixed_pd`, `rotational.inertia`, `rotational.coulomb_friction`, `sensor.encoder`
+- Datasheet: ratio (measured) 0.1072 ; forward efficiency 1 ; backdrive efficiency 0.0405 ; self-locking no 
+
 ### Rack and pinion — `part.rack_pinion`
 
 A spur gear rolling on a straight toothed bar: rotation to straight-line travel, fast and efficient.
@@ -202,6 +210,20 @@ A friction brake that clamps a shaft when engaged: holds a load with no power in
 - Ports: engage (signal in Dimensionless), shaft (rotational)
 - Pairs with: `rotational.inertia`, `rotational.lossy_gear`, `control.pulse`, `control.constant`
 
+### Dovetail joint — `part.dovetail`
+
+A tapered tongue in an undercut groove: it slides in one way and cannot be pulled out, because pulling wedges it against the groove's slanted faces.
+
+- Ports: flank (signal out Force), holding (signal out Force), rail (translational), rubbing (signal out Force), slide (translational), socket (translational), spread (signal out Force), tail (translational)
+- Pairs with: `part.force_command`, `translational.mass`, `translational.ground`, `translational.damper`
+
+### Alignment (dowel) pin — `part.dowel_pin`
+
+A pin fitted into holes in two parts: free across its clearance, then stiff as the pin bears on the hole walls.
+
+- Ports: a (translational), b (translational), bearing (signal out Pressure), load (signal out Force)
+- Pairs with: `translational.mass`, `part.force_command`, `translational.damper`, `translational.ground`
+
 ### Drive wheel with tyre grip — `part.drive_wheel`
 
 A driven wheel pushing a vehicle along: traction up to the grip limit, then wheelspin.
@@ -230,6 +252,13 @@ The torque gravity puts on a link swinging about a joint: largest when horizonta
 
 - Ports: shaft (rotational)
 - Pairs with: `rotational.inertia`, `rotational.worm_gear`
+
+### Screw in plastic (thread or heat-set insert) — `part.threaded_joint`
+
+A screw held in a plastic part, pulled out along its axis: stiff at first, then the plastic around it shears and it tears out.
+
+- Ports: boss (translational), load (signal out Force), screw (translational)
+- Pairs with: `part.force_command`, `translational.mass`, `translational.ground`, `part.hard_stop_linear`
 
 ### Coulomb friction — `rotational.coulomb_friction`
 
@@ -489,12 +518,19 @@ Reports 1 once a carriage passes a position, 0 before: for homing and end-of-tra
 - Ports: axis (translational), pressed (signal out Dimensionless)
 - Pairs with: `part.timing_belt`, `part.rack_pinion`, `translational.mass`, `part.hard_stop_linear`
 
-### Temperature as a signal — `robot.thermal_probe`
+### Speed from angle (filtered derivative) — `part.speed_estimate`
 
-Reads a temperature as a signal (a thermistor or thermocouple, ideal).
+Estimates speed by differentiating an angle reading through a low-pass filter, as firmware does with encoder counts.
 
-- Ports: node (thermal), temperature (signal out Temperature)
-- Pairs with: `thermal.capacitance`, `robot.motor_unit`
+- Ports: angle (signal in Angle), speed (signal out AngularVelocity)
+- Pairs with: `sensor.encoder`, `part.pid_angle`
+
+### Tilt IMU on a swinging link — `part.tilt_imu`
+
+What an IMU mounted on a swinging link reads: gravity plus the link's own acceleration, and a rate gyro with a bias.
+
+- Ports: ax (signal out LinearAcceleration), ay (signal out LinearAcceleration), gyro (signal out AngularVelocity), shaft (rotational)
+- Pairs with: `part.pendulum_gravity`, `rotational.inertia`, `part.complementary_tilt`
 
 ### Angle sensor — `rotational.angle_sensor`
 
@@ -566,6 +602,13 @@ Measures a voltage.
 - Ports: n (electrical), p (electrical), voltage (signal out Voltage)
 - Pairs with: `robot.battery`, `electrical.capacitor`
 
+### Temperature sensor — `thermal.temperature_sensor`
+
+Reads a temperature as a signal (a thermistor or thermocouple, ideal).
+
+- Ports: node (thermal), temperature (signal out Temperature)
+- Pairs with: `thermal.capacitance`, `thermal.controlled_heat_source`, `robot.motor_unit`
+
 ### Position sensor — `translational.position_sensor`
 
 Reads a position exactly (an ideal linear encoder).
@@ -588,6 +631,13 @@ A constant signal.
 
 - Ports: value (signal out Dimensionless)
 - Pairs with: `robot.h_bridge`, `part.brake`, `control.pi`
+
+### Drive limiter (twist rate limit and deadman) — `control.drive_limiter`
+
+Limits a requested body twist (speed and acceleration per axis) and stops it when requests stop arriving.
+
+- Ports: request.forward (signal in LinearVelocity), request.lateral (signal in LinearVelocity), request.yaw (signal in AngularVelocity), sequence (signal in Dimensionless), twist.forward (signal out LinearVelocity), twist.lateral (signal out LinearVelocity), twist.yaw (signal out AngularVelocity)
+- Pairs with: `control.command_lease`
 
 ### H-bridge gate driver (command −1…1 → four gates, sign-magnitude, synchronous) — `control.h_bridge_pwm`
 
@@ -645,6 +695,34 @@ A commanded angle that ramps at a set speed and can wobble sinusoidally: the tar
 - Ports: angle (signal out Angle)
 - Pairs with: `part.stepper_motor`, `part.pid_angle`, `robot.effective_servo`, `robot.servo_firmware`
 
+### Complementary tilt filter — `part.complementary_tilt`
+
+Estimates tilt from an IMU: trusts the gyro over short times and the accelerometer over long ones.
+
+- Ports: accel_tilt (signal out Angle), ax (signal in LinearAcceleration), ay (signal in LinearAcceleration), gyro (signal in AngularVelocity), gyro_tilt (signal out Angle), tilt (signal out Angle)
+- Pairs with: `part.tilt_imu`, `sensor.imu`, `part.pid_angle`
+
+### Force command (ramp + step + sine) — `part.force_command`
+
+A known force over time: a ramp that climbs steadily (then holds), a step held for a set time, and a sine. Feed it to a force source to push, pull or load a part.
+
+- Ports: force (signal out Force)
+- Pairs with: `translational.force_source`, `translational.mass`, `part.dowel_pin`, `part.dovetail`, `part.threaded_joint`
+
+### Indexed moves (stop and shoot) — `part.index_move`
+
+A commanded angle that steps by a fixed amount every period: a smooth move, then a still dwell for the photo.
+
+- Ports: angle (signal out Angle)
+- Pairs with: `control.sampled_fixed_pd`, `robot.servo_firmware`, `part.belt_drive`
+
+### PI current controller (torque control) — `part.pi_current`
+
+Holds a motor's current, and so its torque (τ = k·i), at a target by adjusting the drive command.
+
+- Ports: command (signal out Dimensionless), measured (signal in Current)
+- Pairs with: `sensor.current`, `robot.h_bridge`, `actuator.pwm_driver`, `bridge.brushed_motor`
+
 ### PID position controller (angle) — `part.pid_angle`
 
 Turns an angle error into a motor drive command (−1…1): proportional, integral and filtered derivative action.
@@ -665,6 +743,20 @@ A commanded linear position that ramps and can wobble sinusoidally: the target f
 
 - Ports: position (signal out Length)
 - Pairs with: `part.pid_position`, `translational.mass`
+
+### Torque command (step + sine) — `part.torque_command`
+
+A known torque over time: a step held for a set time, plus a sine that can sweep in frequency. Feed it to a torque source.
+
+- Ports: torque (signal out Torque)
+- Pairs with: `rotational.torque_source`, `rotational.inertia`, `rotational.spring`
+
+### Trapezoidal move (limited acceleration) — `part.trapezoid_move`
+
+A commanded angle that speeds up at a set acceleration, cruises, and slows down to stop exactly at the target.
+
+- Ports: angle (signal out Angle)
+- Pairs with: `part.stepper_motor`, `part.pid_angle`, `robot.effective_servo`, `robot.servo_firmware`
 
 ### Sampled servo position loop — `robot.servo_firmware`
 
@@ -695,6 +787,13 @@ A path heat flows along: conduction through metal, convection to air.
 
 - Ports: a (thermal), b (thermal)
 - Pairs with: `thermal.capacitance`, `thermal.ambient`
+
+### Controlled heat source — `thermal.controlled_heat_source`
+
+Injects the heating power its input signal commands.
+
+- Ports: node (thermal), power (signal in HeatFlow)
+- Pairs with: `thermal.capacitance`, `thermal.temperature_sensor`
 
 ### Constant heat source — `thermal.heat_source`
 

@@ -1,4 +1,4 @@
-//! Build mode: edit a `sim.system/1` file from the physical assembly.
+//! Build mode: edit a `sim.system/2` file from the physical assembly.
 //!
 //! Every edit is a shared `sim_system::Command` applied through the file
 //! store, so this window, the schematic, REST clients and the CLI share one
@@ -80,6 +80,12 @@ enum Purpose {
     ActuatorConsumer,
     /// Path of a gait-lab results folder to read (read-only).
     GaitResults,
+    /// "path [period_s]" of an FMU to add as a block.
+    AddFmu,
+    /// Path of a .simrobot.json to add as a generated robot.
+    AddRobot,
+    /// "period_s [offset_s]" of a block's clock.
+    BlockClock(String),
 }
 
 #[derive(Clone, Debug)]
@@ -100,9 +106,6 @@ struct RunShared {
     /// pre-reset samples instead of flushing them and `save_run` refuses, so
     /// nothing from before the reset reaches the graphs or a saved run.
     reset_pending: bool,
-    /// A robot system's run (`robot_run`): the loaded system and the drive
-    /// status, written by its run thread only. None for every other run.
-    drive: Option<robot_run::RobotDrive>,
 }
 
 /// Simulated seconds of history kept for graphs.
@@ -122,10 +125,6 @@ enum RunControl {
     Step,
     /// Rebuild at t = 0, paused (`Command::Reset`); clears the history.
     Reset,
-    /// A robot system's twist request (`Builder::drive`), interpreted against
-    /// its profile on the UI thread; the run thread applies every queued one
-    /// in order before the next seam period (`robot_run`).
-    Twist { request: sim_domain_control::drive::kinematics::BodyTwist, halt: bool },
 }
 
 /// A hand pushing on a running system through one of its load elements.
@@ -152,15 +151,8 @@ struct LiveRun {
     /// and whether it was edited live.
     document: SystemDocument,
     edited: bool,
-    /// Hosted instances run on the shared drive host (`robot_run`), not the system session.
-    robot: bool,
-    /// The last Run (true) or Pause/Reset (false) sent: a nonzero drive
-    /// request is refused unless it is true (commands are ordered, so the
-    /// run thread sees that Run before the request).
+    /// The last Run (true) or Pause/Reset (false) sent.
     requested_running: bool,
-    /// The last drive request sent, and the last one refused (`Builder::drive`).
-    drive_requested: Option<(sim_domain_control::drive::kinematics::BodyTwist, bool)>,
-    drive_refusal: Option<String>,
 }
 
 #[derive(Resource)]
@@ -254,6 +246,8 @@ pub struct Builder {
     actuators: actuators::ActuatorState,
     /// Read-only gait-lab results browser (Gait lab tab).
     gait_lab: gait_lab::GaitLabState,
+    /// FMU blocks, generated robots and acceptance tests.
+    pub(crate) composition: composition::Composition,
     /// Read-only identification archive review (Actuators tab → Measured evidence).
     calibration: calibration::CalibrationState,
     /// Which part of the Actuators tab is shown.
@@ -399,6 +393,7 @@ impl Builder {
             open: Default::default(),
             actuators: Default::default(),
             gait_lab: Default::default(),
+            composition: Default::default(),
             calibration: Default::default(),
             actuator_view: Default::default(),
             schematic: Default::default(),
@@ -520,6 +515,7 @@ impl Builder {
             "gait_reports": self.gait_reports_json(),
             "actuator_view": self.actuator_view,
             "calibration_review": self.calibration_json(),
+            "composition": self.composition_json(),
             "schematic": self.schematic.json(self.document.revision, &self.level, selected),
             "history": self.store.history(),
         })
@@ -546,14 +542,9 @@ impl Plugin for BuilderPlugin {
         // applied them); its one handler applies them and REST's in Actions.
         app.add_systems(Update, (actions::buttons, actions::keys.run_if(building.clone()).run_if(not(crate::ui_kit::text::typing))).chain().in_set(crate::app::InputSet::Window).run_if(in_state(ModeScope::Builder)))
             .add_systems(Update, system_actions::apply.in_set(ViewerSet::Actions).run_if(in_state(ModeScope::Builder)));
-        // Drive devices (`crate::drive_input`'s one poller, InputSet::Window): Build mode's target
-        // is written before it, and its requests for Build mode go through the one drive apply
-        // after the builder's apply; nothing is offered once Build mode is left.
-        app.add_systems(Update, (robot_run::drive_target.in_set(ViewerSet::Input).before(crate::app::InputSet::Window), actions::drive_devices.in_set(ViewerSet::Actions).after(system_actions::apply)).run_if(building.clone()))
-            .add_systems(OnExit(ViewerMode::Build), actions::leave_drive);
         app.add_systems(
             Update,
-            (frame_timing, watch, agent::tick, reference::tick, sync_field.run_if(building.clone()), drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, picked::track, (finish_actuators, finish_gait_reports, finish_calibration, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
+            (frame_timing, watch, agent::tick, reference::tick, sync_field.run_if(building.clone()), drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, picked::track, (finish_actuators, finish_gait_reports, finish_calibration, composition::finish_tests, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), clear_for_learn.run_if(in_state(ViewerMode::Lessons)))
                 .chain()
                 // Docks and home requests reach the shared camera before it is placed.
                 .before(crate::inspect_view::InspectViewSet::Camera)
@@ -567,11 +558,14 @@ impl Plugin for BuilderPlugin {
         .add_systems(Update, discussion::hover.after(crate::inspect_view::InspectViewSet::Notes).in_set(ViewerSet::SimSync).run_if(building.clone()))
         .add_systems(Update, markers::sync.after(placement::apply_preview).after(discussion::hover).in_set(ViewerSet::SimSync).run_if(building.clone()))
         .add_systems(Update, ui_api::collect.after(markers::sync).after(ui::rebuild_panel).in_set(ViewerSet::SimSync).run_if(building))
+        .add_systems(Update, guide::publish.in_set(ViewerSet::Present))
         .add_observer(placement::end_drag);
     }
 }
 
 mod reference;
+mod composition;
+mod guide;
 pub(crate) mod actions;
 pub(crate) mod system_actions;
 pub(crate) use actions::BuildAction;
@@ -595,7 +589,6 @@ mod editing;
 pub(crate) mod picked;
 mod live_run;
 mod rebuild;
-mod robot_run;
 mod studies;
 use background::{finish_actuators, finish_calibration, finish_gait_reports, frame_timing, open_system, watch};
 use drafts::{drops, sync_field};

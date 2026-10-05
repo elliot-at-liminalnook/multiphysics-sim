@@ -1,4 +1,4 @@
-//! Hierarchical system files on the shared runtime: compile a `sim.system/1`
+//! Hierarchical system files on the shared runtime: compile a `sim.system/2`
 //! document into the description, physical presentation, animation bindings
 //! and live capture that both viewers already use, check that it compiles,
 //! and run it headlessly. Nothing here duplicates physics; the document is
@@ -53,9 +53,44 @@ pub fn config_for(document: &SystemDocument) -> SessionConfig {
     config
 }
 
-/// Flatten and describe. Does not construct the numerical runtime.
+/// Flatten and describe a document that came from no file: generated
+/// instances and relative FMU paths are refused (see [`compile_at`]).
+/// Does not construct the numerical runtime.
 pub fn compile(document: &SystemDocument, registry: &BehaviorRegistry, config: SessionConfig) -> Result<Compiled, String> {
-    let flat = sim_system::flatten(document, registry).map_err(|e| e.to_string())?;
+    compile_inner(document, registry, config, None)
+}
+
+/// Flatten and describe the document stored in directory `base`: generated
+/// instances (robots) are built by the host's generators from files next
+/// to it, and the model's FMU paths resolve against it.
+pub fn compile_at(document: &SystemDocument, registry: &BehaviorRegistry, config: SessionConfig, base: &Path) -> Result<Compiled, String> {
+    compile_inner(document, registry, config, Some(base))
+}
+
+/// Flatten a document, with the host's generators when it has a directory.
+pub fn flatten(document: &SystemDocument, registry: &BehaviorRegistry, base: Option<&Path>) -> Result<Flattened, String> {
+    match base {
+        #[cfg(not(target_arch = "wasm32"))]
+        Some(base) => sim_system::flatten_with(document, registry, &crate::robot_generator::generators(base)),
+        _ => sim_system::flatten(document, registry),
+    }
+    .map_err(|e| e.to_string())
+}
+
+/// The model of a compiled document as a session source (blocks bound at every build).
+pub fn source(compiled: &Compiled, registry: &BehaviorRegistry, document: &SystemDocument) -> ModelSource {
+    ModelSource {
+        model: compiled.flat.model.clone(),
+        registry: registry.clone(),
+        identities: compiled.flat.identities.clone(),
+        source_hash: compiled.flat.source_hash.clone(),
+        revision: document.revision.max(1),
+        base: compiled.launch.base.as_ref().map(PathBuf::from),
+    }
+}
+
+fn compile_inner(document: &SystemDocument, registry: &BehaviorRegistry, config: SessionConfig, base: Option<&Path>) -> Result<Compiled, String> {
+    let flat = flatten(document, registry, base)?;
     let description = sim_inspect::model::describe(&flat.model, registry, &flat.source_hash, document.revision.max(1), &flat.identities)
         .map_err(|e| e.to_string())?
         .description;
@@ -72,24 +107,10 @@ pub fn compile(document: &SystemDocument, registry: &BehaviorRegistry, config: S
         revision: document.revision.max(1),
         config,
         binding: None,
+        base: base.map(|b| b.display().to_string()),
     };
     launch.binding = Some(SourceBinding { model_hash: launch.model_hash()?, description_id: description.id.clone(), identities: flat.identities.clone() });
     Ok(Compiled { flat, description, spatial, animation, launch })
-}
-
-/// The one guard every host runs before it starts a `SystemSession` from a
-/// compiled document: hosted instances (`SystemDocument::links`) are not in
-/// the flattened model, so running it would simulate a different (partial)
-/// system. A robot system runs on the shared drive host instead
-/// (`crate::system_robot`, Build mode's Run).
-pub fn check_hosted(flat: &Flattened) -> Result<(), String> {
-    if flat.hosted.is_empty() {
-        return Ok(());
-    }
-    Err(format!(
-        "this system hosts {} (linked to files); hosted instances run on the shared drive host (sim_runtime::system_robot, Build mode's Run in the native viewer), not the system session, so this host cannot run it",
-        flat.hosted.iter().map(|(name, h)| format!("`{name}` ({})", h.component_type)).collect::<Vec<_>>().join(", ")
-    ))
 }
 
 /// Display bindings for a compiled system; see [`crate::system_display`].
@@ -112,8 +133,18 @@ pub struct Check {
 
 /// Validate, flatten, describe and construct the numerical runtime.
 pub fn check(document: &SystemDocument, registry: &BehaviorRegistry) -> Result<Check, String> {
-    let compiled = compile(document, registry, default_config())?;
-    let compile_error = sim_compile::Runtime::new(compiled.flat.model.clone(), registry, default_config().integrator).err().map(|e| locate(&compiled.flat, e.to_string()));
+    check_inner(document, registry, None)
+}
+
+/// [`check`] for the document stored in `base` (generated instances built,
+/// FMU blocks imported and bound).
+pub fn check_at(document: &SystemDocument, registry: &BehaviorRegistry, base: &Path) -> Result<Check, String> {
+    check_inner(document, registry, Some(base))
+}
+
+fn check_inner(document: &SystemDocument, registry: &BehaviorRegistry, base: Option<&Path>) -> Result<Check, String> {
+    let compiled = compile_inner(document, registry, default_config(), base)?;
+    let compile_error = source(&compiled, registry, document).build(&default_config()).err().map(|e| locate(&compiled.flat, e));
     Ok(Check {
         revision: document.revision,
         content_hash: document.content_hash(),
@@ -142,18 +173,7 @@ pub struct Bundle {
     pub live: PathBuf,
 }
 
-/// Refused for a system with hosted instances ([`check_hosted`]): its live
-/// capture (the `Launch` a viewer's system session runs) would be a partial
-/// model, so none is written and a stale one from before the link is removed.
 pub fn write_bundle(compiled: &Compiled, directory: &Path, stem: &str) -> Result<Bundle, String> {
-    if let Err(e) = check_hosted(&compiled.flat) {
-        let stale = directory.join(format!("{stem}.live.json"));
-        match std::fs::remove_file(&stale) {
-            Ok(()) => return Err(format!("{e}; removed the stale live bundle {}", stale.display())),
-            Err(r) if r.kind() == std::io::ErrorKind::NotFound => return Err(e),
-            Err(r) => return Err(format!("{e}; the stale live bundle {} could not be removed: {r}", stale.display())),
-        }
-    }
     std::fs::create_dir_all(directory).map_err(|e| e.to_string())?;
     fn write<T: Serialize>(directory: &Path, name: String, value: &T) -> Result<PathBuf, String> {
         let path = directory.join(name);
@@ -197,22 +217,29 @@ pub fn simulate(document: &SystemDocument, registry: &BehaviorRegistry, duration
     simulate_cancellable(document, registry, duration, config, select, None)
 }
 
+/// [`simulate`] for the document stored in `base`.
+pub fn simulate_at(document: &SystemDocument, registry: &BehaviorRegistry, base: &Path, duration: f64, config: SessionConfig, select: &[String]) -> Result<Vec<Series>, String> {
+    run_recorded(document, registry, Some(base), duration, config, select, None)
+}
+
 /// Error returned by [`simulate_cancellable`] when `cancel` was raised.
 pub const CANCELLED: &str = "cancelled";
 
 /// [`simulate`] that stops between steps once `cancel` is set, returning
 /// [`CANCELLED`].
 pub fn simulate_cancellable(document: &SystemDocument, registry: &BehaviorRegistry, duration: f64, config: SessionConfig, select: &[String], cancel: Option<&std::sync::atomic::AtomicBool>) -> Result<Vec<Series>, String> {
-    let compiled = compile(document, registry, config.clone())?;
-    check_hosted(&compiled.flat)?;
-    let source = ModelSource {
-        model: compiled.flat.model.clone(),
-        registry: registry.clone(),
-        identities: compiled.flat.identities.clone(),
-        source_hash: compiled.flat.source_hash.clone(),
-        revision: document.revision.max(1),
-    };
-    let flat_for_errors = sim_system::flatten(document, registry).map_err(|e| e.to_string())?;
+    run_recorded(document, registry, None, duration, config, select, cancel)
+}
+
+/// [`simulate_cancellable`] for the document stored in `base`.
+pub fn simulate_cancellable_at(document: &SystemDocument, registry: &BehaviorRegistry, base: &Path, duration: f64, config: SessionConfig, select: &[String], cancel: Option<&std::sync::atomic::AtomicBool>) -> Result<Vec<Series>, String> {
+    run_recorded(document, registry, Some(base), duration, config, select, cancel)
+}
+
+fn run_recorded(document: &SystemDocument, registry: &BehaviorRegistry, base: Option<&Path>, duration: f64, config: SessionConfig, select: &[String], cancel: Option<&std::sync::atomic::AtomicBool>) -> Result<Vec<Series>, String> {
+    let compiled = compile_inner(document, registry, config.clone(), base)?;
+    let source = source(&compiled, registry, document);
+    let flat_for_errors = flatten(document, registry, base)?;
     let mut session = SystemSession::new(compiled.launch.run_id.clone(), config.clone(), move |c| source.build(c)).map_err(|e| locate(&flat_for_errors, e))?;
     let description = session.description().clone();
     let chosen: Vec<String> = description

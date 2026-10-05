@@ -1,0 +1,27 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "control.drive_limiter",
+  "label": "Drive limiter (twist rate limit and deadman)",
+  "kind": "generic",
+  "parameters": {
+    "deadman_timeout": 0.5,
+    "max_accel.forward": 0.6,
+    "max_accel.yaw": 6.0,
+    "max_speed.forward": 0.3,
+    "max_speed.yaw": 3.0,
+    "on_loss_immediate": 0.0,
+    "period": 0.02,
+    "stop_decel.forward": 1.2,
+    "stop_decel.yaw": 12.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) request.forward, request.lateral, request.yaw, sequence: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

@@ -47,7 +47,7 @@ fn default_safety() -> f64 {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Simulation {
-    /// A `sim.system/1` file (relative to the study file).
+    /// A `sim.system/2` file (relative to the study file).
     pub system: String,
     pub seconds: f64,
 }

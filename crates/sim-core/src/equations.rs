@@ -513,19 +513,6 @@ pub trait Behavior: Send + Sync {
         None
     }
 
-    /// Hand an external control element its [`Coupler`] and the contract
-    /// the runtime derived from its wiring. Elements that are not seams
-    /// return the coupler untouched.
-    fn couple(&mut self, coupler: Box<dyn crate::Coupler>, _contract: crate::Contract) -> Result<(), Box<dyn crate::Coupler>> {
-        Err(coupler)
-    }
-
-    /// A fault that ends the run — what a seam reports when its controller
-    /// has gone, timed out, or answered nonsense. The runtime turns it into
-    /// an error naming the element after the step in which it appeared.
-    fn failure(&self) -> Option<String> {
-        None
-    }
 }
 
 /// Builds a behavior's equations from its instance parameters.

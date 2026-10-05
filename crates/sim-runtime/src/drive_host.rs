@@ -37,7 +37,7 @@ pub const PAUSE_RULE: &str = "A drive request live at Pause is invalidated like 
 /// the robot's profile ([`kinematics::scale`], in [`DriveRequest::interpret`]),
 /// so a twist outside the profile cannot be requested; actions are the
 /// profile's, by name. Robot mode's `RobotAction::Drive` and Build mode's
-/// `BuildAction::Drive` carry it; REST `robot_drive` and `system_drive` build
+/// `BuildAction::Drive` carry it; REST `robot_drive` build
 /// it with [`DriveRequest::from_fields`].
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -54,7 +54,7 @@ impl DriveRequest {
     /// A REST command's fields as one request: exactly one of the axes
     /// (forward, lateral, yaw; absent ones are 0), `action` (a profile action
     /// name) or `stop: true`. `command` names the REST command in the errors
-    /// (`robot_drive`, `system_drive`).
+    /// (`robot_drive`).
     pub fn from_fields(forward: Option<f64>, lateral: Option<f64>, yaw: Option<f64>, action: Option<String>, stop: Option<bool>, command: &str) -> Result<DriveRequest, String> {
         let axes = forward.is_some() || lateral.is_some() || yaw.is_some();
         match (axes, action, stop) {

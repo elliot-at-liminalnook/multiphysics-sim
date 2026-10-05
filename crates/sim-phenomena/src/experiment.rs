@@ -426,7 +426,7 @@ pub fn run(
                 .behavior;
             contract = Some(runtime.contract(seam));
             runtime
-                .attach(seam, controller(c, samples.clone(), spec.seed)?)
+                .bind_coupler(seam, controller(c, samples.clone(), spec.seed)?, false)
                 .map_err(|e| e.to_string())?;
         }
         let compile_seconds = compile.elapsed().as_secs_f64();
@@ -537,7 +537,7 @@ pub fn run(
             contract = Some(robot.runtime.contract(seam));
             robot
                 .runtime
-                .attach(seam, controller(c, samples.clone(), spec.seed)?)
+                .bind_coupler(seam, controller(c, samples.clone(), spec.seed)?, false)
                 .map_err(|e| e.to_string())?;
         }
         let compile_seconds = compile.elapsed().as_secs_f64();

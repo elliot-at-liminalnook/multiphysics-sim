@@ -132,7 +132,7 @@ fn saved_studies_compare_gearboxes_and_sweep_worm_starts() {
     let document = winch();
     let value = |v: &system_study::VariantResult, k: &str| v.metrics.iter().chain(v.derived.iter().map(|d| (d.name.clone(), d.value)).collect::<Vec<_>>().iter()).find(|(n, _)| n.contains(k)).map(|(_, x)| *x).unwrap();
 
-    let compare = system_study::run(&document, &registry, "gearboxes", &document.studies["gearboxes"], 3, None, &|_, _| {}).unwrap();
+    let compare = system_study::run(&document, &registry, None, "gearboxes", &document.studies["gearboxes"], 3, None, &|_, _| {}).unwrap();
     eprintln!("{}", system_study::table(&compare));
     let [worm, spur, planetary] = &compare.variants[..] else { panic!("three variants") };
     assert!(worm.error.is_none() && spur.error.is_none() && planetary.error.is_none());
@@ -142,7 +142,7 @@ fn saved_studies_compare_gearboxes_and_sweep_worm_starts() {
     assert!(value(spur, "lift speed") > value(planetary, "lift speed") && value(planetary, "lift speed") > value(worm, "lift speed"));
     assert!(value(spur, "motor current") < value(worm, "motor current"));
 
-    let sweep = system_study::run(&document, &registry, "worm_starts", &document.studies["worm_starts"], 4, None, &|_, _| {}).unwrap();
+    let sweep = system_study::run(&document, &registry, None, "worm_starts", &document.studies["worm_starts"], 4, None, &|_, _| {}).unwrap();
     eprintln!("{}", system_study::table(&sweep));
     let efficiency: Vec<f64> = sweep.variants.iter().map(|v| value(v, "mesh: forward efficiency")).collect();
     let locking: Vec<f64> = sweep.variants.iter().map(|v| value(v, "mesh: self-locking")).collect();
@@ -152,7 +152,7 @@ fn saved_studies_compare_gearboxes_and_sweep_worm_starts() {
     assert!(travel[0].abs() < 2e-3 && travel[1..].iter().all(|t| *t < -0.1), "holds only with one start: {travel:?}");
 
     // Reproducible: the same file gives the same numbers.
-    let again = system_study::run(&document, &registry, "worm_starts", &document.studies["worm_starts"], 2, None, &|_, _| {}).unwrap();
+    let again = system_study::run(&document, &registry, None, "worm_starts", &document.studies["worm_starts"], 2, None, &|_, _| {}).unwrap();
     assert_eq!(serde_json::to_string(&again.variants.iter().map(|v| &v.metrics).collect::<Vec<_>>()).unwrap(), serde_json::to_string(&sweep.variants.iter().map(|v| &v.metrics).collect::<Vec<_>>()).unwrap());
 }
 

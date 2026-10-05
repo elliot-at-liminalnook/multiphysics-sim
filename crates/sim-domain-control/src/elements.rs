@@ -158,8 +158,7 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
         registry.register(descriptor)?;
     }
     crate::motion_clock::register(registry)?;
-    crate::pwm_feedback::register(registry)?;
     crate::sampled_fixed_pd::register(registry)?;
     crate::reference_governor::register(registry)?;
-    crate::external::register(registry)
+    sim_core::block::register(registry)
 }

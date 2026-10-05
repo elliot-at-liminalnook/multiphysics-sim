@@ -381,7 +381,7 @@ mod tests {
     /// The binding as committed before `embedded` existed: it reads unchanged.
     const OLDER: &str = r#"{
   "schema": "sim.controller-binding/1",
-  "description": "The rover's teleoperation controller: an external Python simloop program on the control.external seam that applies the drive profile's deadman and limits, mixes the twist with the differential drive derived from the model, and integrates wheel position targets.",
+  "description": "The rover's teleoperation controller: an external Python simloop program on the model's controller block that applies the drive profile's deadman and limits, mixes the twist with the differential drive derived from the model, and integrates wheel position targets.",
   "controller": {"language": "python", "script": "../../../clients/python/examples/diff_drive_rover.py", "args": []},
   "drive_profile": "robot.drive.json"
 }

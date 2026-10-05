@@ -2,7 +2,7 @@
 //! binding beside the model (`sim_runtime::controller_binding`), loaded on
 //! the reload worker, becomes a [`ControlledRun`]; the run thread builds it
 //! as `sim_runtime::session::Session` (which starts the Python simloop
-//! program and attaches it on the model's `control.external` seam) and
+//! program and binds it to the model's controller block) and
 //! feeds it, once per seam period, the twist the shared drive limiter
 //! (`kinematics::step`, on sim time) allows plus the request heartbeat
 //! (`sim_runtime::drive_host::DriveHost`, the one place a driven session is

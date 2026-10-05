@@ -1101,7 +1101,7 @@ By reading, unexecuted.
 ### RV-05 Wire it in the systems editor
 
 1. **Calls** (`wire_in_build`, script 523-536): the script writes an empty
-   `sim.system/1` file DIR/rover.system.json with exclusive create
+   `sim.system/2` file DIR/rover.system.json with exclusive create
    (525-529), switches with `viewer_mode {"mode":"build","path"}` (530) and
    sends one `system` batch (534) from `system_wiring_commands` (497-515):
    `add_instance` rover (`robot.articulated`), controller

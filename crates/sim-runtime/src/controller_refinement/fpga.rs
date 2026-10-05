@@ -630,7 +630,7 @@ pub(super) fn attach_controller(
     }
     let home = recording.home[axis];
     runtime
-        .attach(
+        .bind_coupler(
             controller,
             Box::new(Adapter {
                 r: recording,
@@ -640,7 +640,7 @@ pub(super) fn attach_controller(
                 previous: home,
                 closed_loop,
                 output,
-            }),
+            }), false,
         )
         .map_err(|e| e.to_string())
 }

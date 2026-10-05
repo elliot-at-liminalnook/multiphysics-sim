@@ -3,6 +3,15 @@
 use super::*;
 
 pub(super) fn library_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
+    // Executable controllers and generated assemblies come from files next to the system.
+    for (purpose, placeholder, action) in [
+        (Purpose::AddFmu, "Add an FMU block: path [period s] · Enter", BuildAction::AddFmuPath),
+        (Purpose::AddRobot, "Add a robot: path to .simrobot.json · Enter", BuildAction::AddRobotPath),
+    ] {
+        let focused = b.input.as_ref().is_some_and(|i| i.purpose == purpose);
+        let shown = b.input.as_ref().filter(|_| focused).map(|i| i.buffer.clone()).unwrap_or_default();
+        body.spawn(k.input(&shown, placeholder, action, focused));
+    }
     let focused = b.input.as_ref().is_some_and(|i| i.purpose == Purpose::Filter);
     let shown = b.input.as_ref().filter(|_| focused).map(|i| i.buffer.clone()).unwrap_or_else(|| b.filter.clone());
     body.spawn(k.input(&shown, "Search components and subsystems   ( / )", BuildAction::Filter, focused));
@@ -31,6 +40,7 @@ pub(super) fn library_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder)
         let subtitle = match &item.kind {
             InstanceKind::Element { component_type } => component_type.clone(),
             InstanceKind::Subsystem { definition } => format!("{} · {definition}", if item.library_path.is_some() { "Library subsystem" } else { "Subsystem in this file" }),
+            other => sim_system::kind_label(other),
         };
         let shown = b.preview.as_ref().is_some_and(|p| p.kind == item.kind);
         body.spawn(k.item(&b.icon(&item.kind), &item.label, &subtitle, category(&item.domain), BuildAction::Preview(i), shown)).observe(placement::start_palette);
@@ -293,6 +303,7 @@ pub(super) fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder)
             r.spawn(k.button("Cancel", BuildAction::CancelStudy, Look::Danger, true));
         });
     }
+    tests_section(body, k, b);
     body.spawn(k.section(&format!("Saved  {}", b.document.studies.len())));
     if b.document.studies.is_empty() {
         body.spawn(k.caption("None yet."));
@@ -373,6 +384,31 @@ pub(super) fn studies_tab(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder)
                 k.property(card, &d.name, &value, if d.unit == "yes=1" || d.unit == "1" { "" } else { &d.unit }, None::<BuildAction>, false);
             }
             card.spawn(k.text(format!("{:.2} s wall time", v.wall_seconds), 10.5, FAINT, 0));
+        });
+    }
+}
+
+/// Acceptance tests: each with where its evidence stands and a Run button
+/// (the same handler as REST `system_test {action: run}`).
+fn tests_section(body: &mut ChildSpawnerCommands, k: &Kit, b: &Builder) {
+    body.spawn(k.section(&format!("Tests  {}", b.document.tests.len())));
+    if b.document.tests.is_empty() {
+        body.spawn(k.text("No acceptance tests yet: save one with system_test {action: set} (requirements on observables).", size::DETAIL, FAINT, 0));
+        return;
+    }
+    let standing = sim_runtime::system_evidence::standing(&b.document, b.path()).unwrap_or_default();
+    let running = b.composition.test_run.as_ref().map(|r| r.name.clone());
+    for (name, test) in &b.document.tests {
+        let state = match standing.get(name) {
+            Some(sim_runtime::system_evidence::Standing::NotAssessed) | None => "not assessed".to_string(),
+            Some(sim_runtime::system_evidence::Standing::Current { verdict }) => format!("{verdict:?} (current)").to_lowercase(),
+            Some(sim_runtime::system_evidence::Standing::Stale { verdict, changed }) => format!("{} (stale: {})", format!("{verdict:?}").to_lowercase(), changed.join("; ")),
+        };
+        body.spawn(k.text(format!("{name} · {} requirement{} · {} s", test.requirements.len(), if test.requirements.len() == 1 { "" } else { "s" }, test.duration_s), size::ITEM, TEXT, 1));
+        body.spawn(k.text(state, size::DETAIL, FAINT, 0));
+        body.spawn(wrap()).with_children(|r| {
+            let busy = running.as_deref() == Some(name.as_str());
+            r.spawn(k.button(if busy { "Running…" } else { "Run" }, BuildAction::RunTest(name.clone()), Look::Ghost, running.is_none()));
         });
     }
 }

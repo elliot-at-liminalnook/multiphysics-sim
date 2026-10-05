@@ -4,7 +4,7 @@
 //! fold-back), `robot.battery` (open-circuit voltage against state of
 //! charge, internal resistance), `robot.servo_firmware` (a sampled position
 //! loop with latency, dead band, sensor quantisation and saturation) and
-//! `robot.thermal_probe` (temperature of a thermal node as a signal).
+//! `thermal.temperature_sensor` (the thermal library's, re-exported as `THERMAL_PROBE`).
 //!
 //! Sign conventions follow the rest of the library: a through value is what
 //! the element absorbs at the port (current into `p`, torque into the
@@ -19,7 +19,8 @@ pub const MOTOR_UNIT: &str = "robot.motor_unit";
 pub const H_BRIDGE: &str = "robot.h_bridge";
 pub const BATTERY: &str = "robot.battery";
 pub const SERVO_FIRMWARE: &str = "robot.servo_firmware";
-pub const THERMAL_PROBE: &str = "robot.thermal_probe";
+/// The temperature sensor robots use (the thermal library's).
+pub const THERMAL_PROBE: &str = sim_domain_thermal::TEMPERATURE_SENSOR;
 
 type Params = BTreeMap<String, f64>;
 
@@ -617,22 +618,6 @@ fn servo_firmware(p: &Params) -> Result<Box<dyn Behavior>, sim_core::EquationErr
     }))
 }
 
-// ---- thermal probe ----------------------------------------------------------
-
-pub struct ThermalProbe;
-impl Behavior for ThermalProbe {
-    fn states(&self) -> Vec<StateDeclaration> {
-        Vec::new()
-    }
-    fn residual(&self, ctx: &mut Context) {
-        ctx.set_signal(0, ctx.across(0));
-    }
-}
-
-fn thermal_probe(_p: &Params) -> Result<Box<dyn Behavior>, sim_core::EquationError> {
-    Ok(Box::new(ThermalProbe))
-}
-
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
     use sim_core::connectors::{Electrical as E, Rotational as R, Thermal as H};
@@ -697,5 +682,5 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
         P::optional("kp", "1/rad", 20.), P::optional("ki", "1/(rad·s)", 0.),
         P::optional("kd", "s/rad", 0.), P::optional("limit", "1", 1.).nonnegative().at_most(1.),
         inherited_default("offset", "s", "1 / rate").nonnegative()]))?;
-    registry.register(BehaviorDescriptor::new(THERMAL_PROBE, "Temperature as a signal", vec![acausal("node", H), signal_out("temperature", Q::Temperature)], thermal_probe).with_parameters(vec![]))
+    Ok(())
 }

@@ -10,7 +10,7 @@
 //! `SIM_LESSON_CACHE`) so the viewer can replay and scrub instantly and CI
 //! can reuse a run when nothing changed.
 use crate::system_builder::{self, Series};
-use crate::system_session::{Command as SessionCommand, ModelSource, SystemSession};
+use crate::system_session::{Command as SessionCommand, SystemSession};
 use serde::{Deserialize, Serialize};
 use sim_core::BehaviorRegistry;
 use sim_inspect::SampleFrame;
@@ -305,8 +305,7 @@ pub fn run_scene(document: &SystemDocument, registry: &BehaviorRegistry, scene: 
     let key = run_key(document, scene, timeline);
     let config = system_builder::config_for(document);
     let compiled = system_builder::compile(document, registry, config.clone())?;
-    system_builder::check_hosted(&compiled.flat)?;
-    let source = ModelSource { model: compiled.flat.model.clone(), registry: registry.clone(), identities: compiled.flat.identities.clone(), source_hash: compiled.flat.source_hash.clone(), revision: document.revision.max(1) };
+    let source = system_builder::source(&compiled, registry, document);
     let mut session = SystemSession::new(compiled.launch.run_id.clone(), config.clone(), move |c| source.build(c)).map_err(|e| system_builder::locate(&compiled.flat, e))?;
     let description = session.description().clone();
     // What to record: animation bindings, plots, checks and plot cues.
@@ -368,7 +367,7 @@ pub fn run_scene(document: &SystemDocument, registry: &BehaviorRegistry, scene: 
             let commands = due.iter().map(|(_, k, v)| set_command(k, *v)).collect::<Result<Vec<_>, _>>()?;
             sim_system::apply(&mut current, registry, &commands).map_err(|e| format!("cue at {:.3} s: {e}", due[0].0))?;
             let next = system_builder::compile(&current, registry, config.clone())?;
-            let source = ModelSource { model: next.flat.model.clone(), registry: registry.clone(), identities: next.flat.identities.clone(), source_hash: next.flat.source_hash.clone(), revision: current.revision.max(1) };
+            let source = system_builder::source(&next, registry, &current);
             let preserved = session.hot_swap(move |c| source.build(c))?;
             if !preserved {
                 return Err(format!("cue at {:.3} s changed the system's structure; lesson cues may only change parameter values", due[0].0));
@@ -513,7 +512,7 @@ pub fn compare_run(document: &SystemDocument, registry: &BehaviorRegistry, compa
     }
     let study = document.studies.get(&compare.study).ok_or_else(|| format!("the system has no saved study `{}` ({})", compare.study, document.studies.keys().cloned().collect::<Vec<_>>().join(", ")))?;
     let threads = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(2).min(4);
-    let result = crate::system_study::run(document, registry, &compare.study, study, threads, cancel, progress)?;
+    let result = crate::system_study::run(document, registry, None, &compare.study, study, threads, cancel, progress)?;
     let run = CompareRun {
         version: VERSION,
         key,

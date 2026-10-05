@@ -681,9 +681,11 @@ impl Coupler for RhaiController {
                 .iter()
                 .any(|a| !commands.contains_key(a.name.as_str()))
         {
-            return Err(CouplerError::Malformed(
-                "controller command names do not match the actuator contract".into(),
-            ));
+            return Err(CouplerError::Malformed(format!(
+                "controller command names do not match the actuator contract: it returned {:?}, the contract's actuators are {:?}",
+                commands.keys().map(|k| k.to_string()).collect::<Vec<_>>(),
+                c.actuators.iter().map(|a| a.name.as_str()).collect::<Vec<_>>()
+            )));
         }
         let values: Vec<_> = c
             .actuators

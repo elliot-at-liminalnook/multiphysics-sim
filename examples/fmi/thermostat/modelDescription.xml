@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription
+  fmiVersion="3.0"
+  modelName="thermostat"
+  instantiationToken="{6f3e1d2a-0c4b-4e7f-9a51-thermostat-1}"
+  description="Hysteresis thermostat: heater on below setpoint - band/2, off above setpoint + band/2"
+  generationTool="multiphysics-sim fixture (hand-written C, examples/fmi)"
+  variableNamingConvention="flat">
+
+  <CoSimulation
+    modelIdentifier="thermostat"
+    canHandleVariableCommunicationStepSize="true"
+    canGetAndSetFMUState="true"
+    canSerializeFMUState="true"
+    canBeInstantiatedOnlyOncePerProcess="false"/>
+
+  <UnitDefinitions>
+    <Unit name="K"><BaseUnit K="1"/></Unit>
+    <Unit name="W"><BaseUnit kg="1" m="2" s="-3"/></Unit>
+    <Unit name="s"><BaseUnit s="1"/></Unit>
+  </UnitDefinitions>
+
+  <DefaultExperiment stepSize="0.5"/>
+
+  <ModelVariables>
+    <Float64 name="time" valueReference="999" causality="independent" variability="continuous" unit="s" description="Simulation time"/>
+    <Float64 name="temperature" valueReference="0" causality="input" unit="K" start="293.15" description="Measured room temperature"/>
+    <Float64 name="heater_power" valueReference="1" causality="output" quantity="HeatFlowRate" unit="W" min="0" initial="calculated" description="Heat the heater delivers"/>
+    <Boolean name="heating" valueReference="2" causality="output" variability="discrete" initial="calculated" description="Heater on"/>
+    <Float64 name="setpoint" valueReference="10" causality="parameter" variability="fixed" unit="K" start="294.15" description="Target temperature"/>
+    <Float64 name="band" valueReference="11" causality="parameter" variability="fixed" unit="K" start="1" min="0" description="Hysteresis band width"/>
+    <Float64 name="rated_power" valueReference="12" causality="parameter" variability="fixed" unit="W" start="500" min="0" description="Heater power when on"/>
+    <Float64 name="fail_after" valueReference="13" causality="parameter" variability="fixed" unit="s" start="-1" description="Test fixture: fail the step from this time (negative: never)"/>
+    <Float64 name="nan_after" valueReference="14" causality="parameter" variability="fixed" unit="s" start="-1" description="Test fixture: output NaN from this time (negative: never)"/>
+    <Float64 name="switches" valueReference="20" causality="local" variability="discrete" initial="calculated" description="How many times the heater switched"/>
+  </ModelVariables>
+
+  <ModelStructure>
+    <Output valueReference="1"/>
+    <Output valueReference="2"/>
+    <InitialUnknown valueReference="1"/>
+    <InitialUnknown valueReference="2"/>
+  </ModelStructure>
+</fmiModelDescription>

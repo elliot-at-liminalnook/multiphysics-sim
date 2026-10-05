@@ -20,7 +20,7 @@ fn main() {
         }
         std::thread::sleep(Duration::from_millis(50));
     }
-    let id=service.ask(Input{instructions:None,discussion:"example".into(),key:format!("example-{}",now()),revision:1,context:serde_json::json!({"purpose":"headless integration smoke test","available_part_paths":[]}),question:args[3].clone()}).unwrap();
+    let id=service.ask(Input{instructions:None,developer:None,discussion:"example".into(),key:format!("example-{}",now()),revision:1,context:serde_json::json!({"purpose":"headless integration smoke test","available_part_paths":[]}),question:args[3].clone()}).unwrap();
     let mut cursor = 0;
     loop {
         let s = service.snapshot();

@@ -1,0 +1,20 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.speed_estimate",
+  "label": "Speed from angle (filtered derivative)",
+  "kind": "generic",
+  "parameters": {
+    "tau": 0.01
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) angle: benches need a fixed drive, so only the ports are documented"
+    }
+  ],
+  "source_hash": "c351ee8486cc69b990fedfca31ecfc2c37cc3dce5754c88315276e2f6eab0a2e"
+}

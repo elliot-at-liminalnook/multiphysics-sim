@@ -1,0 +1,35 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.threaded_joint",
+  "label": "Screw in plastic (thread or heat-set insert)",
+  "kind": "generic",
+  "parameters": {
+    "diameter": 0.0056,
+    "efficiency": 0.5,
+    "length": 0.0057,
+    "peak_displacement": 0.0003,
+    "shear_strength": 17000000.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -0.000044325992634672816,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 6.500e-3 J → change -4.433e-5 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 1.2e-1, 1.9e-1, 1.5e-2 (1 → 0.125 ms); observed order 3.7"
+    }
+  ],
+  "source_hash": "6d152b2d2b3dd5f2d239283028b104ca7afbec256cf3c2c57ab806adf296f677"
+}

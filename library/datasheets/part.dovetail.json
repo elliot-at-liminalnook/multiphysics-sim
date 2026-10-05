@@ -1,0 +1,37 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.dovetail",
+  "label": "Dovetail joint",
+  "kind": "generic",
+  "parameters": {
+    "angle": 0.2618,
+    "clearance": 0.0,
+    "flank_stiffness": 2000000.0,
+    "friction": 0.3,
+    "interference": 0.0,
+    "smoothing": 0.001,
+    "wall_stiffness": 500000.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": -0.00025053485307745954,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 2.700e-2 J → change -2.505e-4 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 1.9e-2, 4.1e-3, 2.1e-4 (1 → 0.125 ms); observed order 4.3"
+    }
+  ],
+  "source_hash": "738e561404d490092d94b3d7d2ef5074d7116cd8b91be17a830228858a8f8fa1"
+}

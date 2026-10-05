@@ -1,0 +1,17 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "thermal.controlled_heat_source",
+  "label": "Controlled heat source",
+  "kind": "generic",
+  "parameters": {},
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) power: benches need a fixed drive, so only the ports are documented"
+    }
+  ]
+}

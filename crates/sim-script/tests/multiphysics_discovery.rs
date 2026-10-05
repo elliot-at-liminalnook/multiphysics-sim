@@ -407,29 +407,23 @@ fn fluid_storage_exposes_mass_and_specific_enthalpy() {
 }
 
 #[test]
-fn dynamic_ports_validate_members_positions_and_integer_settings() {
+fn port_families_validate_members_and_positions() {
     let mut r = BehaviorRegistry::default();
     sim_domain_line::register(&mut r).unwrap();
-    sim_domain_control::external::register(&mut r).unwrap();
     let source = r#"
         let string = part("string", "line.string", #{length:1.0, tension:10.0,
             mass_per_length:0.01, "tap.middle":0.5, "initial.tap.middle.position":0.01});
-        let controller = part("controller", "control.external", #{period:0.01,
-            "sense.position":0.0, "act.force":0.0});
     "#;
     let plan = evaluate(&Sources::single("ports.rhai", source), &r, Map::new()).unwrap();
     let mut model = sim_core::ModelWorld::default();
     let parts = plan.apply(&mut model, &r, Default::default()).unwrap();
     assert!(parts["string"].try_port("tap.middle").is_some());
-    assert!(parts["controller"].try_port("sense.position").is_some());
-    assert!(parts["controller"].try_port("act.force").is_some());
     for invalid in [
         source.replace(
             "initial.tap.middle.position",
             "initial.tap.missing.position",
         ),
         source.replace("\"tap.middle\":0.5", "\"tap.middle\":1.5"),
-        source.replace("period:0.01", "period:0.01, input_delay:0.5"),
         source.replace("length:1.0", "length:1.0, cells:0"),
     ] {
         let error = evaluate(&Sources::single("ports.rhai", &invalid), &r, Map::new())

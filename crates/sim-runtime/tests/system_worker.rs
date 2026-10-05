@@ -45,6 +45,7 @@ fn process_builds_steps_rejects_stale_commands_and_can_be_terminated() {
             seed: 71,
             grid_snapping: false,
         },
+        base: None,
     };
     let mut client = Client::spawn(
         std::path::Path::new(env!("CARGO_BIN_EXE_sim-system-worker")),
@@ -135,6 +136,7 @@ fn authored_motor_connection_samples_match_headless_session_and_reset() {
         identities: launch.binding.as_ref().unwrap().identities.clone(),
         source_hash: launch.source_hash.clone(),
         revision: launch.revision,
+        base: None,
     };
     let mut headless = SystemSession::new(launch.run_id.clone(), launch.config.clone(), move |c| {
         source.build(c)

@@ -63,7 +63,7 @@ def build_thermal():
     bound('mount', 'Mount storage', 'thermal.capacitance', ids['base'], 'mount')
     graph['components']['ambient'] = {'id': 'ambient', 'name': 'Ambient', 'type': 'thermal.ambient',
         'binding': 'ambient', 'parameters': {}}
-    graph['components']['sensor'] = {'id': 'sensor', 'name': 'Housing sensor', 'type': 'robot.thermal_probe',
+    graph['components']['sensor'] = {'id': 'sensor', 'name': 'Housing sensor', 'type': 'thermal.temperature_sensor',
         'body_id': motor, 'parameters': {}}
     for name, ports in {
         'winding': [('motor', 'winding'), ('winding', 'node'), ('transfer', 'a')],

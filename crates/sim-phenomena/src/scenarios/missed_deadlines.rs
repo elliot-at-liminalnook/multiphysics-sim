@@ -70,7 +70,7 @@ impl Deadline {
         let inner = spawn_python(&[script.to_str().unwrap(), "--kp", &self.kp().to_string(), "--ki", "0", "--setpoint", &self.setpoint.to_string(), "--sensor", "speed", "--actuator", "voltage", "--busy", &self.busy.to_string()])?;
         let realtime = RealTime::new(Box::new(inner), Duration::from_secs_f64(self.period));
         let missed = realtime.missed();
-        rt.attach(seam, Box::new(realtime)).unwrap();
+        rt.bind_coupler(seam, Box::new(realtime), false).unwrap();
         let trace = rt.advance_recording(self.samples as f64 * self.period, self.period / 4.0, 1, &[speed]).unwrap();
         let s = trace.column(0).to_vec();
         let third = s.len() / 3;

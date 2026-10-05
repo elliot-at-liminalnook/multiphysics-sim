@@ -1,6 +1,6 @@
 //! Hierarchical system documents for the shared multiphysics runtime.
 //!
-//! - [`document`]: the versioned `sim.system/1` file format.
+//! - [`document`]: the versioned `sim.system/2` file format.
 //! - [`resolve`]: port types, validation and review findings.
 //! - [`commands`]: the one edit command set (both viewers, REST, CLI).
 //! - [`store`]: file-backed editing with a shared undo/redo journal.
@@ -19,9 +19,9 @@ pub mod snap;
 pub mod profile;
 pub mod store;
 
-pub use commands::{apply, Command, Outcome};
+pub use commands::{apply, kind_base_name, kind_label, Command, Outcome};
 pub use document::*;
-pub use flatten::{flatten, Flattened};
+pub use flatten::{flatten, flatten_with, Flattened, Generated, GeneratedReport, Generator, Generators};
 pub use resolve::{Finding, Resolver};
 pub use store::SystemStore;
 

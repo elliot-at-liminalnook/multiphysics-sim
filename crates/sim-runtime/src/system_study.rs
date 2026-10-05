@@ -109,6 +109,7 @@ fn kind_name(document: &SystemDocument, registry: &BehaviorRegistry, kind: &Inst
     match kind {
         InstanceKind::Subsystem { definition } => document.definitions.get(definition).map(|d| d.label.clone()).unwrap_or_else(|| definition.clone()),
         InstanceKind::Element { component_type } => registry.get(&component_type.as_str().into()).map(|d| d.display_name.to_string()).unwrap_or_else(|_| component_type.clone()),
+        other => sim_system::kind_label(other),
     }
 }
 
@@ -130,6 +131,7 @@ fn derived_for(document: &SystemDocument, registry: &BehaviorRegistry, study: &S
                 }
             }
         }
+        InstanceKind::Generated { .. } | InstanceKind::Block { .. } => {}
     }
     let mut out = Vec::new();
     for (prefix, i) in elements {
@@ -171,7 +173,10 @@ pub fn variant_count(study: &Study) -> usize {
 
 /// Run every variant (in parallel, at most `threads` at once). `progress`
 /// receives (finished, total); `cancel` stops before starting more variants.
-pub fn run(document: &SystemDocument, registry: &BehaviorRegistry, name: &str, study: &Study, threads: usize, cancel: Option<&AtomicBool>, progress: &(dyn Fn(usize, usize) + Sync)) -> Result<StudyResult, String> {
+/// `base`: the system file's directory (generated robots, FMU blocks);
+/// None for a document that came from no file.
+#[allow(clippy::too_many_arguments)]
+pub fn run(document: &SystemDocument, registry: &BehaviorRegistry, base: Option<&std::path::Path>, name: &str, study: &Study, threads: usize, cancel: Option<&AtomicBool>, progress: &(dyn Fn(usize, usize) + Sync)) -> Result<StudyResult, String> {
     let total = variant_count(study);
     if total == 0 {
         return Err("the study has no variants".into());
@@ -195,7 +200,11 @@ pub fn run(document: &SystemDocument, registry: &BehaviorRegistry, name: &str, s
                     Ok((label, value, doc)) => {
                         let derived = derived_for(&doc, registry, study);
                         let config = system_builder::config_for(&doc);
-                        match system_builder::simulate(&doc, registry, study.duration, config, &study.observe) {
+                        let run = match base {
+                            Some(base) => system_builder::simulate_at(&doc, registry, base, study.duration, config, &study.observe),
+                            None => system_builder::simulate(&doc, registry, study.duration, config, &study.observe),
+                        };
+                        match run {
                             Ok(series) => {
                                 let metrics = study
                                     .metrics

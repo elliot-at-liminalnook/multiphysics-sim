@@ -92,7 +92,7 @@ fn fixture_at(capacity_ah: f64, initial_soc: f64, step: f64) -> (PhysicalRobot, 
     let captured = ticks.clone();
     robot
         .runtime
-        .attach(
+        .bind_coupler(
             seam,
             Box::new(FnCoupler(move |t: f64, _s: &[f64], a: &mut [f64]| {
                 let duty = if t + 1e-12 < 0.01 { 0.3 } else { 0. };
@@ -100,6 +100,8 @@ fn fixture_at(capacity_ah: f64, initial_soc: f64, step: f64) -> (PhysicalRobot, 
                 a[second] = -duty;
                 captured.lock().unwrap().push([t, duty, -duty]);
             })),
+            // A function of time only: checkpoints may include it.
+            true,
         )
         .unwrap();
     (robot, ticks)
@@ -226,7 +228,7 @@ fn depleted_and_rewound_robot_runs_cannot_claim_valid_battery_history() {
         false
     );
     let (mut robot, _) = fixture(0.01, 0.8);
-    let initial = robot.runtime.snapshot();
+    let initial = robot.runtime.snapshot().unwrap();
     robot.advance(0.005).unwrap();
     robot.runtime.restore(&initial).unwrap();
     let report = robot.results("synthetic rewind");

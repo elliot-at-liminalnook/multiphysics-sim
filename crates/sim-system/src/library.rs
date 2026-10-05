@@ -247,6 +247,7 @@ pub fn alternatives(document: &SystemDocument, registry: &BehaviorRegistry, libr
     let current_interface = match &current.kind {
         InstanceKind::Subsystem { definition } => resolver.definition(definition)?.interface.clone(),
         InstanceKind::Element { component_type } => Some(component_type.clone()),
+        InstanceKind::Generated { .. } | InstanceKind::Block { .. } => None,
     };
     let fits = |offered: &BTreeMap<String, Option<PortSchema>>| used.iter().all(|(p, s)| matches!((s, offered.get(p)), (Some(a), Some(Some(b))) if a == b));
     let mut out = Vec::new();

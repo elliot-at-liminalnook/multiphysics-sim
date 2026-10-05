@@ -42,10 +42,19 @@ pub mod drive_host;
 pub mod drive_bindings;
 /// A bound robot's embedded (Rhai) drive program: the scene and session the browser drives, with the shared limiter and deadman on sim time.
 pub mod embedded_drive;
-/// A system file's hosted robot (linked robot, controller binding and drive profile) resolved for the drive host (native only: reads files).
-#[cfg(not(target_arch = "wasm32"))]
-pub mod system_robot;
 pub mod kinematic_mirror;
+/// Binding a model's blocks (FMUs, host implementations) before a run.
+pub mod system_blocks;
+/// The `robot` generator: a robot assembly composed into a system file.
+#[cfg(not(target_arch = "wasm32"))]
+pub mod robot_generator;
+/// The composition examples: a thermostat room and a rover with battery,
+/// enclosure and two controller FMUs, authored through the command path.
+#[cfg(not(target_arch = "wasm32"))]
+pub mod composition_examples;
+/// Acceptance evidence for systems, bound to what each test ran.
+#[cfg(not(target_arch = "wasm32"))]
+pub mod system_evidence;
 pub mod system_inspection;
 pub mod system_session;
 pub mod system_launch;

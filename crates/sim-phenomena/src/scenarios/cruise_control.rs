@@ -11,7 +11,6 @@ use crate::Report;
 use crate::world::{damped_runtime, registry};
 use sim_compile::Runtime;
 use sim_core::{BehaviorId, BehaviorRegistry, Coupler, FnCoupler, ModelWorld, StateId};
-use sim_domain_control::external::EXTERNAL;
 use sim_domain_multibody::contact as ct;
 use sim_domain_sensing as sense;
 
@@ -52,13 +51,11 @@ impl Car {
         let front = wheel(&mut m, "front", 0.5 * self.wheelbase);
         let servo = m.part(registry, "servo", sense::SERVO, [("bandwidth", 10.0), ("torque_limit", self.torque_limit)]).unwrap();
         let tacho = m.part(registry, "tacho", sense::TACHOMETER, []).unwrap();
-        let seam = m.part(registry, "cruise", EXTERNAL, [("period", self.period), ("sense.axle_speed", 0.0), ("act.torque", 0.0)]).unwrap();
         m.connect([body.port("frame"), rear.port("frame"), front.port("frame")]);
         m.connect([rear.port("axle"), servo.port("shaft"), tacho.port("shaft")]);
         m.connect([front.port("axle")]);
         m.connect([servo.port("current")]);
-        m.connect([tacho.port("speed"), seam.port("sense.axle_speed")]);
-        m.connect([seam.port("act.torque"), servo.port("command")]);
+        let seam = m.add_wired_block("cruise", sim_core::BlockTiming::periodic(self.period), true, sim_core::ImplementationRef::Host { name: "cruise".into() }, &[("axle_speed", tacho.port("speed"))], &[("torque", servo.port("command"))]).unwrap();
         let runtime = damped_runtime(m, registry);
         let vx = runtime.state_id(body.behavior, "vx");
         let torque = runtime.state_id(servo.behavior, "torque");
@@ -87,7 +84,7 @@ impl Car {
 
     pub fn drive(&self, registry: &BehaviorRegistry, controller: Box<dyn Coupler>, duration: f64) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
         let mut plant = self.model(registry);
-        plant.runtime.attach(plant.seam, controller).expect("seam");
+        plant.runtime.bind_coupler(plant.seam, controller, false).expect("seam");
         let trace = plant.runtime.advance_recording(duration, 2.0e-3, 5, &[plant.vx, plant.torque]).expect("the car drives");
         (trace.time.clone(), trace.column(0).iter().map(|v| -v).collect(), trace.column(1))
     }

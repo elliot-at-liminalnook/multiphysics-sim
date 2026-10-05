@@ -71,10 +71,6 @@ const SOURCES: &[(&str, &[u8])] = &[
         include_bytes!("../../../../sim-domain-control/src/elements.rs"),
     ),
     (
-        "crates/sim-domain-control/src/external.rs",
-        include_bytes!("../../../../sim-domain-control/src/external.rs"),
-    ),
-    (
         "crates/sim-domain-control/src/gait_script.rs",
         include_bytes!("../../../../sim-domain-control/src/gait_script.rs"),
     ),

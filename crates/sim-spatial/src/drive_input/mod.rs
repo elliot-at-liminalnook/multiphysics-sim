@@ -82,7 +82,7 @@ pub struct DriveDevice {
 
 /// What a stop, halt or Pause from any origin does to held drive inputs
 /// (shown as `drive_input.disarm_rule`).
-pub const DISARM_RULE: &str = "an accepted stop, halt, named profile action, Pause (one that paused a running run: Robot refuses a Pause when not running, Build accepts it as a no-op that disarms nothing) or Reset from any origin (a panel button, a key, system_ui, REST robot_drive / robot_run / system_drive / system_run, a device) disarms the held drive inputs, as Escape or a bound stop key does: a key, stick or button held when the stop was applied is ignored until it is released and pressed again (a gamepad until every bound stick is in its deadzone and every bound button released), while one first pressed after the stop drives (the poller reads the stop in the next frame and disarms only what was held in the frame it was applied; Robot's apply writes no disarm for the devices' own requests, which disarmed themselves), and if the devices were driving and it was a drive stop or action they send one stop first, so a held input applied in the same frame after the click does not leave the robot driving (a Pause or Reset sends none itself: held axes are refused while paused, and a fresh zero would replace the paused request's on-loss stop; a Reset rebuilds the run as a new drive target, so devices still sending then send one stop to the rebuilt run through the target change); paths that stop or replace a run by removing or changing the drive target (leaving the mode, opening a lesson, a hot swap, another file, a reload, a replay's start or end, a new Build run) disarm through the target change instead; together with the drive host's pause rule (sim_runtime::drive_host::PAUSE_RULE) nothing requested before a Pause moves the robot after Run without fresh input";
+pub const DISARM_RULE: &str = "an accepted stop, halt, named profile action, Pause (one that paused a running run: Robot refuses a Pause when not running) or Reset from any origin (a panel button, a key, a remote command, a device) disarms the held drive inputs, as Escape or a bound stop key does: a key, stick or button held when the stop was applied is ignored until it is released and pressed again (a gamepad until every bound stick is in its deadzone and every bound button released), while one first pressed after the stop drives (the poller reads the stop in the next frame and disarms only what was held in the frame it was applied; Robot's apply writes no disarm for the devices' own requests, which disarmed themselves), and if the devices were driving and it was a drive stop or action they send one stop first, so a held input applied in the same frame after the click does not leave the robot driving (a Pause or Reset sends none itself: held axes are refused while paused, and a fresh zero would replace the paused request's on-loss stop; a Reset rebuilds the run as a new drive target, so devices still sending then send one stop to the rebuilt run through the target change); paths that stop or replace a run by removing or changing the drive target (leaving the mode, opening a lesson, a hot swap, another file, a reload, a replay's start or end, a new Build run) disarm through the target change instead; together with the drive host's pause rule (sim_runtime::drive_host::PAUSE_RULE) nothing requested before a Pause moves the robot after Run without fresh input";
 
 /// A native stop, halt, pause or drive action applied in `mode` ([`DISARM_RULE`]):
 /// the drive inputs held when it was applied are disarmed, as Escape or a
@@ -100,14 +100,9 @@ pub const DISARM_RULE: &str = "an accepted stop, halt, named profile action, Pau
 /// in Actions is read in the next frame's Input, well inside its two-update
 /// lifetime). A message for a mode that is not the live target's is ignored.
 ///
-/// Writers, one per mode: Robot mode's `robot::actions::apply` (every
-/// `RobotAction::Drive` stop or action, `system_ui` drive:* activation and
-/// `RobotAction::Run` Pause or Reset it accepts) and Build mode's
-/// `builder::system_actions::apply` (the run panel's and keys'
-/// `BuildAction::Drive` stop or action, Pause and Reset, their `system_ui`
-/// activations, REST `system_drive` and `system_run` pause / reset). Build's
-/// device requests go to `Builder::drive_request` without it: the poller has
-/// disarmed itself for those already.
+/// Writer: Robot mode's `robot::actions::apply` (every `RobotAction::Drive`
+/// stop or action, `system_ui` drive:* activation and `RobotAction::Run`
+/// Pause or Reset it accepts), the one mode that drives robots from devices.
 #[derive(Message, Clone, Debug, PartialEq)]
 pub struct Disarm {
     pub mode: ViewerMode,

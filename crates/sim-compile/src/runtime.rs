@@ -2,8 +2,9 @@
 //! `StateStore` after every step: the store is what scenarios, tests and
 //! viewers read; the dense island vectors are disposable.
 
+use crate::blocks::{BlockFault, BlockState, Scheduler};
 use crate::{CompileError, compile_islands, island::Island};
-use sim_core::{BehaviorId, BehaviorRegistry, Channel, Contract, Coupler, ModelWorld, PortId, PortSchema, QuantityKind, StateId};
+use sim_core::{BehaviorId, BehaviorRegistry, BlockImplementation, Channel, Contract, Coupler, CouplerBlock, ModelWorld, PortId, StateId};
 use sim_dynamics::System;
 use sim_dynamics::{DynamicsError, Event, Integrator, Simulation, Trace};
 use sim_solve::NewtonConfig;
@@ -22,6 +23,15 @@ pub struct Runtime {
     pub second_law_tolerance: f64,
     /// Per-island step overrides for `advance`.
     island_steps: Vec<Option<f64>>,
+    /// The model's blocks and their implementations (executed between island
+    /// advances, at committed clock ticks).
+    blocks: Scheduler,
+    /// How many times an integration segment that fails to converge is
+    /// retried from its start with the step halved (0: fail at once). A
+    /// segment never contains a block tick, so a retry never re-runs a block.
+    pub retry_halvings: usize,
+    /// Segments retried with a finer step so far.
+    pub step_refinements: usize,
 }
 
 /// A resumable point of a [`Runtime`]: see `Runtime::snapshot`.
@@ -29,6 +39,9 @@ pub struct Runtime {
 pub struct RuntimeSnapshot {
     pub time: f64,
     pub islands: Vec<sim_dynamics::Snapshot>,
+    /// The block scheduler's state and each implementation's own state.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub blocks: Vec<BlockState>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -41,10 +54,8 @@ pub enum RuntimeError {
     State(String),
     #[error("second law violated: behavior {behavior:?} produces entropy at {rate:e} W/K at t={time}")]
     SecondLaw { behavior: BehaviorId, rate: f64, time: f64 },
-    #[error("controller of `{element}` failed at t={time}: {message}")]
-    Controller { element: String, time: f64, message: String },
-    #[error("`{element}` is not an external control element")]
-    NotExternal { element: String },
+    #[error("block `{block}` failed at t={time}: {message}")]
+    Block { block: String, time: f64, message: String },
     #[error("unsupported: {0}")]
     Unsupported(String),
 }
@@ -92,14 +103,137 @@ impl Runtime {
             entropy_ids.push(ids);
         }
         let definitions = registry.definitions().map_err(|e| RuntimeError::State(e.to_string()))?;
-        let mut runtime = Self { model, definitions, observation_identity: std::sync::Arc::new(()), observation_committed_times: Vec::new(), islands, time: 0.0, entropy_ids, second_law_tolerance: 1.0e-9, island_steps: Vec::new() };
+        let mut runtime = Self { model, definitions, observation_identity: std::sync::Arc::new(()), observation_committed_times: Vec::new(), islands, time: 0.0, entropy_ids, second_law_tolerance: 1.0e-9, island_steps: Vec::new(), blocks: Scheduler::default(), retry_halvings: 0, step_refinements: 0 };
         runtime.commit()?;
+        let scheduler = {
+            let rt = &runtime;
+            Scheduler::build(&rt.model, rt.time, &|port| rt.try_signal_id(port), &|behavior, name| rt.try_state_id(behavior, name))
+        };
+        runtime.blocks = scheduler.map_err(RuntimeError::from)?;
         Ok(runtime)
     }
 
-    /// Advance every island by `duration` in steps of `h` (or the island's
-    /// own step, see [`Self::set_island_step`]), islands in parallel, then commit.
+    /// The model has blocks (executed at clock ticks).
+    pub fn has_blocks(&self) -> bool {
+        !self.blocks.blocks.is_empty()
+    }
+
+    /// Bind the implementation that runs block `name`. Its interface must be
+    /// the block's (names, quantities, feedthrough); a previous one is terminated.
+    pub fn bind_block(&mut self, name: &str, implementation: Box<dyn BlockImplementation>) -> Result<(), RuntimeError> {
+        self.blocks.bind(name, implementation).map_err(RuntimeError::State)
+    }
+
+    /// Bind a host [`Coupler`] (the lockstep seam) to the block whose shadow
+    /// element is `behavior`, opening it now with the block's contract (a
+    /// controller that cannot start is refused here, naming the block).
+    /// `stateless`: the coupler keeps no state between samples, so
+    /// checkpoints may include it.
+    pub fn bind_coupler(&mut self, behavior: BehaviorId, coupler: Box<dyn Coupler>, stateless: bool) -> Result<(), RuntimeError> {
+        let decl = self.model.block_of(behavior).ok_or_else(|| RuntimeError::State("not a block's shadow element".into()))?.clone();
+        let block = CouplerBlock::opened(decl.name.clone(), coupler, decl.interface.clone(), stateless, decl.timing.clock.interval(0).unwrap_or(decl.timing.clock.nominal_period()))
+            .map_err(|e| RuntimeError::Block { block: decl.name.clone(), time: self.time, message: e.to_string() })?;
+        self.bind_block(&decl.name, Box::new(block))
+    }
+
+    /// Bind a Python controller script (see `sim_couple::python`) to the
+    /// block whose shadow is `behavior`; the clients root is the repository's
+    /// `clients/` directory.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn bind_python(&mut self, behavior: BehaviorId, clients_root: impl AsRef<std::path::Path>, script: impl AsRef<std::path::Path>, args: &[&str]) -> Result<(), RuntimeError> {
+        let coupler = sim_couple::python(clients_root, script, args).map_err(|e| RuntimeError::State(e.to_string()))?;
+        self.bind_coupler(behavior, Box::new(coupler), false)
+    }
+
+    /// Run the blocks due now (at a fresh runtime: their first tick, which
+    /// initialises each implementation), so a host sees an implementation
+    /// that fails to start before the first advance. `advance` does this
+    /// itself; a tick never runs twice.
+    pub fn start_blocks(&mut self) -> Result<(), RuntimeError> {
+        self.run_blocks()
+    }
+
+    /// Run the blocks due now and write their held outputs in one batch.
+    fn run_blocks(&mut self) -> Result<(), RuntimeError> {
+        if self.blocks.blocks.is_empty() {
+            return Ok(());
+        }
+        let state = &self.model.state;
+        let writes = self.blocks.tick(self.time, &|id| state.get(id).unwrap_or(f64::NAN))?;
+        if !writes.is_empty() {
+            self.set_many(&writes)?;
+        }
+        Ok(())
+    }
+
+    /// The next block tick strictly after now (within roundoff), before `end`.
+    fn next_boundary(&self, end: f64) -> Option<f64> {
+        let tick = self.blocks.next_tick()?;
+        let eps = 64.0 * f64::EPSILON * self.time.abs().max(end.abs()).max(1.0);
+        (tick > self.time + eps && tick < end - eps).then_some(tick)
+    }
+
+    /// Land every island's clock exactly on `t` (a tick reached within roundoff).
+    fn land(&mut self, t: f64) {
+        self.time = t;
+        for island in &mut self.islands {
+            island.time = t;
+        }
+    }
+
+    /// Advance by `duration` in steps of `h` (or each island's own step, see
+    /// [`Self::set_island_step`]), islands in parallel. With blocks, the
+    /// advance is cut at every clock tick: islands reach the tick, commit,
+    /// and the due blocks run there (docs/architecture/composition.md).
     pub fn advance(&mut self, duration: f64, h: f64) -> Result<(), RuntimeError> {
+        if self.blocks.blocks.is_empty() {
+            return self.advance_islands(duration, h);
+        }
+        let end = self.time + duration;
+        self.run_blocks()?;
+        loop {
+            let eps = 64.0 * f64::EPSILON * self.time.abs().max(end.abs()).max(h);
+            if end - self.time <= eps {
+                break;
+            }
+            let until = self.next_boundary(end).unwrap_or(end);
+            self.advance_islands(until - self.time, h)?;
+            self.land(until);
+            self.commit()?;
+            self.run_blocks()?;
+        }
+        self.land(end);
+        Ok(())
+    }
+
+    /// One integration segment (no block tick inside): every island steps
+    /// `duration`, retried from the segment's start with halved steps up to
+    /// `retry_halvings` times when Newton fails, then commit.
+    fn advance_islands(&mut self, duration: f64, h: f64) -> Result<(), RuntimeError> {
+        let saved: Option<Vec<sim_dynamics::Snapshot>> = (self.retry_halvings > 0).then(|| self.islands.iter().map(|i| i.snapshot()).collect());
+        let mut step = h;
+        let mut tries = 0;
+        loop {
+            match self.step_islands(duration, step) {
+                Ok(()) => break,
+                Err(e) if tries < self.retry_halvings && matches!(e, DynamicsError::Solve { .. } | DynamicsError::NonFinite(_)) => {
+                    for (island, snapshot) in self.islands.iter_mut().zip(saved.as_ref().expect("saved for retries")) {
+                        island.restore(snapshot)?;
+                    }
+                    step *= 0.5;
+                    tries += 1;
+                    self.step_refinements += 1;
+                }
+                Err(e) => return Err(e.into()),
+            }
+        }
+        self.time += duration;
+        self.commit()
+    }
+
+    /// Step every island by `duration` in steps of `h` (or the island's own
+    /// step, see [`Self::set_island_step`]), islands in parallel.
+    fn step_islands(&mut self, duration: f64, h: f64) -> Result<(), DynamicsError> {
         let steps = &self.island_steps;
         #[cfg(all(feature = "parallel", not(target_arch = "wasm32")))]
         let results: Vec<Result<(), DynamicsError>> = if self.islands.len() > 1 {
@@ -123,8 +257,7 @@ impl Runtime {
         for result in results {
             result?;
         }
-        self.time += duration;
-        self.commit()
+        Ok(())
     }
 
     /// Give the island containing `behavior` its own step size for
@@ -149,12 +282,23 @@ impl Runtime {
     /// `Simulation::run_adaptive`); returns the accepted steps of the
     /// busiest island.
     pub fn advance_adaptive(&mut self, duration: f64, h0: f64, tolerance: f64, h_min: f64, h_max: f64) -> Result<usize, RuntimeError> {
+        let end = self.time + duration;
+        self.run_blocks()?;
         let mut most = 0;
-        for island in &mut self.islands {
-            most = most.max(island.run_adaptive(duration, h0, tolerance, h_min, h_max)?);
+        loop {
+            let eps = 64.0 * f64::EPSILON * self.time.abs().max(end.abs()).max(h_min);
+            if end - self.time <= eps {
+                break;
+            }
+            let until = self.next_boundary(end).unwrap_or(end);
+            let segment = until - self.time;
+            for island in &mut self.islands {
+                most = most.max(island.run_adaptive(segment, h0, tolerance, h_min, h_max.min(segment))?);
+            }
+            self.land(until);
+            self.commit()?;
+            self.run_blocks()?;
         }
-        self.time += duration;
-        self.commit()?;
         Ok(most)
     }
 
@@ -178,6 +322,34 @@ impl Runtime {
             trace.energy.push(runtime.energy());
         };
         push(self, &mut trace);
+        if !self.blocks.blocks.is_empty() {
+            // Steps of `h`, each cut short at a block tick; the blocks run there.
+            self.run_blocks()?;
+            let mut taken = 0usize;
+            loop {
+                let eps = 64.0 * f64::EPSILON * self.time.abs().max(end.abs()).max(h);
+                if end - self.time <= eps {
+                    break;
+                }
+                let until = self.next_boundary(end).unwrap_or(end).min(self.time + h);
+                let dt = until - self.time;
+                for island in &mut self.islands {
+                    island.step(dt)?;
+                }
+                self.land(until);
+                self.commit()?;
+                self.run_blocks()?;
+                taken += 1;
+                if taken % every == 0 {
+                    push(self, &mut trace);
+                }
+            }
+            self.land(end);
+            if trace.time.last() != Some(&end) {
+                push(self, &mut trace);
+            }
+            return Ok(trace);
+        }
         for step in 1..=steps {
             let remaining = end - self.time;
             let dt = if step == steps { remaining } else { h.min(remaining) };
@@ -220,72 +392,54 @@ impl Runtime {
 
     /// Advance a single-island model to its next event (or `max_duration`).
     pub fn advance_to_event(&mut self, max_duration: f64, h: f64) -> Result<Option<Event>, RuntimeError> {
+        if !self.blocks.blocks.is_empty() {
+            return Err(RuntimeError::Unsupported("advance_to_event stops at physics events only; a model with blocks advances with advance".into()));
+        }
         let event = self.islands[0].run_to_event(max_duration, h)?;
         self.time = self.islands[0].time;
         self.commit()?;
         Ok(event)
     }
 
-    /// Give an external control element (`control.external`) its coupler.
-    /// The contract — channel names and units — comes from the wiring: each
-    /// sensor channel takes the kind of the signal port feeding it, each
-    /// actuator channel the kind of the port it drives.
-    pub fn attach(&mut self, behavior: BehaviorId, coupler: Box<dyn Coupler>) -> Result<(), RuntimeError> {
-        let contract = self.contract(behavior);
-        let element = contract.element.clone();
-        let target = self.islands.iter_mut().find_map(|i| i.system.behaviors.iter_mut().find(|(b, _)| *b == behavior).map(|(_, b)| b));
-        match target {
-            Some(target) => target.couple(coupler, contract).map_err(|_| RuntimeError::NotExternal { element }),
-            None => Err(RuntimeError::NotExternal { element }),
-        }
-    }
-
-    /// Attach a Python controller script (see `sim_couple::python`); the
-    /// clients root is the repository's `clients/` directory.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn attach_python(&mut self, behavior: BehaviorId, clients_root: impl AsRef<std::path::Path>, script: impl AsRef<std::path::Path>, args: &[&str]) -> Result<(), RuntimeError> {
-        let coupler = sim_couple::python(clients_root, script, args).map_err(|e| RuntimeError::State(e.to_string()))?;
-        self.attach(behavior, Box::new(coupler))
-    }
-
-    /// The contract a controller attached to `behavior` would see.
+    /// What a host controller bound to the block whose shadow is `behavior`
+    /// sees: its name, clock period, inputs (sensors) and outputs (actuators).
     pub fn contract(&self, behavior: BehaviorId) -> Contract {
-        let model = &self.model;
-        let element = model.objects[model.behaviors[behavior].object].name.clone();
-        let period = model.parameters_of(behavior).get("period").copied().unwrap_or(0.0);
-        let mut sensors = Vec::new();
-        let mut actuators = Vec::new();
-        let mut owned: Vec<(&String, PortId, PortSchema)> = model.ports.iter().filter(|(_, p)| p.owner == behavior).map(|(id, p)| (&p.name, id, p.schema.clone())).collect();
-        owned.sort_by(|a, b| a.0.cmp(b.0));
-        for (name, id, schema) in owned {
-            let peer_kind = model
-                .connections
-                .iter()
-                .find(|c| c.ports.contains(&id))
-                .and_then(|c| c.ports.iter().find(|p| **p != id))
-                .and_then(|p| match &model.ports[*p].schema {
-                    PortSchema::SignalIn(k) | PortSchema::SignalOut(k) => Some(k.clone()),
-                    PortSchema::Acausal(_) => None,
-                });
-            let channel = |prefix: &str, own: QuantityKind| Channel { name: name.strip_prefix(prefix).unwrap_or(name).to_owned(), kind: peer_kind.unwrap_or(own) };
-            match schema {
-                PortSchema::SignalIn(k) => sensors.push(channel("sense.", k)),
-                PortSchema::SignalOut(k) => actuators.push(channel("act.", k)),
-                PortSchema::Acausal(_) => {}
+        let decl = self.model.block_of(behavior).expect("a block's shadow element");
+        let channels = |ports: &[sim_core::BlockPort]| ports.iter().map(|p| Channel { name: p.name.clone(), kind: p.kind.clone() }).collect();
+        Contract { element: decl.name.clone(), period: decl.timing.clock.nominal_period(), sensors: channels(&decl.interface.inputs), actuators: channels(&decl.interface.outputs) }
+    }
+
+    /// Set several committed state values, then re-solve the algebraic
+    /// unknowns once per island touched (a block tick's writes).
+    pub fn set_many(&mut self, values: &[(StateId, f64)]) -> Result<(), RuntimeError> {
+        for island in &mut self.islands {
+            let mut touched = false;
+            for (id, value) in values {
+                if let Some(index) = island.system.state_ids.iter().position(|s| s == id) {
+                    let Some(reduced) = island.system.reduced_of[index] else {
+                        return Err(RuntimeError::State(format!("`{}` is derived from other unknowns and cannot be set", self.model.state.entry(*id).map(|s| s.name.clone()).unwrap_or_default())));
+                    };
+                    island.state[reduced] = *value;
+                    touched = true;
+                }
+            }
+            if touched {
+                island.make_consistent(NewtonConfig::default())?;
+                island.system.observe_consistent(island.time, &island.state, island.last_rate());
             }
         }
-        Contract { element, period, sensors, actuators }
+        self.commit()
+    }
+
+    fn try_state_id(&self, behavior: BehaviorId, name: &str) -> Option<StateId> {
+        self.islands.iter().find_map(|island| island.system.state_index(behavior, name).map(|i| island.system.state_ids[i]))
+    }
+
+    fn try_signal_id(&self, port: PortId) -> Option<StateId> {
+        self.islands.iter().find_map(|island| island.system.port_signal.get(&port).map(|i| island.system.state_ids[*i]))
     }
 
     fn commit(&mut self) -> Result<(), RuntimeError> {
-        for island in &self.islands {
-            for (behavior, equations) in &island.system.behaviors {
-                if let Some(message) = equations.failure() {
-                    let element = self.model.objects[self.model.behaviors[*behavior].object].name.clone();
-                    return Err(RuntimeError::Controller { element, time: island.time, message });
-                }
-            }
-        }
         let mut trial = self.model.state.begin_trial();
         for (island, ids) in self.islands.iter().zip(&self.entropy_ids) {
             // The store sees every unknown, derived ones included.
@@ -362,8 +516,11 @@ impl Runtime {
 
     /// Every island's committed state and clock, to come back to with
     /// [`Self::restore`]: an episode's start, a branch point of a search.
-    pub fn snapshot(&self) -> RuntimeSnapshot {
-        RuntimeSnapshot { time: self.time, islands: self.islands.iter().map(|i| i.snapshot()).collect() }
+    /// Refused (`Unsupported`) when a block's implementation cannot save its
+    /// state: a checkpoint without it would not be a checkpoint.
+    pub fn snapshot(&self) -> Result<RuntimeSnapshot, RuntimeError> {
+        let blocks = self.blocks.checkpoint().map_err(RuntimeError::Unsupported)?;
+        Ok(RuntimeSnapshot { time: self.time, islands: self.islands.iter().map(|i| i.snapshot()).collect(), blocks })
     }
 
     /// Resume from a snapshot of this runtime and commit it.
@@ -373,6 +530,9 @@ impl Runtime {
         }
         for (island, saved) in self.islands.iter_mut().zip(&snapshot.islands) {
             island.restore(saved)?;
+        }
+        if self.has_blocks() || !snapshot.blocks.is_empty() {
+            self.blocks.restore(&snapshot.blocks).map_err(RuntimeError::Unsupported)?;
         }
         self.time = snapshot.time;
         self.commit()
@@ -398,5 +558,11 @@ impl Runtime {
     /// need parameters the model does not expose otherwise).
     pub fn behavior(&self, id: BehaviorId) -> Option<&dyn sim_core::Behavior> {
         self.islands.iter().find_map(|i| i.system.behaviors.iter().find(|(b, _)| *b == id).map(|(_, b)| b.as_ref()))
+    }
+}
+
+impl From<BlockFault> for RuntimeError {
+    fn from(f: BlockFault) -> Self {
+        RuntimeError::Block { block: f.block, time: f.time, message: f.message }
     }
 }

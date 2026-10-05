@@ -135,14 +135,7 @@ impl DragState {
         axis: Option<usize>,
     ) -> Self {
         let new_name = item.as_ref().map(|item| {
-            b.unique_name(match &item.kind {
-                InstanceKind::Element { component_type } => {
-                    component_type.rsplit('.').next().unwrap_or("part")
-                }
-                InstanceKind::Subsystem { definition } => {
-                    definition.rsplit('.').next().unwrap_or("sub")
-                }
-            })
+            b.unique_name(&sim_system::kind_base_name(&item.kind))
         });
         let work = Arc::new(Work {
             document: b.document.clone(),

@@ -3,7 +3,7 @@
 //! A planar quadruped from library parts: a floating rigid body, four
 //! two-link `multibody.chain` legs hanging from two hips (a left and a
 //! right leg at each), `actuator.servo` torque sources at every joint,
-//! encoders and tachometers into a `control.external` seam, and a compliant
+//! encoders and tachometers into a controller block, and a compliant
 //! point contact under each foot. A Python process closes the loop with a trot:
 //! diagonal pairs alternate, stance feet sweep backward under their hips,
 //! swing feet return along an arc, inverse kinematics turns foot targets
@@ -16,7 +16,6 @@ use crate::scenarios::language_independence::spawn_python;
 use crate::world::{damped_runtime, registry};
 use sim_compile::Runtime;
 use sim_core::{BehaviorId, BehaviorRegistry, Coupler, ModelWorld, StateId};
-use sim_domain_control::external::EXTERNAL;
 use sim_domain_multibody::chain::CHAIN;
 use sim_domain_multibody::contact as ct;
 use sim_domain_sensing as sense;
@@ -93,19 +92,21 @@ impl Quadruped {
         let (hip0, knee0, height) = self.standing();
         let mut m = ModelWorld::default();
         let body = m.part(registry, "body", ct::PLANAR_RIGID_BODY, [("mass", self.body_mass), ("inertia", self.body_inertia), ("gravity", self.gravity), ("initial.y", height - self.hip_y - 0.002)]).unwrap();
-        let mut seam_params: Vec<(&'static str, f64)> = vec![("period", self.period)];
         let names: [[&'static str; 4]; 4] = [
-            ["sense.fl.hip.angle", "sense.fl.hip.speed", "sense.fl.knee.angle", "sense.fl.knee.speed"],
-            ["sense.fr.hip.angle", "sense.fr.hip.speed", "sense.fr.knee.angle", "sense.fr.knee.speed"],
-            ["sense.rl.hip.angle", "sense.rl.hip.speed", "sense.rl.knee.angle", "sense.rl.knee.speed"],
-            ["sense.rr.hip.angle", "sense.rr.hip.speed", "sense.rr.knee.angle", "sense.rr.knee.speed"],
+            ["fl.hip.angle", "fl.hip.speed", "fl.knee.angle", "fl.knee.speed"],
+            ["fr.hip.angle", "fr.hip.speed", "fr.knee.angle", "fr.knee.speed"],
+            ["rl.hip.angle", "rl.hip.speed", "rl.knee.angle", "rl.knee.speed"],
+            ["rr.hip.angle", "rr.hip.speed", "rr.knee.angle", "rr.knee.speed"],
         ];
-        let acts: [[&'static str; 2]; 4] = [["act.fl.hip.torque", "act.fl.knee.torque"], ["act.fr.hip.torque", "act.fr.knee.torque"], ["act.rl.hip.torque", "act.rl.knee.torque"], ["act.rr.hip.torque", "act.rr.knee.torque"]];
-        for k in 0..4 {
-            seam_params.extend(names[k].iter().map(|n| (*n, 0.0)));
-            seam_params.extend(acts[k].iter().map(|n| (*n, 0.0)));
-        }
-        let seam = m.part(registry, "controller", EXTERNAL, seam_params).unwrap();
+        let acts: [[&'static str; 2]; 4] = [["fl.hip.torque", "fl.knee.torque"], ["fr.hip.torque", "fr.knee.torque"], ["rl.hip.torque", "rl.knee.torque"], ["rr.hip.torque", "rr.knee.torque"]];
+        let sensed = |n: &str| if n.ends_with(".angle") { sim_core::QuantityKind::Angle } else { sim_core::QuantityKind::AngularVelocity };
+        let seam = crate::world::controller_block(
+            &mut m,
+            "controller",
+            self.period,
+            names.iter().flatten().map(|n| (n.to_string(), sensed(n))).collect(),
+            acts.iter().flatten().map(|n| (n.to_string(), sim_core::QuantityKind::Torque)).collect(),
+        );
         let mut body_ports = vec![body.port("frame")];
         let mut joints = Vec::new();
         let mut feet = Vec::new();
@@ -198,7 +199,7 @@ pub struct Walk {
 
 pub fn walk(quadruped: &Quadruped, registry: &BehaviorRegistry, stride: f64, duration: f64) -> Walk {
     let mut plant = quadruped.model(registry);
-    plant.runtime.attach(plant.seam, quadruped.controller(stride).unwrap()).expect("seam");
+    plant.runtime.bind_coupler(plant.seam, quadruped.controller(stride).unwrap(), false).expect("seam");
     let ids = [plant.body[0], plant.body[1], plant.body[2]];
     let trace = plant.runtime.advance_recording(duration, 1.0e-3, 8, &ids).expect("the quadruped runs");
     Walk { time: trace.time.clone(), x: trace.column(0), height: trace.column(1), pitch: trace.column(2) }
@@ -245,7 +246,7 @@ pub fn run() -> Report {
     // The same gait as a shared library called in-process: no seam frames.
     if let Ok(c) = q.controller_in(q.stride, Lang::Dylib) {
         let mut plant = q.model(&registry);
-        plant.runtime.attach(plant.seam, c).expect("seam");
+        plant.runtime.bind_coupler(plant.seam, c, false).expect("seam");
         let started = std::time::Instant::now();
         let trace = plant.runtime.advance_recording(duration, 1.0e-3, 8, &[plant.body[0]]).expect("the quadruped runs");
         let worst = trace.column(0).iter().zip(&trot.x).map(|(a, b)| (a - b).abs()).fold(0.0, f64::max);
@@ -257,7 +258,7 @@ pub fn run() -> Report {
     match q.controller_in(q.stride, Lang::C) {
         Ok(c) => {
             let mut plant = q.model(&registry);
-            plant.runtime.attach(plant.seam, c).expect("seam");
+            plant.runtime.bind_coupler(plant.seam, c, false).expect("seam");
             let trace = plant.runtime.advance_recording(duration, 1.0e-3, 8, &[plant.body[0]]).expect("the quadruped runs");
             let worst = trace.column(0).iter().zip(&trot.x).map(|(a, b)| (a - b).abs()).fold(0.0, f64::max);
             report.series("body x (m), trotting, C controller", &trace.time, &trace.column(0), 600);

@@ -142,7 +142,7 @@ fn wheeled_limits() -> Limits {
 
 #[test]
 fn acceleration_ramp_reaches_the_request_after_ceil_v_over_a_dt_steps() {
-    let (v, a, dt) = (0.3, 0.6, 0.02);
+    let (v, a, dt): (f64, f64, f64) = (0.3, 0.6, 0.02);
     let n = (v / (a * dt)).ceil() as usize; // 25
     let request = BodyTwist::new(v, 0.0, 0.0);
     let mut t = BodyTwist::ZERO;

@@ -521,8 +521,8 @@ def build_live_run(state):
 
 
 def wire_in_build(rest, system_path):
-    """RV-05: an empty sim.system/1 file, Build mode on it, one `system` edit (the file store saves each apply)."""
-    doc = {"schema": "sim.system/1", "title": "Two-wheel rover", "revision": 0, "root": "root",
+    """RV-05: an empty sim.system/2 file, Build mode on it, one `system` edit (the file store saves each apply)."""
+    doc = {"schema": "sim.system/2", "title": "Two-wheel rover", "revision": 0, "root": "root",
            "definitions": {"root": {"label": "Two-wheel rover"}}}
     with open(system_path, "x") as f:
         json.dump(doc, f, indent=2)

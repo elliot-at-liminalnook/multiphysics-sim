@@ -13,7 +13,6 @@ use sim_compile::Runtime;
 use sim_core::{BehaviorRegistry, Coupler, FnCoupler, ModelWorld, StateId};
 use sim_couple::FrameCoupler;
 use sim_domain_bridges::elements as bridge;
-use sim_domain_control::external::EXTERNAL;
 use sim_domain_electrical::elements as el;
 use sim_domain_rotational::elements as rot;
 use std::path::PathBuf;
@@ -43,13 +42,11 @@ pub fn plant(registry: &BehaviorRegistry, period: f64) -> (Runtime, sim_core::Be
     let rotor = m.part(registry, "rotor", rot::INERTIA, [("inertia", 2.0e-4), ("damping", 2.0e-4)]).unwrap();
     let mount = m.part(registry, "mount", rot::GROUND, []).unwrap();
     let tacho = m.part(registry, "tacho", rot::SPEED_SENSOR, []).unwrap();
-    let controller = m.part(registry, "controller", EXTERNAL, [("period", period), ("sense.speed", 0.0), ("act.voltage", 0.0)]).unwrap();
     m.connect([source.port("p"), motor.port("p")]);
     m.connect([source.port("n"), motor.port("n"), ground.port("pin")]);
     m.connect([motor.port("shaft"), rotor.port("shaft"), tacho.port("shaft")]);
     m.connect([motor.port("case"), mount.port("flange")]);
-    m.connect([tacho.port("speed"), controller.port("sense.speed")]);
-    m.connect([controller.port("act.voltage"), source.port("voltage")]);
+    let controller = m.add_wired_block("controller", sim_core::BlockTiming::periodic(period), true, sim_core::ImplementationRef::Host { name: "controller".into() }, &[("speed", tacho.port("speed"))], &[("voltage", source.port("voltage"))]).unwrap();
     let rt = runtime(m, registry);
     let speed = rt.state_id(rotor.behavior, "speed");
     let angle = rt.across_id(rotor.port("shaft"));
@@ -108,7 +105,7 @@ pub(crate) fn spawn_python(args: &[&str]) -> std::io::Result<FrameCoupler> {
 
 pub fn trace(registry: &BehaviorRegistry, law: Law, controller: Box<dyn Coupler>, duration: f64) -> (Vec<f64>, Vec<f64>) {
     let (mut rt, seam, speed, _) = plant(registry, law.period);
-    rt.attach(seam, controller).unwrap();
+    rt.bind_coupler(seam, controller, false).unwrap();
     let t = rt.advance_recording(duration, law.period / 4.0, 1, &[speed]).unwrap();
     (t.time.clone(), t.column(0).to_vec())
 }

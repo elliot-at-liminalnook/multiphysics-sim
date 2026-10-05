@@ -76,23 +76,64 @@ pub(crate) enum SystemAction {
     SystemSelect {
         names: Vec<String>,
     },
+    /// `system_add_fmu`: an FMI 3 Co-Simulation FMU as a block instance.
+    SystemAddFmu {
+        #[serde(default)]
+        at: String,
+        #[serde(default)]
+        name: Option<String>,
+        path: String,
+        period: f64,
+        #[serde(default)]
+        offset: f64,
+        #[serde(default)]
+        input_delay: usize,
+        #[serde(default)]
+        output_delay: usize,
+        #[serde(default)]
+        deadline_s: Option<f64>,
+        #[serde(default)]
+        kinds: BTreeMap<String, String>,
+        #[serde(default)]
+        parameters: BTreeMap<String, f64>,
+        #[serde(default)]
+        expected_revision: Option<u64>,
+    },
+    /// `system_add_robot`: a robot generated from its `.simrobot.json`.
+    SystemAddRobot {
+        #[serde(default)]
+        at: String,
+        #[serde(default)]
+        name: Option<String>,
+        source: String,
+        #[serde(default)]
+        driver_control: bool,
+        #[serde(default)]
+        expected_revision: Option<u64>,
+    },
+    /// `system_inspect_fmu {path}`.
+    SystemInspectFmu {
+        path: String,
+    },
+    /// `system_test {action: set | delete | run | status, name?, test?}`.
+    SystemTest {
+        action: String,
+        #[serde(default)]
+        name: Option<String>,
+        #[serde(default)]
+        test: Option<sim_system::SystemTest>,
+        #[serde(default)]
+        expected_revision: Option<u64>,
+    },
+    /// `system_guide {topic?}` (also `GET /v1/system_guide`).
+    SystemGuide {
+        #[serde(default)]
+        topic: Option<String>,
+    },
     SystemUndo,
     SystemRedo,
     SystemRun {
         action: String,
-    },
-    /// `system_drive`: one drive request for a robot system's run.
-    SystemDrive {
-        #[serde(default)]
-        forward: Option<f64>,
-        #[serde(default)]
-        lateral: Option<f64>,
-        #[serde(default)]
-        yaw: Option<f64>,
-        #[serde(default)]
-        action: Option<String>,
-        #[serde(default)]
-        stop: Option<bool>,
     },
     SystemImportImage {
         path: std::path::PathBuf,
@@ -225,18 +266,22 @@ impl actions::Action for SystemAction {
             c("system_grid",json!({}),"Read/set display-only grid (metres, Y up, enclosing definition frame). Never changes physics or CAD geometry. Optional expected_revision."),
             c("system_move",json!({"names":["motor"],"position_m":[0.04,0,0.02],"snap":true,"preview":true}),"Display-only move: first named instance is the anchor, others keep their offsets. Shared mouse/REST snapping, overlap report (allowed=false for invalid preview; commit rejects), atomic undo, expected_revision. Does NOT change physics/CAD."),
             c("system", json!({"label":"Place resistor","commands":[{"command":"add_instance","at":"","name":"r1","instance":{"kind":{"kind":"element","component_type":"electrical.resistor"},"parameters":{"resistance":{"value":100}}}}]}),
-                "Apply sim-system commands atomically (same validation and shared undo history as both viewers and the CLI). Commands apply in order and each is checked as it applies: link_file {instance, path} (host a root robot.articulated, control.external or control.drive_limiter from its .simrobot.json, .controller.json or .drive.json, relative to the system file; path null unlinks, refused while the instance is still connected: disconnect it first) must come before any connect on a hosted port"),
+                "Apply sim-system commands atomically (same validation and shared undo history as both viewers and the CLI). Commands apply in order and each is checked as it applies. Instances are elements (component_type), subsystems (definition), generated assemblies (kind generated: generator robot, source a .simrobot.json next to the system file, ports as recorded by system_add_robot) or blocks (kind block: an FMU or host implementation with its interface and timing, as recorded by system_add_fmu); set_block_timing {name, timing} changes a block's clock, delays and deadline"),
             c("system_state", json!({}), "System file, revision, build level, selection, findings and compile status; workspace (the resolved root: root, found_by override | env | opened_file | cwd, from, error, rule; also in GET /v1/capabilities)"),
             c("system_open", json!({"path":"examples/systems-builder/worm-drive/winch.system.json"}), "Open another system file in this window (same handler as the Systems tab). Refuses, naming the blocker, while a text/discussion draft, placement drag, study, replay or Codex answer is in progress; a live run is stopped and saved to the old file's runs. Loads, validates and compiles off the UI thread (poll the job); a missing or invalid file is an error naming the path and the current system stays open. Writes no runs or annotations. system_state.open reports the pending/last open, discovered systems, the annotations sidecar and whether a --schematic window still shows the old file."),
             c("system_gait_reports", json!({"dir":"examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results"}), "Read-only gait-lab results browser (same handler as the Gait lab tab's path field, Reload and first visit). Reads every <dir>/*/report.yaml (gait, pose_sequence or maneuver by kind) plus <dir>/journal.jsonl with sim_runtime::gait_lab::scan_results, off the UI thread (poll the job). Default dir: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results under the nearest ancestor of the system file, else the workspace root (system_state.workspace); omitted = the current one. Refused while a scan is pending. A missing dir is an error naming it; the last good listing stays in system_state.gait_reports with its own root. Result and system_state.gait_reports: root, journal, warnings, entries [{name, directory, kind, status, report (the report.yaml fields; null numbers mean not recorded/not simulated) | error (names the report.yaml), journal (unix_s, cached, line) or null}], plus pending, selected, error, caveat. Reports carry no runtime fingerprint, so qualification against the current code is unknown. Writes nothing and starts no evaluation."),
             c("system_calibration_review", json!({"path":"examples/actuators/hx30hm/pwm-full-range-identification","trial":"<trial id, e.g. from trials[].id>"}), "Read-only review of a measured actuator identification archive (same handler as the Actuators tab's Measured evidence path field, Reload/Cancel and first visit). Loads <path>/observations.json and results.json with the shared sim_runtime::experiment_comparison::hx_archive::load, verifying the archive's input hashes against the workspace root (system_state.workspace), off the UI thread (poll the job). Default path: examples/actuators/hx30hm/pwm-full-range-identification under the workspace root; omitted = the current one. Refused while a load is pending. A file (e.g. a study) or a sweep.csv folder is refused as not supported yet; any error names the path and the reason, and the last good archive stays in system_state.calibration_review with its own path. Result: path, repository, label, interpretation, split_policy (verbatim), observation_blake3, model_blake3, verified_inputs, input_blake3, integrity_issues, trial_count, counts (by_split/train/held_out/all: total, pass, fail, counted from each trial's comparison.passes; held-out = every split other than train), trials [{id, run, device, stage, kind, drive, duration_s, split, held_out, voltage_range_v, temperature_range_c, unit, limits {rmse, final_abs_error}, comparison {passes, rmse, maximum_abs_error, final_error} (in unit, rad; the archive's limits are 3 and 5 encoder counts of 2π/4096 rad), samples {measured, predicted}}]. system_state.calibration_review adds phase (idle/loading/loaded/failed), pending, requested, error, filters (split all/train/held_out, outcome all/pass/fail; set with system_ui), visible (filtered trial ids) and the current page of rows. Optional trial (a trial id): selects that trial through the same path as a trial row click and the system_ui action {\"calibration_trial\": id}; with no path it selects within the shown archive without reloading (result {selected}); with a path it selects once that load finishes (result gains selected). An unknown id is an error naming it and the previous selection stays; a reload that no longer contains the selected id clears the selection. system_state.calibration_review.selected (null when none) carries id, run, device, stage, kind, drive, duration_s, split, held_out, role (held-out (validation data) / train (fitting data)), quantity, unit, limits, comparison {passes, rmse, maximum_abs_error, final_error} and measured/predicted {source ('measured (hardware archive)' / 'predicted (fitted model, archive)'), quantity, unit, count (true sample count), first, last ({time_s, value}, null when empty)}; chart gives the shared-raster axes as drawn. Writes nothing; evaluates nothing."),
             c("system_actuators", json!({"registry":"examples/actuators/hx30hm/accepted/registry.json","check":["examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json"]}), "Read-only accepted actuator registry inspector (same handler as the Actuators tab). Loads the registry (default: examples/actuators/hx30hm/accepted/registry.json under the nearest ancestor of the system file, else the workspace root (system_state.workspace); omitted = the current one) and checks each consumer file with sim_runtime::actuator_registry (omitted check = recheck the previous files, [] = none), off the UI thread (poll the job). Refused while a load is pending. A missing registry or family hash mismatch is an error naming the path; the last good load stays in system_state.actuators with its own path. Result and system_state.actuators: families (content hash, acceptance, limitations, parameters with value/unit/provenance/uncertainty (null = unknown)/evidence), roles, per-file checks (current/stale/invalid, have and accepted hashes). Writes nothing."),
+            c("system_guide", json!({}), "Start here: how Build mode composes systems (elements, subsystems, generated robots, FMU blocks), the workflows in order, every command with an example and the rules, for an agent starting cold; topic narrows it (about, concepts, workflows, commands, rules). Also GET /v1/system_guide."),
+            c("system_add_fmu", json!({"path":"fmus/thermostat.fmu","name":"thermostat","period":0.5,"parameters":{"setpoint":294.15}}), "Add an FMI 3 Co-Simulation FMU as a block at `at` (default the top level): its interface (every input and output variable as a typed port, units matched exactly) and SHA-256 are read from the archive; path relative to the system file's directory (or absolute under it). period/offset (s) set its clock, input_delay/output_delay whole samples, deadline_s a wall-clock budget per call; kinds names a port's quantity where its unit is ambiguous (e.g. {\"heater_power\":\"HeatFlow\"}); parameters set FMU parameter variables by name. Refused, naming the reason, for anything outside the profile (FMI 1/2, Model Exchange or Scheduled Execution only, clocks, arrays, String/Binary ports, needsExecutionTool, no binary for this platform, a structural or unknown parameter). Wire it with the system command connect; change its timing with set_block_timing. One undoable edit."),
+            c("system_add_robot", json!({"source":"rover.simrobot.json","name":"rover"}), "Add a robot generated from its .simrobot.json (relative to the system file): the same assembly Robot mode runs, with boundary ports supply_p/supply_n (motor bus: connect a battery or supply), ambient (thermal environment), per driven joint <joint>.target (servo setpoint, rad) or with driver_control <motor>.duty, and outputs <joint>.angle, <joint>.speed, imu.*. Ports are recorded; a run regenerates the assembly and refuses it if the source no longer offers them. One undoable edit."),
+            c("system_inspect_fmu", json!({"path":"fmus/thermostat.fmu"}), "What an FMU offers before adding it: model name, FMI version, capabilities, inputs/outputs/parameters with units and the quantity each port would carry (or why not), and every reason a block could not use it (empty: it can). Reads the archive only."),
+            c("system_test", json!({"action":"run","name":"comfort"}), "Acceptance tests of this system: action set {name, test: {duration_s, requirements: [{id, observable (readable key, e.g. thermometer.temperature), reduce (final, mean, max, min, peak, change, integral), window?, min?, max?}]}} saves one (undoable); delete removes it; run runs it on a background thread on the system as composed (its own controllers) and keeps the evidence in <system>.evidence.json; status answers. Answers system_state.composition: tests, standing (not_assessed | current {verdict} | stale {verdict, changed: what changed since: model, an artifact, the settings, the test}), evidence, running, last. A requirement the run cannot judge is not assessed, never a pass."),
             c("system_level", json!({"path":"regulator"}), "Drill into a subsystem instance path (\"\" is the top level)"),
             c("system_select", json!({"names":["q1"]}), "Select instances at the current level: the shared selection's items of the Build document (the Outline's and a part click's path); an unknown name is refused, naming it, and the selection stays. Answers system_state"),
             c("system_undo", json!({}), "Undo the last edit in the shared history"),
             c("system_redo", json!({}), "Redo in the shared history"),
             c("system_run", json!({"action":"step"}), "Control the background run on the shared runtime: action start, pause, step (one timestep while paused) or reset (t = 0, paused; a run that reached 0.1 s is saved first). Same Builder methods as the Run/Pause/Step/Reset buttons"),
-            c("system_drive", json!({"forward":0.5,"lateral":0,"yaw":0}), "Drive a robot system's run: a system whose root hosts a robot.articulated, a control.external and optionally a control.drive_limiter, each linked to its file (system command link_file: .simrobot.json, the robot's .controller.json binding, the .drive.json profile that binding names), running after system_run start on the shared drive host (sim_runtime::drive_host::DriveHost: the shared Session with the binding's external controller on the model's control.external seam; the same code Robot mode drives). Build it with one system batch in this order: add_instance (rover, controller, limiter), link_file each, set_parameter controller sense.command.<axis> (value 1), then connect limiter twist.<axis> to controller sense.command.<axis> (connect is checked as it applies, so it must follow link_file). Give exactly one of: axes forward, lateral, yaw (normalized -1..1: + ahead, + left, + turn left/CCW; absent ones are 0), scaled by the linked profile's max_speed per axis (kinematics::scale; a nonzero axis the profile does not support, a value outside -1..1 or a non-finite one is refused naming the axis); action (one of the profile's named actions: stop approaches zero under the profile's acceleration limit, halt zeroes at once; an unknown name is refused listing the profile's actions); or stop: true. Mixing them is refused naming the fields given. The same BuildAction::Drive as the run panel's Forward/Back/Left/Right/Stop buttons (system_ui). A nonzero request is accepted only while the run is running (system_run start); stop, halt and zero requests are accepted until the run fails or ends, and before the system has loaded only stop is. The run thread limits each request under the profile's max_accel and applies its deadman on simulated time, then sends the twist and a request heartbeat on the controller's command channels (command.forward/lateral/yaw/heartbeat); the controller mixes it. A request older than the profile's deadman timeout is lost and the robot stops, so a REST client must repeat its request faster than that to keep moving. Refused naming the reason: no run, a run that is not a robot system, a run that failed (a controller that exited, timed out or answered badly fails the run; the error names the instance and the controller) or ended, a reset in progress; a refusal is kept in system_state.live_run.drive.last_refusal. Answers system_state.live_run.drive: phase, system (instances and files, limits with units, deadman, period, channels, wiring), status (request and commanded twist, heartbeat, deadman age), requested, last_refusal, last_apply_error and error. In Build mode the bound keys and gamepad (drive_bindings; defaults W/S forward, A/D turn, Q/E lateral, X stop, B halt) drive a loaded robot system's run through the same request and apply (Builder::drive_request), read by the viewer's one drive device poller: axes the linked profile does not support are zeroed per device, a held input repeats its request every frame (quietly; a refusal is last_refusal, not the status line) and one zero request follows its release; Escape stops (not while a text field has the keyboard or in a Cmd/Ctrl/Alt chord), window focus loss stops what the keys or gamepad were driving, a text field taking the keyboard stops what the keys were driving, a bound action is preceded by a zero request, and after any stop or action the held inputs are ignored until released. Build's own keys (arrows, N, G, U, R) are never read for driving. The drive strip under the viewport shows the bound keys and the requested and commanded twist."),
             c("system_import_image", json!({"path":"/abs/board.png"}), "Import a PNG/JPEG as a reference image at the current level"),
             c("system_suggest", json!({"instance":"motor"}), "What can snap onto each port of an instance at the current level (typed, curated first, conflicts explained)"),
             c("system_snap", json!({"instance":"motor","port":"shaft","kind":{"kind":"element","component_type":"rotational.worm_gear"}}), "Place a fitting part next to an instance and connect it to that port (one undoable edit)"),
@@ -332,6 +377,39 @@ fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, 
             let label = label.clone().unwrap_or_else(|| format!("{} command(s) via REST", commands.len()));
             builder.apply(&label, commands.clone()).map(|a| json!(a))
         })(),
+        SystemAction::SystemAddFmu { at, name, path, period, offset, input_delay, output_delay, deadline_s, kinds, parameters, expected_revision } => (|| -> sim_api::Result {
+            if expected_revision.is_some_and(|r| r != builder.document.revision) {
+                return Err("stale system revision; reload system_state".into());
+            }
+            let timing = sim_core::BlockTiming { clock: sim_core::Clock::Periodic { period: *period, offset: *offset }, input_delay: *input_delay, output_delay: *output_delay, deadline_s: *deadline_s };
+            let added = builder.add_fmu(Some(&mut *pick), at, name.clone(), path, timing, kinds, parameters)?;
+            Ok(json!({"added": added, "state": pick.state(builder)}))
+        })(),
+        SystemAction::SystemAddRobot { at, name, source, driver_control, expected_revision } => (|| -> sim_api::Result {
+            if expected_revision.is_some_and(|r| r != builder.document.revision) {
+                return Err("stale system revision; reload system_state".into());
+            }
+            let added = builder.add_robot(Some(&mut *pick), at, name.clone(), source, *driver_control)?;
+            Ok(json!({"added": added, "state": pick.state(builder)}))
+        })(),
+        SystemAction::SystemInspectFmu { path } => builder.inspect_fmu(path),
+        SystemAction::SystemTest { action, name, test, expected_revision } => (|| -> sim_api::Result {
+            let named = || name.clone().ok_or_else(|| format!("system_test {action} needs a name"));
+            match action.as_str() {
+                "set" | "delete" => {
+                    if expected_revision.is_some_and(|r| r != builder.document.revision) {
+                        return Err("stale system revision; reload system_state".into());
+                    }
+                    let test = if action == "set" { Some(test.clone().ok_or("system_test set needs a test {duration_s, requirements}")?) } else { None };
+                    builder.apply(&format!("{} test", if test.is_some() { "Save" } else { "Delete" }), vec![sim_system::Command::SetTest { name: named()?, test }])?;
+                }
+                "run" => builder.run_test(&named()?)?,
+                "status" => {}
+                other => return Err(format!("unknown system_test action `{other}` (set, delete, run or status)")),
+            }
+            Ok(builder.composition_json())
+        })(),
+        SystemAction::SystemGuide { topic } => super::guide::guide(topic.as_deref()),
         SystemAction::SystemGrid { grid, expected_revision } => (|| -> sim_api::Result {
             if expected_revision.is_some_and(|r| r != builder.document.revision) {
                 return Err("stale display grid; reload system_state".into());
@@ -357,9 +435,6 @@ fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, 
             }
             Ok(pick.state(builder))
         })(),
-        SystemAction::SystemDrive { forward, lateral, yaw, action, stop } => {
-            sim_runtime::drive_host::DriveRequest::from_fields(*forward, *lateral, *yaw, action.clone(), *stop, "system_drive").and_then(|request| builder.drive(request))
-        }
         SystemAction::SystemImportImage { path } => builder.import_image(path.clone()).map(|_| pick.state(builder)),
         SystemAction::SystemSuggest { instance } => builder.suggestions(instance).map(|s| json!(s)),
         SystemAction::SystemSnap { instance, port, kind } => (|| -> sim_api::Result {
@@ -405,82 +480,9 @@ fn execute(builder: &mut Builder, scene: &mut SpatialScene, camera: &mut Orbit, 
     Outcome::Done(result)
 }
 
-/// Why `action`, once accepted, disarms held drive inputs
-/// (`crate::drive_input::DISARM_RULE`), or None, and whether its acceptance
-/// is `dispatch`'s (no error recorded in `Builder::action_error`) rather
-/// than the answer's: a drive stop or named action, Pause or Reset from the
-/// run panel's buttons and keys (`Ui`, `RenderedUi`), as a `system_ui`
-/// control (resolved by its listed action before it runs), or REST
-/// `system_drive` and `system_run` pause / reset. Every non-device origin of
-/// Build's drive and run actions passes through [`apply`], so this is their
-/// one place; the devices' own requests go to `actions::drive_devices`.
-/// See [`Disarming`] for what it returns.
-fn disarm_reason(builder: &Builder, action: &SystemAction) -> Option<Disarming> {
-    // (what, stop, pause)
-    fn what(action: &BuildAction) -> Option<(String, bool, bool)> {
-        use sim_runtime::drive_host::DriveRequest;
-        match action {
-            BuildAction::Drive { request: DriveRequest::Stop } => Some(("Stop".into(), true, false)),
-            BuildAction::Drive { request: DriveRequest::Action { name } } => Some((format!("action {name}"), true, false)),
-            BuildAction::Pause => Some(("Pause".into(), false, true)),
-            BuildAction::Reset => Some(("Reset".into(), false, false)),
-            _ => None,
-        }
-    }
-    let disarming = |reason: String, dispatched: bool, stop: bool, pause: bool| Disarming { reason, dispatched, stop, pause };
-    match action {
-        SystemAction::Ui(a) | SystemAction::RenderedUi { action: a, .. } => what(a).map(|(w, stop, pause)| disarming(w, true, stop, pause)),
-        SystemAction::SystemUi { action: UiAction::Activate { id, .. }, .. } => builder.listed_action(id).as_ref().and_then(what).map(|(w, stop, pause)| disarming(format!("{w} from system_ui"), false, stop, pause)),
-        SystemAction::SystemRun { action } => match action.as_str() {
-            "pause" => Some(disarming("Pause from REST".into(), false, false, true)),
-            "reset" => Some(disarming("Reset from REST".into(), false, false, false)),
-            _ => None,
-        },
-        SystemAction::SystemDrive { forward, lateral, yaw, action, stop } => {
-            match sim_runtime::drive_host::DriveRequest::from_fields(*forward, *lateral, *yaw, action.clone(), *stop, "system_drive").ok()? {
-                sim_runtime::drive_host::DriveRequest::Stop => Some(disarming("Stop from REST".into(), false, true, false)),
-                sim_runtime::drive_host::DriveRequest::Action { name } => Some(disarming(format!("action {name} from REST"), false, true, false)),
-                sim_runtime::drive_host::DriveRequest::Axes { .. } => None,
-            }
-        }
-        _ => None,
-    }
-}
-
-/// An action that disarms held drive inputs once accepted ([`disarm_reason`]).
-#[derive(Clone, Debug, PartialEq)]
-struct Disarming {
-    /// `Disarm::reason`.
-    reason: String,
-    /// The action goes through `dispatch`: its refusal is `Builder::action_error`, not the answer.
-    dispatched: bool,
-    /// A drive stop or action (`Disarm::stop`; Pause and Reset send no Stop through it).
-    stop: bool,
-    /// A Pause: it disarms only when it paused a running run.
-    pause: bool,
-}
-
-impl Disarming {
-    /// Whether the applied action writes `Disarm`: it was accepted (`refused`:
-    /// a dispatched action recorded an `action_error`), and a Pause only when
-    /// it paused a run (`running_before`: a run was requested running before
-    /// the action; `paused_after`: a run is requested paused after it). A
-    /// Pause with no run, or of a run already paused, is a no-op (`pause_run`
-    /// accepts it silently) and disarms nothing.
-    fn writes(&self, refused: bool, running_before: bool, paused_after: bool) -> bool {
-        (!self.dispatched || !refused) && (!self.pause || (running_before && paused_after))
-    }
-}
-
 /// Actions: the builder's one apply system (build and lessons). Buttons,
 /// keys and markers go to `dispatch` (a refusal is the status line); REST
-/// commands answer their caller. Build mode's one writer of
-/// `crate::drive_input::Disarm` ([`disarm_reason`]: an accepted drive stop or
-/// action, Pause or Reset from any non-device origin; a Pause only when it
-/// paused a running run, [`Disarming::writes`]), and every answer
-/// that carries `system_state` (`live_run` at its top or under `state`)
-/// gets the device layer's `bindings` and `drive_input`
-/// (`Builder::with_drive_input`, the serializer Robot's `robot_state` uses).
+/// commands answer their caller.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn apply(
     mut messages: ResMut<Messages<Act<SystemAction>>>,
@@ -496,7 +498,6 @@ pub(super) fn apply(
     mut registry: ResMut<DocumentRegistry>,
     studies: Option<Res<calibration::study::StudyOwner>>,
     study_ui: Option<Res<calibration::study::forms::StudyUi>>,
-    (bindings, drive_input, mut disarm): (Option<Res<crate::drive_input::DriveBindings>>, Option<Res<crate::drive_input::DriveInput>>, MessageWriter<crate::drive_input::Disarm>),
 ) {
     let (Some(mut builder), Some(mut scene), Some(mut orbit)) = (builder, scene, orbit) else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |action, _| Outcome::Done(Err(no_builder(action))));
@@ -531,79 +532,9 @@ pub(super) fn apply(
                 return Outcome::Done(Err(format!("system_open refused: {reason}")));
             }
         }
-        // Resolved before the action runs (a `system_ui` activation by the control list it was made from),
-        // with whether a run was running then (a Pause disarms only when it paused one).
-        let disarms = disarm_reason(&builder, action);
-        let running_before = builder.run.as_ref().is_some_and(|r| r.requested_running);
-        let mut outcome = execute(&mut builder, &mut scene, &mut orbit, &mut pick, lessons, &mut switch, action, call);
+        let outcome = execute(&mut builder, &mut scene, &mut orbit, &mut pick, lessons, &mut switch, action, call);
         // An edit re-checks the selection at once (a later action in this frame sees it).
         pick.sync(&builder);
-        if let Outcome::Done(Ok(answer)) = &mut outcome {
-            // DISARM_RULE: accepted (a dispatched action records its refusal in `action_error`);
-            // a Pause only when it paused a running run.
-            let paused_after = builder.run.as_ref().is_some_and(|r| !r.requested_running);
-            if let Some(d) = disarms
-                && d.writes(builder.action_error.is_some(), running_before, paused_after)
-            {
-                disarm.write(crate::drive_input::Disarm { mode: ViewerMode::Build, reason: d.reason, stop: d.stop });
-            }
-            // `system_state`, at the top of the answer or as its `state`: the device layer too.
-            if answer.get("live_run").is_some() {
-                builder.with_drive_input(answer, bindings.as_deref(), drive_input.as_deref());
-            } else if let Some(state) = answer.get_mut("state").filter(|s| s.get("live_run").is_some()) {
-                builder.with_drive_input(state, bindings.as_deref(), drive_input.as_deref());
-            }
-        }
         outcome
     });
-}
-
-#[cfg(test)]
-mod disarm_tests {
-    //! Written fixtures (not executed by their author): when Build's apply
-    //! writes `drive_input::Disarm` for a Pause.
-    use super::*;
-
-    /// A builder on a system without a run (the winch example, copied).
-    fn builder() -> Builder {
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let dir = std::env::temp_dir().join(format!("builder-disarm-pause-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("winch.system.json");
-        std::fs::copy(root.join("examples/systems-builder/worm-drive/winch.system.json"), &path).unwrap();
-        let registry = sim_runtime::registry_with_parts(&root.join("library/parts")).0;
-        Builder::open(path, root.join("library/systems"), registry).unwrap()
-    }
-
-    /// A Pause disarms only when it paused a running run: REST system_run
-    /// pause, the panel's Pause and its system_ui activation are all marked
-    /// as a Pause, and with no run (or a run already paused) none writes a
-    /// Disarm. Reset and a drive stop disarm whenever accepted; a dispatched
-    /// action's refusal (`action_error`) writes none.
-    #[test]
-    fn a_no_op_pause_writes_no_disarm() {
-        let mut b = builder();
-        let pause = disarm_reason(&b, &SystemAction::SystemRun { action: "pause".into() }).unwrap();
-        assert_eq!((pause.reason.as_str(), pause.dispatched, pause.stop, pause.pause), ("Pause from REST", false, false, true));
-        let panel = disarm_reason(&b, &SystemAction::Ui(BuildAction::Pause)).unwrap();
-        assert!(panel.pause && panel.dispatched && !panel.stop);
-        // Nothing running: the Pause is accepted (`run_pause`) but changes nothing.
-        let running_before = b.run.as_ref().is_some_and(|r| r.requested_running);
-        b.run_pause();
-        let paused_after = b.run.as_ref().is_some_and(|r| !r.requested_running);
-        assert!(!running_before && !paused_after);
-        assert!(!pause.writes(false, running_before, paused_after), "a Pause with no run writes no Disarm");
-        assert!(!panel.writes(false, running_before, paused_after));
-        // An already-paused run: not running before.
-        assert!(!pause.writes(false, false, true), "a Pause of a paused run writes no Disarm");
-        // A running run that the Pause paused.
-        assert!(pause.writes(false, true, true));
-        assert!(!panel.writes(true, true, true), "a refused dispatched Pause writes none");
-        // Reset and a drive stop are not gated on the run's state.
-        let reset = disarm_reason(&b, &SystemAction::SystemRun { action: "reset".into() }).unwrap();
-        assert!(!reset.pause && reset.writes(false, false, false));
-        let stop = disarm_reason(&b, &SystemAction::SystemDrive { forward: None, lateral: None, yaw: None, action: None, stop: Some(true) }).unwrap();
-        assert!(stop.stop && !stop.pause && stop.writes(false, false, false));
-    }
 }

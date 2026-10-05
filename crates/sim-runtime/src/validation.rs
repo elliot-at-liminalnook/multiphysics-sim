@@ -385,7 +385,7 @@ pub fn compare_recording(
         if candidate.frame().error.is_some() || reference.frame().error.is_some() {
             return Err("shared comparison prefix failed".into());
         }
-        if candidate.robot.runtime.snapshot() != reference.robot.runtime.snapshot()
+        if candidate.robot.runtime.snapshot().ok() != reference.robot.runtime.snapshot().ok()
             || measurements(&candidate, &candidate_labels) != measurements(&reference, &reference_labels)
             || serde_json::to_value(candidate.frame()).map_err(|e| e.to_string())?
                 != serde_json::to_value(reference.frame()).map_err(|e| e.to_string())? {

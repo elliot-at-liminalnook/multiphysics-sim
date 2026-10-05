@@ -23,6 +23,8 @@ const USAGE: &str = "usage: sim-system <command> …
   reference FILE AT ID IMAGE [--view spatial|schematic] [--width W] [--origin X,Y,Z]
                                        import a PNG/JPEG reference image
   study FILE NAME [--threads N]         run a saved comparison or sweep; print the trade-off table
+  test FILE [NAME]                     run an acceptance test (keep its evidence beside the file); without
+                                       NAME, print where every test stands (not assessed, current, stale)
   datasheet TYPE|--all [--write DIR] [--parameters CAD.physics.json]
                                        run a part's bench; print (or write) its datasheet;
                                        --parameters benches the part as derived from CAD
@@ -107,6 +109,11 @@ fn run() -> Result<(), String> {
     let command = args.first().ok_or(USAGE)?.as_str();
     let registry = sim_runtime::system_registry();
     let file = || args.get(1).map(PathBuf::from).ok_or_else(|| USAGE.to_string());
+    // The system file's directory: generated robots and FMU blocks resolve against it.
+    let dir = || -> Result<PathBuf, String> {
+        let f = std::path::absolute(file()?).map_err(|e| e.to_string())?;
+        Ok(f.parent().map(Path::to_path_buf).unwrap_or_default())
+    };
     let store = || file().map(SystemStore::new);
     let e = |e: sim_system::SystemError| e.to_string();
     match command {
@@ -130,12 +137,23 @@ fn run() -> Result<(), String> {
             let label = flag(&args, "--label").unwrap_or_else(|| format!("{} command(s) from CLI", commands.len()));
             print(&store()?.apply(&registry, &label, &commands, expected).map_err(e)?)?;
         }
+        "test" => {
+            let document = store()?.load_valid(&registry).map_err(e)?;
+            match args.get(2) {
+                Some(name) => {
+                    let evidence = sim_runtime::system_evidence::assess(&document, &registry, &dir()?, name, None)?;
+                    sim_runtime::system_evidence::save(&file()?, &evidence)?;
+                    print(&evidence)?;
+                }
+                None => print(&sim_runtime::system_evidence::standing(&document, &file()?)?)?,
+            }
+        }
         "study" => {
             let document = store()?.load_valid(&registry).map_err(e)?;
             let name = args.get(2).ok_or(USAGE)?;
             let study = document.studies.get(name).ok_or_else(|| format!("no study `{name}` (saved: {})", document.studies.keys().cloned().collect::<Vec<_>>().join(", ")))?;
             let threads = flag(&args, "--threads").and_then(|t| t.parse().ok()).unwrap_or(4);
-            let result = sim_runtime::system_study::run(&document, &registry, name, study, threads, None, &|done, total| eprintln!("{done}/{total}"))?;
+            let result = sim_runtime::system_study::run(&document, &registry, Some(&dir()?), name, study, threads, None, &|done, total| eprintln!("{done}/{total}"))?;
             println!("{}", sim_runtime::system_study::table(&result));
         }
         "datasheet" => {
@@ -273,7 +291,7 @@ fn run() -> Result<(), String> {
         "redo" => print(&store()?.redo().map_err(e)?)?,
         "history" => print(&store()?.history())?,
         "check" => {
-            let report = builder::check(&store()?.load().map_err(e)?, &registry)?;
+            let report = builder::check_at(&store()?.load().map_err(e)?, &registry, &dir()?)?;
             print(&report)?;
             if report.compile_error.is_some() {
                 return Err("the system does not compile".into());
@@ -283,7 +301,7 @@ fn run() -> Result<(), String> {
             let document = store()?.load().map_err(e)?;
             let out = PathBuf::from(args.get(2).ok_or(USAGE)?);
             let stem = flag(&args, "--stem").unwrap_or_else(|| file().unwrap().file_name().unwrap().to_string_lossy().trim_end_matches(".system.json").trim_end_matches(".json").to_string());
-            let compiled = builder::compile(&document, &registry, builder::config_for(&document))?;
+            let compiled = builder::compile_at(&document, &registry, builder::config_for(&document), &dir()?)?;
             let bundle = builder::write_bundle(&compiled, &out, &stem)?;
             println!("description {}\nlive {}", bundle.description.display(), bundle.live.display());
             if let Some(s) = bundle.spatial {
@@ -323,7 +341,7 @@ fn run() -> Result<(), String> {
                 }
             }
             let started = std::time::Instant::now();
-            let series = builder::simulate(&document, &registry, seconds, config, &flags(&args, "--select"))?;
+            let series = builder::simulate_at(&document, &registry, &dir()?, seconds, config, &flags(&args, "--select"))?;
             let wall = started.elapsed().as_secs_f64();
             for s in &series {
                 let (min, max) = s.values.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), v| (a.min(*v), b.max(*v)));

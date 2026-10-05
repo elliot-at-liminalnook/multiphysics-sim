@@ -1,0 +1,21 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.complementary_tilt",
+  "label": "Complementary tilt filter",
+  "kind": "generic",
+  "parameters": {
+    "min_ay": 0.01,
+    "time_constant": 0.5
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) ax, ay, gyro: benches need a fixed drive, so only the ports are documented"
+    }
+  ],
+  "source_hash": "7373e812546b20f77d690b6c8d54b9c6f667e6c3969b07ca510d1a0832fce28a"
+}

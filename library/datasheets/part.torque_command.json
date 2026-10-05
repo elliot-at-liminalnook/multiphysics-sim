@@ -1,0 +1,37 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.torque_command",
+  "label": "Torque command (step + sine)",
+  "kind": "generic",
+  "parameters": {
+    "amplitude": 0.0,
+    "chirp": 0.0,
+    "duration": 1.0,
+    "edge": 0.0005,
+    "frequency": 1.0,
+    "start": 0.0,
+    "step": 0.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 0.0,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 0.000e0 J → change 0.000e0 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 0.0e0, 0.0e0, 0.0e0 (1 → 0.125 ms); observed order NaN"
+    }
+  ],
+  "source_hash": "6e86d7c6954fbe83022c1406883ef38de8ce481098bde6dad9e6d3d8e081c708"
+}

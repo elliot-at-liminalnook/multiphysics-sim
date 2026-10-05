@@ -1778,7 +1778,7 @@ impl Exhibit for LanguageExhibit {
         } else {
             language_independence::rust_controller(self.law)
         };
-        rt.attach(seam, controller).expect("seam");
+        rt.bind_coupler(seam, controller, false).expect("seam");
         self.runtime = rt;
         self.speed = speed;
         self.angle = angle;
@@ -1949,13 +1949,13 @@ impl Exhibit for DeadlineExhibit {
             Ok(inner) => {
                 let realtime = sim_couple::RealTime::new(Box::new(inner), std::time::Duration::from_secs_f64(self.case.period));
                 self.missed = Some(realtime.missed());
-                rt.attach(seam, Box::new(realtime)).expect("seam");
+                rt.bind_coupler(seam, Box::new(realtime), false).expect("seam");
                 self.error = None;
             }
             Err(e) => {
                 self.missed = None;
                 self.error = Some(format!("python3 unavailable: {e}"));
-                rt.attach(seam, language_independence::rust_controller(language_independence::Law { kp: self.case.kp(), ki: 0.0, setpoint: 0.0, limit: f64::INFINITY, period: self.case.period })).expect("seam");
+                rt.bind_coupler(seam, language_independence::rust_controller(language_independence::Law { kp: self.case.kp(), ki: 0.0, setpoint: 0.0, limit: f64::INFINITY, period: self.case.period }), false).expect("seam");
             }
         }
         self.runtime = Some(rt);
@@ -2031,7 +2031,7 @@ impl Exhibit for LegExhibit {
         let target = [self.leg.initial[0], self.leg.initial[1] + self.step, self.leg.initial[2]];
         match self.leg.controller(target, self.leg.initial, 0.5, false) {
             Ok(c) => {
-                plant.runtime.attach(plant.seam, c).expect("seam");
+                plant.runtime.bind_coupler(plant.seam, c, false).expect("seam");
                 self.error = None;
             }
             Err(e) => self.error = Some(format!("python3 unavailable: {e}")),
@@ -2103,7 +2103,7 @@ impl Exhibit for QuadrupedExhibit {
         let controller = self.quadruped.controller_in(self.quadruped.stride, quadruped_gait::Lang::Dylib).or_else(|_| self.quadruped.controller_in(self.quadruped.stride, quadruped_gait::Lang::C)).or_else(|_| self.quadruped.controller(self.quadruped.stride));
         match controller {
             Ok(c) => {
-                plant.runtime.attach(plant.seam, c).expect("seam");
+                plant.runtime.bind_coupler(plant.seam, c, false).expect("seam");
                 self.error = None;
             }
             Err(e) => self.error = Some(format!("no controller available: {e}")),
@@ -2233,7 +2233,7 @@ impl CruiseExhibit {
     }
     fn build(registry: &BehaviorRegistry, car: &cruise_control::Car) -> (cruise_control::Plant, StateId, StateId, StateId) {
         let mut plant = car.model(registry);
-        plant.runtime.attach(plant.seam, car.controller()).expect("seam");
+        plant.runtime.bind_coupler(plant.seam, car.controller(), false).expect("seam");
         let body = plant.runtime.model.behaviors.keys().next().expect("a body");
         let ids = ["x", "y", "theta"].map(|n| plant.runtime.state_id(body, n));
         (plant, ids[0], ids[1], ids[2])

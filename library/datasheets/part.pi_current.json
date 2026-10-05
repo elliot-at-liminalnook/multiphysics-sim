@@ -1,0 +1,26 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.pi_current",
+  "label": "PI current controller (torque control)",
+  "kind": "generic",
+  "parameters": {
+    "ki": 0.0,
+    "kp": 0.2,
+    "limit": 1.0,
+    "offset": 0.0,
+    "rise": 0.00005,
+    "start": 0.0,
+    "target": 1.0
+  },
+  "conditions": {},
+  "values": [],
+  "curves": [],
+  "checks": [
+    {
+      "name": "bench",
+      "passed": true,
+      "detail": "driven by signal input(s) measured: benches need a fixed drive, so only the ports are documented"
+    }
+  ],
+  "source_hash": "9af631a2d30ea200e43794dff5998a6c8c243dbacbf51463d79fc8372881af9a"
+}

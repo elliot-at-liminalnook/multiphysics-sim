@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription
+  fmiVersion="3.0"
+  modelName="joint_controller"
+  instantiationToken="{0d7c2b44-9e1a-4c35-b8f0-joint-controller-1}"
+  description="One joint's outer loop: a sine reference with integral trim, commanding the servo target"
+  generationTool="multiphysics-sim fixture (hand-written C, examples/fmi)"
+  variableNamingConvention="flat">
+
+  <CoSimulation
+    modelIdentifier="joint_controller"
+    canHandleVariableCommunicationStepSize="true"
+    canGetAndSetFMUState="true"
+    canSerializeFMUState="true"
+    canBeInstantiatedOnlyOncePerProcess="false"/>
+
+  <UnitDefinitions>
+    <Unit name="rad"><BaseUnit rad="1"/></Unit>
+    <Unit name="Hz"><BaseUnit s="-1"/></Unit>
+    <Unit name="1/s"><BaseUnit s="-1"/></Unit>
+    <Unit name="s"><BaseUnit s="1"/></Unit>
+  </UnitDefinitions>
+
+  <DefaultExperiment stepSize="0.01"/>
+
+  <ModelVariables>
+    <Float64 name="time" valueReference="999" causality="independent" variability="continuous" unit="s" description="Simulation time"/>
+    <Float64 name="angle" valueReference="0" causality="input" unit="rad" start="0" description="Measured joint angle"/>
+    <Float64 name="target" valueReference="1" causality="output" unit="rad" min="-3.2" max="3.2" initial="calculated" description="Servo target angle"/>
+    <Float64 name="amplitude" valueReference="10" causality="parameter" variability="fixed" unit="rad" start="0.3" description="Reference amplitude"/>
+    <Float64 name="frequency" valueReference="11" causality="parameter" variability="fixed" unit="Hz" start="0.5" min="0" description="Reference frequency"/>
+    <Float64 name="offset" valueReference="12" causality="parameter" variability="fixed" unit="rad" start="0" description="Reference offset"/>
+    <Float64 name="ki" valueReference="13" causality="parameter" variability="fixed" unit="1/s" start="0" min="0" description="Integral trim gain"/>
+    <Float64 name="limit" valueReference="14" causality="parameter" variability="fixed" unit="rad" start="1.5" description="Target limit (absolute)"/>
+    <Float64 name="trim" valueReference="20" causality="local" initial="calculated" unit="rad" description="Integral trim"/>
+  </ModelVariables>
+
+  <ModelStructure>
+    <Output valueReference="1"/>
+    <InitialUnknown valueReference="1"/>
+  </ModelStructure>
+</fmiModelDescription>

@@ -171,13 +171,13 @@ pub fn calibrate(edit: &mut Edit, id: &str, first: [f64; 3], second: [f64; 3], d
     update(edit, id, Update { width: Some(image["width"].as_f64().unwrap_or(100.) * factor), origin: Some(origin), ..Update::default() })
 }
 
-/// system_link.py's `read`: a `sim.system/1` file's hash and summary.
+/// system_link.py's `read`: a `sim.system/2` file's hash and summary.
 pub fn read_system(path: &Path) -> Result<Value, String> {
     let data = std::fs::read(path).map_err(|e| format!("Cannot read system file: {e}"))?;
     let name = path.file_name().map_or_else(|| path.display().to_string(), |f| f.to_string_lossy().into_owned());
     let doc: Value = serde_json::from_slice(&data).map_err(|e| format!("{name} is not JSON: {e}"))?;
-    if doc["schema"] != "sim.system/1" {
-        return Err(format!("{name} is not a sim.system/1 system file"));
+    if doc["schema"] != "sim.system/2" {
+        return Err(format!("{name} is not a sim.system/2 system file"));
     }
     let defs = doc["definitions"].as_object().map_or(0, |d| d.len());
     let root = doc["root"].as_str().and_then(|r| doc["definitions"].get(r)).cloned().unwrap_or(Value::Null);

@@ -1,0 +1,36 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.index_move",
+  "label": "Indexed moves (stop and shoot)",
+  "kind": "generic",
+  "parameters": {
+    "begin": 0.0,
+    "gain": 1.0,
+    "move": 1.2,
+    "period": 2.0,
+    "start": 0.0,
+    "step": 0.1745329
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 0.0,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 0.000e0 J → change 0.000e0 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 0.0e0, 0.0e0, 0.0e0 (1 → 0.125 ms); observed order NaN"
+    }
+  ],
+  "source_hash": "b032c7bfa45ce0c61cc68f23960360cd64583657aef0c750929f81adc5b7661a"
+}

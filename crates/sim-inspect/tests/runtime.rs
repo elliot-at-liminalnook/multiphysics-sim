@@ -9,7 +9,7 @@ use sim_inspect::{
     runtime::{FrameStamp, RuntimeInspection},
     *,
 };
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 static CALLS: AtomicUsize = AtomicUsize::new(0);
 struct Decay;
 impl Behavior for Decay {
@@ -191,25 +191,17 @@ fn thermal_subscription_exposes_balanced_flows_with_registered_units() {
 
 #[test]
 fn failed_runtime_commit_keeps_old_endpoint_and_withholds_new_algebraic_values() {
-    struct Failing {
-        failed: AtomicBool,
-    }
+    // A residual that turns non-finite after 0.01 s: the advance fails.
+    struct Failing;
     impl Behavior for Failing {
         fn states(&self) -> Vec<StateDeclaration> {
             vec![StateDeclaration::new("x", QuantityKind::Voltage, 1.)]
         }
         fn residual(&self, c: &mut Context) {
-            if c.time > 0.01 {
-                self.failed.store(true, Ordering::Relaxed);
-            }
-            c.set_state_residual(0, c.state_rate(0) + c.state(0));
+            let poison = if c.time > 0.01 { f64::NAN } else { 0.0 };
+            c.set_state_residual(0, c.state_rate(0) + c.state(0) + poison);
             c.set_signal(0, c.state(0));
             c.add_through(0, c.across_rate(0));
-        }
-        fn failure(&self) -> Option<String> {
-            self.failed
-                .load(Ordering::Relaxed)
-                .then(|| "deliberate failure".into())
         }
     }
     let mut registry = BehaviorRegistry::default();
@@ -221,11 +213,7 @@ fn failed_runtime_commit_keeps_old_endpoint_and_withholds_new_algebraic_values()
                 signal_out("voltage", QuantityKind::Voltage),
                 sim_core::acausal("node", sim_core::ConnectorKind::Thermal),
             ],
-            |_| {
-                Ok(Box::new(Failing {
-                    failed: AtomicBool::new(false),
-                }))
-            },
+            |_| Ok(Box::new(Failing)),
         ))
         .unwrap();
     let mut model = ModelWorld::default();

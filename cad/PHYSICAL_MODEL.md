@@ -309,7 +309,7 @@ Fit/export consistency does not establish hardware accuracy. See the
   * `robot.servo_firmware`: signal_in `target`, `measured`; signal_out `command` (voltage or current); sampled loop with latency, deadband, quantised sensor, PID with saturation.
   * `robot.h_bridge`: `supply_p/supply_n` in, `p/n` out, signal_in `command`; averaged, on-resistance, current limit.
   * `robot.battery`: `p/n`; SOC state, EMF(SOC), internal resistance, cutoff.
-  * `robot.thermal_probe`: thermal `node` → signal_out `temperature`.
+  * `thermal.temperature_sensor`: thermal `node` → signal_out `temperature`.
   * `robot.imu`: Frame `mount` → signals `ax ay az gx gy gz` (sampled, noise, bias walk, quantisation).
   * `robot.cable`: Frame `a`, Frame `b`; lumped elastic cable, tension-only.
 * `sim-phenomena::scenarios::cad_robot`: v3 builder wiring all of the above into one ModelWorld (`CadRobot::build`), planar projection option, Monte Carlo (`run_monte_carlo`), results writer, `fit` for identification. v2 files keep the old planar chain path.

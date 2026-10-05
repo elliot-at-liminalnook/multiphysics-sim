@@ -7659,6 +7659,11 @@ counter-clockwise.
   `DriveHost` (the `Session` plus its `TwistState`): the one place a driven
   session is stepped. Robot mode's run thread (`Sim::Controlled { host }`)
   and Build mode's robot-system run thread both own a `DriveHost`.
+- *Superseded 2026-10-04 (docs/architecture/composition.md): hosted
+  instances, `Command::LinkFile`, `system_robot` and Build mode's drive host
+  are gone. A robot in a system is a generated assembly flattened into the
+  one model, its controllers are blocks run by the runtime's scheduler, and
+  `SystemSession` runs it like any system. The record below is history.*
 - *Build mode hosts the robot on `DriveHost`, not `SystemSession`.*
   `SystemSession` runs `Runtime::advance`, which would skip
   `PhysicalRobot::advance`'s slice retry and battery sampling: a second

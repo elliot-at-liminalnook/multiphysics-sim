@@ -48,7 +48,7 @@ pub struct DriveInput {
     pub last_error: Option<String>,
 }
 /// Why `drive_input.ignored_axes` lists an axis.
-pub const IGNORED_RULE: &str = "device axes the robot's drive profile does not support are zeroed before sending and listed here; REST robot_drive and system_drive refuse them by name";
+pub const IGNORED_RULE: &str = "device axes the robot's drive profile does not support are zeroed before sending and listed here; a remote drive request refuses them by name";
 impl DriveInput {
     /// `drive_input` as both modes' state answers carry it ([`super::insert_state`], the one serializer).
     pub fn json(&self) -> Value {
@@ -110,7 +110,7 @@ pub fn live_target(target: &DriveTarget, mode: Option<ViewerMode>) -> Option<&su
 /// Robot mode forwards them as `RobotAction::Drive` (the same action as
 /// `system_ui` drive:* and REST `robot_drive`), Build mode applies them with
 /// `Builder::drive_request` (the same apply as the run panel's drive buttons and
-/// REST `system_drive`).
+/// REST `robot_drive`).
 ///
 /// Coexistence: a target is live only for a controlled run (Robot: a robot
 /// with a controller binding and a `sim.drive/1` profile; Build: a robot

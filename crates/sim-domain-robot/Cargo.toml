@@ -17,11 +17,11 @@ sim-dynamics = { path = "../sim-dynamics" }
 sim-domain-multibody = { path = "../sim-domain-multibody" }
 sim-domain-control = { path = "../sim-domain-control" }
 sim-domain-electrical = { path = "../sim-domain-electrical" }
+sim-domain-thermal = { path = "../sim-domain-thermal" }
 
 [dev-dependencies]
 approx.workspace = true
 sim-compile = { path = "../sim-compile" }
-sim-domain-thermal = { path = "../sim-domain-thermal" }
 sim-domain-rotational = { path = "../sim-domain-rotational" }
 sim-domain-control = { path = "../sim-domain-control" }
 

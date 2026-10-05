@@ -1,7 +1,7 @@
 {
-  "schema": "sim.system/1",
+  "schema": "sim.system/2",
   "title": "Worm-drive winch",
-  "revision": 10,
+  "revision": 12,
   "root": "root",
   "definitions": {
     "planetary_gearbox_30": {
@@ -1204,14 +1204,14 @@
     },
     "notes": "Realtime models: the motor drops its winding inductance (current becomes algebraic), so the ~1 ms start-up current transient is not resolved: current error is bounded at 25 % of range (peak inrush), speeds and angles at 5 %. Worm friction smoothing 0.05 rad/s (more creep when locked); 2 ms step.",
     "measured": {
-      "content_hash": "7f080c3a061d725c8ab63794db0b7f626b44b5411729e515800f6405c6f96a25",
+      "content_hash": "bcc4f13c06bf9d47d0dc926e7d54501639430ee58d5e15336da6c265fcf88fd0",
       "errors": {
         "drum.shaft.angle": 0.0003438079634077844,
         "drum.shaft.speed": 0.007185572051236804,
         "motor.p.current": 0.20920831081548286
       },
-      "detailed_speed": 3.8247832668394124,
-      "realtime_speed": 18.097378610091102,
+      "detailed_speed": 2.9469333699322813,
+      "realtime_speed": 13.481815124448918,
       "host": "x86_64 macos (release build)"
     }
   }

@@ -4,7 +4,7 @@
 //! - `link_system(path)`: stores `{path (relative to the .rcad when they
 //!   share a tree), sha256, title, revision, definitions, instances,
 //!   linked}` in `robot_settings["system"]`; one undo step; `result` is the
-//!   link. A file that is not `sim.system/1` JSON is a 422.
+//!   link. A file that is not `sim.system/2` JSON is a 422.
 //! - `unlink_system()`: removes it (422 "No system file is linked").
 //! - `refresh_system_link()`: "Accept changes": re-links the file now at
 //!   the stored path (new hash and revision).

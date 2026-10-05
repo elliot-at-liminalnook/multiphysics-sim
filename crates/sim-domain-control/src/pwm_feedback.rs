@@ -1,137 +1,41 @@
-//! Typed sampled angular-feedback/duty seam and a reusable bounded position PID.
+//! The sampled angular-feedback/duty controller block and a reusable bounded position PID.
 //! No actuator physics; hardware and simulated hosts call the same control law.
 use serde::{Deserialize, Serialize};
 use sim_core::{
-    BehaviorDescriptor, BehaviorRegistry, ParameterDeclaration as P, QuantityKind as Q,
-    RegistryError, signal_in, signal_out,
+    BlockInterface, BlockPort, BlockTiming, Clock, ImplementationRef, Instance, ModelWorld,
+    QuantityKind as Q, RegistryError,
 };
-pub const FEEDBACK: &str = "control.angular_pwm_feedback";
-pub const SCHEDULED_FEEDBACK: &str = "control.scheduled_angular_pwm_feedback";
-pub const ELECTRICAL_FEEDBACK: &str = "control.electrical_angular_pwm_feedback";
-pub const SCHEDULED_ELECTRICAL_FEEDBACK: &str = "control.scheduled_electrical_angular_pwm_feedback";
-fn electrical_external(
-    p: &std::collections::BTreeMap<String, f64>,
-    scheduled: bool,
-) -> Result<Box<dyn sim_core::Behavior>, sim_core::EquationError> {
-    let mut e = crate::external::External::new(
-        vec![
-            "angle".into(),
-            "supply_voltage".into(),
-            "supply_current".into(),
-            "winding_current".into(),
-        ],
-        vec!["duty".into()],
-        if scheduled {
-            1.
-        } else {
-            sim_core::param(p, "period")?
-        },
-    );
-    if scheduled {
-        let count = sim_core::param(p, "count")? as usize;
-        let times = (0..count)
-            .map(|i| sim_core::param(p, &format!("time.{i}")))
-            .collect::<Result<Vec<_>, _>>()?;
-        if times.is_empty()
-            || times.iter().any(|t| !t.is_finite() || *t < 0.)
-            || times.windows(2).any(|w| w[0] >= w[1])
-        {
-            return Err(sim_core::EquationError::InvalidParameter(
-                "time.*".into(),
-                "Expected ordered nonnegative schedule".into(),
-            ));
-        }
-        e.offset = times[0];
-        e.schedule = Some(times);
-    }
-    Ok(Box::new(e))
-}
-pub fn register(r: &mut BehaviorRegistry) -> Result<(), RegistryError> {
-    for (kind, scheduled) in [
-        (ELECTRICAL_FEEDBACK, false),
-        (SCHEDULED_ELECTRICAL_FEEDBACK, true),
-    ] {
-        r.register(
-            BehaviorDescriptor::new(
-                kind,
-                "Sampled angle and electrical feedback with PWM duty",
-                vec![
-                    signal_in("sense.angle", Q::Angle),
-                    signal_in("sense.supply_voltage", Q::Voltage),
-                    signal_in("sense.supply_current", Q::Current),
-                    signal_in("sense.winding_current", Q::Current),
-                    signal_out("act.duty", Q::Dimensionless),
-                ],
-                if scheduled {
-                    |p| electrical_external(p, true)
-                } else {
-                    |p| electrical_external(p, false)
-                },
-            )
-            .with_parameters(if scheduled {
-                vec![
-                    P::required("count", "1").integer(1., 300_000.),
-                    P::alternative("time.*", "s"),
-                ]
-            } else {
-                vec![P::required("period", "s").positive()]
-            }),
-        )?;
-    }
 
-    r.register(
-        BehaviorDescriptor::new(
-            FEEDBACK,
-            "Sampled angular feedback and PWM duty",
-            vec![
-                signal_in("sense.angle", Q::Angle),
-                signal_out("act.duty", Q::Dimensionless),
-            ],
-            |p| {
-                Ok(Box::new(crate::external::External::new(
-                    vec!["angle".into()],
-                    vec!["duty".into()],
-                    sim_core::param(p, "period")?,
-                )))
-            },
-        )
-        .with_parameters(vec![P::required("period", "s").positive()]),
-    )?;
-    r.register(
-        BehaviorDescriptor::new(
-            SCHEDULED_FEEDBACK,
-            "Angular feedback/PWM at captured event times",
-            vec![
-                signal_in("sense.angle", Q::Angle),
-                signal_out("act.duty", Q::Dimensionless),
-            ],
-            |p| {
-                let count = sim_core::param(p, "count")? as usize;
-                let times = (0..count)
-                    .map(|i| sim_core::param(p, &format!("time.{i}")))
-                    .collect::<Result<Vec<_>, _>>()?;
-                if times.is_empty()
-                    || times.iter().any(|t| !t.is_finite() || *t < 0.)
-                    || times.windows(2).any(|w| w[0] >= w[1])
-                {
-                    return Err(sim_core::EquationError::InvalidParameter(
-                        "time.*".into(),
-                        "schedule requires ordered nonnegative times".into(),
-                    ));
-                }
-                let mut external =
-                    crate::external::External::new(vec!["angle".into()], vec!["duty".into()], 1.);
-                external.offset = times[0];
-                external.schedule = Some(times);
-                Ok(Box::new(external))
-            },
-        )
-        .with_parameters(vec![
-            P::required("count", "1").integer(1., 300_000.),
-            P::alternative("time.*", "s"),
-        ]),
-    )
+/// The host implementation name the feedback block declares.
+pub const HOST: &str = "angular_pwm_feedback";
+
+/// The feedback controller's block interface: `angle` in (plus the
+/// electrical readings `supply_voltage`, `supply_current`, `winding_current`
+/// when `electrical`), `duty` out (starts at 0, within [-1, 1]). The host
+/// controller answers at the sample instant (feedthrough).
+pub fn interface(electrical: bool) -> BlockInterface {
+    let mut inputs = vec![BlockPort::new("angle", Q::Angle)];
+    if electrical {
+        inputs.extend([
+            BlockPort::new("supply_voltage", Q::Voltage),
+            BlockPort::new("supply_current", Q::Current),
+            BlockPort::new("winding_current", Q::Current),
+        ]);
+    }
+    BlockInterface {
+        inputs,
+        outputs: vec![BlockPort::new("duty", Q::Dimensionless).start(0.0).range(Some(-1.0), Some(1.0))],
+        feedthrough: true,
+    }
 }
+
+/// Add a feedback controller block named `name`, ticking on `clock` (a
+/// period, or the captured acquisition times of a recorded experiment).
+/// Bind its implementation with `Runtime::bind_coupler`.
+pub fn add(world: &mut ModelWorld, name: &str, electrical: bool, clock: Clock) -> Result<Instance, RegistryError> {
+    world.add_block(name, interface(electrical), BlockTiming::with_clock(clock), ImplementationRef::Host { name: HOST.into() })
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Pid {
     pub kp: f64,

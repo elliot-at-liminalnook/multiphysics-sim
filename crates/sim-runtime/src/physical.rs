@@ -3,7 +3,7 @@
 //! driver → motor unit → joint, the winding's heat through case and mount
 //! to ambient (the mount temperature softening the printed link), servo
 //! firmware closing the loop from an encoder, plus sensors, cables and the
-//! `control.external` seam that hands targets in. Results (peaks, margins,
+//! controller block that hands targets in. Results (peaks, margins,
 //! hotspots, traces) are accumulated while it runs and written beside the
 //! model for the CAD tool to read; Monte Carlo over the uncertainty block
 //! and identification against a logged run live here too.
@@ -12,7 +12,6 @@ use crate::{newton, registry};
 use serde_json::{json, Value};
 use sim_compile::Runtime;
 use sim_core::{BehaviorId, BehaviorRegistry, FnCoupler, Instance, ModelWorld, PortId, StateId};
-use sim_domain_control::external::EXTERNAL;
 use sim_domain_robot::articulated::ContactPoint;
 use sim_domain_robot::articulated::friction::FloorFrictionModel;
 use sim_domain_robot::math::{M, V};
@@ -184,6 +183,386 @@ pub struct PhysicalRobot {
     pub trajectory: Vec<(f64, Vec<f64>)>,
 }
 
+/// How a robot assembly meets the rest of what it is composed with.
+#[derive(Clone, Debug, Default)]
+pub struct AssemblyOptions {
+    /// Object-name prefix (a system instance path and `/`).
+    pub prefix: String,
+    /// The motor bus is a boundary (`supply_p`, `supply_n`) instead of the
+    /// robot's own battery or per-motor supplies and ground.
+    pub external_supply: bool,
+    /// The thermal environment is a boundary (`ambient`) instead of the
+    /// robot's own fixed-temperature ambient.
+    pub external_ambient: bool,
+}
+
+/// One motor's elements: model, unit, bridge, firmware, winding, case,
+/// mount link, joint port.
+pub type MotorParts = (Motor, Instance, Option<Instance>, Option<Instance>, Instance, Instance, Option<usize>, String);
+
+/// A robot assembled into a model: the articulated mechanism, per motor the
+/// unit, driver, firmware (or direct duty) and thermal path, encoders and
+/// tachometers, and its boundary. Robot mode adds its own supply and
+/// controller block to the boundary (`PhysicalRobot::build`); a system adds
+/// whatever its document connects (the `robot` generator).
+pub struct RobotAssembly {
+    pub robot: Instance,
+    pub art: Articulated,
+    pub composition: crate::system_inspection::CompositionMap,
+    pub warnings: Vec<String>,
+    pub battery: Option<Instance>,
+    pub motors: Vec<MotorParts>,
+    pub mounts: BTreeMap<usize, Instance>,
+    /// Driven joints in the order of the model's control targets.
+    pub targets_order: Vec<String>,
+    /// Boundary port → its type and the element ports it joins (left unconnected).
+    pub boundary: BTreeMap<String, (sim_core::PortSchema, Vec<PortId>)>,
+    pub model: Arc<PhysicalModel>,
+    pub power_profile: Option<sim_domain_robot::power_profile::ResolvedPower>,
+}
+
+/// Assemble a robot into `m` (see [`RobotAssembly`]).
+pub fn assemble(m: &mut ModelWorld, registry: &BehaviorRegistry, model: PhysicalModel, opts: &BuildOptions, how: &AssemblyOptions) -> Result<RobotAssembly, String> {
+    let prefix = how.prefix.as_str();
+        let mut model = model;
+    model.resolve_actuator_profiles(registry)?;
+    let power_profile = model.resolve_power_profile(registry, [1.0; 4])?;
+    if model.motors.iter().any(|m|m.resolved_actuator.is_some()) && !opts.driver_control {
+        return Err("CAD actuator profiles require explicit PWM control; catalog servo firmware cannot substitute for the declared fixed-PD controller".into());
+    }
+    model.apply_identification();
+    let model = Arc::new(model);
+    let mut warnings = Vec::new();
+    let art_opts = Options { floor_friction: opts.floor_friction, floor_dissipation_s_m: opts.floor_dissipation_s_m, hybrid_jacobian: opts.hybrid_articulated_jacobian, rate_partials:opts.articulated_rate_partials, constraint_state_step:opts.constraint_state_step.unwrap_or(0.0), structural_loop_identities: opts.structural_loop_identities, planar: opts.planar, flex: opts.flex, contact: opts.contact, omit_inter_link_contact: opts.omit_inter_link_contact, flex_modes: opts.flex_modes.max(1), ..Options::default() };
+    let art = Articulated::new(model.clone(), &art_opts)?;
+    warnings.extend(art.warnings.iter().cloned());
+    let handle = register_model(model.as_ref().clone());
+    let mut params: Vec<(&'static str, f64)> = vec![("model", handle), ("jacobian.hybrid", if opts.hybrid_articulated_jacobian { 1.0 } else { 0.0 }), ("jacobian.rates", if opts.articulated_rate_partials {1.0} else {0.0}), ("jacobian.constraint_state_step", opts.constraint_state_step.unwrap_or(0.0)), ("loop.structural_identities", if opts.structural_loop_identities { 1.0 } else { 0.0 }), ("planar", if opts.planar { 1.0 } else { 0.0 }), ("flex", if opts.flex { 1.0 } else { 0.0 }), ("contact", if opts.contact { 1.0 } else { 0.0 }), ("flex.modes", opts.flex_modes.max(1) as f64)];
+    params.push(("collision.omit_inter_link", if opts.omit_inter_link_contact { 1.0 } else { 0.0 }));
+    params.push(("floor.regularized_slip_speed", opts.floor_friction.registry_speed()));
+    if let Some(value) = opts.floor_dissipation_s_m {
+        params.push(("floor.dissipation", value));
+    }
+    for (k, val) in art.port_parameters() {
+        params.push((leak(k), val));
+    }
+    let mut composition = crate::system_inspection::CompositionMap::from_cad_source(&model.source);
+    for (id, label) in [("assembly", "Mechanical assembly"), ("actuators", "Actuators"), ("mounts", "Mount thermal paths"), ("measurements", "Joint measurements"), ("environment", "Environment"), ("power", "Power supply"), ("policy", "Controller boundary")] {
+        composition.group(id, label, None);
+    }
+            let robot = m.part(registry, &format!("{prefix}{prefix}robot"), ARTICULATED, params).unwrap();
+    composition.component(&robot, "composition/assembly", "assembly", None);
+    m.connect([robot.port("frame.base")]);
+    for name in &art.signal_out_names {
+        if !name.starts_with("imu.") {
+            m.connect([robot.port(leak(name.clone()))]);
+        }
+    }
+    // The environment node is the world's ambient: links, mounts, motor
+    // windings and cases start at it and shed heat to it. A motor's own
+    // `thermal.ambient_c` is its datasheet rating ambient
+    // (cad/PHYSICAL_MODEL.md "Motor"): only the motor unit's resistance
+    // and derating reference (PhysicalModel::motor_ambient).
+    let ambient_k = model.world.ambient_c + 273.15;
+    let mut ambient_ports = Vec::new();
+    if !how.external_ambient {
+        let ambient = m.part(registry, &format!("{prefix}ambient"), sim_domain_thermal::AMBIENT, [("temperature", ambient_k)]).unwrap();
+        composition.component(&ambient, "composition/ambient", "environment", None);
+        ambient_ports.push(ambient.port("node"));
+    }
+    let mut gnd_ports = Vec::new();
+    if !how.external_supply {
+        let gnd = m.part(registry, &format!("{prefix}gnd"), sim_domain_electrical::elements::GROUND, []).unwrap();
+        composition.component(&gnd, "composition/ground", "power", None);
+        gnd_ports.push(gnd.port("pin"));
+    }
+    // Battery (one pack for every motor) or nothing: motors without a
+    // pack get their own ideal supply at the spec voltage.
+    let battery_parameters: Option<BTreeMap<String, f64>> = power_profile.as_ref().map(|p| p.config.battery.clone()).or_else(|| model.battery.as_ref().map(|b| [
+        ("cells".into(), b.cells), ("nominal_voltage".into(), b.nominal_voltage),
+        ("internal_resistance".into(), b.internal_resistance), ("capacity_ah".into(), b.capacity_ah),
+        ("initial_soc".into(), b.initial_soc),
+    ].into()));
+    // Composed into a system, the motor bus is a boundary: the system supplies it.
+    let battery = battery_parameters.as_ref().filter(|_| !how.external_supply).map(|p| m.part(registry, &format!("{prefix}battery"), BATTERY, p.iter().map(|(k,v)|(k.as_str(),*v))).unwrap());
+    let mut supply_ports: Vec<PortId> = Vec::new();
+    if let Some(b) = &battery {
+        composition.component(b, "composition/battery", "power", None);
+        supply_ports.push(b.port("p"));
+        gnd_ports.push(b.port("n"));
+        m.connect([b.port("soc")]);
+    }
+    // Compile the same validated radial tree used by the incremental bank.
+    // Explicit zero-resistance segments alias their ancestor's electrical net.
+    let mut branch_ports: BTreeMap<String, Vec<PortId>> = BTreeMap::new();
+    let mut motor_power_nodes: BTreeMap<String, Option<String>> = BTreeMap::new();
+    if let Some(power) = &power_profile {
+        let branches: BTreeMap<_,_> = power.config.branches.iter().map(|b|(b.id.as_str(),b)).collect();
+        let node = |id: &str| -> Option<String> {
+            let mut at = id;
+            loop {
+                let b = branches[at];
+                if b.resistance_ohm > 0.0 { return Some(b.id.clone()); }
+                match b.parent.as_deref() { Some(parent) => at=parent, None => return None }
+            }
+        };
+        for b in &power.config.branches {
+            if b.resistance_ohm > 0.0 { branch_ports.insert(b.id.clone(),vec![]); }
+            for motor in &b.motors { motor_power_nodes.insert(motor.clone(),node(&b.id)); }
+        }
+        for (i,b) in power.config.branches.iter().enumerate().filter(|(_,b)|b.resistance_ohm>0.0) {
+            let wire=m.part(registry,&format!("{prefix}power.branch.{i}"),sim_domain_electrical::elements::RESISTOR,[("resistance",b.resistance_ohm)]).map_err(|e|e.to_string())?;
+            composition.component(&wire,format!("composition/power/{}",b.id),"power",None);
+            branch_ports.get_mut(&b.id).unwrap().push(wire.port("n"));
+            if let Some(parent)=b.parent.as_deref().and_then(node) {
+                branch_ports.get_mut(&parent).unwrap().push(wire.port("p"));
+            } else { supply_ports.push(wire.port("p")); }
+        }
+    }
+    // Mount thermal nodes per link (created on demand).
+    let mut mounts: BTreeMap<usize, Instance> = BTreeMap::new();
+    let mut mount_ports: BTreeMap<usize, Vec<PortId>> = BTreeMap::new();
+    let mut temperature_driven: BTreeMap<String, Instance> = BTreeMap::new(); // link name → probe
+    // Joint ports: connected with whatever drives them.
+    let mut joint_conn: BTreeMap<String, Vec<PortId>> = art.port_names.iter().map(|n| (n.clone(), vec![robot.port(leak(n.clone()))])).collect();
+    let mut seam_params: Vec<(&'static str, f64)> = Vec::new(); // (`sense.`/`act.` channel, unused)
+    let mut seam_links: Vec<(String, PortId)> = Vec::new(); // (seam port name, other port)
+    let mut motors_built: Vec<(Motor, Instance, Option<Instance>, Option<Instance>, Instance, Instance, Option<usize>, String)> = Vec::new();
+    // Encoders and tachometers on every port DOF for the seam.
+    let mut angle_groups: BTreeMap<String, (String, Vec<PortId>)> = BTreeMap::new();
+    let mut speed_groups: BTreeMap<String, (String, Vec<PortId>)> = BTreeMap::new();
+    for name in &art.port_names {
+        let (encoder_type, velocity_type, axis, position, velocity) = if name.starts_with("slide.") {
+            (sense::LINEAR_ENCODER, sense::LINEAR_VELOCITY, "axis", "position", "velocity")
+        } else {
+            (sense::ENCODER, sense::TACHOMETER, "shaft", "angle", "speed")
+        };
+        let enc = m.part(registry, &format!("{prefix}{name}.encoder"), encoder_type, []).unwrap();
+        let tacho = m.part(registry, &format!("{prefix}{name}.tacho"), velocity_type, []).unwrap();
+        let short_joint = name.trim_start_matches("joint.").trim_start_matches("slide.");
+        let cad_joint = model.joint(short_joint);
+        let key = cad_joint.filter(|j| !j.id.is_empty()).map(|j| format!("cad/joint/{}", j.id))
+            .unwrap_or_else(|| format!("capture/joint/{name}"));
+        composition.group(&key, short_joint, Some("measurements"));
+        composition.component(&enc, format!("{key}/encoder"), &key, None);
+        composition.component(&tacho, format!("{key}/velocity"), &key, None);
+        joint_conn.get_mut(name).unwrap().extend([enc.port(axis), tacho.port(axis)]);
+        let short = name.trim_start_matches("joint.").trim_start_matches("slide.").to_owned();
+        seam_params.push((leak(format!("sense.{short}.{position}")), 0.0));
+        seam_params.push((leak(format!("sense.{short}.{velocity}")), 0.0));
+        // One connection per signal: the encoder's angle feeds the seam and,
+        // for a driven joint, the firmware too (added below).
+        angle_groups.insert(name.clone(), (format!("sense.{short}.{position}"), vec![enc.port(position)]));
+        speed_groups.insert(name.clone(), (format!("sense.{short}.{velocity}"), vec![tacho.port(velocity)]));
+    }
+    let mut targets_order: Vec<String> = Vec::new();
+    for (motor_index, motor) in model.motors.iter().enumerate() {
+        let Some(jname) = motor.joint.as_deref() else {
+            warnings.push(format!("motor {} drives no joint; it is left out of the circuit", motor.name));
+            continue;
+        };
+        let port_name = ["joint.", "slide."].iter().map(|p| format!("{p}{jname}")).find(|n| joint_conn.contains_key(n));
+        let Some(port_name) = port_name else {
+            warnings.push(format!("motor {} drives joint {jname}, which has no port (fixed or unknown joint)", motor.name));
+            continue;
+        };
+        let joint = model.joint(jname);
+        let joint_backlash = joint.map(|j| j.physics.drive_backlash_rad(model.version >= 4))
+            .transpose().map_err(|e| format!("{jname}: {e}"))?.unwrap_or(0.0);
+        let link = motor.mounted_on.as_deref().and_then(|l| model.link_index(l)).or_else(|| joint.and_then(|j| j.parent.as_deref()).and_then(|p| model.link_index(p)));
+        let motor_group = if motor.id.is_empty() { format!("capture/motor/{}", motor.name) } else { format!("cad/motor/{}", motor.id) };
+        composition.group(&motor_group, &motor.name, Some("actuators"));
+        let cad_body = link.map(|li| model.links[li].id.as_str());
+        let e = &motor.electrical;
+        let th = &motor.thermal;
+        // The resistance and derating reference: the motor's rating
+        // ambient (else world.ambient_c, as before).
+        let motor_ambient_k = model.motor_ambient(motor_index)?.kelvin();
+        let unit = m.part(registry, &format!("{prefix}{}.unit", motor.name), MOTOR_UNIT,
+            sim_domain_robot::motor::cad_motor_unit_parameters(
+                motor, joint_backlash, motor_ambient_k, opts.analytic_motor_jacobian, opts.backlash_events,
+            ).into_iter().chain(opts.motor_dynamics.parameter_flags())).unwrap();
+        composition.component(&unit, format!("{motor_group}/unit"), &motor_group, cad_body);
+        joint_conn.get_mut(&port_name).unwrap().push(unit.port("shaft"));
+        for s in ["current", "torque", "speed"] {
+            if opts.driver_control {
+                let channel = format!("sense.{}.{s}", motor.name);
+                seam_params.push((leak(channel.clone()), 0.0));
+                seam_links.push((channel, unit.port(s)));
+            } else {
+                m.connect([unit.port(s)]);
+            }
+        }
+        // Thermal path: winding → case → (mount, ambient).
+        let wcap = m.part(registry, &format!("{prefix}{}.winding", motor.name), sim_domain_thermal::CAPACITANCE, [("heat_capacity", th.winding_heat_capacity.max(0.1)), ("initial.temperature", ambient_k)]).unwrap();
+        let ccap = m.part(registry, &format!("{prefix}{}.case", motor.name), sim_domain_thermal::CAPACITANCE, [("heat_capacity", th.case_heat_capacity.max(0.1)), ("initial.temperature", ambient_k)]).unwrap();
+        let g_wc = m.part(registry, &format!("{prefix}{}.g_wc", motor.name), sim_domain_thermal::CONDUCTANCE, [("conductance", 1.0 / th.r_winding_case.max(1e-3))]).unwrap();
+        let g_ca = m.part(registry, &format!("{prefix}{}.g_ca", motor.name), sim_domain_thermal::CONDUCTANCE, [("conductance", 1.0 / th.r_case_ambient.max(1e-3))]).unwrap();
+        for (role, instance) in [("winding", &wcap), ("case", &ccap), ("winding_case", &g_wc), ("case_ambient", &g_ca)] {
+            composition.component(instance, format!("{motor_group}/{role}"), &motor_group, cad_body);
+        }
+        m.connect([unit.port("winding"), wcap.port("node"), g_wc.port("a")]);
+        let mut case_ports = vec![g_wc.port("b"), ccap.port("node"), g_ca.port("a")];
+        ambient_ports.push(g_ca.port("b"));
+        if let Some(li) = link {
+            let l = &model.links[li];
+            let mat = model.material_of(l);
+            if !mounts.contains_key(&li) {
+                let area = {
+                    let lo = l.bbox.first().copied().unwrap_or([0.0; 3]);
+                    let hi = l.bbox.get(1).copied().unwrap_or([0.01; 3]);
+                    let d = [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]];
+                    2.0 * (d[0] * d[1] + d[1] * d[2] + d[0] * d[2]).abs().max(1e-4)
+                };
+                let mcap = m.part(registry, &format!("{prefix}{}.mount", l.name), sim_domain_thermal::CAPACITANCE, [("heat_capacity", (l.mass * mat.specific_heat).max(0.5)), ("initial.temperature", ambient_k)]).unwrap();
+                let g_ma = m.part(registry, &format!("{prefix}{}.g_ma", l.name), sim_domain_thermal::CONDUCTANCE, [("conductance", 10.0 * area)]).unwrap();
+                let probe = m.part(registry, &format!("{prefix}{}.probe", l.name), THERMAL_PROBE, []).unwrap();
+                let link_group = if l.id.is_empty() { format!("capture/link/{}", l.name) } else { format!("cad/link/{}", l.id) };
+                composition.group(&link_group, &l.name, Some("mounts"));
+                for (role, instance) in [("storage", &mcap), ("ambient_path", &g_ma), ("temperature_probe", &probe)] {
+                    composition.component(instance, format!("{link_group}/{role}"), &link_group, Some(&l.id));
+                }
+                ambient_ports.push(g_ma.port("b"));
+                mount_ports.insert(li, vec![mcap.port("node"), g_ma.port("a"), probe.port("node")]);
+                let tname = format!("temperature.{}", l.name);
+                if art.signal_in_names.contains(&tname) {
+                    m.connect([probe.port("temperature"), robot.port(leak(tname))]);
+                } else {
+                    m.connect([probe.port("temperature")]);
+                }
+                temperature_driven.insert(l.name.clone(), probe.clone());
+                mounts.insert(li, mcap);
+            }
+            let g_cm = m.part(registry, &format!("{prefix}{}.g_cm", motor.name), sim_domain_thermal::CONDUCTANCE, [("conductance", 1.0 / th.r_case_mount.max(1e-3))]).unwrap();
+            composition.component(&g_cm, format!("{motor_group}/case_mount"), &motor_group, cad_body);
+            case_ports.push(g_cm.port("a"));
+            mount_ports.get_mut(&li).unwrap().push(g_cm.port("b"));
+        }
+        m.connect(case_ports);
+        // Electrical path: supply → bridge → unit, and the firmware.
+        let fw = &motor.firmware;
+        // Only position servo firmware on an H-bridge is modelled; say so
+        // when the CAD declares another loop or driver instead of silently
+        // treating the command as a position target.
+        if !opts.driver_control && !matches!(fw.kind.as_str(), "servo" | "position" | "none") {
+            warnings.push(format!("motor {}: `{}` firmware is simulated as a position servo; its target is an angle", motor.name, fw.kind));
+        }
+        if fw.kind != "none" && !matches!(motor.driver.kind.as_str(), "h_bridge" | "servo_internal" | "") {
+            warnings.push(format!("motor {}: `{}` driver is simulated as an averaged H-bridge", motor.name, motor.driver.kind));
+        }
+        let (bridge, firmware) = if fw.kind == "none" && !opts.driver_control {
+            m.connect([unit.port("p")]);
+            gnd_ports.push(unit.port("n"));
+            (None, None)
+        } else {
+            let bridge_parameters = sim_domain_robot::motor::cad_h_bridge_parameters(motor);
+            let bridge = m.part(registry, &format!("{prefix}{}.bridge", motor.name), H_BRIDGE, bridge_parameters.iter().map(|(k,v)|(k.as_str(),*v))).unwrap();
+            composition.component(&bridge, format!("{motor_group}/bridge"), &motor_group, cad_body);
+            if power_profile.is_some() {
+                let key = format!("joint.{}", motor.joint.as_ref().ok_or("Powered motor requires joint")?);
+                match motor_power_nodes.get(&key).ok_or("Missing CAD power feed")? {
+                    Some(node) => branch_ports.get_mut(node).unwrap().push(bridge.port("supply_p")),
+                    None => supply_ports.push(bridge.port("supply_p")),
+                }
+            } else if battery.is_some() || how.external_supply {
+                supply_ports.push(bridge.port("supply_p"));
+            } else {
+                let src = m.part(registry, &format!("{prefix}{}.supply", motor.name), sim_domain_electrical::elements::VOLTAGE_SOURCE, [("voltage", e.supply_voltage.max(0.1))]).unwrap();
+                composition.component(&src, format!("{motor_group}/supply"), &motor_group, cad_body);
+                m.connect([src.port("p"), bridge.port("supply_p")]);
+                gnd_ports.push(src.port("n"));
+            }
+            gnd_ports.push(bridge.port("supply_n"));
+            gnd_ports.push(bridge.port("n"));
+            gnd_ports.push(unit.port("n"));
+            m.connect([bridge.port("p"), unit.port("p")]);
+            if opts.driver_control {
+                let channel = format!("act.{}.duty", motor.name);
+                seam_params.push((leak(channel.clone()), 0.0));
+                seam_links.push((channel, bridge.port("command")));
+                (Some(bridge), None)
+            } else {
+            let firmware_parameters = sim_domain_robot::motor::cad_servo_firmware_parameters(motor);
+            let firmware = m.part(registry, &format!("{prefix}{}.firmware", motor.name), SERVO_FIRMWARE, firmware_parameters.iter().map(|(k,v)|(k.as_str(),*v))).unwrap();
+            composition.component(&firmware, format!("{motor_group}/firmware"), &motor_group, cad_body);
+            m.connect([firmware.port("command"), bridge.port("command")]);
+            // Measured angle from the joint's encoder; target from the seam.
+            angle_groups.get_mut(&port_name).unwrap().1.push(firmware.port("measured"));
+            speed_groups.get_mut(&port_name).unwrap().1.push(firmware.port("rate"));
+            let short = port_name.trim_start_matches("joint.").trim_start_matches("slide.").to_owned();
+            seam_params.push((leak(format!("act.{short}.target")), 0.0));
+            seam_links.push((format!("act.{short}.target"), firmware.port("target")));
+            targets_order.push(port_name.clone());
+            (Some(bridge), Some(firmware))
+            }
+        };
+        motors_built.push((motor.clone(), unit, bridge, firmware, wcap, ccap, link, port_name));
+    }
+    // Encoders already feed the seam; an encoder output wired twice is fine
+    // (signal fan-out), but the seam port must exist for every sense channel.
+    // IMU signals into the seam.
+    for name in art.signal_out_names.iter().filter(|n| n.starts_with("imu.")) {
+        seam_params.push((leak(format!("sense.{name}")), 0.0));
+        seam_links.push((format!("sense.{name}"), robot.port(leak(name.clone()))));
+    }
+    // Temperature inputs without a mount: ambient.
+    for name in &art.signal_in_names {
+        let link = name.trim_start_matches("temperature.");
+        if !temperature_driven.contains_key(link) {
+            let c = m.part(registry, &format!("{prefix}{link}.ambient_probe"), sim_domain_control::elements::CONSTANT, [("value", ambient_k)]).unwrap();
+            if let Some(li) = model.link_index(link) {
+                let body = &model.links[li];
+                let key = if body.id.is_empty() { format!("capture/link/{}", body.name) } else { format!("cad/link/{}", body.id) };
+                composition.component(&c, format!("{key}/ambient_input"), "environment", Some(&body.id));
+            }
+            m.connect([c.port("value"), robot.port(leak(name.clone()))]);
+        }
+    }
+    for (_, ports) in mount_ports {
+        m.connect(ports);
+    }
+    for (_, ports) in joint_conn.iter() {
+        m.connect(ports.clone());
+    }
+    for ports in branch_ports.into_values() { m.connect(ports); }
+    // The boundary: what the rest of a system (or Robot mode's own
+    // supply and controller) joins. Acausal: the motor bus and the
+    // thermal environment when they are external. Signals: every
+    // `act.<channel>` is an input (`<channel>`: a servo target, a driver
+    // duty), every `sense.<channel>` an output (encoders, tachometers,
+    // motor current/torque/speed, IMU), named as the controller
+    // contract names them.
+    let mut boundary: BTreeMap<String, (sim_core::PortSchema, Vec<PortId>)> = BTreeMap::new();
+    if how.external_supply {
+        if !supply_ports.is_empty() {
+            boundary.insert("supply_p".into(), (sim_core::PortSchema::Acausal(sim_core::connectors::Electrical), supply_ports));
+        }
+        if !gnd_ports.is_empty() {
+            boundary.insert("supply_n".into(), (sim_core::PortSchema::Acausal(sim_core::connectors::Electrical), gnd_ports));
+        }
+    } else {
+        if !supply_ports.is_empty() {
+            m.connect(supply_ports);
+        }
+        m.connect(gnd_ports);
+    }
+    if how.external_ambient {
+        boundary.insert("ambient".into(), (sim_core::PortSchema::Acausal(sim_core::connectors::Thermal), ambient_ports));
+    } else {
+        m.connect(ambient_ports);
+    }
+    let schema_of = |port: PortId| m.ports[port].schema.clone();
+    let channel = |name: &str| name.strip_prefix("sense.").or_else(|| name.strip_prefix("act.")).unwrap_or(name).to_owned();
+    for (name, port) in seam_links {
+        boundary.insert(channel(&name), (schema_of(port), vec![port]));
+    }
+    for (_, (name, ports)) in angle_groups.into_iter().chain(speed_groups) {
+        boundary.insert(channel(&name), (schema_of(ports[0]), ports));
+    }
+    let _ = seam_params;
+    Ok(RobotAssembly { robot, art, composition, warnings, battery, motors: motors_built, mounts, targets_order, boundary, model, power_profile })
+}
+
 impl PhysicalRobot {
     pub fn build(model: PhysicalModel, registry: &BehaviorRegistry, opts: &BuildOptions) -> Result<Self, String> {
         Self::build_with(model, registry, opts, |_, _| Ok(()))
@@ -193,321 +572,42 @@ impl PhysicalRobot {
     /// compilation. All callers retain the same physical assembly and solver.
     pub fn build_with<F>(model: PhysicalModel, registry: &BehaviorRegistry, opts: &BuildOptions, compose: F) -> Result<Self, String>
     where F: FnOnce(&mut ModelWorld, &Instance) -> Result<(), String> {
-        let mut model = model;
-        model.resolve_actuator_profiles(registry)?;
-        let power_profile = model.resolve_power_profile(registry, [1.0; 4])?;
-        if model.motors.iter().any(|m|m.resolved_actuator.is_some()) && !opts.driver_control {
-            return Err("CAD actuator profiles require explicit PWM control; catalog servo firmware cannot substitute for the declared fixed-PD controller".into());
-        }
-        model.apply_identification();
-        let model = Arc::new(model);
-        let mut warnings = Vec::new();
-        let art_opts = Options { floor_friction: opts.floor_friction, floor_dissipation_s_m: opts.floor_dissipation_s_m, hybrid_jacobian: opts.hybrid_articulated_jacobian, rate_partials:opts.articulated_rate_partials, constraint_state_step:opts.constraint_state_step.unwrap_or(0.0), structural_loop_identities: opts.structural_loop_identities, planar: opts.planar, flex: opts.flex, contact: opts.contact, omit_inter_link_contact: opts.omit_inter_link_contact, flex_modes: opts.flex_modes.max(1), ..Options::default() };
-        let art = Articulated::new(model.clone(), &art_opts)?;
-        warnings.extend(art.warnings.iter().cloned());
-        let handle = register_model(model.as_ref().clone());
-        let mut params: Vec<(&'static str, f64)> = vec![("model", handle), ("jacobian.hybrid", if opts.hybrid_articulated_jacobian { 1.0 } else { 0.0 }), ("jacobian.rates", if opts.articulated_rate_partials {1.0} else {0.0}), ("jacobian.constraint_state_step", opts.constraint_state_step.unwrap_or(0.0)), ("loop.structural_identities", if opts.structural_loop_identities { 1.0 } else { 0.0 }), ("planar", if opts.planar { 1.0 } else { 0.0 }), ("flex", if opts.flex { 1.0 } else { 0.0 }), ("contact", if opts.contact { 1.0 } else { 0.0 }), ("flex.modes", opts.flex_modes.max(1) as f64)];
-        params.push(("collision.omit_inter_link", if opts.omit_inter_link_contact { 1.0 } else { 0.0 }));
-        params.push(("floor.regularized_slip_speed", opts.floor_friction.registry_speed()));
-        if let Some(value) = opts.floor_dissipation_s_m {
-            params.push(("floor.dissipation", value));
-        }
-        for (k, val) in art.port_parameters() {
-            params.push((leak(k), val));
-        }
-        let mut composition = crate::system_inspection::CompositionMap::from_cad_source(&model.source);
-        for (id, label) in [("assembly", "Mechanical assembly"), ("actuators", "Actuators"), ("mounts", "Mount thermal paths"), ("measurements", "Joint measurements"), ("environment", "Environment"), ("power", "Power supply"), ("policy", "Controller boundary")] {
-            composition.group(id, label, None);
-        }
         let mut m = ModelWorld::default();
-        let robot = m.part(registry, "robot", ARTICULATED, params).unwrap();
-        composition.component(&robot, "composition/assembly", "assembly", None);
-        m.connect([robot.port("frame.base")]);
-        for name in &art.signal_out_names {
-            if !name.starts_with("imu.") {
-                m.connect([robot.port(leak(name.clone()))]);
+        let RobotAssembly { robot, art, mut composition, warnings, battery, motors: motors_built, mounts, targets_order, boundary, model, power_profile } =
+            assemble(&mut m, registry, model, opts, &AssemblyOptions::default())?;
+        // The controller block on the boundary's signals: inputs are the
+        // robot's outputs, outputs its inputs, each typed as the port it
+        // joins (exact match), held at 0 until the first tick.
+        let signals: Vec<(String, sim_core::PortSchema, Vec<PortId>)> = boundary.into_iter().filter(|(_, (s, _))| !matches!(s, sim_core::PortSchema::Acausal(_))).map(|(n, (s, p))| (n, s, p)).collect();
+        let has_inputs = signals.iter().any(|(_, s, _)| matches!(s, sim_core::PortSchema::SignalIn(_)));
+        // Without inputs or an IMU there is nothing for a controller to do:
+        // the joint measurements stay observable on their own.
+        let seam = if !has_inputs && !signals.iter().any(|(n, _, _)| n.starts_with("imu.")) {
+            for (_, _, ports) in &signals {
+                m.connect(ports.clone());
             }
-        }
-        // The environment node is the world's ambient: links, mounts, motor
-        // windings and cases start at it and shed heat to it. A motor's own
-        // `thermal.ambient_c` is its datasheet rating ambient
-        // (cad/PHYSICAL_MODEL.md "Motor"): only the motor unit's resistance
-        // and derating reference (PhysicalModel::motor_ambient).
-        let ambient_k = model.world.ambient_c + 273.15;
-        let ambient = m.part(registry, "ambient", sim_domain_thermal::AMBIENT, [("temperature", ambient_k)]).unwrap();
-        composition.component(&ambient, "composition/ambient", "environment", None);
-        let mut ambient_ports = vec![ambient.port("node")];
-        let gnd = m.part(registry, "gnd", sim_domain_electrical::elements::GROUND, []).unwrap();
-        composition.component(&gnd, "composition/ground", "power", None);
-        let mut gnd_ports = vec![gnd.port("pin")];
-        // Battery (one pack for every motor) or nothing: motors without a
-        // pack get their own ideal supply at the spec voltage.
-        let battery_parameters: Option<BTreeMap<String, f64>> = power_profile.as_ref().map(|p| p.config.battery.clone()).or_else(|| model.battery.as_ref().map(|b| [
-            ("cells".into(), b.cells), ("nominal_voltage".into(), b.nominal_voltage),
-            ("internal_resistance".into(), b.internal_resistance), ("capacity_ah".into(), b.capacity_ah),
-            ("initial_soc".into(), b.initial_soc),
-        ].into()));
-        let battery = battery_parameters.as_ref().map(|p| m.part(registry, "battery", BATTERY, p.iter().map(|(k,v)|(k.as_str(),*v))).unwrap());
-        let mut supply_ports: Vec<PortId> = Vec::new();
-        if let Some(b) = &battery {
-            composition.component(b, "composition/battery", "power", None);
-            supply_ports.push(b.port("p"));
-            gnd_ports.push(b.port("n"));
-            m.connect([b.port("soc")]);
-        }
-        // Compile the same validated radial tree used by the incremental bank.
-        // Explicit zero-resistance segments alias their ancestor's electrical net.
-        let mut branch_ports: BTreeMap<String, Vec<PortId>> = BTreeMap::new();
-        let mut motor_power_nodes: BTreeMap<String, Option<String>> = BTreeMap::new();
-        if let Some(power) = &power_profile {
-            let branches: BTreeMap<_,_> = power.config.branches.iter().map(|b|(b.id.as_str(),b)).collect();
-            let node = |id: &str| -> Option<String> {
-                let mut at = id;
-                loop {
-                    let b = branches[at];
-                    if b.resistance_ohm > 0.0 { return Some(b.id.clone()); }
-                    match b.parent.as_deref() { Some(parent) => at=parent, None => return None }
-                }
-            };
-            for b in &power.config.branches {
-                if b.resistance_ohm > 0.0 { branch_ports.insert(b.id.clone(),vec![]); }
-                for motor in &b.motors { motor_power_nodes.insert(motor.clone(),node(&b.id)); }
-            }
-            for (i,b) in power.config.branches.iter().enumerate().filter(|(_,b)|b.resistance_ohm>0.0) {
-                let wire=m.part(registry,&format!("power.branch.{i}"),sim_domain_electrical::elements::RESISTOR,[("resistance",b.resistance_ohm)]).map_err(|e|e.to_string())?;
-                composition.component(&wire,format!("composition/power/{}",b.id),"power",None);
-                branch_ports.get_mut(&b.id).unwrap().push(wire.port("n"));
-                if let Some(parent)=b.parent.as_deref().and_then(node) {
-                    branch_ports.get_mut(&parent).unwrap().push(wire.port("p"));
-                } else { supply_ports.push(wire.port("p")); }
-            }
-        }
-        // Mount thermal nodes per link (created on demand).
-        let mut mounts: BTreeMap<usize, Instance> = BTreeMap::new();
-        let mut mount_ports: BTreeMap<usize, Vec<PortId>> = BTreeMap::new();
-        let mut temperature_driven: BTreeMap<String, Instance> = BTreeMap::new(); // link name → probe
-        // Joint ports: connected with whatever drives them.
-        let mut joint_conn: BTreeMap<String, Vec<PortId>> = art.port_names.iter().map(|n| (n.clone(), vec![robot.port(leak(n.clone()))])).collect();
-        let mut seam_params: Vec<(&'static str, f64)> = vec![("period", model.control.period_s.max(1e-4)), ("output_delay", (model.control.latency_s / model.control.period_s.max(1e-4)).round())];
-        let mut seam_links: Vec<(String, PortId)> = Vec::new(); // (seam port name, other port)
-        let mut motors_built: Vec<(Motor, Instance, Option<Instance>, Option<Instance>, Instance, Instance, Option<usize>, String)> = Vec::new();
-        // Encoders and tachometers on every port DOF for the seam.
-        let mut angle_groups: BTreeMap<String, (String, Vec<PortId>)> = BTreeMap::new();
-        let mut speed_groups: BTreeMap<String, (String, Vec<PortId>)> = BTreeMap::new();
-        for name in &art.port_names {
-            let (encoder_type, velocity_type, axis, position, velocity) = if name.starts_with("slide.") {
-                (sense::LINEAR_ENCODER, sense::LINEAR_VELOCITY, "axis", "position", "velocity")
-            } else {
-                (sense::ENCODER, sense::TACHOMETER, "shaft", "angle", "speed")
-            };
-            let enc = m.part(registry, &format!("{name}.encoder"), encoder_type, []).unwrap();
-            let tacho = m.part(registry, &format!("{name}.tacho"), velocity_type, []).unwrap();
-            let short_joint = name.trim_start_matches("joint.").trim_start_matches("slide.");
-            let cad_joint = model.joint(short_joint);
-            let key = cad_joint.filter(|j| !j.id.is_empty()).map(|j| format!("cad/joint/{}", j.id))
-                .unwrap_or_else(|| format!("capture/joint/{name}"));
-            composition.group(&key, short_joint, Some("measurements"));
-            composition.component(&enc, format!("{key}/encoder"), &key, None);
-            composition.component(&tacho, format!("{key}/velocity"), &key, None);
-            joint_conn.get_mut(name).unwrap().extend([enc.port(axis), tacho.port(axis)]);
-            let short = name.trim_start_matches("joint.").trim_start_matches("slide.").to_owned();
-            seam_params.push((leak(format!("sense.{short}.{position}")), 0.0));
-            seam_params.push((leak(format!("sense.{short}.{velocity}")), 0.0));
-            // One connection per signal: the encoder's angle feeds the seam and,
-            // for a driven joint, the firmware too (added below).
-            angle_groups.insert(name.clone(), (format!("sense.{short}.{position}"), vec![enc.port(position)]));
-            speed_groups.insert(name.clone(), (format!("sense.{short}.{velocity}"), vec![tacho.port(velocity)]));
-        }
-        let mut targets_order: Vec<String> = Vec::new();
-        for (motor_index, motor) in model.motors.iter().enumerate() {
-            let Some(jname) = motor.joint.as_deref() else {
-                warnings.push(format!("motor {} drives no joint; it is left out of the circuit", motor.name));
-                continue;
-            };
-            let port_name = ["joint.", "slide."].iter().map(|p| format!("{p}{jname}")).find(|n| joint_conn.contains_key(n));
-            let Some(port_name) = port_name else {
-                warnings.push(format!("motor {} drives joint {jname}, which has no port (fixed or unknown joint)", motor.name));
-                continue;
-            };
-            let joint = model.joint(jname);
-            let joint_backlash = joint.map(|j| j.physics.drive_backlash_rad(model.version >= 4))
-                .transpose().map_err(|e| format!("{jname}: {e}"))?.unwrap_or(0.0);
-            let link = motor.mounted_on.as_deref().and_then(|l| model.link_index(l)).or_else(|| joint.and_then(|j| j.parent.as_deref()).and_then(|p| model.link_index(p)));
-            let motor_group = if motor.id.is_empty() { format!("capture/motor/{}", motor.name) } else { format!("cad/motor/{}", motor.id) };
-            composition.group(&motor_group, &motor.name, Some("actuators"));
-            let cad_body = link.map(|li| model.links[li].id.as_str());
-            let e = &motor.electrical;
-            let th = &motor.thermal;
-            // The resistance and derating reference: the motor's rating
-            // ambient (else world.ambient_c, as before).
-            let motor_ambient_k = model.motor_ambient(motor_index)?.kelvin();
-            let unit = m.part(registry, &format!("{}.unit", motor.name), MOTOR_UNIT,
-                sim_domain_robot::motor::cad_motor_unit_parameters(
-                    motor, joint_backlash, motor_ambient_k, opts.analytic_motor_jacobian, opts.backlash_events,
-                ).into_iter().chain(opts.motor_dynamics.parameter_flags())).unwrap();
-            composition.component(&unit, format!("{motor_group}/unit"), &motor_group, cad_body);
-            joint_conn.get_mut(&port_name).unwrap().push(unit.port("shaft"));
-            for s in ["current", "torque", "speed"] {
-                if opts.driver_control {
-                    let channel = format!("sense.{}.{s}", motor.name);
-                    seam_params.push((leak(channel.clone()), 0.0));
-                    seam_links.push((channel, unit.port(s)));
-                } else {
-                    m.connect([unit.port(s)]);
-                }
-            }
-            // Thermal path: winding → case → (mount, ambient).
-            let wcap = m.part(registry, &format!("{}.winding", motor.name), sim_domain_thermal::CAPACITANCE, [("heat_capacity", th.winding_heat_capacity.max(0.1)), ("initial.temperature", ambient_k)]).unwrap();
-            let ccap = m.part(registry, &format!("{}.case", motor.name), sim_domain_thermal::CAPACITANCE, [("heat_capacity", th.case_heat_capacity.max(0.1)), ("initial.temperature", ambient_k)]).unwrap();
-            let g_wc = m.part(registry, &format!("{}.g_wc", motor.name), sim_domain_thermal::CONDUCTANCE, [("conductance", 1.0 / th.r_winding_case.max(1e-3))]).unwrap();
-            let g_ca = m.part(registry, &format!("{}.g_ca", motor.name), sim_domain_thermal::CONDUCTANCE, [("conductance", 1.0 / th.r_case_ambient.max(1e-3))]).unwrap();
-            for (role, instance) in [("winding", &wcap), ("case", &ccap), ("winding_case", &g_wc), ("case_ambient", &g_ca)] {
-                composition.component(instance, format!("{motor_group}/{role}"), &motor_group, cad_body);
-            }
-            m.connect([unit.port("winding"), wcap.port("node"), g_wc.port("a")]);
-            let mut case_ports = vec![g_wc.port("b"), ccap.port("node"), g_ca.port("a")];
-            ambient_ports.push(g_ca.port("b"));
-            if let Some(li) = link {
-                let l = &model.links[li];
-                let mat = model.material_of(l);
-                if !mounts.contains_key(&li) {
-                    let area = {
-                        let lo = l.bbox.first().copied().unwrap_or([0.0; 3]);
-                        let hi = l.bbox.get(1).copied().unwrap_or([0.01; 3]);
-                        let d = [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]];
-                        2.0 * (d[0] * d[1] + d[1] * d[2] + d[0] * d[2]).abs().max(1e-4)
-                    };
-                    let mcap = m.part(registry, &format!("{}.mount", l.name), sim_domain_thermal::CAPACITANCE, [("heat_capacity", (l.mass * mat.specific_heat).max(0.5)), ("initial.temperature", ambient_k)]).unwrap();
-                    let g_ma = m.part(registry, &format!("{}.g_ma", l.name), sim_domain_thermal::CONDUCTANCE, [("conductance", 10.0 * area)]).unwrap();
-                    let probe = m.part(registry, &format!("{}.probe", l.name), THERMAL_PROBE, []).unwrap();
-                    let link_group = if l.id.is_empty() { format!("capture/link/{}", l.name) } else { format!("cad/link/{}", l.id) };
-                    composition.group(&link_group, &l.name, Some("mounts"));
-                    for (role, instance) in [("storage", &mcap), ("ambient_path", &g_ma), ("temperature_probe", &probe)] {
-                        composition.component(instance, format!("{link_group}/{role}"), &link_group, Some(&l.id));
-                    }
-                    ambient_ports.push(g_ma.port("b"));
-                    mount_ports.insert(li, vec![mcap.port("node"), g_ma.port("a"), probe.port("node")]);
-                    let tname = format!("temperature.{}", l.name);
-                    if art.signal_in_names.contains(&tname) {
-                        m.connect([probe.port("temperature"), robot.port(leak(tname))]);
-                    } else {
-                        m.connect([probe.port("temperature")]);
-                    }
-                    temperature_driven.insert(l.name.clone(), probe.clone());
-                    mounts.insert(li, mcap);
-                }
-                let g_cm = m.part(registry, &format!("{}.g_cm", motor.name), sim_domain_thermal::CONDUCTANCE, [("conductance", 1.0 / th.r_case_mount.max(1e-3))]).unwrap();
-                composition.component(&g_cm, format!("{motor_group}/case_mount"), &motor_group, cad_body);
-                case_ports.push(g_cm.port("a"));
-                mount_ports.get_mut(&li).unwrap().push(g_cm.port("b"));
-            }
-            m.connect(case_ports);
-            // Electrical path: supply → bridge → unit, and the firmware.
-            let fw = &motor.firmware;
-            // Only position servo firmware on an H-bridge is modelled; say so
-            // when the CAD declares another loop or driver instead of silently
-            // treating the command as a position target.
-            if !opts.driver_control && !matches!(fw.kind.as_str(), "servo" | "position" | "none") {
-                warnings.push(format!("motor {}: `{}` firmware is simulated as a position servo; its target is an angle", motor.name, fw.kind));
-            }
-            if fw.kind != "none" && !matches!(motor.driver.kind.as_str(), "h_bridge" | "servo_internal" | "") {
-                warnings.push(format!("motor {}: `{}` driver is simulated as an averaged H-bridge", motor.name, motor.driver.kind));
-            }
-            let (bridge, firmware) = if fw.kind == "none" && !opts.driver_control {
-                m.connect([unit.port("p")]);
-                gnd_ports.push(unit.port("n"));
-                (None, None)
-            } else {
-                let bridge_parameters = sim_domain_robot::motor::cad_h_bridge_parameters(motor);
-                let bridge = m.part(registry, &format!("{}.bridge", motor.name), H_BRIDGE, bridge_parameters.iter().map(|(k,v)|(k.as_str(),*v))).unwrap();
-                composition.component(&bridge, format!("{motor_group}/bridge"), &motor_group, cad_body);
-                if power_profile.is_some() {
-                    let key = format!("joint.{}", motor.joint.as_ref().ok_or("Powered motor requires joint")?);
-                    match motor_power_nodes.get(&key).ok_or("Missing CAD power feed")? {
-                        Some(node) => branch_ports.get_mut(node).unwrap().push(bridge.port("supply_p")),
-                        None => supply_ports.push(bridge.port("supply_p")),
-                    }
-                } else if battery.is_some() {
-                    supply_ports.push(bridge.port("supply_p"));
-                } else {
-                    let src = m.part(registry, &format!("{}.supply", motor.name), sim_domain_electrical::elements::VOLTAGE_SOURCE, [("voltage", e.supply_voltage.max(0.1))]).unwrap();
-                    composition.component(&src, format!("{motor_group}/supply"), &motor_group, cad_body);
-                    m.connect([src.port("p"), bridge.port("supply_p")]);
-                    gnd_ports.push(src.port("n"));
-                }
-                gnd_ports.push(bridge.port("supply_n"));
-                gnd_ports.push(bridge.port("n"));
-                gnd_ports.push(unit.port("n"));
-                m.connect([bridge.port("p"), unit.port("p")]);
-                if opts.driver_control {
-                    let channel = format!("act.{}.duty", motor.name);
-                    seam_params.push((leak(channel.clone()), 0.0));
-                    seam_links.push((channel, bridge.port("command")));
-                    (Some(bridge), None)
-                } else {
-                let firmware_parameters = sim_domain_robot::motor::cad_servo_firmware_parameters(motor);
-                let firmware = m.part(registry, &format!("{}.firmware", motor.name), SERVO_FIRMWARE, firmware_parameters.iter().map(|(k,v)|(k.as_str(),*v))).unwrap();
-                composition.component(&firmware, format!("{motor_group}/firmware"), &motor_group, cad_body);
-                m.connect([firmware.port("command"), bridge.port("command")]);
-                // Measured angle from the joint's encoder; target from the seam.
-                angle_groups.get_mut(&port_name).unwrap().1.push(firmware.port("measured"));
-                speed_groups.get_mut(&port_name).unwrap().1.push(firmware.port("rate"));
-                let short = port_name.trim_start_matches("joint.").trim_start_matches("slide.").to_owned();
-                seam_params.push((leak(format!("act.{short}.target")), 0.0));
-                seam_links.push((format!("act.{short}.target"), firmware.port("target")));
-                targets_order.push(port_name.clone());
-                (Some(bridge), Some(firmware))
-                }
-            };
-            motors_built.push((motor.clone(), unit, bridge, firmware, wcap, ccap, link, port_name));
-        }
-        // Encoders already feed the seam; an encoder output wired twice is fine
-        // (signal fan-out), but the seam port must exist for every sense channel.
-        // IMU signals into the seam.
-        for name in art.signal_out_names.iter().filter(|n| n.starts_with("imu.")) {
-            seam_params.push((leak(format!("sense.{name}")), 0.0));
-            seam_links.push((format!("sense.{name}"), robot.port(leak(name.clone()))));
-        }
-        // Temperature inputs without a mount: ambient.
-        for name in &art.signal_in_names {
-            let link = name.trim_start_matches("temperature.");
-            if !temperature_driven.contains_key(link) {
-                let c = m.part(registry, &format!("{link}.ambient_probe"), sim_domain_control::elements::CONSTANT, [("value", ambient_k)]).unwrap();
-                if let Some(li) = model.link_index(link) {
-                    let body = &model.links[li];
-                    let key = if body.id.is_empty() { format!("capture/link/{}", body.name) } else { format!("cad/link/{}", body.id) };
-                    composition.component(&c, format!("{key}/ambient_input"), "environment", Some(&body.id));
-                }
-                m.connect([c.port("value"), robot.port(leak(name.clone()))]);
-            }
-        }
-        for (_, ports) in mount_ports {
-            m.connect(ports);
-        }
-        for (_, ports) in joint_conn.iter() {
-            m.connect(ports.clone());
-        }
-        for ports in branch_ports.into_values() { m.connect(ports); }
-        if !supply_ports.is_empty() {
-            m.connect(supply_ports);
-        }
-        m.connect(gnd_ports);
-        m.connect(ambient_ports);
-        let seam = if seam_links.is_empty() { None } else { Some(m.part(registry, "controller", EXTERNAL, seam_params).unwrap()) };
-        if let Some(seam) = &seam {
-            composition.component(seam, "composition/controller", "policy", None);
-            for (name, other) in &seam_links {
-                m.connect([seam.port(leak(name.clone())), *other]);
-            }
-            for (_, (seam_name, mut ports)) in angle_groups.into_iter().chain(speed_groups) {
-                ports.push(seam.port(leak(seam_name)));
-                m.connect(ports);
-            }
+            None
         } else {
-            for (_, (_, ports)) in angle_groups.into_iter().chain(speed_groups) {
+            let kind = |s: &sim_core::PortSchema| match s {
+                sim_core::PortSchema::SignalIn(k) | sim_core::PortSchema::SignalOut(k) => k.clone(),
+                sim_core::PortSchema::Acausal(_) => unreachable!("signals only"),
+            };
+            let interface = sim_core::BlockInterface {
+                inputs: signals.iter().filter(|(_, s, _)| matches!(s, sim_core::PortSchema::SignalOut(_))).map(|(n, s, _)| sim_core::BlockPort::new(n.clone(), kind(s))).collect(),
+                outputs: signals.iter().filter(|(_, s, _)| matches!(s, sim_core::PortSchema::SignalIn(_))).map(|(n, s, _)| sim_core::BlockPort::new(n.clone(), kind(s)).start(0.0)).collect(),
+                feedthrough: true,
+            };
+            let period = model.control.period_s.max(1e-4);
+            let mut timing = sim_core::BlockTiming::periodic(period);
+            timing.output_delay = (model.control.latency_s / period).round().max(0.0) as usize;
+            let seam = m.add_block("controller", interface, timing, sim_core::ImplementationRef::Host { name: "robot_controller".into() }).map_err(|e| e.to_string())?;
+            composition.component(&seam, "composition/controller", "policy", None);
+            for (name, _, mut ports) in signals {
+                ports.push(seam.port(&name));
                 m.connect(ports);
             }
-        }
+            Some(seam)
+        };
         let integrator = Integrator::BackwardEuler(sim_solve::NewtonConfig {
             guarded_backtracking: opts.guarded_backtracking, ..newton()
         });
@@ -518,6 +618,7 @@ impl PhysicalRobot {
         // clocks on the absolute step grid the sampled controllers schedule
         // on, or slivers split off every deadline after a few seconds.
         runtime.set_grid_clock(true);
+        runtime.retry_halvings = 4;
         if opts.numerical_jacobian {
             for island in &mut runtime.islands { island.set_numerical_jacobian(true); }
         }
@@ -575,8 +676,10 @@ impl PhysicalRobot {
                         sim_domain_control::trajectory::Keyframe {time_s:*t,values:values.clone()}).collect(),
                 })?)
             };
+            // The model's own target supervisor: a pure function of time and
+            // the shared hold targets, so checkpoints may include it.
             runtime
-                .attach(
+                .bind_coupler(
                     seam.behavior,
                     Box::new(FnCoupler(move |t: f64, _s: &[f64], a: &mut [f64]| {
                         let current: Vec<f64> = if let Some(traj) = &traj { traj.sample(t).expect("finite simulation time").values } else { held.lock().unwrap_or_else(|p| p.into_inner()).clone() };
@@ -584,6 +687,7 @@ impl PhysicalRobot {
                             a[*idx] = current.get(k).copied().unwrap_or(0.0);
                         }
                     })),
+                    true,
                 )
                 .map_err(|e| e.to_string())?;
         }
@@ -669,28 +773,12 @@ impl PhysicalRobot {
             let slice = left.min(self.sample_interval).max(h);
             let slice = (slice / h).round().max(1.0) * h;
             // A stiff transient (an impact, a hard gear mesh) can defeat Newton
-            // at the nominal step: retry the slice from a snapshot with the
-            // step halved, up to 16× finer, before giving up.
-            let snapshot = self.runtime.snapshot();
-            let mut sub = h;
-            let mut tries = 0;
-            loop {
-                match self.runtime.advance(slice, sub) {
-                    Ok(()) => {
-                        self.steps += (slice / sub).round() as usize;
-                        break;
-                    }
-                    Err(e) => {
-                        tries += 1;
-                        if tries > 4 {
-                            return Err(e.to_string());
-                        }
-                        self.runtime.restore(&snapshot).map_err(|e| e.to_string())?;
-                        sub *= 0.5;
-                        self.step_refinements += 1;
-                    }
-                }
-            }
+            // at the nominal step: the runtime retries each integration segment
+            // with the step halved (`retry_halvings`), never across a block tick.
+            let refined = self.runtime.step_refinements;
+            self.runtime.advance(slice, h).map_err(|e| e.to_string())?;
+            self.steps += (slice / h).round() as usize;
+            self.step_refinements += self.runtime.step_refinements - refined;
             self.sample_battery()?;
             left -= slice;
             if self.runtime.time - self.last_sample >= self.sample_interval - 1e-9 {
@@ -1117,7 +1205,7 @@ pub fn run_physical_with_controller(path: &str, seconds: f64, opts: &BuildOption
     if let Some(controller) = controller {
         let seam = robot.seam.ok_or("model has no external control seam")?;
         let controller = sim_couple::FrameCoupler::spawn_command(controller).map_err(|e| format!("could not start controller: {e}"))?;
-        robot.runtime.attach(seam, Box::new(controller)).map_err(|e| e.to_string())?;
+        robot.runtime.bind_coupler(seam, Box::new(controller), false).map_err(|e| e.to_string())?;
     }
     let mut lines = vec![format!(
         "{} links, {} joints ({} driven), {} motors, {} loops, {} states; base `{}`{}",

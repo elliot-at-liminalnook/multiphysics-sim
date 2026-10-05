@@ -7896,6 +7896,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "sim-fmi"
+version = "0.1.0"
+dependencies = [
+ "libloading",
+ "roxmltree 0.21.1",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sim-compile",
+ "sim-core",
+ "sim-domain-control",
+ "sim-domain-rotational",
+ "sim-domain-thermal",
+ "sim-dynamics",
+ "sim-runtime",
+ "tempfile",
+ "thiserror 2.0.20",
+ "zip",
+]
+
+[[package]]
 name = "sim-geometry"
 version = "0.1.0"
 dependencies = [
@@ -8063,6 +8084,7 @@ dependencies = [
  "sim-domain-thermal",
  "sim-domain-translational",
  "sim-dynamics",
+ "sim-fmi",
  "sim-inspect",
  "sim-lesson",
  "sim-parts",
@@ -8145,6 +8167,7 @@ dependencies = [
  "sim-diagram",
  "sim-domain-control",
  "sim-domain-robot",
+ "sim-fmi",
  "sim-inspect",
  "sim-lesson",
  "sim-markdown",

@@ -168,6 +168,8 @@ fn layout(doc: &SystemDocument, registry: &BehaviorRegistry) -> Result<Layout, S
                         ids: lineage,
                     });
                 }
+                // Blocks are code; a generated assembly's own geometry comes from its source.
+                InstanceKind::Generated { .. } | InstanceKind::Block { .. } => {}
             }
         }
         Ok(())

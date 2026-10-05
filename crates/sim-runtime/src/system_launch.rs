@@ -16,6 +16,9 @@ pub struct Launch {
     pub config: SessionConfig,
     #[serde(default)]
     pub binding: Option<SourceBinding>,
+    /// The system file's directory, which the model's FMU paths are relative to.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base: Option<String>,
 }
 /// Authoring identities scoped to one exact model capture, never guessed by a UI.
 #[derive(Debug, Clone, Serialize, Deserialize)]

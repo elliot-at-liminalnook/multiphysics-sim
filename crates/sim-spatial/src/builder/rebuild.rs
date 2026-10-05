@@ -3,15 +3,17 @@
 //! chrome while a lesson is shown.
 use super::*;
 
-fn compile_job(document: SystemDocument, registry: BehaviorRegistry) -> crate::jobs::Job<CompileResult> {
-    crate::jobs::Job::spawn(crate::jobs::Pool::Compute, document.revision, "the compile", move |_| Ok(compile_now(document, registry)))
+fn compile_job(document: SystemDocument, registry: BehaviorRegistry, base: PathBuf) -> crate::jobs::Job<CompileResult> {
+    crate::jobs::Job::spawn(crate::jobs::Pool::Compute, document.revision, "the compile", move |_| Ok(compile_now(document, registry, &base)))
 }
 
-/// One compile of `document` for the scene (call off the UI thread).
-pub(super) fn compile_now(document: SystemDocument, registry: BehaviorRegistry) -> CompileResult {
+/// One compile of `document` (stored in `base`) for the scene (call off the
+/// UI thread): generated robots built, FMU blocks imported and bound, so a
+/// changed or unusable artifact is the compile error.
+pub(super) fn compile_now(document: SystemDocument, registry: BehaviorRegistry, base: &std::path::Path) -> CompileResult {
     let config = system_builder::config_for(&document);
-    let result = system_builder::compile(&document, &registry, config.clone()).map(|compiled| {
-        let runtime_error = sim_compile::Runtime::new(compiled.flat.model.clone(), &registry, config.integrator).err().map(|e| system_builder::locate(&compiled.flat, e.to_string()));
+    let result = system_builder::compile_at(&document, &registry, config.clone(), base).map(|compiled| {
+        let runtime_error = system_builder::source(&compiled, &registry, &document).build(&config).err().map(|e| system_builder::locate(&compiled.flat, e));
         CompileOutput {
             spatial: compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, &document.title)),
             description: compiled.description,
@@ -39,7 +41,7 @@ pub(super) fn compile_now(document: SystemDocument, registry: BehaviorRegistry) 
 /// runtime: the launch, a lessons launch and a switch to build or lessons
 /// mode all start from it.
 pub fn compiled_scene(builder: &Builder) -> Result<SpatialScene, String> {
-    let compiled = system_builder::compile(&builder.document, builder.registry(), system_builder::config_for(&builder.document)).map_err(|e| e.to_string())?;
+    let compiled = system_builder::compile_at(&builder.document, builder.registry(), system_builder::config_for(&builder.document), &builder.system_dir()).map_err(|e| e.to_string())?;
     let spatial = compiled.spatial.clone().unwrap_or_else(|| compiled.flat.spatial(&compiled.description.id, &builder.document.title));
     let mut scene = SpatialScene::for_builder(compiled.description.clone(), spatial).map_err(|e| e.to_string())?;
     if let Some(animation) = compiled.animation.clone() {
@@ -86,7 +88,7 @@ pub(super) fn rebuild_scene(
     // Compile off the UI thread; apply the newest finished result.
     if builder.scene_dirty && builder.job.is_none() {
         builder.scene_dirty = false;
-        builder.job = Some(compile_job(builder.document.clone(), builder.registry.clone()));
+        builder.job = Some(compile_job(builder.document.clone(), builder.registry.clone(), builder.system_dir()));
     }
     let Some(polled) = builder.job.as_ref().and_then(crate::jobs::Job::poll) else { return };
     builder.job = None;

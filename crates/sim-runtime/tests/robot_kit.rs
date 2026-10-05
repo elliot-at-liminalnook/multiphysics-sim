@@ -72,16 +72,16 @@ fn saved_studies_show_the_trade_offs() {
     let value = |res: &system_study::StudyResult, i: usize, k: &str| res.variants[i].metrics.iter().find(|m| m.0.contains(k)).unwrap().1;
     // Driving a stepper too fast loses steps.
     let doc = robot("belt_axis");
-    let steps = system_study::run(&doc, &r, "move_speed", &doc.studies["move_speed"], 4, None, &|_, _| {}).unwrap();
+    let steps = system_study::run(&doc, &r, None, "move_speed", &doc.studies["move_speed"], 4, None, &|_, _| {}).unwrap();
     assert!((value(&steps, 0, "final position") - 0.2).abs() < 0.002 && value(&steps, 3, "final position") < 0.1);
     // Bigger props hover on less battery current.
     let doc = robot("drone");
-    let props = system_study::run(&doc, &r, "prop_size", &doc.studies["prop_size"], 4, None, &|_, _| {}).unwrap();
+    let props = system_study::run(&doc, &r, None, "prop_size", &doc.studies["prop_size"], 4, None, &|_, _| {}).unwrap();
     let currents: Vec<f64> = (0..4).map(|i| value(&props, i, "battery current").abs()).collect();
     assert!(currents.windows(2).all(|w| w[1] < w[0]), "{currents:?}");
     // Screws: efficient screws grip harder; only the self-locking one holds exactly.
     let doc = robot("gripper");
-    let screws = system_study::run(&doc, &r, "screws", &doc.studies["screws"], 3, None, &|_, _| {}).unwrap();
+    let screws = system_study::run(&doc, &r, None, "screws", &doc.studies["screws"], 3, None, &|_, _| {}).unwrap();
     eprintln!("{}", system_study::table(&screws));
     let hold = |i: usize| value(&screws, i, "after power-off") / value(&screws, i, "while powered");
     assert!(value(&screws, 2, "while powered") > value(&screws, 0, "while powered"), "ball screw grips harder");

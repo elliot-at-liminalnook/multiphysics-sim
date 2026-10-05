@@ -20,7 +20,6 @@ use crate::world::{damped_runtime, registry};
 use sim_compile::{Runtime, RuntimeSnapshot};
 use sim_core::{BehaviorId, BehaviorRegistry, FnCoupler, ModelWorld, StateId};
 use sim_couple::{Environment, Frame, Spaces};
-use sim_domain_control::external::EXTERNAL;
 use sim_domain_multibody::chain::CHAIN;
 use sim_domain_multibody::contact as ct;
 use sim_domain_sensing as sense;
@@ -204,10 +203,10 @@ impl Default for Biped {
 
 const LEGS: [&str; 2] = ["l", "r"];
 const SENSES: [[&str; 4]; 2] = [
-    ["sense.l.hip.angle", "sense.l.hip.speed", "sense.l.knee.angle", "sense.l.knee.speed"],
-    ["sense.r.hip.angle", "sense.r.hip.speed", "sense.r.knee.angle", "sense.r.knee.speed"],
+    ["l.hip.angle", "l.hip.speed", "l.knee.angle", "l.knee.speed"],
+    ["r.hip.angle", "r.hip.speed", "r.knee.angle", "r.knee.speed"],
 ];
-const ACTS: [[&str; 2]; 2] = [["act.l.hip.torque", "act.l.knee.torque"], ["act.r.hip.torque", "act.r.knee.torque"]];
+const ACTS: [[&str; 2]; 2] = [["l.hip.torque", "l.knee.torque"], ["r.hip.torque", "r.knee.torque"]];
 
 /// Parameter names are `&'static str`; the terrain's are minted per patch
 /// index and kept for the process.
@@ -265,12 +264,14 @@ impl Biped {
                 ("initial.x", x), ("initial.y", ground + self.hip_height - self.hip_y - 0.001),
             ])
             .unwrap();
-        let mut seam_params: Vec<(&'static str, f64)> = vec![("period", self.pd_period)];
-        for k in 0..2 {
-            seam_params.extend(SENSES[k].iter().map(|n| (*n, 0.0)));
-            seam_params.extend(ACTS[k].iter().map(|n| (*n, 0.0)));
-        }
-        let seam = m.part(registry, "controller", EXTERNAL, seam_params).unwrap();
+        let sensed = |n: &str| if n.ends_with(".angle") { sim_core::QuantityKind::Angle } else { sim_core::QuantityKind::AngularVelocity };
+        let seam = crate::world::controller_block(
+            &mut m,
+            "controller",
+            self.pd_period,
+            SENSES.iter().flatten().map(|n| (n.to_string(), sensed(n))).collect(),
+            ACTS.iter().flatten().map(|n| (n.to_string(), sim_core::QuantityKind::Torque)).collect(),
+        );
         let mut body_ports = vec![body.port("frame")];
         let mut joints = Vec::new();
         let mut speeds = Vec::new();
@@ -330,10 +331,8 @@ impl Biped {
         let (hr, kr) = self.standing(stance);
         let targets = Arc::new(Mutex::new([hl, kl, hr, kr]));
         let contract = runtime.contract(seam.behavior);
-        // The contract names channels without their `sense.`/`act.` family.
         let index = |names: &[sim_core::Channel], name: &str| {
-            let bare = name.trim_start_matches("sense.").trim_start_matches("act.");
-            names.iter().position(|c| c.name == bare).unwrap_or_else(|| panic!("seam has no channel `{bare}`; it has {:?}", names.iter().map(|c| c.name.as_str()).collect::<Vec<_>>()))
+            names.iter().position(|c| c.name == name).unwrap_or_else(|| panic!("seam has no channel `{name}`; it has {:?}", names.iter().map(|c| c.name.as_str()).collect::<Vec<_>>()))
         };
         let angle = [0, 1].map(|k| [index(&contract.sensors, SENSES[k][0]), index(&contract.sensors, SENSES[k][2])]);
         let speed = [0, 1].map(|k| [index(&contract.sensors, SENSES[k][1]), index(&contract.sensors, SENSES[k][3])]);
@@ -341,7 +340,7 @@ impl Biped {
         let (kp, kd, limit) = (self.kp, self.kd, self.torque_limit);
         let held = targets.clone();
         runtime
-            .attach(
+            .bind_coupler(
                 seam.behavior,
                 Box::new(FnCoupler(move |_t: f64, s: &[f64], a: &mut [f64]| {
                     let target = *held.lock().unwrap_or_else(|p| p.into_inner());
@@ -352,6 +351,8 @@ impl Biped {
                         }
                     }
                 })),
+                // A pure function of the sample and the shared targets.
+                true,
             )
             .expect("seam");
         Plant { runtime, seam: seam.behavior, torso, joints, joint_speeds, feet, foot_force, targets, terrain: terrain.clone() }
@@ -675,7 +676,7 @@ impl Environment for PlankEnv {
 
     fn snapshot(&self) -> Vec<f64> {
         let Some(plant) = self.plant.as_ref() else { return Vec::new() };
-        let snap = plant.runtime.snapshot();
+        let snap = plant.runtime.snapshot().expect("the PD seam is stateless");
         let mut out = vec![self.seed as f64, self.level, self.done as u8 as f64, self.success as u8 as f64, snap.time];
         out.extend(self.planner.map(|p| p.as_vec()).unwrap_or_default());
         let targets = *plant.targets.lock().unwrap_or_else(|p| p.into_inner());
@@ -686,6 +687,10 @@ impl Environment for PlankEnv {
             out.push(island.state.len() as f64);
             out.extend(&island.state);
             out.extend(&island.previous_rate);
+        }
+        out.push(snap.blocks.len() as f64);
+        for block in &snap.blocks {
+            out.extend(block.to_numbers().expect("the PD seam keeps no state of its own"));
         }
         out
     }
@@ -719,7 +724,15 @@ impl Environment for PlankEnv {
             at += 2 * n;
             islands.push(sim_dynamics::Snapshot { time: t, state, previous_rate });
         }
-        plant.runtime.restore(&RuntimeSnapshot { time, islands }).map_err(|e| e.to_string())?;
+        let count = *snapshot.get(at).ok_or("snapshot lacks the blocks")? as usize;
+        at += 1;
+        let mut blocks = Vec::with_capacity(count);
+        for _ in 0..count {
+            let (block, used) = sim_compile::BlockState::from_numbers(&snapshot[at..]).ok_or("snapshot truncated")?;
+            at += used;
+            blocks.push(block);
+        }
+        plant.runtime.restore(&RuntimeSnapshot { time, islands, blocks }).map_err(|e| e.to_string())?;
         Ok(self.frame(false, false))
     }
 }

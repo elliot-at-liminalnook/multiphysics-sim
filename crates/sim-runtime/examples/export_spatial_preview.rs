@@ -77,6 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             grid_snapping: false,
         },
         binding: None,
+        base: None,
     };
     launch.binding = Some(sim_runtime::system_worker::SourceBinding {
         model_hash: launch.model_hash()?,

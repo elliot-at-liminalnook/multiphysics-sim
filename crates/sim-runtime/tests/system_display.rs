@@ -33,7 +33,7 @@ fn the_winch_shows_its_drive_train_and_balances_power() {
         assert!(a.flows.iter().any(|f| f.domain == domain), "{domain:?}");
     }
 
-    let source = ModelSource { model: compiled.flat.model.clone(), registry: registry.clone(), identities: compiled.flat.identities.clone(), source_hash: compiled.flat.source_hash.clone(), revision: doc.revision.max(1) };
+    let source = ModelSource { model: compiled.flat.model.clone(), registry: registry.clone(), identities: compiled.flat.identities.clone(), source_hash: compiled.flat.source_hash.clone(), revision: doc.revision.max(1), base: None };
     let mut session = SystemSession::new(compiled.launch.run_id.clone(), config.clone(), move |c| source.build(c)).unwrap();
     session.subscribe(a.observables().into_iter().collect()).unwrap();
     session.execute(Command::Start).unwrap();

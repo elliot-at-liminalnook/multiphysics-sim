@@ -1535,6 +1535,14 @@ fn build_island(
         }
         // Fixed ports in descriptor order; a family's members sorted by name.
         let mut bound_ports: Vec<(PortId, PortSchema)> = Vec::new();
+        // A block's shadow: its own signals, inputs then outputs, in its
+        // interface's order (the descriptor declares none).
+        if let Some(block) = model.block_of(*id).filter(|_| descriptor.dynamic_ports) {
+            for port in block.interface.inputs.iter().chain(&block.interface.outputs) {
+                let pid = ports_by_name[port.name.as_str()];
+                bound_ports.push((pid, model.ports[pid].schema.clone()));
+            }
+        }
         for declared in &descriptor.ports {
             if declared.name.contains('*') {
                 let mut members: Vec<(&str, PortId)> = ports_by_name.iter().filter(|(n, _)| declared.matches(n)).map(|(n, p)| (*n, *p)).collect();

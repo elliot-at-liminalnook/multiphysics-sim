@@ -3,7 +3,7 @@
 
 use sim_core::{
     Behavior, BehaviorDescriptor, BehaviorRegistry, Context, QuantityKind, RegistryError,
-    StateDeclaration, View, acausal, param, param_or,
+    StateDeclaration, View, acausal, param, param_or, signal_in, signal_out,
 };
 use std::collections::BTreeMap;
 
@@ -11,6 +11,8 @@ pub const CAPACITANCE: &str = "thermal.capacitance";
 pub const CONDUCTANCE: &str = "thermal.conductance";
 pub const AMBIENT: &str = "thermal.ambient";
 pub const HEAT_SOURCE: &str = "thermal.heat_source";
+pub const CONTROLLED_HEAT_SOURCE: &str = "thermal.controlled_heat_source";
+pub const TEMPERATURE_SENSOR: &str = "thermal.temperature_sensor";
 
 type Params = BTreeMap<String, f64>;
 type Made = Result<Box<dyn Behavior>, sim_core::EquationError>;
@@ -96,6 +98,36 @@ fn heat_source(p: &Params) -> Made {
     Ok(Box::new(HeatSource { power: param_or(p, "power", 0.0) }))
 }
 
+/// Heat into the node at the commanded `power` signal (W): a heater driven
+/// by a controller.
+pub struct ControlledHeatSource;
+impl Behavior for ControlledHeatSource {
+    fn states(&self) -> Vec<StateDeclaration> {
+        Vec::new()
+    }
+    fn residual(&self, ctx: &mut Context) {
+        let power = ctx.signal_in(0);
+        ctx.add_through(0, -power);
+    }
+}
+fn controlled_heat_source(_p: &Params) -> Made {
+    Ok(Box::new(ControlledHeatSource))
+}
+
+/// The node temperature as a signal (an ideal thermistor or thermocouple).
+pub struct TemperatureSensor;
+impl Behavior for TemperatureSensor {
+    fn states(&self) -> Vec<StateDeclaration> {
+        Vec::new()
+    }
+    fn residual(&self, ctx: &mut Context) {
+        ctx.set_signal(0, ctx.across(0));
+    }
+}
+fn temperature_sensor(_p: &Params) -> Made {
+    Ok(Box::new(TemperatureSensor))
+}
+
 pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
     use sim_core::ParameterDeclaration as P;
     use sim_core::connectors::Thermal as H;
@@ -104,6 +136,8 @@ pub fn register(registry: &mut BehaviorRegistry) -> Result<(), RegistryError> {
         BehaviorDescriptor::new(CONDUCTANCE, "Thermal conductance", vec![acausal("a", H), acausal("b", H)], conductance).with_parameters(vec![P::alternative("conductance", "W/K").nonnegative(), P::alternative("resistance", "K/W").positive()]),
         BehaviorDescriptor::new(AMBIENT, "Fixed temperature", vec![acausal("node", H)], ambient).with_parameters(vec![P::required("temperature", "K").nonnegative()]),
         BehaviorDescriptor::new(HEAT_SOURCE, "Constant heat source", vec![acausal("node", H)], heat_source).with_parameters(vec![P::optional("power", "W", 0.0)]),
+        BehaviorDescriptor::new(CONTROLLED_HEAT_SOURCE, "Controlled heat source", vec![acausal("node", H), signal_in("power", QuantityKind::HeatFlow)], controlled_heat_source).with_parameters(vec![]),
+        BehaviorDescriptor::new(TEMPERATURE_SENSOR, "Temperature sensor", vec![acausal("node", H), signal_out("temperature", QuantityKind::Temperature)], temperature_sensor).with_parameters(vec![]),
     ] {
         registry.register(descriptor)?;
     }

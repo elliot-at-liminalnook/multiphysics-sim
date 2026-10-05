@@ -49,7 +49,7 @@ fn source() -> ModelSource {
         registry,
         identities: Default::default(),
         source_hash: "thermal-session-fixture".into(),
-        revision: 1,
+        revision: 1, base: None
     }
 }
 fn session() -> SystemSession {
@@ -245,23 +245,16 @@ fn failed_solve_keeps_last_completed_values_and_reset_recreates_behavior_state()
     use sim_core::{
         Behavior, BehaviorDescriptor, Context, QuantityKind, StateDeclaration, signal_out,
     };
-    use std::sync::atomic::AtomicBool;
-    struct Failing(AtomicBool);
+    // A residual that turns non-finite after 0.11 s: the solve fails.
+    struct Failing;
     impl Behavior for Failing {
         fn states(&self) -> Vec<StateDeclaration> {
             vec![StateDeclaration::new("x", QuantityKind::Voltage, 1.)]
         }
         fn residual(&self, c: &mut Context) {
-            if c.time > 0.11 {
-                self.0.store(true, Ordering::Relaxed);
-            }
-            c.set_state_residual(0, c.state_rate(0) + c.state(0));
+            let poison = if c.time > 0.11 { f64::NAN } else { 0.0 };
+            c.set_state_residual(0, c.state_rate(0) + c.state(0) + poison);
             c.set_signal(0, c.state(0));
-        }
-        fn failure(&self) -> Option<String> {
-            self.0
-                .load(Ordering::Relaxed)
-                .then(|| "deliberate solve failure".into())
         }
     }
     let mut registry = BehaviorRegistry::default();
@@ -270,7 +263,7 @@ fn failed_solve_keeps_last_completed_values_and_reset_recreates_behavior_state()
             "failing",
             "Failing",
             vec![signal_out("voltage", QuantityKind::Voltage)],
-            |_| Ok(Box::new(Failing(AtomicBool::new(false)))),
+            |_| Ok(Box::new(Failing)),
         ))
         .unwrap();
     let mut model = ModelWorld::default();
@@ -280,7 +273,7 @@ fn failed_solve_keeps_last_completed_values_and_reset_recreates_behavior_state()
         registry,
         identities: Default::default(),
         source_hash: "failure".into(),
-        revision: 1,
+        revision: 1, base: None
     };
     let mut s = SystemSession::new("failure".into(), config(), move |c| source.build(c)).unwrap();
     let all = ids(&s);
@@ -295,7 +288,7 @@ fn failed_solve_keeps_last_completed_values_and_reset_recreates_behavior_state()
     .unwrap();
     s.execute(Command::Step).unwrap();
     let last = s.latest().clone();
-    assert!(s.execute(Command::Step).unwrap_err().contains("deliberate"));
+    assert!(s.execute(Command::Step).is_err());
     assert_eq!(s.status().phase, Phase::Failed);
     assert_eq!((s.status().step, s.status().time), (1, 0.1));
     assert_eq!(*s.latest(), last);
@@ -319,7 +312,7 @@ fn failed_solve_keeps_last_completed_values_and_reset_recreates_behavior_state()
     let failed = s.execute(Command::Reset).unwrap().recording.unwrap();
     failed.validate().unwrap();
     assert_eq!(failed.completion, RecordingCompletion::Failed);
-    assert!(failed.end_status.message.unwrap().contains("deliberate"));
+    assert!(failed.end_status.message.is_some_and(|m| !m.is_empty()), "the failure is reported");
 }
 #[test]
 fn invalid_intervals_are_rejected_before_building() {
@@ -375,7 +368,7 @@ fn draining_event_history_preserves_hybrid_states_and_cumulative_counts() {
         registry,
         identities: Default::default(),
         source_hash: "pulse".into(),
-        revision: 1,
+        revision: 1, base: None
     };
     let mut direct = source.build(&config()).unwrap();
     direct.runtime.seed(71);

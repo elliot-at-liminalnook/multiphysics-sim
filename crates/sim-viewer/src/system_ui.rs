@@ -1,4 +1,4 @@
-//! Build mode for the schematic: edit a `sim.system/1` file with the same
+//! Build mode for the schematic: edit a `sim.system/2` file with the same
 //! shared commands, validation and undo history as the physical viewer, REST
 //! and the CLI. Levels map onto description groups: drilling into a
 //! subsystem focuses its group and collapses the rest. Reference images for
@@ -54,11 +54,10 @@ pub(super) struct CompileOutput {
 
 /// Flatten, construct the runtime once to report compile errors, and write
 /// the live bundle. Pure with respect to the builder, so it can run on a thread.
-fn compile_output(document: &SystemDocument, registry: &sim_core::BehaviorRegistry, build_dir: &std::path::Path) -> Result<CompileOutput, String> {
+fn compile_output(document: &SystemDocument, registry: &sim_core::BehaviorRegistry, build_dir: &std::path::Path, base: &std::path::Path) -> Result<CompileOutput, String> {
     let config = system_builder::config_for(document);
-    let compiled = system_builder::compile(document, registry, config.clone())?;
-    let compile_error = sim_compile::Runtime::new(compiled.flat.model.clone(), registry, config.integrator).err().map(|e| system_builder::locate(&compiled.flat, e.to_string()));
-    // A hosted system (linked files) gets no live bundle: `write_bundle` refuses it (check_hosted) and removes a stale one.
+    let compiled = system_builder::compile_at(document, registry, config.clone(), base)?;
+    let compile_error = system_builder::source(&compiled, registry, document).build(&config).err().map(|e| system_builder::locate(&compiled.flat, e));
     let bundle = system_builder::write_bundle(&compiled, build_dir, "system")?;
     Ok(CompileOutput { findings: compiled.flat.findings.clone(), compile_error, live_path: bundle.live, description: compiled.description })
 }
@@ -107,7 +106,7 @@ impl SystemBuilder {
     /// Compile the current document into a description and runnable capture
     /// (blocking; used once at startup before the window opens).
     pub(super) fn compile(&mut self) -> Result<SystemDescription, String> {
-        let output = compile_output(&self.document, &self.registry, &self.build_dir)?;
+        let output = compile_output(&self.document, &self.registry, &self.build_dir, &self.system_dir())?;
         Ok(self.accept(output))
     }
 
@@ -118,12 +117,17 @@ impl SystemBuilder {
         output.description
     }
 
+    /// The system file's directory (generated robots, FMU blocks resolve against it).
+    fn system_dir(&self) -> PathBuf {
+        std::path::absolute(&self.store.path).ok().and_then(|p| p.parent().map(|d| d.to_path_buf())).unwrap_or_default()
+    }
+
     /// Start compiling the current revision off the UI thread.
     fn start_compile(&mut self) {
-        let (document, registry, build_dir) = (self.document.clone(), self.registry.clone(), self.build_dir.clone());
+        let (document, registry, build_dir, base) = (self.document.clone(), self.registry.clone(), self.build_dir.clone(), self.system_dir());
         let (send, receive) = std::sync::mpsc::channel();
         std::thread::spawn(move || {
-            let _ = send.send(compile_output(&document, &registry, &build_dir));
+            let _ = send.send(compile_output(&document, &registry, &build_dir, &base));
         });
         self.compiling = Some((self.document.revision, receive));
     }
@@ -565,6 +569,7 @@ impl Viewer {
                                 InstanceKind::Element { component_type } => b.registry.get(&component_type.as_str().into()).ok().and_then(|d| d.parameters.clone()).unwrap_or_default().into_iter()
                                     .filter(|p| !p.implementation_reference && !p.name.starts_with("initial.") && !p.name.contains('*')).map(|p| (p.name, p.unit, p.default)).collect(),
                                 InstanceKind::Subsystem { definition } => b.document.definitions.get(definition).map(|d| d.parameters.iter().map(|(k, p)| (k.clone(), p.unit.clone(), p.default)).collect()).unwrap_or_default(),
+                                InstanceKind::Block { .. } | InstanceKind::Generated { .. } => spec.parameters.keys().map(|k| (k.clone(), String::new(), None)).collect(),
                             };
                             if !declared.is_empty() {
                                 ui.small("Parameters (Enter applies; empty clears; $name inherits)");
@@ -677,7 +682,7 @@ impl Viewer {
                 }
                 egui::ScrollArea::vertical().id_salt("palette").max_height(260.).show(ui, |ui| {
                     for (label, detail, kind, library_path) in items.into_iter().filter(|(l, d, _, _)| needle.is_empty() || l.to_lowercase().contains(&needle) || d.to_lowercase().contains(&needle)).take(120) {
-                        let explicit=match &kind {InstanceKind::Element{component_type}=>b.elements.iter().find(|e|&e.component_type==component_type).map(|e|e.icon.as_str()).unwrap_or(""),InstanceKind::Subsystem{definition}=>b.document.definitions.get(definition).map(|d|d.icon.as_str()).unwrap_or("")};
+                        let explicit=match &kind {InstanceKind::Element{component_type}=>b.elements.iter().find(|e|&e.component_type==component_type).map(|e|e.icon.as_str()).unwrap_or(""),InstanceKind::Subsystem{definition}=>b.document.definitions.get(definition).map(|d|d.icon.as_str()).unwrap_or(""),_=>""};
                         let icon=sim_core::icons::resolve(explicit,&detail);
                         let response=ui.horizontal(|ui|{let(rect,_)=ui.allocate_exact_size(egui::vec2(24.,24.),egui::Sense::hover());for line in sim_core::icons::strokes(icon){ui.painter().add(egui::Shape::line(line.into_iter().map(|p|rect.min+egui::vec2(p[0],p[1])).collect(),egui::Stroke::new(1.5,ui.visuals().text_color())));}ui.button(format!("+ {label}"))}).inner;
                         if response.on_hover_text(&detail).clicked() {
@@ -688,10 +693,7 @@ impl Viewer {
                                     Err(e) => b.status = e.to_string(),
                                 }
                             }
-                            let base = match &kind {
-                                InstanceKind::Element { component_type } => component_type.rsplit('.').next().unwrap_or("part").to_string(),
-                                InstanceKind::Subsystem { definition } => definition.rsplit('.').next().unwrap_or("sub").to_string(),
-                            };
+                            let base = sim_system::kind_base_name(&kind);
                             let name = b.unique(&base);
                             let count = b.definition().map(|d| d.instances.len()).unwrap_or(0);
                             let mut spec = InstanceSpec::new(kind).at([(count % 6) as f32 * 0.03, 0., (count / 6) as f32 * 0.03]);

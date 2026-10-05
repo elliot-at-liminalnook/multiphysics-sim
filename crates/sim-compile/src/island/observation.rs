@@ -184,6 +184,20 @@ impl Island {
     pub fn set_observation_capture(&self, enabled: bool) {
         self.observations.set_enabled(enabled);
     }
+    /// Retain the consistent state at `time` (after a block tick's writes
+    /// and re-solve) as the accepted evaluation, so its algebraic values
+    /// and flows stay observable at that instant: one residual evaluation
+    /// of the state the runtime commits, nothing else.
+    pub(crate) fn observe_consistent(&self, time: f64, state: &[f64], rate: &[f64]) {
+        if !self.observations.enabled() {
+            return;
+        }
+        let (full, full_rate) = self.expand_at(time, state, rate);
+        let mut residual = vec![0.0; full.len()];
+        self.residual_full(time, &full, &full_rate, &mut residual);
+        self.observations.solved(time, time, time, state, rate, state, &self.full_of);
+        self.observations.commit(time, state);
+    }
     pub(crate) fn flow_binding(&self, port: PortId, lane: usize) -> Option<(usize, usize)> {
         let (slot, offset, width) = self.port_flows.get(&port)?;
         (lane < *width).then_some((*slot, offset + lane))

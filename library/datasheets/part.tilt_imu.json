@@ -1,0 +1,36 @@
+{
+  "schema": "sim.datasheet/1",
+  "component_type": "part.tilt_imu",
+  "label": "Tilt IMU on a swinging link",
+  "kind": "generic",
+  "parameters": {
+    "bandwidth": 0.002,
+    "bias": 0.0,
+    "buzz": 87.0,
+    "g": 9.80665,
+    "radius": 0.1,
+    "vibration": 0.0
+  },
+  "conditions": {},
+  "values": [
+    {
+      "name": "audit energy change",
+      "value": 0.0,
+      "unit": "J"
+    }
+  ],
+  "curves": [],
+  "checks": [
+    {
+      "name": "energy audit",
+      "passed": true,
+      "detail": "energy 5.000e-2 J → change 0.000e0 J (dissipated or conserved)"
+    },
+    {
+      "name": "step convergence",
+      "passed": true,
+      "detail": "port-rate differences between successive steps 0.0e0, 0.0e0, 0.0e0 (1 → 0.125 ms); observed order NaN"
+    }
+  ],
+  "source_hash": "ebdeb41a291782ea49a988c96edb549b5fe0cd43c16c65cd122e893748c229db"
+}

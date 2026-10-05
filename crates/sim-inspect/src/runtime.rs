@@ -218,6 +218,14 @@ impl Subscription {
                         Ok(ValueObservation::Endpoint { value, sample_time }) => {
                             SampleValue::Committed { value, sample_time }
                         }
+                        // An evaluation of a consistent state at one instant (a
+                        // block tick's re-solve) is that instant's exact value.
+                        Ok(ValueObservation::AcceptedStage {
+                            value,
+                            sample_time,
+                            step_start,
+                            step_end,
+                        }) if step_start == step_end => SampleValue::Committed { value, sample_time },
                         Ok(ValueObservation::AcceptedStage {
                             value,
                             sample_time,

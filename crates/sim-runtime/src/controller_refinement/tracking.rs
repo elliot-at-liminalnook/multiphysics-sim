@@ -181,7 +181,7 @@ pub fn simulate(experiment: &Experiment, cancel: &AtomicBool) -> Result<ResultTr
     let output = Arc::new(Mutex::new(Vec::new()));
     bench
         .runtime
-        .attach(
+        .bind_coupler(
             bench.controller.unwrap(),
             Box::new(Adapter {
                 experiment: experiment.clone(),
@@ -191,7 +191,7 @@ pub fn simulate(experiment: &Experiment, cancel: &AtomicBool) -> Result<ResultTr
                 commands: vec![0; n],
                 applied_target: 0,
                 output: output.clone(),
-            }),
+            }), false,
         )
         .map_err(|e| e.to_string())?;
     let mut time = 0.;
@@ -332,7 +332,7 @@ pub fn simulate_group(
         let output = Arc::new(Mutex::new(Vec::new()));
         bench
             .runtime
-            .attach(
+            .bind_coupler(
                 bench.axes[&i.to_string()].controller,
                 Box::new(Adapter {
                     experiment: e.clone(),
@@ -342,7 +342,7 @@ pub fn simulate_group(
                     commands: vec![0; e.targets_counts.len()],
                     applied_target: 0,
                     output: output.clone(),
-                }),
+                }), false,
             )
             .map_err(|e| e.to_string())?;
         outputs.push(output);

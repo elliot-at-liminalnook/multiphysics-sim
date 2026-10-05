@@ -443,7 +443,7 @@ impl Session {
         let telemetry = Arc::new(Mutex::new(Telemetry::default()));
         robot
             .runtime
-            .attach(
+            .bind_coupler(
                 seam,
                 Box::new(EpisodeCoupler {
                     policy,
@@ -459,16 +459,12 @@ impl Session {
                     bounds,
                     label,
                 }),
+                false,
             )
             .map_err(|e| e.to_string())?;
-        // `External::couple` runs the handshake (hello/ready) inside `attach`
-        // but only records a failed one, which the runtime would report at the
-        // first commit. Report it now: a controller that exits before ready or
-        // answers hello with nonsense refuses the session, not its first step.
-        // (Dropping `robot` on this path closes the coupler and reaps the child.)
-        if let Some(failure) = robot.runtime.behavior(seam).and_then(|b| b.failure()) {
-            return Err(failure);
-        }
+        // Binding opened the controller (hello/ready for a process): one that
+        // exits before ready or answers hello with nonsense has refused the
+        // session above. (Dropping `robot` on that path reaps the child.)
         Ok(Self {
             robot,
             robot_input,

@@ -459,7 +459,7 @@ impl KinematicMirror {
     }
 }
 
-/// A system file (`sim.system/1`) running in the browser on the shared
+/// A system file (`sim.system/2`) running in the browser on the shared
 /// runtime, in its detailed or realtime profile. Authored parts arrive as
 /// sources (`{"coreless_motor.part": "…"}`) and compile here exactly as they
 /// do natively. Hosts advance it in bounded chunks of simulated time.
@@ -489,14 +489,12 @@ impl SystemRun {
         }
         let config = sim_runtime::system_builder::config_for(&document);
         let compiled = sim_runtime::system_builder::compile(&document, &registry, config.clone()).map_err(error)?;
-        // Hosted instances (linked files) need the native drive host; never run a partial model.
-        sim_runtime::system_builder::check_hosted(&compiled.flat).map_err(error)?;
         let source = sim_runtime::system_session::ModelSource {
             model: compiled.flat.model.clone(),
             registry: registry.clone(),
             identities: compiled.flat.identities.clone(),
             source_hash: compiled.flat.source_hash.clone(),
-            revision: document.revision.max(1),
+            revision: document.revision.max(1), base: None
         };
         let interval = config.interval;
         let mut session = sim_runtime::system_session::SystemSession::new("browser".into(), config, move |c| source.build(c)).map_err(error)?;

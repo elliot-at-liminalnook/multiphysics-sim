@@ -117,7 +117,7 @@ is there, with the gap named; **absent**: not reachable in sim-spatial.
   - Lesson mode keeps its own sandbox flow.
   - The native proof activates controls through REST `system_ui`, not pointer
     gestures.
-- **Source owner:** system file `*.system.json` (`sim.system/1`); topology
+- **Source owner:** system file `*.system.json` (`sim.system/2`); topology
   lives in examples/library.
 - **Verified evidence (T3.2):** `.claude-pair/captures/T3-open-system/`
   (`drive_open.py`, `capture.json` with ok=true). The run launched on a board

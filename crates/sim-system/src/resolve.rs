@@ -64,6 +64,9 @@ impl<'a> Resolver<'a> {
                 InstanceKind::Element { component_type } => {
                     return Err(SystemError::Invalid(format!("`{name}` is a {component_type} element, not a subsystem; swap it for a subsystem to implement it further")));
                 }
+                other => {
+                    return Err(SystemError::Invalid(format!("`{name}` is a {}, not an editable subsystem", crate::commands::kind_label(other))));
+                }
             }
         }
         Ok(id)
@@ -104,6 +107,8 @@ impl<'a> Resolver<'a> {
                 }
                 Ok(out)
             }
+            InstanceKind::Generated { ports, .. } => Ok(ports.iter().map(|(k, v)| (k.clone(), Some(v.clone()))).collect()),
+            InstanceKind::Block { interface, .. } => Ok(block_ports(interface).into_iter().map(|(k, v)| (k, Some(v))).collect()),
         }
     }
 
@@ -146,6 +151,12 @@ impl<'a> Resolver<'a> {
                         })
                     }
                     InstanceKind::Subsystem { definition: child } => self.boundary_schema(child, port, visiting),
+                    InstanceKind::Generated { generator, ports, .. } => ports.get(port).cloned().map(Some).ok_or_else(|| {
+                        SystemError::Invalid(format!("generated {generator} assembly `{instance}` has no port `{port}`; it has {:?}", ports.keys().collect::<Vec<_>>()))
+                    }),
+                    InstanceKind::Block { interface, .. } => block_ports(interface).remove(port).map(Some).ok_or_else(|| {
+                        SystemError::Invalid(format!("block `{instance}` has no signal `{port}`; it has {:?}", block_ports(interface).keys().collect::<Vec<_>>()))
+                    }),
                 }
             }
         }
@@ -163,10 +174,6 @@ impl<'a> Resolver<'a> {
             return Err(SystemError::Invalid(format!("unsupported schema `{}`; expected `{SCHEMA}`", doc.schema)));
         }
         self.definition(&doc.root)?;
-        // Links first: a net's hosted-only rule (`check_net`) relies on them naming root instances.
-        for (name, link) in &doc.links {
-            self.check_link(name, &link.path)?;
-        }
         for (id, d) in &doc.definitions {
             if !valid_definition_id(id) {
                 return Err(SystemError::Invalid(format!("invalid definition id `{id}`")));
@@ -212,39 +219,6 @@ impl<'a> Resolver<'a> {
             }
         }
         self.check_acyclic()?;
-        Ok(())
-    }
-
-    /// A link (`Command::LinkFile`) is valid: it names an instance of the
-    /// root definition that is an element of a hostable type
-    /// ([`HOSTED_TYPES`]), and its path is relative, non-empty and has that
-    /// type's suffix. Pure: the file itself is read only by the host at run time.
-    pub fn check_link(&self, instance: &str, path: &str) -> Result<(), SystemError> {
-        let root = self.definition(&self.document.root)?;
-        let invalid = |m: String| Err(SystemError::Invalid(format!("link of `{instance}`: {m}")));
-        let Some(spec) = root.instances.get(instance) else {
-            return invalid(format!("the root definition `{}` has no instance `{instance}` (links name instances of the root; unlink an instance before grouping it)", self.document.root));
-        };
-        let InstanceKind::Element { component_type } = &spec.kind else {
-            return invalid(format!("`{instance}` is a subsystem; only {} elements can be hosted", hosted_list()));
-        };
-        let Some(suffix) = hosted_suffix(component_type) else {
-            return invalid(format!("`{instance}` is a {component_type} element; only {} elements can be hosted", hosted_list()));
-        };
-        if path.trim().is_empty() {
-            return invalid("the path is empty".into());
-        }
-        let bytes = path.as_bytes();
-        if path.starts_with('/') || path.starts_with('\\') || (bytes.len() >= 2 && bytes[1] == b':') {
-            return invalid(format!("`{path}` is absolute; give it relative to the system file's directory"));
-        }
-        if path.contains('\\') {
-            return invalid(format!("`{path}` uses `\\`; separate directories with `/`"));
-        }
-        let file = path.rsplit('/').next().unwrap_or(path);
-        if !file.ends_with(suffix) || file.len() == suffix.len() {
-            return invalid(format!("a {component_type} instance links a `<name>{suffix}` file; `{path}` is not one"));
-        }
         Ok(())
     }
 
@@ -303,6 +277,52 @@ impl<'a> Resolver<'a> {
                     }
                 }
             }
+            InstanceKind::Generated { generator, source, ports } => {
+                if generator.is_empty() {
+                    return Err(SystemError::Invalid(format!("generated instance `{name}` names no generator")));
+                }
+                check_relative_path(source).map_err(|e| SystemError::Invalid(format!("generated instance `{name}`: {e}")))?;
+                if ports.is_empty() {
+                    return Err(SystemError::Invalid(format!("generated instance `{name}` records no ports (add it through its generator)")));
+                }
+            }
+            InstanceKind::Block { implementation, interface, timing } => {
+                let invalid = |m: String| SystemError::Invalid(format!("block `{name}` in `{definition_id}`: {m}"));
+                timing.validate().map_err(invalid)?;
+                let mut names = BTreeSet::new();
+                for port in interface.inputs.iter().chain(&interface.outputs) {
+                    if port.name.is_empty() || !names.insert(port.name.as_str()) {
+                        return Err(invalid(format!("signal names must be unique and non-empty (`{}`)", port.name)));
+                    }
+                    if port.start.is_some_and(|v| !v.is_finite()) || port.min.is_some_and(f64::is_nan) || port.max.is_some_and(f64::is_nan) {
+                        return Err(invalid(format!("signal `{}` has a non-finite start or a NaN bound", port.name)));
+                    }
+                }
+                if timing.clock.first() > 0.0 {
+                    if let Some(port) = interface.outputs.iter().find(|p| p.start.is_none()) {
+                        return Err(invalid(format!("output `{}` needs a start value: the block's first tick is {} s after the start", port.name, timing.clock.first())));
+                    }
+                }
+                match implementation {
+                    BlockSource::Fmu { path, sha256 } => {
+                        check_relative_path(path).map_err(invalid)?;
+                        if sha256.len() != 64 || !sha256.bytes().all(|b| b.is_ascii_hexdigit()) {
+                            return Err(invalid("the FMU's SHA-256 must be 64 hex digits".into()));
+                        }
+                        if interface.feedthrough {
+                            return Err(invalid("an FMI 3 Co-Simulation block has no feedthrough".into()));
+                        }
+                    }
+                    BlockSource::Host { name: host } => {
+                        if host.is_empty() {
+                            return Err(invalid("a host block names its implementation".into()));
+                        }
+                        if !instance.parameters.is_empty() {
+                            return Err(invalid("a host block takes no parameters (its host configures it)".into()));
+                        }
+                    }
+                }
+            }
         }
         Ok(())
     }
@@ -329,27 +349,25 @@ impl<'a> Resolver<'a> {
 
     /// Type-check one net. Physical terminals must share a connector (a plain
     /// port may join the matching member of a composite); a signal net has at
-    /// most one output and every input reads its quantity.
-    ///
-    /// A root net that touches a hosted instance (`SystemDocument::links`)
-    /// must join hosted instances only: they are not in the compiled model,
-    /// the drive host runs them. Its terminals must exist, but their declared
-    /// types are not compared (a `control.external` seam's `sense.*` ports are
-    /// dimensionless placeholders for the channels the linked files define);
-    /// the host checks the wiring against what it runs (`sim_runtime::system_robot`).
+    /// most one output and every input reads its quantity. A block's signal
+    /// joins only signals of exactly its quantity.
     pub fn check_net(&self, definition: &str, net: &Net) -> Result<(), SystemError> {
-        let hosted: Vec<&Terminal> = net.terminals.iter().filter(|t| t.instance().is_some_and(|i| self.document.hosted(definition, i))).collect();
-        if !hosted.is_empty() {
-            if let Some(other) = net.terminals.iter().find(|t| !t.instance().is_some_and(|i| self.document.hosted(definition, i))) {
-                return Err(SystemError::Invalid(format!(
-                    "net in `{definition}`: {} is on a hosted instance but {other} is not; a hosted instance's ports join only other hosted instances (the drive host runs them, the compiled model does not contain them)",
-                    hosted[0]
-                )));
+        let d = self.definition(definition)?;
+        let mut block_kinds = Vec::new();
+        let mut kinds = Vec::new();
+        for t in &net.terminals {
+            if let Some(PortSchema::SignalIn(k) | PortSchema::SignalOut(k)) = self.terminal_schema(definition, t, &mut BTreeSet::new())? {
+                let on_block = t.instance().and_then(|i| d.instances.get(i)).is_some_and(|i| matches!(i.kind, InstanceKind::Block { .. }));
+                if on_block {
+                    block_kinds.push((t, k.clone()));
+                }
+                kinds.push((t, k));
             }
-            for t in &net.terminals {
-                self.terminal_schema(definition, t, &mut BTreeSet::new())?;
+        }
+        for (bt, bk) in &block_kinds {
+            if let Some((t, k)) = kinds.iter().find(|(_, k)| k != bk) {
+                return Err(SystemError::Invalid(format!("net in `{definition}`: block signal {bt} is {bk:?} but {t} is {k:?}; a block's signals join only the same quantity (no conversion)")));
             }
-            return Ok(());
         }
         let mut schemas = Vec::new();
         for t in &net.terminals {
@@ -375,12 +393,6 @@ impl<'a> Resolver<'a> {
         let connected: BTreeSet<&Terminal> = d.nets.iter().flat_map(|n| &n.terminals).collect();
         for (name, instance) in &d.instances {
             let here = join_path(path, name);
-            // Hosted: its parameters and inputs come from the linked file and the drive host.
-            if self.document.hosted(definition, name) {
-                let link = self.document.link(name).map(|l| l.path.as_str()).unwrap_or_default();
-                out.push(Finding { code: "hosted".into(), message: format!("{here} ({}) runs from `{link}` on the drive host; it is not in the compiled model", crate::commands::kind_label(&instance.kind)), subject: Some(here.clone()) });
-                continue;
-            }
             if let Ok(ports) = self.instance_ports(instance) {
                 let top: Vec<&String> = ports.keys().filter(|k| !ports.keys().any(|p| p != *k && k.starts_with(&format!("{p}.")))).collect();
                 for port in top {
@@ -414,6 +426,10 @@ impl<'a> Resolver<'a> {
                     }
                     self.findings_at(&here, child, out, depth + 1);
                 }
+                InstanceKind::Block { implementation: BlockSource::Host { name: host }, .. } => {
+                    out.push(Finding { code: "host_block".into(), message: format!("{here} runs host implementation `{host}`: only a host that supplies it can run this system"), subject: Some(here.clone()) });
+                }
+                InstanceKind::Block { .. } | InstanceKind::Generated { .. } => {}
             }
         }
         for port in d.ports.keys() {
@@ -422,10 +438,6 @@ impl<'a> Resolver<'a> {
             }
         }
     }
-}
-
-fn hosted_list() -> String {
-    HOSTED_TYPES.iter().map(|(t, _)| *t).collect::<Vec<_>>().join(", ")
 }
 
 fn wildcard_match(pattern: &str, name: &str) -> bool {
@@ -449,6 +461,13 @@ fn check_bounds(name: &str, parameter: &str, value: f64, decl: &sim_core::Parame
         return Err(SystemError::Invalid(format!("`{name}.{parameter}` must be an integer")));
     }
     Ok(())
+}
+
+/// A block's signals as port schemas: inputs read, outputs drive.
+pub fn block_ports(interface: &sim_core::BlockInterface) -> BTreeMap<String, PortSchema> {
+    interface.inputs.iter().map(|p| (p.name.clone(), PortSchema::SignalIn(p.kind.clone())))
+        .chain(interface.outputs.iter().map(|p| (p.name.clone(), PortSchema::SignalOut(p.kind.clone()))))
+        .collect()
 }
 
 /// Whether these terminal types may share one net.

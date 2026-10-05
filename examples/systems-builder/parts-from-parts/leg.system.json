@@ -1,7 +1,7 @@
 {
-  "schema": "sim.system/1",
+  "schema": "sim.system/2",
   "title": "One-joint leg",
-  "revision": 2,
+  "revision": 4,
   "root": "root",
   "definitions": {
     "dc_motor_12v": {
@@ -33,6 +33,7 @@
       },
       "instances": {
         "mount": {
+          "display_id": "11b2fbc367fbf0f87bd57385",
           "label": "Mount",
           "kind": {
             "kind": "element",
@@ -53,6 +54,7 @@
           }
         },
         "rotor": {
+          "display_id": "766acfdd90295635d93c8956",
           "label": "Rotor",
           "kind": {
             "kind": "element",
@@ -82,6 +84,7 @@
           }
         },
         "winding": {
+          "display_id": "4663800ce53000a23c203d92",
           "label": "Brushed motor",
           "kind": {
             "kind": "element",
@@ -194,6 +197,7 @@
       },
       "instances": {
         "bearing": {
+          "display_id": "a08b0130c50ea07980d4fecf",
           "label": "Output bearing",
           "kind": {
             "kind": "element",
@@ -219,6 +223,7 @@
           }
         },
         "drive": {
+          "display_id": "86ff81c30b570f4d85363f73",
           "label": "Gearmotor",
           "kind": {
             "kind": "subsystem",
@@ -226,6 +231,7 @@
           }
         },
         "housing": {
+          "display_id": "24039cc3145d48d0ac2add3c",
           "label": "Housing",
           "kind": {
             "kind": "element",
@@ -307,6 +313,7 @@
       "label": "One-joint leg",
       "instances": {
         "gnd": {
+          "display_id": "d659d40d8c8b02cf6862d0fa",
           "kind": {
             "kind": "element",
             "component_type": "electrical.ground"
@@ -326,6 +333,7 @@
           }
         },
         "gravity": {
+          "display_id": "548932dc8e5ae8abff5d313f",
           "label": "Gravity on the thigh",
           "kind": {
             "kind": "element",
@@ -362,6 +370,7 @@
           }
         },
         "hip": {
+          "display_id": "8ec0e5ea9ffda7a3ef600b60",
           "label": "Hip actuator",
           "kind": {
             "kind": "subsystem",
@@ -382,6 +391,7 @@
           }
         },
         "supply": {
+          "display_id": "f4dab463b4e1a755700d5cb9",
           "label": "6 V pulse",
           "kind": {
             "kind": "element",
@@ -410,6 +420,7 @@
           }
         },
         "thigh": {
+          "display_id": "c9eb8974a27cbd2f8ccdffbc",
           "label": "Thigh link",
           "kind": {
             "kind": "element",
@@ -500,6 +511,7 @@
       },
       "instances": {
         "coupling": {
+          "display_id": "5c40be43462805ca28ccac1b",
           "label": "Shaft coupling",
           "kind": {
             "kind": "element",
@@ -541,6 +553,7 @@
           }
         },
         "mesh": {
+          "display_id": "bcd21586a9bf8e0bbb027eaf",
           "label": "Worm-wheel mesh",
           "kind": {
             "kind": "element",
@@ -570,6 +583,7 @@
           }
         },
         "worm": {
+          "display_id": "810ce0af62c29d7797ded17b",
           "label": "Worm",
           "kind": {
             "kind": "element",
@@ -678,6 +692,7 @@
       },
       "instances": {
         "gearbox": {
+          "display_id": "b65f1b5a75ad450b5961072d",
           "label": "Gearbox",
           "kind": {
             "kind": "subsystem",
@@ -685,6 +700,7 @@
           }
         },
         "motor": {
+          "display_id": "0da67bb6f84983bd372e25f8",
           "label": "Motor",
           "kind": {
             "kind": "subsystem",
@@ -775,13 +791,13 @@
     "bound": 0.05,
     "notes": "Realtime models: motor winding inductance dropped (current algebraic), friction smoothing 0.05 rad/s; 2 ms step.",
     "measured": {
-      "content_hash": "887ede1881bc6c30ec323d81ef381566d0f3f247bd8d6abd36752541d70965cb",
+      "content_hash": "86530385fca8c56fc66c2f83bdbec7a144dc7d779ece8e0ab8a42c60bb9d2b51",
       "errors": {
         "thigh.shaft.angle": 0.00534449877510967,
         "thigh.shaft.speed": 0.018851707532639945
       },
-      "detailed_speed": 4.662123783433174,
-      "realtime_speed": 56.74696867151185,
+      "detailed_speed": 3.600036769335547,
+      "realtime_speed": 43.377430347052695,
       "host": "x86_64 macos (release build)"
     }
   }

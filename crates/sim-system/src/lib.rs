@@ -21,7 +21,7 @@ pub mod store;
 
 pub use commands::{apply, kind_base_name, kind_label, Command, Outcome};
 pub use document::*;
-pub use flatten::{flatten, flatten_with, Flattened, Generated, GeneratedReport, Generator, Generators};
+pub use flatten::{flatten, flatten_with, Flattened, Generated, GeneratedDetail, GeneratedReport, Generator, Generators};
 pub use resolve::{Finding, Resolver};
 pub use store::SystemStore;
 

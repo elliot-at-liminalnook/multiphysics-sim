@@ -7,15 +7,33 @@ use sim_compile::Runtime;
 use sim_core::ImplementationRef;
 use std::path::Path;
 
+/// Host implementations by name (`ImplementationRef::Host`): each builds
+/// the implementation for one block that names it.
+pub type Hosts<'a> = std::collections::BTreeMap<String, Box<dyn FnMut(&sim_core::BlockDecl) -> Result<Box<dyn sim_core::BlockImplementation>, String> + 'a>>;
+
 /// Bind every block of `runtime`. `base` is the system file's directory
 /// (None: the model came from no file, so a relative FMU path is refused).
 pub fn bind(runtime: &mut Runtime, base: Option<&Path>) -> Result<(), String> {
-    let host: Vec<String> = runtime.model.blocks.iter().filter_map(|b| match &b.implementation {
-        ImplementationRef::Host { name } => Some(format!("`{}` (host implementation `{name}`)", b.name)),
-        ImplementationRef::Fmi3 { .. } => None,
-    }).collect();
-    if !host.is_empty() {
-        return Err(format!("this host supplies no implementation for {}: run the system where they are provided, or replace them with FMU blocks", host.join(", ")));
+    bind_with(runtime, base, &mut Hosts::new())
+}
+
+/// [`bind`] where the host supplies the implementations in `hosts` (a test
+/// bench's stimulus, a teleoperation source). A host block nothing supplies
+/// is refused by name.
+pub fn bind_with(runtime: &mut Runtime, base: Option<&Path>, hosts: &mut Hosts) -> Result<(), String> {
+    let mut missing = Vec::new();
+    for decl in runtime.model.blocks.clone() {
+        let ImplementationRef::Host { name } = &decl.implementation else { continue };
+        match hosts.get_mut(name) {
+            Some(make) => {
+                let implementation = make(&decl).map_err(|e| format!("block `{}` (host implementation `{name}`): {e}", decl.name))?;
+                runtime.bind_block(&decl.name, implementation).map_err(|e| e.to_string())?;
+            }
+            None => missing.push(format!("`{}` (host implementation `{name}`)", decl.name)),
+        }
+    }
+    if !missing.is_empty() {
+        return Err(format!("this host supplies no implementation for {}: run the system where they are provided, or replace them with FMU blocks", missing.join(", ")));
     }
     if !runtime.model.blocks.iter().any(|b| matches!(b.implementation, ImplementationRef::Fmi3 { .. })) {
         return Ok(());
@@ -59,15 +77,23 @@ pub fn fmu_instance(base: &Path, path: &str, timing: sim_core::BlockTiming, kind
 }
 
 /// A generated robot instance from the `.simrobot.json` at `source`
-/// (relative to `base`), its port signature recorded. `driver_control`:
-/// duty inputs per motor instead of servo targets per joint.
+/// (relative to `base`), its port signature recorded. `parameters` are the
+/// robot generator's (`driver_control`: duty inputs per motor instead of
+/// servo targets per joint; `own_supply`, `own_ambient`: the model's own
+/// supply and ambient instead of boundary ports).
 #[cfg(not(target_arch = "wasm32"))]
-pub fn robot_instance(registry: &sim_core::BehaviorRegistry, base: &Path, source: &str, driver_control: bool) -> Result<sim_system::InstanceSpec, String> {
-    let parameters: std::collections::BTreeMap<String, f64> = if driver_control { [("driver_control".to_owned(), 1.0)].into() } else { Default::default() };
-    let ports = crate::robot_generator::generators(base).ports(registry, crate::robot_generator::NAME, source, &parameters)?;
+pub fn robot_instance_with(registry: &sim_core::BehaviorRegistry, base: &Path, source: &str, parameters: &std::collections::BTreeMap<String, f64>) -> Result<sim_system::InstanceSpec, String> {
+    let ports = crate::robot_generator::generators(base).ports(registry, crate::robot_generator::NAME, source, parameters)?;
     let mut spec = sim_system::InstanceSpec::generated(crate::robot_generator::NAME, source, ports);
-    for (name, value) in &parameters {
+    for (name, value) in parameters {
         spec = spec.with(name, *value);
     }
     Ok(spec)
+}
+
+/// [`robot_instance_with`] with boundary supply and ambient.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn robot_instance(registry: &sim_core::BehaviorRegistry, base: &Path, source: &str, driver_control: bool) -> Result<sim_system::InstanceSpec, String> {
+    let parameters: std::collections::BTreeMap<String, f64> = if driver_control { [("driver_control".to_owned(), 1.0)].into() } else { Default::default() };
+    robot_instance_with(registry, base, source, &parameters)
 }

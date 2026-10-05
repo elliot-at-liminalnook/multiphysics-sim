@@ -3,7 +3,9 @@
 //! project's `make/` (its exact-geometry tessellation, mm), listed in
 //! `make/parts.json` with the CAD file's SHA-256 (the tested design's),
 //! its material, mass, volume and print settings, and the bought parts (the
-//! library motors). Print studies (layer strength, splitting, plates) are
+//! library motors). File names are the bodies' names, made distinct when two
+//! bodies share one (`part_files`); files a previous export wrote that this
+//! design no longer has are removed. Print studies (layer strength, splitting, plates) are
 //! not ported to the in-process editor; the list says so.
 use super::ProjectState;
 use crate::cad::CadDocument;
@@ -22,6 +24,64 @@ impl MakeRun {
     pub(crate) fn json(&self) -> Value {
         json!({"running": self.job.is_some(), "last": self.last.as_ref().map(super::msg)})
     }
+}
+
+/// The print settings the model export assumes for a body that states none
+/// (`sim_cad::physical`).
+pub(crate) const DEFAULT_INFILL: f64 = 0.3;
+pub(crate) const DEFAULT_WALLS: u32 = 3;
+
+/// A body's print settings as its CAD node states them, and which of them
+/// it does not state (the default is then used, and named).
+pub(crate) struct PrintSettings {
+    pub orientation: [f64; 3],
+    pub infill: f64,
+    pub walls: u32,
+    pub assumed: Vec<String>,
+}
+
+pub(crate) fn print_settings(node: &Value) -> PrintSettings {
+    let robot = &node["robot"];
+    let mut assumed = Vec::new();
+    let orientation = robot["print_orientation"].as_array().filter(|a| a.len() == 3).and_then(|a| Some([a[0].as_f64()?, a[1].as_f64()?, a[2].as_f64()?])).filter(|v| v.iter().map(|c| c * c).sum::<f64>() > 1e-12).unwrap_or_else(|| {
+        assumed.push("printed upright (+Z)".to_string());
+        [0.0, 0.0, 1.0]
+    });
+    let infill = robot["infill"].as_f64().map(|i| i.clamp(0.0, 1.0)).unwrap_or_else(|| {
+        assumed.push(format!("{:.0} % infill", DEFAULT_INFILL * 100.0));
+        DEFAULT_INFILL
+    });
+    let walls = robot["walls"].as_u64().map(|w| w as u32).unwrap_or_else(|| {
+        assumed.push(format!("{DEFAULT_WALLS} walls"));
+        DEFAULT_WALLS
+    });
+    PrintSettings { orientation, infill, walls, assumed }
+}
+
+/// One distinct `.stl` file name per body, from (id, name): the name's slug,
+/// with the body's id appended for every body whose slug another shares
+/// (or that has none), so no part overwrites another and a name keeps its
+/// file whatever order the bodies come in.
+pub(crate) fn part_files(bodies: &[(String, String)]) -> Vec<String> {
+    let slug = sim_runtime::robot_project::slug;
+    let slugs: Vec<String> = bodies.iter().map(|(_, name)| slug(name)).collect();
+    let mut files: Vec<String> = bodies.iter().zip(&slugs).map(|((id, _), s)| {
+        let shared = s.is_empty() || slugs.iter().filter(|o| *o == s).count() > 1;
+        match (shared, s.is_empty()) {
+            (false, _) => s.clone(),
+            (true, true) => format!("part-{}", slug(id)),
+            (true, false) => format!("{s}-{}", slug(id)),
+        }
+    }).collect();
+    // Ids are unique, but a suffixed name can still meet another body's plain one.
+    for i in 0..files.len() {
+        let mut n = 2;
+        while files[..i].contains(&files[i]) {
+            files[i] = format!("{}-{n}", files[i].trim_end_matches(&format!("-{}", n - 1)));
+            n += 1;
+        }
+    }
+    files.into_iter().map(|f| format!("{f}.stl")).collect()
 }
 
 /// A binary STL of `triangles` over `vertices` (mm).
@@ -65,6 +125,7 @@ pub(crate) fn start(st: &mut ProjectState, doc: &CadDocument) -> Result<Value, S
         let printed = |mid: &str| sim_cad::edit::material(&archive.manifest, mid).is_some_and(|m| m["tags"].as_array().is_some_and(|t| t.iter().any(|x| x == "print")));
         let mut parts = Vec::new();
         let mut bought = Vec::new();
+        let mut printed_bodies = Vec::new();
         for g in &local.geometry {
             let Some(n) = archive.node(&g.node_id) else { continue };
             let name = n["name"].as_str().unwrap_or(&g.node_id).to_string();
@@ -73,11 +134,15 @@ pub(crate) fn start(st: &mut ProjectState, doc: &CadDocument) -> Result<Value, S
                 continue;
             }
             let Some(mid) = n["material"].as_str().filter(|m| printed(m)) else { continue };
-            let file = format!("{}.stl", sim_runtime::robot_project::slug(&name));
-            std::fs::write(make.join(&file), stl(&name, &g.vertices_mm, &g.triangles)).map_err(|e| format!("{file}: {e}"))?;
+            printed_bodies.push((g, n, name, mid.to_string()));
+        }
+        let files = part_files(&printed_bodies.iter().map(|(g, _, name, _)| (g.node_id.clone(), name.clone())).collect::<Vec<_>>());
+        for ((g, n, name, mid), file) in printed_bodies.into_iter().zip(&files) {
+            std::fs::write(make.join(file), stl(&name, &g.vertices_mm, &g.triangles)).map_err(|e| format!("{file}: {e}"))?;
             let mass = local.masses.bodies.get(&g.node_id);
+            let print = print_settings(n);
             parts.push(json!({"name": name, "id": g.node_id, "file": file, "material": mid, "mass_kg": mass.map(|m| m.mass_kg), "volume_cm3": g.properties.volume_mm3 / 1000.0,
-                "print": {"orientation": n["robot"]["print_orientation"], "infill": n["robot"]["infill"], "walls": n["robot"]["walls"]}, "triangles": g.triangles.len()}));
+                "print": {"orientation": print.orientation, "infill": print.infill, "walls": print.walls, "assumed": print.assumed}, "triangles": g.triangles.len()}));
         }
         if parts.is_empty() {
             return Err("the design has no printed body (a material tagged print, such as PLA or PETG)".into());
@@ -92,6 +157,13 @@ pub(crate) fn start(st: &mut ProjectState, doc: &CadDocument) -> Result<Value, S
             "parts": parts, "bought": bought, "not_ported": NOT_PORTED,
             "units": "STL in millimetres, the design's frame (Z up); the CAD display tessellation of the exact geometry",
         });
+        // Part files an earlier export listed that this design no longer has.
+        let earlier: Option<Value> = std::fs::read(make.join("parts.json")).ok().and_then(|b| serde_json::from_slice(&b).ok());
+        for old in earlier.iter().flat_map(|m| m["parts"].as_array().into_iter().flatten()).filter_map(|p| p["file"].as_str()) {
+            if !files.iter().any(|f| f == old) && old.ends_with(".stl") && !old.contains(['/', '\\']) {
+                let _ = std::fs::remove_file(make.join(old));
+            }
+        }
         std::fs::write(make.join("parts.json"), serde_json::to_vec_pretty(&manifest).map_err(|e| e.to_string())?).map_err(|e| format!("parts.json: {e}"))?;
         Ok(manifest)
     }));
@@ -112,6 +184,28 @@ pub(super) fn tick(mut st: ResMut<ProjectState>) {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn bodies_that_share_a_name_get_their_own_files() {
+        let b = |id: &str, name: &str| (id.to_string(), name.to_string());
+        let files = super::part_files(&[b("n1", "Arm"), b("n2", "Base Plate"), b("n3", "arm"), b("n4", "!!"), b("n5", "Arm n1")]);
+        assert_eq!(files, ["arm-n1.stl", "base-plate.stl", "arm-n3.stl", "part-n4.stl", "arm-n1-2.stl"]);
+        let mut distinct = files.clone();
+        distinct.sort();
+        distinct.dedup();
+        assert_eq!(distinct.len(), files.len());
+        // The same bodies in another order keep their files.
+        let again = super::part_files(&[b("n3", "arm"), b("n1", "Arm"), b("n2", "Base Plate")]);
+        assert_eq!(again, ["arm-n3.stl", "arm-n1.stl", "base-plate.stl"]);
+    }
+
+    #[test]
+    fn unstated_print_settings_are_named() {
+        let p = super::print_settings(&serde_json::json!({"robot": {"infill": 0.5}}));
+        assert_eq!((p.infill, p.walls, p.orientation), (0.5, super::DEFAULT_WALLS, [0.0, 0.0, 1.0]));
+        assert_eq!(p.assumed, ["printed upright (+Z)", "3 walls"]);
+        assert!(super::print_settings(&serde_json::json!({"robot": {"infill": 0.2, "walls": 4, "print_orientation": [1, 0, 0]}})).assumed.is_empty());
+    }
+
     #[test]
     fn a_binary_stl_has_its_header_count_and_records() {
         let b = super::stl("cube", &[[0., 0., 0.], [1., 0., 0.], [0., 1., 0.]], &[[0, 1, 2]]);

@@ -20,7 +20,9 @@
 //! - **Follow-ups** ([`Intent`]): a step that needs another mode first
 //!   (Model needs CAD on the project's file; asking the design assistant
 //!   needs CAD) switches, then acts once the mode is ready.
-//! - **Test**: the acceptance test runs headless on a job
+//! - **Test**: the acceptance test runs the project's system (the robot as
+//!   a generated assembly, with the controllers composed around it) headless
+//!   on a job
 //!   (`sim_runtime::acceptance`); its report is written under the
 //!   project's results folder and Robot mode shows the model.
 //! - REST: `project_*` in every mode ([`actions`]); `project_guide` explains
@@ -158,7 +160,9 @@ impl ProjectState {
             "steps": self.steps, "next": status::next(&self.steps),
             "model": f.map(|f| json!({"exists": f.model_exists, "cad_sha256": f.model_cad_sha256, "cad_revision": f.model_revision, "assumptions": f.assumptions, "blocking": f.blocking, "links": f.model_links, "exporter": f.model_exporter, "error": f.model_error})),
             "design": f.map(|f| json!({"exists": f.cad_exists, "cad_sha256": f.cad_sha256, "revision": f.cad_revision, "bodies": f.bodies, "joints": f.joints, "driven_joints": f.driven_joints, "motors": f.motors, "error": f.cad_error})),
-            "test": {"stated": p.file.test, "running": self.test.as_ref().map(|t| json!({"seconds": t.started.elapsed().as_secs_f64(), "progress": *t.progress.lock().unwrap_or_else(|e| e.into_inner())})), "latest": f.and_then(|f| f.report.clone()), "latest_path": f.and_then(|f| f.report_path.clone())},
+            "test": {"stated": p.file.test, "running": self.test.as_ref().map(|t| json!({"seconds": t.started.elapsed().as_secs_f64(), "progress": *t.progress.lock().unwrap_or_else(|e| e.into_inner())})), "latest": f.and_then(|f| f.report.clone()), "latest_path": f.and_then(|f| f.report_path.clone()), "standing": f.and_then(|f| f.standing.clone()),
+                "standing_rule": "current: the latest report's fingerprint (the system's model, every file it read by SHA-256, the run settings, the test) matches what a run would be now; stale: something changed (listed), so the report's verdict no longer counts; not_assessed: never run"},
+            "system": {"path": p.system(), "exists": f.map(|f| f.system_exists), "error": f.and_then(|f| f.system_error.clone()), "rule": "the system the robot is tested in (sim.system/2): open it in Build mode (viewer_mode {mode: build, path}) to add controller FMUs, a battery or thermal parts; the test then runs with them"},
             "lessons": {"written": f.map(|f| f.lessons.iter().map(|(slug, title)| json!({"slug": slug, "title": title})).collect::<Vec<_>>()), "suggested": lessons::suggestions(self), "writer": self.lessons.json()},
             "make": {"latest": f.and_then(|f| f.make.clone()), "running": self.make.json()},
             "chat": {"turns": p.file.chat, "assistant": self.chat.json()},
@@ -266,10 +270,19 @@ pub(crate) fn start_test(st: &mut ProjectState) -> Result<Value, String> {
     let (results, cad) = (project.results(), project.cad());
     let progress = std::sync::Arc::new(std::sync::Mutex::new(0.0));
     let shared = progress.clone();
+    let tested = project.clone();
     let job = Job::spawn(Pool::Dedicated, 0, format!("project test: {}", test.name), move |ctx| {
         let text = std::fs::read_to_string(&model_path).map_err(|e| format!("{}: {e}", model_path.display()))?;
         let model: Value = serde_json::from_str(&text).map_err(|e| format!("{}: {e}", model_path.display()))?;
-        let mut report = sim_runtime::acceptance::run(&model, &test, &|| ctx.cancelled(), &|f| *shared.lock().unwrap_or_else(|e| e.into_inner()) = f)?;
+        // The robot as composed in the project's system: its controller
+        // blocks run as they are, on the same path as any system run.
+        let registry = sim_runtime::registry();
+        let document = tested.ensure_system(&registry)?;
+        let system = tested.system();
+        let base = system.parent().unwrap_or(std::path::Path::new(".")).to_path_buf();
+        let extra = status::judged_files(&tested, &test);
+        let mut report = sim_runtime::acceptance::run(&document, &base, &registry, &test, &extra, &|| ctx.cancelled(), &|f| *shared.lock().unwrap_or_else(|e| e.into_inner()) = f)?;
+        report["system"]["file"] = json!(system);
         // Printed-part strength: judged here, from the design's part meshes and the run's peak loads.
         for (i, c) in test.criteria.iter().enumerate() {
             if let sim_runtime::acceptance::Criterion::PartStrength { min_safety_factor } = c {

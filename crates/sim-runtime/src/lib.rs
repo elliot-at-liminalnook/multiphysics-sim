@@ -81,7 +81,9 @@ pub mod policy_evaluation;
 pub mod predictive_control;
 pub mod lift;
 pub mod physical;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod acceptance;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod robot_project;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod part_strength;

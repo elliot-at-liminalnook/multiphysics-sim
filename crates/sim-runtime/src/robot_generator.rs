@@ -4,8 +4,11 @@
 //! thermal environment as boundary ports and its controller contract's
 //! channels as typed signals (docs/architecture/composition.md, "Robots"):
 //!
-//! - `supply_p`, `supply_n`: the motor bus (electrical), for a battery or supply;
-//! - `ambient`: the thermal environment the motors and mounts shed heat to;
+//! - `supply_p`, `supply_n`: the motor bus (electrical), for a battery or
+//!   supply (with `own_supply = 1` the robot keeps the supply its model
+//!   defines, as in Robot mode, and offers no bus);
+//! - `ambient`: the thermal environment the motors and mounts shed heat to
+//!   (with `own_ambient = 1`, the model's own fixed ambient instead);
 //! - inputs `<joint>.target` (servo setpoint, rad) or, with
 //!   `driver_control = 1`, `<motor>.duty` (H-bridge duty);
 //! - outputs `<joint>.angle`, `<joint>.speed` (encoders, tachometers),
@@ -22,33 +25,41 @@ pub const NAME: &str = "robot";
 #[derive(Default)]
 pub struct RobotGenerator;
 
-fn options(parameters: &BTreeMap<String, f64>) -> Result<BuildOptions, String> {
+/// The assembly a `robot` instance was generated as, for the host code
+/// that measures it in the compiled model (`acceptance`): taken once.
+pub type Handle = std::sync::Mutex<Option<crate::physical::RobotAssembly>>;
+
+/// How the instance's parameters ask for the robot to be built.
+pub fn options(prefix: &str, parameters: &BTreeMap<String, f64>) -> Result<(BuildOptions, AssemblyOptions), String> {
     let mut opts = BuildOptions::default();
+    let mut how = AssemblyOptions { prefix: prefix.to_owned(), external_supply: true, external_ambient: true };
     for (name, value) in parameters {
         match name.as_str() {
             "driver_control" => opts.driver_control = *value != 0.0,
-            other => return Err(format!("the robot generator has no parameter `{other}` (it takes `driver_control`)")),
+            "own_supply" => how.external_supply = *value == 0.0,
+            "own_ambient" => how.external_ambient = *value == 0.0,
+            other => return Err(format!("the robot generator has no parameter `{other}` (it takes `driver_control`, `own_supply`, `own_ambient`)")),
         }
     }
-    Ok(opts)
-}
-
-fn how(prefix: &str) -> AssemblyOptions {
-    AssemblyOptions { prefix: prefix.to_owned(), external_supply: true, external_ambient: true }
+    Ok((opts, how))
 }
 
 impl Generator for RobotGenerator {
     fn ports(&self, registry: &BehaviorRegistry, source: &Path, parameters: &BTreeMap<String, f64>) -> Result<BTreeMap<String, PortSchema>, String> {
         let model = PhysicalModel::load(&source.display().to_string())?;
         let mut scratch = ModelWorld::default();
-        let assembly = assemble(&mut scratch, registry, model, &options(parameters)?, &how(""))?;
+        let (opts, how) = options("", parameters)?;
+        let assembly = assemble(&mut scratch, registry, model, &opts, &how)?;
         Ok(assembly.boundary.into_iter().map(|(name, (schema, _))| (name, schema)).collect())
     }
 
     fn generate(&self, world: &mut ModelWorld, registry: &BehaviorRegistry, prefix: &str, source: &Path, parameters: &BTreeMap<String, f64>) -> Result<Generated, String> {
         let model = PhysicalModel::load(&source.display().to_string())?;
-        let assembly = assemble(world, registry, model, &options(parameters)?, &how(prefix))?;
-        Ok(Generated { boundary: assembly.boundary.into_iter().map(|(name, (_, ports))| (name, ports)).collect(), warnings: assembly.warnings })
+        let (opts, how) = options(prefix, parameters)?;
+        let assembly = assemble(world, registry, model, &opts, &how)?;
+        let boundary = assembly.boundary.iter().map(|(name, (_, ports))| (name.clone(), ports.clone())).collect();
+        let warnings = assembly.warnings.clone();
+        Ok(Generated { boundary, warnings, detail: Some(std::sync::Arc::new(Handle::new(Some(assembly)))) })
     }
 }
 

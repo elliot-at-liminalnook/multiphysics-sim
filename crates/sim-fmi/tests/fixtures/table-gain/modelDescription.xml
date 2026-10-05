@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription
+  fmiVersion="3.0"
+  modelName="table_gain"
+  instantiationToken="{table-gain-fixture-1}"
+  description="Test fixture: y = gain * u, the gain read from resources/gain.txt at every step"
+  generationTool="multiphysics-sim fixture (hand-written C)"
+  variableNamingConvention="flat">
+
+  <CoSimulation
+    modelIdentifier="table_gain"
+    canHandleVariableCommunicationStepSize="true"
+    canBeInstantiatedOnlyOncePerProcess="false"/>
+
+  <ModelVariables>
+    <Float64 name="time" valueReference="999" causality="independent" variability="continuous" description="Simulation time"/>
+    <Float64 name="u" valueReference="0" causality="input" start="0"/>
+    <Float64 name="y" valueReference="1" causality="output" initial="calculated"/>
+  </ModelVariables>
+
+  <ModelStructure>
+    <Output valueReference="1"/>
+    <InitialUnknown valueReference="1"/>
+  </ModelStructure>
+</fmiModelDescription>

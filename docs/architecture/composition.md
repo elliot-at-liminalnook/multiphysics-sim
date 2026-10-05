@@ -65,17 +65,27 @@ call blocks. `advance_to_event` is refused for a model with blocks.
 
 **One tick.** At an instant `t` with due blocks `D`:
 
-1. *Apply pending.* A block without feedthrough (FMI Co-Simulation) applies
-   the outputs its previous step computed: its values at `t`.
-2. *Execute in dependency order.* Blocks in `D` run in topological order of
+1. *Apply what was decided before `t`.* A block without feedthrough (FMI
+   Co-Simulation) applies the outputs its previous step computed: its
+   values at `t`. A feedthrough block with an output delay of `d` samples
+   applies what it computed `d` ticks ago.
+2. *Initial outputs.* A block without feedthrough at its first tick is
+   initialised and its initial outputs apply. Every such block reads the
+   other blocks as they stood after step 1.
+3. *Execute in dependency order.* Blocks in `D` run in topological order of
    same-instant edges (a producer with feedthrough and no output delay). A
    block's plant inputs are the committed state at `t`, before any write at
    `t` (sample, then update); its block inputs are the producers' applied
    outputs. A cycle of same-instant edges is an algebraic loop, refused when
    the runtime is built, naming the blocks.
-3. *Write.* Feedthrough outputs apply at `t`; a step's end-of-step outputs
-   wait for the next tick. Applied outputs pass through the `output_delay`
-   line and are written in one batch.
+4. *Write.* Every changed output is written in one batch.
+
+What a consumer reads from a producer is therefore fixed by the connection,
+never by the order the blocks were declared in: the producer's output of
+this tick over a same-instant edge, its output of `d` ticks ago over a
+feedthrough edge delayed by `d`, the result of its previous step over an
+end-of-step edge. In step 3 only same-instant producers change their
+signal, and the order puts each before its consumers.
 
 **Inputs.** Sample and hold; `input_delay` whole samples (before the line
 fills, the oldest sample held).
@@ -86,9 +96,16 @@ declare one for every output (refused otherwise).
 
 **First tick.** `initialize(t, dt)` (FMI: enter initialization mode with
 `startTime = t`, set inputs, exit, read outputs); its outputs apply at `t`.
-A block without feedthrough then takes its first step from `t` at once
-(its result applies at the next tick); later ticks take one step each, of
-the interval to the next tick.
+A block without feedthrough is initialised in step 2 (a block input reads
+the producer as it stood before this tick's executions) and then takes its
+first step from `t` in step 3 with this tick's inputs (its result applies at
+the next tick); later ticks take one step each, of the interval to the next
+tick.
+
+**Adaptive advances.** `advance_adaptive` cuts at ticks like `advance`. A
+segment shorter than the smallest step asked for (a tick just ahead, or the
+end of the advance just past one) is taken as one step of its own length;
+bounds with `h_min > h_max` are refused.
 
 ## Validation before execution
 
@@ -190,9 +207,11 @@ A robot is a generated assembly (`generator: robot`, source a
 `.simrobot.json`) built by `physical::assemble`, the same code Robot mode
 runs. Composed into a system its boundary is:
 
-- `supply_p`, `supply_n`: the motor bus (electrical) — a battery or supply;
+- `supply_p`, `supply_n`: the motor bus (electrical) — a battery or supply
+  (with the generator parameter `own_supply = 1` the robot keeps the supply
+  its model defines and offers no bus);
 - `ambient`: the thermal environment the windings, cases and mounts shed
-  heat to;
+  heat to (`own_ambient = 1`: the model's own fixed ambient instead);
 - inputs `<joint>.target` (servo setpoint) or, with `driver_control`,
   `<motor>.duty` (H-bridge duty);
 - outputs `<joint>.angle`, `<joint>.speed` (encoders, tachometers), `imu.*`,
@@ -204,6 +223,47 @@ controller block on the signals; systems connect whatever they like. The
 articulated element still receives its model through a process-local handle
 (`register_model`); its value is never recorded (evidence fingerprints use
 the document and the source file's bytes).
+
+A generator may hand the host a handle on what it built
+(`Generated::detail`, kept in `Flattened::generated_details`): the robot
+generator's is the assembly, so host code can measure the robot inside the
+compiled system (`PhysicalRobot::attach`) with the code Robot mode reports
+with. When a source file changes its ports (a re-exported model with another
+joint), the `refresh_generated` command records the new signature; a
+connection to a port that is gone is refused by name.
+
+## Robot projects
+
+A robot project (`*.robot.json`, Design → Model → Test → Learn → Make) tests
+its robot as it is composed in the project's system (`<name>.system.json`, a
+`sim.system/2` file like any other). The first test makes it: the model as a
+generated robot with its own supply and ambient, run with the robot
+assembly's step and Newton settings. Controllers (FMU blocks), a battery or
+thermal parts are added to it in Build mode.
+
+`sim_runtime::acceptance::run` runs that system on the path every system run
+takes — flatten with the generators, compile, bind FMU blocks, schedule — so:
+
+- controller blocks in the system run as they are; nothing replaces them;
+- the test's trajectory commands only signal inputs the system leaves open
+  (a joint's servo target when nothing drives it, or a controller's own
+  setpoint named `instance.port`), through a test-bench block on the same
+  scheduler at the robot model's control period and latency. Commanding an
+  input the system already drives is refused. Open robot inputs the test
+  does not name are held (a servo target at the model's control target);
+  the report lists commands, holds and the controllers that ran;
+- the criteria are the robot's own (reach, tracking, torque against stall,
+  winding temperature, bearing and yield margins, falls, limits, printed-part
+  strength), read from the compiled model by `PhysicalRobot::attach`. Every
+  sampled series has one value per sample; tracking is judged against the
+  test's command for the joint, or the target a controller sent it.
+
+The report carries the same fingerprint as system evidence (the system's
+physics hash, the SHA-256 of every file read — the robot model, FMUs, and
+for part strength the CAD file and the print registry — the run settings and
+the test). `acceptance::standing` compares it with what a run would be now:
+`project_state.test.standing` is current, or stale with what changed, and a
+stale pass neither completes the Test step nor allows Make.
 
 ## Systems, tests and evidence
 
@@ -258,16 +318,26 @@ shows blocks, tests, standing and evidence.
   `sim-runtime/tests/composition.rs` (the two systems saved, reloaded,
   flattened with paths; parameter inheritance; a block inside a subsystem;
   wiring refusals; changed artifacts and host blocks refused; evidence
-  current, stale on a model, artifact or test change, not assessed, failed).
+  current, stale on a model, artifact or test change, not assessed, failed),
+  `sim-runtime/tests/robot_acceptance.rs` (a robot project's test through
+  its system: alone under the test bench, with controller FMUs that are
+  never overridden, stale on a test, system, model or judged-file change, a
+  re-exported model refreshed).
 
 ## Limits
 
 - Only FMI 3 Co-Simulation; no Scheduled Execution, Model Exchange, clocks,
   arrays, strings or event mode.
 - Integer and Boolean FMU ports carry dimensionless values only.
-- A host block runs only where its host binds it: Build mode binds none, so
+- A host block runs only where its host binds it (`system_blocks::bind_with`:
+  a robot test binds its test bench). Build mode binds none, so
   teleoperating a robot from Build mode is not available (Robot mode's
   teleoperation is unchanged).
+- A robot test judges one robot: a system with several generated robots is
+  refused. Robot mode's live view still runs the model on its own
+  (`PhysicalRobot::build`), not the project's system.
+- Printed-part strength loads a link that is driven and also carries a
+  further joint with both load cases, which overstates.
 - The articulated robot element still takes its model through a
   process-local handle (`register_model`).
 - Islands are connected components over all connections, signals included,

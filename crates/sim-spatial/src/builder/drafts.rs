@@ -68,7 +68,7 @@ impl Builder {
             Purpose::AddRobot if text.is_empty() => Err("Type the path of a .simrobot.json next to the system file".into()),
             Purpose::AddRobot => {
                 let level = self.level.clone();
-                self.add_robot(pick.as_deref_mut(), &level, None, &text, false).map(|name| self.status = format!("Added robot {name}: connect supply_p/supply_n, ambient and its joint targets, then Run."))
+                self.add_robot(pick.as_deref_mut(), &level, None, &text, &[]).map(|name| self.status = format!("Added robot {name}: connect supply_p/supply_n, ambient and its joint targets, then Run."))
             }
             Purpose::BlockClock(name) => {
                 let p: Vec<f64> = text.split_whitespace().filter_map(|t| t.parse().ok()).collect();

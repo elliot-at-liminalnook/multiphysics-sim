@@ -121,19 +121,24 @@ fn an_arm_built_from_an_empty_archive_exports_a_model_the_simulator_runs() {
             {"kind": "yield_margin", "min": 1.0},
         ],
     })).unwrap();
-    let report = sim_runtime::acceptance::run(&model, &test, &|| false, &|_| {}).unwrap();
+    let report = sim_runtime::acceptance::run_model(&model, &test, &|| false, &|_| {}).unwrap();
     let status: Vec<&str> = report["outcomes"].as_array().unwrap().iter().map(|o| o["status"].as_str().unwrap()).collect();
     assert_eq!(status, ["pass", "pass", "pass", "pass", "not_assessed"], "{}", report["summary"]);
     assert_eq!(report["verdict"], json!("incomplete"));
     assert_eq!(report["evidence"], json!(false));
+    // It ran as a composed system: the robot generated from the model, no
+    // controller blocks, the test bench commanding the open servo target.
+    assert_eq!(report["system"]["controllers"], json!([]));
+    assert_eq!(report["system"]["test_bench"]["commands"], json!(["robot.Shoulder.target"]));
+    assert!(report["fingerprint"]["artifacts"]["robot"].is_string(), "{}", report["fingerprint"]);
     // Without the unassessable criterion it passes, and counts as evidence (no blocking assumption).
     let mut passing = test.clone();
     passing.criteria.pop();
-    let report = sim_runtime::acceptance::run(&model, &passing, &|| false, &|_| {}).unwrap();
+    let report = sim_runtime::acceptance::run_model(&model, &passing, &|| false, &|_| {}).unwrap();
     assert_eq!((report["verdict"].as_str(), report["evidence"].as_bool()), (Some("passed"), Some(true)), "{}", report["summary"]);
     // A 6 kg payload overloads the servo: the same test fails, naming the motor.
     let mut heavy = model.clone();
     heavy["links"][1]["mass"] = json!(6.0);
-    let report = sim_runtime::acceptance::run(&heavy, &passing, &|| false, &|_| {}).unwrap();
+    let report = sim_runtime::acceptance::run_model(&heavy, &passing, &|| false, &|_| {}).unwrap();
     assert_eq!(report["verdict"], json!("failed"), "{}", report["summary"]);
 }

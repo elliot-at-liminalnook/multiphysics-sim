@@ -45,8 +45,14 @@ pub fn pack(model_dir: &Path, out: &Path) -> Result<String, String> {
     let library = build.path().join(format!("{}{}", cs.model_identifier, std::env::consts::DLL_SUFFIX));
     let mut cc = std::process::Command::new(std::env::var("CC").unwrap_or_else(|_| "cc".into()));
     cc.args(["-std=c99", "-O2", "-fPIC", "-shared", "-Wall", "-Werror"]).arg("-I").arg(headers()).arg("-I").arg(model_dir.join("sources")).args(&sources).arg("-o").arg(&library);
+    // The library's own name, not the temporary build path, so the same
+    // sources and compiler give the same bytes.
+    let file = format!("{}{}", cs.model_identifier, std::env::consts::DLL_SUFFIX);
+    if cfg!(target_os = "macos") {
+        cc.arg(format!("-Wl,-install_name,@rpath/{file}"));
+    }
     if cfg!(target_os = "linux") {
-        cc.arg("-lm");
+        cc.arg(format!("-Wl,-soname,{file}")).arg("-lm");
     }
     let output = cc.output().map_err(|e| format!("cannot run the C compiler (`cc`): {e}"))?;
     if !output.status.success() {

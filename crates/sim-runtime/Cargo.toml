@@ -84,10 +84,10 @@ sim-parts = { path = "../sim-parts" }
 sim-vision = { path = "../sim-vision" }
 
 web-time = "1.1"
+sha2 = "=0.10.9"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 sim-fmi = { path = "../sim-fmi" }
-sha2 = "=0.10.9"
 libc = "=0.2.189"
 sim-vision = { path = "../sim-vision", features = ["parallel"] }
 sim-print = { path = "../sim-print" }

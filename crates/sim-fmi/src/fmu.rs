@@ -71,8 +71,11 @@ pub struct VariableSummary {
     pub value_type: ValueType,
     pub variability: Variability,
     pub unit: Option<String>,
-    /// The quantity a port of it carries, or why it cannot be inferred.
-    pub kind: Result<String, String>,
+    /// The quantity a port of it carries (None: see `kind_error`).
+    pub kind: Option<String>,
+    /// Why no quantity can be inferred (state the port's kind, or the
+    /// variable cannot be a port).
+    pub kind_error: Option<String>,
     pub start: Option<f64>,
     pub min: Option<f64>,
     pub max: Option<f64>,
@@ -122,16 +125,20 @@ impl Fmu {
 
     pub fn summary(&self) -> Summary {
         let md = &self.description;
-        let describe = |v: &Variable| VariableSummary {
+        let describe = |v: &Variable| {
+            let kind = scalar_problem(v).map_or_else(|| units::kind_of(md, v, None).map(|k| format!("{k:?}")), Err);
+            VariableSummary {
             name: v.name.clone(),
             value_type: v.value_type,
             variability: v.variability,
             unit: v.unit.clone(),
-            kind: scalar_problem(v).map_or_else(|| units::kind_of(md, v, None).map(|k| format!("{k:?}")), Err),
+            kind: kind.as_ref().ok().cloned(),
+            kind_error: kind.err(),
             start: v.start,
             min: v.min,
             max: v.max,
             description: v.description.clone(),
+        }
         };
         let of = |c: Causality| md.variables.iter().filter(|v| v.causality == c).map(describe).collect::<Vec<_>>();
         let unsupported = self.interface(&BTreeMap::new()).err().map(|e| match e {

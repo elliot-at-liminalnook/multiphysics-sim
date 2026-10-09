@@ -1,0 +1,1084 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>multiphysics-sim: repository map</title>
+<style>
+  :root { --bg:#fbfaf7; --ink:#1f2328; --muted:#5b6470; --line:#dcd8cf; --code:#f3f1ec; --accent:#2d5fa8; --done:#22783f; --partial:#935a00; --legacy:#7a3e8a; --unverified:#a63c30; --badge-ink:#fff; --max:72rem; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#16181d; --ink:#e4e4e0; --muted:#9aa2ad; --line:#2d323b; --code:#1d2127; --accent:#7faaf0; --done:#5fcf80; --partial:#f0b35a; --legacy:#c48fd6; --unverified:#ff8a7a; --badge-ink:#14161a; } }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 Georgia, "Iowan Old Style", "Palatino Linotype", serif; }
+  .wrap { max-width:var(--max); margin:0 auto; padding:0 20px 80px; display:grid; grid-template-columns:15rem minmax(0,1fr); gap:40px; }
+  nav.toc { position:sticky; top:0; align-self:start; max-height:100vh; overflow:auto; padding:28px 0; font:13px/1.5 -apple-system, system-ui, sans-serif; }
+  nav.toc a { display:block; color:var(--muted); text-decoration:none; padding:2px 0; }
+  nav.toc a.l2 { padding-left:12px; font-size:12px; }
+  nav.toc a:hover { color:var(--accent); }
+  main { min-width:0; padding-top:28px; }
+  h1 { font-size:34px; line-height:1.15; margin:0 0 4px; font-weight:600; letter-spacing:-.01em; }
+  h2 { font-size:24px; margin:56px 0 12px; padding-top:16px; border-top:1px solid var(--line); font-weight:600; }
+  h3 { font-size:18px; margin:30px 0 8px; font-weight:600; }
+  h4 { font-size:15px; margin:20px 0 6px; font-weight:600; font-family:-apple-system, system-ui, sans-serif; }
+  p { margin:0 0 14px; max-width:46rem; }
+  li { max-width:46rem; }
+  .lede { color:var(--muted); font-size:17px; margin-bottom:22px; }
+  .stats { display:flex; flex-wrap:wrap; gap:8px 22px; font:13px/1.4 -apple-system, system-ui, sans-serif; color:var(--muted); margin:14px 0 26px; }
+  .stats b { color:var(--ink); font-weight:600; }
+  code { font:13.5px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace; background:var(--code); padding:1px 5px; border-radius:4px; }
+  pre { background:var(--code); border:1px solid var(--line); border-radius:8px; padding:14px 16px; overflow:auto; margin:10px 0 20px; font:13px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  pre code { background:none; padding:0; font-size:inherit; }
+  figure { margin:14px 0 24px; }
+  figcaption { font:13px/1.45 -apple-system, system-ui, sans-serif; color:var(--muted); margin:6px 0 0; max-width:46rem; }
+  figure.code figcaption { margin:-12px 0 20px; }
+  figure.code figcaption .path { font-family:ui-monospace, Menlo, monospace; color:var(--ink); }
+  .c-kw { color:#9c3cbf; } .c-ty { color:#1c6b9e; } .c-str { color:#2f7a3a; } .c-num { color:#b25500; } .c-cm { color:#7a8390; font-style:italic; } .c-mac { color:#b25500; } .c-fn { color:#1c4fb0; } .c-attr { color:#8c6a1f; }
+  @media (prefers-color-scheme: dark) { .c-kw { color:#d39cf0; } .c-ty { color:#7fc3ea; } .c-str { color:#9fd8a5; } .c-num { color:#f0a86a; } .c-cm { color:#8a94a2; } .c-mac { color:#f0a86a; } .c-fn { color:#9bb9f5; } .c-attr { color:#d7bb6e; } }
+  table { border-collapse:collapse; width:100%; font:14px/1.45 -apple-system, system-ui, sans-serif; margin:10px 0 22px; }
+  th, td { text-align:left; vertical-align:top; padding:7px 10px; border-bottom:1px solid var(--line); }
+  th { font-weight:600; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+  td code { font-size:12.5px; }
+  .table-wrap { overflow-x:auto; margin:10px 0 22px; }
+  .table-wrap table { margin:0; min-width:34rem; }
+  p .path, li .path, figcaption .path { overflow-wrap:anywhere; }
+  td code, td .path { overflow-wrap:break-word; }
+  .badge { display:inline-block; font:11px/1.2 -apple-system, system-ui, sans-serif; font-weight:600; padding:3px 7px; border-radius:999px; color:var(--badge-ink); white-space:nowrap; vertical-align:middle; }
+  .done { background:var(--done); } .partial { background:var(--partial); } .legacy { background:var(--legacy); } .unverified { background:var(--unverified); }
+  .legend { display:flex; flex-wrap:wrap; gap:10px 18px; font:13px/1.5 -apple-system, system-ui, sans-serif; margin:0 0 20px; }
+  .legend span { color:var(--muted); }
+  .legend span.badge { color:var(--badge-ink); }
+  svg.diagram { width:100%; height:auto; max-width:46rem; display:block; font:12px -apple-system, system-ui, sans-serif; }
+  svg.diagram .box { fill:var(--code); stroke:var(--line); stroke-width:1; }
+  svg.diagram .box.hi { stroke:var(--accent); stroke-width:1.5; }
+  svg.diagram text { fill:var(--ink); }
+  svg.diagram .sub { fill:var(--muted); font-size:11px; }
+  svg.diagram .edge { stroke:var(--muted); stroke-width:1.2; fill:none; marker-end:url(#arrow); }
+  svg.diagram .edge.strong { stroke:var(--accent); stroke-width:1.6; }
+  aside.note { border-left:3px solid var(--accent); padding:6px 14px; margin:14px 0 20px; max-width:46rem; font-size:15px; color:var(--muted); }
+  .path { font-family:ui-monospace, Menlo, monospace; font-size:13px; }
+  .kicker { font:12px/1.4 -apple-system, system-ui, sans-serif; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin:0 0 8px; }
+  @media (max-width: 880px) { .wrap { grid-template-columns:1fr; } nav.toc { position:static; max-height:none; padding:16px 0 0; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" style="fill:var(--muted)"/></marker></defs></svg>
+<div class="wrap">
+<nav class="toc" id="toc"></nav>
+<main>
+<p class="kicker">multiphysics-sim · repository map · 9 October 2026</p>
+<h1>What is in this repository, and how it fits together</h1>
+<p class="lede">A map of the simulator for someone who has to work in it. It covers the physics core, how systems are composed and run, the native viewer and its modes, the robot pipeline from CAD to printed parts, the hardware bench and the learning tools, and says what state each piece is in. Code excerpts come from the source and name their file; where an excerpt is trimmed or condensed, its caption says so.</p>
+<div class="stats">
+  <div><b>46</b> crates, <b>419k</b> lines of Rust</div>
+  <div><b>2,526</b> <code>#[test]</code> functions, <b>190</b> integration test files</div>
+  <div><b>169</b> example programs, <b>18</b> command-line tools, <b>4</b> applications</div>
+  <div><b>27</b> lessons, <b>31</b> equation parts, <b>110</b> datasheets</div>
+  <div><b>477</b> commits, 23 Aug – 5 Oct 2026, and an uncommitted working tree since</div>
+</div>
+<div class="legend">
+  <span><span class="badge done">done</span> works end to end in the Rust process, with tests</span>
+  <span><span class="badge partial">partial</span> works, with a stated gap</span>
+  <span><span class="badge legacy">legacy</span> still outside the Rust-only architecture, or kept only for compatibility</span>
+  <span><span class="badge unverified">unverified</span> written and reviewed, not yet run (usually: hardware)</span>
+</div>
+<h2 id="orientation">1. Orientation</h2>
+<p>The repository is a multiphysics simulator with one job around it: take a robot from a CAD model through a physics model, a controller and a test, to measured results and printed parts, in one Rust process. The rules that shape every part of it are in <span class="path">AGENTS.md</span>. The three that explain most of what follows:</p>
+<ul>
+  <li><b>CAD owns the robot's physical definition.</b> Masses, joints, motors, materials and limits come from the CAD file with their provenance. The simulator never fills in a missing value quietly; it lists every guess as an assumption and says whether it blocks evidence.</li>
+  <li><b>Everything runs in Rust, in the viewer's process.</b> Simulation, CAD geometry, the user interface and hardware driving all live in one binary, <code>sim-spatial</code>. There is no server the viewer depends on. The browser and the Python/C controller clients are compatibility surfaces, not the architecture.</li>
+  <li><b>One execution path.</b> Interactive viewing, headless runs, tests and learning share the same runtime and the same observation and action contract. Seeds and inputs are recorded so any run can be replayed.</li>
+</ul>
+<p>Reading the code from the bottom up, there are five layers. Each one depends only on the ones below it.</p>
+<figure>
+<svg class="diagram" viewBox="0 0 740 400" role="img" aria-label="Five layers of the repository">
+  <g>
+    <rect class="box" x="10" y="10" width="720" height="66" rx="6"/>
+    <text x="24" y="32" font-weight="600">Content and evidence</text>
+    <text x="24" y="50" class="sub">library/ (parts, datasheets, systems, print registry) · lessons/ · examples/ (robots, experiments, FMUs)</text>
+    <text x="24" y="66" class="sub">docs/ (architecture, checklists, ledgers) · roadmap and progress files at the root</text>
+    <rect class="box" x="10" y="88" width="720" height="66" rx="6"/>
+    <text x="24" y="110" font-weight="600">Hosts</text>
+    <text x="24" y="128" class="sub">sim-spatial: the native viewer, 7 modes, REST · 18 command-line tools</text>
+    <text x="24" y="144" class="sub">sim-web: the browser worker (compatibility) · firmware/robot-link: the ESP32 bench host</text>
+    <rect class="box hi" x="10" y="166" width="720" height="66" rx="6"/>
+    <text x="24" y="188" font-weight="600">Composition and runtime</text>
+    <text x="24" y="206" class="sub">sim-system (system files, commands, flatten) · sim-fmi (FMU blocks) · sim-script (Rhai)</text>
+    <text x="24" y="222" class="sub">sim-runtime (sessions, robots, acceptance, hardware, learning) · sim-inspect (descriptions, recordings)</text>
+    <rect class="box" x="10" y="244" width="720" height="66" rx="6"/>
+    <text x="24" y="266" font-weight="600">Compile and solve</text>
+    <text x="24" y="284" class="sub">sim-compile (islands, residual layout, Runtime, block scheduler)</text>
+    <text x="24" y="300" class="sub">sim-dynamics (integrators, events) · sim-solve (Newton, sparse Jacobians, optimisers)</text>
+    <rect class="box" x="10" y="322" width="720" height="66" rx="6"/>
+    <text x="24" y="344" font-weight="600">Equations</text>
+    <text x="24" y="362" class="sub">sim-core (ModelWorld, Behavior, ports, units, blocks, couplers)</text>
+    <text x="24" y="378" class="sub">sim-domain-* (17 domain crates) · sim-parts (equations written in files)</text>
+  </g>
+</svg>
+<figcaption>Each layer depends only on the layers below it. The viewer contains no physics, and the equation crates know nothing about files or windows.</figcaption>
+</figure>
+<p>The layers also give a reading order. Sections 2–4 cover the physics and how it is composed. Section 5 covers the viewer. Sections 6 and 7 follow a robot from CAD to the hardware bench. Sections 8–10 cover what is built on top: evaluation and learning, content, and tooling. Section 11 is the status table, and section 12 suggests where to start reading.</p>
+
+<h2 id="elements">2. Elements and equations</h2>
+<p>A model is a set of <em>elements</em> joined at <em>ports</em>. An element is a Rust type implementing <code>Behavior</code>: it declares its states and, every solver iteration, writes a residual. A port carries an <em>across</em> quantity and a <em>through</em> quantity in the power-conjugate pairs of each domain: temperature and heat flow, voltage and current, angle and torque, pressure and volume flow. Connecting ports makes a node; the compiler adds one equation per node lane saying the through contributions sum to zero.</p>
+<p>That is the whole modelling language. Here is a complete element, the heat capacity of a thermal node:</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-domain-thermal/src/lib.rs
+/// Heat capacity at a node; supply `initial.temperature` to set the node.
+pub struct Capacitance {
+    pub heat_capacity: f64,
+}
+impl Behavior for Capacitance {
+    fn states(&self) -> Vec<StateDeclaration> {
+        Vec::new()                              // no states of its own: the node's temperature is the unknown
+    }
+    fn residual(&self, ctx: &mut Context) {
+        // Port 0 is the thermal node. across = temperature, across_rate = dT/dt.
+        let stored = self.heat_capacity * ctx.across_rate(0);
+        ctx.add_through(0, stored);             // heat flowing *into* this element, summed to zero at the node
+        ctx.store_entropy(stored / ctx.across(0)); // bookkeeping for the second-law check every run performs
+    }
+    fn energy(&self, view: &View) -> f64 {
+        self.heat_capacity * view.across(0)     // reported, and conserved where it should be
+    }
+}
+fn capacitance(p: &Params) -> Made {
+    Ok(Box::new(Capacitance { heat_capacity: param(p, "heat_capacity")? }))
+}</script>
+<figcaption><span class="path">crates/sim-domain-thermal/src/lib.rs</span>. The factory at the bottom is what the registry calls when a system file names <code>thermal.capacitance</code>.</figcaption>
+</figure>
+<p>Elements are registered with a descriptor: typed ports, parameters with units and validation, notes. That descriptor is the single source for the viewer's inspector, the catalogue (<span class="path">library/CATALOG.md</span>), datasheets and Rhai scripts. A model is assembled in a <code>ModelWorld</code>:</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// after crates/sim-fmi/tests/fmi.rs: one room, built from registry elements (loop and room prefix removed)
+let registry = sim_runtime::registry();          // every domain crate's descriptors, by type name
+let mut m = ModelWorld::default();
+let outside     = m.part(&registry, "outside",     sim_domain_thermal::AMBIENT,     [("temperature", 278.15)])?;
+let air         = m.part(&registry, "air",         sim_domain_thermal::CAPACITANCE, [("heat_capacity", 2.0e4), ("initial.temperature", 290.15)])?;
+let wall        = m.part(&registry, "wall",        sim_domain_thermal::CONDUCTANCE, [("conductance", 8.0)])?;
+let heater      = m.part(&registry, "heater",      sim_domain_thermal::CONTROLLED_HEAT_SOURCE, [])?;
+let thermometer = m.part(&registry, "thermometer", sim_domain_thermal::TEMPERATURE_SENSOR, [])?;
+// A connection is a node. Four thermal ports on one node: their heat flows sum to zero.
+m.connect([air.port("node"), wall.port("a"), heater.port("node"), thermometer.port("node")]);
+m.connect([wall.port("b"), outside.port("node")]);
+// The controller is a block (section 4): here an FMU, declared with a 1 s clock and a setpoint.
+let fmu = Fmu::load("thermostat.fmu")?;          // read, checked against the profile, extracted; no binary loaded yet
+let block = sim_fmi::add_block(&mut m, "thermostat", &fmu, "thermostat.fmu", &BTreeMap::new(),
+                               BlockTiming::periodic(1.0), BTreeMap::from([("setpoint".to_owned(), 293.15)]))?;
+// Signals are directed: one output drives any number of inputs.
+m.connect([thermometer.port("temperature"), block.port("temperature")]);
+m.connect([block.port("heater_power"), heater.port("power")]);</script>
+<figcaption>Adapted from the thermostat test, which builds one room per setpoint in a loop; the period and setpoint values here are illustrative. Every host builds models this way: the viewer from a system file, the robot assembler from a CAD export, tests by hand. <code>connect</code> only records the node. The port kinds and quantities are checked when the model compiles, before the first step.</figcaption>
+</figure>
+<h3>The domains</h3>
+<table>
+<tr><th>Crate</th><th>Across / through</th><th>What it holds</th></tr>
+<tr><td><code>sim-domain-electrical</code></td><td>voltage / current</td><td>sources (fixed, switched, controlled), resistor, capacitor, inductor, diode, MOSFET, Chua's diode, ground</td></tr>
+<tr><td><code>sim-domain-rotational</code>, <code>-translational</code></td><td>angle / torque; position / force</td><td>inertia and mass, springs, dampers, ideal, lossy and worm gears, backlash, Coulomb and belt friction, sensors, a Langevin bath</td></tr>
+<tr><td><code>sim-domain-thermal</code></td><td>temperature / heat flow</td><td>capacitance, conductance, ambient, fixed and controlled heat sources, temperature sensor</td></tr>
+<tr><td><code>sim-domain-bridges</code></td><td>two domains</td><td>brushed and general motors, lead screw, thermistor, dual drive, thermoelastic layer: the places where energy changes form</td></tr>
+<tr><td><code>sim-domain-magnetic</code>, <code>-hydraulic</code>, <code>-chemical</code>, <code>-acoustic</code>, <code>-radiative</code>, <code>-granular</code>, <code>-fluid</code>, <code>-line</code></td><td>per domain</td><td>the rest of the twelve-domain roadmap (reluctance and magnets with coil and air-gap bridges; volumes and valves; …). Each domain has a library, a scenario in the phenomena suite and an exhibit</td></tr>
+<tr><td><code>sim-domain-multibody</code></td><td>pose / wrench</td><td>planar and spatial rigid bodies, chains, pins and sliders, point, wheel and terrain contact; the owned-frame port kind</td></tr>
+<tr><td><code>sim-domain-control</code></td><td>signals</td><td>sampled P, PD and PI controllers, PWM and H-bridge, drive limiters, reference governors, gait and contact-phase clocks</td></tr>
+<tr><td><code>sim-domain-sensing</code></td><td>signals</td><td>encoders, tachometers, IMU, current, voltage and force sensors, PWM driver, servo and quantiser, with sampling, quantisation and latency</td></tr>
+<tr><td><code>sim-domain-robot</code></td><td>all of the above</td><td>the CAD-described robot as one articulated element, plus motors, drivers, firmware, battery and cables (section 4)</td></tr>
+<tr><td><code>sim-parts</code></td><td>any</td><td>elements written as equations in <code>*.part</code> files and compiled at run time, with an exact Jacobian by forward-mode differentiation; 31 in <span class="path">library/parts</span>, hot-reloaded</td></tr>
+<tr><td><code>sim-example-diffusion</code></td><td>concentration / species flow</td><td>a worked example of adding a domain from outside the core. It makes no energy claim, because concentration alone is not a potential</td></tr>
+</table>
+<p>Two things the domains share. Every element can report energy and entropy production, and the runtime checks the second law at every commit (<code>second_law_tolerance</code> in <code>Runtime</code>). And every element may provide a <code>jacobian</code> of its own; those that do not get finite differences on their own inputs only, so the Jacobian of a whole island is assembled element by element rather than by differencing the whole system.</p>
+
+<h2 id="compile">3. Compiling and solving</h2>
+<p>A <code>ModelWorld</code> is a description. Running it takes three steps, in three crates.</p>
+<p><b>Compile</b> (<code>sim-compile</code>). The connection graph is validated (port kinds, units, one owner per frame, no dangling through lanes) and split into <em>islands</em>: connected components that share no unknown. Each island gets one unknown vector and one residual vector in a fixed layout. Every unknown is registered as a named state in <code>model.state</code>, which is how the viewer, recordings and tests address values later.</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-compile/src/island.rs (module documentation)
+//! Unknown layout per island: every behavior's states, then the across
+//! bundle of every unowned node, then every signal output. Residual rows:
+//! one per state (from the owning behavior), one per node through lane
+//! (the contributions summed to zero), one per signal output (the
+//! producer's value minus the unknown). Owned frame nodes alias their
+//! owner's states and add no unknowns or rows.</script>
+<figcaption><span class="path">crates/sim-compile/src/island.rs</span>. This layout is the contract between the equation layer and the solver.</figcaption>
+</figure>
+<p><b>Integrate</b> (<code>sim-dynamics</code>). A <code>Simulation</code> owns one island as a <code>System</code> (anything that can say how far a <code>(state, rate)</code> pair is from satisfying its equations), an integrator, the state and a trace. Three integrators exist and the choice is deliberate:</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-dynamics/src/lib.rs
+pub enum Integrator {
+    /// Second order, symplectic, A-stable. The default for anything stiff,
+    /// constrained or conservative.
+    ImplicitMidpoint(NewtonConfig),
+    /// First order, L-stable: damps the modes it cannot resolve instead of
+    /// letting them ring. For a stiff network whose fast modes are not of
+    /// interest — the acoustics of a water column, say — and never for
+    /// anything whose energy budget is the point.
+    BackwardEuler(NewtonConfig),
+    /// Classical fourth-order Runge–Kutta. Explicit systems only.
+    Rk4,
+}</script>
+<figcaption><span class="path">crates/sim-dynamics/src/lib.rs</span>. Robots run on backward Euler at 0.5 ms (switching drivers and contact), the phenomena suite on implicit midpoint (energy is the point). Events (guards and scheduled deadlines) are located inside a step; a nonsmooth element can propose alternative branches when the smooth predictor fails to converge, which is how contact handles Painlevé's paradox.</figcaption>
+</figure>
+<p><b>Solve</b> (<code>sim-solve</code>). Each implicit step is a Newton solve with a line search over the island's residual. The Jacobian is sparse and coloured, so one residual evaluation fills many columns. Its LU factorisation (from <code>faer</code>, with the symbolic analysis shared by sparsity pattern) is kept across iterations and steps for as long as the residual keeps halving: the modified Newton method. The same crate holds constrained solvers (dogleg, augmented Lagrangian, barrier, least squares). Behind Cargo features it also holds the search tools the learning code uses: Bayesian optimisation (<code>bayesian</code>), CMA-ES (<code>evolution</code>), a conic solver (<code>conic</code>, Clarabel) and an IPOPT binding loaded at run time (<code>native-ipopt</code>).</p>
+<p>The <code>Runtime</code> in <code>sim-compile</code> ties the three together and adds what every host needs: a committed, consistent state after each step; checkpoints; adaptive stepping with retries that never cross a controller tick; and the block scheduler of section 4.</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-compile/src/runtime.rs
+pub fn new(mut model: ModelWorld, registry: &BehaviorRegistry, integrator: Integrator) -> Result<Self, RuntimeError> {
+    let islands = compile_islands(&mut model, registry)?;          // validate, partition, lay out unknowns
+    let islands = islands
+        .into_iter()
+        .map(|island| {
+            let initial = island.reduced_initial();
+            let mut sim = Simulation::new(island, integrator, initial);
+            sim.make_consistent(NewtonConfig::default())?;        // solve the algebraic unknowns at t = 0
+            Ok::<_, DynamicsError>(sim)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    // … one entropy-production state per element is registered here …
+    let mut runtime = Self { model, islands, time: 0.0, blocks: Scheduler::default(), retry_halvings: 0, /* … */ };
+    runtime.commit()?;                                             // the first committed observation
+    // Blocks (executable controllers) are resolved against the compiled signals and held states.
+    runtime.blocks = Scheduler::build(&runtime.model, runtime.time, &|port| runtime.try_signal_id(port), &|b, name| runtime.try_state_id(b, name))?;
+    Ok(runtime)
+}</script>
+<figcaption><span class="path">crates/sim-compile/src/runtime.rs</span>, trimmed. Islands step in parallel on native builds; <code>advance</code> is cut at every block tick so a controller only ever sees a committed state.</figcaption>
+</figure>
+<h2 id="composition">4. Composition: systems, blocks, robots</h2>
+<p>Hand-built <code>ModelWorld</code>s are for tests. Everything a person or an agent builds goes through a <em>system file</em>, <code>*.system.json</code> (schema <code>sim.system/2</code>, crate <code>sim-system</code>). A system file is a hierarchy of definitions; each definition has instances, nets joining their ports, boundary ports, parameters, and display-only placement. It also carries the numerical settings it was validated with, saved studies, a realtime profile and acceptance tests, so a file alone reproduces its runs.</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-system/src/document.rs (trimmed)
+pub struct SystemDocument {
+    pub schema: String,                               // "sim.system/2"
+    pub title: String,
+    pub revision: u64,                                // every applied edit, undo and redo bumps it
+    pub root: String,                                 // the definition placed at the top
+    pub definitions: BTreeMap<String, Definition>,
+    pub run: Option<RunSettings>,                     // integrator, step, tolerances, and why
+    pub studies: BTreeMap<String, Study>,             // comparisons and sweeps, rerunnable from the file
+    pub realtime: Option<RealtimeProfile>,            // the browser/interactive profile and its measured error
+    pub tests: BTreeMap<String, SystemTest>,          // requirements on observables (section 6)
+    // … discussions (display only) and content-addressed assets …
+}
+
+pub struct Definition {
+    pub label: String,
+    pub ports: BTreeMap<String, BoundaryPort>,        // what this subsystem exposes
+    pub parameters: BTreeMap<String, ParameterDecl>,  // what instances inside may inherit
+    pub instances: BTreeMap<String, InstanceSpec>,    // kind: Element | Subsystem | Generated | Block
+    pub nets: Vec<Net>,
+    // … grid, icon, description, interface family …
+}</script>
+<figcaption><span class="path">crates/sim-system/src/document.rs</span>. Four instance kinds. <code>Element</code> is a registry type with parameters; <code>Subsystem</code> places another definition; <code>Generated</code> is built by a host generator from a source file (a robot from its <code>.simrobot.json</code>); <code>Block</code> is executable code with a declared signal interface and clock.</figcaption>
+</figure>
+<p>Three pieces of machinery sit on the document:</p>
+<ul>
+  <li><b>Commands</b> (<code>sim_system::Command</code>): the one edit set, applied atomically with validation, used identically by the viewer's controls, REST and the CLI. The store keeps a shared undo journal beside the file.</li>
+  <li><b>Resolve</b>: port typing through the hierarchy, net checks (a signal net has one output; a block's signal joins only its exact quantity; physical ports must share a connector), and review findings for things that are valid but incomplete.</li>
+  <li><b>Flatten</b>: the hierarchy becomes one <code>ModelWorld</code> with path identities (<code>rover/left drive.unit</code>), which is what section 3 compiles. Generators run here.</li>
+</ul>
+
+<h3>Blocks: controllers that run only at committed ticks</h3>
+<p>A controller is not an equation. It runs at discrete instants, keeps state, and may be code the simulator cannot see inside. So a block is a separate kind: a <em>shadow element</em> holds its outputs as states the plant can read, and a scheduler in the runtime runs the block's implementation between island advances. The rules (full text in <span class="path">docs/architecture/composition.md</span>):</p>
+<figure>
+<svg class="diagram" viewBox="0 0 740 280" role="img" aria-label="One block tick">
+  <rect class="box" x="10" y="20" width="130" height="60" rx="6"/><text x="75" y="45" text-anchor="middle" font-weight="600">islands</text><text x="75" y="63" text-anchor="middle" class="sub">advance to t</text>
+  <rect class="box" x="170" y="20" width="130" height="60" rx="6"/><text x="235" y="45" text-anchor="middle" font-weight="600">commit</text><text x="235" y="63" text-anchor="middle" class="sub">a consistent state</text>
+  <rect class="box hi" x="330" y="20" width="400" height="124" rx="6"/>
+  <text x="346" y="44" font-weight="600">tick at t</text>
+  <text x="346" y="68" class="sub">1  apply the outputs decided before t</text>
+  <text x="346" y="88" class="sub">2  blocks at their first tick give initial outputs</text>
+  <text x="346" y="108" class="sub">3  execute the due blocks in dependency order</text>
+  <text x="346" y="128" class="sub">4  write all held outputs in one batch</text>
+  <path class="edge" d="M140 50 L170 50"/><path class="edge" d="M300 50 L330 50"/>
+  <path class="edge" d="M530 144 C530 178 75 178 75 82"/>
+  <text x="150" y="196" class="sub">then the next segment, cut at the next tick; step retries stay inside it</text>
+  <rect class="box" x="10" y="212" width="720" height="58" rx="6"/>
+  <text x="24" y="236" class="sub">inputs: sampled from the committed plant state, before any write at t</text>
+  <text x="24" y="256" class="sub">outputs: held between ticks, delayed by output_delay samples · a fault is sticky and names the block</text>
+</svg>
+<figcaption>Step 3 runs feedthrough blocks in topological order of same-instant edges; a cycle is an algebraic loop and is refused before the run. What a consumer reads is fixed by the connection, never by declaration order.</figcaption>
+</figure>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-compile/src/blocks.rs (trimmed): the scheduler's tick at one instant
+pub fn tick(&mut self, time: f64, read: &dyn Fn(StateId) -> f64) -> Result<Vec<(StateId, f64)>, BlockFault> {
+    let due: Vec<usize> = self.order.iter().copied().filter(|&k| self.due(k, time)).collect();
+    // Plant inputs: the committed state before any write at this instant
+    // (an undriven setpoint input reads its start value).
+    let plant = /* for every block input: Some(read(id)) from the plant, Some(start) for a held setpoint, None from a block */;
+    let mut changed = Vec::new();
+    // 1. Outputs decided before this instant: a pending end-of-step output
+    //    (FMI co-simulation), or a feedthrough output held back by `output_delay`.
+    for &k in &due { /* pending.take() → emit, or pop the delay line */ }
+    // 2. Blocks without feedthrough, at their first tick, give their initial outputs.
+    //    Each sees the others as they stood after step 1, so declaration order cannot matter.
+    let before: Vec<Vec<f64>> = self.blocks.iter().map(|b| b.applied.clone()).collect();
+    for &k in &due { /* initial_outputs(k, time, inputs read from plant or `before`) */ }
+    // 3. Execute in dependency order: a producer runs before its same-instant consumers.
+    for &k in &due {
+        let inputs: Vec<f64> = /* plant sample, or the producer's applied output */;
+        if let Err(message) = self.execute(k, time, inputs) {
+            let f = BlockFault { block: self.blocks[k].decl.name.clone(), time, message };
+            self.fault = Some(f.clone());          // sticky: every later tick returns it
+            return Err(f);
+        }
+        changed.push(k);
+    }
+    // 4. One batch of held-state writes. Every island that reads an output holds its
+    //    own copy of it, and all copies are written together; the runtime applies them
+    //    and re-solves the algebraic unknowns before the next integration segment.
+    changed.sort_unstable();
+    changed.dedup();
+    let mut writes = Vec::new();
+    for k in changed {
+        let b = &self.blocks[k];
+        for (ids, value) in b.output_ids.iter().zip(&b.applied) {
+            writes.extend(ids.iter().map(|id| (*id, *value)));
+        }
+    }
+    Ok(writes)
+}</script>
+<figcaption><span class="path">crates/sim-compile/src/blocks.rs</span>, trimmed; the elided bodies are described in the comments. <code>execute</code> runs the input-delay line, calls <code>initialize</code> or <code>step</code> on the implementation within its deadline, checks the outputs (finite and in range), and queues end-of-step outputs for the next tick.</figcaption>
+</figure>
+<p>A block does not tie the islands it touches together. Its inputs are sampled from committed state and its outputs are constant between ticks, so island grouping ignores the connections to a block's shadow element: two rooms, each with its own thermostat block, compile to two islands and still step in parallel (<code>a_block_does_not_merge_the_islands_it_reads_and_drives</code> in <span class="path">sim-phenomena/tests/blocks.rs</span>). A block input may be declared a <em>setpoint</em> (<code>BlockPort.setpoint</code>, or an FMU input annotated <code>sim.setpoint</code>); left unconnected it holds its start value instead of being a dangling port, and teleoperation can drive it (section 6). These changes are written and their own tests pass, but five phenomena scenarios started failing with them, three of which run a controller as a block (section 8); the cause has not been found.</p>
+<p>Every controller, whatever language it is written in, sits behind one trait. The scheduler knows nothing else about it:</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-core/src/block.rs
+/// The executable side of a block (owned by the runtime).
+pub trait BlockImplementation: Send {
+    /// How errors name it (`FMI 3 FMU thermostat.fmu`, `python controller …`).
+    fn label(&self) -> String;
+    /// The interface it implements; the runtime checks it against the
+    /// block's declaration before the first tick.
+    fn interface(&self) -> BlockInterface;
+    /// The first tick at time `t` (`period` the clock's): initialise with
+    /// `inputs`, write the initial `outputs`.
+    fn initialize(&mut self, t: f64, period: f64, inputs: &[f64], outputs: &mut [f64]) -> Result<(), String>;
+    /// Every later tick: one step of `dt` from `t` with `inputs` held; write
+    /// `outputs` (feedthrough: the values at `t`; otherwise at `t + dt`).
+    fn step(&mut self, t: f64, dt: f64, inputs: &[f64], outputs: &mut [f64]) -> Result<(), String>;
+    /// The run is over (also after a fault): release everything.
+    fn terminate(&mut self) {}
+    // Saving state is opt-in: a block that cannot do it makes a runtime checkpoint refuse.
+    fn checkpoint(&self) -> Checkpoint { Checkpoint::Unsupported(/* "… cannot save its state" */) }
+    fn restore(&mut self, _state: &[u8]) -> Result<(), String> { Err(/* "… cannot restore a state" */) }
+}</script>
+<figcaption><span class="path">crates/sim-core/src/block.rs</span>; the default bodies of the last two methods are shortened.</figcaption>
+</figure>
+<p>Two families of implementation exist: couplers and FMUs.</p>
+<h4>Couplers: Rust, Rhai, Python and C</h4>
+<p>A <em>coupler</em> is the older and simpler seam: one call per sample instant, sensors in and actuator commands out, in lockstep with the simulation. <code>CouplerBlock</code> adapts any coupler to the block trait, so all of these run on the same scheduler: a Rust closure, a Rhai script, and an out-of-process program speaking the newline-delimited JSON frame protocol of <code>sim-couple</code> (the Python and C clients in <span class="path">clients/</span>).</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-core/src/couple.rs
+pub trait Coupler: Send {
+    /// The handshake: called once, before the first sample, with the
+    /// contract the element derived from its wiring.
+    fn open(&mut self, _contract: &Contract) -> Result<(), CouplerError> {
+        Ok(())
+    }
+    /// One sample instant at simulation time `t`: read `sensors`, write
+    /// `actuators` (which arrive holding the previous command).
+    fn sample(&mut self, t: f64, sensors: &[f64], actuators: &mut [f64]) -> Result<(), CouplerError>;
+    /// The run is over; release whatever the coupler holds.
+    fn close(&mut self) {}
+}</script>
+<figcaption><span class="path">crates/sim-core/src/couple.rs</span>. The <em>contract</em> names every sensor and actuator, so a script addresses values by name, never by index.</figcaption>
+</figure>
+<p>Rhai is the scripting language the project uses for controllers, lesson cues and experiment recipes (<code>sim-script</code>). A Rhai controller is a single <code>control</code> function. <code>RhaiController::sample</code> turns the contract's arrays into named maps, calls the function, and refuses a reply whose command names do not match the contract exactly. This one turns a requested wheel speed into a position target for each axle's servo:</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rhai">// examples/wheeled-robot/velocity-controller.rhai
+// Integrate requested shaft velocity into a position reference. The ordinary
+// CAD motor, gearbox and firmware execute it; this does not move physical state.
+fn control(t, sensors, commands, state) {
+    let p = parameters();                       // the recipe's parameters, captured with the run
+    let left = if state.contains("left") { state.left } else { p.initial_left };
+    let right = if state.contains("right") { state.right } else { p.initial_right };
+    state.left = left + p.period_s * sensors["command.left_speed"];
+    state.right = right + p.period_s * sensors["command.right_speed"];
+    commands["left axle.target"] = state.left;  // names come from the contract
+    commands["right axle.target"] = state.right;
+    #{commands: commands, state: state}         // state is handed back at the next sample
+}</script>
+<figcaption><span class="path">examples/wheeled-robot/velocity-controller.rhai</span>; the three end-of-line comments are added. Rhai scripts are evaluated from sources captured with the run, never re-read from disk. An out-of-process Python controller is pinned differently: the scene records the script's SHA-256, and <code>Session::new</code> refuses to start it if the file on disk has changed.</figcaption>
+</figure>
+<h4>FMUs</h4>
+<p>An <code>FmuBlock</code> (<code>sim-fmi</code>) loads an FMI 3.0 Co-Simulation FMU. The archive is checked against a stated profile before any binary is loaded. Units must match exactly (SI exponents, no conversion). Each block gets its own instance, its parameters are set from the system file, and the FMU's state goes into runtime checkpoints when the FMU can serialise it. Everything outside the profile is refused by name: FMI 1 and 2, Model Exchange, Scheduled Execution, clocks, arrays, strings, event mode, or a missing binary for this platform. The crate has its own hand-written ABI over <code>libloading</code>. The existing <code>fmi</code> crate was rejected because its strict schema cannot hold the <code>unit</code> attribute that common tools write.</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-fmi/src/lib.rs: binding every FMU block of a compiled runtime
+pub fn bind(runtime: &mut sim_compile::Runtime, base: &Path, cache: &mut Cache) -> Result<usize, FmiError> {
+    for decl in runtime.model.blocks.clone() {
+        let ImplementationRef::Fmi3 { path, sha256, parameters } = &decl.implementation else { continue };
+        let fmu = cache.load(&base.join(path))?;                  // read, validate against the profile, extract
+        if !sha256.is_empty() && *sha256 != fmu.sha256 {           // the artifact must be the one the model recorded
+            return Err(FmiError::Binding(format!("block `{}`: {} is not the FMU the model was built with …", decl.name, path)));
+        }
+        let binding = fmu.check(&decl.name, &decl.interface, parameters)?;   // every port and parameter by name and unit
+        let block = FmuBlock::new(fmu, &decl.name, decl.interface.clone(), binding)?; // fmi3InstantiateCoSimulation
+        runtime.bind_block(&decl.name, Box::new(block))?;
+    }
+    Ok(bound)
+}</script>
+<figcaption><span class="path">crates/sim-fmi/src/lib.rs</span>, trimmed. The fixture FMUs in <span class="path">examples/fmi</span> are C, built by <code>sim-fmi pack</code> reproducibly (same bytes for the same sources).</figcaption>
+</figure>
+
+<h3>Robots as assemblies</h3>
+<p>A robot is not a special runtime. <code>sim-domain-robot</code> holds <code>robot.articulated</code>, one element for the whole mechanism: a floating or grounded base, tree joints in minimal coordinates, loop closures, optional modal flexibility per link, and contact from the links' own geometry. Its equations are inverse dynamics in residual form: a forward pass for poses and twists, a backward Newton–Euler pass for the force each joint transmits, each joint port absorbing the torque its motion demands. Around it, <code>sim_runtime::physical::assemble</code> builds, per motor, the chain battery → bridge → motor → gearbox → joint, with winding and case thermal paths, servo firmware, encoders and an IMU, all from registry elements.</p>
+<p>In a system file the robot is a <code>Generated</code> instance. The generator runs the same <code>assemble</code> and exposes a boundary: <code>supply_p</code>/<code>supply_n</code> (the motor bus), <code>ambient</code> (where windings and mounts shed heat), <code>&lt;joint&gt;.target</code> inputs, and <code>&lt;joint&gt;.angle</code>, <code>.speed</code> and <code>imu.*</code> outputs. A battery, an enclosure and controller FMUs are ordinary parts wired to those ports.</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-runtime/src/robot_generator.rs
+impl Generator for RobotGenerator {
+    fn generate(&self, world: &mut ModelWorld, registry: &BehaviorRegistry, prefix: &str, source: &Path, parameters: &BTreeMap<String, f64>) -> Result<Generated, String> {
+        let model = PhysicalModel::load(&source.display().to_string())?;      // the CAD export, schema 4
+        let (opts, how) = options(prefix, parameters)?;                       // driver_control, own_supply, own_ambient
+        let assembly = assemble(world, registry, model, &opts, &how)?;        // the same code Robot mode runs
+        let boundary = assembly.boundary.iter().map(|(name, (_, ports))| (name.clone(), ports.clone())).collect();
+        Ok(Generated {
+            boundary,                                                         // port name → the element ports it joins
+            warnings: assembly.warnings.clone(),
+            // The assembly itself, so a test can measure the robot inside the compiled system (section 6).
+            detail: Some(std::sync::Arc::new(Handle::new(Some(assembly)))),
+        })
+    }
+}</script>
+<figcaption><span class="path">crates/sim-runtime/src/robot_generator.rs</span>, with the struct literal spread over lines and comments added. The example system <span class="path">examples/composition</span> (<code>composition_demo</code>) composes the wheeled robot with its own battery, an enclosure vented to the outside and two independent instances of one joint-controller FMU.</figcaption>
+</figure>
+<p>A robot travels with its model world. Element factories take scalar parameters only, so the articulated element names its <code>PhysicalModel</code> by a key: the first 52 bits of the BLAKE3 hash of the model's JSON, an integer an <code>f64</code> holds exactly. The text itself is kept in <code>ModelWorld.resources</code>, and compiling installs it into a process cache that the factory reads (<span class="path">crates/sim-core/src/resources.rs</span>; a different text with a colliding key is refused). So a flattened system serialises, rebuilds in another process and runs the same (<code>a_flattened_robot_system_serialises_and_runs_the_same</code>).</p>
+<h2 id="viewer">5. The native viewer</h2>
+<p><code>sim-spatial</code> is the one application (Bevy 0.19.1; 156k lines, the largest crate). Every workflow is a <em>mode</em> of the same window, and the user switches between them in the window. A mode is a Bevy state; the computed states <code>ModeScope</code> and <code>SpatialScreen</code> follow it. Launch flags, or a bare path, choose the first mode: <code>sim-spatial robot.system.json</code> opens Build mode, <code>*.simrobot.json</code> Robot mode, a <code>place.json</code> directory Place mode, a lessons directory Lessons mode, <code>*.rcad</code> CAD mode.</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-spatial/src/app/mod.rs
+/// The window's mode. One is active at a time; the user switches between
+/// them in the running window (`switch`).
+#[derive(States, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ViewerMode {
+    Inspect,    // a source-bound assembly: descriptions and recordings from sim-inspect
+    Build,      // the system builder on a *.system.json file
+    Lessons,    // lessons drawn over the builder's scene
+    Robot,      // a CAD-exported *.simrobot.json, run on PhysicalRobot
+    Place,      // a scanned place (sim-place build)
+    Cad,        // a *.rcad document, edited in process through sim-cad
+    Phenomena,  // the gallery of sim-phenomena exhibits
+}</script>
+<figcaption><span class="path">crates/sim-spatial/src/app/mod.rs</span>, with the doc comments shortened to one line each. Seven modes, one <code>App</code>. The source's own comment on <code>Cad</code> still says documents are edited "through RoboCAD's REST service". That is no longer true (section 6), and the comment is one of several leftovers from the migration.</figcaption>
+</figure>
+<p>Four shared services keep the modes from duplicating each other (<span class="path">docs/architecture/native-viewer.md</span> is the design record, kept current with each change):</p>
+<ul>
+  <li><b>Actions.</b> Each mode has one action type. A REST command, a toolbar button, a key and a REST batch all produce the same action, and one handler applies it. The capability list is generated from the action registry, so the REST surface cannot drift from the UI.</li>
+  <li><b>Jobs.</b> Nothing outside <code>jobs/</code> starts a thread or a process; a test scans the source tree to enforce it. One-shot jobs run on an I/O, compute or dedicated pool with cancellation and progress; long-lived workers (a simulation run, a playback clock) are named threads with a command channel in and a generation-stamped snapshot out.</li>
+  <li><b>Documents, selection, annotations.</b> One document registry, one selection every mode reads, one annotation service with one thread panel (<code>sim-annotate</code>); comment threads behave the same in CAD, Build, Inspect, Lessons and Robot.</li>
+  <li><b>UI kit and camera.</b> Tokens, buttons and docks come from <code>ui_kit</code>; the shared camera has 13 REST commands tagged with every orbit mode.</li>
+</ul>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-spatial/src/app/actions.rs (trimmed)
+pub struct Spec {
+    pub name: &'static str,
+    pub modes: &'static [ViewerMode],   // which modes accept it; another mode refuses it by name
+    pub example: Value,                 // a working example, shown by GET /v1/capabilities
+    pub description: String,
+}
+
+/// A mode's (or feature's) action type.
+pub trait Action: DeserializeOwned + Send + Sync + 'static {
+    /// Its REST commands, in the order `GET /v1/capabilities` lists them.
+    fn commands() -> Vec<Spec>;
+    /// A REST command as this action. The default is the action's own serde
+    /// form (`{"command": name, ...args}`), which keeps each command's JSON
+    /// shape and error text.
+    fn parse(command: &sim_api::Command) -> Result<Self, String> {
+        sim_api::decode::<Self>(command)
+    }
+}
+
+/// The capability list, from the registry: no hand-written list exists.
+pub fn capabilities() -> Vec<Value> {
+    registry().iter().flat_map(|f| (f.commands)()).map(|s| {
+        let mut c = sim_api::capability(s.name, s.example, &s.description);
+        c["modes"] = json!(s.modes);
+        c
+    }).collect()
+}
+
+/// The body of every mode's apply system: the actions still in flight, then
+/// this frame's messages, each given to the one handler; outcomes go to their
+/// REST replies.
+pub fn apply<A>(messages: &mut Messages<Act<A>>, in_flight: &mut InFlight<A>, replies: &mut Replies,
+                mut handle: impl FnMut(&A, &mut Call) -> Outcome) {
+    for (action, origin, mut continuation) in /* carried-over actions, then this frame's */ {
+        let outcome = handle(&action, &mut Call { origin, continuation: &mut continuation, /* … */ });
+        match outcome {
+            // Only a REST caller waits: a long action (a load, a study, a render)
+            // is re-applied every frame with its continuation until it finishes.
+            Outcome::Pending if matches!(origin, Origin::Rest(_)) => in_flight.0.push((action, origin, continuation)),
+            Outcome::Pending => {}                       // a click's work continues in its own job
+            done => if let Origin::Rest(r) = origin { replies.answer(r, done) },
+        }
+    }
+}</script>
+<figcaption><span class="path">crates/sim-spatial/src/app/actions.rs</span>, trimmed (<code>apply</code> also handles cancelled and abandoned REST calls). A button press and a REST command reach the same <code>handle</code> with a different <code>Origin</code>, which is why they cannot behave differently. The rule in <span class="path">AGENTS.md</span>: every screen is usable by an AI. A mode ships its REST commands in the same change as its controls, and a guide command (<code>cad_guide</code>, <code>system_guide</code>, <code>project_guide</code>, …) tells an agent starting cold where to begin.</figcaption>
+</figure>
+<p>The REST server (<code>sim-api</code>) is loopback-only and bounded: <code>POST /v1/batch</code> queues ordered commands, <code>GET /v1/jobs/{id}</code> polls them, <code>GET /v1/capabilities</code> lists them, published resources (<code>/v1/system_state</code>, <code>/v1/project_state</code>, …) and <code>/v1/events/…</code> give long waits a non-blocking path, <code>/v1/images/{id}.png</code> serves renders. Transport threads never touch application state; the viewer polls one command at a time from its own update loop. The same server runs <code>--headless</code>, with the window-only commands refused.</p>
+
+<h3>What each mode does</h3>
+<table>
+<tr><th>Mode</th><th>Document</th><th>What it does</th><th>Status</th></tr>
+<tr><td>Inspect</td><td>description + spatial (from <code>sim-inspect</code>)</td><td>a source-bound assembly with recorded observations; physics layers (power, forces, heat, trails); notes as threads; the headless renderer's view</td><td><span class="badge done">done</span></td></tr>
+<tr><td>Build</td><td><code>*.system.json</code></td><td>place parts from the library, wire ports, parameters with provenance, subsystems, studies, realtime profiles, FMU and robot instances, tests with evidence, live runs on the shared session, keyboard and gamepad driving through a <code>drive_input</code> host block, schematic, datasheets, part fitting</td><td><span class="badge done">done</span></td></tr>
+<tr><td>Lessons</td><td><code>lessons/</code></td><td>Markdown lessons with live scenes, claims checked on recorded runs, sliders that re-record, quizzes, progress, narration</td><td><span class="badge done">done</span></td></tr>
+<tr><td>Robot</td><td><code>*.simrobot.json</code></td><td>the CAD-exported robot on <code>PhysicalRobot</code>: run, step, teleoperate with keys and gamepads through the drive profile, results (torque margins, winding temperatures, bearings), threads from the CAD source. A model that belongs to a robot project runs the project's composed system, controllers included</td><td><span class="badge done">done</span></td></tr>
+<tr><td>CAD</td><td><code>*.rcad</code></td><td>open, display, select, measure exact mass; modelling operations by RoboCAD's command names; sketches; mesh import; print checks, studies, splitting, plates and assembly guides; experiments and candidates; Rhai model scripts; components and assemblies; export the physical model in process; agent comment loop</td><td><span class="badge done">done</span> see section 6</td></tr>
+<tr><td>Place</td><td><code>sim-place</code> directory</td><td>fly through a scanned place with photo and station markers</td><td><span class="badge done">done</span></td></tr>
+<tr><td>Phenomena</td><td>built in</td><td>the gallery of exhibits from the phenomena suite, each with its knobs</td><td><span class="badge done">done</span></td></tr>
+</table>
+<p>A run in Build mode shows how the layers meet:</p>
+<figure>
+<svg class="diagram" viewBox="0 0 740 280" role="img" aria-label="Data flow of a system run">
+  <rect class="box" x="10" y="10" width="165" height="70" rx="6"/><text x="92" y="33" text-anchor="middle" font-weight="600">system file</text><text x="92" y="51" text-anchor="middle" class="sub">SystemStore</text><text x="92" y="67" text-anchor="middle" class="sub">commands · undo</text>
+  <rect class="box" x="193" y="10" width="165" height="70" rx="6"/><text x="275" y="33" text-anchor="middle" font-weight="600">flatten</text><text x="275" y="51" text-anchor="middle" class="sub">hierarchy → ModelWorld</text><text x="275" y="67" text-anchor="middle" class="sub">generators run here</text>
+  <rect class="box" x="376" y="10" width="165" height="70" rx="6"/><text x="458" y="33" text-anchor="middle" font-weight="600">compile</text><text x="458" y="51" text-anchor="middle" class="sub">islands</text><text x="458" y="67" text-anchor="middle" class="sub">Runtime::new</text>
+  <rect class="box" x="559" y="10" width="171" height="70" rx="6"/><text x="644" y="33" text-anchor="middle" font-weight="600">bind blocks</text><text x="644" y="51" text-anchor="middle" class="sub">sim_fmi::bind</text><text x="644" y="67" text-anchor="middle" class="sub">host blocks</text>
+  <path class="edge" d="M175 45 L193 45"/><path class="edge" d="M358 45 L376 45"/><path class="edge" d="M541 45 L559 45"/>
+  <rect class="box hi" x="382" y="112" width="348" height="70" rx="6"/><text x="556" y="135" text-anchor="middle" font-weight="600">SystemSession (run thread)</text><text x="556" y="153" text-anchor="middle" class="sub">Start · Pause · Step · Reset</text><text x="556" y="169" text-anchor="middle" class="sub">Subscribe · BeginRecording · TakeRecording</text>
+  <path class="edge" d="M644 80 L644 112"/>
+  <rect class="box" x="10" y="112" width="348" height="70" rx="6"/><text x="184" y="135" text-anchor="middle" font-weight="600">SystemDescription (sim-inspect)</text><text x="184" y="153" text-anchor="middle" class="sub">components, nets, observables</text><text x="184" y="169" text-anchor="middle" class="sub">with units and provenance</text>
+  <path class="edge" d="M382 147 L358 147"/>
+  <rect class="box" x="10" y="214" width="348" height="56" rx="6"/><text x="184" y="237" text-anchor="middle" font-weight="600">viewer</text><text x="184" y="255" text-anchor="middle" class="sub">assembly view, schematic, plots, inspector</text>
+  <rect class="box" x="382" y="214" width="348" height="56" rx="6"/><text x="556" y="237" text-anchor="middle" font-weight="600">sample frames → recording</text><text x="556" y="255" text-anchor="middle" class="sub">studies, tests, lessons</text>
+  <path class="edge" d="M184 182 L184 214"/><path class="edge" d="M556 182 L556 214"/>
+</svg>
+<figcaption>The session describes the system once (<code>Describe</code>) and then streams frames. The description is independent of graphics and carries physical identity; frames carry committed observations only. The browser worker, the command-line tools and the tests use the same <code>SystemSession</code>.</figcaption>
+</figure>
+
+<h3>Other hosts</h3>
+<p>The viewer is the main host but not the only one. The rest call the same library functions, so a run started from the command line or the browser follows the same code as one started in the window.</p>
+<table>
+<tr><th>Host</th><th>What it is</th><th>Status</th></tr>
+<tr><td>18 command-line tools (<code>sim-system</code>, <code>sim-session</code>, <code>sim-lesson</code>, <code>sim-fmi</code>, <code>sim-print</code>, …; section 10)</td><td>headless front ends over the same library calls; each refuses what the viewer refuses. <code>sim-spatial --headless</code> serves the viewer's REST commands without a window</td><td><span class="badge done">done</span></td></tr>
+<tr><td><code>sim-web</code> + <span class="path">web/viewer</span></td><td>the browser workspace. A Web Worker runs the Rust runtime compiled to WebAssembly (sessions, embedded environments, WASD walking, gait playback, the controller leaderboard); the page only carries messages and draws. 45 presets in <span class="path">presets.json</span>, from lift experiments to walking students</td><td><span class="badge partial">partial</span> no FMU blocks in the browser; the walking presets are experimental (section 8); a compatibility surface under the project rules</td></tr>
+<tr><td><span class="path">web/system-builder</span></td><td>runs system files in the browser on the same WebAssembly runtime (<code>SystemRun</code>), with three bundled examples and every library part</td><td><span class="badge partial">partial</span> runs and plots; no editing, no FMUs</td></tr>
+<tr><td><code>sim-viewer</code></td><td>an egui schematic window over <code>sim-diagram</code>, launched as a separate process from the viewer for a linked schematic view</td><td><span class="badge legacy">legacy</span> a second native application; the viewer's own schematic covers most of it</td></tr>
+<tr><td><code>serve_motor_bench</code>, <code>serve_actuator_calibration</code></td><td>example programs serving the two browser hardware pages over HTTP (section 7)</td><td><span class="badge legacy">legacy</span> kept for the browser pages; the logic lives in <code>sim_runtime::hardware</code></td></tr>
+<tr><td><span class="path">firmware/robot-link</span></td><td>ESP32-P4 host for the FPGA supervisor over Wi-Fi: a page for the leg (arming, jogging and teaching inside taught travel, gait preview and playback) and a raw tunnel for the calibration panel (section 7)</td><td><span class="badge partial">partial</span> running on the leg's bench; gaits not yet played on the leg</td></tr>
+</table>
+<h2 id="pipeline">6. The robot pipeline</h2>
+<p>A <em>robot project</em> (<code>*.robot.json</code>, <code>sim_runtime::robot_project</code>) carries one robot through five steps, each a mode of the viewer and each reachable over REST. The project file holds what is not the robot's physical definition: the description the person gave, the acceptance test, the design conversation, and where results, lessons and parts go. The robot itself is the CAD file.</p>
+<figure>
+<svg class="diagram" viewBox="0 0 740 110" role="img" aria-label="The five steps of a robot project">
+  <g font-weight="600">
+    <rect class="box" x="10" y="20" width="132" height="56" rx="6"/><text x="76" y="43" text-anchor="middle">1 Design</text><text x="76" y="61" text-anchor="middle" class="sub">CAD · .rcad</text>
+    <rect class="box" x="157" y="20" width="132" height="56" rx="6"/><text x="223" y="43" text-anchor="middle">2 Model</text><text x="223" y="61" text-anchor="middle" class="sub">physical export</text>
+    <rect class="box" x="304" y="20" width="132" height="56" rx="6"/><text x="370" y="43" text-anchor="middle">3 Test</text><text x="370" y="61" text-anchor="middle" class="sub">system run · report</text>
+    <rect class="box" x="451" y="20" width="132" height="56" rx="6"/><text x="517" y="43" text-anchor="middle">4 Learn</text><text x="517" y="61" text-anchor="middle" class="sub">lessons for it</text>
+    <rect class="box" x="598" y="20" width="132" height="56" rx="6"/><text x="664" y="43" text-anchor="middle">5 Make</text><text x="664" y="61" text-anchor="middle" class="sub">STL · manifest</text>
+  </g>
+  <path class="edge" d="M142 48 L157 48"/><path class="edge" d="M289 48 L304 48"/><path class="edge" d="M436 48 L451 48"/><path class="edge" d="M583 48 L598 48"/>
+  <text x="10" y="100" class="sub">Each step's state (done · ready · attention · waiting) is computed from the files; a stale step blocks the ones after it.</text>
+</svg>
+</figure>
+
+<h3>Design: CAD in process</h3>
+<p>RoboCAD, the Python and OCCT CAD application in <span class="path">cad/robocad</span> (30k lines), is now only the reference for how things should behave. Its Rust port, <code>sim-cad</code>, owns the <code>.rcad</code> archive format: it keeps every original byte and entry, and it identifies a model by the SHA-256 of the file. It reaches the OCCT kernel through a narrow C ABI over a C++ bridge of about 1,100 lines (<span class="path">crates/sim-cad/native</span>), linked to OCCT 7.7.2. The choice of a hand-written bridge over a general wrapper is recorded in <span class="path">crates/sim-cad/README.md</span>. The bridge covers primitives, transforms, booleans, fillets, chamfers, extrusions, plane sections and face and edge listings. Exact mass properties, sketches, references and saved views are written in Rust.</p>
+<p>CAD mode in the viewer runs RoboCAD's operations under their original names and argument binding. <code>sim_cad::ops::run</code> has 84 match arms covering 94 operation names. Every operation is one undo step. A design assistant (<code>sim-agent</code>, a Codex conversation) edits through the same commands. The viewer never starts, calls or waits for RoboCAD.</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-spatial/src/cad/local_client.rs (trimmed)
+//! The in-process editor behind every CAD edit: the methods each panel,
+//! tool and form calls (`edit(doc, call, label, |c| c.patch(…))`), with the
+//! same names and answers RoboCAD's client had, applied to the archive being
+//! edited (`local::Workspace`) through the shared library (`sim_cad::ops`,
+//! `sim_cad::sketch`, `sim_cad::references`, `sim_cad::robotics`,
+//! `sim_cad::component_edit`, `sim_cad::scripts`, `sim_cad::experiments`).
+impl Workspace<'_> {
+    pub fn op(&mut self, name: &str, args: &[Value], kwargs: &Map<String, Value>) -> R<OpResult> {
+        let geometry = self.geometry;
+        let centroid = |id: &str| geometry.iter().find(|b| b.node_id == id).map(|b| b.properties.centroid_mm);
+        let mut cx = sim_cad::ops::Ctx { doc: self.archive, stamps: self.stamps, edit: &mut self.edit, centroid: &centroid, cancelled: self.cancelled };
+        sim_cad::ops::run(&mut cx, name, args, kwargs).map(op_result).map_err(err)
+    }
+}</script>
+<figcaption><span class="path">crates/sim-spatial/src/cad/local_client.rs</span>, trimmed. The method names match the old REST client's, so the panels written against RoboCAD's API did not have to change; their data types now live in the viewer's <code>cad::types</code>, with the same JSON shapes.</figcaption>
+</figure>
+<p>On 8 October the rest of the migration was written (plan and limits: <span class="path">docs/cad-migration-and-composition-plan.md</span>). Every feature that used to refuse by name now runs in process:</p>
+<ul>
+  <li><b>Mesh import</b> (STL, OBJ, PLY, 3MF) with RoboCAD's unit guess, and <b>print checks</b> (wall thickness, export validation, overhangs): <code>sim_cad::printing</code>.</li>
+  <li><b>Print studies</b>: splitting a part for printing (cut planes with dowel, insert and dovetail joints), strength, whole-or-split, plans with plates written as 3MF, assembly guides and coupon kits (<code>sim_cad::print</code>, with the stress check and planner in <code>sim_runtime::print_tools</code>, which the <code>sim-print</code> binary now wraps). They run as viewer jobs; a job that changes the document publishes one undo step when it ends, refused if the document changed meanwhile.</li>
+  <li><b>Experiments</b> on the export, captured review, comparisons and evidence threads, candidates as staged edit batches accepted as one undo step, identification applied through the actuator registry (<code>sim_cad::experiments</code>).</li>
+  <li><b>Model scripts</b> in Rhai over the shared operations, sketches and GT2 belts (<code>sim_cad::scripts</code>, <code>cad_script</code>); the turntable's scripts are <span class="path">.rhai</span> now and their Python is gone.</li>
+  <li><b>Components and assemblies</b>: definitions, parameters, occurrences, regeneration and composition edits (<code>sim_cad::component_edit</code>, <code>sim_cad::component_graph</code>), and reference poses with motion patterns (<code>sim_cad::pose</code>).</li>
+</ul>
+<p>Each has tests in <code>sim-cad</code> (52 tests, all passing on 9 October). What has not happened yet is the plan's last step: a REST walkthrough of each feature in the live viewer. The agent's view of the editor is its guide command, which states the contract plainly:</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="json">// crates/sim-spatial/src/cad/guide.rs: cad_guide, two entries of its answer (trimmed)
+"about": "The CAD editor runs inside the viewer process (Rust + OCCT 7.7.2). The open document is a .rcad archive …
+          Every change is an in-process edit: applied on a job, one undo step, the archive rewritten in memory;
+          nothing is written to disk until cad_save. There is no CAD service.",
+{"goal": "Print a part", "steps": [
+  "cad_run {id: print.wall_check} and {id: print.validate} on the selection",
+  "split one too big for the printer: cad_run {id: print.split, params: {printer}} (a job; cad_print {op: job, job} until done; the pieces arrive as one undo step)",
+  …]}</script>
+<figcaption><span class="path">crates/sim-spatial/src/cad/guide.rs</span>, two entries of <code>cad_guide</code>, trimmed.</figcaption>
+</figure>
+<p>The RoboCAD client is gone: <code>sim_runtime::cad_client</code> (7,500 lines) and the CAD parity harness (<code>cad_parity</code>, which ran the Python and Rust implementations side by side) were deleted, <code>CadDocument</code> has no client, attach field or child-process slot, and a recent-documents entry that pointed at a RoboCAD URL is listed disabled and refused by name. <span class="path">docs/cad-parity-harness.md</span> is kept as the record of what the harness compared. Two stale notes remain: the <code>Cad</code> mode's doc comment in <span class="path">app/mod.rs</span> still says documents are edited through RoboCAD, and <span class="path">crates/sim-cad/README.md</span> still opens with "Source reviewed, unexecuted". The ledger of what is ported is <span class="path">docs/cad-rust-physical-derivations.md</span>.</p>
+
+<h3>Model: the physical export</h3>
+<p><code>sim_cad::physical::export</code> turns the archive into the <code>simrobot</code> v4 model in process: links from bodies merged by fixed joints and motor mounts, with exact B-rep mass and inertia combined by the parallel-axis theorem; joints with bearing physics estimated from the motor shaft or a printed pin unless set in CAD; library motors with their electrical, gearbox, thermal, firmware and driver blocks; sensors, cables, battery, materials. Every guess is listed in <code>source.assumptions</code> with whether it blocks evidence and how to resolve it. Three things are declared not modelled: flexible links (every link is rigid), link-to-link contact, and bearing inference from cylinder pairs.</p>
+<p>The three limits are constants in the exporter, and every exported file carries them in <code>source.not_modelled</code>:</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-cad/src/physical/mod.rs
+pub const SCHEMA_VERSION: u32 = 4;
+pub const EXPORTER: &str = "sim_cad::physical (in-process Rust port of RoboCAD export_physical_model)";
+pub const NOT_MODELLED: [&str; 3] = [
+    "flexible links: every link is rigid (RoboCAD's modal reduction is not ported)",
+    "link-to-link contact: no signed distance grid is built (floor contact uses the collision surface)",
+    "bearing inference from cylinder pairs: joint bearings are estimated from the motor shaft or a 2 mm printed pin unless set in CAD",
+];</script>
+<figcaption><span class="path">crates/sim-cad/src/physical/mod.rs</span> (four unit and default constants between the first two lines omitted). This is the project's rule about shortcuts applied to the exporter itself: a simplification is written into the output, where every later stage can see it.</figcaption>
+</figure>
+
+<h3>Test: the robot as composed</h3>
+<p>The test runs the project's own system file (<code>&lt;name&gt;.system.json</code>): the model as a generated robot, at first alone with the supply and ambient its model defines, and with whatever controller FMUs, battery or thermal parts were added to it in Build mode. It runs on the same path as any system: flatten with the generators, compile, bind blocks, schedule. Controller blocks are never substituted. The test's trajectory drives only inputs the system leaves open, through a test-bench block on the same scheduler at the model's control period and latency.</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-runtime/src/acceptance.rs, condensed: one test run
+pub fn run(document: &SystemDocument, base: &Path, registry: &BehaviorRegistry, test: &Test, extra: &BTreeMap<String, String>, cancelled: &dyn Fn() -> bool, progress: &dyn Fn(f64)) -> Result<Value, String> {
+    let fingerprint = fingerprint(document, base, test, extra);        // what this run is: model hash, file SHA-256s, settings, test
+    let (robot_name, source, parameters, ports) = robot_of(document)?;  // exactly one generated robot at the top level
+    let driven = bench(document, registry, test, &robot_name, &ports, &model)?; // open inputs the trajectory may command; a driven one is refused
+    // The test bench is an ordinary block in a copy of the document …
+    let flat = sim_system::flatten_with(&composed, registry, &generators(base))?;
+    let assembly = flat.generated_details[&robot_name].downcast_ref::<Handle>()…take();   // the robot the generator built
+    let mut runtime = Runtime::new(flat.model.clone(), registry, config.integrator)?;
+    bind_with(&mut runtime, Some(base), &mut hosts)?;                  // FMUs, plus the bench's host implementation
+    let mut robot = PhysicalRobot::attach(runtime, assembly, &opts)?;  // the same measurements Robot mode reports
+    for k in 1..=steps { robot.advance(SAMPLE_S)?; sample(&robot, k as f64 * SAMPLE_S); }
+    let outcomes = test.criteria.iter().map(|c| judge(c, test, &robot.results(..), &run)).collect();
+    // … report: verdict, evidence, fingerprint, what ran (controllers, commands, holds), traces …
+}</script>
+<figcaption><span class="path">crates/sim-runtime/src/acceptance.rs</span>, condensed to its steps. Criteria: reaches, tracking, torque margin against stall, winding temperature, bearing and yield margins, no fall, no limit hits, printed-part strength. A criterion the run cannot judge is "not assessed" and never a pass.</figcaption>
+</figure>
+<p>Evidence is bound to what ran. A report carries a fingerprint (the system's physics hash, the SHA-256 of every file read, the run settings, the test); the project's status compares it with what a run would be now and reports <em>current</em>, or <em>stale</em> with what changed. A stale pass neither completes the Test step nor allows Make. The same fingerprint type serves system tests in Build mode (<code>system_evidence</code>).</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-spatial/src/project/status.rs, condensed: the Test step from the files
+match (&f.standing, &f.report) {
+    (Some(Standing::Current { .. }), Some(r)) => match (r["verdict"].as_str(), r["evidence"].as_bool()) {
+        (Some("passed"), Some(true)) => (State::Done, summary, None),
+        (Some("failed"), _)          => (State::Attention, summary, Some("Change the design (or the test) and run it again")),
+        _                            => (State::Attention, summary, Some("Some criteria could not be assessed; see Test")),
+    },
+    // A result for something that has since changed is not a result for this.
+    (Some(Standing::Stale { changed, .. }), _) => (State::Ready, format!("Not tested since {}", changed.join("; ")), Some("Run the test again")),
+    _ => (State::Ready, "Not tested yet", Some("Run the test")),
+}</script>
+<figcaption><span class="path">crates/sim-spatial/src/project/status.rs</span>, condensed (<code>summary</code> stands for the report's summary text).</figcaption>
+</figure>
+
+<h3>Learn and Make</h3>
+<p>Lessons for the robot are written by the AI from its numbers and a render (section 9). Make writes every printed body as a binary STL under <span class="path">make/</span> with a manifest naming the tested CAD revision, each part's material, mass and print settings (unstated settings named as assumed). Printed-part strength is judged after a test by <code>sim-print</code>'s layer-aware voxel stress check, with loads from the run's peak motor torques and joint reactions and filament values from the print registry.</p>
+<table>
+<tr><th>Piece</th><th>Where</th><th>Status</th></tr>
+<tr><td>Project file, steps, follow-ups across modes, REST and guide</td><td><code>sim-spatial/project</code>, <code>sim-runtime/robot_project</code></td><td><span class="badge done">done</span></td></tr>
+<tr><td>CAD open, select, measure, RoboCAD's operations, sketches, saved views, export, threads</td><td><code>sim-cad</code>, <code>sim-spatial/cad</code></td><td><span class="badge done">done</span> the REST agent loop in <span class="path">examples/cad-agent-loop</span> built <span class="path">quadruped.rcad</span>, a 12-servo quadruped, from an empty file. The crate README still says "unexecuted"; that line is out of date</td></tr>
+<tr><td>Mesh import, print checks and studies, splitting, plates, assembly guides and coupons, experiments and candidates, Rhai model scripts, components and assemblies, poses</td><td><code>sim-cad</code>, <code>sim-spatial/cad</code></td><td><span class="badge done">done</span> library tests pass; the REST walkthrough of each in the live viewer has not been done</td></tr>
+<tr><td>RoboCAD client and parity harness</td><td><code>cad_client</code>, <code>cad_parity</code> (deleted)</td><td><span class="badge done">done</span> removed; two stale notes remain (the <code>Cad</code> mode's doc comment, the crate README's "unexecuted")</td></tr>
+<tr><td>Physical export</td><td><code>sim-cad/physical</code></td><td><span class="badge partial">partial</span> rigid links only; flexible-link modal reduction not ported</td></tr>
+<tr><td>Acceptance test through the composed system; evidence and staleness</td><td><code>acceptance</code>, <code>system_evidence</code></td><td><span class="badge done">done</span></td></tr>
+<tr><td>Robot mode's live view</td><td><code>sim-spatial/robot</code>, <code>teleop</code></td><td><span class="badge done">done</span> a project's model runs its composed system (<code>compose_robot</code>); joints are jogged through free targets or controller setpoints, and the rest are refused by name</td></tr>
+<tr><td>Make: STL and manifest</td><td><code>sim-spatial/project/make</code></td><td><span class="badge done">done</span></td></tr>
+<tr><td>Printed-part strength, print registry, coupon promotion, plates</td><td><code>sim-print</code>, <code>part_strength</code></td><td><span class="badge done">done</span> as a library, a CLI and CAD mode's print studies</td></tr>
+<tr><td>Design assistant</td><td><code>sim-agent</code></td><td><span class="badge done">done</span> needs a Codex login; model unavailability is an error, never a substitute</td></tr>
+</table>
+<h2 id="hardware">7. Hardware</h2>
+<p>The bench is a printed leg of HiWonder HX-30HM serial bus servos (knee, worm and belt-driven hip, IDs 1–3) and a nine-servo chain (IDs 4–12). Between the host and the servos sits a Sipeed Tang Primer 25K FPGA, and the design rule from <span class="path">AGENTS.md</span> is that its safety holds whatever the host does. The chain uses the FPGA's bench profile; the leg uses its calibration profile, which adds taught travel windows. The FPGA sources live in the separate <span class="path">sipeed-tang-primer-25k</span> repository; this repository holds the host side, a frozen source snapshot with its validation report (<span class="path">examples/actuators/hx30hm/software-validation</span>), and an ESP32 host that now drives the leg over Wi-Fi.</p>
+<figure>
+<svg class="diagram" viewBox="0 0 740 100" role="img" aria-label="The hardware chain">
+  <rect class="box" x="10" y="15" width="150" height="72" rx="6"/><text x="85" y="40" text-anchor="middle" font-weight="600">host</text><text x="85" y="58" text-anchor="middle" class="sub">sim_runtime::hardware</text><text x="85" y="74" text-anchor="middle" class="sub">or the ESP32 (Wi-Fi)</text>
+  <rect class="box" x="190" y="15" width="170" height="72" rx="6"/><text x="275" y="40" text-anchor="middle" font-weight="600">UART link</text><text x="275" y="58" text-anchor="middle" class="sub">USB through the dock,</text><text x="275" y="74" text-anchor="middle" class="sub">or ESP32 pins at 115200</text>
+  <rect class="box hi" x="390" y="15" width="180" height="72" rx="6"/><text x="480" y="40" text-anchor="middle" font-weight="600">FPGA supervisor</text><text x="480" y="58" text-anchor="middle" class="sub">leases, trips, S2, STOP;</text><text x="480" y="74" text-anchor="middle" class="sub">taught windows (leg)</text>
+  <rect class="box" x="600" y="15" width="130" height="72" rx="6"/><text x="665" y="40" text-anchor="middle" font-weight="600">HX-30HM servos</text><text x="665" y="58" text-anchor="middle" class="sub">leg 1–3, chain 4–12</text><text x="665" y="74" text-anchor="middle" class="sub">1 Mbaud bus</text>
+  <path class="edge" d="M160 51 L190 51"/><path class="edge" d="M360 51 L390 51"/><path class="edge" d="M570 51 L600 51"/>
+</svg>
+<figcaption>Host packets have the form <code>FF FF | ID | LEN | INSTR | params | checksum</code>. The supervisor's own commands use ID <code>FE</code> and instruction <code>A0</code>: STOP, ARM, STATUS, HEARTBEAT and DISARM. The FPGA arms a servo only on fresh telemetry. It trips on temperature, voltage, current or a device error, when the telemetry lease or the command lease runs out (200 and 300 ms on the bench profile, 400 and 600 ms on the leg's), or when the S2 button is pressed. It stops a servo with PWM zero, then torque off. On the calibration profile it also arms a motor only inside a travel window it was sent, anchored to the motor's live reading; it counts encoder turns from that anchor and drops drive (PWM, speed or a position goal) that would take the motor further out. Leaving the window does not trip it.</figcaption>
+</figure>
+<p>On the host, <code>sim_runtime::hardware</code> holds two application services with no transport of their own: <em>calibration</em> (serialised acquisition, taught poses, sweeps, tuning, durable records, an independently reachable STOP and motion leases) and <em>bench</em> (gait playback on the leg, live references, FPGA plans and receipts). The protocol codecs are small and tested against documented byte vectors:</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-runtime/src/acquisition/servo_safety.rs: the supervisor's host protocol, version 1
+pub const BRIDGE_ID: u8 = 254;
+pub const INSTRUCTION: u8 = 0xa0;
+pub enum Command { Stop, Arm(u8), Status, Heartbeat(u8), Disarm(u8) }
+impl Command {
+    pub fn packet(self) -> Result<Vec<u8>, &'static str> {
+        packet(BRIDGE_ID, INSTRUCTION, &self.parameters()?)   // e.g. ARM 12 → [255, 255, 254, 4, 160, 1, 12, 80]
+    }
+}
+pub struct Status {
+    pub latched: bool, pub reason: u8, pub fault_id: u8,     // reasons: 1 boot, 2 heat, 3/4 voltage, 5 current, 7 telemetry timeout, 8 command timeout, 9 S2, 10 host stop …
+    pub armed_mask: u16, pub fresh_mask: u16,                 // bit 0 = ID 4
+    pub temperature_max_c: u8, pub voltage_min_raw: u8, pub voltage_max_raw: u8, pub current_max_raw_uncalibrated: u16,
+}
+impl Status {
+    /// The bench profile's thresholds, or a refusal: a different image is not driven by this code.
+    pub fn require_bench_profile(&self) -> Result<(), &'static str> { /* 60 °C, 9.0–12.6 V, 2000 counts */ }
+}</script>
+<figcaption><span class="path">crates/sim-runtime/src/acquisition/servo_safety.rs</span>, condensed: fields joined onto fewer lines, the <code>version</code> field and the method bodies omitted. The ESP32 firmware's portable C core (<span class="path">firmware/robot-link/core</span>) produces the same bytes, and a test in each language checks the same vectors.</figcaption>
+</figure>
+<p>The ESP32 firmware builds the same packets in portable C. Here is the builder, with the checksum that both sides compute:</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="c">// firmware/robot-link/core/hx.c
+size_t hx_packet(uint8_t *out, uint8_t id, uint8_t instruction, const uint8_t *params, size_t n)
+{
+    if (id == 0xFF || n > HX_MAX_PARAMS) return 0;
+    out[0] = 0xFF;                       /* two-byte header */
+    out[1] = 0xFF;
+    out[2] = id;                         /* servo ID, or 0xFE for the FPGA supervisor */
+    out[3] = (uint8_t)(n + 2);           /* length: instruction + params + checksum */
+    out[4] = instruction;                /* 0xA0 for supervisor commands */
+    if (n) memcpy(out + 5, params, n);
+    uint8_t sum = 0;
+    for (size_t i = 2; i < 5 + n; i++) sum = (uint8_t)(sum + out[i]);
+    out[5 + n] = (uint8_t)~sum;          /* ARM 12: ~(254+4+160+1+12) mod 256 = 80 */
+    return 6 + n;
+}</script>
+<figcaption><span class="path">firmware/robot-link/core/hx.c</span>, with comments added. <span class="path">firmware/robot-link/test/test_core.c</span> checks that <code>ARM 12</code> gives <code>[255, 255, 254, 4, 160, 1, 12, 80]</code>, the same vector the Rust test in <code>servo_safety.rs</code> checks.</figcaption>
+</figure>
+<p>Two browser pages predate the native front end and still work: the motor bench (<code>serve_motor_bench</code>, FPGA gait playback) and the calibration page with its viewer mirror (<code>serve_actuator_calibration</code>). Both are thin HTTP adapters over the same services. The native viewer's hardware front end (Robot mode's hardware panel, the leg clock aligned with the simulation, Sim/Leg/Both playback) is written and source-reviewed, but <span class="path">docs/hardware-checklist.md</span> is explicit that its checklist items HW-01 to HW-11 have not been executed on the leg since the last changes; the browser page remains the reference until a pass runs.</p>
+<p>The measurement side feeds the simulator back. The <em>actuator registry</em> (<code>actuator_registry</code>, <code>sim-actuator-profiles</code>) is the one source of accepted motor families, promoted from identification captures and flowing to CAD, simulation, screens and hardware limits; nothing is hand-copied. A staged characterisation campaign (stages A–K: breakaway, gain, speed, stopping distance, thermal) is implemented and tested against a simulated rig, with a hardware rig written for the bus; it has not yet run on the leg.</p>
+<h3>The ESP32 host and the leg</h3>
+<p>The ESP32-P4 host (<span class="path">firmware/robot-link</span>) has been running on the leg's bench since 8 October. It replaces the dock's USB chip with a UART on the FPGA's G7/G8 pins and joins the bench's Wi-Fi network. The FPGA's calibration image with those pins is written to the dock's SPI flash, so it boots without a host (receipts in <span class="path">examples/actuators/hx30hm/hardware/2026-10-08-robot-link</span>). The board's Wi-Fi goes through its C6 co-processor, and <code>esp_hosted</code> is pinned to the C6's 2.12 line: with 3.0.9 the data path died within a minute. The firmware's portable C core (<span class="path">core/</span>) runs one transaction at a time, keeps armed motors' telemetry fresh, sends lease heartbeats only while a page session is alive, and is tested two ways: <code>make -C test</code> against a behavioural model of the supervisor, and <code>make -C cosim</code> against the real Verilog under Verilator with UART bits at the real baud rates, built once for each profile.</p>
+<p>The leg can be driven two ways through it. A raw TCP tunnel (port 4196, bridged to a pty by <span class="path">tools/tunnel_pty.py</span>) lends the UART to the Rust calibration panel, which calibrated the leg over Wi-Fi. The board's own page does the rest. Its state, STOP, gait selection, turn confirmation and teaching are also REST commands; arming, jogging and playing need the page's live session, which is what a lease is renewed from:</p>
+<ul>
+  <li><b>Arming, jogging and teaching.</b> Arm sends the motor's taught window, anchored at its reading, then puts it in open-loop PWM mode for hold-to-move. A motor found outside its travel is armed with the window stretched only to where it already is, so it can come back in and no further out, and a held jog is zeroed at the window's edge. Poses are set where the motor is, named as in the panel (lower and upper), kept in the board's flash, and promoted into <span class="path">calibration.json</span> by <code>leg_gait_pack --pull-calibration</code>, which keeps the previous file and asks for a reason when a travel widens.</li>
+  <li><b>The worm's turns.</b> The worm's travel is 1.1 encoder turns, so a reading alone does not say where it is. The page draws the leg at each place the reading allows and the operator picks the one that matches; the count is forgotten on anything that could hide a turn (a missed reading, a half-turn jump, a gap, the tunnel taking the link).</li>
+  <li><b>Gaits.</b> A gait pack built on the Mac (<code>sim_runtime::hardware::calibration::gait_pack</code>, from the same gait catalog, calibration, registry limits and CAD as the panel) holds each gait's desired reference and governor, a check sequence from the Rust governor that the C port must match, and the leg figure: the CAD collision meshes with per-link transforms, checked against the kinematic mirror to 0.08 mm, which the page draws for the preview, the live leg and the worm's places. Knee and hip play as servo position goals; the worm plays in servo speed mode with a position trim, because position mode cannot leave one turn.</li>
+</ul>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="c">// firmware/robot-link/core/robot_link.c: arm_tick, the window step (trimmed)
+case J_WINDOW: {
+    if (t->multi_turn && !s->turn_known) return job_fail(rl, now, false, "motor %u's turn is not known", id), false;
+    int32_t p = rl_position(rl, id);                 /* the reading, with its confirmed turns when multi-turn */
+    int32_t lo = t->open[RL_END_LO] ? -RL_TRAVEL_OPEN : t->lo, hi = t->open[RL_END_HI] ? RL_TRAVEL_OPEN : t->hi;
+    /* Outside its travel: stretch the window only to where it already is. */
+    t->armed_lo = p < lo ? p : lo;
+    t->armed_hi = p > hi ? p : hi;
+    uint8_t q[14] = {7, id};                         /* [7, id, anchor, lower, upper]: the supervisor's window command */
+    put_i32(q + 2, p);
+    put_i32(q + 6, t->armed_lo);
+    put_i32(q + 10, t->armed_hi);
+    job_local(rl, now, q, sizeof q);
+    return true;
+}</script>
+<figcaption><span class="path">firmware/robot-link/core/robot_link.c</span>, one step of the calibrated arm, trimmed (two comments added). The FPGA accepts the window only if the anchor's low 12 bits equal its last reading, and arms only inside it.</figcaption>
+</figure>
+<p>On the leg so far (9 October): the link, the tunnel calibration, arming, recovering the knee from outside its travel, jogging, teaching poses and confirming the worm's turn have all been used. Not yet: a gait played on the leg, the worm's servo speed mode on this servo (its units are assumed to be counts per second), and a cold power-cycle of the dock to confirm it boots the flash image.</p>
+<table>
+<tr><th>Piece</th><th>Where</th><th>Status</th></tr>
+<tr><td>Supervisor protocol, telemetry, PWM dialect, stream framing</td><td><code>acquisition/servo_bus</code>, <code>servo_safety</code></td><td><span class="badge done">done</span> verified on nine units (PWM direction bit)</td></tr>
+<tr><td>Calibration and bench services, virtual bench</td><td><code>hardware/{calibration,bench}</code>, <code>hx_virtual_bench</code></td><td><span class="badge done">done</span> in process; the virtual bench is a host simulation, not FPGA parity</td></tr>
+<tr><td>Browser calibration and motor-bench pages</td><td><code>serve_*</code>, <span class="path">web/viewer</span>, <span class="path">web/motor-bench</span></td><td><span class="badge legacy">legacy</span> the reference until the native front end is executed</td></tr>
+<tr><td>Native hardware front end (HW-01–HW-11)</td><td><code>sim-spatial/robot</code>, <code>drive_input</code></td><td><span class="badge unverified">unverified</span> by reading only</td></tr>
+<tr><td>Actuator registry and profile promotion</td><td><code>actuator_registry</code>, <code>sim-actuator-profiles</code></td><td><span class="badge done">done</span></td></tr>
+<tr><td>Characterisation campaign</td><td><code>acquisition/characterization</code></td><td><span class="badge unverified">unverified</span> simulation-tested; hardware pending</td></tr>
+<tr><td>ESP32 link engine, Wi-Fi, page, tunnel</td><td><span class="path">firmware/robot-link</span></td><td><span class="badge done">done</span> running on the leg's bench; unit-tested and co-simulated against the RTL</td></tr>
+<tr><td>Arming, recovery, jogging and teaching on the page; promotion to <span class="path">calibration.json</span></td><td><span class="path">firmware/robot-link/core</span>, <code>gait_pack::promote_esp32_poses</code></td><td><span class="badge partial">partial</span> used on the leg; no taught pose has been promoted yet</td></tr>
+<tr><td>Gait pack, the leg figure, the ESP32 gait player (live governor, servo speed for the worm)</td><td><code>gait_pack</code>, <code>leg_gait_pack</code>, <span class="path">firmware/robot-link/core</span></td><td><span class="badge unverified">unverified</span> on hardware: co-simulated against the RTL; no gait played on the leg yet</td></tr>
+<tr><td>FPGA calibration image with the ESP32's pins, in the dock's flash</td><td><span class="path">firmware/robot-link/fpga</span></td><td><span class="badge partial">partial</span> answers as profile 8 after the write; a cold power-cycle is not yet confirmed</td></tr>
+<tr><td>Browser compatibility client of the hardware servers</td><td><code>hardware_client</code>, <code>loopback_http</code></td><td><span class="badge legacy">legacy</span> re-exports the protocol owners for the pages</td></tr>
+<tr><td>Verification harness for the native front end</td><td><span class="path">tools/native-calibration</span> (Python)</td><td><span class="badge unverified">unverified</span> written for a future HW-01–HW-11 pass; builds nothing and has not run</td></tr>
+</table>
+
+<h2 id="learning">8. Evaluation and learning</h2>
+<p>Everything in this section runs on the sessions of section 5; none of it has physics of its own.</p>
+<h3>The phenomena suite</h3>
+<p><code>sim-phenomena</code> is the acceptance suite for the physics: 35 scenarios, each a model of registered elements that must reproduce a published number, and must lose the effect when its falsifier is applied (for Huygens' clocks: make the beam rigid, and the clocks must drift apart). Huygens' clocks synchronise, the tippe top inverts, the passive walker walks, Chua's circuit goes chaotic, a Rijke tube sings, a silo shows Janssen's saturation, a sampled controller hunts at the wrong rate. The same model builders drive the exhibits in Phenomena mode.</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="rust">// crates/sim-phenomena/src/lib.rs (trimmed)
+//! The surprise suite: emergent phenomena as acceptance tests. Each scenario
+//! authors a `ModelWorld` of registered behaviors, compiles and runs it, and
+//! returns a Report asserting the published number and the falsifier.
+pub type Scenario = fn() -> Report;
+pub const ALL: &[(&str, Scenario)] = &[
+    ("huygens-clocks", scenarios::huygens_clocks::run),       // two pendulum clocks on one beam synchronise
+    ("tippe-top", scenarios::tippe_top::run),
+    ("passive-walker", scenarios::passive_walker::run),
+    ("sample-rate-instability", scenarios::sample_rate_instability::run),
+    ("chua-circuit", scenarios::chua_circuit::run),
+    ("painleve-rod", scenarios::painleve_rod::run),            // contact with no smooth solution
+    ("levitron", scenarios::levitron::run),
+    ("geyser", scenarios::geyser::run),
+    ("latency-instability", scenarios::latency_instability::run),   // a controller as a block (section 4)
+    ("quadruped-gait", scenarios::quadruped_gait::run),
+    ("walk-the-plank", scenarios::walk_the_plank::run),              // the learning environment's biped
+    // … 35 in all, in this order …
+];</script>
+<figcaption><span class="path">crates/sim-phenomena/src/lib.rs</span>, trimmed to 11 of the 35 entries; the end-of-line comments are added. Rerun for this map on 9 October on the working tree, scenario by scenario: 28 of the 35 pass. <code>levitron</code> (t = 2.77 s) and <code>geyser</code> (t = 0.16 s) still stop because Newton does not converge, as on 8 October with the build of 5 October, and the runner's <code>all</code> aborts at the first such panic, so a scenario after it is reported only when run by name. Five more fail that passed on 8 October: <code>sample-rate-instability</code> (the sampled controller's poles miss z = e<sup>−T/τ</sup> − KpK(1 − e<sup>−T/τ</sup>) by up to 0.014, against a tolerance of 10<sup>−6</sup>), <code>thermoelastic-damping</code> (its falsifier, heat carried uphill, is no longer rejected by the second-law check), <code>cruise-control</code> and <code>leg-on-the-seam</code> (Newton does not converge, at t = 2.19 s and 0.25 ms), and <code>walk-the-plank</code> (the planner no longer crosses level 0). They are new since the uncommitted runtime and block changes of 8 October (section 4) and have not been diagnosed; several of them run a controller as a block.</figcaption>
+</figure>
+<h3>Robot evaluation</h3>
+<p>Robot work goes through <code>Session</code> (host-independent episodes: inputs in, snapshots out, Rhai or an out-of-process controller inside) and <code>EmbeddedEnvironment</code> (sampled environments over the same runtime, actions as held controller inputs). On top of those: reproducible motion experiments with checkpoints; matched-input fidelity comparisons between the detailed model and a realtime profile; a controller leaderboard that ranks only measured, gated evidence; a gait lab that evaluates readable gait files; PPO training and a distilled "student" policy; contact-aware motion planning with several solvers (IPOPT, conic, Bayesian, CMA-ES, behind features). The browser's WASD walking and the native experiments share these exactly.</p>
+<p>The state of the walking work is honest and mixed. The CAD-derived quadruped walks in the browser: it was observed at about 0.14 m/s under the <code>robot-measured-400hz-reuse</code> preset on 22 September. The leaderboard's recipes meet none of their declared gates (sustained heading, numerical agreement, realtime). The faster development gait is labelled experimental. <span class="path">examples/full-robot</span> (355 entries) holds the experiments, their recipes and result sheets.</p>
+<table>
+<tr><th>Piece</th><th>Where</th><th>Status</th></tr>
+<tr><td>Phenomena suite and exhibits</td><td><code>sim-phenomena</code></td><td><span class="badge partial">partial</span> 28 of 35 pass; five regressions since 8 October</td></tr>
+<tr><td>Sessions, embedded environments, experiments, fidelity</td><td><code>session</code>, <code>embedded</code>, <code>environment</code>, <code>experiment</code>, <code>fidelity</code></td><td><span class="badge done">done</span></td></tr>
+<tr><td>Walking: browser WASD, gait lab, steered gaits, leaderboard</td><td><code>gait_lab</code>, <code>walking_task</code>, <span class="path">web/leaderboard</span></td><td><span class="badge partial">partial</span> walks; no recipe meets every gate</td></tr>
+<tr><td>Learning: sim-gym, PPO, distillation, planc</td><td><code>environment</code>, <code>ppo_training</code>, <code>sim_gym</code>, <span class="path">papers/walk-the-planc.pdf</span></td><td><span class="badge done">done</span> as tooling; policies are experimental</td></tr>
+<tr><td>Contact planning and solver features</td><td><code>contact_planning</code>, <code>sim-solve</code> features</td><td><span class="badge partial">partial</span> optional features; audits in examples</td></tr>
+<tr><td>Controller and model refinement, FPGA controller fits</td><td><code>controller_refinement</code></td><td><span class="badge done">done</span> evidence is published with its sources</td></tr>
+<tr><td>Cloud gait search (AWS spot)</td><td><span class="path">examples/full-robot/measured-actuator-integration</span> scripts</td><td><span class="badge partial">partial</span> scripts and a ceiling; needs approval each time by the project rules</td></tr>
+</table>
+<h2 id="content">9. Lessons, library and the other content</h2>
+<h3>Lessons</h3>
+<p>A lesson is a folder with a <code>lesson.md</code>: Markdown with YAML front matter and fenced blocks that embed live content. Three kinds carry systems: <code>sim-scene</code> (a system run, recorded and animated), <code>sim-component</code> (a library card) and <code>sim-compare</code> (a saved study). The others teach: <code>sim-quiz</code>, <code>sim-recall</code>, <code>sim-reflect</code>, <code>sim-equation</code>, <code>sim-remedy</code>, <code>sim-task</code>, <code>sim-lab</code> and <code>sim-measured</code>. <code>sim-lesson</code> parses and validates the file and reports errors as <code>lesson.md:line</code>. <code>sim_runtime::lesson</code> resolves the systems, records each scene on the same <code>SystemSession</code> the viewer uses, and checks every <code>expect</code> claim against the recording. A workspace test (<span class="path">crates/sim-runtime/tests/lessons.rs</span>) runs that check over every lesson in CI. There are 27 lessons, among them gear ratio, backlash, battery sag, PID on a joint, worm self-locking and one built on a measured knee servo. They come with quizzes, recall prompts, sliders that re-record a scene, progress tracking and narration.</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="markdown">---
+title: Why worm gears self-lock
+systems: { winch: ../../examples/systems-builder/worm-drive/winch.system.json }
+---
+Watch [the worm](part:winch/gearbox/worm) when the power goes off.
+
+```sim-scene
+id: hold
+system: winch
+run: { duration_s: 2.0 }
+script: power-off.rhai          # a Rhai cue script on the shared runtime
+plots: [drum.shaft.speed]
+expect:                          # checked in CI against the recorded run
+  - { observe: drum.shaft.angle, reduce: change, window: [1.4, 2.0], min: -0.001, max: 0.001 }
+```</script>
+<figcaption>The example from the <code>sim-lesson</code> crate documentation (its <code>order</code> line omitted; comments added). A <code>part:</code> link points at an instance path in a scene, so the reader can click a word and see the part highlighted. The real <span class="path">lessons/worm-self-locking/lesson.md</span> builds on this with a recall prompt, a prediction quiz and two scenes.</figcaption>
+</figure>
+<h3>The library</h3>
+<p><span class="path">library/</span> is content with one source each: 31 equation parts (<code>*.part</code>, hot-reloaded), 110 generated datasheets, 21 saved systems, the print registry (printers, filaments, printed-joint values; estimated values replaced only by measured coupons through <code>sim-print promote</code>), and 3D models for the viewer. <span class="path">library/CATALOG.md</span> is generated from the registry descriptors.</p>
+<h3>Vision and places</h3>
+<p><code>sim-vision</code> models the Raspberry Pi Camera Module 3 Wide as a pinhole camera with rolling shutter and exposure, renders deterministic frames of a described scene, and reconstructs depth by plane-sweep stereo with poses that come from the simulated mechanism (a camera turntable driven by an HX-30HM, <span class="path">examples/camera-turntable</span>, CAD-derived). <code>sim-place</code> fuses scans into a place model with twelve query tools that serve a CLI and an MCP server, so an AI can look around a scanned room; Place mode flies through it. The finding that shaped the design: the servo's angle (0.004°) is a better pose than image refinement can give, and a smooth once-per-turn angle error is unobservable from neighbouring shots. The real cameras run from the stereo-camera project on the same ESP32-P4 board; the simulator side has not yet consumed a real scan.</p>
+<h3>Examples and documentation</h3>
+<table>
+<tr><th>Directory</th><th>What it holds</th></tr>
+<tr><td><span class="path">examples/full-robot</span></td><td>the four-leg robot's commissioning: experiments, recipes, measured-actuator integration, gait searches, result sheets (355 entries)</td></tr>
+<tr><td><span class="path">examples/actuators/hx30hm</span></td><td>identification captures, accepted families, the characterisation plan, hardware sessions (the leg's calibration record and gait runs; the ESP32 deployment receipts), the FPGA software validation snapshot</td></tr>
+<tr><td><span class="path">firmware/robot-link</span></td><td>the ESP32 host: the portable C core, the ESP-IDF firmware and its page, unit tests, the Verilator co-simulation, the FPGA pin variant and an animated wiring and signal-check guide (<span class="path">docs/wiring.html</span>)</td></tr>
+<tr><td><span class="path">examples/interactive</span></td><td>native/browser runtime acceptance: the session contract, presets, parity checks</td></tr>
+<tr><td><span class="path">examples/composition</span>, <span class="path">examples/fmi</span></td><td>the thermostat and rover compositions; the fixture FMUs in C with the Co-Simulation scaffold</td></tr>
+<tr><td><span class="path">examples/systems-builder</span>, <span class="path">systems-viewer</span>, <span class="path">components</span></td><td>system files, lesson systems, the robot physics lessons' generated systems, viewer fixtures</td></tr>
+<tr><td><span class="path">examples/wheeled-robot</span>, <span class="path">motorized-pendulum</span>, <span class="path">robot-kit</span>, <span class="path">robot-pipeline</span>, <span class="path">cad-agent-loop</span></td><td>smaller end-to-end fixtures: the rover, a pendulum from CAD to measurement, the printable kit, one robot through the pipeline, an agent building a quadruped over REST</td></tr>
+<tr><td><span class="path">examples/camera-turntable</span>, <span class="path">primitives</span>, <span class="path">experimentation</span>, <span class="path">experiments</span></td><td>the scanner, exploration primitives, Rhai experimentation, measured-data experiments</td></tr>
+<tr><td><span class="path">docs/architecture</span></td><td><span class="path">native-viewer.md</span> (the viewer's design record) and <span class="path">composition.md</span> (the composition model); this map</td></tr>
+<tr><td><span class="path">docs/*.md</span></td><td>checklists, plans and ledgers: the CAD migration and composition plan, the retired CAD parity harness, hardware checklist and parity, leg-in-process, the robot pipeline plan, verification records</td></tr>
+<tr><td>root <span class="path">*-roadmap.md</span>, <span class="path">*-progress.md</span></td><td>the roadmaps that drove each phase, with their status; <span class="path">improvements-log.md</span></td></tr>
+</table>
+
+<h2 id="tooling">10. Tooling, clients and tests</h2>
+<h3>Command-line tools and applications</h3>
+<table>
+<tr><th>Binary</th><th>Does</th></tr>
+<tr><td><code>sim-system</code></td><td>system files without a window: new, show, apply commands, undo, check, compile, run, study, test, datasheet, realtime, fit, catalogue, library</td></tr>
+<tr><td><code>sim-session</code>, <code>sim-gym</code>, <code>sim-experiment</code></td><td>robot sessions, learning environments and experiments from scene and recipe files</td></tr>
+<tr><td><code>sim-lesson</code>, <code>sim-narrate</code></td><td>check, model, draft and report lessons; narration audio through a paid API with a spending ceiling</td></tr>
+<tr><td><code>sim-fmi</code></td><td>inspect an FMU; pack one reproducibly from C sources</td></tr>
+<tr><td><code>sim-print</code></td><td>stress checks, print plans, plates and coupon promotion against the print registry</td></tr>
+<tr><td><code>sim-scan</code>, <code>sim-place</code></td><td>virtual scans; place models, queries and the MCP server</td></tr>
+<tr><td><code>sim-cad</code></td><td>run a CAD export through the robot runtime (the paired Python/Rust parity harness, <code>cad_parity</code>, was deleted with the RoboCAD client)</td></tr>
+<tr><td><code>sim-actuator-profiles</code>, <code>sim-track</code>, <code>sim-validate</code>, <code>sim-profile</code>, <code>sim-inspect-scene</code>, <code>sim-system-worker</code>, <code>simctl</code></td><td>actuator promotion, motion tracking, validation campaigns, solver profiling, scene inspection, the builder's worker process, a command-line REST client</td></tr>
+<tr><td><code>sim-spatial</code>, <code>sim-viewer</code>, <code>sim-phenomena</code>, <code>sim-example-diffusion</code></td><td>the four applications: the viewer, the egui schematic window, the phenomena suite runner and gallery generator, and the diffusion extension's demo</td></tr>
+</table>
+<h3>Controllers in other languages</h3>
+<p>The seam protocol of <code>sim-couple</code> lets a controller run in another process, in any language. The protocol is newline-delimited JSON in lockstep, and the simulation speaks first:</p>
+<figure class="code">
+<script type="text/plain" class="snippet" data-lang="text">→ {"type":"hello","element":"controller","period":0.001,
+   "sensors":[{"name":"angle","unit":"rad"}],
+   "actuators":[{"name":"voltage","unit":"V"}]}
+← {"type":"ready"}
+→ {"type":"sample","seq":0,"t":0.0,"sensors":[0.1]}
+← {"type":"act","seq":0,"actuators":[2.5]}
+→ {"type":"sample","seq":1,"t":0.001,"sensors":[0.09]}
+← {"type":"act","seq":1,"actuators":[2.4]}
+…
+→ {"type":"close"}</script>
+<figcaption>From the <code>sim-couple</code> crate documentation. Every <code>sample</code> carries simulation time, so the controller never sees a wall clock. A mismatched <code>seq</code>, a malformed line, a closed pipe or a late reply is an error that names the element.</figcaption>
+</figure>
+<p>A Python client that needs only the standard library (<span class="path">clients/python</span>, <code>simloop</code>) and a C client (<span class="path">clients/c</span>) implement it. Under the project rules these are compatibility surfaces: new controllers are written in Rust or Rhai, or arrive as FMUs.</p>
+<h3>Agents</h3>
+<p>The rule in <span class="path">AGENTS.md</span> is that every screen can be used by an AI. In practice, every mode's commands appear in <code>GET /v1/capabilities</code> with a working example, and most modes publish a state resource (<code>system_state</code>, <code>cad_state</code>, <code>robot_state</code>, <code>project_state</code>, <code>lesson_state</code>, <code>phenomena_state</code>). Every mode also has a guide command that tells an agent starting cold where to begin: <code>inspect_guide</code>, <code>system_guide</code> (Build), <code>lesson_guide</code>, <code>robot_guide</code>, <code>place_guide</code>, <code>cad_guide</code> and <code>phenomena_guide</code>, plus <code>project_guide</code> for robot projects across modes. A test (<code>every_mode_has_a_guide_of_its_own</code>) fails if a mode is added without one.</p>
+<p><span class="path">tools/claude-pair</span> runs two Claude Code roles through a local coordinator that runs the checks itself. An orchestrator writes bounded assignments and a worker implements them, with an optional director above both. Much of the viewer's migration ledger in <span class="path">docs/architecture/native-viewer.md</span> was produced this way. That is why it reads as a sequence of accepted batches, each with an explicit "by reading, unexecuted" caveat.</p>
+<h3>Tests and CI</h3>
+<p>The workspace has 2,526 <code>#[test]</code> functions and 190 integration test files, and eight GitHub workflows: simulation, CAD, browser, experiment, walking reference, and one for each optional solver feature (Bayesian, conic, native IPOPT). The tests follow the project rules. The equation crates check analytic cases and conservation. Scheduler, FMI and composition semantics are tested in <span class="path">sim-phenomena/tests/blocks.rs</span>, <span class="path">sim-fmi/tests</span> and <span class="path">sim-runtime/tests/{composition,robot_acceptance}.rs</span>. Parity tests compare native and WebAssembly builds. Source-scanning tests enforce the viewer's structure: threads and processes are started only in <code>jobs</code>, no window text tells a person to use REST, and commands keep their order.</p>
+<p>Run for this map on 9 October, on the working tree: <code>sim-core</code> and <code>sim-system</code> (42 tests), <code>sim-compile</code> (26), <code>sim-fmi</code> (14), <code>sim-cad</code> (52), the block semantics in <span class="path">sim-phenomena/tests/blocks.rs</span> (20), <code>sim-domain-robot</code> (200) and the viewer's library tests (874, 7 ignored) all pass, and the viewer's binaries build. The viewer's eight known failures of 8 October (CAD service-switching tests, two calibration-study timing tests, the copy guard and the source-size limit) no longer fail. <code>sim-runtime</code> passes 695 and fails 11, none of them new: nine hardware-bench UART mock tests, <code>request_mirror_matches_the_server</code> (it looks for <code>struct Request</code> in the example server, but the struct moved into <code>hardware::calibration</code>), and <code>coreless_motor_loads_with_notes_snaps_and_heats</code> in <span class="path">tests/authored_parts.rs</span>. The firmware's <code>make -C test</code> and both co-simulation builds pass. The phenomena suite is the regression to look at first (section 8).</p>
+<p>Two practical notes for anyone building: <span class="path">target/</span> grows past 100 GB, so build with <code>CARGO_INCREMENTAL=0</code> and never a second target directory; and a workspace check takes minutes while the viewer crate takes much longer, so test the library crates first.</p>
+<h2 id="status">11. Status map</h2>
+<p>Every feature, in the order of this document. "Where" names the crate or directory; "What is missing" is empty for a finished piece. A feature is <em>done</em> when it works end to end in the Rust process and has tests; <em>partial</em> when it works with a stated gap; <em>legacy</em> when it still runs outside the Rust-only architecture or exists only for compatibility; <em>unverified</em> when it is written and reviewed but has not run, which on this project usually means hardware.</p>
+<table>
+<tr><th>Feature</th><th>Where</th><th>Status</th><th>What is missing</th></tr>
+<tr><td colspan="4"><b>Equations</b></td></tr>
+<tr><td>Element model: behaviors, typed ports, units, registry, notes</td><td><code>sim-core</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Twelve physical domains with scenario and exhibit each</td><td><code>sim-domain-*</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Control, sensing, drive profiles, gait and contact-phase planners</td><td><code>sim-domain-control</code>, <code>-sensing</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Equation parts in files with exact Jacobians, hot reload</td><td><code>sim-parts</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Articulated robot element: contact, loops, modal flexibility</td><td><code>sim-domain-robot</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Energy and second-law accounting</td><td><code>sim-core</code>, <code>sim-compile</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td colspan="4"><b>Compile and solve</b></td></tr>
+<tr><td>Islands, residual layout, elimination, per-element Jacobians</td><td><code>sim-compile</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Implicit midpoint, backward Euler, RK4; events; branches; adaptive steps</td><td><code>sim-dynamics</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Newton with cached factorisation, colouring, line search</td><td><code>sim-solve</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Search and optimisation (Bayesian, CMA-ES, conic, IPOPT)</td><td><code>sim-solve</code> features</td><td><span class="badge partial">partial</span></td><td>optional features; IPOPT is a runtime binding</td></tr>
+<tr><td>Checkpoints, reset, replay by seed and inputs</td><td><code>Runtime</code>, <code>Session</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td colspan="4"><b>Composition</b></td></tr>
+<tr><td>System files: hierarchy, commands, undo, resolve, flatten, library, snap</td><td><code>sim-system</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Blocks: scheduler, clocks, delays, faults, checkpoints, loop detection</td><td><code>sim-core/block</code>, <code>sim-compile/blocks</code></td><td><span class="badge partial">partial</span></td><td>five phenomena scenarios regressed with the 8 October changes; cause not found (section 8)</td></tr>
+<tr><td>FMI 3.0 Co-Simulation import, packer, refusals</td><td><code>sim-fmi</code></td><td><span class="badge done">done</span></td><td>Co-Simulation only; integer and Boolean ports are unitless; native only</td></tr>
+<tr><td>Robots as generated assemblies with a typed boundary</td><td><code>robot_generator</code>, <code>physical::assemble</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Robot models as content-addressed resources; flattened systems serialise and rebuild</td><td><code>sim_core::resources</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Couplers as blocks: Rust closures, Rhai scripts, Python and C over the seam</td><td><code>sim-core/couple</code>, <code>sim-script</code>, <code>sim-couple</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Host blocks (test bench, <code>drive_input</code> teleoperation); setpoint inputs</td><td><code>system_blocks::bind_with</code>, <code>teleop</code></td><td><span class="badge done">done</span></td><td>headless runs refuse a <code>drive_input</code> block by name</td></tr>
+<tr><td>Studies, realtime profiles with measured error, datasheets, part fitting</td><td><code>system_study</code>, <code>realtime_fidelity</code>, <code>bench</code>, <code>part_fit</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>System tests with fingerprinted evidence</td><td><code>system_evidence</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td colspan="4"><b>Viewer</b></td></tr>
+<tr><td>One app, seven modes, switcher, picker, settings, recent documents</td><td><code>sim-spatial/app</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Actions, REST, generated capabilities, headless server</td><td><code>app/actions</code>, <code>rest</code>, <code>sim-api</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Guide commands for agents, one per mode</td><td><code>*_guide</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Jobs (threads and processes only there), workers, cancellation</td><td><code>jobs</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Documents, selection, annotations and threads across modes</td><td><code>document</code>, <code>selection</code>, <code>annotations</code>, <code>sim-annotate</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Inspect, Build, Lessons, Robot, Place, Phenomena modes</td><td><code>sim-spatial</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>CAD mode</td><td><code>sim-spatial/cad</code>, <code>sim-cad</code></td><td><span class="badge done">done</span></td><td>the 8 October features (mesh import, print, experiments, scripts, components) have library tests but no live REST walkthrough yet</td></tr>
+<tr><td>Headless PNG rendering of snapshots</td><td><code>sim-render</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Schematic widget and the egui schematic window</td><td><code>sim-diagram</code>, <code>sim-viewer</code></td><td><span class="badge legacy">legacy</span></td><td>a second native app, launched detached</td></tr>
+<tr><td>Browser workspace (WASD walking, 45 presets, leaderboard)</td><td><code>sim-web</code>, <span class="path">web/viewer</span></td><td><span class="badge partial">partial</span></td><td>no FMUs; a compatibility surface under the rules</td></tr>
+<tr><td>Browser system runner</td><td><span class="path">web/system-builder</span></td><td><span class="badge partial">partial</span></td><td>runs and plots three bundled systems; no editing, no FMUs</td></tr>
+<tr><td colspan="4"><b>Robot pipeline</b></td></tr>
+<tr><td>Projects: steps, follow-ups, chat, lessons, make, REST, guide</td><td><code>sim-spatial/project</code>, <code>robot_project</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>CAD archive, OCCT kernel, 94 operations, sketches, views, export</td><td><code>sim-cad</code></td><td><span class="badge done">done</span></td><td>exercised by the agent-loop example; crate README's "unexecuted" is out of date</td></tr>
+<tr><td>RoboCAD (Python), kept as the behaviour reference</td><td><span class="path">cad/robocad</span></td><td><span class="badge legacy">legacy</span></td><td>by design; the viewer never starts or calls it, and the client and parity harness are deleted</td></tr>
+<tr><td>Physical export with listed assumptions</td><td><code>sim-cad/physical</code></td><td><span class="badge partial">partial</span></td><td>flexible links, link-to-link contact, bearing inference from cylinders</td></tr>
+<tr><td>Acceptance test on the composed system; staleness</td><td><code>acceptance</code></td><td><span class="badge done">done</span></td><td>one robot per system</td></tr>
+<tr><td>Printed-part strength, print registry, coupons</td><td><code>sim-print</code>, <code>part_strength</code></td><td><span class="badge done">done</span></td><td>a driven link that carries a further joint gets both load cases, which overstates</td></tr>
+<tr><td>Design assistant and lesson writer</td><td><code>sim-agent</code>, <code>lesson_draft</code></td><td><span class="badge done">done</span></td><td>needs a Codex login</td></tr>
+<tr><td colspan="4"><b>Hardware</b></td></tr>
+<tr><td>Supervisor protocol, servo bus codecs, PWM dialect</td><td><code>acquisition</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Calibration and bench services; virtual bench</td><td><code>hardware</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Browser calibration and motor-bench pages</td><td><code>serve_*</code>, <span class="path">web/</span></td><td><span class="badge legacy">legacy</span></td><td>still the reference for hardware runs</td></tr>
+<tr><td>Native hardware front end (HW-01–HW-11)</td><td><code>sim-spatial/robot</code></td><td><span class="badge unverified">unverified</span></td><td>no executed pass on the leg since the last changes</td></tr>
+<tr><td>Actuator registry and promotion</td><td><code>actuator_registry</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Characterisation campaign (A–K)</td><td><code>acquisition/characterization</code></td><td><span class="badge unverified">unverified</span></td><td>hardware pass pending</td></tr>
+<tr><td>Python verification harness for HW-01–HW-11</td><td><span class="path">tools/native-calibration</span></td><td><span class="badge unverified">unverified</span></td><td>written, not run</td></tr>
+<tr><td>ESP32-P4 Wi-Fi host, page and tunnel</td><td><span class="path">firmware/robot-link</span></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Arming, recovery, jogging and teaching on the ESP32 page; promotion</td><td><span class="path">firmware/robot-link</span>, <code>gait_pack</code></td><td><span class="badge partial">partial</span></td><td>no taught pose promoted yet</td></tr>
+<tr><td>Gait pack, leg figure and ESP32 gait player</td><td><code>gait_pack</code>, <span class="path">firmware/robot-link</span></td><td><span class="badge unverified">unverified</span></td><td>no gait played on the leg; the worm's servo speed mode untried on the servo</td></tr>
+<tr><td>FPGA calibration image in the dock's flash</td><td><span class="path">firmware/robot-link/fpga</span></td><td><span class="badge partial">partial</span></td><td>cold power-cycle not confirmed</td></tr>
+<tr><td colspan="4"><b>Evaluation and learning</b></td></tr>
+<tr><td>Phenomena suite (35 scenarios)</td><td><code>sim-phenomena</code></td><td><span class="badge partial">partial</span></td><td>28 pass; levitron and geyser fail as before; sample-rate-instability, thermoelastic-damping, cruise-control, leg-on-the-seam and walk-the-plank regressed with the 8 October changes, undiagnosed</td></tr>
+<tr><td>Sessions, environments, experiments, fidelity, forecasting</td><td><code>sim-runtime</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Walking: gaits, steering, leaderboard</td><td><code>gait_lab</code>, <code>walking_task</code>, <span class="path">web/leaderboard</span></td><td><span class="badge partial">partial</span></td><td>no recipe meets all gates</td></tr>
+<tr><td>PPO, distillation, planc</td><td><code>ppo_training</code>, <code>sim_gym</code></td><td><span class="badge done">done</span></td><td>policies experimental</td></tr>
+<tr><td>Contact planning</td><td><code>contact_planning</code></td><td><span class="badge partial">partial</span></td><td>behind solver features</td></tr>
+<tr><td>Controller refinement and FPGA controller fits</td><td><code>controller_refinement</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td colspan="4"><b>Content</b></td></tr>
+<tr><td>Lessons (27), format, checks, quizzes, progress</td><td><code>sim-lesson</code>, <code>lesson</code>, <span class="path">lessons/</span></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Narration</td><td><code>sim-voice</code></td><td><span class="badge done">done</span></td><td>paid API with a ceiling</td></tr>
+<tr><td>Library: parts, datasheets, systems, print registry, models</td><td><span class="path">library/</span></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Virtual camera, reconstruction, places, MCP tools, Place mode</td><td><code>sim-vision</code>, <code>sim-place</code></td><td><span class="badge done">done</span></td><td>no real scan consumed yet; the turntable is built in CAD and simulation, not printed</td></tr>
+<tr><td>Markdown, model context, annotations</td><td><code>sim-markdown</code>, <code>sim-model-context</code>, <code>sim-annotate</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td colspan="4"><b>Tooling</b></td></tr>
+<tr><td>18 command-line tools, 4 applications</td><td><code>crates/*/src/bin</code></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>Python and C controller clients</td><td><span class="path">clients/</span>, <code>sim-couple</code></td><td><span class="badge legacy">legacy</span></td><td>compatibility surface</td></tr>
+<tr><td>Agent tooling: published state, capabilities, claude-pair</td><td><code>*_guide</code>, <span class="path">tools/claude-pair</span></td><td><span class="badge done">done</span></td><td></td></tr>
+<tr><td>CI workflows</td><td><span class="path">.github/workflows</span></td><td><span class="badge partial">partial</span></td><td>seven phenomena scenarios and eleven <code>sim-runtime</code> tests fail (section 10)</td></tr>
+</table>
+
+<h2 id="start">12. Where to start reading</h2>
+<ol>
+  <li><span class="path">AGENTS.md</span>, then <span class="path">docs/architecture/composition.md</span>: the rules and the composition model.</li>
+  <li><span class="path">crates/sim-domain-thermal/src/lib.rs</span> (146 lines): a whole domain, to see what an element is.</li>
+  <li><span class="path">crates/sim-fmi/tests/fmi.rs</span>: a model built by hand, a controller bound, a run, every refusal.</li>
+  <li><span class="path">crates/sim-runtime/examples/composition_demo.rs</span> and the two systems it writes: how files, generators and FMUs meet. Run it with <code>cargo run -p sim-runtime --example composition_demo -- target/composition-demo</code> and open the rover in the viewer.</li>
+  <li><span class="path">crates/sim-spatial/src/app/mod.rs</span> and <span class="path">app/actions.rs</span>: the viewer's spine.</li>
+  <li><span class="path">docs/architecture/native-viewer.md</span>, "Where it is today": the viewer's design record and its caveats.</li>
+  <li><span class="path">docs/hardware-checklist.md</span> and <span class="path">firmware/robot-link/README.md</span> before touching the leg: the rules, then how the ESP32 host arms, teaches and plays gaits on it.</li>
+</ol>
+<p class="kicker" style="margin-top:60px">Written from the source tree at commit 66a712c6 and the working tree of 9 October 2026 (nothing has been committed since 5 October). Counts are taken from the files. Statuses are taken from the code, its tests and the repository's own verification records, not from roadmap files; on 9 October the changed crates' tests, the viewer's library tests and the phenomena suite were run for this map. Where a claim rests on a record rather than a run made for this map, the text says so.</p>
+</main>
+</div>
+<script>
+// A small syntax highlighter: enough for the Rust, Rhai, C, JSON and Markdown excerpts here, no dependencies.
+(function () {
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const RUST_KW = /\b(as|async|await|break|const|continue|crate|dyn|else|enum|extern|false|fn|for|if|impl|in|let|loop|match|mod|move|mut|pub|ref|return|self|Self|static|struct|super|trait|true|type|unsafe|use|where|while)\b/;
+  const C_KW = /\b(auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while|bool|true|false)\b/;
+  const rules = {
+    rust: [
+      ['c-cm', /\/\*[\s\S]*?\*\/|\/\/[^\n]*/],
+      ['c-str', /"(?:[^"\\]|\\.)*"/],
+      ['c-attr', /#\[[^\]]*\]/],
+      ['c-mac', /\b[A-Za-z_][A-Za-z0-9_]*!/],
+      ['c-kw', RUST_KW],
+      ['c-ty', /\b[A-Z][A-Za-z0-9_]*\b/],
+      ['c-fn', /\b[a-z_][a-z0-9_]*(?=\()/],
+      ['c-num', /\b\d[\d_]*(?:\.\d+)?(?:e-?\d+)?\b/],
+    ],
+    rhai: [
+      ['c-cm', /\/\/[^\n]*/],
+      ['c-str', /"(?:[^"\\]|\\.)*"/],
+      ['c-kw', /\b(?:fn|let|const|if|else|for|in|while|loop|return|true|false)\b|#\{/],
+      ['c-fn', /\b[a-z_][a-z0-9_]*(?=\()/],
+      ['c-num', /\b\d+(?:\.\d+)?\b/],
+    ],
+    c: [
+      ['c-cm', /\/\*[\s\S]*?\*\/|\/\/[^\n]*/],
+      ['c-str', /"(?:[^"\\]|\\.)*"/],
+      ['c-attr', /#\s*(?:include|define|ifdef|ifndef|endif|if|else)\b[^\n]*/],
+      ['c-kw', C_KW],
+      ['c-ty', /\b(?:u?int(?:8|16|32|64)_t|size_t|[A-Za-z_]\w*_t)\b/],
+      ['c-fn', /\b[a-z_][a-z0-9_]*(?=\()/],
+      ['c-num', /\b(?:0x[0-9A-Fa-f]+|\d+)\b/],
+    ],
+    json: [
+      ['c-cm', /\/\/[^\n]*/],
+      ['c-str', /"(?:[^"\\]|\\.)*"/],
+      ['c-num', /\b\d+(?:\.\d+)?\b/],
+    ],
+    markdown: [
+      ['c-cm', /#[^\n]*$/m],
+      ['c-kw', /^---$|^```[^\n]*$/m],
+      ['c-ty', /^[a-z_]+(?=:)/m],
+      ['c-str', /\[[^\]]*\]\([^)]*\)/],
+      ['c-num', /\b\d+(?:\.\d+)?\b/],
+    ],
+  };
+  function highlight(code, lang) {
+    const rs = rules[lang] || [];
+    let out = '', i = 0;
+    while (i < code.length) {
+      let best = null;
+      for (const [cls, re] of rs) {
+        const r = new RegExp(re.source, re.flags.includes('g') ? re.flags : re.flags + 'g');
+        r.lastIndex = i;
+        const m = r.exec(code);
+        if (m && (!best || m.index < best.index)) best = { index: m.index, len: m[0].length, cls, text: m[0] };
+        if (m && m.index === i) break;
+      }
+      if (!best) { out += esc(code.slice(i)); break; }
+      out += esc(code.slice(i, best.index));
+      out += '<span class="' + best.cls + '">' + esc(best.text) + '</span>';
+      i = best.index + Math.max(best.len, 1);
+    }
+    return out;
+  }
+  document.querySelectorAll('script.snippet').forEach(s => {
+    const pre = document.createElement('pre');
+    const code = document.createElement('code');
+    let text = s.textContent.replace(/^\n/, '').replace(/\s+$/, '');
+    code.innerHTML = highlight(text, s.dataset.lang);
+    pre.appendChild(code);
+    s.replaceWith(pre);
+  });
+  // Wide tables scroll inside their own box on narrow screens.
+  document.querySelectorAll('main table').forEach(t => {
+    const w = document.createElement('div');
+    w.className = 'table-wrap';
+    t.replaceWith(w);
+    w.appendChild(t);
+  });
+  // Table of contents from the headings.
+  const toc = document.getElementById('toc');
+  document.querySelectorAll('main h2, main h3').forEach(h => {
+    if (!h.id) h.id = h.textContent.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const a = document.createElement('a');
+    a.href = '#' + h.id;
+    a.textContent = h.textContent;
+    if (h.tagName === 'H3') a.className = 'l2';
+    toc.appendChild(a);
+  });
+  window.__highlight = highlight; // for the validation script
+})();
+</script>
+</body>
+</html>

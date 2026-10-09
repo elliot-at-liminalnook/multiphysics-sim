@@ -26,10 +26,12 @@
 //! inside a `spec(` or (in [`C_SPEC_FILES`]) `c(` call.
 
 /// The registries' description tables and the modes' agent guides
-/// (`cad_guide`, `robot_guide`, `project_guide`: answered only over REST), skipped whole
-/// (their text answers REST callers; robot/actions/commands.rs also converts
-/// wire commands, whose errors go back to the REST caller only).
-const DESCRIPTION_FILES: [&str; 5] = ["cad/specs.rs", "robot/actions/commands.rs", "cad/guide.rs", "robot/guide.rs", "project/guide.rs"];
+/// (`cad_guide`, `robot_guide`, `project_guide`, `inspect_guide`,
+/// `lesson_guide`, `place_guide`, `phenomena_guide`: answered only over
+/// REST), skipped whole (their text answers REST callers;
+/// robot/actions/commands.rs also converts wire commands, whose errors go
+/// back to the REST caller only).
+const DESCRIPTION_FILES: [&str; 9] = ["cad/specs.rs", "robot/actions/commands.rs", "cad/guide.rs", "robot/guide.rs", "project/guide.rs", "inspect_guide.rs", "lesson/guide.rs", "place_guide.rs", "phenomena/guide.rs"];
 
 /// (file under src/, snippet of the literal, reason).
 const ALLOWLIST: &[(&str, &str, &str)] = &[
@@ -51,10 +53,11 @@ const ALLOWLIST: &[(&str, &str, &str)] = &[
     // Answers only a REST or system_ui caller receives (the window never shows them).
     ("robot/preset.rs", "robot_state.run.error", "OPENABLE_RULE: the openable_rule field of the preset listing JSON and the robot_presets description"),
     ("robot/graphs.rs", "system_ui graphs:toggle", "the toggle field of robot_state.graphs (REST JSON)"),
-    ("cad/actions.rs", "it shows in cad_state.physical", "cad_physical's Ok message: a click's Ok outcome is dropped (actions::serve answers only REST with it)"),
+    ("cad/actions.rs", "available in cad_state.local_mass", "cad_physical's Ok message: a click's Ok outcome is dropped (actions::serve answers only REST with it)"),
     ("cad/actions.rs", "its outcome shows in cad_state.status", "wait_edit: only a REST caller waits on an edit (the edit continuation is set only when call.rest())"),
     ("cad/actions.rs", "see cad_state.status", "wait_edit: only a REST caller waits on an edit (the edit continuation is set only when call.rest())"),
     ("cad/ui_api.rs", "system_ui activate needs an id", "answer to a system_ui caller"),
+    ("robot/actions/mod.rs", "{what} from REST", "origin label of a remote drive or run press (DriveInput::last_action: where the press came from)"),
     ("cad/ui_api.rs", "system_ui in CAD mode", "answer to a system_ui caller"),
     ("cad/files/jobs.rs", "its outcome shows in cad_state.files.last", "files::jobs::wait: a REST caller's job"),
     ("cad/files/jobs.rs", "see cad_state.files.last", "files::jobs::wait: a REST caller's job"),

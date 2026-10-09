@@ -209,6 +209,7 @@ pub(crate) fn state_json(g: &Gallery) -> Value {
 /// A control's action as its REST command (what `system_ui` lists).
 pub(crate) fn rest_form(action: &PhenomenaAction) -> Value {
     match action {
+        PhenomenaAction::PhenomenaGuide { topic } => json!({"command": "phenomena_guide", "topic": topic}),
         PhenomenaAction::State => json!({"command": "state"}),
         PhenomenaAction::PhenomenaState => json!({"command": "phenomena_state"}),
         PhenomenaAction::PhenomenaSelect { exhibit } => json!({"command": "phenomena_select", "exhibit": match exhibit { ExhibitRef::Number(n) => json!(n), ExhibitRef::Title(t) => json!(t) }}),

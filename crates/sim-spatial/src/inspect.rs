@@ -26,6 +26,11 @@ pub enum InspectAction {
         #[serde(default)]
         options: sim_render::physical::Options,
     },
+    /// How Inspect mode works, for an agent starting cold (`inspect_guide`).
+    InspectGuide {
+        #[serde(default)]
+        topic: Option<String>,
+    },
     State,
     Description,
     Spatial,
@@ -75,6 +80,7 @@ impl actions::Action for InspectAction {
         vec![
             spec("annotations", S, json!({"action":{"operation":"document"}}), "Shared multi-part notes, links, saved views and hover emphasis; same sidecar as schematic. Operations: document, edit, save_view, restore_view, follow_link (reply for a reply's link), select_note, emphasize, reply {note, body, author}, edit_comment {note, comment (the note's id: its text), body}, delete_comment {note, comment}, resolve {note, resolved}"),
             spec("render", S, json!({"options":{"view":"isometric","size":{"width":1280,"height":900},"section":null}}), "Off-screen PNG of captured geometry; x/y/z sections use meters and do not change the viewport"),
+            spec("inspect_guide", &[ViewerMode::Inspect], json!({}), "Start here: how Inspect mode works (concepts, workflows in order, every command with an example, rules) for an agent starting cold; topic narrows it (about, how_to_call, concepts, workflows, commands, rules). Also GET /v1/inspect_guide."),
             spec("state", S, json!({}), "Display, selection, camera and live status"),
             spec("description", S, json!({}), "Shared typed components, ports, nets, observables and validation"),
             spec("spatial", S, json!({}), "Display parts, dimensions, provenance and source identities"),
@@ -183,6 +189,7 @@ fn execute(scene: &mut SpatialScene, camera: &mut Orbit, mut owner: Option<&mut 
         InspectAction::Annotations { .. } | InspectAction::Render { .. } | InspectAction::FlyTo => {
             return Err("render requires the asynchronous image dispatcher".into());
         }
+        InspectAction::InspectGuide { topic } => return crate::inspect_guide::guide(topic.as_deref()),
         InspectAction::State => return Ok(state(scene, camera, &selected(scene, owner.as_deref()))),
         InspectAction::Description => return Ok(json!(scene.description)),
         InspectAction::Spatial => return Ok(json!(scene.spatial)),
@@ -376,6 +383,8 @@ fn publish_json(server: &mut sim_api::Server, scene: &SpatialScene, camera: &Orb
     shown["viewer_mode"] = json!(mode.name());
     server.publish("state", shown);
     server.publish("annotations", json!(scene.note_document()));
+    server.publish_changed("inspect_guide", "1", || crate::inspect_guide::guide(None).unwrap_or_default());
+    server.publish_changed("lesson_guide", "1", || crate::lesson::guide::guide(None).unwrap_or_default());
     server.publish_changed("description", &scene.description.id, || json!(scene.description));
     server.publish_changed("spatial", &scene.description.id, || json!(scene.spatial));
     server.publish("measurements", json!(scene.frame()));

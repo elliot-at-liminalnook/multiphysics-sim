@@ -1,147 +1,124 @@
-//! The one poller of RoboCAD's print jobs (ui/app.py:1144-1162
-//! `_watch_print_job` and :1265-1275 `print_jobs_status`).
+//! The print jobs, run in process (RoboCAD's `print_jobs.py` `PrintJobs`
+//! and its window's `_watch_print_job` / `print_jobs_status`).
 //!
-//! - **Watched jobs**: the jobs this window started (a study start's
-//!   answer, adopted in [`edit_answered`] when its edit is the one
-//!   `studies::send` noted). RoboCAD's window polls each with a timer
-//!   every 250 ms; here one `GET /print/jobs` on a `Pool::Dedicated` job
-//!   is in flight at most, started every [`POLL_INTERVAL`] while a watched
-//!   job runs or the Print jobs section is open. Never a thread or job per
-//!   print job. `GET /print/jobs/{id}`'s `wait` is never honoured by
-//!   RoboCAD (a GET has no body), so nothing waits on it.
-//! - **Status line**, RoboCAD's texts: while running "kind: message (n %)"
-//!   (RoboCAD's Qt hint " — Print ▸ Print jobs… to cancel" is left out:
-//!   the Print jobs section has the Cancel button), written only when it
-//!   changes; once done the kind's done text (and the assembly guide or
-//!   the coupons' protocol folder opened through `jobs::open_local` on a
-//!   `Pool::Io` job), then the document is refetched (`sync::refresh`) and
-//!   the robot reads taken again for the jobs that publish (RoboCAD's
-//!   `_refresh_panels`); failed: "Kind: error" (RoboCAD's warning title
-//!   and text); cancelled: "kind cancelled" (or, when the cancel landed
-//!   after the work had published, that it did, and the document is read
-//!   back); a state RoboCAD never writes is an error naming it, never done.
-//!   A poll error is shown once by name and the poll tried again.
-//! - **Polls are stamped** (a counter moved as each poll starts) and each
-//!   watched job keeps the stamp current when it was adopted: a list from
-//!   a poll that started before the adoption may lack the job, so the job
-//!   counts as gone only when a poll started after its adoption lacks it.
+//! - **Starting** ([`start`]): a study's start (`studies::send`) or REST
+//!   takes the shown snapshot (refused by name when the document moved
+//!   since the form or selection was read, RoboCAD's `check_revision`) and
+//!   runs `sim_cad::print::jobs::run` on one `Pool::Dedicated` job: split,
+//!   analyze, plan, strength_split, assembly or coupons. The stress check
+//!   and planner run in process too (`sim_runtime::print_tools`, the
+//!   `sim-print` binary's library). Never a thread per job outside `jobs`.
+//! - **Progress**: the job's fraction and message, read each frame;
+//!   "kind: message (n %)" on the status line, written only when it changes.
+//! - **Publishing**: a job that changes the document (split, analyze, plan,
+//!   assembly with its exploded view) hands back a staged edit; it lands
+//!   as one undo step through `local::start` once no other edit is in
+//!   flight, and only if the document is still the snapshot the job read
+//!   (otherwise the job fails by name: run it again). The kind's done text
+//!   follows (the assembly guide or the coupons' folder opened through
+//!   `jobs::open_local` on a `Pool::Io` job); failed: "Kind: error";
+//!   cancelled: "kind cancelled".
 //! - **Cancel** (RoboCAD's "Cancel the running jobs?"): asking opens the
-//!   confirmation in the Print jobs section; Yes sends exactly one `DELETE
-//!   /print/jobs/{id}` per running job of the latest list (or only the one
-//!   named) on one Dedicated job, then polls. Before any list was read in
-//!   this generation it is refused by name and a poll started: nothing is
-//!   answered or sent from a list never read.
-//! - **Leaving CAD mode** is refused while a watched job runs and the
-//!   window is connected ([`PrintJobTracker::blockers`]): a self-started
-//!   RoboCAD stops when CAD mode closes, which would kill the job, and an
-//!   attached one would finish unseen. Not connected, nothing can be
-//!   confirmed (no poll can see the job end, and a lost service took its
-//!   jobs with it), so nothing is held: holding would trap the user in CAD
-//!   mode with no way to clear the blocker.
+//!   confirmation in the Print jobs section; Yes cancels each running job
+//!   (it stops at its next check, and never publishes).
+//! - **Leaving CAD mode** is refused while a job runs or waits to publish
+//!   ([`PrintJobTracker::blockers`]): its result would land unseen.
 //!
-//! The tracker lives on the document, so it belongs to one document; a new
-//! connection generation (a restarted service) starts it over.
+//! The tracker lives on the document; a new document generation drops its
+//! jobs (each cancelled as its handle drops).
 use crate::app::actions::Call;
 use crate::app::{ViewerMode, ViewerSet};
-use crate::cad::document::CadDocument;
+use crate::cad::document::{CadDocument, EditDone};
 use crate::jobs::{Job, Pool};
 use bevy::prelude::*;
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{PrintJob, SplitDone};
-use std::path::Path;
-use std::time::{Duration, Instant};
+use crate::cad::types::{PrintJob, SplitDone};
+use std::path::{Path, PathBuf};
+use std::time::Instant;
 
-/// How often RoboCAD's job list is read while a watched job runs or the
-/// section is open.
-pub(super) const POLL_INTERVAL: Duration = Duration::from_millis(500);
-/// How many jobs RoboCAD's "Print jobs…" lists (the last eight).
+/// How many jobs "Print jobs…" lists (the last eight).
 pub(super) const SHOWN: usize = 8;
-/// Cancel before any list was read in this generation.
-pub(super) const UNREAD: &str = "RoboCAD's print jobs have not been read yet; try again in a moment";
+/// How many finished jobs are kept for the list and `cad_state`.
+const KEPT: usize = 32;
 
-/// A job this window started, with the poll stamp current at its adoption.
-#[derive(Clone, Debug)]
-pub(super) struct Watched {
-    pub(super) job: PrintJob,
-    /// `PrintJobTracker::polls` when it was adopted: only a list from a
-    /// later-started poll can say it is gone.
-    adopted: u64,
+/// `sim-print analyze|plan` in this process (`sim_runtime::print_tools`).
+struct InProcess;
+impl sim_cad::print::Runner for InProcess {
+    fn run(&self, command: &str, study: &Path, out: &Path, progress: &dyn Fn(f64, &str) -> bool) -> Result<Value, String> {
+        sim_runtime::print_tools::run(command, study, Some(out), &mut |f, m| progress(f, m))
+    }
 }
 
-/// RoboCAD's print jobs as last polled, and the poll in flight.
+/// What a finished job hands back: its result, its folder, and the staged
+/// edit to publish with its label and the snapshot it was made against.
+struct Finished {
+    result: Value,
+    out_dir: Option<PathBuf>,
+    edit: Option<(String, sim_cad::Edit)>,
+}
+
+/// A job in flight.
+struct Running {
+    id: String,
+    work: Job<Finished>,
+    /// The archive identity of the snapshot it read.
+    identity: String,
+    since: Instant,
+}
+
+/// A finished job's edit waiting for the edit slot.
+struct Publish {
+    id: String,
+    label: String,
+    edit: sim_cad::Edit,
+    identity: String,
+    result: Value,
+}
+
+/// The print jobs of this document: the list (oldest first), the work in
+/// flight and the edits waiting to publish.
 #[derive(Default)]
 pub struct PrintJobTracker {
-    /// The connection generation the lists belong to.
+    /// The document generation the jobs belong to.
     generation: u64,
-    /// Whether the window was connected at the last tick (blockers hold only then).
-    connected: bool,
-    /// The jobs this window started that have not ended, as last polled.
-    pub(super) watched: Vec<Watched>,
-    /// `GET /print/jobs` as last polled, oldest first.
+    /// Every job this document ran, oldest first (the last [`KEPT`]).
     pub(super) jobs: Vec<PrintJob>,
-    /// A list has landed in this generation.
-    pub(super) listed: bool,
-    /// The poll in flight (at most one), with its stamp.
-    poll: Option<(u64, Job<Vec<PrintJob>>)>,
-    /// Polls started in this generation (the stamp of the latest).
-    polls: u64,
-    /// When the last poll started; None: poll at the next tick.
-    polled_at: Option<Instant>,
-    /// One poll is wanted even though the section is closed and nothing is
-    /// watched (a cancel before any list was read).
-    once: bool,
+    running: Vec<Running>,
+    publish: Vec<Publish>,
+    /// Jobs started (ids are `p<n>`).
+    started: u64,
     /// The Print jobs section is shown.
     pub(super) open: bool,
     /// "Cancel the running jobs?" is being asked.
     pub(super) confirming: bool,
-    /// The cancel in flight (its errors, naming each job).
-    cancel: Option<Job<Vec<String>>>,
-    /// The last poll's error (None once one succeeds).
-    pub(super) error: Option<String>,
     /// The progress line this tracker last wrote.
     shown: Option<String>,
     /// Guides and folders being opened (`Pool::Io`).
     opens: Vec<Job<()>>,
+    /// Where job folders go; None: `sim_cad::print::runs_dir()`.
+    pub(super) runs: Option<PathBuf>,
 }
 
 impl PrintJobTracker {
-    /// Why leaving CAD mode would drop a job this window started: one line
-    /// per running watched job, while connected.
+    /// Why leaving CAD mode would drop a job: one line per running or publishing job.
     pub(crate) fn blockers(&self) -> Vec<String> {
-        if !self.connected {
-            return Vec::new();
-        }
-        self.watched.iter().map(|w| &w.job).filter(|j| j.running()).map(|j| format!("a print job is running in RoboCAD: {} ({} %); wait for it, or cancel it in the Print jobs section", j.kind, percent(j))).collect()
+        self.jobs.iter().filter(|j| j.running()).map(|j| format!("a print job is running: {} ({} %); wait for it, or cancel it in the Print jobs section", j.kind, percent(j))).collect()
     }
-    /// Poll at the next tick.
-    pub(super) fn request_poll(&mut self) {
-        self.polled_at = None;
-    }
-    /// A poll is in flight.
-    #[cfg(test)]
-    pub(super) fn polling(&self) -> bool {
-        self.poll.is_some()
-    }
-    /// The running jobs' ids (the last list's, then watched ones it lacks),
-    /// or only `job` when it is one of them.
+    /// The running jobs' ids, or only `job` when it is one of them.
     pub(super) fn running(&self, job: Option<&str>) -> Vec<String> {
-        let mut ids: Vec<String> = Vec::new();
-        for j in self.jobs.iter().chain(self.watched.iter().map(|w| &w.job)) {
-            if j.running() && !ids.contains(&j.id) && job.is_none_or(|id| id == j.id) {
-                ids.push(j.id.clone());
-            }
-        }
-        ids
+        self.jobs.iter().filter(|j| j.running() && job.is_none_or(|id| id == j.id)).map(|j| j.id.clone()).collect()
     }
     /// The last [`SHOWN`] jobs as RoboCAD's lines.
     pub(super) fn lines(&self) -> Vec<String> {
         self.jobs[self.jobs.len().saturating_sub(SHOWN)..].iter().map(line).collect()
     }
+    fn job_mut(&mut self, id: &str) -> Option<&mut PrintJob> {
+        self.jobs.iter_mut().find(|j| j.id == id)
+    }
 }
 
-/// Python's `f"{fraction * 100:.0f}"`: both format the exact binary value
-/// (only an exact half, such as 0.125 × 100, is a tie).
+/// Python's `f"{fraction * 100:.0f}"`.
 pub(super) fn percent(j: &PrintJob) -> String {
     format!("{:.0}", j.fraction * 100.0)
 }
@@ -171,7 +148,7 @@ pub(super) fn done_text(j: &PrintJob) -> (String, Option<String>) {
     match j.kind.as_str() {
         "split" => match serde_json::from_value::<SplitDone>(r.clone()) {
             Ok(done) => (done.status(), None),
-            Err(e) => (format!("split: done (RoboCAD's answer could not be read: {e})"), None),
+            Err(e) => (format!("split: done (its answer could not be read: {e})"), None),
         },
         "analyze" => {
             let parts = r["parts"].as_array().map_or(&[][..], Vec::as_slice);
@@ -182,7 +159,7 @@ pub(super) fn done_text(j: &PrintJob) -> (String, Option<String>) {
             });
             match worst {
                 Some((sf, p)) => (format!("strength: least safety factor {sf:.2} on {} ({}); Print ▸ Strength overlay shows where", s(&p["name"]), s(&p["mode"])), None),
-                None => ("strength: done; RoboCAD's answer names no part with a safety factor".to_string(), None),
+                None => ("strength: done; no part has a safety factor".to_string(), None),
             }
         }
         "plan" => {
@@ -203,55 +180,70 @@ pub(super) fn done_text(j: &PrintJob) -> (String, Option<String>) {
     }
 }
 
-/// Whether a done job published a RoboCAD undo step (print_jobs.py
-/// `_publish`): split, analyze and plan always, assembly with its exploded view.
+/// Whether a job kind publishes an undo step when done: split, analyze and
+/// plan always, assembly with its exploded view.
 pub(super) fn publishes(j: &PrintJob) -> bool {
     matches!(j.kind.as_str(), "split" | "analyze" | "plan") || (j.kind == "assembly" && j.result.get("exploded").is_some())
 }
 
-/// `sync::finish_edit`: edit `seq` answered (`result`: RoboCAD's answer
-/// when it succeeded). If it is the print start `studies::send` noted, the
-/// job RoboCAD answered is watched from now on, and polled at once.
-pub(super) fn edit_answered(doc: &mut CadDocument, seq: u64, result: Option<&Value>) {
-    let generation = doc.generation;
-    let Some(started) = doc.print.studies.started.take() else { return };
-    if started.seq != seq || started.generation != generation {
-        return;
-    }
-    let Some(Ok(mut job)) = result.map(|v| serde_json::from_value::<PrintJob>(v.clone())) else { return };
-    if job.id.is_empty() {
-        return;
-    }
-    if job.kind.is_empty() {
-        job.kind = started.kind.to_string();
-    }
-    let t = &mut doc.print.jobs;
-    if t.generation != generation {
-        reset(t, generation);
-    }
-    t.watched.retain(|w| w.job.id != job.id);
-    // A poll in flight now started before this adoption: its list may lack the job.
-    let adopted = t.polls;
-    t.watched.push(Watched { job, adopted });
-    t.request_poll();
-    doc.touch();
+/// A new generation: every job of the old one is dropped (cancelled).
+fn reset(t: &mut PrintJobTracker, generation: u64) {
+    let (open, runs) = (t.open, t.runs.clone());
+    let old = std::mem::take(t);
+    crate::jobs::drop_off_thread(old.running.into_iter().map(|r| r.work).collect::<Vec<_>>(), "superseded print jobs");
+    *t = PrintJobTracker { generation, open, runs, ..PrintJobTracker::default() };
 }
 
-/// A new connection generation: every job of the old one is gone with it.
-fn reset(t: &mut PrintJobTracker, generation: u64) {
-    let open = t.open;
-    *t = PrintJobTracker { generation, open, ..PrintJobTracker::default() };
+/// Start print job `kind` with `body` (the REST body) on the shown
+/// snapshot, read at `revision`: the job as it is listed.
+pub(super) fn start(doc: &mut CadDocument, kind: &'static str, body: Value, revision: u64, message: String) -> Result<PrintJob, String> {
+    if !sim_cad::print::jobs::KINDS.contains(&kind) {
+        return Err(format!("{kind} is not a print job ({})", sim_cad::print::jobs::KINDS.join(", ")));
+    }
+    let snapshot = doc.local.clone().ok_or("no CAD document is open")?;
+    if revision != doc.shown_revision() {
+        return Err(format!("the document moved to revision {} since this was read at revision {revision}; read it again", doc.shown_revision()));
+    }
+    if doc.print.jobs.generation != doc.generation {
+        reset(&mut doc.print.jobs, doc.generation);
+    }
+    let t = &mut doc.print.jobs;
+    t.started += 1;
+    let id = format!("p{}", t.started);
+    let runs = t.runs.clone().unwrap_or_else(sim_cad::print::runs_dir);
+    let identity = snapshot.archive.identity().to_string();
+    let label = format!("print {kind} {id}");
+    let work = Job::spawn(Pool::Dedicated, doc.generation, label, move |ctx| {
+        let cancelled = || ctx.cancelled();
+        let say = |f: f64, m: &str| {
+            if f >= 0.0 {
+                ctx.fraction(f.clamp(0.0, 1.0));
+            }
+            ctx.message(m);
+            !ctx.cancelled()
+        };
+        let env = sim_cad::print::jobs::Env { doc: &snapshot.archive, revision, runs, runner: &InProcess, progress: &say, cancelled: &cancelled };
+        let out = sim_cad::print::jobs::run(kind, &body, &env)?;
+        if ctx.cancelled() {
+            return Err("cancelled before publishing".into());
+        }
+        Ok(Finished { result: out.result, out_dir: out.out_dir, edit: out.edit })
+    });
+    let job = PrintJob { id: id.clone(), kind: kind.to_string(), state: "running".into(), message: message.clone(), ..PrintJob::default() };
+    t.jobs.push(job.clone());
+    t.running.push(Running { id, work, identity, since: Instant::now() });
+    t.shown = None;
+    doc.show(Ok(message));
+    Ok(job)
 }
 
 /// `cad_print {op: cancel}`: `confirm` None asks (the section shows the
-/// question), false closes the question (saying so when none was open),
-/// true sends one `DELETE /print/jobs/{id}` per running job of the latest
-/// list (or only `job`) on one job, then polls. Refused with [`UNREAD`],
-/// and a poll started, while no list was read in this generation.
+/// question), false closes the question, true cancels each running job
+/// (or only `job`).
 pub(super) fn cancel(doc: &mut CadDocument, _call: &mut Call, job: Option<&str>, confirm: Option<bool>) -> Outcome {
     let done = Outcome::Done;
+    let t = &mut doc.print.jobs;
     if confirm == Some(false) {
-        let t = &mut doc.print.jobs;
         if !t.confirming {
             return done(Ok(json!({"confirming": false, "message": "There was no cancel confirmation open; nothing changed."})));
         }
@@ -259,119 +251,40 @@ pub(super) fn cancel(doc: &mut CadDocument, _call: &mut Call, job: Option<&str>,
         doc.touch();
         return done(Ok(json!({"confirming": false, "message": "The running print jobs were left running."})));
     }
-    // A new generation not ticked yet: its lists are gone (`tick` would
-    // reset them too, and with them the poll asked for below).
-    let generation = doc.generation;
-    if doc.print.jobs.generation != generation {
-        reset(&mut doc.print.jobs, generation);
-    }
-    // Never read in this generation: no answer or DELETE from a list never
-    // read; ask RoboCAD once (even with the section closed) and refuse.
-    // Otherwise the latest list (and the watched jobs) decide.
-    if !doc.print.jobs.listed {
-        if !doc.connected() || doc.client.is_none() {
-            return done(Err(super::PRINT_UNPORTED.to_string()));
-        }
-        let t = &mut doc.print.jobs;
-        t.once = true;
-        t.request_poll();
-        doc.touch();
-        return done(Err(UNREAD.to_string()));
-    }
-    let ids = doc.print.jobs.running(job);
+    let ids = t.running(job);
     if ids.is_empty() {
         return done(Err(match job {
-            Some(id) => format!("print job {id} is not running (as RoboCAD last listed its jobs)"),
+            Some(id) => format!("print job {id} is not running"),
             None => "No print jobs are running".to_string(),
         }));
     }
     if confirm.is_none() {
-        let t = &mut doc.print.jobs;
         t.confirming = true;
         t.open = true;
-        t.request_poll();
         doc.touch();
         return done(Ok(json!({"confirming": true, "running": ids, "message": "Cancel the running jobs?"})));
     }
-    if doc.print.jobs.cancel.is_some() {
-        return done(Err("the running print jobs are already being cancelled".into()));
+    for r in t.running.iter().filter(|r| ids.contains(&r.id)) {
+        r.work.cancel();
     }
-    let Some(client) = doc.client.clone().filter(|_| doc.connected()) else {
-        return done(Err(super::PRINT_UNPORTED.to_string()));
-    };
-    let sent = ids.clone();
-    let job = Job::spawn(Pool::Dedicated, doc.generation, "cad print cancel", move |_| {
-        // Exactly one DELETE per job; an error names its job and the rest still go.
-        Ok(sent.iter().filter_map(|id| client.cancel_print_job(id).err().map(|e| format!("{id}: {e}"))).collect::<Vec<String>>())
-    });
-    let t = &mut doc.print.jobs;
-    t.cancel = Some(job);
+    // A finished job waiting to publish never publishes once cancelled.
+    let dropped: Vec<String> = t.publish.iter().filter(|p| ids.contains(&p.id)).map(|p| p.id.clone()).collect();
+    t.publish.retain(|p| !ids.contains(&p.id));
+    for id in &dropped {
+        if let Some(j) = t.job_mut(id) {
+            j.state = "cancelled".into();
+        }
+    }
     t.confirming = false;
     let n = ids.len();
     doc.show(Ok(format!("Cancelling {n} print job(s)…")));
     done(Ok(json!({"cancelling": ids})))
 }
 
-/// The landed list of poll `stamp`: the watched jobs' progress or end on
-/// the status line.
-fn land(doc: &mut CadDocument, stamp: u64, result: Result<Vec<PrintJob>, String>) {
-    let list = match result {
-        Ok(list) => list,
-        Err(e) => {
-            let first = doc.print.jobs.error.as_deref() != Some(e.as_str());
-            doc.print.jobs.error = Some(e.clone());
-            if first {
-                doc.show(Err(format!("RoboCAD's print jobs could not be read: {e}; trying again")));
-            }
-            return;
-        }
-    };
-    let t = &mut doc.print.jobs;
-    let changed = t.jobs != list || t.error.is_some() || !t.listed;
-    t.error = None;
-    t.listed = true;
-    // A landed list answers a one-shot request made while this poll was in flight.
-    t.once = false;
-    t.jobs = list;
-    let mut running_line = None;
-    let mut ended: Vec<Result<PrintJob, PrintJob>> = Vec::new();
-    for w in std::mem::take(&mut t.watched) {
-        match t.jobs.iter().find(|j| j.id == w.job.id) {
-            Some(j) if j.running() => {
-                running_line = Some(progress(j));
-                t.watched.push(Watched { job: j.clone(), adopted: w.adopted });
-            }
-            Some(j) => ended.push(Ok(j.clone())),
-            // Polled before the adoption: this list cannot know the job yet.
-            None if stamp <= w.adopted => t.watched.push(w),
-            // RoboCAD no longer lists it.
-            None => ended.push(Err(w.job)),
-        }
-    }
-    if let Some(text) = running_line
-        && t.shown.as_ref() != Some(&text)
-    {
-        t.shown = Some(text.clone());
-        doc.show(Ok(text));
-    }
-    for j in ended {
-        finish(doc, j);
-    }
-    if changed {
-        doc.touch();
-    }
-}
-
-/// A watched job ended (`Err`: RoboCAD no longer lists it).
-fn finish(doc: &mut CadDocument, job: Result<PrintJob, PrintJob>) {
+/// A job ended: its state, the status line, the guide or folder opened.
+fn ended(doc: &mut CadDocument, id: &str) {
     doc.print.jobs.shown = None;
-    let j = match job {
-        Ok(j) => j,
-        Err(w) => {
-            doc.show(Err(format!("{} {}: RoboCAD no longer lists this print job", w.kind, w.id)));
-            return;
-        }
-    };
+    let Some(j) = doc.print.jobs.jobs.iter().find(|j| j.id == id).cloned() else { return };
     match j.state.as_str() {
         "done" => {
             let (text, open) = done_text(&j);
@@ -381,58 +294,59 @@ fn finish(doc: &mut CadDocument, job: Result<PrintJob, PrintJob>) {
                 doc.print.jobs.opens.push(job);
             }
             if publishes(&j) {
-                // A publish is an edit (one RoboCAD undo step): the saved
-                // state is unknown until the refetch answers, so
-                // `switch_blockers` never sees a stale "saved" in the frame
-                // this job's own blocker goes away.
-                crate::cad::sync::refresh(doc, true);
-                // The robot reads again: the stress paint is keyed by each
-                // node's results (`GET /results/nodes`), so a finished
-                // analyze recolours from the new read without an explicit clear.
+                // The stress paint is keyed by each node's results: the robot reads again.
                 doc.robot.data.invalidate();
             }
         }
         "failed" => doc.show(Err(format!("{}: {}", capitalize(&j.kind), j.error.as_deref().filter(|e| !e.is_empty()).unwrap_or("failed")))),
-        "cancelled" => match published_revision(&j) {
-            // The cancel landed after the work published (print_jobs.py
-            // `_start` marks it cancelled once the work returned): the
-            // document did change, so it is said and read back.
-            Some(revision) => {
-                doc.show(Ok(format!("{} cancelled after RoboCAD had already published its result as one undo step (revision {revision}); Ctrl+Z undoes it", j.kind)));
-                crate::cad::sync::refresh(doc, true);
-                doc.robot.data.invalidate();
+        _ => doc.show(Ok(format!("{} cancelled", j.kind))),
+    }
+}
+
+/// Publish the edits waiting for the edit slot (one per frame at most).
+fn publish(doc: &mut CadDocument) {
+    if doc.print.jobs.publish.is_empty() || doc.edit.is_some() {
+        return;
+    }
+    let p = doc.print.jobs.publish.remove(0);
+    let current = doc.local.as_ref().map(|l| l.archive.identity().to_string());
+    let outcome = if current.as_deref() != Some(p.identity.as_str()) {
+        Err("the document changed while the job ran; its result was not published: run it again".to_string())
+    } else {
+        let message = format!("{} published", p.label);
+        let edit = p.edit;
+        let result = p.result.clone();
+        super::super::local::start(doc, p.label.clone(), false, false, move |ws| {
+            ws.edit = edit;
+            Ok(EditDone { message, result })
+        })
+        .map(|_| ())
+    };
+    let t = &mut doc.print.jobs;
+    if let Some(j) = t.job_mut(&p.id) {
+        match outcome {
+            Ok(()) => {
+                j.state = "done".into();
+                j.fraction = 1.0;
+                j.result = p.result;
             }
-            None => doc.show(Ok(format!("{} cancelled", j.kind))),
-        },
-        // Not one of RoboCAD's states (queued | running | done | failed |
-        // cancelled): never read as done or cancelled.
-        other => doc.show(Err(format!("{} {}: RoboCAD reports the state {other:?}, which this window does not know; its result is not read", j.kind, j.id))),
+            Err(e) => {
+                j.state = "failed".into();
+                j.error = Some(e);
+            }
+        }
     }
+    ended(doc, &p.id);
 }
 
-/// The revision a cancelled job published at, when its work had already
-/// returned a publishing result (split, analyze, plan, an assembly with
-/// its exploded view: each answers the `revision` `_publish` returned).
-pub(super) fn published_revision(j: &PrintJob) -> Option<u64> {
-    if !publishes(j) {
-        return None;
-    }
-    j.result.get("revision").and_then(Value::as_u64)
-}
-
-/// One frame: a new generation starts over; landed opens, cancels and
-/// polls are applied; a poll is started when due.
+/// One frame: a new generation starts over; progress is read, ended jobs
+/// land, waiting edits publish.
 pub(super) fn tick(doc: &mut CadDocument) {
     let generation = doc.generation;
-    let connected = doc.connected();
     let mut statuses: Vec<Result<String, String>> = Vec::new();
     let t = &mut doc.print.jobs;
-    let mut touched = t.connected != connected;
-    t.connected = connected;
     if t.generation != generation {
         reset(t, generation);
-        t.connected = connected;
-        touched = true;
     }
     t.opens.retain(|j| match j.poll() {
         None => true,
@@ -442,38 +356,87 @@ pub(super) fn tick(doc: &mut CadDocument) {
             false
         }
     });
-    let cancelled = t.cancel.as_ref().and_then(Job::poll);
-    if let Some(result) = cancelled {
-        t.cancel = None;
-        t.request_poll();
-        touched = true;
+    let mut touched = false;
+    let mut line_now = None;
+    let mut finished: Vec<String> = Vec::new();
+    let mut i = 0;
+    while i < t.running.len() {
+        let r = &t.running[i];
+        let p = r.work.progress();
+        let landed = r.work.poll();
+        let id = r.id.clone();
+        let identity = r.identity.clone();
+        let Some(j) = t.jobs.iter_mut().find(|j| j.id == id) else {
+            t.running.remove(i);
+            continue;
+        };
+        if let Some(f) = p.fraction
+            && (f - j.fraction).abs() > 1e-9
+        {
+            j.fraction = f;
+            touched = true;
+        }
+        if !p.message.is_empty() && p.message != j.message {
+            j.message = p.message.clone();
+            touched = true;
+        }
+        let Some(result) = landed else {
+            line_now = Some(progress(j));
+            i += 1;
+            continue;
+        };
+        let cancelled = matches!(&result, Err(e) if e.contains("cancelled"));
+        j.seconds = t.running[i].since.elapsed().as_secs_f64();
         match result {
-            Ok(errors) if errors.is_empty() => {}
-            Ok(errors) => statuses.push(Err(format!("RoboCAD did not cancel every print job: {}", errors.join("; ")))),
-            Err(e) => statuses.push(Err(e)),
+            Ok(f) => {
+                j.out_dir = f.out_dir.map(|p| p.display().to_string());
+                match f.edit {
+                    Some((label, edit)) => {
+                        j.message = "publishing".into();
+                        t.publish.push(Publish { id: id.clone(), label, edit, identity, result: f.result });
+                    }
+                    None => {
+                        j.state = "done".into();
+                        j.fraction = 1.0;
+                        j.result = f.result;
+                        finished.push(id.clone());
+                    }
+                }
+            }
+            Err(e) if cancelled => {
+                j.state = "cancelled".into();
+                j.error = Some(e);
+                finished.push(id.clone());
+            }
+            Err(e) => {
+                j.state = "failed".into();
+                j.error = Some(e);
+                finished.push(id.clone());
+            }
+        }
+        t.running.remove(i);
+        touched = true;
+    }
+    if t.jobs.len() > KEPT {
+        let keep_from = t.jobs.len() - KEPT;
+        let (old, _) = t.jobs.split_at(keep_from);
+        if old.iter().all(|j| !j.running()) {
+            t.jobs.drain(..keep_from);
         }
     }
-    let landed = t.poll.as_ref().and_then(|(stamp, j)| j.poll().map(|r| (*stamp, j.generation(), r)));
+    if let Some(text) = line_now
+        && t.shown.as_ref() != Some(&text)
+    {
+        t.shown = Some(text.clone());
+        statuses.push(Ok(text));
+    }
     for status in statuses {
         doc.show(status);
     }
-    if let Some((stamp, g, result)) = landed {
-        doc.print.jobs.poll = None;
-        // `land` touches the document only when what it shows changed.
-        if g == generation {
-            land(doc, stamp, result);
-        }
+    for id in finished {
+        ended(doc, &id);
     }
-    let t = &doc.print.jobs;
-    let due = t.poll.is_none() && (t.open || t.once || !t.watched.is_empty()) && t.polled_at.is_none_or(|at| at.elapsed() >= POLL_INTERVAL);
-    if due && let Some(client) = doc.client.clone().filter(|_| connected) {
-        let job = Job::spawn(Pool::Dedicated, generation, "cad print jobs", move |_| client.print_jobs().map_err(|e| e.to_string()));
-        let t = &mut doc.print.jobs;
-        t.polls += 1;
-        t.poll = Some((t.polls, job));
-        t.once = false;
-        t.polled_at = Some(Instant::now());
-    }
+    publish(doc);
     if touched {
         doc.touch();
     }
@@ -482,17 +445,20 @@ pub(super) fn tick(doc: &mut CadDocument) {
 /// `cad_state.print.jobs`.
 pub(super) fn state_json(doc: &CadDocument) -> Value {
     let t = &doc.print.jobs;
-    let job = |j: &PrintJob| json!({"id": j.id, "kind": j.kind, "state": j.state, "fraction": j.fraction, "message": j.message, "error": j.error, "out_dir": j.out_dir, "seconds": j.seconds, "line": line(j)});
+    let job = |j: &PrintJob| json!({"id": j.id, "kind": j.kind, "state": j.state, "fraction": j.fraction, "message": j.message, "error": j.error, "out_dir": j.out_dir, "result": j.result, "line": line(j)});
     json!({
-        "watched": t.watched.iter().map(|w| job(&w.job)).collect::<Vec<_>>(),
         "jobs": t.jobs[t.jobs.len().saturating_sub(SHOWN)..].iter().map(job).collect::<Vec<_>>(),
-        "polling": t.poll.is_some(),
-        "interval_ms": POLL_INTERVAL.as_millis() as u64,
+        "running": t.running(None),
+        "publishing": t.publish.iter().map(|p| p.id.clone()).collect::<Vec<_>>(),
         "confirming": t.confirming,
-        "cancelling": t.cancel.is_some(),
-        "error": t.error,
         "blockers": t.blockers(),
     })
+}
+
+/// `cad_print {op: job, job}`: one job as listed (its result once done).
+pub(super) fn job_json(doc: &CadDocument, id: &str) -> Result<Value, String> {
+    let j = doc.print.jobs.jobs.iter().find(|j| j.id == id).ok_or_else(|| format!("no print job {id}"))?;
+    serde_json::to_value(j).map_err(|e| e.to_string())
 }
 
 /// JobResults: [`tick`].
@@ -501,8 +467,7 @@ fn poll(doc: Option<ResMut<CadDocument>>) {
     tick(&mut doc);
 }
 
-/// CadCorePlugin: the poller (JobResults, after `sync::receive`, which
-/// adopts a started job through [`edit_answered`]).
+/// CadCorePlugin: the tracker (JobResults, after `sync::receive`).
 pub(super) fn build_core(app: &mut App) {
     app.add_systems(Update, poll.after(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)));
 }

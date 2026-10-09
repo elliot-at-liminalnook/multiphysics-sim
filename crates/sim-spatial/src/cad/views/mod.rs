@@ -44,14 +44,14 @@ use crate::cad::display::CadDisplay;
 use crate::cad::document::{CadDocument, EditDone};
 use crate::cad::sync::value;
 use crate::camera::{CameraAction, Orbit};
-use crate::jobs::{Job, Pool};
+use crate::jobs::Job;
 use crate::ui_kit::text::TextDraft;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_api::Outcome;
 use crate::cad::selection::Shared;
-use sim_runtime::cad_client::{SavedView, ViewState, check_view_name};
+use crate::cad::types::{SavedView, ViewState, check_view_name};
 
 /// (document generation, RoboCAD's shown revision): what a list was read at.
 type Key = (u64, u64);
@@ -586,9 +586,6 @@ pub(super) fn sync(doc: Option<Res<CadDocument>>, views: Option<ResMut<CadViews>
         }
         return;
     }
-    let Some(client) = doc.client.clone() else { return };
-    let job = Job::spawn(Pool::Dedicated, doc.generation, "cad-saved-views", move |_| client.views().map_err(|e| e.to_string()));
-    views.job = Some((now, job));
 }
 
 /// SimSync (after `CameraSet::Place`): the CAD camera as a saved view

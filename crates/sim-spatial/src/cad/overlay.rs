@@ -45,7 +45,7 @@ use crate::ui_kit::{ACCENT, BAR, BORDER, Kit, LEFT_WIDTH, Look, SURFACE, TOPBAR,
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
-use sim_runtime::cad_client::{MeshData, SelectionItem};
+use crate::cad::types::{MeshData, SelectionItem};
 use std::collections::HashMap;
 use std::sync::Arc;
 

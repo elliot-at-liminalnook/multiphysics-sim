@@ -41,7 +41,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{SectionCurves, SectionQuery};
+use crate::cad::types::{SectionCurves, SectionQuery};
 use std::sync::Arc;
 
 mod draw;
@@ -572,7 +572,7 @@ pub(in crate::cad) fn controls(cx: &Cx) -> Vec<(String, String, CadAction, Resul
 /// The controls for `doc` and `selection` (the shared selection's CAD
 /// items), the display state (None: no 3D view) and what `cad_section`
 /// reads (`context`): the toolbar's buttons write the same actions.
-pub(in crate::cad) fn controls_of(doc: &crate::cad::document::CadDocument, selection: &[sim_runtime::cad_client::SelectionItem], shown: Option<&CadDisplay>, context: &SectionContext) -> Vec<(String, String, CadAction, Result<(), String>)> {
+pub(in crate::cad) fn controls_of(doc: &crate::cad::document::CadDocument, selection: &[crate::cad::types::SelectionItem], shown: Option<&CadDisplay>, context: &SectionContext) -> Vec<(String, String, CadAction, Result<(), String>)> {
     let ready: Result<(), String> = if shown.is_some() { Ok(()) } else { Err("CAD mode's display state belongs to its 3D view, and this window has none".into()) };
     let display = |args: DisplayArgs| CadAction::CadDisplay(args);
     let mut out = Vec::new();

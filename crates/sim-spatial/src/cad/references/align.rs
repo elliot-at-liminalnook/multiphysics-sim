@@ -31,7 +31,7 @@ use crate::cad::document::CadDocument;
 use bevy::math::{DMat3, DQuat, DVec3};
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{ImagePlacement, PlaneFrame};
+use crate::cad::types::{ImagePlacement, PlaneFrame};
 
 /// RoboCAD's camera pitch limit (degrees).
 const PITCH_LIMIT: f64 = 89.5;

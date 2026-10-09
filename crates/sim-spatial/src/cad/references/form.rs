@@ -20,7 +20,7 @@ use crate::cad::document::CadDocument;
 use crate::cad::sketch::{BasePlane, CadActivePlane};
 use crate::ui_kit::form::{FieldKind, FieldValue, Unit, evaluate};
 use serde_json::{Value, json};
-use sim_runtime::cad_client::{ImagePlacement, ReferenceUpdate};
+use crate::cad::types::{ImagePlacement, ReferenceUpdate};
 
 /// One row: label, unit suffix, kind (with RoboCAD's range) and decimals.
 pub(crate) struct Row {

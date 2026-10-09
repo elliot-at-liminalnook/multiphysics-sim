@@ -2,7 +2,7 @@
 //! apply through CadAction; no remote selection reads, writes or echo exists.
 mod shared;
 
-pub(crate) use shared::{CadItems, CadSelection, Shared, View, cad_id, ensure_registered, follow_tree, reopen, source};
+pub(crate) use shared::{CadItems, CadSelection, Shared, View, cad_id, ensure_registered, follow_tree, reopen};
 #[cfg(test)]
 pub(crate) use shared::Fixture;
 
@@ -17,7 +17,7 @@ use bevy::math::DVec3;
 use bevy::prelude::*;
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{MESH_TOLERANCE, MeshData, SelectionItem};
+use crate::cad::types::{MESH_TOLERANCE, MeshData, SelectionItem};
 use std::collections::HashMap;
 
 /// The kinds a selection item may have: RoboCAD's selection modes, and

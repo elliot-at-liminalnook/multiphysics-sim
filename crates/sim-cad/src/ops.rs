@@ -327,7 +327,7 @@ pub const METHODS: &[&str] = &[
     "boolean", "region", "cut", "shell", "thicken", "fillet", "fillet_chordal", "fillet_all", "full_round", "remove_fillets", "chamfer",
     "transform", "mirror", "instance", "make_unique", "array_rect", "array_radial", "array_curve", "join", "unjoin", "dissolve", "extract_components", "project_curve", "silhouette",
     "set_control_points", "raise_degree", "rebuild_face", "plane_from_face", "plane_three_points", "plane_two_points_camera", "plane_midplane", "add_measurement",
-    "clearance", "fastener_hole",
+    "clearance", "fastener_hole", "print_split",
     "add_joint", "set_joint", "connect_fixed", "add_motor", "mount_motor", "attach_motor", "set_ground", "infer_joints", "add_sensor", "add_cable",
     "set_robot_setting", "set_battery", "set_control", "set_uncertainty", "save_motion", "delete_motion", "set_material_props", "set_joint_physics",
 ];
@@ -559,6 +559,23 @@ pub fn run(cx: &mut Ctx, name: &str, args: &[Value], kwargs: &Map<String, Value>
             let f = cx.face(a.need("face")?, id)?;
             let d = a.num("distance")?;
             cx.edit_body(id, |_, b| kernel::op1(Op::PushPull, &[&b], &[d], &[f], c))
+        }
+        "print_split" => {
+            // Ops.print_split(node_id, **SplitOptions): the pieces under a new group, one undo step.
+            const OPTIONS: [&str; 9] = ["printer", "joint", "screw", "pin_diameter", "wall", "area_per_screw", "max_screws", "extra_planes", "name"];
+            let a = a!(&["node_id", "printer", "joint", "screw", "pin_diameter", "wall", "area_per_screw", "max_screws", "extra_planes", "name"])?;
+            let node = a.str("node_id")?.to_string();
+            if !cx.is_body(&node) {
+                return Err(format!("print_split: {} is not a body", cx.name(&node)));
+            }
+            let body: Map<String, Value> = OPTIONS.iter().filter_map(|k| a.get(k).map(|v| (k.to_string(), v.clone()))).collect();
+            let options = crate::print::split::SplitOptions::from_body(&Value::Object(body))?;
+            let reg = crate::print::Registry::load()?;
+            let cancelled = cx.cancelled;
+            let k = crate::print::K { cancelled };
+            let brep = cx.body(&node)?;
+            let result = crate::print::split::split_for_printing(&k, &reg, &node, &brep, &options, None)?;
+            Ok(json!(crate::print::split::apply_split(cx, &k, &result, a.opt_str("name"))?))
         }
         "offset_faces" | "clearance" => {
             let a = if name == "offset_faces" { a!(&["node_id", "faces", "distance"])? } else { a!(&["node_id", "faces", "amount"])? };

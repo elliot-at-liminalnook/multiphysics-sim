@@ -1,7 +1,7 @@
 //! Authoring values are preserved verbatim on refusal. Validation names field
 //! paths; runner-owned defaults and fidelity profiles remain authoritative.
 use super::*;
-use sim_runtime::cad_client::{candidates::CandidateRequest, experiments::ExperimentRequest};
+use crate::cad::types::{candidates::CandidateRequest, experiments::ExperimentRequest};
 use std::time::Instant;
 #[derive(Clone, Debug, Serialize)]
 pub(crate) struct Draft {
@@ -87,7 +87,7 @@ pub(crate) fn link(st: &mut ExperimentsState, a: &ExperimentsArgs) -> Result<(),
     let path = a.value.clone().unwrap_or_default();
     if !path.is_empty() && !std::path::Path::new(&path).is_absolute() {
         return Err(
-            "experiments.link.path: requires an absolute path on the RoboCAD service host".into(),
+            "experiments.link.path: requires an absolute path".into(),
         );
     }
     let d = &mut st.drafts[index];

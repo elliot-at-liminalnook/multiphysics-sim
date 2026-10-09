@@ -102,7 +102,7 @@ pub(super) fn input(
 }
 
 /// What the open menu and dialog show (None: neither is open).
-fn key(doc: &CadDocument, selection: &[sim_runtime::cad_client::SelectionItem], window: Vec2) -> Option<String> {
+fn key(doc: &CadDocument, selection: &[crate::cad::types::SelectionItem], window: Vec2) -> Option<String> {
     if doc.tree.menu.is_none() && doc.tree.dialog.is_none() {
         return None;
     }

@@ -23,7 +23,7 @@ use crate::cad::sketch::BasePlane;
 use crate::cad::sync::value;
 use serde_json::Value;
 use sim_api::Outcome;
-use sim_runtime::cad_client::ReferenceUpdate;
+use crate::cad::types::ReferenceUpdate;
 
 /// Remember edit `outcome` as this part's (when it was started).
 fn started(doc: &mut CadDocument, outcome: Outcome, kind: Pending) -> Outcome {

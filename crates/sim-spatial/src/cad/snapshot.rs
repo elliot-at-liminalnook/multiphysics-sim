@@ -1,7 +1,7 @@
 //! `cad_state` and the REST snapshot (Present): the document as this
 //! window shows it, with cad-views-export's display, saved views and file
 //! jobs (split from `actions` to keep it under the size cap).
-use super::document::{CadDocument, CadTarget, Connection};
+use super::document::{CadDocument, Connection};
 use super::mesh::CadMeshes;
 use super::selection::CadSelection;
 use super::sketch::CadActivePlane;
@@ -9,7 +9,7 @@ use super::sync::value;
 use crate::app::ViewerMode;
 use bevy::prelude::*;
 use serde_json::{Value, json};
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 
 /// cad-views-export's parts of `cad_state` (None without CAD mode's window).
 #[derive(Clone, Copy, Default)]

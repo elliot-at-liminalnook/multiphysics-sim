@@ -7,7 +7,7 @@
 //! and the "Move to group" paths ([`group_paths`], widgets.py:416-430).
 //! Nothing here talks to RoboCAD or changes its document.
 use crate::cad::document::{CadDocument, TreeRow};
-use sim_runtime::cad_client::{DocState, SelectionItem};
+use crate::cad::types::{DocState, SelectionItem};
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 /// The outliner's state on the document (display only; reset with the

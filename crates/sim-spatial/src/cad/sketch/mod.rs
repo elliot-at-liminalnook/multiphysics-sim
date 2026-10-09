@@ -38,7 +38,7 @@ pub use extrude::ExtrudeState;
 use super::document::CadDocument;
 use bevy::prelude::*;
 use serde_json::Value;
-use sim_runtime::cad_client::PlaneFrame;
+use crate::cad::types::PlaneFrame;
 
 /// RoboCAD's three named planes (`Plane.xy()`, `.xz()`, `.yz()`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

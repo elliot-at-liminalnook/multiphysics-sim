@@ -40,7 +40,7 @@ use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
 use crate::cad::panel::{CadButton, own_controls};
 use crate::cad::selection::CadSelection;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use crate::ui_kit::{BAR, BORDER, Kit, LEFT_WIDTH, Look, RIGHT_WIDTH, SURFACE, TEXT, TOPBAR, UiFonts, WHEEL_LINE, size, wheel_delta};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;

@@ -36,7 +36,7 @@ use crate::cad::document::CadDocument;
 use crate::cad::results::Inputs;
 use serde_json::{Value, json};
 use sim_domain_robot::stress_results::Hotspot;
-use sim_runtime::cad_client::NodeResult;
+use crate::cad::types::NodeResult;
 
 /// The section RoboCAD's print blocks carry.
 pub(crate) const SECTION: &str = "print";

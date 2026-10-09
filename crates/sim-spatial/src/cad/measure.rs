@@ -46,7 +46,7 @@ use bevy::picking::hover::HoverMap;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use serde_json::{Value, json};
-use sim_runtime::cad_client::{EdgeInfo, FaceInfo, SelectionItem};
+use crate::cad::types::{EdgeInfo, FaceInfo, SelectionItem};
 
 /// A measurement as RoboCAD's `Measurement` (document.py:179): kind
 /// (distance | radius | angle), points (mm), value (mm or degrees), label.

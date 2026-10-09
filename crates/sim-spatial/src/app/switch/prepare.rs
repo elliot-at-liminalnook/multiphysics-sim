@@ -273,7 +273,7 @@ pub(super) fn prepare(world: &World, current: ViewerMode, request: &ModeSwitch) 
         ViewerMode::Cad => {
             let target = match (&request.document, path) {
                 (Some(Document::Url(url)), _) => {
-                    return Err(format!("{url}: CAD service attachment awaiting Rust migration; open a local .rcad archive"));
+                    return Err(format!("{url}: there is no CAD service to attach to; open a local .rcad archive"));
                 }
                 (_, Some(p)) => {
                     if !p.to_string_lossy().ends_with(".rcad") {

@@ -1,7 +1,6 @@
 //! Loopback addresses and one-request HTTP/1.1 exchanges over
-//! `std::net::TcpStream`, shared by the clients of the local servers (the
-//! hardware servers, [`crate::hardware_client`]; RoboCAD's REST API,
-//! [`crate::cad_client`]): connect, read and write timeouts, an overall
+//! `std::net::TcpStream`, for the clients of the local hardware servers
+//! ([`crate::hardware_client`]): connect, read and write timeouts, an overall
 //! deadline, a response size cap, and the server's `error` field surfaced on
 //! a non-2xx answer.
 //!
@@ -136,8 +135,8 @@ pub fn exchange(endpoint: &Endpoint, timeout: Duration, request: &Request) -> Re
     String::from_utf8(body).map_err(|_| Error::Decode(format!("{} {}{}: response body is not UTF-8", request.method, endpoint.origin(), request.path)))
 }
 
-/// [`exchange`] for an answer that is not text (RoboCAD's `GET /render`
-/// PNG): the 2xx body's bytes as sent. Everything else is [`exchange`]'s:
+/// [`exchange`] for an answer that is not text (an image): the 2xx body's
+/// bytes as sent. Everything else is [`exchange`]'s:
 /// the same request, limits, salvage after a reset and error answers (an
 /// error body is read as JSON for its `error` field).
 pub fn exchange_bytes(endpoint: &Endpoint, timeout: Duration, request: &Request) -> Result<Vec<u8>, Error> {

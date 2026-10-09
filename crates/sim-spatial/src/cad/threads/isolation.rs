@@ -38,7 +38,7 @@ use crate::cad::views::CadViews;
 use crate::camera::{CameraAction, CameraState};
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{AnchorStatus, CadThread, SelectionItem, ViewState};
+use crate::cad::types::{AnchorStatus, CadThread, SelectionItem, ViewState};
 use std::collections::{BTreeSet, HashSet};
 
 /// RoboCAD's annotation camera keys (`annotations.camera_view`).

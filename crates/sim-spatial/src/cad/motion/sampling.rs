@@ -24,7 +24,7 @@ pub(crate) fn current(d: &CadDocument, s: &MotionState, intent: &Intent) -> bool
 pub(crate) fn prior(
     sample: Option<&PoseSample>,
     stamp: &Stamp,
-) -> Option<sim_runtime::cad_client::motion::PoseContinuation> {
+) -> Option<crate::cad::types::motion::PoseContinuation> {
     sample
         .filter(|p| {
             p.identity.document_id == stamp.document
@@ -81,7 +81,7 @@ fn pump(d: &CadDocument, s: &mut MotionState) -> Result<(), String> {
     {
         return Ok(());
     }
-    let client = d.client.clone().ok_or("Not connected")?;
+    let client = crate::cad::motion_service::service(d)?;
     intent.request.prior = prior(s.sample.as_ref(), &intent.stamp);
     let sent = intent.request.clone();
     let job = Job::spawn(

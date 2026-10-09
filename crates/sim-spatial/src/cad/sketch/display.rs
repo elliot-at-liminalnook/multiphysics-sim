@@ -14,7 +14,7 @@ use super::CadSketches;
 use crate::app::{ViewerMode, ViewerSet};
 use crate::cad::document::CadDocument;
 use crate::cad::selection::{CadItems, CadSelection};
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use crate::cad::view::CadView;
 use bevy::prelude::*;
 

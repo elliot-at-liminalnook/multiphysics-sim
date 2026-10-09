@@ -35,7 +35,7 @@ use crate::ui_kit::{ACCENT_BG, DANGER, Kit, Look, TEXT, Tint, UiFonts, WHEEL_LIN
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use std::time::{Duration, Instant};
 
 /// "Search materials…".

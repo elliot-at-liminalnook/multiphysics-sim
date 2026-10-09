@@ -208,7 +208,7 @@ pub struct Launch {
     pub learn: Option<crate::lesson::Learn>,
     pub robot: Option<crate::robot::RobotView>,
     pub place: Option<crate::place_view::PlaceView>,
-    /// CAD mode's document (the RoboCAD service to attach to or start).
+    /// CAD mode's document (a `.rcad` archive, opened in process).
     pub cad: Option<crate::cad::CadDocument>,
     /// A robot project to open at launch (`--project`).
     pub project: Option<std::path::PathBuf>,

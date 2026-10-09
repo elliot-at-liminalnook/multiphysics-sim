@@ -46,7 +46,7 @@ use super::sketch::{CadActivePlane, CadSketches};
 use super::topology::{CadTopology, NodeTopology};
 use super::view::{CadView, ray_plane};
 use bevy::prelude::*;
-use sim_runtime::cad_client::{PlaneFrame, SketchGeometry};
+use crate::cad::types::{PlaneFrame, SketchGeometry};
 
 /// RoboCAD's `snap_pixels` (viewport.py:300).
 pub const SNAP_PIXELS: f32 = 12.0;
@@ -277,7 +277,7 @@ pub(crate) mod tests {
     use super::*;
     use bevy::camera::CameraProjection;
     use bevy::math::Affine3A;
-    use sim_runtime::cad_client::{EdgeInfo, VertexInfo};
+    use crate::cad::types::{EdgeInfo, VertexInfo};
 
     /// A camera `height_mm` above the model origin looking straight down
     /// (model +Y is up on screen, +X right), over a 200 × 100 px view at
@@ -383,7 +383,7 @@ pub(crate) mod tests {
     /// sketch's plane; with a plane the best snap is projected onto it.
     #[test]
     fn sketch_endpoints_and_the_plane_step() {
-        use sim_runtime::cad_client::{SketchCurve, SketchGeometry};
+        use crate::cad::types::{SketchCurve, SketchGeometry};
         let view = top_view(200.0);
         // A sketch on XY offset 5 mm up: a line from (40, 0) to (60, 0), a circle centred at (-40, 0).
         let plane = PlaneFrame { origin: [0.0, 0.0, 5.0], ..PlaneFrame::XY };

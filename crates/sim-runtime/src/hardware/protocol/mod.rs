@@ -230,7 +230,7 @@ pub fn js_number_text(x: f64) -> String {
 /// `deserialize_with` for a status field: a value of the wrong shape reads
 /// as the field's default instead of failing the whole answer, so one
 /// malformed section (a server change, a partial write) cannot hide the rest.
-pub(crate) fn lenient<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+pub fn lenient<'de, D, T>(deserializer: D) -> Result<T, D::Error>
 where
     D: serde::Deserializer<'de>,
     T: serde::de::DeserializeOwned + Default,
@@ -241,7 +241,7 @@ where
 
 /// `deserialize_with` for a list: the items that parse (a malformed item is
 /// dropped, not the list); anything but an array reads as empty.
-pub(crate) fn lenient_items<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
+pub fn lenient_items<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
 where
     D: serde::Deserializer<'de>,
     T: serde::de::DeserializeOwned,

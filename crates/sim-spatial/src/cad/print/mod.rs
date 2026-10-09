@@ -1,38 +1,33 @@
-//! CAD mode's Print menu (cad-print; native-viewer.md "CAD print"):
-//! RoboCAD's print tools over its REST routes (`sim_runtime::cad_client`'s
-//! print module). RoboCAD stays the kernel: its wall thickness sampling,
-//! validation, split, strength, plan, assembly and coupon jobs run there;
-//! nothing here ports them.
+//! CAD mode's Print menu (cad-print; native-viewer.md "CAD print"), in
+//! process: the checks and jobs are `sim_cad::printing` and
+//! `sim_cad::print` (RoboCAD's printing.py and print_*.py, ported), the
+//! stress check and planner `sim_runtime::print_tools` (`sim-print`'s).
 //!
 //! - [`checks`]: "Wall thickness check…" (Ctrl+W) and "Validate for
-//!   printing" (Ctrl+Shift+V): reads on a job (`GET /nodes/{id}/thin`,
-//!   `/validate`), RoboCAD's status text; the thin points are drawn by
-//!   [`thin_overlay`], display only, cached by (node, revision, threshold).
+//!   printing" (Ctrl+Shift+V): reads on a job, RoboCAD's status text; the
+//!   thin points are drawn by [`thin_overlay`], display only, cached by
+//!   (node, revision, threshold).
 //! - Overhang shading ("Toggle overhang shading") is a display toggle
 //!   (`display::DisplaySetting::Overhangs`): the shown mesh's triangles past
 //!   RoboCAD's 45° (`display::section::overhangs`), display only.
 //! - [`edits`]: "Fastener hole…" (Ctrl+H; its face clicks in
 //!   [`fastener_tool`], faces only through `CadMeshes::face_at`) and
 //!   "Clearance offset…" (Ctrl+Shift+C), with RoboCAD's remembered values;
-//!   each commit is one RoboCAD call through `actions::edit_at`.
+//!   each commit is one edit through `actions::edit_at`.
 //! - [`studies`]: split for printing, check strength, plan, whole or split,
 //!   assembly guide and test coupons: catalogue forms whose printers and
-//!   filaments come from `GET /print/registry` (read on a job once per
-//!   connection generation) and whose study and split groups come from
-//!   `GET /print/study` (per shown revision). Each start is one RoboCAD
-//!   call through `actions::edit_at`.
-//! - [`jobs_tracker`]: [`PrintJobTracker`], the one poller of RoboCAD's
-//!   print jobs (`GET /print/jobs` on a jobs-module request at an interval
-//!   while one runs): "kind: message (n %)" on the status line, failures
-//!   named, the document refreshed when an editing job ends, and leaving
-//!   CAD mode refused while a job this window started runs
-//!   (`CadDocument::switch_blockers`).
+//!   filaments come from the print registry (read on a job once per
+//!   generation) and whose study and split groups come from the shown
+//!   archive. Each start is one job.
+//! - [`jobs_tracker`]: [`PrintJobTracker`], the jobs in flight: "kind:
+//!   message (n %)" on the status line, failures named, a job's staged edit
+//!   published as one undo step, and leaving CAD mode refused while one
+//!   runs (`CadDocument::switch_blockers`).
 //! - [`jobs_panel`]: the Print jobs section of the right dock: the last
 //!   eight jobs, Cancel after RoboCAD's "Cancel the running jobs?".
-//! - [`overlay`]: the print study's results ("print" blocks of
-//!   `GET /results/nodes`) coloured through the shared stress rule
-//!   (`results::overlay`, `sim_domain_robot::stress_results`), with the
-//!   staleness label.
+//! - [`overlay`]: the print study's results (each node's "print" results
+//!   block) coloured through the shared stress rule (`results::overlay`,
+//!   `sim_domain_robot::stress_results`), with the staleness label.
 //!
 //! Every intent is a [`CadAction`]: the catalogue's (`CadInvoke`,
 //! `CadRun`, forms) for the tools and studies, [`PrintArgs`] (`cad_print`)
@@ -57,10 +52,6 @@ mod tracker_tests;
 
 pub(crate) use jobs_tracker::PrintJobTracker;
 
-/// Why print studies, split, coupons, print jobs and the wall/thin checks
-/// refuse: they ran in RoboCAD's print service, which has no in-process port yet.
-pub(crate) const PRINT_UNPORTED: &str = "RoboCAD's print service (studies, split, coupons, print jobs, wall and thin checks) is not ported to the in-process editor yet";
-
 use super::actions::{CadAction, Cx};
 use super::document::CadDocument;
 use super::ops::{Built, Env, OpEntry, Resolved};
@@ -69,7 +60,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 
 /// cad-print's state on the document (reset with it, so per connection
 /// generation and document).
@@ -79,9 +70,9 @@ pub struct PrintState {
     pub(crate) checks: checks::ChecksState,
     /// The fastener tool's document-local clicks and picks.
     pub(crate) edits: edits::EditsState,
-    /// The printing registry (per generation), the print study (per revision), the study started.
+    /// The printing registry (per generation).
     pub(crate) studies: studies::StudiesState,
-    /// RoboCAD's print jobs as last polled.
+    /// The print jobs this document ran.
     pub(crate) jobs: PrintJobTracker,
 }
 impl PrintState {
@@ -94,25 +85,25 @@ impl PrintState {
 /// Which Print menu entry a catalogue run is (`ops::Shape::Print`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum PrintCall {
-    /// `print.wall_check`: `GET /nodes/{id}/thin` per node on a job.
+    /// `print.wall_check`: `sim_cad::printing::wall_thickness` per node on a job.
     WallCheck,
-    /// `print.validate`: `GET /nodes/{id}/validate` per visible body on a job.
+    /// `print.validate`: `sim_cad::printing::validate` per visible body on a job.
     Validate,
     /// `tool.fastener`: one `fastener_hole` per face click.
     Fastener,
     /// `tool.clearance`: one `clearance` per node with selected faces.
     Clearance,
-    /// `print.split`: `POST /print/split` (background, as RoboCAD's menu).
+    /// `print.split`: a split job (`sim_cad::print::jobs::split`).
     Split,
-    /// `print.strength`: `POST /print/analyze` with the document's study.
+    /// `print.strength`: an analyze job with the document's study.
     Strength,
-    /// `print.plan`: `POST /print/plan` with the document's study.
+    /// `print.plan`: a plan job with the document's study.
     Plan,
-    /// `print.strength_split`: `POST /print/strength_split`.
+    /// `print.strength_split`: a whole-or-split job.
     StrengthSplit,
-    /// `print.assembly`: `POST /print/assembly`.
+    /// `print.assembly`: an assembly guide job.
     Assembly,
-    /// `print.coupons`: `POST /print/coupons`.
+    /// `print.coupons`: a test coupon job.
     Coupons,
 }
 
@@ -170,12 +161,6 @@ pub(in crate::cad) fn precheck(entry: &OpEntry, doc: &CadDocument, selection: &[
     studies::precheck(entry, doc, selection)
 }
 
-/// `sync::finish_edit`: edit `seq` answered (`result`: RoboCAD's answer
-/// when it succeeded, from this connection): a print start's job is tracked.
-pub(in crate::cad) fn edit_answered(doc: &mut CadDocument, seq: u64, result: Option<&Value>) {
-    jobs_tracker::edit_answered(doc, seq, result);
-}
-
 /// What `cad_print` does.
 #[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]
@@ -185,10 +170,12 @@ pub enum PrintOp {
     State,
     /// The Print jobs section shown (`open: true`), hidden (`false`) or toggled.
     Jobs,
-    /// Cancel RoboCAD's running print jobs (or `job`): without `confirm`
-    /// the confirmation "Cancel the running jobs?" opens; `confirm: true`
-    /// sends one `DELETE /print/jobs/{id}` per running job; `false` closes it.
+    /// Cancel the running print jobs (or `job`): without `confirm` the
+    /// confirmation "Cancel the running jobs?" opens; `confirm: true`
+    /// cancels each running job; `false` closes it.
     Cancel,
+    /// One job (`job`) as listed, with its result once done.
+    Job,
     /// The fastener tool's pick: `item` (a face) at `picked_at`.
     Pick,
     /// Clear the wall check's points (RoboCAD's `temp_shapes`).
@@ -242,8 +229,11 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
     if args.open.is_some() && args.op != PrintOp::Jobs {
         return wrong("open", "jobs");
     }
-    if (args.job.is_some() || args.confirm.is_some()) && args.op != PrintOp::Cancel {
-        return wrong("job and confirm", "cancel");
+    if args.job.is_some() && !matches!(args.op, PrintOp::Cancel | PrintOp::Job) {
+        return wrong("job", "cancel or job");
+    }
+    if args.confirm.is_some() && args.op != PrintOp::Cancel {
+        return wrong("confirm", "cancel");
     }
     if (args.item.is_some() || args.picked_at.is_some()) && args.op != PrintOp::Pick {
         return wrong("item and picked_at", "pick");
@@ -252,6 +242,7 @@ pub(in crate::cad) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -
         PrintOp::State => Outcome::Done(Ok(state_json(cx.doc, Some(&cx.settings.cad)))),
         PrintOp::Jobs => Outcome::Done(jobs_panel::show(cx.doc, args.open)),
         PrintOp::Cancel => jobs_tracker::cancel(cx.doc, call, args.job.as_deref(), args.confirm),
+        PrintOp::Job => Outcome::Done(args.job.as_deref().ok_or_else(|| "op job needs job (a print job id)".to_string()).and_then(|id| jobs_tracker::job_json(cx.doc, id))),
         PrintOp::Pick => fastener_tool::pick(args, call, cx),
         PrintOp::Clear => Outcome::Done(Ok(checks::clear(cx.doc, Some(&cx.settings.cad)))),
     }
@@ -282,7 +273,7 @@ pub(in crate::cad) fn specs() -> Vec<Spec> {
         "cad_print",
         super::actions::CAD,
         json!({"op": "jobs", "open": true}),
-        "CAD mode: RoboCAD's print jobs and the print tools' state (cad_state.print). op: state, jobs (open true | false, absent toggles the Print jobs section: the last eight of RoboCAD's print jobs with kind, state, progress and message), cancel (without confirm the confirmation \"Cancel the running jobs?\" opens; confirm true sends one DELETE /print/jobs/{id} per running job, or only job; confirm false closes it), pick (the fastener tool's face pick: item [node, \"face\", index] at picked_at, the revision it was read at), clear (the wall check's points). The tools and studies are catalogue operations: cad_invoke or cad_run tool.fastener, tool.clearance, print.wall_check, print.validate, print.split, print.strength, print.plan, print.strength_split, print.assembly, print.coupons, ops.print_split. RoboCAD's print jobs are polled (GET /print/jobs) while one runs: \"kind: message (n %)\" on the status line; leaving CAD mode is refused while one this window started runs. system_ui lists cad:print:*.",
+        "CAD mode: the print jobs and the print tools' state (cad_state.print). op: state, jobs (open true | false, absent toggles the Print jobs section: the last eight print jobs with kind, state, progress and message), job (one job by id, with its result once done), cancel (without confirm the confirmation \"Cancel the running jobs?\" opens; confirm true cancels each running job, or only job; confirm false closes it), pick (the fastener tool's face pick: item [node, \"face\", index] at picked_at, the revision it was read at), clear (the wall check's points). The tools and studies are catalogue operations: cad_invoke or cad_run tool.fastener, tool.clearance, print.wall_check, print.validate, print.split, print.strength, print.plan, print.strength_split, print.assembly, print.coupons, ops.print_split. A study's start answers the started job ({id, kind, state}); read it with op job until its state is done, failed or cancelled. Jobs run in this process on the shown snapshot; a job that changes the document (split, strength, plan, an assembly's exploded view) publishes one undo step when it ends, refused by name if the document moved meanwhile. Leaving CAD mode is refused while one runs. system_ui lists cad:print:*.",
     )]
 }
 

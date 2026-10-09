@@ -20,7 +20,7 @@ use crate::cad::sync::value;
 use crate::cad::topology::CadTopology;
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 
 /// One Ops call: its name, positional args, keyword args and the label the
 /// header and RoboCAD's history name it by.

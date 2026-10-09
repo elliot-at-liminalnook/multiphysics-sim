@@ -12,7 +12,7 @@ use super::*;
 use crate::app::actions::{self, Action};
 use crate::cad::document::{Edit, EditDone};
 use crate::cad::rest_form::rest_form;
-use sim_runtime::cad_client::{DocState, Health};
+use crate::cad::types::{DocState, Health};
 
 /// The formats `Service.export` takes (api.py: stl, 3mf, step, iges, obj,
 /// svg, drawing) with the settings io/exporters.py's dataclasses and

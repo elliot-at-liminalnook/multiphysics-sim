@@ -11,14 +11,9 @@ pub mod hardware;
 /// Loopback HTTP client of the hardware servers (native only: std::net).
 #[cfg(not(target_arch = "wasm32"))]
 pub mod hardware_client;
-/// One-request HTTP/1.1 transport to loopback servers (native only: std::net).
+/// One-request HTTP/1.1 transport to the loopback hardware servers (native only: std::net).
 #[cfg(not(target_arch = "wasm32"))]
 pub mod loopback_http;
-/// Typed client of RoboCAD's loopback REST API and its service lifecycle helpers (native only).
-#[cfg(not(target_arch = "wasm32"))]
-pub mod cad_client;
-/// Graphics-independent CAD migration contracts and paired headless harness.
-pub mod cad_parity;
 pub mod units;
 pub mod contact_audit;
 pub mod contact_planning;
@@ -45,6 +40,9 @@ pub mod embedded_drive;
 pub mod kinematic_mirror;
 /// Binding a model's blocks (FMUs, host implementations) before a run.
 pub mod system_blocks;
+pub mod teleop;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod print_tools;
 /// The `robot` generator: a robot assembly composed into a system file.
 #[cfg(not(target_arch = "wasm32"))]
 pub mod robot_generator;

@@ -26,7 +26,7 @@ use bevy::picking::hover::HoverMap;
 use bevy::picking::mesh_picking::ray_cast::MeshRayCast;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use sim_runtime::cad_client::{FaceInfo, SelectionItem};
+use crate::cad::types::{FaceInfo, SelectionItem};
 use std::time::{Duration, Instant};
 
 /// Two presses closer than this in time and space are a double-click.

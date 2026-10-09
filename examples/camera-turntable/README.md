@@ -45,9 +45,10 @@ pulley-tooth coupon first: the GT2 groove shape is an approximation.
 ## Rebuilding
 
 ```sh
-# CAD (live window: one undo step; re-running replaces the previous build)
-cad/.venv/bin/python -c "from robocad.client import RoboClient; RoboClient().script('examples/camera-turntable/cad/turntable_model.py')"
-# save the window's document to cad/turntable.rcad, then:
+# CAD (in the viewer's CAD mode: one undo step; re-running replaces the previous build)
+curl -s -H 'Content-Type: application/json' http://127.0.0.1:8421/v1/batch \
+  -d '{"commands":[{"command":"cad_script","args":{"path":"examples/camera-turntable/cad/turntable_model.rhai"}}]}'
+# save the document to cad/turntable.rcad, then:
 cad/.venv/bin/python examples/camera-turntable/cad/derive_physics.py   # *.physics.json from the CAD bodies
 cad/.venv/bin/python examples/camera-turntable/cad/export_models.py    # viewer display models (models/)
 # system file (from an empty file; the HX-30HM definition comes from library/systems)
@@ -234,7 +235,7 @@ Results (2026-09-28, simulated room, two stations — table, and a stool
 - A higher camera, the spare camera tilted down, or more stations would fill
   this in.
 
-**Objects.** The object-scanning kit (`cad/object_scan_kit.py`) is a platform
+**Objects.** The object-scanning kit (`cad/object_scan_kit.rhai`, run like the turntable model) is a platform
 on the disc and a fixed camera stand with two detents (15° and 35° down). The
 ESP32 and camera move to the stand, so nothing winds up. Its rig files
 (`cad/object-rig-*.json`) come from CAD. With the object on the disc, the

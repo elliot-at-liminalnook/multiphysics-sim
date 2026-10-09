@@ -3,7 +3,7 @@ use super::*;
 use bevy::ecs::system::RunSystemOnce;
 use crate::app::actions::Act;
 use crate::ui_kit::activation::Activated;
-use sim_runtime::cad_client::{DocState, Health, NodeSummary};
+use crate::cad::types::{DocState, Health, NodeSummary};
 
 fn fixture() -> World {
     let mut doc = CadDocument::new(super::super::document::CadTarget::Service("http://127.0.0.1:8420".into()));

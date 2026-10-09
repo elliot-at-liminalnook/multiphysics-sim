@@ -54,7 +54,7 @@ use crate::app::{ViewerMode};
 use crate::ui_kit::{Kit, SUBTLE, VALUE, size};
 use bevy::prelude::*;
 use serde_json::Value;
-use sim_runtime::cad_client::NodeSummary;
+use crate::cad::types::NodeSummary;
 
 /// The editors' field and their typing (Input).
 pub(super) fn build(app: &mut App) {

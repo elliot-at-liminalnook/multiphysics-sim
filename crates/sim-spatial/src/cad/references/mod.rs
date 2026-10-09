@@ -2,7 +2,7 @@
 //! organize"): RoboCAD's reference-image workspace and its linked system
 //! file (cad/robocad/ui/references.py, references.py, system_link.py,
 //! commands.py:1112-1136) over the typed client calls
-//! (`sim_runtime::cad_client::{references, system_link}`). RoboCAD stays the
+//! (`crate::cad::types::{references, system_link}`). RoboCAD stays the
 //! kernel: it reads and embeds the image files, keeps their placement and
 //! the link, and owns undo. Every edit is one RoboCAD call through
 //! `actions::edit_at`.
@@ -55,7 +55,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::NodeSummary;
+use crate::cad::types::NodeSummary;
 use std::collections::HashMap;
 use std::path::PathBuf;
 

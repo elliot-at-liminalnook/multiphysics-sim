@@ -7826,3 +7826,91 @@ drives it in Robot mode. None of it compiled or run: all by reading,
 unexecuted. Traces: `docs/rover-checklist.md` RV-01 to RV-07 and RV-40.
 Browser and Build-mode device driving followed in rover-browser-drive
 (above).
+
+## Agent guides for every mode (2026-10-08)
+
+AGENTS.md asks for a guide command per mode. Four modes had none; now
+every mode does. Plan: `docs/agent-guides-plan.md`.
+
+- **Guides.** `inspect_guide` (`inspect_guide.rs`), `lesson_guide`
+  (`lesson/guide.rs`), `place_guide` (`place_guide.rs`) and
+  `phenomena_guide` (`phenomena/guide.rs`), shaped like `system_guide` and
+  `robot_guide`: about, how_to_call, concepts, workflows, commands (every
+  command of the mode with a working example), rules; `topic` narrows,
+  an unknown topic is refused naming the valid ones. Each is a variant of
+  its mode's own action type, so it is in `GET /v1/capabilities` with its
+  modes and refused by name elsewhere, and each is published as
+  `GET /v1/<name>`. `lesson_guide`, `place_guide` and `phenomena_guide`
+  answer even with no lessons, place or gallery open (the guide is how an
+  agent learns to open one).
+- **Place could not see its photos.** `state` gained `photo_views` (each
+  photo's position and unit direction, viewer frame) and `camera` gained
+  `view` (stand where photo i was taken, looking along it; refused with a
+  station, or out of range).
+- **Fly camera fix.** `camera::fly::orientation` applied pitch after the
+  quarter turn, so pitch rolled the view about its forward axis instead of
+  tilting it (yaw 0: forward stayed `(1, 0, 0)` for every pitch). Now
+  `from_euler(YXZ, yaw − π/2, pitch, 0)`: yaw's meaning is unchanged, pitch
+  tilts. `fly::angles_toward` inverts it for the photo jump. The
+  walkthrough's first camera now uses the same `orientation(START)` its
+  `Fly` reports (it used to start level while reporting pitch −0.25).
+- **Tests.** `app::tests::every_mode_has_a_guide_of_its_own` (a `*_guide`
+  registered for each `ViewerMode` that not every mode accepts, so
+  `project_guide` does not count); `the_guide_lists_every_*_command` for the
+  four guides (listed commands equal the action type's, every example
+  parses); `camera::tests::fly_pitch_tilts_and_never_rolls`; the four guide
+  files joined `copy_guard_tests::DESCRIPTION_FILES`.
+- **Verified (executed).** `cargo test -p sim-spatial --lib`: 858 passed,
+  8 failed, 15 ignored. The 8 failures are outside this change and match
+  the known list: four CAD-switch tests that attach to a RoboCAD URL (now
+  refused by design), two electrical calibration-study cancellation tests,
+  `source_files_stay_small` (five robot files over 750 lines) and the copy
+  guard (eight strings in CAD and robot files). Live: `--headless`
+  answered `inspect_guide` (whole, by topic, an unknown topic refused, `GET
+  /v1/inspect_guide`); the windowed viewer over REST answered
+  `lesson_guide`, `place_guide`, `phenomena_guide` (while its exhibits
+  were still being built) and their `GET /v1/…` resources; in Place,
+  `camera {view: 0}` put the camera at photo 0's position with its forward
+  equal to the photo's direction, and both refusals named their cause.
+  Not done: a screenshot of the pitched Place view (the window was not
+  visible, so `screenshot` refused).
+
+## CAD without RoboCAD, and composed robots (2026-10-08)
+
+Plan and limits: [docs/cad-migration-and-composition-plan.md](../cad-migration-and-composition-plan.md).
+Written in one pass; the build, tests and REST walkthroughs follow.
+
+- **No RoboCAD client.** `sim_runtime::cad_client` and `cad_parity` are
+  deleted. The panels' data types live in `cad::types` (the same JSON as
+  before, so files and REST answers keep their shape); `CadDocument` has no
+  client, attach field or child slot; a `CadTarget::Service` (a URL from an
+  older session) is refused by name and the picker lists such a recent entry
+  disabled.
+- **Print** (`cad::print`): the checks run `sim_cad::printing`; the studies
+  (split, strength, plan, whole-or-split, assembly guide, coupons) start a
+  job in `jobs_tracker` on the shown snapshot (`sim_cad::print::jobs`, with
+  `sim_runtime::print_tools` for the stress check and planner). A job that
+  changes the document publishes one undo step through `local::start` when it
+  ends, refused by name if the document moved meanwhile. `cad_print {op: job}`
+  reads one job and its result.
+- **Experiments** (`cad::lab`): runs capture the shown snapshot into
+  `runs/experiments/<id>` and execute on one dedicated job each
+  (`sim_cad::experiments::service::Lab`, the `Simulate` runner). Candidates
+  are staged edit batches kept on disk; accepting one is a `local_client`
+  edit. Captured review, comparison and evidence threads read the same
+  records.
+- **Components and composition** (`cad::component_service`): the dock's
+  start / poll / cancel lifecycle is kept; a start prepares the change on a
+  staged copy (`sim_cad::component_edit`) and the dock's tick commits a ready
+  one as an undo step. Composition edits are `local_client` edits
+  (`sim_cad::component_graph::edit`); its reads (types, recipes, a check's
+  imported components) come from the same service.
+- **Model scripts** (`cad_script`): repository `.rhai` files over bodies,
+  sketches, GT2 belts and the shared operations (`sim_cad::scripts`).
+- **Pose mode** (`cad::motion_service`): reference kinematics and motion
+  patterns in process (`sim_cad::pose`).
+- **Robot mode, composed** (`robot::run`): a model that belongs to a robot
+  project runs the project's flattened system (`Source::Composed`), with
+  drive and jog through `drive_input` and controller setpoints; Build mode's
+  live run takes `drive_input` blocks (`system_add_drive_input`,
+  `system_drive`).

@@ -30,7 +30,7 @@ use crate::cad::document::CadDocument;
 use crate::cad::inspector::py_g;
 use crate::ui_kit::form::{FieldKind, FieldValue, Unit, evaluate};
 use serde_json::{Map, Value, json};
-use sim_runtime::cad_client::{Material, NewMaterial};
+use crate::cad::types::{Material, NewMaterial};
 
 /// RoboCAD's engineering rows (widgets.py:687): key, label, the dialog's
 /// scale from SI.

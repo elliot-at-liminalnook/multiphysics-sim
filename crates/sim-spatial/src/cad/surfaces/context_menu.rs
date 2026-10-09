@@ -28,7 +28,7 @@ use crate::app::actions::Act;
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
 use crate::cad::selection::CadItems;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use crate::cad::view::CadView;
 use bevy::picking::hover::HoverMap;
 use bevy::prelude::*;

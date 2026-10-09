@@ -39,7 +39,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 
 /// The active fastener tool's catalogue id (`Flow::PrintPick`).
 pub(super) fn active_tool(doc: &CadDocument) -> Option<&'static str> {

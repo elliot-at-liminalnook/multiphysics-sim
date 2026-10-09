@@ -8,7 +8,7 @@ use crate::cad::document::CadTarget;
 use crate::cad::rest_form::rest_form;
 use crate::cad::robot::data::Bundle;
 use crate::cad::selection::Fixture;
-use sim_runtime::cad_client::{Battery, DocState, NodeResult, NodeResults, NodeSummary, RobotJoint, RobotMotor};
+use crate::cad::types::{Battery, DocState, NodeResult, NodeResults, NodeSummary, RobotJoint, RobotMotor};
 use std::collections::BTreeMap;
 
 fn node(id: &str, kind: &str, name: &str, material: Option<&str>) -> NodeSummary {
@@ -105,7 +105,7 @@ fn the_panel_shows_robocads_summary_tree_margins_and_validity() {
     let mut doc = document();
     if let Some(b) = doc.robot.data.bundle.as_mut() {
         b.sensors = Err("GET /sensors: 500".into());
-        b.summary.as_mut().unwrap().issues = vec![sim_runtime::cad_client::RobotIssue { severity: "error".into(), message: "Elbow: child body is missing".into(), node: Some("j1".into()) }];
+        b.summary.as_mut().unwrap().issues = vec![crate::cad::types::RobotIssue { severity: "error".into(), message: "Elbow: child body is missing".into(), node: Some("j1".into()) }];
     }
     let v = view(&doc, &[]);
     assert!(v.summary.as_deref().unwrap().contains("? sensors"));

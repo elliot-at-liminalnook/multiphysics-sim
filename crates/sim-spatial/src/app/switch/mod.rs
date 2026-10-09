@@ -460,7 +460,7 @@ pub(crate) fn handle(world: &mut World) {
                     continue;
                 }
             };
-            let target = request.mode;
+            let _target = request.mode;
             // A refused request's reveal goes with it (`start` installs a
             // reveal only for a switch it accepts).
             if let Err(e) = start(world, &mut switch, current, origin, request, interactive) {

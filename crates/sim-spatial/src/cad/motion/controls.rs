@@ -19,7 +19,7 @@ fn ready(d: &CadDocument, s: &MotionState, op: MotionOp) -> Result<(), String> {
         return if d.connected() {
             Ok(())
         } else {
-            Err("Connect to RoboCAD".into())
+            Err("Open a CAD document first".into())
         };
     }
     let id = s.identity.as_ref().ok_or("Enter pose mode first")?;

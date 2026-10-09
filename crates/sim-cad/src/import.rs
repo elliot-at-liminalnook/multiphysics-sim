@@ -1,8 +1,9 @@
 //! File > Import (RoboCAD's `api.import_file` and `io/importers.py`): STEP
 //! and IGES solids become bodies named after the file, an SVG drawing becomes
 //! one sketch on the XY plane, and PNG/JPEG files become reference images.
-//! Meshes (STL, OBJ, PLY, 3MF) are refused by name: RoboCAD stores them as
-//! mesh nodes this editor does not model yet.
+//! Meshes (STL, OBJ, PLY, 3MF) become reference mesh nodes in the unit the
+//! caller states (`crate::mesh`; RoboCAD's unit prompt), stored as
+//! `mesh/<id>.npz`; FBX and glTF are refused by name.
 //!
 //! STEP is read by plain transfer (RoboCAD's fallback path when the file has
 //! no XDE structure): every solid is a body named after the file stem. XDE
@@ -13,11 +14,17 @@ use crate::sketch::{Curve, Plane, Sketch, V2};
 use serde_json::Map;
 use std::path::Path;
 
-/// The extensions read as meshes (refused).
+/// The extensions RoboCAD read as meshes (those in `crate::mesh::REFUSED` are refused here).
 pub const MESH: [&str; 7] = ["stl", "obj", "3mf", "fbx", "ply", "glb", "gltf"];
 
 /// Import `path`: the new node ids, as `{"imported": [...]}` answers them.
+/// A mesh needs its file's unit ([`import_file_in`]).
 pub fn import_file(cx: &mut Ctx, path: &str) -> Result<Vec<String>, String> {
+    import_file_in(cx, path, None)
+}
+
+/// [`import_file`] with the unit a mesh file is in (mm, cm, m, in, ft).
+pub fn import_file_in(cx: &mut Ctx, path: &str, unit: Option<&str>) -> Result<Vec<String>, String> {
     let p = Path::new(path);
     let ext = p.extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default();
     let stem = p.file_stem().map_or_else(|| path.to_string(), |s| s.to_string_lossy().into_owned());
@@ -39,9 +46,22 @@ pub fn import_file(cx: &mut Ctx, path: &str) -> Result<Vec<String>, String> {
             Ok(vec![cx.add_node("sketch", &base, None, extra)?])
         }
         "png" | "jpg" | "jpeg" => crate::references::import(cx.edit, &[path.to_string()], None),
-        e if MESH.contains(&e) => Err(format!("Import {base}: mesh import is not available in the in-process editor yet (STEP, IGES, SVG and images are)")),
+        e if MESH.contains(&e) => {
+            let unit = unit.ok_or_else(|| format!("Import {base}: a mesh needs the unit its file is in ({})", crate::mesh::UNITS.map(|(u, _)| u).join(", ")))?;
+            Ok(vec![import_mesh(cx, p, unit, &base)?])
+        }
         _ => Err(format!("Import {base}: not a file the editor imports (step, stp, iges, igs, svg, png, jpg)")),
     }
+}
+
+/// A reference mesh node named `name` from the mesh file at `path` in `unit`
+/// (RoboCAD's `import_mesh`): its triangles in millimetres in a
+/// `mesh/<id>.npz` entry. A mesh has no exact solid: no mass, no physics.
+pub fn import_mesh(cx: &mut Ctx, path: &Path, unit: &str, name: &str) -> Result<String, String> {
+    let mesh = crate::mesh::read(path, unit)?;
+    let id = cx.add_node("mesh", name, None, Map::new())?;
+    cx.edit.entries.insert(format!("mesh/{id}.npz"), Some(crate::mesh::to_npz(&mesh)?));
+    Ok(id)
 }
 
 /// The attribute `name="…"` of one SVG element's opening tag, as a number.

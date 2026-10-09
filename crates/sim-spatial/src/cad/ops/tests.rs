@@ -10,7 +10,7 @@ use crate::cad::analysis_overlay::Read;
 use crate::cad::document::{CadTarget, Connection, Edit};
 use crate::cad::sketch::{ActivePlane, BasePlane, CadActivePlane};
 use crate::cad::transform::face_ref;
-use sim_runtime::cad_client::{CadClient, DocState, Health, NodeSummary, PlaneFrame};
+use crate::cad::types::{DocState, Health, NodeSummary, PlaneFrame};
 
 fn node(id: &str, kind: &str, name: &str) -> NodeSummary {
     NodeSummary { id: id.into(), kind: kind.into(), name: name.into(), visible: true, effective_visible: true, ..Default::default() }
@@ -24,7 +24,6 @@ fn item(node: &str, kind: &str, index: i64) -> SelectionItem {
 /// bodies, a sheet, an instance and a curve; nothing selected.
 fn document() -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
-    doc.client = Some(CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
     doc.doc = Some(DocState {

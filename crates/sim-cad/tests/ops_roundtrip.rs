@@ -172,8 +172,12 @@ fn every_export_format_writes_a_file_that_reads_back() {
     let iges = sim_cad::import::import_file(&mut cx, dir.join("r.iges").to_str().unwrap()).unwrap();
     assert_eq!(step.len(), 6, "six solids from STEP");
     assert!(!iges.is_empty(), "IGES imports");
-    assert!(sim_cad::import::import_file(&mut cx, dir.join("r.stl").to_str().unwrap()).unwrap_err().contains("mesh import"));
+    // A mesh becomes one reference mesh node with its triangles in the archive.
+    let mesh = sim_cad::import::import_file_in(&mut cx, dir.join("r.stl").to_str().unwrap(), Some("mm")).unwrap();
+    assert_eq!(mesh.len(), 1);
     let next = doc.apply(edit).unwrap();
+    assert_eq!(next.node(&mesh[0]).unwrap()["kind"], "mesh");
+    assert!(next.entry(&format!("mesh/{}.npz", mesh[0])).is_some());
     assert_eq!(next.node(&step[0]).unwrap()["kind"], "body");
     assert!(next.node(&step[0]).unwrap()["name"].as_str().unwrap().starts_with('r'));
     let g = sim_cad::geometry::load_geometry(&next, &|| false, &|_| {}).unwrap();

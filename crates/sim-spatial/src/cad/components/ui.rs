@@ -195,7 +195,7 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, st:
     for kind in ComponentsFormKind::ALL {
         button(p, k, &controls, &format!("cad:components:{}", kind.name()));
     }
-    p.spawn(k.caption("Saved library · folder on the RoboCAD service host"));
+    p.spawn(k.caption("Saved library · a folder of .rcomp files"));
     p.spawn(k.input(
         &st.folder,
         "Component library folder",
@@ -288,7 +288,7 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, st:
                         serde_json::from_str::<
                             std::collections::BTreeMap<
                                 String,
-                                sim_runtime::cad_client::ComponentVariant,
+                                crate::cad::types::ComponentVariant,
                             >,
                         >(
                             d.fields.get("variants").map(String::as_str).unwrap_or("{}")

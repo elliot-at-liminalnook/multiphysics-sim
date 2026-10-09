@@ -31,7 +31,7 @@ use super::CadActivePlane;
 use crate::cad::document::CadDocument;
 use crate::jobs::{Job, Pool};
 use bevy::prelude::*;
-use sim_runtime::cad_client::{PlaneFrame, SketchGeometry, plane_of};
+use crate::cad::types::{PlaneFrame, SketchGeometry, plane_of};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
@@ -170,7 +170,7 @@ pub fn wanted(doc: &CadDocument) -> HashMap<String, bool> {
 /// `node_detail`), read here with the dropped curves' indices kept.
 fn fetch(archive: &sim_cad::ArchiveDocument, id: &str, sketch: bool) -> Result<(Geometry, Vec<usize>), String> {
     let node = archive.node(id).cloned().ok_or_else(|| format!("no node {id}"))?;
-    let detail: sim_runtime::cad_client::NodeDetail = serde_json::from_value(node).map_err(|e| format!("node {id}: {e}"))?;
+    let detail: crate::cad::types::NodeDetail = serde_json::from_value(node).map_err(|e| format!("node {id}: {e}"))?;
     if !sketch {
         return Ok((Geometry::Plane(plane_of(&detail)), Vec::new()));
     }

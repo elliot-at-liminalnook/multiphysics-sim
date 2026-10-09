@@ -19,7 +19,7 @@ use crate::cad::sketch::{ActivePlane, BasePlane, CadActivePlane, CadSketches};
 use crate::cad::transform::ToolGizmos;
 use crate::cad::view::CadView;
 use bevy::prelude::*;
-use sim_runtime::cad_client::{PlaneFrame, SketchCall, SketchCurve, Uv};
+use crate::cad::types::{PlaneFrame, SketchCall, SketchCurve, Uv};
 use std::f64::consts::{PI, TAU};
 
 /// RoboCAD's temporary-shape colour for a sketch preview (tools.py:718).

@@ -8,7 +8,7 @@ use crate::jobs::{Job, Pool};
 use crate::selection::Selection;
 use bevy::prelude::*;
 use serde_json::{Value, json};
-use sim_runtime::cad_client::{CadClient, DocState, MeshData, NodeSummary};
+use crate::cad::types::{DocState, MeshData, NodeSummary};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -78,6 +78,23 @@ pub(crate) fn tree(archive: &sim_cad::ArchiveDocument) -> Result<DocState, Strin
     serde_json::from_value(value).map_err(|e| format!("{}: manifest display projection: {e}", archive.path.display()))
 }
 
+/// The display snapshot of an opened archive: its tree, exact geometry,
+/// masses, display meshes, fingerprints and pin stamps.
+pub(crate) fn snapshot_of(archive: Arc<sim_cad::ArchiveDocument>, cancelled: &dyn Fn() -> bool, progress: &dyn Fn(&str)) -> Result<LocalSnapshot, String> {
+    let tree = tree(&archive)?;
+    let geometry = sim_cad::geometry::load_geometry(&archive, cancelled, progress)?;
+    if cancelled() { return Err("Local open cancelled after geometry".into()); }
+    progress("Deriving exact body and assembly mass properties");
+    let masses = sim_cad::mass::derive_document_with(&archive, &geometry, cancelled, progress)?;
+    if cancelled() { return Err("Local open cancelled after mass derivation".into()); }
+    progress("Preparing local display snapshot");
+    let meshes = geometry.iter().map(|body| (body.node_id.clone(), super::local::mesh(body))).collect();
+    let fingerprints = sim_cad::geometry::fingerprints(&archive);
+    progress("Checking comment pins");
+    let pin_stamps = sim_cad::annotations::pinned_stamps(&archive);
+    Ok(LocalSnapshot { archive, tree, geometry, meshes, masses, fingerprints, pin_stamps })
+}
+
 pub(crate) fn request_load(doc: &mut CadDocument, path: PathBuf) -> u64 {
     if let Some(old) = doc.local_load.take() {
         doc.load_outcomes.insert(old.sequence, Err("Local CAD open superseded; current document preserved".into()));
@@ -91,18 +108,7 @@ pub(crate) fn request_load(doc: &mut CadDocument, path: PathBuf) -> u64 {
         ctx.message("Reading compatible archive");
         let archive = Arc::new(sim_cad::ArchiveDocument::open_with(&input, &|| ctx.cancelled(), &|stage| ctx.message(stage))?);
         if ctx.cancelled() { return Err("Local open cancelled after archive read".into()); }
-        let tree = tree(&archive)?;
-        let geometry = sim_cad::geometry::load_geometry(&archive, &|| ctx.cancelled(), &|stage| ctx.message(stage))?;
-        if ctx.cancelled() { return Err("Local open cancelled after geometry".into()); }
-        ctx.message("Deriving exact body and assembly mass properties");
-        let masses = sim_cad::mass::derive_document_with(&archive, &geometry, &|| ctx.cancelled(), &|stage| ctx.message(stage))?;
-        if ctx.cancelled() { return Err("Local open cancelled after mass derivation".into()); }
-        ctx.message("Preparing local display snapshot");
-        let meshes = geometry.iter().map(|body| (body.node_id.clone(), super::local::mesh(body))).collect();
-        let fingerprints = sim_cad::geometry::fingerprints(&archive);
-        ctx.message("Checking comment pins");
-        let pin_stamps = sim_cad::annotations::pinned_stamps(&archive);
-        Ok(LocalSnapshot { archive, tree, geometry, meshes, masses, fingerprints, pin_stamps })
+        snapshot_of(archive, &|| ctx.cancelled(), &|stage| ctx.message(stage))
     });
     doc.local_load = Some(LocalLoad { sequence, source_generation, source_revision, target: path, job });
     doc.show(Ok("Opening locally; current document retained until success (Escape cancels)".into()));
@@ -120,7 +126,7 @@ pub(crate) fn cancel_load(doc: &mut CadDocument, sequence: u64) {
 pub(crate) fn start(doc: &mut CadDocument) {
     match &doc.target {
         CadTarget::File(path) => { request_load(doc, path.clone()); }
-        CadTarget::Service(_) => { doc.connection = Connection::Lost { error: "CAD service attachment awaiting Rust migration; open a local .rcad archive".into(), since: Instant::now() }; doc.touch(); }
+        CadTarget::Service(_) => { doc.connection = Connection::Lost { error: "No CAD service is attached in this viewer; open a local .rcad archive".into(), since: Instant::now() }; doc.touch(); }
     }
 }
 
@@ -195,7 +201,6 @@ pub(crate) fn receive(doc: Option<ResMut<CadDocument>>, mut selection: ResMut<Se
     }
 }
 
-pub(crate) fn refresh(doc: &mut CadDocument, _after_edit: bool) { start(doc); }
 pub(crate) fn fetch_physical(doc: &mut CadDocument) -> Result<(), String> {
     let local = doc.local.as_ref().ok_or("Local CAD archive is not loaded")?;
     doc.physical = Some((doc.shown_revision(), Ok(super::local::physical_json(local))));
@@ -222,7 +227,6 @@ fn finish_edit(doc: &mut CadDocument, shared: &mut Shared) {
         super::selection::follow_tree(shared, tree.revision, &tree, true);
     }
     // cad-print / cad-organize: the parts that track an edit hear its answer.
-    crate::cad::print::edit_answered(doc, seq, answer.as_ref().ok().map(|(_, r)| r));
     crate::cad::threads::edit_answered(doc, seq, answer.as_ref().map(|(_, r)| r).map_err(Clone::clone));
     crate::cad::references::edit_answered(doc, seq, answer.as_ref().map(|(_, r)| r));
     doc.status = Some(answer.as_ref().map(|(m, _)| m.clone()).map_err(Clone::clone));

@@ -19,10 +19,10 @@ use crate::app::actions::Call;
 use crate::app::{ViewerMode, ViewerSet};
 use crate::cad::display::CadDisplay;
 use crate::cad::document::CadDocument;
-use crate::jobs::{Job, Pool};
+use crate::jobs::Job;
 use bevy::prelude::*;
 use serde_json::{Value, json};
-use sim_runtime::cad_client::CadThread;
+use crate::cad::types::CadThread;
 
 /// (document generation, RoboCAD's shown revision, read epoch) a list was read at.
 pub(crate) type Key = (u64, u64, u64);
@@ -129,9 +129,8 @@ fn needs_work(doc: &CadDocument, pins: bool) -> Option<Option<Landed>> {
 pub(crate) fn tick(doc: &mut CadDocument, pins: bool, landed: Option<Landed>) -> bool {
     let now = key(doc);
     let want = wanted(doc, pins);
-    let client = doc.client.clone().filter(|_| doc.connected());
     let local = doc.local.clone().filter(|_| doc.connected());
-    let generation = doc.generation;
+    let _generation = doc.generation;
     let r = &mut doc.threads.read;
     let mut touched = false;
     // Superseded: dropping the job cancels it.
@@ -164,17 +163,7 @@ pub(crate) fn tick(doc: &mut CadDocument, pins: bool, landed: Option<Landed>) ->
         }
         return true;
     }
-    if !have && r.job.is_none() && want && let Some(client) = client {
-        let job = Job::spawn(Pool::Dedicated, generation, "cad-threads", move |ctx| {
-            if ctx.cancelled() {
-                return Err("superseded by a newer revision".to_string());
-            }
-            // RoboCAD's own words (the dock shows them; no route).
-            client.threads(None, None, None).map_err(|e| e.message)
-        });
-        r.job = Some((now, job));
-        touched = true;
-    }
+    let _ = want;
     touched
 }
 

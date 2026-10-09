@@ -72,7 +72,7 @@ fn malformed_evidence_is_refused_by_the_shared_annotation_adapter() {
 }
 #[test]
 fn evidence_wire_preserves_capture_identity_and_omits_surface_coordinates() {
-    use sim_runtime::cad_client::threads::{ExperimentEvidence, NewEvidenceThread};
+    use crate::cad::types::threads::{ExperimentEvidence, NewEvidenceThread};
     let input = NewEvidenceThread {
         body: "Sample note".into(),
         author: "You".into(),

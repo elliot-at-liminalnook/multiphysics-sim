@@ -60,7 +60,7 @@ use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextDraft, TextField, T
 use crate::ui_kit::{DANGER, Kit, Look, SUBTLE, size, wrap};
 use bevy::prelude::*;
 use serde_json::{Value, json};
-use sim_runtime::cad_client::NodeSummary;
+use crate::cad::types::NodeSummary;
 
 /// The inspector's value editors' field: one kit field for every editor
 /// (the value is `ToolState::inspector_edit`).

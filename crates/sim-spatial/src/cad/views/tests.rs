@@ -11,7 +11,7 @@ use crate::camera::{Orbit, ViewPreset, robocad_to_display};
 use bevy::math::DVec3;
 use bevy::prelude::*;
 use serde_json::Value;
-use sim_runtime::cad_client::{Health, SavedView, VIEW_STATE_KEYS, ViewState};
+use crate::cad::types::{Health, SavedView, VIEW_STATE_KEYS, ViewState};
 use std::collections::BTreeSet;
 
 fn close(a: f64, b: f64, eps: f64) -> bool {
@@ -151,7 +151,6 @@ fn display_settings_and_fov_are_restored() {
 
 fn document() -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
-    doc.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
     doc.doc_key = Some((None, 4));

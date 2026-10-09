@@ -12,7 +12,7 @@ use crate::ui_kit::{ACCENT, ACCENT_BG, DANGER, FAINT, Kit, Look, SUBTLE, TEXT, T
 use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
 use serde_json::Value;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use std::fmt::Write;
 
 /// Indent per tree level (px).

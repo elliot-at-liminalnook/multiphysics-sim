@@ -1,18 +1,17 @@
 //! The Print jobs section of the right dock (`panel::Part::Print`):
 //! RoboCAD's "Print jobs…" (ui/app.py:1265-1275) as a section beside the
 //! Robot and Materials sections instead of a message box. It shows the
-//! last eight of RoboCAD's print jobs as RoboCAD's lines ("kind id: state
-//! n % message", or "No print jobs yet."), a "Cancel running jobs…" button
-//! while one runs, RoboCAD's question "Cancel the running jobs?" with Yes
-//! and No, and Close. Every button writes a `CadAction::CadPrint`
-//! (`cad_print`), the same action REST and `system_ui` send. Opening it
-//! starts a poll ([`super::jobs_tracker`] polls while it is open).
-use super::jobs_tracker::{PrintJobTracker, UNREAD};
+//! last eight print jobs as RoboCAD's lines ("kind id: state n % message",
+//! or "No print jobs yet."), a "Cancel running jobs…" button while one
+//! runs, RoboCAD's question "Cancel the running jobs?" with Yes and No,
+//! and Close. Every button writes a `CadAction::CadPrint` (`cad_print`),
+//! the same action REST and `system_ui` send.
+use super::jobs_tracker::PrintJobTracker;
 use super::{PrintArgs, PrintOp};
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
 use crate::cad::panel::CadButton;
-use crate::ui_kit::{DANGER, Kit, Look, size, wrap};
+use crate::ui_kit::{Kit, Look, wrap};
 use bevy::prelude::*;
 use serde_json::{Value, json};
 
@@ -26,14 +25,12 @@ fn act(op: PrintOp, open: Option<bool>, confirm: Option<bool>) -> CadAction {
 }
 
 /// `cad_print {op: jobs}`: the section shown (`Some(true)`), hidden
-/// (`Some(false)`) or toggled (`None`); opening polls at once.
+/// (`Some(false)`) or toggled (`None`).
 pub(super) fn show(doc: &mut CadDocument, open: Option<bool>) -> Result<Value, String> {
     let t = &mut doc.print.jobs;
     let now = open.unwrap_or(!t.open);
     t.open = now;
-    if now {
-        t.request_poll();
-    } else {
+    if !now {
         t.confirming = false;
     }
     let lines = t.lines();
@@ -44,7 +41,7 @@ pub(super) fn show(doc: &mut CadDocument, open: Option<bool>) -> Result<Value, S
 /// `cad_state.print.panel`.
 pub(super) fn state_json(doc: &CadDocument) -> Value {
     let t = &doc.print.jobs;
-    json!({"open": t.open, "confirming": t.confirming, "lines": t.lines(), "listed": t.listed, "running": t.running(None)})
+    json!({"open": t.open, "confirming": t.confirming, "lines": t.lines(), "running": t.running(None)})
 }
 
 /// `cad:print:jobs` (show or hide the section), `cad:print:cancel` (ready
@@ -53,14 +50,13 @@ pub(super) fn state_json(doc: &CadDocument) -> Value {
 pub(super) fn controls(doc: &CadDocument) -> Vec<(String, String, CadAction, Result<(), String>)> {
     let t = &doc.print.jobs;
     let running = !t.running(None).is_empty();
-    // As `jobs_tracker::cancel` refuses: nothing before a list was read.
-    let none = || Err(if t.listed { "No print jobs are running" } else { UNREAD }.to_string());
+    let none = || Err("No print jobs are running".to_string());
     let mut out = vec![
         ("cad:print:jobs".to_string(), if t.open { "Hide print jobs" } else { "Show print jobs" }.to_string(), act(PrintOp::Jobs, Some(!t.open), None), Ok(())),
-        ("cad:print:cancel".to_string(), "Cancel running jobs…".to_string(), act(PrintOp::Cancel, None, None), if running && t.listed { Ok(()) } else { none() }),
+        ("cad:print:cancel".to_string(), "Cancel running jobs…".to_string(), act(PrintOp::Cancel, None, None), if running { Ok(()) } else { none() }),
     ];
     if t.confirming {
-        out.push(("cad:print:cancel_yes".to_string(), "Yes".to_string(), act(PrintOp::Cancel, None, Some(true)), if running && t.listed { Ok(()) } else { none() }));
+        out.push(("cad:print:cancel_yes".to_string(), "Yes".to_string(), act(PrintOp::Cancel, None, Some(true)), if running { Ok(()) } else { none() }));
         out.push(("cad:print:cancel_no".to_string(), "No".to_string(), act(PrintOp::Cancel, None, Some(false)), Ok(())));
     }
     out
@@ -83,16 +79,10 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
     p.spawn(k.title("Print jobs"));
     let lines = t.lines();
     if lines.is_empty() {
-        p.spawn(k.caption(if t.listed { NO_JOBS } else { "Reading RoboCAD's print jobs…" }));
+        p.spawn(k.caption(NO_JOBS));
     }
     for line in lines {
         p.spawn(k.caption(line));
-    }
-    if let Some(e) = &t.error {
-        p.spawn(k.text(format!("RoboCAD's print jobs could not be read: {e}"), size::SMALL, DANGER, 0));
-    }
-    if !doc.connected() {
-        p.spawn(k.note("Not connected to RoboCAD: the list is as last read."));
     }
     let running = !t.running(None).is_empty();
     if t.confirming && running {
@@ -111,13 +101,13 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
 }
 
 /// What the section shows, as a comparable text (the jobs' states and
-/// progress, the question, the error, the connection, open or closed).
+/// progress, the question, open or closed).
 pub(in crate::cad) fn key(doc: &CadDocument) -> String {
     let t = &doc.print.jobs;
     if !t.open {
         return "closed".to_string();
     }
-    format!("{:?}", (t.lines(), t.confirming, t.listed, &t.error, t.running(None), doc.connected()))
+    format!("{:?}", (t.lines(), t.confirming, t.running(None)))
 }
 
 /// CadPlugin: nothing beyond the dock's own refresh and buttons (`panel`).

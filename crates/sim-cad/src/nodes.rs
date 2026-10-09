@@ -127,6 +127,8 @@ pub fn delete(edit: &mut Edit, ids: &[String]) -> Result<Vec<String>, String> {
     }
     for id in &selected {
         edit.entries.insert(format!("brep/{id}.brep"), None);
+        // A reference mesh node's triangles go with it.
+        edit.entries.insert(format!("mesh/{id}.npz"), None);
     }
     Ok(selected)
 }
@@ -207,7 +209,8 @@ pub fn replace_body(edit: &mut Edit, _stamps: &Stamps, id: &str, brep: Vec<u8>) 
 pub fn transform(edit: &mut Edit, doc: &ArchiveDocument, stamps: &Stamps, ids: &[String], centers: &[[f64; 3]], translation: [f64; 3], axis: Option<[f64; 3]>, angle_deg: f64, scale: f64) -> Result<Vec<String>, String> {
     let mut moved = Vec::new();
     for (id, center) in ids.iter().zip(centers) {
-        let n = doc.node(id).ok_or_else(|| format!("part {id} does not exist"))?;
+        // As this edit has the node (a part made earlier in the same edit included).
+        let n = edit.node(id).cloned().ok_or_else(|| format!("part {id} does not exist"))?;
         if !n["component_member"].is_null() || !n["component_instance"].is_null() {
             return Err("Move the whole component occurrence or edit its parameters".into());
         }
@@ -216,7 +219,11 @@ pub fn transform(edit: &mut Edit, doc: &ArchiveDocument, stamps: &Stamps, ids: &
         }
         let m = crate::kernel::placement(translation, axis, angle_deg, *center, scale)?;
         if n["kind"] == "body" {
-            let bytes = body_bytes(doc, id)?;
+            let staged = edit.entries.get(&format!("brep/{id}.brep")).cloned().flatten();
+            let bytes = match &staged {
+                Some(b) => b.as_slice(),
+                None => body_bytes(doc, id)?,
+            };
             let brep = crate::kernel::build(&crate::kernel::Shape::Transform { body: bytes, matrix: m }, &|| false)?;
             // The new stamp is RoboCAD's of the moved body, as drawn.
             let solid = n["body_kind"].as_str().unwrap_or("solid") == "solid";

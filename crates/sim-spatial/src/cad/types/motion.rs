@@ -1,0 +1,65 @@
+//! Reference CAD kinematics; radians/mm, never physics or motor commands.
+use super::experiments::CaptureIdentity;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::collections::BTreeMap;
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct PoseRequest {
+    pub document_id: String,
+    pub expected_revision: u64,
+    pub positions: BTreeMap<String, f64>,
+    pub program: Option<Value>,
+    pub time: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub prior: Option<PoseContinuation>,
+}
+/// Caller-owned resolved state; validated by the reference service before it
+/// seeds a solver. No remote mutable session and no cross-consumer state.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PoseContinuation {
+    pub identity: CaptureIdentity,
+    pub positions: BTreeMap<String, f64>,
+}
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PoseJoint {
+    pub id: String,
+    pub name: String,
+    pub unit: String,
+    pub home: f64,
+    pub lower: Option<f64>,
+    pub upper: Option<f64>,
+    pub display_lower: f64,
+    pub display_upper: f64,
+    pub driver: bool,
+    pub pivot: [f64; 3],
+    pub axis: [f64; 3],
+    pub child: String,
+    pub parent: Option<String>,
+}
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PoseMetadata {
+    pub identity: CaptureIdentity,
+    pub joints: Vec<PoseJoint>,
+    pub assumptions: Vec<String>,
+    #[serde(default)]
+    pub focus_ids: BTreeMap<String, Vec<String>>,
+}
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PoseSample {
+    pub identity: CaptureIdentity,
+    pub positions: BTreeMap<String, f64>,
+    pub matrices: BTreeMap<String, [[f64; 4]; 4]>,
+    pub closure_error_mm: f64,
+    pub time: f64,
+    pub program: Option<Value>,
+    #[serde(default)]
+    pub prior_applied: bool,
+}
+impl PoseSample {
+    pub fn continuation(&self) -> PoseContinuation {
+        PoseContinuation {
+            identity: self.identity.clone(),
+            positions: self.positions.clone(),
+        }
+    }
+}

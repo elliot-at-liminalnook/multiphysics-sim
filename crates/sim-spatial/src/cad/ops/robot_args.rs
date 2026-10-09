@@ -26,7 +26,7 @@ use crate::cad::sync::value;
 use crate::cad::transform::{OpCall, num, round6};
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::RobotSummary;
+use crate::cad::types::RobotSummary;
 
 /// Which robot handler a catalogue entry is.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -381,7 +381,7 @@ pub(super) fn send(doc: &mut CadDocument, call: &mut Call, plan: Plan) -> Outcom
             }
             Done::Ground { ids, names } => {
                 for (i, id) in ids.iter().enumerate() {
-                    let step = |mut e: sim_runtime::cad_client::CadError| {
+                    let step = |mut e: crate::cad::types::CadError| {
                         if ids.len() > 1 {
                             e.message = format!("{} (body {} of {}; the {i} before it were toggled, each its own RoboCAD undo step)", e.message, i + 1, ids.len());
                         }

@@ -4,12 +4,12 @@
 pub(crate) use super::reads::{compare, read_candidate, read_selected, refresh};
 use super::*;
 use crate::jobs::{Job, Pool};
-use sim_runtime::cad_client::{CadClient, experiments::ExperimentRecord};
+use crate::cad::types::experiments::ExperimentRecord;
 use std::time::{Duration, Instant};
 pub(crate) struct Active {
     pub stamp: Stamp,
     pub expected_revision: u64,
-    pub client: CadClient,
+    pub client: crate::cad::lab::Service,
     pub label: String,
     pub mutation: bool,
     pub cancel_requested: bool,
@@ -79,7 +79,7 @@ pub(crate) fn start(
         request.label, s.generation, s.sequence, nonce
     );
     let label = request.label.clone();
-    let client = doc.client.clone().ok_or("Not connected to RoboCAD")?;
+    let client = crate::cad::lab::service(doc)?;
     let sending = client.clone();
     let candidate = if a.op == ExperimentsOp::CandidateRun {
         let id = st.candidate.clone().ok_or("Select a candidate first")?;
@@ -151,7 +151,7 @@ pub(crate) fn mutate(
         return Err("candidate.draft: editor changed; original retained".into());
     }
     let s = d.stamp.clone();
-    let client = doc.client.clone().ok_or("Not connected to RoboCAD")?;
+    let client = crate::cad::lab::service(doc)?;
     let sending = client.clone();
     let operation = a.op;
     let candidate = st.candidate.clone();
@@ -583,7 +583,7 @@ pub(crate) fn tick(
     {
         let s = d.stamp.clone();
         let paths = d.linked.clone();
-        let client = doc.client.clone();
+        let client = crate::cad::lab::service(doc).ok();
         st.linked = Some(Linked {
             stamp: s.clone(),
             job: Job::spawn(
@@ -591,7 +591,7 @@ pub(crate) fn tick(
                 s.generation,
                 "linked experiment sources",
                 move |_| {
-                    let client = client.ok_or("Not connected to RoboCAD")?;
+                    let client = client.ok_or("Open a CAD document first")?;
                     paths
                         .into_iter()
                         .map(|(key, path)| {

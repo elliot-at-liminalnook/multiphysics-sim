@@ -9,7 +9,7 @@ use crate::cad::selection::CadItems;
 use crate::cad::topology::CadTopology;
 use crate::ui_kit::{DANGER, Kit, SUBTLE, WARN, size};
 use bevy::prelude::*;
-use sim_runtime::cad_client::{FaceInfo, SelectionItem};
+use crate::cad::types::{FaceInfo, SelectionItem};
 
 pub(in crate::cad) fn name_key(doc: &CadDocument, selection: &[SelectionItem], draft: &NameDraft) -> String {
     let sel = selection.first_node();
@@ -194,17 +194,10 @@ fn waiting(doc: &CadDocument) -> Option<(String, bool)> {
     if doc.connected() {
         return None;
     }
-    if doc.client.is_none() {
-        return Some(match &doc.connection {
-            Connection::Connecting { what, .. } => (format!("Local archive loading: {what}."), false),
-            Connection::Lost { error, .. } => (format!("Local archive unavailable: {error}"), true),
-            Connection::Connected => ("No local document snapshot is available.".to_string(), false),
-        });
-    }
     Some(match &doc.connection {
-        Connection::Connecting { what, .. } => (format!("Waiting for the connection to RoboCAD: {what}."), false),
-        Connection::Lost { error, .. } => (format!("No detail: no CAD document is open: {error}"), true),
-        Connection::Connected => ("Waiting for the connection to RoboCAD.".to_string(), false),
+        Connection::Connecting { what, .. } => (format!("Local archive loading: {what}."), false),
+        Connection::Lost { error, .. } => (format!("Local archive unavailable: {error}"), true),
+        Connection::Connected => ("No local document snapshot is available.".to_string(), false),
     })
 }
 

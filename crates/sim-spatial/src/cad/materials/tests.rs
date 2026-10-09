@@ -8,11 +8,10 @@ use crate::app::actions::{Action, control_matches};
 use crate::cad::actions::CadAction;
 use crate::cad::document::{CadDocument, CadTarget, Connection};
 use serde_json::{Value, json};
-use sim_runtime::cad_client::{DocState, Health, Material, NodeSummary, SelectionItem};
+use crate::cad::types::{DocState, Health, Material, NodeSummary, SelectionItem};
 
 fn document() -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
-    doc.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
     doc.doc_key = Some((None, 4));

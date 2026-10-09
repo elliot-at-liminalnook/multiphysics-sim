@@ -77,7 +77,7 @@ use bevy::picking::hover::HoverMap;
 use bevy::prelude::*;
 use bevy::window::{PrimaryWindow, RequestRedraw};
 use serde_json::{Map, Value};
-use sim_runtime::cad_client::PlaneFrame;
+use crate::cad::types::PlaneFrame;
 use std::time::{Duration, Instant};
 
 /// A primitive being placed: the base's first and current points on the

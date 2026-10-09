@@ -6,15 +6,14 @@ fn document() -> CadDocument {
     let mut d = CadDocument::new(super::super::CadTarget::Service(
         "http://127.0.0.1:1".into(),
     ));
-    d.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:1").unwrap());
     d.connection = Connection::Connected;
-    d.doc = Some(sim_runtime::cad_client::DocState {
+    d.doc = Some(crate::cad::types::DocState {
         revision: 7,
         document_id: Some("doc".into()),
         ..default()
     });
     d.doc_key = Some((Some("doc".into()), 7));
-    d.health = Some(sim_runtime::cad_client::Health {
+    d.health = Some(crate::cad::types::Health {
         revision: 7,
         ..default()
     });

@@ -10,7 +10,7 @@ use crate::app::actions::Action;
 use crate::cad::actions::CadAction;
 use crate::jobs::Job;
 use serde_json::{Map, Value, json};
-use sim_runtime::cad_client::MassBlock;
+use crate::cad::types::MassBlock;
 
 fn stamp() -> Stamp {
     Stamp { generation: 1, revision: 7, edit_seq: 3, nodes: vec!["b1".into(), "b2".into()] }

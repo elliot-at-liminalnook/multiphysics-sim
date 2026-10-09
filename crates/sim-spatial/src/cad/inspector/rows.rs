@@ -37,7 +37,7 @@ use crate::cad::transform::num;
 use crate::ui_kit::{DANGER, Kit, Look, SUBTLE, VALUE, WARN, size, wrap};
 use bevy::prelude::*;
 use serde_json::{Map, Value};
-use sim_runtime::cad_client::{NodeSummary, RobotJoint, SelectionItem};
+use crate::cad::types::{NodeSummary, RobotJoint, SelectionItem};
 
 /// A physical row's field: a press opens its draft (`entry`).
 #[derive(Component, Clone, Debug)]

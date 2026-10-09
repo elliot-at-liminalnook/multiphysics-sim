@@ -45,7 +45,7 @@ use crate::ui_kit::{DANGER, Kit, Look, SUBTLE, UiFonts, WARN, size};
 use bevy::ecs::system::ParamSet;
 use bevy::prelude::*;
 use serde_json::{Map, Value, json};
-use sim_runtime::cad_client::{IMPORT_EXTENSIONS, IMPORT_UNITS, MESH_EXTENSIONS, RENDER_MODES, RENDER_VIEWS, extension};
+use crate::cad::types::{IMPORT_EXTENSIONS, IMPORT_UNITS, MESH_EXTENSIONS, RENDER_MODES, RENDER_VIEWS, extension};
 use std::collections::BTreeMap;
 
 /// The path form's text field (`ui_kit::text`): the row it edits is

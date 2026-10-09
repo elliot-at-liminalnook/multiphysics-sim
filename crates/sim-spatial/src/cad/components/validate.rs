@@ -2,7 +2,7 @@
 //! authoritative in RoboCAD. Errors carry a field/identity path.
 use super::{ComponentsState, form::definition};
 use crate::cad::CadDocument;
-use sim_runtime::cad_client::{ComponentOperation, ComponentParameter};
+use crate::cad::types::{ComponentOperation, ComponentParameter};
 use std::collections::BTreeMap;
 
 pub(super) fn validate_operation(

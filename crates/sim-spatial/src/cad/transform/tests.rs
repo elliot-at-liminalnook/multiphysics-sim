@@ -11,7 +11,7 @@ use super::*;
 use crate::app::actions::{Call, Origin, Replies};
 use crate::cad::actions::Dimension;
 use crate::cad::document::{CadTarget, Connection, Edit, EditDone};
-use sim_runtime::cad_client::{CadClient, DocState, Health, NodeSummary, SelectionItem};
+use crate::cad::types::{DocState, Health, NodeSummary, SelectionItem};
 
 fn node(id: &str, name: &str) -> NodeSummary {
     NodeSummary { id: id.into(), kind: "body".into(), name: name.into(), visible: true, effective_visible: true, ..Default::default() }
@@ -20,7 +20,6 @@ fn node(id: &str, name: &str) -> NodeSummary {
 /// A connected document at revision 4 with two bodies (Bracket selected: [`selected`]).
 fn document() -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
-    doc.client = Some(CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), nodes: 2, revision: 4, ..Default::default() });
     doc.doc = Some(DocState { nodes: vec![node("b1", "Bracket"), node("b2", "Plate")], revision: 4, ..Default::default() });
@@ -292,7 +291,7 @@ fn tool_state_reports_the_tool_and_its_labels() {
 
 #[test]
 fn a_targeted_face_is_found_again_after_an_edit_or_refused_by_name() {
-    use sim_runtime::cad_client::FaceInfo;
+    use crate::cad::types::FaceInfo;
     let plane = |index: i64, z: f64, nz: f64| FaceInfo { index, kind: "plane".into(), centroid: Some([0.0, 0.0, z]), normal: Some([0.0, 0.0, nz]), area: Some(100.0), ..Default::default() };
     let top = plane(1, 20.0, 1.0);
     // After a push/pull the faces are renumbered and the top moved up 5 mm.

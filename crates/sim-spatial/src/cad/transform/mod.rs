@@ -119,7 +119,7 @@ use super::document::{CadDocument, CadTool};
 use super::measure::MeasureState;
 use super::numeric::Numeric;
 use super::snap::Snap;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use crate::app::actions::Call;
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
 use bevy::prelude::*;

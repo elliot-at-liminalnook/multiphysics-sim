@@ -231,7 +231,7 @@ pub(crate) fn request(doc: &mut CadDocument, request: ExportRequest) -> Result<V
                 doc.results.exports.land(Last { seq: old, label: q.label, path: q.path, outcome: Err(message), cad_sha256: None, cad_sha256_reason: None });
             }
             doc.results.exports.queued_seq = seq;
-            let message = format!("{label}: queued; it starts when the running export ends; poll cad_state.results.exports.recent for seq {seq} (last is the newest)");
+            let message = format!("{label}: queued as export {seq}; it starts when the running export ends");
             doc.show(Ok(message.clone()));
             Ok(json!({"queued": true, "seq": seq, "message": message}))
         }
@@ -239,7 +239,7 @@ pub(crate) fn request(doc: &mut CadDocument, request: ExportRequest) -> Result<V
             let path = request.path.clone();
             let seq = next_seq();
             start(doc, request, seq)?;
-            Ok(json!({"started": true, "path": path, "seq": seq, "message": format!("exporting {label} in the background…; poll cad_state.results.exports.recent for seq {seq} (last is the newest)")}))
+            Ok(json!({"started": true, "path": path, "seq": seq, "message": format!("exporting {label} in the background as export {seq}…")}))
         }
     }
 }

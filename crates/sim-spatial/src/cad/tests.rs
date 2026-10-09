@@ -8,7 +8,7 @@ use super::rest_form::rest_form;
 use super::document::{CadDocument, CadTarget, Connection, Edit, EditDone};
 use crate::app::actions::{self, Action};
 use serde_json::{Value, json};
-use sim_runtime::cad_client::{CommandInfo, DocState, Health, History, NodeSummary, SelectionItem};
+use crate::cad::types::{CommandInfo, DocState, Health, History, NodeSummary, SelectionItem};
 
 fn node(id: &str, parent: Option<&str>, name: &str) -> NodeSummary {
     NodeSummary { id: id.into(), kind: "body".into(), name: name.into(), parent: parent.map(str::to_string), visible: true, effective_visible: true, ..Default::default() }
@@ -23,7 +23,6 @@ fn selected() -> Vec<SelectionItem> {
 /// materials, an undo step and one GUI registry command.
 fn document() -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
-    doc.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), gui: true, nodes: 3, revision: 4, ..Default::default() });
     doc.doc = Some(DocState {

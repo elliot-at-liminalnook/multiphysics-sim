@@ -9,7 +9,7 @@ use crate::cad::document::CadDocument;
 use crate::cad::panel::{edit_blocked, own_controls};
 use crate::cad::selection::CadItems;
 use crate::cad::surfaces::registry;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 
 /// One control: (id, label, action, ready).
 pub(crate) type TreeControl = (String, String, CadAction, Result<(), String>);

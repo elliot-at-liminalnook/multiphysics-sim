@@ -29,7 +29,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 
 /// A joint physics override row (RoboCAD's labels, widgets.py:513-541).
 #[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Eq)]

@@ -28,7 +28,7 @@ use bevy::picking::hover::HoverMap;
 use bevy::picking::mesh_picking::ray_cast::MeshRayCast;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 
 /// Whether a command surface was open at the end of the last frame's
 /// Input, i.e. when this frame's press was made (that press closes it).

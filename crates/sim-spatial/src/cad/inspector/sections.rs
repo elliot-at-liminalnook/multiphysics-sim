@@ -3,15 +3,13 @@
 //! ([`super::rows`]), the node's flags, material and Delete, RoboCAD's
 //! history and its GUI command registry.
 use super::{current_revision, field, inline, lines, node, provenance};
-use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
-use crate::cad::panel::{CadButton, Control, HEADLESS_COMMANDS, command_label, control, controls, edit_blocked, material};
+use crate::cad::panel::{CadButton, Control, control, controls, edit_blocked, material};
 use crate::cad::selection::CadItems;
-use crate::ui_kit::{DANGER, Kit, Look, SUBTLE, TEXT, WARN, size, wrap};
+use crate::ui_kit::{DANGER, Kit, Look, SUBTLE, TEXT, size, wrap};
 use bevy::prelude::*;
 use serde_json::Value;
-use sim_runtime::cad_client::SelectionItem;
-use std::collections::BTreeMap;
+use crate::cad::types::SelectionItem;
 
 pub(in crate::cad) fn physical_key(doc: &CadDocument, selection: &[SelectionItem]) -> String {
     // Not the model itself (collision meshes make it large): its revision,
@@ -162,58 +160,8 @@ pub(in crate::cad) fn commands_key(doc: &CadDocument) -> String {
     format!("{:?}", (&doc.commands, doc.health.as_ref().map(|h| h.gui), edit_blocked(doc)))
 }
 
-/// RoboCAD's GUI command registry, by category; a press runs the command there.
-pub(in crate::cad) fn commands(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem]) {
-    if doc.client.is_none() {
-        p.spawn(k.section("Modelling commands"));
-        p.spawn(k.caption("Every modelling operation runs in process: the menus, the command palette (Ctrl+K) and cad_run/cad_model over REST."));
-        return;
-    }
-    p.spawn(k.section("RoboCAD commands"));
-    let Some(health) = &doc.health else {
-        p.spawn(k.caption("Waiting for RoboCAD to answer."));
-        return;
-    };
-    let map = match &doc.commands {
-        Some(Err(e)) => {
-            p.spawn(k.text(e.clone(), size::SMALL, DANGER, 0));
-            return;
-        }
-        Some(Ok(map)) if health.gui && !map.is_empty() => map,
-        Some(Ok(_)) if health.gui => {
-            p.spawn(k.caption("RoboCAD listed no commands."));
-            return;
-        }
-        Some(Ok(_)) => {
-            p.spawn(k.caption(HEADLESS_COMMANDS));
-            return;
-        }
-        None if !health.gui => {
-            p.spawn(k.caption(HEADLESS_COMMANDS));
-            return;
-        }
-        None => {
-            p.spawn(k.caption("Loading RoboCAD's command registry…"));
-            return;
-        }
-    };
-    let blocked = edit_blocked(doc);
-    if let Some(why) = &blocked {
-        p.spawn(k.text(format!("Commands are unavailable: {why}."), size::SMALL, WARN, 0));
-    }
-    let all = controls(doc, selection);
-    let mut groups: BTreeMap<&str, Vec<(&String, &sim_runtime::cad_client::CommandInfo)>> = BTreeMap::new();
-    for (id, info) in map {
-        groups.entry(info.category.as_str()).or_default().push((id, info));
-    }
-    for (category, items) in groups {
-        p.spawn(k.text(if category.is_empty() { "Other" } else { category }, size::BODY, TEXT, 1));
-        p.spawn(wrap()).with_children(|r| {
-            for (id, info) in items {
-                // The action and enabled state `system_ui` lists (`panel::controls`).
-                let ready = control(&all, &format!("cad:command:{id}")).map_or(blocked.is_none(), |c| c.ready.is_ok());
-                r.spawn(k.button(&command_label(&info.label, &info.keys), CadButton(CadAction::CadCommand { id: id.clone() }), Look::Secondary, ready));
-            }
-        });
-    }
+/// The modelling commands: every operation runs in process (menus, palette, REST).
+pub(in crate::cad) fn commands(p: &mut ChildSpawnerCommands, k: &Kit, _doc: &CadDocument, _selection: &[SelectionItem]) {
+    p.spawn(k.section("Modelling commands"));
+    p.spawn(k.caption("Every modelling operation runs in process, from the menus and the command palette (Ctrl+K)."));
 }

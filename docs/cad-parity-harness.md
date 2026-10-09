@@ -1,3 +1,8 @@
+> **Retired (2026-10-08).** The paired RoboCAD/Rust harness (`sim_runtime::cad_parity`,
+> `cad_parity`, `examples/cad-parity/`) was deleted with the RoboCAD client: CAD runs only
+> in process now (see docs/cad-migration-and-composition-plan.md). This page is kept as
+> the record of what the harness compared.
+
 # Shared CAD parity harness — T44
 
 T44.1–T44.4 implement §9 phase 2 tooling by source review. Contracts, adapters,

@@ -28,7 +28,7 @@ use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
 use crate::cad::panel::{Control, own_controls};
 use crate::cad::selection::CadSelection;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use crate::ui_kit::palette::{PaletteEntry, rank};
 use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextDraft, TextFocus};
 use crate::ui_kit::{Kit, LEFT_WIDTH, TOPBAR};

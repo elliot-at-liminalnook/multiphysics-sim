@@ -22,6 +22,14 @@ fn declaration_is_substantive(value: &Value) -> bool {
     }
 }
 
+/// Where occurrence resolution reads: the component definitions (the
+/// manifest's `component_definitions`) and the document's nodes (port
+/// bindings name document nodes).
+pub(crate) struct Library<'a> {
+    pub defs: &'a Value,
+    pub node: &'a dyn Fn(&str) -> Option<Value>,
+}
+
 #[derive(Clone, Debug)]
 pub(crate) struct Recipe {
     pub content: String,
@@ -30,7 +38,7 @@ pub(crate) struct Recipe {
     pub matrices: Vec<[f64; 12]>,
 }
 #[derive(Clone, Copy)]
-struct Quantity {
+pub(crate) struct Quantity {
     v: f64,
     d: [i32; 4],
 }
@@ -196,7 +204,7 @@ impl Parser<'_> {
         Ok(a)
     }
 }
-fn expression(v: &Value, u: &str, vars: &HashMap<String, Quantity>) -> Result<f64, String> {
+pub(crate) fn expression(v: &Value, u: &str, vars: &HashMap<String, Quantity>) -> Result<f64, String> {
     if let Some(n) = v.as_f64() {
         return if n.is_finite() {
             Ok(n)
@@ -232,7 +240,7 @@ fn expression(v: &Value, u: &str, vars: &HashMap<String, Quantity>) -> Result<f6
     }
     Ok(q.v / target.v)
 }
-fn parameters(d: &Value, overrides: &Value) -> Result<HashMap<String, Quantity>, String> {
+pub(crate) fn parameters(d: &Value, overrides: &Value) -> Result<HashMap<String, Quantity>, String> {
     let empty = serde_json::Map::new();
     let specs = d["parameters"].as_object().unwrap_or(&empty);
     let overrides = overrides.as_object().unwrap_or(&empty);
@@ -277,7 +285,7 @@ fn parameters(d: &Value, overrides: &Value) -> Result<HashMap<String, Quantity>,
     }
     Ok(vars)
 }
-fn arguments(f: &Value, vars: &HashMap<String, Quantity>) -> Result<Value, String> {
+pub(crate) fn arguments(f: &Value, vars: &HashMap<String, Quantity>) -> Result<Value, String> {
     let kind = f["kind"].as_str().ok_or("feature kind missing")?;
     let fields: &[(&str, &str, usize)] = match kind {
         "box" => &[("corner", "mm", 3), ("size", "mm", 3)],
@@ -326,11 +334,11 @@ fn arguments(f: &Value, vars: &HashMap<String, Quantity>) -> Result<Value, Strin
     Ok(Value::Object(out))
 }
 #[derive(Clone)]
-struct Part {
-    node: Value,
-    recipe: Option<Recipe>,
+pub(crate) struct Part {
+    pub(crate) node: Value,
+    pub(crate) recipe: Option<Recipe>,
 }
-fn placement(v: &Value) -> Result<[f64; 12], String> {
+pub(crate) fn placement(v: &Value) -> Result<[f64; 12], String> {
     if let Some(a) = v["_resolved_matrix"].as_array() {
         if a.len() != 12 {
             return Err("resolved component matrix must have 12 coefficients".into());
@@ -368,7 +376,7 @@ fn apply(part: &mut Part, m: [f64; 12]) -> Result<(), String> {
     Ok(())
 }
 
-fn physical_transform(v: &mut Value, m: [f64; 12]) -> Result<(), String> {
+pub(crate) fn physical_transform(v: &mut Value, m: [f64; 12]) -> Result<(), String> {
     let Some(o) = v.as_object_mut() else {
         return Ok(());
     };
@@ -438,13 +446,13 @@ fn physical_transform(v: &mut Value, m: [f64; 12]) -> Result<(), String> {
     Ok(())
 }
 fn bind_ports(
-    doc: &ArchiveDocument,
+    lib: &Library,
     target: &str,
     spec: &Value,
     map: &mut serde_json::Map<String, Value>,
     local: &HashMap<String, Part>,
 ) -> Result<(), String> {
-    let mut d = &doc.manifest["component_definitions"][target];
+    let mut d = &lib.defs[target];
     let mut seen = HashSet::new();
     while d["variants"].as_object().is_some_and(|v| !v.is_empty()) {
         let id = d["id"].as_str().ok_or("family id missing")?;
@@ -458,7 +466,7 @@ fn bind_ports(
         let next = d["variants"][choice]["definition_id"]
             .as_str()
             .ok_or("family target missing")?;
-        d = &doc.manifest["component_definitions"][next];
+        d = &lib.defs[next];
     }
     let empty = serde_json::Map::new();
     let ports = d["ports"].as_object().unwrap_or(&empty);
@@ -468,11 +476,10 @@ fn bind_ports(
     }
     for (k, port) in ports {
         let dest = bindings[k].as_str().ok_or("port binding must be node id")?;
-        let n = local
-            .get(dest)
-            .map(|p| &p.node)
-            .or_else(|| doc.node(dest))
-            .ok_or_else(|| format!("port {k}: missing binding {dest}"))?;
+        let n = match local.get(dest) {
+            Some(p) => p.node.clone(),
+            None => (lib.node)(dest).ok_or_else(|| format!("port {k}: missing binding {dest}"))?,
+        };
         if n["kind"] != port["kind"] {
             return Err(format!(
                 "port {k}: binding {dest} requires {}",
@@ -484,7 +491,7 @@ fn bind_ports(
     }
     Ok(())
 }
-fn remap(v: &mut Value, map: &serde_json::Map<String, Value>) {
+pub(crate) fn remap(v: &mut Value, map: &serde_json::Map<String, Value>) {
     match v {
         Value::String(s) => {
             if let Some(n) = map.get(s).and_then(Value::as_str) {
@@ -525,8 +532,9 @@ fn remap_node(n: &mut Value, map: &serde_json::Map<String, Value>) {
         }
     }
 }
-fn variant(
-    doc: &ArchiveDocument,
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn variant(
+    lib: &Library,
     id: &str,
     overrides: &Value,
     nested: &Value,
@@ -542,7 +550,7 @@ fn variant(
     if stack.len() > 64 || !stack.insert(id.into()) {
         return Err(format!("component definition cycle/depth {id}"));
     }
-    let d = &doc.manifest["component_definitions"][id];
+    let d = &lib.defs[id];
     if d.is_null() {
         return Err(format!("missing definition {id}"));
     }
@@ -558,7 +566,7 @@ fn variant(
         let target = selected["definition_id"]
             .as_str()
             .ok_or("variant target missing")?;
-        let td = &doc.manifest["component_definitions"][target];
+        let td = &lib.defs[target];
         let mut mapped = json!({});
         if let Some(bindings) = selected["parameter_bindings"].as_object() {
             for (k, v) in bindings {
@@ -572,7 +580,7 @@ fn variant(
             }
         }
         let result = variant(
-            doc, target, &mapped, nested, None, stack, cancelled, progress,
+            lib, target, &mapped, nested, None, stack, cancelled, progress,
         );
         stack.remove(id);
         return result;
@@ -675,7 +683,7 @@ fn variant(
             .as_str()
             .ok_or("nested definition missing")?
             .to_owned();
-        let td = &doc.manifest["component_definitions"][&target];
+        let td = &lib.defs[&target];
         let mut child_values = spec["overrides"].as_object().cloned().unwrap_or_default();
         if let Some(bindings) = spec["parameter_bindings"].as_object() {
             for (k, v) in bindings {
@@ -709,7 +717,7 @@ fn variant(
             }
         }
         let child = variant(
-            doc,
+            lib,
             &target,
             &Value::Object(child_values),
             &Value::Object(child_nested),
@@ -719,7 +727,7 @@ fn variant(
             progress,
         )?;
         let m = placement(&spec["placement"])?;
-        bind_ports(doc, &target, &spec, &mut map, &parts)?;
+        bind_ports(lib, &target, &spec, &mut map, &parts)?;
         parts.get_mut(&nid).ok_or("nested root missing")?.node["component_instance"] = spec.clone();
         for (source, mut p) in child {
             let dest = map
@@ -742,12 +750,12 @@ fn variant(
     Ok(parts)
 }
 
-fn structural_roots(
-    doc: &ArchiveDocument,
+pub(crate) fn structural_roots(
+    defs: &Value,
     id: &str,
     choice: Option<&str>,
 ) -> Result<Vec<String>, String> {
-    let definition = &doc.manifest["component_definitions"][id];
+    let definition = &defs[id];
     if let Some(variants) = definition["variants"].as_object().filter(|v| !v.is_empty()) {
         let name = choice
             .or_else(|| definition["default_variant"].as_str())
@@ -757,14 +765,14 @@ fn structural_roots(
             .as_str()
             .ok_or("variant definition missing")?;
         // Reference family targets must be an assembly, never another family.
-        let target_definition = &doc.manifest["component_definitions"][target];
+        let target_definition = &defs[target];
         if target_definition["variants"]
             .as_object()
             .is_some_and(|v| !v.is_empty())
         {
             return Err("A family variant must be an assembly definition".into());
         }
-        return structural_roots(doc, target, None);
+        return structural_roots(defs, target, None);
     }
     definition["roots"]
         .as_array()
@@ -805,8 +813,10 @@ pub(crate) fn restore(
                 "occurrence {rid}: definition {did} revision mismatch"
             ));
         }
+        let lookup = |id: &str| doc.node(id).cloned();
+        let lib = Library { defs: &doc.manifest["component_definitions"], node: &lookup };
         let parts = variant(
-            doc,
+            &lib,
             did,
             &spec["overrides"],
             &spec["nested_overrides"],
@@ -825,7 +835,7 @@ pub(crate) fn restore(
                 "occurrence {rid}: node identities differ from definition"
             ));
         }
-        let expected_children: Vec<Value> = structural_roots(doc, did, spec["variant"].as_str())?
+        let expected_children: Vec<Value> = structural_roots(lib.defs, did, spec["variant"].as_str())?
             .iter()
             .map(|id| {
                 map.get(id)
@@ -838,7 +848,7 @@ pub(crate) fn restore(
                 "occurrence {rid}: hierarchy differs from its definition"
             ));
         }
-        bind_ports(doc, did, spec, &mut map, &HashMap::new())?;
+        bind_ports(&lib, did, spec, &mut map, &HashMap::new())?;
         let placement = transform(&spec["placement"], true)?;
         for (source, mut p) in parts {
             if cancelled() {
@@ -891,4 +901,56 @@ pub(crate) fn restore(
         }
     }
     Ok(())
+}
+
+/// The member nodes of occurrence `root` as the manifest stores them
+/// (RoboCAD's `materialize`): ids from its node map, the hierarchy under
+/// the root, "Root / Part" names, locked, `component_member`, and the
+/// derived robot, joint and body kind. A member already there for the same
+/// source keeps its name, visibility and colour (`previous`).
+pub(crate) fn materialize(lib: &Library, root: &Value, previous: &dyn Fn(&str) -> Option<Value>, cancelled: &dyn Fn() -> bool) -> Result<Vec<Value>, String> {
+    let rid = root["id"].as_str().ok_or("occurrence id missing")?;
+    let spec = &root["component_instance"];
+    let did = spec["definition_id"].as_str().ok_or("occurrence definition missing")?;
+    let parts = variant(lib, did, &spec["overrides"], &spec["nested_overrides"], spec["variant"].as_str(), &mut HashSet::new(), cancelled, &|_| {})?;
+    let mut map = spec["node_map"].as_object().ok_or("occurrence node_map missing")?.clone();
+    if parts.len() != map.len() || parts.keys().any(|k| !map.contains_key(k)) {
+        return Err("Occurrence node identities do not match its component definition".into());
+    }
+    bind_ports(lib, did, spec, &mut map, &HashMap::new())?;
+    let m = transform(&spec["placement"], true)?;
+    let root_name = root["name"].as_str().unwrap_or("Component");
+    let mut out = Vec::with_capacity(parts.len());
+    let mut sources: Vec<&String> = parts.keys().collect();
+    sources.sort();
+    for source in sources {
+        let mut p = parts[source].clone();
+        let dest = map.get(source).and_then(Value::as_str).ok_or_else(|| format!("occurrence {rid}: missing identity {source}"))?.to_string();
+        apply(&mut p, m)?;
+        let name = p.node["name"].as_str().unwrap_or(source).to_string();
+        remap_node(&mut p.node, &map);
+        let mut n = p.node;
+        n["id"] = json!(dest);
+        if n["parent"].is_null() {
+            n["parent"] = json!(rid);
+        }
+        if n["component_member"].is_null() {
+            n["component_member"] = json!({"instance_id": rid, "source_node": source});
+        }
+        n["name"] = json!(format!("{root_name} / {name}"));
+        n["locked"] = json!(true);
+        n["results"] = Value::Null;
+        if p.recipe.is_some() && n["body_kind"].is_null() {
+            n["body_kind"] = json!("solid");
+        }
+        if let Some(prev) = previous(&dest)
+            && prev["component_member"] == n["component_member"]
+        {
+            for k in ["name", "visible", "color"] {
+                n[k] = prev[k].clone();
+            }
+        }
+        out.push(n);
+    }
+    Ok(out)
 }

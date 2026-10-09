@@ -13,7 +13,7 @@ use crate::cad::panel::own_controls;
 use crate::ui_kit::form::FieldKind;
 use crate::ui_kit::palette::conflicts;
 use serde_json::{Value, json};
-use sim_runtime::cad_client::{DocState, Health, History, NodeSummary, SelectionItem};
+use crate::cad::types::{DocState, Health, History, NodeSummary, SelectionItem};
 use std::collections::HashSet;
 
 fn node(id: &str, kind: &str, name: &str) -> NodeSummary {
@@ -23,7 +23,6 @@ fn node(id: &str, kind: &str, name: &str) -> NodeSummary {
 /// A connected headless document with two bodies and an instance, nothing selected.
 fn document() -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
-    doc.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), gui: false, nodes: 3, revision: 4, ..Default::default() });
     doc.doc = Some(DocState { nodes: vec![node("b1", "body", "Bracket"), node("b2", "body", "Plate"), node("i1", "instance", "Bracket copy")], history: History { undo: vec!["Move".into()], redo: vec![] }, revision: 4, ..Default::default() });

@@ -1,18 +1,16 @@
 //! One CAD source owner: the shared immutable archive and its local exact
 //! geometry/mass snapshot. Pending replacement is jobs-owned and only lands
-//! against the captured document generation/revision. Legacy DTO and tool state
-//! fields remain as migration scaffolding, never a connected native service.
+//! against the captured document generation/revision.
 mod state;
 mod types;
 
-pub use types::{CadTarget, CadTool, Candidates, ChildSlot, Connected, Connection, Edit, EditDone, PollCommand, PollSnapshot, SelectMode, TreeRow};
+pub use types::{CadTarget, CadTool, Candidates, Connection, Edit, EditDone, PollCommand, PollSnapshot, SelectMode, TreeRow};
 
 use crate::jobs::{Job, RunThread};
 use bevy::prelude::*;
 use serde_json::Value;
-use sim_runtime::cad_client::{Autosave, CadClient, CommandInfo, DocState, Health, NodeDetail, SelectionItem};
+use crate::cad::types::{Autosave, CommandInfo, DocState, Health, NodeDetail, SelectionItem};
 use std::collections::{BTreeMap, HashMap};
-use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
 
@@ -31,12 +29,6 @@ pub struct CadDocument {
     /// are dropped.
     pub generation: u64,
     pub target: CadTarget,
-    /// Legacy unmigrated control seam. Native local loading NEVER fills it.
-    pub client: Option<CadClient>,
-    /// The service this window started (empty when attached): the only
-    /// RoboCAD the viewer ever stops. Shared with the connect job, which
-    /// fills it as soon as it spawns the process ([`ChildSlot`]).
-    pub child: ChildSlot,
     pub connection: Connection,
     /// The latest `GET /` (revision, dirty, gui, document id).
     pub health: Option<Health>,
@@ -114,7 +106,6 @@ pub struct CadDocument {
     /// Bumped whenever anything the panels show changes.
     pub revision: u64,
     // Work owned by `sync`.
-    pub(super) connect: Option<Job<Connected>>,
     pub(super) poll: Option<RunThread<PollCommand, PollSnapshot>>,
     pub(super) seen_poll: u64,
     pub(super) detail_job: Option<Job<NodeDetail>>,
@@ -156,13 +147,6 @@ pub struct CadDocument {
     /// After an edit finishes, `health.dirty` is unknown until the poll has
     /// published this sequence (a `GET /` sent after the edit's answer).
     pub(super) dirty_known_at: Option<u64>,
-    /// The URL the client talks to (the target's, or the self-started port).
-    pub(super) url: Option<String>,
-    /// The self-started service's stderr log (`service::log_path`).
-    pub(super) log: Option<PathBuf>,
-    /// The self-started service has exited: its exit, then its log tail.
-    pub(super) child_exit: Option<String>,
-    pub(super) exit_log: Option<Job<String>>,
     /// Whole seconds shown while connecting (the line is refreshed once a second).
     pub(super) shown_seconds: u64,
 }
@@ -178,10 +162,6 @@ impl CadDocument {
     /// A document not yet connected: CAD mode's OnEnter (or `cad_open`)
     /// starts the connection on a job (`sync::start`). No I/O here.
     pub fn new(target: CadTarget) -> Self {
-        let url = match &target {
-            CadTarget::Service(url) => Some(url.clone()),
-            CadTarget::File(_) => None,
-        };
         let what = match &target {
             CadTarget::File(p) => format!("opening local archive {}", p.display()),
             CadTarget::Service(url) => format!("connecting to RoboCAD at {url}"),
@@ -190,8 +170,6 @@ impl CadDocument {
             local: None, local_load: None, load_sequence: 0, load_outcomes: HashMap::new(), history: Default::default(),
             generation: next_generation(),
             target,
-            client: None,
-            child: ChildSlot::default(),
             connection: Connection::Connecting { what, since: Instant::now() },
             health: None,
             doc: None,
@@ -223,7 +201,6 @@ impl CadDocument {
             uncertain_history: Vec::new(),
             status: None,
             revision: 0,
-            connect: None,
             poll: None,
             seen_poll: 0,
             detail_job: None,
@@ -242,10 +219,6 @@ impl CadDocument {
             edit_waited: false,
             edit_results: HashMap::new(),
             dirty_known_at: None,
-            url,
-            log: None,
-            child_exit: None,
-            exit_log: None,
             shown_seconds: 0,
         }
     }

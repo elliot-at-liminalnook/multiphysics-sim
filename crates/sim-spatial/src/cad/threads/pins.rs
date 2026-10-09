@@ -32,7 +32,7 @@ use crate::ui_kit::{Kit, UiFonts};
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
-use sim_runtime::cad_client::AnchorStatus;
+use crate::cad::types::AnchorStatus;
 
 /// RoboCAD's attached pin colour (#74c8ef).
 pub(crate) const ATTACHED: Color = Color::srgb(116. / 255., 200. / 255., 239. / 255.);

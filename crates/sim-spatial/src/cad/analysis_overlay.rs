@@ -29,7 +29,7 @@ use crate::app::{ViewerMode, ViewerSet};
 use crate::jobs::{Job, Pool};
 use bevy::prelude::*;
 use serde_json::{Value, json};
-use sim_runtime::cad_client::{ControlPoints, Continuity, CurvatureComb};
+use crate::cad::types::{ControlPoints, Continuity, CurvatureComb};
 use std::collections::BTreeMap;
 
 /// Control point markers (app.py:981 `("point", (p, (1.0, 0.5, 0.9), 8.0))`).
@@ -177,7 +177,7 @@ pub(super) fn start(doc: &mut CadDocument, read: Read, revision: u64) -> Result<
                 let v = sim_cad::kernel::measure(sim_cad::kernel::Measure::ControlPoints, &[&b], &[], &[face as i32])?;
                 let (nu, nv) = (v[0] as usize, v[1] as usize);
                 let rows = (0..nu).map(|i| (0..nv).map(|j| { let k = 2 + 3 * (i * nv + j); [v[k], v[k + 1], v[k + 2]] }).collect()).collect();
-                Ok(Landed::ControlPoints(sim_runtime::cad_client::ControlPoints { node, face, rows }))
+                Ok(Landed::ControlPoints(crate::cad::types::ControlPoints { node, face, rows }))
             }
             Read::CurvatureComb { node } => {
                 // A sketch holds no body: no comb lines (as RoboCAD's GUI).
@@ -185,7 +185,7 @@ pub(super) fn start(doc: &mut CadDocument, read: Read, revision: u64) -> Result<
                     Ok(b) => sim_cad::kernel::measure(sim_cad::kernel::Measure::CurvatureComb, &[&b], &[5.0], &[48])?.chunks_exact(6).map(|c| [[c[0], c[1], c[2]], [c[3], c[4], c[5]]]).collect(),
                     Err(_) => Vec::new(),
                 };
-                Ok(Landed::CurvatureComb(sim_runtime::cad_client::CurvatureComb { node, lines }))
+                Ok(Landed::CurvatureComb(crate::cad::types::CurvatureComb { node, lines }))
             }
             Read::Continuity { node } => {
                 let b = sim_cad::geometry::resolved_brep(archive, &node)?;
@@ -198,9 +198,9 @@ pub(super) fn start(doc: &mut CadDocument, read: Read, revision: u64) -> Result<
                     let grade = match code.first().copied().unwrap_or(0.) as i64 { 1 => "G0", 2 => "G1", 3 => "G2", _ => "boundary" };
                     *counts.entry(grade.to_string()).or_insert(0u64) += 1;
                     let points = e["points"].as_array().into_iter().flatten().filter_map(|p| serde_json::from_value(p.clone()).ok()).collect();
-                    edges.push(sim_runtime::cad_client::EdgeContinuity { index, continuity: grade.into(), points });
+                    edges.push(crate::cad::types::EdgeContinuity { index, continuity: grade.into(), points });
                 }
-                Ok(Landed::Continuity(sim_runtime::cad_client::Continuity { node, edges, counts }))
+                Ok(Landed::Continuity(crate::cad::types::Continuity { node, edges, counts }))
             }
         }
     });
@@ -352,7 +352,7 @@ fn draw(doc: Option<Res<CadDocument>>, view: Option<Res<CadView>>, mut gizmos: G
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sim_runtime::cad_client::EdgeContinuity;
+    use crate::cad::types::EdgeContinuity;
 
     #[test]
     fn counts_print_as_robocads_status() {

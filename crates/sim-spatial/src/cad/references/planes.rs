@@ -36,7 +36,7 @@ use bevy::image::{CompressedImageFormats, ImageSampler, ImageType};
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
 use serde_json::{Value, json};
-use sim_runtime::cad_client::ImagePlacement;
+use crate::cad::types::ImagePlacement;
 use std::collections::HashMap;
 
 /// Reads at once.

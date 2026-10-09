@@ -6,7 +6,7 @@ use crate::cad::CadDocument;
 use crate::ui_kit::form::{FieldKind, FieldValue, Unit, evaluate};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use sim_runtime::cad_client::{
+use crate::cad::types::{
     ComponentDefinition, ComponentNested, ComponentOperation, ComponentParameter, ComponentVariant,
 };
 use std::collections::BTreeMap;

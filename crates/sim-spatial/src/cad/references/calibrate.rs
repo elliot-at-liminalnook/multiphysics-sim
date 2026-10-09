@@ -40,7 +40,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::ImagePlacement;
+use crate::cad::types::ImagePlacement;
 
 /// RoboCAD's refusal (references.py `calibrate_reference`, references.py:70).
 pub(crate) const DISTINCT: &str = "Pick two distinct points and enter a positive distance";

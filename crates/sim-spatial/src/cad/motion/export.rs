@@ -21,7 +21,7 @@ pub(crate) struct Export {
     sender: Option<SyncSender<Pixels>>,
     encode: Job<PathBuf>,
     sample: Option<Job<PoseSample>>,
-    continuation: Option<sim_runtime::cad_client::motion::PoseContinuation>,
+    continuation: Option<crate::cad::types::motion::PoseContinuation>,
     requested_time: Option<f64>,
     prepared: bool,
     capture_started: Option<std::time::Instant>,
@@ -229,7 +229,7 @@ fn capture(
     }
     if !e.prepared {
         if e.sample.is_none() {
-            let Some(c) = d.client.clone() else {
+            let Ok(c) = crate::cad::motion_service::service(&d) else {
                 e.cancel();
                 return;
             };

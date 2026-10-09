@@ -23,9 +23,9 @@ pub(crate) use jobs::key;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{
+use crate::cad::types::{
     ComponentCatalogue, ComponentJobStatus, ComponentLibrary, ComponentOperation, ComponentRecipes,
-    ComponentStamp, EDIT_TIMEOUT,
+    ComponentStamp,
 };
 pub(crate) use ui::{build, draw};
 
@@ -332,15 +332,13 @@ fn submit(
         return Err(e);
     }
     validate::validate_operation(&operation, st, doc)?;
-    let client = doc.client.clone().ok_or("Not connected to RoboCAD")?;
+    let client = crate::cad::component_service::service(doc)?;
     let stamp = ComponentStamp {
         document_id: identity.document_id.clone(),
         expected_revision: began,
     };
     let sent = operation.clone();
-    // An edit: wait longer than a desktop RoboCAD's own 120 s, as every
-    // other edit does, so a busy window answers rather than times out.
-    let sending = client.clone().with_timeout(EDIT_TIMEOUT);
+    let sending = client.clone();
     let job = Job::spawn(
         Pool::Dedicated,
         identity.generation,
@@ -412,10 +410,10 @@ fn applied_refusal(index: usize) -> String {
 fn folder(st: &mut ComponentsState, doc: &CadDocument, path: &str) -> Result<Value, String> {
     if !path.is_empty() && !std::path::Path::new(path).is_absolute() {
         return Err(
-            "components.library.path: choose an absolute folder on the RoboCAD service host".into(),
+            "components.library.path: choose an absolute folder".into(),
         );
     }
-    let client = doc.client.clone().ok_or("Not connected to RoboCAD")?;
+    let client = crate::cad::component_service::service(doc)?;
     st.folder = path.into();
     let p = path.to_string();
     st.listing = Some((
@@ -511,7 +509,7 @@ pub(crate) fn controls_of(doc: &CadDocument, st: &ComponentsState) -> Vec<Contro
         if doc.connected() {
             Ok(())
         } else {
-            Err("Not connected to RoboCAD".into())
+            Err("Open a CAD document first".into())
         },
     ));
     for (i, file) in st.files.iter().enumerate() {

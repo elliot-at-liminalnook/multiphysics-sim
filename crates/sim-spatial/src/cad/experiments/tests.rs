@@ -2,15 +2,14 @@
 use super::*;
 fn document() -> CadDocument {
     let mut d = CadDocument::new(crate::cad::CadTarget::Service("http://127.0.0.1:1".into()));
-    d.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:1").unwrap());
     d.connection = crate::cad::Connection::Connected;
-    d.doc = Some(sim_runtime::cad_client::DocState {
+    d.doc = Some(crate::cad::types::DocState {
         revision: 7,
         document_id: Some("doc".into()),
         ..Default::default()
     });
     d.doc_key = Some((Some("doc".into()), 7));
-    d.health = Some(sim_runtime::cad_client::Health {
+    d.health = Some(crate::cad::types::Health {
         revision: 7,
         ..Default::default()
     });
@@ -28,7 +27,7 @@ fn active(s: Stamp) -> lifecycle::Active {
     lifecycle::Active {
         expected_revision: s.revision,
         stamp: s,
-        client: sim_runtime::cad_client::CadClient::new("http://127.0.0.1:1").unwrap(),
+        client: crate::cad::lab::test_service(),
         label: "unique".into(),
         mutation: false,
         cancel_requested: true,
@@ -105,7 +104,7 @@ fn unknown_start_uses_unique_readonly_discovery_and_keeps_cancel() {
     let st = state(&d);
     let mut a = active(st.drafts[0].stamp.clone());
     assert!(lifecycle::ambiguous("RoboCAD may still apply it"));
-    let record = sim_runtime::cad_client::experiments::ExperimentRecord {
+    let record = crate::cad::types::experiments::ExperimentRecord {
         id: "captured".into(),
         label: "unique".into(),
         document_id: Some("doc".into()),
@@ -123,7 +122,7 @@ fn unknown_start_uses_unique_readonly_discovery_and_keeps_cancel() {
 fn cancellation_running_ack_keeps_intent_and_terminal_ack_cannot_be_regressed() {
     let d = document();
     let mut a = active(Stamp::of(&d, 0, 0).unwrap());
-    let r = sim_runtime::cad_client::experiments::ExperimentRecord {
+    let r = crate::cad::types::experiments::ExperimentRecord {
         id: "run".into(),
         document_id: Some("doc".into()),
         state: "running".into(),
@@ -136,7 +135,7 @@ fn cancellation_running_ack_keeps_intent_and_terminal_ack_cannot_be_regressed() 
     assert!(!a.status.as_ref().unwrap().terminal());
     lifecycle::accept_status(
         &mut a,
-        sim_runtime::cad_client::experiments::ExperimentRecord {
+        crate::cad::types::experiments::ExperimentRecord {
             state: "cancelled".into(),
             updated_at: 3.,
             ..r.clone()

@@ -134,10 +134,10 @@ fn rendered_dynamic_buttons_match_shared_catalogue_actions_and_readiness() {
         ..default()
     };
     s.metadata = Some(PoseMetadata {
-        identity: sim_runtime::cad_client::experiments::CaptureIdentity::default(),
+        identity: crate::cad::types::experiments::CaptureIdentity::default(),
         assumptions: vec![],
         focus_ids: BTreeMap::new(),
-        joints: vec![sim_runtime::cad_client::motion::PoseJoint {
+        joints: vec![crate::cad::types::motion::PoseJoint {
             id: "joint".into(),
             name: "Reference hinge".into(),
             unit: "rad".into(),

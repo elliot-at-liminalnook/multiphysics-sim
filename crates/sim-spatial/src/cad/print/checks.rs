@@ -1,5 +1,6 @@
 //! "Wall thickness check…" (`print.wall_check`, Ctrl+W) and "Validate for
-//! printing" (`print.validate`, Ctrl+Shift+V): RoboCAD's reads on a job,
+//! printing" (`print.validate`, Ctrl+Shift+V): RoboCAD's checks run in
+//! process on the shown archive (`sim_cad::printing`) on a job, with
 //! RoboCAD's status text (ui/app.py:1113-1135). Nothing is written: the
 //! thin points are drawn display only by `thin_overlay`.
 //!
@@ -33,7 +34,7 @@ use crate::jobs::{Job, Pool};
 use bevy::prelude::*;
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{ThinRegion, Validation, ValidationIssue};
+use crate::cad::types::{ThinRegion, Validation, ValidationIssue};
 use std::collections::HashMap;
 
 /// RoboCAD's dialog default (`getDouble(…, 1.2, 0.1, 20, 2)`), mm.
@@ -41,7 +42,7 @@ pub(super) const DEFAULT_THRESHOLD: f64 = 1.2;
 /// RoboCAD's node kinds `Document.bodies` lists (document.py:430-431).
 const BODY_KINDS: [&str; 2] = ["body", "sheet"];
 /// Why the validation's text lacks RoboCAD's open-edge lines.
-pub(super) const OPEN_EDGE_NOTE: &str = "open-edge check: RoboCAD's desktop only (its tessellation open-edge count is not served by GET /nodes/{id}/validate)";
+pub(super) const OPEN_EDGE_NOTE: &str = "open-edge check: included, as RoboCAD's desktop does (the welded 0.05 mm tessellation's edges used by one triangle)";
 
 /// One node's thin read: its regions, or None when it has no geometry (404).
 pub(super) type NodeThin = Option<Vec<ThinRegion>>;
@@ -244,7 +245,7 @@ pub(super) fn split_cached(state: &ChecksState, generation: u64, revision: u64, 
 /// Start a wall check (or land it at once from the cache).
 pub(super) fn start_wall(doc: &mut CadDocument, threshold: f64, nodes: Vec<String>) -> Result<Value, String> {
     const LABEL: &str = "Wall thickness check";
-    let client = doc.client.clone().filter(|_| doc.connected()).ok_or_else(|| format!("{LABEL}: {}", super::PRINT_UNPORTED))?;
+    let archive = doc.local.as_ref().map(|l| l.archive.clone()).ok_or_else(|| format!("{LABEL}: open a document first"))?;
     let (generation, revision) = (doc.generation, doc.shown_revision());
     let (known, missing) = split_cached(&doc.print.checks, generation, revision, threshold, &nodes);
     let answer = json!({"reading": "thin", "nodes": nodes, "threshold": threshold, "revision": revision, "cached": known.len(), "sent": missing.len()});
@@ -262,12 +263,13 @@ pub(super) fn start_wall(doc: &mut CadDocument, threshold: f64, nodes: Vec<Strin
             if ctx.cancelled() {
                 return Err("cancelled".into());
             }
-            match client.thin_walls(&id, threshold) {
-                Ok(regions) => out.push((id, Some(regions))),
-                // RoboCAD's `resolved_body(i) is None: continue`.
-                Err(e) if e.not_found() => out.push((id, None)),
-                Err(e) => return Err(format!("{id}: {e}")),
+            // RoboCAD's `resolved_body(i) is None: continue`: a node without an exact body.
+            if !archive.node(&id).is_some_and(|n| matches!(n["kind"].as_str(), Some("body" | "instance"))) {
+                out.push((id, None));
+                continue;
             }
+            let regions = sim_cad::printing::wall_thickness(&archive, &id, threshold, 12, &|| ctx.cancelled()).map_err(|e| format!("{id}: {e}"))?;
+            out.push((id, Some(regions.into_iter().map(|r| ThinRegion { point: r.point, thickness: r.thickness, face: r.face }).collect())));
         }
         Ok(out)
     });
@@ -279,7 +281,7 @@ pub(super) fn start_wall(doc: &mut CadDocument, threshold: f64, nodes: Vec<Strin
 /// Start a validation of `bodies` (id, name).
 fn start_validate(doc: &mut CadDocument, bodies: Vec<(String, String)>) -> Result<Value, String> {
     const LABEL: &str = "Validate for printing";
-    let client = doc.client.clone().filter(|_| doc.connected()).ok_or_else(|| format!("{LABEL}: {}", super::PRINT_UNPORTED))?;
+    let archive = doc.local.as_ref().map(|l| l.archive.clone()).ok_or_else(|| format!("{LABEL}: open a document first"))?;
     let (generation, revision) = (doc.generation, doc.shown_revision());
     let answer = json!({"reading": "validate", "bodies": bodies.iter().map(|(id, _)| id).collect::<Vec<_>>(), "revision": revision});
     let meta = ValidateMeta { revision, generation, bodies: bodies.len() };
@@ -289,12 +291,13 @@ fn start_validate(doc: &mut CadDocument, bodies: Vec<(String, String)>) -> Resul
             if ctx.cancelled() {
                 return Err("cancelled".into());
             }
-            match client.validate_node(&id) {
-                Ok(rep) => out.push((name, rep)),
-                // Not one of RoboCAD's `bodies` (no geometry): not validated.
-                Err(e) if e.not_found() => {}
-                Err(e) => return Err(format!("{name}: {e}")),
+            // Not one of RoboCAD's `bodies` (no exact geometry): not validated.
+            if !archive.node(&id).is_some_and(|n| matches!(n["kind"].as_str(), Some("body" | "instance"))) {
+                continue;
             }
+            let rep = sim_cad::printing::validate(&archive, &id, &|| ctx.cancelled()).map_err(|e| format!("{name}: {e}"))?;
+            let issues = rep.issues.into_iter().map(|i| ValidationIssue { severity: i.severity, message: i.message, location: i.location, fix: i.fix }).collect();
+            out.push((name, Validation { valid: rep.valid, watertight: rep.watertight, issues, summary: rep.summary }));
         }
         Ok(out)
     });

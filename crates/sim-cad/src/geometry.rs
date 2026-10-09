@@ -452,6 +452,11 @@ pub fn load_geometry_reusing(
         .ok_or("manifest nodes missing")?;
     for node in nodes {
         let id = node["id"].as_str().ok_or("manifest node id missing")?;
+        // A reference mesh: drawn from its stored triangles (no exact solid, no properties).
+        if node["kind"] == "mesh" {
+            out.push(mesh_geometry(doc, node, id).map_err(|e| format!("{}: node {id}: {e}", doc.path.display()))?);
+            continue;
+        }
         if !matches!(
             node["kind"].as_str(),
             Some("body" | "sheet" | "curve" | "instance")
@@ -533,6 +538,26 @@ pub fn load_geometry_reusing(
     Ok(out)
 }
 
+/// A mesh node's display geometry: its `mesh/<id>.npz` triangles placed by
+/// the node's own transform. It has no exact solid, so no properties.
+fn mesh_geometry(doc: &ArchiveDocument, node: &Value, id: &str) -> Result<BodyGeometry, String> {
+    let entry = format!("mesh/{id}.npz");
+    let mesh = crate::mesh::from_npz(doc.entry(&entry).ok_or_else(|| format!("missing {entry}"))?)?;
+    let m = transform(&node["transform"], false)?;
+    let rotate = |v: [f64; 3]| [0, 1, 2].map(|i| m[i * 4] * v[0] + m[i * 4 + 1] * v[1] + m[i * 4 + 2] * v[2]);
+    let place = |v: [f64; 3]| { let r = rotate(v); [r[0] + m[3], r[1] + m[7], r[2] + m[11]] };
+    let unit = |v: [f64; 3]| { let l = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt(); if l > 0. { v.map(|x| x / l) } else { v } };
+    Ok(BodyGeometry {
+        node_id: id.into(),
+        vertices_mm: mesh.vertices.iter().map(|v| place(v.map(f64::from))).collect(),
+        normals: mesh.normals.iter().map(|n| unit(rotate(n.map(f64::from)))).collect(),
+        triangles: mesh.triangles.iter().map(|t| t.map(|i| i as u32)).collect(),
+        triangle_faces: mesh.triangle_face.iter().map(|f| *f as u32).collect(),
+        properties: GeometryProperties::default(),
+        solids: Vec::new(),
+    })
+}
+
 /// The key [`load_geometry_reusing`] looks a body up by.
 pub fn reuse_key(fingerprint: &str, tolerance: f64) -> String {
     format!("{fingerprint}@{tolerance}")
@@ -575,6 +600,28 @@ pub fn resolved_brep(doc: &ArchiveDocument, id: &str) -> Result<Vec<u8>, String>
         bytes = crate::kernel::build(&crate::kernel::Shape::Transform { body: &bytes, matrix: *m }, &|| false)?;
     }
     Ok(bytes)
+}
+
+/// A body that is not a node (a split piece, a coupon) from its B-rep
+/// bytes: tessellated at `tolerance` mm, with its exact properties when
+/// `solid` (volume, centroid, inertia).
+pub fn body_geometry(brep: &[u8], solid: bool, tolerance: f64, cancelled: &dyn Fn() -> bool) -> Result<BodyGeometry, String> {
+    if !(tolerance.is_finite() && tolerance > 0.) {
+        return Err("tolerance must be a positive length".into());
+    }
+    let _guard = kernel_lock(cancelled)?;
+    let mut ctx = Context { body: BodyGeometry::default(), cancelled };
+    let mut error = [0 as c_char; 1024];
+    let args = [0f64; 8];
+    let matrices: Vec<f64> = Vec::new();
+    // Synchronous: as `load_geometry_reusing`.
+    let result = unsafe {
+        sim_cad_query(brep.as_ptr(), brep.len(), 0, args.as_ptr(), matrices.as_ptr(), 0, solid, tolerance, &mut ctx as *mut _ as *mut c_void, property, vertex, triangle, cancel, error.as_mut_ptr(), error.len())
+    };
+    if result != 0 {
+        return Err(unsafe { CStr::from_ptr(error.as_ptr()) }.to_string_lossy().into_owned());
+    }
+    Ok(ctx.body)
 }
 
 /// Node `id` tessellated at `tolerance` (mm) instead of its own (an export's chord tolerance).

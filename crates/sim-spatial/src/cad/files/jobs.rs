@@ -25,7 +25,7 @@ use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{CadClient, CadError, FILE_TIMEOUT};
+use crate::cad::types::CadError;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Instant;
 
@@ -98,7 +98,7 @@ pub(super) fn cancel(files: &mut CadFiles, seq: Option<u64>) -> Result<Value, St
     }
     if asked.is_empty() {
         return Err(match seq {
-            Some(s) => format!("no export or render job {s} is in flight (cad_state.files.jobs lists them)"),
+            Some(s) => format!("no export or render job {s} is in flight; it may have ended already"),
             None => "no export or render is in flight".to_string(),
         });
     }

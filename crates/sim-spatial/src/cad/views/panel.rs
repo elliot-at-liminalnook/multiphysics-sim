@@ -32,7 +32,7 @@ use bevy::ecs::message::Messages;
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
-use sim_runtime::cad_client::check_view_name;
+use crate::cad::types::check_view_name;
 
 /// The panel's field: one kit field for every field of the panel (which
 /// one is `CadViews::typing`).

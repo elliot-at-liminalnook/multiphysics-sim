@@ -10,7 +10,7 @@ use crate::cad::view::CadView;
 use bevy::picking::hover::HoverMap;
 use bevy::picking::mesh_picking::ray_cast::{MeshRayCast, MeshRayCastSettings, RayCastVisibility};
 use bevy::prelude::*;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use std::collections::HashSet;
 
 /// The nodes `ids` and everything under them in the shown tree (the drawn

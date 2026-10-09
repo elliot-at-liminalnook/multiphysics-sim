@@ -37,7 +37,7 @@ use crate::cad::selection::{CadItems, CadSelection};
 use crate::cad::view::CadView;
 use bevy::math::DVec3;
 use bevy::prelude::*;
-use sim_runtime::cad_client::{CableMeta, NodeDetail, RobotJoint, RobotMotor, RobotSummary, SelectionItem, SensorMeta};
+use crate::cad::types::{CableMeta, NodeDetail, RobotJoint, RobotMotor, RobotSummary, SelectionItem, SensorMeta};
 use std::collections::HashMap;
 
 /// The glyphs' lines: 2 px (viewport.py `_draw_temp`) and over the bodies,

@@ -15,7 +15,7 @@
 use crate::cad::document::CadDocument;
 use crate::cad::selection::{CadItems, CadSelection};
 use bevy::prelude::*;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 
 /// How long the shown revision must stay put before the model is fetched again.
 const SETTLE: std::time::Duration = std::time::Duration::from_millis(500);

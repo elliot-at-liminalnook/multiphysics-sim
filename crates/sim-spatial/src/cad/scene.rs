@@ -166,7 +166,7 @@ pub(super) fn over_ui(hover: Option<&HoverMap>, nodes: &Query<(), With<Node>>) -
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sim_runtime::cad_client::MeshData;
+    use crate::cad::types::MeshData;
 
     /// A box from `lo` to `hi` (RoboCAD's mm, Z up) as drawn mesh data.
     fn cube(lo: [f64; 3], hi: [f64; 3]) -> MeshData {

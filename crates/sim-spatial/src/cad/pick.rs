@@ -75,7 +75,7 @@ use bevy::picking::hover::HoverMap;
 use bevy::picking::mesh_picking::ray_cast::{MeshRayCast, MeshRayCastSettings, RayCastVisibility};
 use bevy::prelude::*;
 use bevy::window::{PrimaryWindow, RequestRedraw};
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -552,7 +552,7 @@ mod tests {
     use super::*;
     use bevy::camera::CameraProjection;
     use bevy::math::Affine3A;
-    use sim_runtime::cad_client::{EdgeInfo, VertexInfo};
+    use crate::cad::types::{EdgeInfo, VertexInfo};
 
     fn view() -> CadView {
         let projection = PerspectiveProjection { aspect_ratio: 2.0, ..default() };

@@ -21,7 +21,7 @@ use super::mesh::BODY_KINDS;
 use super::selection::CadItems;
 use crate::jobs::{Job, Pool};
 use bevy::prelude::*;
-use sim_runtime::cad_client::{EdgeInfo, FaceInfo, SelectionItem, VertexInfo};
+use crate::cad::types::{EdgeInfo, FaceInfo, SelectionItem, VertexInfo};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 

@@ -18,7 +18,7 @@ use crate::cad::ops::{Built, Env, FormState, Resolved, entry};
 use crate::cad::transform::fl;
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{CadClient, DocState, Health, NodeSummary, SelectionItem, SketchCall, SketchCurve, SketchGeometry};
+use crate::cad::types::{DocState, Health, NodeSummary, SelectionItem, SketchCall, SketchCurve, SketchGeometry};
 use std::sync::Arc;
 
 fn node(id: &str, kind: &str, name: &str, visible: bool) -> NodeSummary {
@@ -29,7 +29,6 @@ fn node(id: &str, kind: &str, name: &str, visible: bool) -> NodeSummary {
 /// its client pointed at `url`.
 fn document(url: &str, nodes: Vec<NodeSummary>) -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service(url.into()));
-    doc.client = Some(CadClient::new(url).unwrap());
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
     doc.doc = Some(DocState { nodes, revision: 4, ..Default::default() });

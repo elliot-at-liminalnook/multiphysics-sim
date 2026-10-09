@@ -1,6 +1,6 @@
 //! The document picker's discovery (on its `Pool::Io` job, never the UI
-//! thread): the mode's recent documents, robot presets, the RoboCAD
-//! service at the default URL, and the workspace's example documents.
+//! thread): the mode's recent documents, robot presets and the
+//! workspace's example documents.
 //! The walk stops when the job is cancelled (the picker closed), and a
 //! section cut by the walk's budget or [`CAP`] says so in its title.
 use super::{Choice, Section, Sources};
@@ -110,7 +110,8 @@ fn recent_section(mode: ViewerMode, root: Option<&Path>, recents: &Recents, read
                 Document::Path(p) if !p.exists() => (relative(root, p), "missing".to_string(), false),
                 Document::Path(p) => (relative(root, p), String::new(), true),
                 Document::Preset(id) => (id.clone(), "preset".to_string(), true),
-                Document::Url(url) => (url.clone(), "RoboCAD service".to_string(), true),
+                // A RoboCAD service from an older session: CAD runs in process now.
+                Document::Url(url) => (url.clone(), "RoboCAD service (no longer attachable)".to_string(), false),
             };
             Choice { label, detail, enabled, document }
         })

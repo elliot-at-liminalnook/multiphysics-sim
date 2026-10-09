@@ -28,7 +28,7 @@ use crate::cad::display::{CadDisplay, DisplayMode, SectionPlane};
 use crate::camera::{CameraState, Orbit, display_to_robocad, robocad_to_display};
 use bevy::math::{DMat3, DVec3};
 use bevy::prelude::*;
-use sim_runtime::cad_client::{VIEW_PITCH_LIMIT, ViewPlane, ViewSection, ViewState};
+use crate::cad::types::{VIEW_PITCH_LIMIT, ViewPlane, ViewSection, ViewState};
 
 /// The field of view the native camera takes, degrees (RoboCAD's `view.fov`
 /// dialog, `QInputDialog.getDouble(…, 5, 120, 1)`; `camera_set` refuses

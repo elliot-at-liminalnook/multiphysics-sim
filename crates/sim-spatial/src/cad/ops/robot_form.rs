@@ -19,7 +19,7 @@ use crate::cad::document::CadDocument;
 use crate::cad::transform::num;
 use crate::ui_kit::form::FieldKind;
 use serde_json::{Map, Value, json};
-use sim_runtime::cad_client::{RobotJoint, RobotSummary, SelectionItem};
+use crate::cad::types::{RobotJoint, RobotSummary, SelectionItem};
 
 /// RoboCAD's `JOINT_TYPES` with `JOINT_TYPE_HINTS` (robotics.py:22, ui/widgets.py:1065-1071).
 const JOINT_TYPES: [(&str, &str); 7] = [

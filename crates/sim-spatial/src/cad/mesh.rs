@@ -8,7 +8,7 @@ use bevy::picking::mesh_picking::ray_cast::RayCastBackfaces;
 use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
-use sim_runtime::cad_client::MeshData;
+use crate::cad::types::MeshData;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 

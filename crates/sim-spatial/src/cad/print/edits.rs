@@ -32,7 +32,7 @@ use crate::cad::ops::{Env, OpEntry, Resolved};
 use crate::cad::sync::value;
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{FastenerSpec, SelectionItem};
+use crate::cad::types::{FastenerSpec, SelectionItem};
 
 /// RoboCAD's first `ops.last_clearance` (commands.py:271).
 #[cfg(test)]

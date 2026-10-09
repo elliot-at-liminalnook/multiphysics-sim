@@ -14,7 +14,7 @@ use super::sync::LocalSnapshot;
 use crate::jobs::{Job, Pool};
 use serde_json::{Value, json};
 use sim_cad::geometry::BodyGeometry;
-use sim_runtime::cad_client::MeshData;
+use crate::cad::types::MeshData;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -233,7 +233,7 @@ pub(crate) fn mesh(body: &BodyGeometry) -> Arc<MeshData> {
 
 /// Node `id`'s exact mass block (RoboCAD's `node_detail` `mass`): volume,
 /// mass from its material, centroid and bounding box (mm, g). None without geometry.
-pub(crate) fn mass_block(local: &LocalSnapshot, id: &str) -> Option<sim_runtime::cad_client::MassBlock> {
+pub(crate) fn mass_block(local: &LocalSnapshot, id: &str) -> Option<crate::cad::types::MassBlock> {
     let g = local.geometry.iter().find(|b| b.node_id == id)?;
     let (mut lo, mut hi) = ([f64::INFINITY; 3], [f64::NEG_INFINITY; 3]);
     for v in &g.vertices_mm {
@@ -243,7 +243,7 @@ pub(crate) fn mass_block(local: &LocalSnapshot, id: &str) -> Option<sim_runtime:
         }
     }
     let mass_g = local.masses.bodies.get(id).map(|m| m.mass_kg * 1000.);
-    Some(sim_runtime::cad_client::MassBlock {
+    Some(crate::cad::types::MassBlock {
         volume_mm3: Some(g.properties.volume_mm3),
         area_mm2: None,
         mass_g,
@@ -268,7 +268,7 @@ pub(crate) fn physical_json(snapshot: &LocalSnapshot) -> serde_json::Value {
 /// path as an opened file. Roots and children follow the tree when it names
 /// them, else its parents.
 #[cfg(test)]
-pub(crate) fn test_snapshot(tree: &sim_runtime::cad_client::DocState) -> LocalSnapshot {
+pub(crate) fn test_snapshot(tree: &crate::cad::types::DocState) -> LocalSnapshot {
     let empty = sim_cad::edit::empty_archive(None).expect("an empty archive");
     let path = Path::new("/test/fixture.rcad");
     let archive = sim_cad::ArchiveDocument::from_bytes(path, empty, &|| false, &|_| {}).expect("the empty archive reads");

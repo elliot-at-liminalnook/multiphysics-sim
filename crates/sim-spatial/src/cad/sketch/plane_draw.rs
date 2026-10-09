@@ -30,7 +30,7 @@ use crate::cad::view::CadView;
 use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
-use sim_runtime::cad_client::PlaneFrame;
+use crate::cad::types::PlaneFrame;
 
 /// Half the square's side (viewport.py:644), mm.
 const HALF: f64 = 60.0;

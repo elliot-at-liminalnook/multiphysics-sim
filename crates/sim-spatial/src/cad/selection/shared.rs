@@ -26,7 +26,7 @@ use crate::document::{DocumentId, DocumentKind, DocumentRegistry, Source};
 use crate::selection::{Item, Op, Recheck, Selection, SelectionAction};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use sim_runtime::cad_client::{DocState, SelectionItem};
+use crate::cad::types::{DocState, SelectionItem};
 
 /// Why a CAD selection change cannot be applied without a registry entry.
 const NOT_REGISTERED: &str = "CAD mode's document is not in the window's document registry yet; nothing was selected";

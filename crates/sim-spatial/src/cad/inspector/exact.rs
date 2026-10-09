@@ -33,8 +33,8 @@ use crate::cad::selection::{CadItems, CadSelection};
 use crate::jobs::{Ctx, Job, Pool};
 use bevy::prelude::*;
 use serde_json::{Value, json};
-use sim_runtime::cad_client::{CadClient, MassBlock, SelectionItem};
-use std::time::{Duration, Instant};
+use crate::cad::types::{MassBlock, SelectionItem};
+use std::time::Duration;
 
 /// RoboCAD's limit (`timer.start(60000)`).
 pub(crate) const LIMIT: Duration = Duration::from_secs(60);

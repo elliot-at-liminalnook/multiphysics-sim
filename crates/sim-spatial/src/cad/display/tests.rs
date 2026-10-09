@@ -6,7 +6,7 @@ use super::section::{accept, clip, clip_polyline, overhangs, segments};
 use super::ui::{cube_action, facing};
 use super::*;
 use crate::camera::{CameraAction, ViewPreset};
-use sim_runtime::cad_client::MeshData;
+use crate::cad::types::MeshData;
 
 /// A unit cube (mm) as RoboCAD tessellates it: 8 vertices, 2 triangles per
 /// face, faces 0..6 (−Z, +Z, −Y, +Y, −X, +X).
@@ -325,9 +325,8 @@ fn display_controls_fit_a_pattern_and_round_trip_through_rest() {
     use crate::app::actions::{Action, control_matches};
     use crate::cad::document::{CadDocument, CadTarget, Connection};
     use serde_json::Value;
-    use sim_runtime::cad_client::SelectionItem;
+    use crate::cad::types::SelectionItem;
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
-    doc.client = Some(sim_runtime::cad_client::CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.doc_key = Some((None, 4));
     doc.open_fixture();

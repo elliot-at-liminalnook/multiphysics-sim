@@ -17,7 +17,7 @@ use crate::cad::selection::Fixture;
 use serde_json::{Value, json};
 use sim_annotate::{Anchor, Comment, ThreadCommand};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{AnchorStatus, CadClient, CadThread, DocState, Health, NodeSummary, SelectionItem, ThreadPatch};
+use crate::cad::types::{AnchorStatus, CadThread, DocState, Health, NodeSummary, SelectionItem, ThreadPatch};
 use std::collections::BTreeMap;
 
 /// `thread_detail` of a pin on b1 whose geometry changed, with a reply
@@ -36,7 +36,6 @@ fn node(id: &str, parent: Option<&str>, name: &str) -> NodeSummary {
 /// The client's port is the discard port, so a started edit reaches nothing.
 fn document() -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:9".into()));
-    doc.client = Some(CadClient::new("http://127.0.0.1:9").unwrap());
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
     doc.doc = Some(DocState { nodes: vec![node("g1", None, "Frame"), node("b1", Some("g1"), "Bracket"), node("b2", Some("g1"), "Plate"), node("b3", None, "Base")], revision: 4, ..Default::default() });
@@ -348,10 +347,9 @@ fn unknown_mutation_requires_fresh_explicit_ack_and_retains_receipt() {
 fn evidence_navigation_uses_captured_run_instead_of_a_model_pin() {
     let mut doc=document();listed(&mut doc);
     doc.threads.current=Some("e1".into());
-    // Experiment review reads RoboCAD's experiment service: refused by name in process.
-    doc.client=None;
+    // Experiment review reads the local experiment service: no connection needed.
     let controls=controls_of(&doc,&[]);
-    assert_eq!(controls.iter().find(|c|c.id=="cad:threads:show").unwrap().ready, Err(super::EVIDENCE_UNPORTED.to_string()));
+    assert_eq!(controls.iter().find(|c|c.id=="cad:threads:show").unwrap().ready, Ok(()));
 }
 
 /// A pin placed at revision 4 is never posted once the shown document is

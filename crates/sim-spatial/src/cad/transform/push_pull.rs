@@ -23,7 +23,7 @@ use bevy::picking::hover::HoverMap;
 use bevy::picking::mesh_picking::ray_cast::MeshRayCast;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use sim_runtime::cad_client::{FaceInfo, SelectionItem};
+use crate::cad::types::{FaceInfo, SelectionItem};
 
 /// The face push/pull or offset acts on: its index at `revision`, and the
 /// face as RoboCAD described it then (to find it again after an edit

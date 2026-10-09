@@ -12,7 +12,7 @@ pub(super) fn edit(
     doc: &mut CadDocument,
     call: &mut Call,
     label: String,
-    work: impl FnOnce(&mut Workspace) -> Result<EditDone, sim_runtime::cad_client::CadError>
+    work: impl FnOnce(&mut Workspace) -> Result<EditDone, crate::cad::types::CadError>
     + Send
     + 'static,
 ) -> Outcome {
@@ -24,7 +24,7 @@ fn edit_scoped(
     call: &mut Call,
     label: String,
     auxiliary: bool,
-    work: impl FnOnce(&mut Workspace) -> Result<EditDone, sim_runtime::cad_client::CadError>
+    work: impl FnOnce(&mut Workspace) -> Result<EditDone, crate::cad::types::CadError>
     + Send
     + 'static,
 ) -> Outcome {
@@ -49,7 +49,7 @@ pub(super) fn edit_at(
     call: &mut Call,
     began: Option<u64>,
     label: String,
-    work: impl FnOnce(&mut Workspace) -> Result<EditDone, sim_runtime::cad_client::CadError>
+    work: impl FnOnce(&mut Workspace) -> Result<EditDone, crate::cad::types::CadError>
     + Send
     + 'static,
 ) -> Outcome {
@@ -66,7 +66,7 @@ pub(super) fn edit_auxiliary_at(
     call: &mut Call,
     began: Option<u64>,
     label: String,
-    work: impl FnOnce(&mut Workspace) -> Result<EditDone, sim_runtime::cad_client::CadError>
+    work: impl FnOnce(&mut Workspace) -> Result<EditDone, crate::cad::types::CadError>
     + Send
     + 'static,
 ) -> Outcome {

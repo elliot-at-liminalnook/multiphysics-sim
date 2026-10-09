@@ -51,6 +51,7 @@ pub(in crate::cad) fn rest_form(action: &CadAction) -> Value {
         CadAction::CadPatch { id, attrs } => json!({"command": "cad_patch", "id": id, "attrs": attrs}),
         CadAction::CadCommand { id } => json!({"command": "cad_command", "id": id}),
         CadAction::CadOp { name, args, kwargs } => json!({"command": "cad_op", "name": name, "args": args, "kwargs": kwargs}),
+        CadAction::CadScript { path, params, replace, revision } => json!({"command": "cad_script", "path": path, "params": params, "replace": replace, "revision": revision}),
         CadAction::CadOpen { path, url } => json!({"command": "cad_open", "path": path, "url": url}),
         CadAction::CadInvoke { id } => json!({"command": "cad_invoke", "id": id}),
         CadAction::CadRun { id, params, items, revision } => json!({"command": "cad_run", "id": id, "params": params, "items": items, "revision": revision}),

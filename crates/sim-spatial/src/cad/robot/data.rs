@@ -19,7 +19,7 @@ use crate::cad::document::CadDocument;
 use crate::jobs::{Job, Pool};
 use bevy::prelude::*;
 use serde_json::{Map, Value, json};
-use sim_runtime::cad_client::{Battery, Control, Margins, MotorSpec, NodeDetail, NodeResult, NodeResults, RobotSummary};
+use crate::cad::types::{Battery, Control, Margins, MotorSpec, NodeDetail, NodeResult, NodeResults, RobotSummary};
 use std::collections::BTreeMap;
 
 /// (document generation, RoboCAD's shown revision): what a read was made at.

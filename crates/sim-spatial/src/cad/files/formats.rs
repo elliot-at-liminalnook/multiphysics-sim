@@ -232,6 +232,6 @@ pub(crate) fn settings(fmt: &Format, given: &Map<String, Value>, cx: &Context) -
 
 /// Whether `path`'s extension is one the desktop maps to `fmt`.
 pub(crate) fn extension_fits(fmt: &Format, path: &str) -> bool {
-    let ext = sim_runtime::cad_client::extension(path);
+    let ext = crate::cad::types::extension(path);
     fmt.extensions.contains(&ext.as_str())
 }

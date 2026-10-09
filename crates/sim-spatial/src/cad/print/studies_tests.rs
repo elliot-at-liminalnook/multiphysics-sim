@@ -1,22 +1,21 @@
 //! The print studies without a window: the registry's picks in its order
 //! with RoboCAD's labels, each study's body and RoboCAD's refusals from a
-//! test document with a print study read at its revision, the dialogs'
-//! precheck while the registry is unread or failed, and a print block
-//! coloured through the shared stress rule (red at a safety factor of 1).
+//! local test archive with a print study at its revision, the dialogs'
+//! precheck while the registry is unread or failed, a refused start, and a
+//! print block coloured through the shared stress rule (red at a safety
+//! factor of 1).
 use super::PrintCall;
 use super::overlay;
 use super::studies::{self, NO_STUDY, REGISTRY_READING, Request, StudyPlan};
 use crate::app::actions::{Call, Origin, Replies};
-use crate::cad::document::{CadDocument, CadTarget, Connection};
+use crate::cad::document::{CadDocument, CadTarget};
 use crate::cad::ops::{self, Env, Resolved};
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
 use sim_domain_robot::stress_results::colormap;
-use sim_runtime::cad_client::{CadClient, DocState, FilamentInfo, Health, NodeResult, NodeSummary, Ordered, PrintRegistry, PrintStudy, PrinterInfo, SplitRequest};
-
-fn node(id: &str, kind: &str, name: &str, parent: Option<&str>) -> NodeSummary {
-    NodeSummary { id: id.into(), kind: kind.into(), name: name.into(), parent: parent.map(str::to_string), visible: true, effective_visible: true, ..Default::default() }
-}
+use crate::cad::types::{FilamentInfo, NodeResult, Ordered, PrintRegistry, PrinterInfo, SplitRequest};
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 fn registry() -> PrintRegistry {
     PrintRegistry {
@@ -41,27 +40,56 @@ fn study_json() -> Value {
     })
 }
 
-/// Connected at RoboCAD's revision 4: bodies b1 "Bracket" and b2 "Plate",
-/// a split group g1 with pieces p1 and p2; the registry and the print
-/// study read at revision 4.
-fn document() -> CadDocument {
-    let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
-    doc.client = Some(CadClient::new("http://127.0.0.1:8420").unwrap());
-    doc.connection = Connection::Connected;
-    doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
-    doc.doc = Some(DocState {
-        nodes: vec![node("b1", "body", "Bracket", None), node("b2", "body", "Plate", None), node("g1", "group", "Arm split", None), node("p1", "body", "Arm 1", Some("g1")), node("p2", "body", "Arm 2", Some("g1"))],
-        revision: 4,
-        ..Default::default()
-    });
-    doc.doc_key = Some((None, 4));
+/// An archive with bodies b1 "Bracket" and b2 "Plate", a split group g1
+/// "Arm split" (its `robot.print_split`) with pieces p1 and p2, and
+/// `study` as `robot_settings.print_study`.
+fn archive(study: Value) -> sim_cad::ArchiveDocument {
+    let path = Path::new("/tmp/print-studies-test.rcad");
+    let empty = sim_cad::ArchiveDocument::from_bytes(path, sim_cad::edit::empty_archive(None).unwrap(), &|| false, &|_| {}).unwrap();
+    let stamps = sim_cad::annotations::Stamps::default();
+    let mut edit = sim_cad::Edit::of(&empty);
+    let mut ids: Vec<(String, &str)> = Vec::new();
+    {
+        let mut cx = sim_cad::ops::Ctx { doc: &empty, stamps: &stamps, edit: &mut edit, centroid: &|_| None, cancelled: &|| false };
+        let cube = |x: f64| sim_cad::kernel::Built { kind: sim_cad::kernel::Kind::Solid, brep: sim_cad::kernel::build(&sim_cad::kernel::Shape::Box { corner: [x, 0.0, 0.0], size: [10.0, 10.0, 10.0] }, &|| false).unwrap() };
+        ids.push((cx.add_built(cube(0.0), "Bracket", None, None).unwrap(), "b1"));
+        ids.push((cx.add_built(cube(20.0), "Plate", None, None).unwrap(), "b2"));
+        let mut robot = Map::new();
+        robot.insert("robot".into(), json!({"print_split": {"seams": [], "hardware": []}}));
+        let group = cx.add_node("group", "Arm split", None, robot).unwrap();
+        ids.push((cx.add_built(cube(40.0), "Arm 1", None, Some(&group)).unwrap(), "p1"));
+        ids.push((cx.add_built(cube(60.0), "Arm 2", None, Some(&group)).unwrap(), "p2"));
+        ids.push((group, "g1"));
+    }
+    edit.manifest["robot_settings"]["print_study"] = study;
+    // The generated ids (12 hex digits, unique) become the test's names.
+    let mut text = serde_json::to_string(&edit.manifest).unwrap();
+    for (generated, wanted) in &ids {
+        text = text.replace(generated.as_str(), wanted);
+        if let Some(b) = edit.entries.remove(&format!("brep/{generated}.brep")) {
+            edit.entries.insert(format!("brep/{wanted}.brep"), b);
+        }
+    }
+    edit.manifest = serde_json::from_str(&text).unwrap();
+    empty.apply(edit).unwrap()
+}
+
+/// A local document showing [`archive`] at revision 4 (each install is the
+/// next revision), with the registry read.
+fn document_with(study: Value) -> CadDocument {
+    let mut doc = CadDocument::new(CadTarget::File(PathBuf::from("/tmp/print-studies-test.rcad")));
+    let snapshot = Arc::new(crate::cad::sync::snapshot_of(Arc::new(archive(study)), &|| false, &|_| {}).unwrap());
+    for _ in 0..4 {
+        crate::cad::local::install(&mut doc, snapshot.clone());
+    }
+    doc.connection = crate::cad::Connection::Connected;
+    assert_eq!(doc.shown_revision(), 4);
     doc.print.studies.registry = Some(((doc.generation, doc.mesh_retry), Ok(registry())));
-    set_study(&mut doc, study_json());
     doc
 }
 
-fn set_study(doc: &mut CadDocument, study: Value) {
-    doc.print.studies.study = Some(((doc.generation, 4), doc.mesh_retry, Ok(PrintStudy { revision: 4, study, splits: vec!["g1".into()] })));
+fn document() -> CadDocument {
+    document_with(study_json())
 }
 
 fn values(id: &str, given: Value) -> Map<String, Value> {
@@ -119,9 +147,8 @@ fn split_sends_the_chosen_printer_and_joint_as_a_background_job() {
 }
 
 #[test]
-#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn strength_and_plan_send_the_study_with_the_revision_or_robocads_explanation() {
-    let mut doc = document();
+    let doc = document();
     let mut want = study_json();
     want["expected_revision"] = json!(4);
     let plan = build(&doc, PrintCall::Strength, "print.strength", &[], json!({})).unwrap();
@@ -131,21 +158,16 @@ fn strength_and_plan_send_the_study_with_the_revision_or_robocads_explanation() 
     assert_eq!(plan.kind, "plan");
     assert_eq!(body(plan), want);
     // No study: RoboCAD's explanation, for both.
-    set_study(&mut doc, Value::Null);
-    assert_eq!(build(&doc, PrintCall::Strength, "print.strength", &[], json!({})).unwrap_err(), NO_STUDY);
-    assert_eq!(build(&doc, PrintCall::Plan, "print.plan", &[], json!({})).unwrap_err(), NO_STUDY);
-    // Not read at the shown revision yet: refused by name, nothing guessed.
-    doc.print.studies.study = None;
-    let e = build(&doc, PrintCall::Strength, "print.strength", &[], json!({})).unwrap_err();
-    assert_eq!(e, "the print study is still being read (revision 4); try again in a moment");
-    // A failed read names RoboCAD's error.
-    doc.print.studies.study = Some(((doc.generation, 4), doc.mesh_retry, Err("GET /print/study: 404".into())));
-    let e = build(&doc, PrintCall::Plan, "print.plan", &[], json!({})).unwrap_err();
-    assert_eq!(e, "RoboCAD's print study could not be read: GET /print/study: 404");
+    let none = document_with(Value::Null);
+    assert_eq!(build(&none, PrintCall::Strength, "print.strength", &[], json!({})).unwrap_err(), NO_STUDY);
+    assert_eq!(build(&none, PrintCall::Plan, "print.plan", &[], json!({})).unwrap_err(), NO_STUDY);
+    // A selection read at another revision: refused by name, nothing guessed.
+    let r = Resolved { revision: 3, ..Default::default() };
+    let e = studies::build(PrintCall::Strength, ops::entry("print.strength").unwrap(), &r, &values("print.strength", json!({})), &doc, &Env::default()).unwrap_err();
+    assert_eq!(e, "the document is at revision 4, the selection was read at 3; try again");
 }
 
 #[test]
-#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn strength_split_takes_the_first_study_part_selected_with_the_studys_settings() {
     let doc = document();
     // Selection order b2, b1: the study's order decides (RoboCAD's `next(p for p in parts …)`).
@@ -156,11 +178,6 @@ fn strength_split_takes_the_first_study_part_selected_with_the_studys_settings()
     let refusal = ops::entry("print.strength_split").unwrap().refusal;
     assert_eq!(build(&doc, PrintCall::StrengthSplit, "print.strength_split", &["p1"], json!({})).unwrap_err(), refusal);
     assert_eq!(build(&doc, PrintCall::StrengthSplit, "print.strength_split", &[], json!({})).unwrap_err(), refusal);
-    // Nothing selected is the entry's refusal even while the study is unread.
-    let mut unread = document();
-    unread.print.studies.study = None;
-    assert_eq!(build(&unread, PrintCall::StrengthSplit, "print.strength_split", &[], json!({})).unwrap_err(), refusal);
-    assert_eq!(build(&unread, PrintCall::StrengthSplit, "print.strength_split", &["b1"], json!({})).unwrap_err(), "the print study is still being read (revision 4); try again in a moment");
 }
 
 #[test]
@@ -190,7 +207,6 @@ fn coupons_send_the_split_or_none_with_the_chosen_printer_and_filament() {
 }
 
 #[test]
-#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn the_split_and_coupon_dialogs_wait_for_the_registry() {
     let mut doc = document();
     let split = ops::entry("print.split").unwrap();
@@ -205,26 +221,33 @@ fn the_split_and_coupon_dialogs_wait_for_the_registry() {
     assert_eq!(studies::precheck(ops_split, &doc, &[]).as_deref(), Some(REGISTRY_READING));
     assert_eq!(studies::precheck(coupons, &doc, &[]).as_deref(), Some(REGISTRY_READING));
     assert_eq!(studies::precheck(strength, &doc, &[]), None);
-    doc.print.studies.registry = Some(((doc.generation, doc.mesh_retry), Err("GET /print/registry: connection refused".into())));
-    assert_eq!(studies::precheck(coupons, &doc, &[]).as_deref(), Some("RoboCAD's printing registry could not be read: GET /print/registry: connection refused"));
-    assert_eq!(studies::precheck(ops_split, &doc, &[]).as_deref(), Some("RoboCAD's printing registry could not be read: GET /print/registry: connection refused"));
-    // A read from an older generation is not this connection's.
+    doc.print.studies.registry = Some(((doc.generation, doc.mesh_retry), Err("registry.json: not JSON".into())));
+    assert_eq!(studies::precheck(coupons, &doc, &[]).as_deref(), Some("the printing registry could not be read: registry.json: not JSON"));
+    assert_eq!(studies::precheck(ops_split, &doc, &[]).as_deref(), Some("the printing registry could not be read: registry.json: not JSON"));
+    // A read from another generation is not this document's.
     doc.print.studies.registry = Some(((doc.generation + 1000, 0), Ok(registry())));
     assert_eq!(studies::precheck(split, &doc, &[]).as_deref(), Some(REGISTRY_READING));
 }
 
 #[test]
-#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
-fn a_refused_start_sends_nothing_and_notes_nothing() {
+fn a_start_read_before_the_document_moved_is_refused_and_starts_nothing() {
     let mut doc = document();
     let plan = build(&doc, PrintCall::Strength, "print.strength", &[], json!({})).unwrap();
-    doc.client = None;
+    let snapshot = doc.local.clone().unwrap();
+    crate::cad::local::install(&mut doc, snapshot);
     let (mut continuation, mut replies) = (Value::Null, Replies::default());
     let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
     let out = studies::send(&mut doc, &mut call, plan);
-    assert!(matches!(&out, Outcome::Done(Err(e)) if e.starts_with("not connected to RoboCAD")));
-    assert!(doc.edit.is_none());
-    assert!(doc.print.studies.started.is_none());
+    assert!(matches!(&out, Outcome::Done(Err(e)) if e == "the document moved to revision 5 since this was read at revision 4; read it again"), "{out:?}");
+    assert!(doc.print.jobs.jobs.is_empty());
+}
+
+#[test]
+fn the_registry_reads_the_repositorys_file_in_its_order() {
+    let r = studies::read_registry().unwrap();
+    assert!(r.printers.get("bambu-h2c").is_some_and(|p| p.usable_mm.len() == 3));
+    assert!(!r.materials.is_empty());
+    assert!(r.sha256.as_deref().is_some_and(|s| s.len() == 64));
 }
 
 #[test]

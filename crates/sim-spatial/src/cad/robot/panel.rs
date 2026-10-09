@@ -41,7 +41,7 @@ use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{CableMeta, Margins, NodeDetail, RobotSummary, SelectionItem, SensorMeta};
+use crate::cad::types::{CableMeta, Margins, NodeDetail, RobotSummary, SelectionItem, SensorMeta};
 use std::collections::HashSet;
 use std::time::{Duration, Instant};
 

@@ -34,7 +34,7 @@ use super::panel::CadButton;
 use super::selection::CadSelection;
 use super::topology::CadTopology;
 use super::transform::{DimensionEntry, Field, FieldCommit, fields, hint, keep_entry, mode_label};
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use crate::app::actions::Act;
 use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextDraft, TextField, TextFocus};
 use crate::ui_kit::{BORDER, DANGER, FAINT, Kit, LEFT_WIDTH, RIGHT_WIDTH, STATUSBAR, SUBTLE, SURFACE, TEXT, UiFonts, VALUE, above_strip, size};

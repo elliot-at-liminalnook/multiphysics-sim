@@ -36,7 +36,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 
 /// The robot parts' state on the document (reset with it).
 #[derive(Default)]

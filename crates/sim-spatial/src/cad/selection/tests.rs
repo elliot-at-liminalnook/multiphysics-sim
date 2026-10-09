@@ -5,7 +5,7 @@ use crate::cad::document::{CadTarget, Candidates, Connection};
 use crate::jobs::Job;
 use bevy::camera::CameraProjection;
 use bevy::math::Affine3A;
-use sim_runtime::cad_client::{DocState, EdgeInfo, Health, NodeSummary, Selection, VertexInfo};
+use crate::cad::types::{DocState, EdgeInfo, Health, NodeSummary, Selection, VertexInfo};
 use std::time::{Duration, Instant};
 use super::super::topology::NodeTopology;
 

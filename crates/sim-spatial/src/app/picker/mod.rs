@@ -7,8 +7,8 @@
 //!   document and nothing to reopen opens [`Picker`] for that mode; the
 //!   current mode stays. REST `viewer_mode` is refused as before.
 //! - **Sources** (`discover::discover`): the mode's recent documents
-//!   (`super::recent`), robot presets, the workspace's example files, and
-//!   for CAD the RoboCAD service at the default URL. Found on a `jobs` job
+//!   (`super::recent`), robot presets and the workspace's example files.
+//!   Found on a `jobs` job
 //!   (`Pool::Io`) when the picker opens; the UI thread reads no file.
 //! - **The path field** ("Open file…", the kit's `path_field`): a typed
 //!   path (`~/` expanded; for CAD an http(s) URL too) with its directory's

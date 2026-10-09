@@ -9,7 +9,7 @@ use super::*;
 use crate::cad::document::{CadTarget, Connection, Edit};
 use crate::cad::robot::data::Bundle;
 use crate::cad::sketch::{ActivePlane, BasePlane, CadActivePlane};
-use sim_runtime::cad_client::{Battery, CadClient, DocState, Health, MotorSpec, NodeResults, NodeSummary, RobotJoint, RobotMotor, RobotSummary};
+use crate::cad::types::{Battery, DocState, Health, MotorSpec, NodeResults, NodeSummary, RobotJoint, RobotMotor, RobotSummary};
 use std::collections::BTreeMap;
 
 fn node(id: &str, kind: &str, name: &str) -> NodeSummary {
@@ -25,7 +25,6 @@ fn body(id: &str) -> SelectionItem {
 /// robot description (hip revolute b1 → b3, motor m1) and motor library.
 fn document() -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
-    doc.client = Some(CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
     doc.doc = Some(DocState {

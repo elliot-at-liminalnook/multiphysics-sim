@@ -117,7 +117,7 @@ use super::actions::{CadAction, Cx};
 use super::document::CadDocument;
 use super::panel::Control;
 use super::selection::CadSelection;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use super::view::CadView;
 use crate::app::actions::{Act, Call};
 use crate::app::{ModeScope, ViewerMode, ViewerSet};

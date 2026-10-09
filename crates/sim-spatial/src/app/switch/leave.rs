@@ -5,7 +5,7 @@
 use super::sources;
 use crate::app::ViewerMode;
 use crate::builder::Builder;
-use crate::cad::{CadDocument, CadTarget};
+use crate::cad::CadDocument;
 use crate::document::{DocumentRegistry, Parked, Source};
 use crate::lesson::Learn;
 use crate::place_view::PlaceView;
@@ -77,22 +77,14 @@ pub(super) fn leave_robot(world: &mut World) {
     }
 }
 
-/// OnExit(Cad): the document is removed; its self-started RoboCAD service is
-/// released here, synchronously and without blocking
-/// (`CadDocument::release_child`: the child slot is closed, so a service
-/// still starting while "Connecting…" is stopped too; killed and reaped,
-/// never an attached one); the rest is dropped off the UI thread (its poll
-/// worker joins) and CAD mode's other resources go (`cad::clear`). Leaving
-/// with a self-started document's unsaved edits, or edits whose saved state
-/// can't be confirmed, is refused (`leaving_blockers`); if edits appear
-/// between that check and this exit, the service is left running instead
-/// and CAD mode reattaches to its URL next time, so they are not lost; the
-/// switch's message (its `entering` summary, shown once the mode is
-/// entered) then says so, besides the log line. A pending thread reveal
+/// OnExit(Cad): the document is removed (a pending open cancelled), dropped
+/// off the UI thread, and CAD mode's other resources go (`cad::clear`).
+/// Leaving with unsaved edits, or while an edit or a CAD job runs, is
+/// refused before this (`leaving_blockers`). A pending thread reveal
 /// (`cad::threads::RevealThread`) is dropped.
 pub(super) fn leave_cad(world: &mut World) {
     if let Some(mut doc) = world.remove_resource::<CadDocument>() {
-        doc.local_load = None; // cancel before off-thread drop; mode exit cannot accept a late result.
+        doc.cancel_load(); // before the off-thread drop: mode exit cannot accept a late result.
         let target = doc.target.clone();
         crate::jobs::drop_off_thread(doc, "the CAD document");
         sources::left(world, ViewerMode::Cad, Some(sources::cad_source(&target)));

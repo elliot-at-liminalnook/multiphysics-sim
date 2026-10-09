@@ -19,7 +19,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{
+use crate::cad::types::{
     components::ComponentStamp,
     motion::{PoseMetadata, PoseRequest, PoseSample},
 };
@@ -264,7 +264,7 @@ pub(crate) fn handle(a: &MotionArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
                 if s.export.is_some() {
                     return Err("Wait for export terminal receipt".into());
                 }
-                let c = d.client.clone().ok_or("Connect to RoboCAD first")?;
+                let c = crate::cad::motion_service::service(d)?;
                 s.sequence += 1;
                 s.cancel_requested = false;
                 s.open = true;
@@ -358,7 +358,7 @@ pub(crate) fn handle(a: &MotionArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
             }
             MotionOp::Validate | MotionOp::Sweep => {
                 s.focus = None;
-                let c = d.client.clone().ok_or("Connect to RoboCAD first")?;
+                let c = crate::cad::motion_service::service(d)?;
                 let id = s.identity.clone().ok_or("Enter pose mode first")?;
                 guard(d, &id)?;
                 let stamp = ComponentStamp {

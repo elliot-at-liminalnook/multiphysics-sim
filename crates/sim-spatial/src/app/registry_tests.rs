@@ -32,9 +32,14 @@ fn status(app: &mut App) -> Value {
 #[test]
 fn a_reopened_document_keeps_its_id_and_a_new_one_gets_a_new_id() {
     use crate::selection::{Item, Op, Selection, SelectionAction};
-    let (u1, u2) = ("http://127.0.0.1:1", "http://127.0.0.1:2");
+    let dir = std::env::temp_dir().join(format!("registry-cad-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let (u1, u2) = (dir.join("one.rcad"), dir.join("two.rcad"));
+    for p in [&u1, &u2] {
+        std::fs::write(p, sim_cad::edit::empty_archive(None).unwrap()).unwrap();
+    }
     let mut app = registry_app(ViewerMode::Inspect, None, None);
-    let seq = submit(&mut app, ViewerMode::Cad, Some(Document::Url(u1.into())));
+    let seq = submit(&mut app, ViewerMode::Cad, Some(Document::Path(u1.clone())));
     settle(&mut app, seq).unwrap();
     assert_eq!(mode(&app), ViewerMode::Cad);
     let (c1, revision) = app.world().resource::<DocumentRegistry>().current(ViewerMode::Cad).expect("cad's document is open");
@@ -63,13 +68,13 @@ fn a_reopened_document_keeps_its_id_and_a_new_one_gets_a_new_id() {
     let documents = status(&mut app)["documents"].clone();
     let keys: BTreeSet<&str> = documents.as_object().unwrap().keys().map(String::as_str).collect();
     assert_eq!(keys, BTreeSet::from(["builder_scene_parked", "cad", "inspect", "inspect_parked", "lessons", "library", "models", "phenomena", "place", "presets", "registry", "robot"]));
-    assert_eq!(documents["cad"], json!({"url": u1}));
+    assert_eq!(documents["cad"], json!({"path": u1}));
     assert_eq!(documents["phenomena"], json!({"exhibit": null}));
     assert_eq!(documents["robot"], Value::Null);
     assert_eq!(documents["inspect_parked"], false);
     let cad = documents["registry"].as_array().unwrap().iter().find(|e| e["mode"] == "cad").expect("cad's entry").clone();
     assert_eq!((cad["id"].clone(), cad["kind"].clone(), cad["revision"].clone(), cad["presence"].clone()), (json!(c1.0), json!("cad"), json!(1), json!("open")));
-    assert_eq!(cad["source"], json!({"kind": "url", "url": u1}));
+    assert_eq!(cad["source"], json!({"kind": "path", "path": u1}));
 
     // Phenomena again (its reload), then another document: a new id, c1's items gone.
     let seq = submit(&mut app, ViewerMode::Phenomena, None);
@@ -77,12 +82,13 @@ fn a_reopened_document_keeps_its_id_and_a_new_one_gets_a_new_id() {
     assert_eq!(app.world().resource::<DocumentRegistry>().current(ViewerMode::Phenomena).map(|(_, r)| r), Some(1));
     app.world_mut().resource_mut::<DocumentRegistry>().remember(ViewerMode::Robot, DocumentKind::Robot, Source::Preset { id: "p".into() });
     assert_eq!(status(&mut app)["documents"]["robot"], json!({"preset": "p"}), "robot's document reads as before");
-    let seq = submit(&mut app, ViewerMode::Cad, Some(Document::Url(u2.into())));
+    let seq = submit(&mut app, ViewerMode::Cad, Some(Document::Path(u2.clone())));
     settle(&mut app, seq).unwrap();
     let (c2, revision) = app.world().resource::<DocumentRegistry>().current(ViewerMode::Cad).unwrap();
     assert!(c2 != c1 && revision == 0, "another document: a new id ({c2:?} after {c1:?}) at revision 0");
     assert_eq!(app.world().resource::<Selection>().of(c1).count(), 0, "the replaced document's items are forgotten");
-    assert_eq!(status(&mut app)["documents"]["cad"], json!({"url": u2}));
+    assert_eq!(status(&mut app)["documents"]["cad"], json!({"path": u2}));
+    std::fs::remove_dir_all(&dir).ok();
 }
 
 /// Inspect's scene and link are parked on its registry entry while another

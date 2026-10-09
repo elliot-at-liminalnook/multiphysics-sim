@@ -2,7 +2,7 @@
 use super::{CadDocument, CadTarget, sync};
 use crate::{document::DocumentRegistry, jobs::Job, selection::Selection};
 use bevy::prelude::*;
-use sim_runtime::cad_client::{DocState, NodeSummary};
+use crate::cad::types::{DocState, NodeSummary};
 
 fn document() -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::File("/previous.rcad".into()));
@@ -56,12 +56,10 @@ fn stale_generation_and_revision_are_refused_before_result_application() {
     }
 }
 #[test]
-fn mode_exit_release_cancels_local_work_without_service_lifecycle() {
+fn mode_exit_cancels_local_work() {
     let mut doc = document();
     let generation = doc.generation;
     pending(&mut doc, generation);
-    assert!(doc.release_child("mode exit").is_none());
+    doc.cancel_load();
     assert!(doc.local_load.is_none());
-    assert!(doc.client.is_none());
-    assert!(!doc.child.is_some());
 }

@@ -197,7 +197,7 @@ fn run(ws: &mut super::local::Workspace, args: &ModelArgs) -> Result<EditDone, S
         ModelOp::Batch => {
             let operations = need(&args.operations, "operations", op)?;
             let n = operations.len();
-            let request = sim_runtime::cad_client::candidates::CandidateRequest {
+            let request = crate::cad::types::candidates::CandidateRequest {
                 document_id: ws.archive.manifest["document_id"].as_str().unwrap_or("").to_string(),
                 expected_revision: ws.archive.manifest["revision"].as_u64().unwrap_or(0),
                 label: "Batch".into(),

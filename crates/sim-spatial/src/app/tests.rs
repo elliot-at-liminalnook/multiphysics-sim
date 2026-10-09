@@ -227,6 +227,24 @@ fn rest_refuses_commands_of_another_mode_by_name() {
 /// command's example parses into its action type, and each action type's
 /// registered commands are exactly the commands its parser accepts
 /// (serde's own variant list), with no orphan either way.
+/// AGENTS.md: every mode's functionality is covered by that mode's guide
+/// command, for an agent starting cold. Each mode registers a `*_guide`
+/// command of its own: one that some mode does not accept (so the
+/// cross-mode `project_guide` does not count), and it answers there.
+#[test]
+fn every_mode_has_a_guide_of_its_own() {
+    let mut missing = Vec::new();
+    for mode in ViewerMode::ALL {
+        let own = actions::registry().iter().flat_map(|f| (f.commands)()).any(|spec| {
+            spec.name.ends_with("_guide") && spec.modes.contains(&mode) && spec.modes.len() < ViewerMode::ALL.len() && actions::feature_for(mode, spec.name).is_some()
+        });
+        if !own {
+            missing.push(mode.name());
+        }
+    }
+    assert!(missing.is_empty(), "modes without a guide command of their own: {missing:?}");
+}
+
 #[test]
 fn every_capability_parses_into_its_action_and_every_parsed_command_is_registered() {
     let mut registered: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
@@ -324,11 +342,31 @@ fn every_mode_control_resolves_to_a_switch() {
 /// truthfully that it is not connected (nothing listens on port 1), and
 /// leaving removes the CAD document, its mesh cache and CAD-scoped entities
 /// while the builder, its scene and the shared resources stay.
+/// An empty `.rcad` archive in `dir` (what File → New writes).
+fn archive(dir: &std::path::Path) -> PathBuf {
+    let path = dir.join("model.rcad");
+    std::fs::write(&path, sim_cad::edit::empty_archive(None).unwrap()).unwrap();
+    path
+}
+
+/// Frames until the CAD document has opened its archive (or failed to).
+fn opened(app: &mut App) {
+    for _ in 0..500 {
+        app.update();
+        let doc = app.world().resource::<crate::cad::CadDocument>();
+        if doc.local.is_some() || matches!(doc.connection, crate::cad::Connection::Lost { .. }) {
+            return;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    panic!("the archive never opened");
+}
+
 #[test]
 fn build_cad_build_tears_down_the_cad_document_and_keeps_shared_state() {
     let dir = std::env::temp_dir().join(format!("mode-switch-cad-{}", std::process::id()));
     let (board, builder, scene) = self::board(&dir);
-    let url = "http://127.0.0.1:1";
+    let rcad = archive(&dir);
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, StatesPlugin))
         .insert_resource(builder)
@@ -339,14 +377,14 @@ fn build_cad_build_tears_down_the_cad_document_and_keeps_shared_state() {
     app.update();
     assert_eq!(mode(&app), ViewerMode::Build);
 
-    // Refused: url is a cad-only document; a cad path must be a .rcad file.
-    let seq = submit(&mut app, ViewerMode::Robot, Some(Document::Url(url.into())));
+    // Refused: a url is a cad-only document; a cad path must be a .rcad file.
+    let seq = submit(&mut app, ViewerMode::Robot, Some(Document::Url("http://127.0.0.1:1".into())));
     assert!(settle(&mut app, seq).unwrap_err().contains("cad mode only"));
     let seq = submit(&mut app, ViewerMode::Cad, Some(Document::Path(board.clone())));
     assert!(settle(&mut app, seq).unwrap_err().contains(".rcad"));
     assert_eq!(mode(&app), ViewerMode::Build);
 
-    let seq = submit(&mut app, ViewerMode::Cad, Some(Document::Url(url.into())));
+    let seq = submit(&mut app, ViewerMode::Cad, Some(Document::Path(rcad.clone())));
     let entered = settle(&mut app, seq).unwrap();
     assert_eq!(entered["mode"], "cad");
     assert_eq!(mode(&app), ViewerMode::Cad);
@@ -357,21 +395,11 @@ fn build_cad_build_tears_down_the_cad_document_and_keeps_shared_state() {
     let body = app.world_mut().spawn(Transform::default()).id();
     app.update();
     assert_eq!(scoped(&mut app, body), Some(ModeScope::Cad));
-    // The connect job fails (connection refused); the error is shown, not hidden.
-    let mut lost = None;
-    for _ in 0..500 {
-        app.update();
-        if let crate::cad::Connection::Lost { error, .. } = &app.world().resource::<crate::cad::CadDocument>().connection {
-            lost = Some(error.clone());
-            break;
-        }
-        std::thread::sleep(std::time::Duration::from_millis(10));
-    }
-    let error = lost.expect("CAD mode reports the refused connection");
-    assert!(error.contains("127.0.0.1:1"), "{error}");
+    // The archive opens in process.
+    opened(&mut app);
     let doc = app.world().resource::<crate::cad::CadDocument>();
-    assert!(doc.connection_line().0.starts_with("Not connected"), "{}", doc.connection_line().0);
-    assert!(doc.child.pid().is_none(), "an attached service has no child process");
+    assert!(doc.local.is_some(), "{:?}", doc.connection_line());
+    assert!(doc.connection_line().0.starts_with("In-process CAD"), "{}", doc.connection_line().0);
 
     // Cad → Build: the CAD document and its resources go; shared state survives.
     let seq = submit(&mut app, ViewerMode::Build, None);
@@ -383,7 +411,7 @@ fn build_cad_build_tears_down_the_cad_document_and_keeps_shared_state() {
     let world = app.world();
     assert_eq!(world.resource::<Builder>().path(), board.as_path());
     assert!(world.contains_resource::<SpatialScene>() && world.contains_resource::<crate::models::ModelLibrary>() && world.contains_resource::<crate::rest::Rest>());
-    assert_eq!(world.resource::<DocumentRegistry>().source(ViewerMode::Cad), Some(&Source::Url { url: url.into() }), "cad mode reopens what it showed");
+    assert_eq!(world.resource::<DocumentRegistry>().source(ViewerMode::Cad), Some(&Source::Path { path: rcad.clone() }), "cad mode reopens what it showed");
     std::fs::remove_dir_all(&dir).ok();
 }
 
@@ -395,7 +423,7 @@ fn build_cad_build_tears_down_the_cad_document_and_keeps_shared_state() {
 fn leaving_cad_mode_is_refused_only_on_unsent_sketch_points() {
     let dir = std::env::temp_dir().join(format!("mode-switch-sketch-{}", std::process::id()));
     let (_, builder, scene) = self::board(&dir);
-    let url = "http://127.0.0.1:1";
+    let rcad = archive(&dir);
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, StatesPlugin))
         .insert_resource(builder)
@@ -404,17 +432,10 @@ fn leaving_cad_mode_is_refused_only_on_unsent_sketch_points() {
         .insert_resource(crate::rest::Rest(crate::rest::bind(0).unwrap(), None))
         .add_plugins((ModesPlugin { initial: ViewerMode::Build }, crate::cad::CadCorePlugin));
     app.update();
-    let seq = submit(&mut app, ViewerMode::Cad, Some(Document::Url(url.into())));
+    let seq = submit(&mut app, ViewerMode::Cad, Some(Document::Path(rcad)));
     settle(&mut app, seq).unwrap();
     assert_eq!(mode(&app), ViewerMode::Cad);
-    // The connect job settles first (refused: nothing listens on port 1).
-    for _ in 0..500 {
-        app.update();
-        if matches!(app.world().resource::<crate::cad::CadDocument>().connection, crate::cad::Connection::Lost { .. }) {
-            break;
-        }
-        std::thread::sleep(std::time::Duration::from_millis(10));
-    }
+    opened(&mut app);
     // The line tool starts as its command does, then one point is clicked.
     app.world_mut().write_message(Act::ui(crate::cad::CadAction::CadInvoke { id: "sketch.line".into() }));
     app.update();
@@ -444,7 +465,7 @@ fn a_refused_switch_to_cad_cannot_change_the_reveal_of_the_one_that_lands() {
     use crate::cad::threads::{Reveal, RevealThread};
     let dir = std::env::temp_dir().join(format!("mode-switch-reveal-{}", std::process::id()));
     let (_, builder, scene) = self::board(&dir);
-    let url = "http://127.0.0.1:1";
+    let rcad = archive(&dir);
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, StatesPlugin))
         .insert_resource(builder)
@@ -453,8 +474,8 @@ fn a_refused_switch_to_cad_cannot_change_the_reveal_of_the_one_that_lands() {
         .insert_resource(crate::rest::Rest(crate::rest::bind(0).unwrap(), None))
         .add_plugins((ModesPlugin { initial: ViewerMode::Build }, crate::cad::CadCorePlugin));
     app.update();
-    let target = crate::cad::CadTarget::Service(url.into());
-    let ask = |thread: &str| ModeSwitch { mode: ViewerMode::Cad, document: Some(Document::Url(url.into())), reveal: Some(Reveal::new(target.clone(), thread)) };
+    let target = crate::cad::CadTarget::File(rcad.clone());
+    let ask = |thread: &str| ModeSwitch { mode: ViewerMode::Cad, document: Some(Document::Path(rcad.clone())), reveal: Some(Reveal::new(target.clone(), thread)) };
     let first = app.world_mut().resource_mut::<Replies>().open();
     let second = app.world_mut().resource_mut::<Replies>().open();
     app.world_mut().write_message(Act { action: WindowAction::Switch(ask("e1")), origin: Origin::Rest(first) });

@@ -15,7 +15,7 @@ use crate::cad::rest_form::rest_form;
 use crate::cad::selection::Fixture;
 use serde_json::Value;
 use sim_api::Outcome;
-use sim_runtime::cad_client::{CadClient, DocState, Health, NodeSummary, SelectionItem};
+use crate::cad::types::{DocState, Health, NodeSummary, SelectionItem};
 
 fn node(id: &str, kind: &str, parent: Option<&str>, name: &str, children: &[&str]) -> NodeSummary {
     NodeSummary {
@@ -51,7 +51,6 @@ fn tree() -> DocState {
 /// Connected to RoboCAD at revision 4.
 fn document() -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
-    doc.client = Some(CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
     doc.doc = Some(tree());
@@ -63,7 +62,6 @@ fn document() -> CadDocument {
 /// Not connected: selection changes are not pushed (no job starts).
 fn offline() -> CadDocument {
     let mut doc = document();
-    doc.client = None;
     doc.local = None;
     doc.connection = Connection::Lost { error: "RoboCAD GET /: connect: refused".into(), since: std::time::Instant::now() };
     doc

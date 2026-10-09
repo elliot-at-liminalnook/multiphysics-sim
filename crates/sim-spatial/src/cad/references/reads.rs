@@ -38,7 +38,7 @@ use crate::cad::document::{CadDocument, CadTool};
 use crate::jobs::{Job, Pool};
 use bevy::ecs::message::Messages;
 use bevy::prelude::*;
-use sim_runtime::cad_client::{ImagePlacement, SystemStatus};
+use crate::cad::types::{ImagePlacement, SystemStatus};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
@@ -190,7 +190,7 @@ pub(crate) fn tick(doc: &mut CadDocument) -> bool {
                         return Err("superseded by a newer revision".to_string());
                     }
                     let node = c.archive.node(&id).cloned().ok_or_else(|| format!("no node {id}"));
-                    let p = node.and_then(|n| serde_json::from_value::<sim_runtime::cad_client::NodeDetail>(n).map_err(|e| e.to_string())).and_then(|d| ImagePlacement::of(&d).ok_or_else(|| format!("{} has no image placement", d.summary.name)));
+                    let p = node.and_then(|n| serde_json::from_value::<crate::cad::types::NodeDetail>(n).map_err(|e| e.to_string())).and_then(|d| ImagePlacement::of(&d).ok_or_else(|| format!("{} has no image placement", d.summary.name)));
                     out.push((id, p));
                 }
                 Ok(out)

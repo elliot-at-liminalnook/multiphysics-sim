@@ -13,7 +13,7 @@
 use super::resolve::{Resolved, kind_of};
 use super::{Arg, Env, Fan, Needs, OpEntry, Param, Primitive, Shape};
 use crate::cad::sketch::{BasePlane, SketchTarget, ViewAct};
-use sim_runtime::cad_client::{PlaneFrame, SketchCall};
+use crate::cad::types::{PlaneFrame, SketchCall};
 use crate::cad::analysis_overlay::Read;
 use crate::cad::document::CadDocument;
 use crate::cad::mesh::BODY_KINDS;

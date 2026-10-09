@@ -42,7 +42,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::AnchorStatus;
+use crate::cad::types::AnchorStatus;
 
 /// RoboCAD's refusal for a click on nothing (comments.py:121).
 pub(crate) const MISSED: &str = "Click a visible surface to place the annotation";

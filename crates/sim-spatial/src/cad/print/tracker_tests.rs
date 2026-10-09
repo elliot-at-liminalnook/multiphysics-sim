@@ -1,216 +1,119 @@
-//! The print job poller without a window, against a fake RoboCAD on
-//! loopback (its accept loop runs on a `crate::jobs::Job`): a watched
-//! job's progress on the status line, its done text and the refresh, the
-//! blockers while it runs, a list polled before a job's adoption not
-//! ending it, and cancel sending exactly one `DELETE /print/jobs/{id}` for
-//! the one running job, only after the confirmation and a list read.
-use super::jobs_panel;
-use super::jobs_tracker::{self, UNREAD, capitalize, done_text, line, published_revision, publishes};
-use super::studies::Started;
+//! The print jobs without a window, in process: a split of a bar longer
+//! than the printer runs on its job, publishes its pieces as one edit and
+//! says RoboCAD's done text; a job started on an older revision is refused
+//! by name; cancel asks first, then cancels; the done texts of each kind.
+use super::jobs_tracker::{self, capitalize, done_text, line, publishes};
 use crate::app::actions::{Call, Origin, Replies};
-use crate::cad::document::{CadDocument, CadTarget, Connection};
-use crate::jobs::{Job, Pool};
+use crate::cad::document::{CadDocument, CadTarget};
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{CadClient, DocState, Health, PrintJob};
-use std::io::{ErrorKind, Read, Write};
-use std::net::{TcpListener, TcpStream};
-use std::sync::{Arc, Mutex};
+use crate::cad::types::PrintJob;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-/// (method, path) of every request, in arrival order.
-type Log = Arc<Mutex<Vec<(String, String)>>>;
-
-/// A fake RoboCAD answering `GET /print/jobs` with `jobs` and `DELETE
-/// /print/jobs/{id}` by marking that job cancelled. Dropping it cancels its
-/// job, which ends the accept loop.
-struct Fake {
-    url: String,
-    log: Log,
-    jobs: Arc<Mutex<Value>>,
-    _job: Job<()>,
-}
-impl Fake {
-    fn start(jobs: Value) -> Fake {
-        let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
-        listener.set_nonblocking(true).expect("nonblocking");
-        let port = listener.local_addr().expect("address").port();
-        let (log, jobs): (Log, _) = (Arc::default(), Arc::new(Mutex::new(jobs)));
-        let (served, listed) = (log.clone(), jobs.clone());
-        let job = Job::spawn(Pool::Dedicated, 0, "fake RoboCAD print jobs", move |ctx| {
-            while !ctx.cancelled() {
-                match listener.accept() {
-                    // One request at a time: the poller sends at most one.
-                    Ok((stream, _)) => answer(stream, &served, &listed),
-                    Err(e) if e.kind() == ErrorKind::WouldBlock => std::thread::sleep(Duration::from_millis(1)),
-                    Err(e) => return Err(e.to_string()),
-                }
-            }
-            Ok(())
-        });
-        Fake { url: format!("http://127.0.0.1:{port}"), log, jobs, _job: job }
-    }
-    fn deletes(&self) -> Vec<String> {
-        self.log.lock().unwrap().iter().filter(|(m, _)| m == "DELETE").map(|(_, p)| p.clone()).collect()
-    }
-    fn set(&self, jobs: Value) {
-        *self.jobs.lock().unwrap() = jobs;
-    }
-}
-
-fn answer(mut stream: TcpStream, log: &Log, jobs: &Arc<Mutex<Value>>) {
-    let _ = stream.set_nonblocking(false);
-    let _ = stream.set_read_timeout(Some(Duration::from_secs(2)));
-    let mut data = Vec::new();
-    let mut chunk = [0u8; 4096];
-    let end = loop {
-        match stream.read(&mut chunk) {
-            Ok(0) | Err(_) => return,
-            Ok(n) => data.extend_from_slice(&chunk[..n]),
-        }
-        if let Some(p) = data.windows(4).position(|w| w == b"\r\n\r\n") {
-            break p + 4;
-        }
+/// An archive with one box body `size` mm from the origin: (archive, the body's id).
+fn archive_with_box(size: [f64; 3]) -> (Arc<sim_cad::ArchiveDocument>, String) {
+    let path = Path::new("/tmp/print-jobs-test.rcad");
+    let empty = sim_cad::ArchiveDocument::from_bytes(path, sim_cad::edit::empty_archive(None).unwrap(), &|| false, &|_| {}).unwrap();
+    let stamps = sim_cad::annotations::Stamps::default();
+    let mut edit = sim_cad::Edit::of(&empty);
+    let id = {
+        let mut cx = sim_cad::ops::Ctx { doc: &empty, stamps: &stamps, edit: &mut edit, centroid: &|_| None, cancelled: &|| false };
+        let brep = sim_cad::kernel::build(&sim_cad::kernel::Shape::Box { corner: [0.0; 3], size }, &|| false).unwrap();
+        cx.add_built(sim_cad::kernel::Built { kind: sim_cad::kernel::Kind::Solid, brep }, "Bar", None, None).unwrap()
     };
-    let head = String::from_utf8_lossy(&data[..end]).to_string();
-    let length = head.lines().filter_map(|l| l.split_once(':')).find(|(k, _)| k.trim().eq_ignore_ascii_case("content-length")).and_then(|(_, v)| v.trim().parse::<usize>().ok()).unwrap_or(0);
-    while data.len() < end + length {
-        match stream.read(&mut chunk) {
-            Ok(0) | Err(_) => return,
-            Ok(n) => data.extend_from_slice(&chunk[..n]),
-        }
-    }
-    let mut words = head.split_whitespace();
-    let (method, path) = (words.next().unwrap_or("").to_string(), words.next().unwrap_or("").to_string());
-    log.lock().unwrap().push((method.clone(), path.clone()));
-    let (status, reply) = match (method.as_str(), path.strip_prefix("/print/jobs")) {
-        ("GET", Some("")) => (200, jobs.lock().unwrap().clone()),
-        ("DELETE", Some(rest)) if rest.starts_with('/') => {
-            let id = &rest[1..];
-            let mut list = jobs.lock().unwrap();
-            match list.as_array_mut().and_then(|a| a.iter_mut().find(|j| j["id"] == id)) {
-                Some(j) => {
-                    j["state"] = json!("cancelled");
-                    (200, j.clone())
-                }
-                None => (404, json!({"error": format!("no print job {id}")})),
-            }
-        }
-        _ => (404, json!({"error": format!("no route {method} {path}")})),
-    };
-    let text = reply.to_string();
-    let _ = write!(stream, "HTTP/1.1 {status} X\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{text}", text.len());
-    let _ = stream.flush();
+    (Arc::new(empty.apply(edit).unwrap()), id)
 }
 
-/// Connected to `fake` at RoboCAD's revision 4.
-fn document(fake: &Fake) -> CadDocument {
-    let mut doc = CadDocument::new(CadTarget::Service(fake.url.clone()));
-    doc.client = Some(CadClient::new(&fake.url).unwrap());
-    doc.connection = Connection::Connected;
-    doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
-    doc.doc = Some(DocState { revision: 4, ..Default::default() });
-    doc.doc_key = Some((None, 4));
+/// A local document showing `archive`, its jobs writing under a scratch folder.
+fn document(archive: Arc<sim_cad::ArchiveDocument>, runs: &Path) -> CadDocument {
+    let mut doc = CadDocument::new(CadTarget::File(PathBuf::from("/tmp/print-jobs-test.rcad")));
+    let snapshot = crate::cad::sync::snapshot_of(archive, &|| false, &|_| {}).unwrap();
+    crate::cad::local::install(&mut doc, Arc::new(snapshot));
+    doc.connection = crate::cad::Connection::Connected;
+    doc.print.jobs.runs = Some(runs.to_path_buf());
     doc
 }
 
-/// Runs the poller's frames (`jobs_tracker::tick`, what its JobResults
-/// system calls) until `done`, at most 5 s.
+fn scratch(name: &str) -> PathBuf {
+    let dir = std::env::temp_dir().join(format!("print-jobs-{name}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    dir
+}
+
+/// Tick until `done` (a job's work runs on its own thread).
 fn until(doc: &mut CadDocument, what: &str, done: impl Fn(&CadDocument) -> bool) {
-    let deadline = Instant::now() + Duration::from_secs(5);
-    loop {
+    let end = Instant::now() + Duration::from_secs(120);
+    while !done(doc) {
+        assert!(Instant::now() < end, "timed out waiting for {what}: {}", jobs_tracker::state_json(doc));
         jobs_tracker::tick(doc);
-        if done(doc) {
-            return;
-        }
-        assert!(Instant::now() < deadline, "timed out waiting for {what}; status {:?}, state {}", doc.status, jobs_tracker::state_json(doc));
-        std::thread::sleep(Duration::from_millis(5));
+        std::thread::sleep(Duration::from_millis(20));
     }
 }
 
-fn running(id: &str, kind: &str, fraction: f64, message: &str) -> Value {
-    json!({"id": id, "kind": kind, "state": "running", "fraction": fraction, "message": message, "error": null, "result": null, "out_dir": null, "seconds": 1.5})
+fn state(doc: &CadDocument, id: &str) -> String {
+    doc.print.jobs.jobs.iter().find(|j| j.id == id).map(|j| j.state.clone()).unwrap_or_default()
 }
 
 #[test]
-#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
-fn a_watched_job_shows_its_progress_then_robocads_done_text_and_refreshes() {
-    let fake = Fake::start(json!([running("a1", "analyze", 0.42, "meshing")]));
-    let mut doc = document(&fake);
-    // The start's edit answered with the job RoboCAD started (`studies::send` noted it).
-    doc.edit_seq = 3;
-    doc.print.studies.started = Some(Started { seq: 3, generation: doc.generation, kind: "analyze" });
-    jobs_tracker::edit_answered(&mut doc, 3, Some(&json!({"id": "a1", "kind": "analyze", "state": "queued", "fraction": 0.0, "message": ""})));
-    assert_eq!(doc.print.jobs.watched.len(), 1);
-    assert!(doc.print.studies.started.is_none());
-    until(&mut doc, "the progress line", |d| d.status == Some(Ok("analyze: meshing (42 %)".to_string())));
-    // Leaving CAD mode would stop a self-started RoboCAD with it.
-    assert_eq!(doc.print.jobs.blockers(), vec!["a print job is running in RoboCAD: analyze (42 %); wait for it, or cancel it in the Print jobs section".to_string()]);
-    // Not connected, nothing can be confirmed or held.
-    doc.connection = Connection::Lost { error: "gone".into(), since: Instant::now() };
-    jobs_tracker::tick(&mut doc);
+fn a_split_job_runs_in_process_and_publishes_its_pieces_as_one_edit() {
+    // 600 mm: longer than any printer's bed, so it is cut.
+    let (archive, bar) = archive_with_box([600.0, 30.0, 20.0]);
+    let runs = scratch("split");
+    let mut doc = document(archive, &runs);
+    let revision = doc.shown_revision();
+    let job = jobs_tracker::start(&mut doc, "split", json!({"node": bar, "printer": "bambu-h2c", "joint": "pins"}), revision, "Started split of Bar".into()).unwrap();
+    assert_eq!(job.kind, "split");
+    assert!(!doc.print.jobs.blockers().is_empty(), "leaving CAD mode is refused while it runs");
+    until(&mut doc, "the split to end and publish", |d| state(d, &job.id) != "running" && d.edit.is_some());
+    let done = doc.print.jobs.jobs.iter().find(|j| j.id == job.id).unwrap().clone();
+    assert_eq!(done.state, "done", "{:?}", done.error);
+    assert!(done.result["piece_nodes"].as_array().is_some_and(|p| p.len() >= 2), "{}", done.result);
+    assert!(done_text(&done).0.starts_with("split into "));
+    assert_eq!(doc.edit_label().as_deref(), Some("Split Bar for printing"));
     assert!(doc.print.jobs.blockers().is_empty());
-    doc.connection = Connection::Connected;
-    // Done: RoboCAD's text, the document refetched and the robot reads taken again.
-    doc.robot.data.key = Some((doc.generation, 4));
-    assert_eq!(doc.unsaved(), Some(false));
-    let result = json!({"revision": 5, "parts": [
-        {"node": "b2", "name": "Plate", "safety_factor": 3.0, "mode": "shear"},
-        {"node": "b1", "name": "Bracket", "safety_factor": 1.5, "mode": "tension"},
-        {"node": "b3", "name": "Leg", "safety_factor": 1.5, "mode": "bending"},
-    ]});
-    fake.set(json!([{"id": "a1", "kind": "analyze", "state": "done", "fraction": 1.0, "message": "publishing", "result": result}]));
-    until(&mut doc, "the end", |d| d.print.jobs.watched.is_empty());
-    assert_eq!(doc.status, Some(Ok("strength: least safety factor 1.50 on Bracket (tension); Print ▸ Strength overlay shows where".to_string())));
-    assert!(doc.robot.data.key.is_none(), "the robot reads are taken again");
-    // A publish is an edit: the saved state is unknown until the refetch answers.
-    assert_eq!(doc.unsaved(), None);
-    assert!(doc.print.jobs.blockers().is_empty());
-    assert_eq!(fake.deletes(), Vec::<String>::new());
 }
 
 #[test]
-#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
-fn cancel_asks_first_then_sends_exactly_one_delete_per_running_job() {
-    let done = json!({"id": "b2", "kind": "split", "state": "done", "fraction": 1.0, "message": "", "result": {"piece_nodes": ["p1", "p2"], "hardware": []}});
-    let fake = Fake::start(json!([done, running("a1", "plan", 0.1, "")]));
-    let mut doc = document(&fake);
-    jobs_panel::show(&mut doc, Some(true)).unwrap();
-    until(&mut doc, "the list", |d| d.print.jobs.listed);
-    assert_eq!(doc.print.jobs.lines(), vec!["split b2: done 100 % ".to_string(), "plan a1: running 10 % ".to_string()]);
+fn a_job_read_at_an_older_revision_is_refused_by_name() {
+    let (archive, bar) = archive_with_box([20.0, 20.0, 20.0]);
+    let mut doc = document(archive, &scratch("stale"));
+    let stale = doc.shown_revision() + 5;
+    let e = jobs_tracker::start(&mut doc, "split", json!({"node": bar}), stale, String::new()).unwrap_err();
+    assert!(e.contains("moved to revision"), "{e}");
+    assert!(doc.print.jobs.jobs.is_empty());
+    let now = doc.shown_revision();
+    let e = jobs_tracker::start(&mut doc, "bake", json!({}), now, String::new()).unwrap_err();
+    assert!(e.contains("not a print job"), "{e}");
+}
+
+#[test]
+fn cancel_asks_first_then_cancels_and_never_publishes() {
+    let (archive, bar) = archive_with_box([900.0, 40.0, 30.0]);
+    let mut doc = document(archive, &scratch("cancel"));
+    let revision = doc.shown_revision();
+    let job = jobs_tracker::start(&mut doc, "split", json!({"node": bar}), revision, String::new()).unwrap();
     let (mut continuation, mut replies) = (Value::Null, Replies::default());
-    let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
-    // Asking opens RoboCAD's question in the section; nothing is sent.
-    assert!(matches!(jobs_tracker::cancel(&mut doc, &mut call, None, None), Outcome::Done(Ok(_))));
+    let mut c = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
+    let asked = jobs_tracker::cancel(&mut doc, &mut c, None, None);
+    assert!(matches!(&asked, Outcome::Done(Ok(v)) if v["confirming"] == true));
     assert!(doc.print.jobs.confirming);
-    let ids: Vec<String> = jobs_panel::controls(&doc).into_iter().map(|c| c.0).collect();
-    assert!(ids.contains(&"cad:print:cancel_yes".to_string()) && ids.contains(&"cad:print:cancel_no".to_string()), "{ids:?}");
-    assert!(fake.deletes().is_empty());
-    // No closes the question; a second No says none was open.
-    let message = |o: Outcome| match o {
-        Outcome::Done(Ok(v)) => v["message"].as_str().unwrap_or_default().to_string(),
-        _ => panic!("expected an answer"),
-    };
-    assert_eq!(message(jobs_tracker::cancel(&mut doc, &mut call, None, Some(false))), "The running print jobs were left running.");
-    assert!(!doc.print.jobs.confirming);
-    assert_eq!(message(jobs_tracker::cancel(&mut doc, &mut call, None, Some(false))), "There was no cancel confirmation open; nothing changed.");
-    assert!(fake.deletes().is_empty());
-    // Yes: one DELETE for the one running job, then a poll shows it cancelled.
-    assert!(matches!(jobs_tracker::cancel(&mut doc, &mut call, None, Some(true)), Outcome::Done(Ok(_))));
-    until(&mut doc, "the cancel and the poll after it", |d| jobs_tracker::state_json(d)["cancelling"] == false && d.print.jobs.jobs.iter().all(PrintJob::ended));
-    assert_eq!(fake.deletes(), vec!["/print/jobs/a1".to_string()]);
-    // Nothing runs now: refused by name, nothing more sent.
-    match jobs_tracker::cancel(&mut doc, &mut call, None, Some(true)) {
+    assert!(matches!(jobs_tracker::cancel(&mut doc, &mut c, None, Some(true)), Outcome::Done(Ok(_))));
+    until(&mut doc, "the cancelled job to end", |d| state(d, &job.id) != "running");
+    assert_eq!(state(&doc, &job.id), "cancelled");
+    assert!(doc.edit.is_none(), "a cancelled job publishes nothing");
+    match jobs_tracker::cancel(&mut doc, &mut c, None, Some(true)) {
         Outcome::Done(Err(e)) => assert_eq!(e, "No print jobs are running"),
         _ => panic!("expected the refusal"),
     }
-    assert_eq!(fake.deletes().len(), 1);
 }
 
 #[test]
 fn robocads_texts_for_each_kind() {
     let job = |kind: &str, result: Value| PrintJob { id: "x".into(), kind: kind.into(), state: "done".into(), fraction: 1.0, result, ..PrintJob::default() };
-    let split = job("split", json!({"revision": 6, "group": "g1", "piece_nodes": ["p1", "p2", "p3"], "hardware": [{"item": "screw", "size": "M3x12", "count": 4}]}));
+    let split = job("split", json!({"group": "g1", "piece_nodes": ["p1", "p2", "p3"], "hardware": [{"item": "screw", "size": "M3x12", "count": 4}]}));
     assert_eq!(done_text(&split), ("split into 3 pieces; hardware: 4× screw M3x12".to_string(), None));
     let plan = job("plan", json!({"plate_files": ["a.3mf", "b.3mf"], "total_hours": 5.26, "total_filament_g": 123.4, "plates": "/runs/plates"}));
     assert_eq!(done_text(&plan).0, "plan: 2 plate(s), about 5.3 h and 123 g (estimates); 3MF files in /runs/plates");
@@ -226,57 +129,4 @@ fn robocads_texts_for_each_kind() {
     quiet.state = "running".into();
     quiet.fraction = 0.126;
     assert_eq!(line(&quiet), "analyze x: running 13 % ");
-    // A cancel that landed after the work published: its revision; a
-    // cancel before publishing (no result) or a kind that never publishes: none.
-    let mut late = job("plan", json!({"revision": 9, "plate_files": []}));
-    late.state = "cancelled".into();
-    assert_eq!(published_revision(&late), Some(9));
-    late.result = Value::Null;
-    assert_eq!(published_revision(&late), None);
-    assert_eq!(published_revision(&job("coupons", json!({"revision": 9}))), None);
-}
-
-#[test]
-#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
-fn a_list_polled_before_a_jobs_adoption_does_not_end_it() {
-    let fake = Fake::start(json!([]));
-    let mut doc = document(&fake);
-    jobs_panel::show(&mut doc, Some(true)).unwrap();
-    // The section's poll starts (it lands only at a later tick).
-    jobs_tracker::tick(&mut doc);
-    assert!(doc.print.jobs.polling());
-    // The start's edit answers while that poll is in flight.
-    doc.edit_seq = 3;
-    doc.print.studies.started = Some(Started { seq: 3, generation: doc.generation, kind: "analyze" });
-    jobs_tracker::edit_answered(&mut doc, 3, Some(&json!({"id": "a9", "kind": "analyze", "state": "queued", "fraction": 0.0, "message": ""})));
-    // The earlier poll's list lacks the job: it stays watched, nothing said.
-    until(&mut doc, "the earlier poll's list", |d| d.print.jobs.listed);
-    assert_eq!(doc.print.jobs.watched.len(), 1);
-    assert!(!matches!(&doc.status, Some(Err(e)) if e.contains("no longer lists")), "{:?}", doc.status);
-    // A poll started after the adoption that lacks it ends it.
-    until(&mut doc, "a later poll", |d| d.print.jobs.watched.is_empty());
-    assert_eq!(doc.status, Some(Err("analyze a9: RoboCAD no longer lists this print job".to_string())));
-}
-
-#[test]
-#[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
-fn cancel_before_any_list_was_read_refuses_and_polls_once() {
-    let fake = Fake::start(json!([running("a1", "plan", 0.1, "")]));
-    let mut doc = document(&fake);
-    let (mut continuation, mut replies) = (Value::Null, Replies::default());
-    let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
-    // The section is closed and nothing is watched: no list was read.
-    for confirm in [None, Some(true)] {
-        match jobs_tracker::cancel(&mut doc, &mut call, None, confirm) {
-            Outcome::Done(Err(e)) => assert_eq!(e, UNREAD),
-            _ => panic!("expected the refusal"),
-        }
-    }
-    assert!(!doc.print.jobs.open && !doc.print.jobs.confirming);
-    // The refusal asked RoboCAD once, though the section is closed.
-    until(&mut doc, "the list", |d| d.print.jobs.listed);
-    assert!(fake.deletes().is_empty());
-    assert!(matches!(jobs_tracker::cancel(&mut doc, &mut call, None, Some(true)), Outcome::Done(Ok(_))));
-    until(&mut doc, "the cancel", |d| jobs_tracker::state_json(d)["cancelling"] == false);
-    assert_eq!(fake.deletes(), vec!["/print/jobs/a1".to_string()]);
 }

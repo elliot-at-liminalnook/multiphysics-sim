@@ -51,7 +51,7 @@ use crate::cad::ops::{self, Flow, RobotTool};
 use bevy::prelude::*;
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{FaceInfo, RobotSummary, SelectionItem};
+use crate::cad::types::{FaceInfo, RobotSummary, SelectionItem};
 
 /// The joint tool's picks so far (`JointTool.stage`, `parent`, `child`).
 #[derive(Clone, Debug, Default, PartialEq)]

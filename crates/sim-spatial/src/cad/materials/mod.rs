@@ -39,7 +39,7 @@ use form::{FormKind, MaterialForm, Submit};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{Material, SelectionItem};
+use crate::cad::types::{Material, SelectionItem};
 
 pub(in crate::cad) use panel::{draw, key};
 

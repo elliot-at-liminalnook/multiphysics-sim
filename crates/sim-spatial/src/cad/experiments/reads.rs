@@ -8,7 +8,7 @@ pub(crate) fn refresh(st: &mut ExperimentsState, doc: &CadDocument) -> Result<()
         return Err("experiments.read: previous read pending".into());
     }
     let s = stamp(doc, st)?;
-    let client = doc.client.clone().ok_or("Not connected to RoboCAD")?;
+    let client = crate::cad::lab::service(doc)?;
     st.read = Some(Read {
         stamp: s.clone(),
         kind: "list",
@@ -41,7 +41,7 @@ pub(crate) fn read_selected(
     }
     let id = st.selected.clone().ok_or("Select a captured run first")?;
     let s = stamp(doc, st)?;
-    let client = doc.client.clone().ok_or("Not connected to RoboCAD")?;
+    let client = crate::cad::lab::service(doc)?;
     st.read = Some(Read {
         stamp: s.clone(),
         kind: "selected",
@@ -65,7 +65,7 @@ pub(crate) fn read_candidate(st: &mut ExperimentsState, doc: &CadDocument) -> Re
     }
     let id = st.candidate.clone().ok_or("Select a candidate first")?;
     let s = stamp(doc, st)?;
-    let client = doc.client.clone().ok_or("Not connected to RoboCAD")?;
+    let client = crate::cad::lab::service(doc)?;
     st.read = Some(Read {
         stamp: s.clone(),
         kind: "candidate",
@@ -86,7 +86,7 @@ pub(crate) fn compare(st: &mut ExperimentsState, doc: &CadDocument) -> Result<()
     let baseline = st.baseline.clone().ok_or("Set a baseline first")?;
     let id = st.selected.clone().ok_or("Select a run first")?;
     let s = stamp(doc, st)?;
-    let client = doc.client.clone().ok_or("Not connected to RoboCAD")?;
+    let client = crate::cad::lab::service(doc)?;
     st.read = Some(Read {
         stamp: s.clone(),
         kind: "compare",

@@ -42,7 +42,7 @@ use crate::cad::ops::{Built, Env, OpEntry, Resolved};
 use serde_json::{Map, Value};
 use sim_api::Outcome;
 use crate::cad::selection::CadItems;
-use sim_runtime::cad_client::{PlaneFrame, SelectionItem, SketchCall, SketchCurve, SketchGeometry, Uv, check_calls};
+use crate::cad::types::{PlaneFrame, SelectionItem, SketchCall, SketchCurve, SketchGeometry, Uv, check_calls};
 use std::f64::consts::{PI, TAU};
 use std::sync::Arc;
 

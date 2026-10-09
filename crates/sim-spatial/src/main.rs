@@ -251,7 +251,7 @@ fn launch(mode: sim_spatial::ViewerMode, api: sim_api::Server, documents: Docume
 fn cad_mode(args: &Args, target: sim_spatial::cad::CadTarget, project: Option<PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
     use sim_spatial::cad::CadTarget;
     if matches!(&target, CadTarget::Service(_)) {
-        return Err("CAD service attachment awaiting Rust migration; open a local .rcad archive".into());
+        return Err("There is no CAD service to attach to; open a local .rcad archive".into());
     }
     if args.validate_only {
         if let CadTarget::File(path) = &target {

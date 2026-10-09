@@ -8,9 +8,9 @@ use crate::cad::CadDocument;
 use crate::jobs::{Job, Pool};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use sim_runtime::cad_client::{
-    CadClient, CadError, ComponentJobState, ComponentJobStatus, ComponentOperation,
-    ComponentStarted,
+use crate::cad::component_service::Service;
+use crate::cad::types::{
+    CadError, ComponentJobState, ComponentJobStatus, ComponentOperation, ComponentStarted,
 };
 use std::time::{Duration, Instant};
 
@@ -59,7 +59,7 @@ impl Identity {
 pub(crate) struct Active {
     pub identity: Identity,
     pub expected_revision: u64,
-    pub client: CadClient,
+    pub client: Service,
     pub operation: ComponentOperation,
     pub start: Option<Job<Started>>,
     pub status: Option<ComponentJobStatus>,
@@ -88,7 +88,7 @@ impl Active {
     pub fn new(
         identity: Identity,
         expected_revision: u64,
-        client: CadClient,
+        client: Service,
         operation: ComponentOperation,
         start: Job<Started>,
         draft: Option<usize>,
@@ -375,6 +375,16 @@ pub(crate) fn tick(
         }
         st.touch();
     }
+    // A ready preparation is published here (one undo step), unless the
+    // request was cancelled or belongs to another document.
+    if !displaced
+        && !active.cancel_requested
+        && let Some(status) = active.status.as_ref().filter(|s| s.state == ComponentJobState::Ready)
+        && let Some(d) = doc.as_deref_mut()
+        && let Err(e) = crate::cad::component_service::commit(d, &status.id)
+    {
+        st.error = Some(format!("components.{op}: {e}"));
+    }
     if !ended
         && let Some(status) = &active.status
         && status.state.terminal()
@@ -431,7 +441,8 @@ pub(crate) fn tick(
         } else if let Some(d) = doc.as_deref_mut() {
             match status.state {
                 ComponentJobState::Applied => {
-                    crate::cad::sync::refresh(d, true);
+                    // The edit landed through `local::start` (one undo step); the
+                    // catalogue is read again at the new revision.
                     st.catalogue = None;
                     let definition = status
                         .result
@@ -602,7 +613,7 @@ fn read(st: &mut ComponentsState, doc: Option<&CadDocument>) {
     let Ok(id) = Identity::of(doc) else { return };
     if st.library_identity.as_ref() != Some(&id)
         && st.listing.is_none()
-        && let Some(client) = doc.client.clone()
+        && let Ok(client) = crate::cad::component_service::service(doc)
     {
         st.listing = Some((
             id.clone(),
@@ -627,7 +638,7 @@ fn read(st: &mut ComponentsState, doc: Option<&CadDocument>) {
     {
         return;
     }
-    let Some(client) = doc.client.clone() else {
+    let Ok(client) = crate::cad::component_service::service(doc) else {
         return;
     };
     st.read_at = Some(Instant::now());
@@ -732,7 +743,7 @@ mod tests {
                 document_id: "doc-a".into(),
             },
             expected_revision: 4,
-            client: CadClient::new("http://127.0.0.1:1").unwrap(),
+            client: crate::cad::component_service::test_service(),
             operation: ComponentOperation::Import {
                 path: "/library/leg.rcomp".into(),
             },

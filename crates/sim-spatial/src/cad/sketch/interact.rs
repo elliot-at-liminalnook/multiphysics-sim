@@ -91,7 +91,7 @@ use bevy::picking::hover::HoverMap;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use serde_json::Value;
-use sim_runtime::cad_client::{PlaneFrame, SketchCall, Uv};
+use crate::cad::types::{PlaneFrame, SketchCall, Uv};
 use std::time::{Duration, Instant};
 
 /// Qt's default double-click interval.

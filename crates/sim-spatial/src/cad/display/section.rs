@@ -38,7 +38,7 @@ use crate::jobs::{Ctx, Job, Latest, Pool};
 use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
-use sim_runtime::cad_client::{MeshData, SectionCurves};
+use crate::cad::types::{MeshData, SectionCurves};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 

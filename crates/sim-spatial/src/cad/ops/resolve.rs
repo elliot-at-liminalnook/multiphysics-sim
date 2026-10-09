@@ -9,7 +9,7 @@
 use super::{Env, Needs, OpEntry};
 use crate::cad::document::CadDocument;
 use crate::cad::transform::{mm, selection_revision, view_back};
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 
 /// What an operation runs on.
 #[derive(Clone, Debug, Default, PartialEq)]

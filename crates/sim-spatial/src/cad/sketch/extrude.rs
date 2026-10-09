@@ -74,7 +74,7 @@ use bevy::picking::hover::HoverMap;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use serde_json::{Map, Value, json};
-use sim_runtime::cad_client::{PlaneFrame, SelectionItem};
+use crate::cad::types::{PlaneFrame, SelectionItem};
 
 /// RoboCAD's refusal when there is nothing to extrude (`_apply`, ui/tools.py:911-912).
 pub const NO_SOURCE: &str = "Select a sketch or closed curve first";
@@ -545,7 +545,7 @@ mod tests {
     use crate::cad::sketch::cache::Geometry;
     use crate::cad::sketch::{ActivePlane, BasePlane};
     use crate::ui_kit::form::FieldKind;
-    use sim_runtime::cad_client::{DocState, NodeSummary, SketchCurve, SketchGeometry};
+    use crate::cad::types::{DocState, NodeSummary, SketchCurve, SketchGeometry};
     use std::sync::Arc;
 
     fn node(id: &str, kind: &str, name: &str, visible: bool) -> NodeSummary {

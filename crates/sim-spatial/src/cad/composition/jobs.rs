@@ -110,7 +110,7 @@ pub(super) fn tick(doc: Option<ResMut<CadDocument>>, mut st: ResMut<CadCompositi
     {
         return;
     }
-    let Some(client) = doc.client.clone() else {
+    let Ok(client) = crate::cad::component_service::service(&doc) else {
         return;
     };
     let check = (!st.check_id.is_empty()).then(|| st.check_id.clone());

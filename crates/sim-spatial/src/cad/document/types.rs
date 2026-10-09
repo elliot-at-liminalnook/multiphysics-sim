@@ -1,15 +1,13 @@
 //! The document's value types: the target, the connection, edits in
-//! flight and their results, the poll's snapshot, tree rows, the child
-//! service's slot, the selection modes, the tools, the Alt menu and the
-//! input focus flag.
-use crate::jobs::{ChildProcess, Job};
+//! flight and their results, the poll's snapshot, tree rows, the selection
+//! modes, the tools, the Alt menu and the input focus flag.
+use crate::jobs::Job;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use sim_runtime::cad_client::{Autosave, CadClient, CommandInfo, DocState, Health, Selection, SelectionItem};
+use crate::cad::types::{Autosave, CommandInfo, DocState, Health, Selection, SelectionItem};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Instant;
 
 /// What CAD mode was asked to show.
@@ -36,7 +34,7 @@ impl CadTarget {
     }
 }
 
-/// The connection to the RoboCAD service, as shown in the header.
+/// The document's state as the header shows it: opening, open, or failed.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Connection {
     /// Starting the service or waiting for its first answer.
@@ -125,70 +123,6 @@ pub struct TreeRow {
     /// its subtree are left out of the model (and are not effectively visible).
     pub disabled: bool,
     pub selected: bool,
-}
-
-/// The RoboCAD service this window started, with one owner: the slot. The
-/// connect job puts the process here the moment it spawns it, and the
-/// document holds the same slot from the moment that job starts, so
-/// closing the window or leaving CAD mode while it is still "Connecting…"
-/// stops it at once ([`CadDocument::release_child`](super::CadDocument::release_child): `ChildProcess::stop`
-/// never blocks). A closed slot refuses a process put later (the connect
-/// job then stops it itself), and the connect job's wait ends when it sees
-/// the slot closed. Empty for an attached RoboCAD, which is never stopped.
-#[derive(Clone, Default)]
-pub struct ChildSlot(Arc<Mutex<SlotState>>);
-
-#[derive(Default)]
-struct SlotState {
-    child: Option<ChildProcess>,
-    closed: bool,
-}
-
-impl ChildSlot {
-    fn lock(&self) -> MutexGuard<'_, SlotState> {
-        self.0.lock().unwrap_or_else(|p| p.into_inner())
-    }
-    /// The process id while the slot holds the process (also once it has exited).
-    pub fn pid(&self) -> Option<u32> {
-        self.lock().child.as_ref().map(ChildProcess::id)
-    }
-    /// Whether the slot holds a process this window started.
-    pub fn is_some(&self) -> bool {
-        self.lock().child.is_some()
-    }
-    /// The connect job's: hold `child`, unless the slot was closed meanwhile
-    /// (it is then handed back, for the job to stop).
-    pub(in crate::cad) fn put(&self, child: ChildProcess) -> Result<(), ChildProcess> {
-        let mut state = self.lock();
-        if state.closed {
-            return Err(child);
-        }
-        state.child = Some(child);
-        Ok(())
-    }
-    /// Take the process out (to stop or detach it); the slot stays open.
-    pub(in crate::cad) fn take(&self) -> Option<ChildProcess> {
-        self.lock().child.take()
-    }
-    /// Close the slot (a process put later is refused) and take the process.
-    pub(in crate::cad) fn close(&self) -> Option<ChildProcess> {
-        let mut state = self.lock();
-        state.closed = true;
-        state.child.take()
-    }
-    pub(in crate::cad) fn closed(&self) -> bool {
-        self.lock().closed
-    }
-    /// Non-blocking (`ChildProcess::exited`, a `try_wait`): the held
-    /// process's exit; None while it runs or when the slot is empty.
-    pub(in crate::cad) fn exited(&self) -> Option<String> {
-        self.lock().child.as_mut().and_then(ChildProcess::exited)
-    }
-    /// The slot holds a process that has not exited.
-    pub(in crate::cad) fn running(&self) -> bool {
-        let mut state = self.lock();
-        state.child.as_mut().is_some_and(|c| c.exited().is_none())
-    }
 }
 
 /// RoboCAD's selection modes (`viewport.selection_mode`; keymap `select.*`):
@@ -291,11 +225,3 @@ pub struct Candidates {
     pub revision: Option<u64>,
 }
 
-/// A finished connect: the client, the first health, and whether this
-/// window started the service (its process is in the document's
-/// [`ChildSlot`] already).
-pub struct Connected {
-    pub client: CadClient,
-    pub health: Health,
-    pub self_started: bool,
-}

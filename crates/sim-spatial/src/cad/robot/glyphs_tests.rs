@@ -4,7 +4,7 @@
 use super::*;
 use crate::cad::document::{CadDocument, CadTarget};
 use serde_json::json;
-use sim_runtime::cad_client::{DocState, NodeSummary};
+use crate::cad::types::{DocState, NodeSummary};
 
 fn document() -> CadDocument {
     CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()))

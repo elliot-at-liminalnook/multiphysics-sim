@@ -10,7 +10,7 @@ use super::super::kinds::*;
 use super::super::*;
 use crate::cad::print::PrintCall;
 use crate::ui_kit::form::Unit;
-use sim_runtime::cad_client::{FASTENER_KINDS, FASTENER_SIZES, SPLIT_JOINTS};
+use crate::cad::types::{FASTENER_KINDS, FASTENER_SIZES, SPLIT_JOINTS};
 
 /// "Printer:" for a split: the registry's printers with their usable size
 /// (`print::picks` "printers": "bambu-h2c (325 × 320 × 320 mm)"), the

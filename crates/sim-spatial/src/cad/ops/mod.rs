@@ -63,7 +63,7 @@ use form::{form_set, submit};
 use form::open_form;
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use std::sync::OnceLock;
 
 /// What an operation needs selected (RoboCAD's handler reads
@@ -631,7 +631,7 @@ fn start(entry: &'static OpEntry, built: Built, explicit: bool, selection: &[Sel
 /// `POST /nodes {"kind": "sketch", "plane", "calls"}` for a new sketch. The
 /// one path every sketch shape and sketch edit takes (`cad_sketch` too);
 /// the caller has checked `CadDocument::commit_refusal`.
-pub(in crate::cad) fn send_sketch(doc: &mut CadDocument, call: &mut Call, target: SketchTarget, calls: Vec<sim_runtime::cad_client::SketchCall>, label: String) -> Outcome {
+pub(in crate::cad) fn send_sketch(doc: &mut CadDocument, call: &mut Call, target: SketchTarget, calls: Vec<crate::cad::types::SketchCall>, label: String) -> Outcome {
     let message = label.clone();
     // The polygon tool's side count follows a polygon sent with sides once
     // its edit succeeds (RoboCAD's `Sketch.last_polygon_sides`; `sync::finish_edit`).

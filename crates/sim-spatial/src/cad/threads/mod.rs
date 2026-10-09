@@ -54,7 +54,7 @@ pub(in crate::cad) use controls::controls;
 pub(crate) use controls::{attachment, controls_of, shown_threads, submit_action};
 pub(in crate::cad) use ops::handle;
 pub(crate) use ops::open;
-pub(crate) use source::{Request, UNDO_IS_ROBOCADS, request_on, thread_of};
+pub(crate) use source::{Request, request_on, thread_of};
 pub(crate) use ops::annotate_evidence;
 
 use crate::annotations::InFlight;
@@ -64,7 +64,7 @@ use crate::cad::document::CadDocument;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
-use sim_runtime::cad_client::CadThread;
+use crate::cad::types::CadThread;
 
 /// RoboCAD's undo labels (annotations.py), also the edits' labels here.
 pub(crate) const ADD: &str = "Add annotation";
@@ -554,10 +554,6 @@ pub(crate) fn plain(e: &str) -> String {
         _ => rest.to_string(),
     }
 }
-
-/// Why a captured-experiment pin cannot be shown: experiment review reads
-/// RoboCAD's experiment service, which has no in-process port yet.
-pub(crate) const EVIDENCE_UNPORTED: &str = "Captured experiment review is not available in the in-process editor yet (it reads RoboCAD's experiment service)";
 
 /// `sync::start` (a reconnect, a new document): commits sent on the old
 /// connection will not land here, and what was read and picked on it goes.

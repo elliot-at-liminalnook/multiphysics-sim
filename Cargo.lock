@@ -7641,11 +7641,16 @@ dependencies = [
 name = "sim-cad"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "cc",
+ "rhai",
+ "roxmltree 0.21.1",
  "serde",
  "serde_json",
  "sha2",
  "sim-domain-robot",
+ "sim-print",
+ "sim-render",
  "sim-runtime",
  "ttf-parser",
  "zip",

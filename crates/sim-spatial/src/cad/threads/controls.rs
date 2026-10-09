@@ -10,7 +10,7 @@ use crate::cad::actions::{CadAction, Cx};
 use crate::cad::document::CadDocument;
 use crate::cad::panel::Control;
 use crate::cad::selection::CadItems;
-use sim_runtime::cad_client::{AnchorStatus, CadThread, SelectionItem};
+use crate::cad::types::{AnchorStatus, CadThread, SelectionItem};
 
 /// The action the composer's post sends now (Post annotation, Save edit or Reply).
 pub(crate) fn submit_action(doc: &CadDocument) -> Option<(CadAction, &'static str)> {
@@ -80,8 +80,7 @@ pub(crate) fn controls_of(doc: &CadDocument, selection: &[SelectionItem]) -> Vec
     let show_ready = current.map_or(Ok(()), |t| {
         if t.anchor_status == AnchorStatus::Evidence {
             if t.evidence.as_ref().and_then(|e| e["run_id"].as_str()).is_none() { Err("Captured evidence requires a run_id".into()) }
-            // The captured run opens in experiment review, which reads RoboCAD's experiment service.
-            else if doc.client.is_none() { Err(crate::cad::threads::EVIDENCE_UNPORTED.into()) }
+            // The captured run opens in experiment review (the local experiment service).
             else { Ok(()) }
         } else if t.anchor.node_id.is_none() { Err("This annotation has no model pin".into()) }
         else { Ok(()) }

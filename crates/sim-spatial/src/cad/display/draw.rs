@@ -206,7 +206,7 @@ fn fetch_edges(local: std::sync::Arc<crate::cad::sync::LocalSnapshot>, node: Str
 }
 
 /// The visible curve nodes of the shown tree.
-fn curve_nodes(doc: &CadDocument) -> impl Iterator<Item = &sim_runtime::cad_client::NodeSummary> {
+fn curve_nodes(doc: &CadDocument) -> impl Iterator<Item = &crate::cad::types::NodeSummary> {
     doc.doc.iter().flat_map(|d| d.nodes.iter()).filter(|n| n.effective_visible && n.kind == "curve")
 }
 
@@ -265,7 +265,7 @@ pub(super) fn edges_sync(
 }
 
 /// Start edge fetches for the drawn bodies `CadTopology` does not hold.
-fn start_body_edges(e: &mut DisplayEdges, meshes: &CadMeshes, topology: Option<&CadTopology>, state: &sim_runtime::cad_client::DocState, client: &std::sync::Arc<crate::cad::sync::LocalSnapshot>, revision: u64) {
+fn start_body_edges(e: &mut DisplayEdges, meshes: &CadMeshes, topology: Option<&CadTopology>, state: &crate::cad::types::DocState, client: &std::sync::Arc<crate::cad::sync::LocalSnapshot>, revision: u64) {
     let mut ids: Vec<&str> = state.nodes.iter().filter(|n| n.effective_visible && BODY_KINDS.contains(&n.kind.as_str()) && meshes.shown(&n.id)).map(|n| n.id.as_str()).collect();
     ids.sort_unstable();
     for id in ids {

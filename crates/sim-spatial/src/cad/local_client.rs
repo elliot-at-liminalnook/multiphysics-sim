@@ -2,19 +2,16 @@
 //! tool and form calls (`edit(doc, call, label, |c| c.patch(…))`), with the
 //! same names and answers RoboCAD's client had, applied to the archive being
 //! edited (`local::Workspace`) through the shared library (`sim_cad::ops`,
-//! `sim_cad::sketch`, `sim_cad::references`, `sim_cad::robotics`). An
-//! operation that has no in-process port yet refuses by name.
+//! `sim_cad::sketch`, `sim_cad::references`, `sim_cad::robotics`,
+//! `sim_cad::component_edit`, `sim_cad::scripts`, `sim_cad::experiments`).
 use super::local::Workspace;
 use serde_json::{Map, Value, json};
-use sim_runtime::cad_client::{CadError, FastenerSpec, History, Material, NewMaterial, NodeDetail, OpResult, Pasted, Ran, ReferenceUpdate, SketchCall};
+use crate::cad::types::{CadError, FastenerSpec, History, Material, NewMaterial, NodeDetail, OpResult, Pasted, Ran, ReferenceUpdate, SketchCall};
 
 type R<T> = Result<T, CadError>;
 
 fn err(e: String) -> CadError {
     CadError::local(e)
-}
-fn not_ported(what: &str) -> CadError {
-    CadError::local(format!("{what}: not available in the in-process editor yet (it needed RoboCAD's service, which is gone)"))
 }
 fn op_result(result: Value) -> OpResult {
     OpResult { result, history: History::default(), job: None }
@@ -57,10 +54,6 @@ impl Workspace<'_> {
             sim_cad::nodes::patch(&mut self.edit, id, &plain).map_err(err)?;
         }
         self.node(id)
-    }
-    pub fn delete(&mut self, id: &str) -> R<Value> {
-        sim_cad::nodes::delete(&mut self.edit, &[id.to_string()]).map_err(err)?;
-        Ok(json!({"deleted": id}))
     }
     pub fn group(&mut self, ids: &[String], name: &str) -> R<OpResult> {
         self.op_kw("group", vec![json!(ids), json!(name)], json!({}))
@@ -151,6 +144,8 @@ impl Workspace<'_> {
                 let id = self.op_kw("new_sketch", vec![sk.plane.json()], json!({"name": name}))?.result.as_str().map(str::to_string).unwrap_or_default();
                 self.edit.node_mut(&id).map_err(err)?["sketch"] = sk.json();
                 pasted.push(id);
+            } else if d["kind"] == "mesh" {
+                return Err(err(format!("{name}: a reference mesh is not pasted; import its file again")));
             }
         }
         Ok(Pasted { pasted, revision: None, history: History::default() })
@@ -165,11 +160,18 @@ impl Workspace<'_> {
         let s = json!({"size": spec.size, "kind": spec.kind, "extra_clearance": spec.extra_clearance, "depth": spec.depth});
         self.op_kw("fastener_hole", vec![json!(node), json!({"node": node, "face": face}), json!(point), s], json!({}))
     }
-    pub fn print_split_job(&mut self, _request: &sim_runtime::cad_client::SplitRequest) -> R<sim_runtime::cad_client::PrintJob> {
-        Err(not_ported("Split for printing"))
-    }
-    pub fn print_start(&mut self, kind: &str, _body: &Value) -> R<sim_runtime::cad_client::PrintJob> {
-        Err(not_ported(&format!("print {kind} job")))
+
+    // ---- components and the system composition ----
+    /// One system-graph edit (RoboCAD's `/system` routes), validated against the document.
+    pub fn composition_edit(&mut self, revision: u64, command: &crate::cad::types::composition::GraphCommand, _check: Option<&str>, document_id: Option<&str>) -> R<crate::cad::types::composition::GraphEdit> {
+        if document_id.is_some_and(|d| Some(d) != self.archive.manifest["document_id"].as_str()) {
+            return Err(err("system.document_id: document changed; draft preserved".into()));
+        }
+        let command = serde_json::to_value(command).map_err(|e| err(e.to_string()))?;
+        let graph = self.edit.manifest["component_graph"].clone();
+        let (graph, id) = sim_cad::component_graph::edit(&graph, &self.edit.manifest, &command).map_err(err)?;
+        self.edit.manifest["component_graph"] = graph.clone();
+        serde_json::from_value(json!({"revision": revision + 1, "document_id": self.archive.manifest["document_id"], "id": id, "graph": graph})).map_err(|e| err(e.to_string()))
     }
 
     // ---- references and the linked system file ----
@@ -214,31 +216,39 @@ impl Workspace<'_> {
     }
 
     // ---- motion programs ----
-    pub fn save_motion(&mut self, program: &Value, _stamp: &sim_runtime::cad_client::ComponentStamp) -> R<Value> {
+    pub fn save_motion(&mut self, program: &Value, _stamp: &crate::cad::types::ComponentStamp) -> R<Value> {
         self.op_kw("save_motion", vec![program.clone()], json!({})).map(|r| r.result)
     }
-    pub fn delete_motion(&mut self, name: &str, _stamp: &sim_runtime::cad_client::ComponentStamp) -> R<Value> {
+    pub fn delete_motion(&mut self, name: &str, _stamp: &crate::cad::types::ComponentStamp) -> R<Value> {
         self.op_kw("delete_motion", vec![json!(name)], json!({})).map(|r| r.result)
     }
 
     /// File > Import: not yet in process (STEP, IGES and meshes need the exchange toolkits).
     /// `POST /import` (`sim_cad::import`): STEP/IGES bodies, an SVG sketch or
     /// a reference image; meshes are refused by name.
-    pub fn import(&mut self, path: &str, _unit: Option<&str>) -> R<sim_runtime::cad_client::Imported> {
+    pub fn import(&mut self, path: &str, unit: Option<&str>) -> R<crate::cad::types::Imported> {
         let geometry = self.geometry;
         let centroid = |id: &str| geometry.iter().find(|b| b.node_id == id).map(|b| b.properties.centroid_mm);
         let mut cx = sim_cad::ops::Ctx { doc: self.archive, stamps: self.stamps, edit: &mut self.edit, centroid: &centroid, cancelled: self.cancelled };
-        let ids = sim_cad::import::import_file(&mut cx, path).map_err(err)?;
-        Ok(sim_runtime::cad_client::Imported { imported: ids.into_iter().map(Value::from).collect() })
+        let ids = sim_cad::import::import_file_in(&mut cx, path, unit).map_err(err)?;
+        Ok(crate::cad::types::Imported { imported: ids.into_iter().map(Value::from).collect() })
     }
 
     // ---- experiments (RoboCAD's experiment service) ----
-    pub fn accept_candidate(&mut self, _id: &str, _document_id: &str, _revision: u64) -> R<sim_runtime::cad_client::candidates::CandidateRecord> {
-        Err(not_ported("Accept experiment candidate"))
+    /// Accept a draft candidate: the edit becomes the candidate's staged
+    /// state (one undo step), refused when the document moved since its base.
+    pub fn accept_candidate(&mut self, id: &str, document_id: &str, revision: u64) -> R<crate::cad::types::candidates::CandidateRecord> {
+        if self.archive.manifest["document_id"].as_str().is_some_and(|d| d != document_id) {
+            return Err(err("Document replaced before acceptance".into()));
+        }
+        let (_, edit) = super::lab::accept(self.archive, revision, id, revision).map_err(err)?;
+        self.edit = edit;
+        let record = super::lab::mark_accepted(id, document_id, revision + 1).map_err(err)?;
+        serde_json::from_value(record).map_err(|e| err(e.to_string()))
     }
     /// `POST /doc/batch`: operations `{op, args, kwargs, as}` applied in order as
     /// one edit (all or nothing); `{"$ref": alias}` names an earlier result.
-    pub fn batch(&mut self, r: &sim_runtime::cad_client::candidates::CandidateRequest) -> R<Value> {
+    pub fn batch(&mut self, r: &crate::cad::types::candidates::CandidateRequest) -> R<Value> {
         if self.archive.manifest["document_id"].as_str().is_some_and(|d| d != r.document_id) {
             return Err(err("Document replaced before the batch".into()));
         }
@@ -282,16 +292,52 @@ impl Workspace<'_> {
         self.op_kw("set_robot_setting", vec![json!("actuator_profiles"), profiles.clone()], json!({}))?;
         Ok(profiles.clone())
     }
+    /// `POST /results/load`: a results file hung on its nodes (stale when
+    /// it describes another physical state).
     pub fn load_results(&mut self, path: &str) -> R<Value> {
-        Err(not_ported(&format!("Load results from {path}")))
+        let hash = sim_cad::experiments::capture::capture(self.archive, 0).map_err(err)?.physical_hash;
+        sim_cad::experiments::identification::load_results(&mut self.edit, std::path::Path::new(path), &hash).map_err(err)
     }
+    /// `POST /identification/apply`: fitted joint parameters stored; a joint
+    /// the accepted actuator registry covers points at its family instead
+    /// of taking copied motor numbers.
     pub fn apply_identification(&mut self, path: &str) -> R<Value> {
-        Err(not_ported(&format!("Apply identification from {path}")))
+        let registry = sim_runtime::actuator_registry::Registry::load(&sim_runtime::actuator_registry::default_path()).ok();
+        let covered = |joint: &str| -> Option<(String, Value)> {
+            let r = registry.as_ref()?;
+            r.role_family(joint).ok().map(|f| (f.to_string(), r.identity()))
+        };
+        sim_cad::experiments::identification::apply_identification(&mut self.edit, std::path::Path::new(path), &covered).map_err(err)
     }
-    pub fn model_script(&mut self, _r: &Value) -> R<Value> {
-        Err(not_ported("Model script"))
+    /// `POST /doc/script`: a repository `.rhai` model script run on this
+    /// edit (`sim_cad::scripts`): one undo step; with `changes`, what changed.
+    pub fn model_script(&mut self, r: &Value) -> R<Value> {
+        if r["document_id"].as_str().is_some_and(|d| Some(d) != self.archive.manifest["document_id"].as_str()) {
+            return Err(err("Document replaced while the model script was prepared".into()));
+        }
+        let path = r["path"].as_str().ok_or_else(|| err("model script: give path (a .rhai file in the repository)".into()))?;
+        let doc = std::sync::Arc::new(self.archive.clone());
+        let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new((self.cancelled)()));
+        let (edit, summary) = sim_cad::scripts::stage(doc, path, &r["params"], r["replace"].as_bool().unwrap_or(true), stop).map_err(err)?;
+        let mut out = summary.json();
+        if r["changes"] == true {
+            let before = sim_cad::experiments::capture::capture(self.archive, 0).map_err(err)?;
+            let after = sim_cad::experiments::capture::capture(&self.archive.apply(edit.clone()).map_err(err)?, 1).map_err(err)?;
+            out["changes"] = sim_cad::experiments::candidates::change_set(&before, &after).map_err(err)?;
+        }
+        self.edit = edit;
+        Ok(out)
     }
-    pub fn restore_experiment_inputs(&mut self, _id: &str, _document_id: &str, _revision: u64) -> R<Value> {
-        Err(not_ported("Restore experiment inputs"))
+    /// Restore a run's captured component graph (one undo step); its
+    /// source bundles are answered for the editor, never written to files.
+    pub fn restore_experiment_inputs(&mut self, id: &str, document_id: &str, _revision: u64) -> R<Value> {
+        if self.archive.manifest["document_id"].as_str().is_some_and(|d| d != document_id) {
+            return Err(err("Document changed; retained draft cannot publish here".into()));
+        }
+        let spec = super::lab::lab().inputs(id).map_err(err)?;
+        if let Some(graph) = spec.get("component_graph").filter(|g| !g.is_null()) {
+            self.edit.manifest["component_graph"] = sim_cad::component_graph::validate(graph, &self.edit.manifest).map_err(err)?;
+        }
+        Ok(json!({"inputs": spec}))
     }
 }

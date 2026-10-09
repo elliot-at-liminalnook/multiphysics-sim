@@ -1,25 +1,21 @@
 //! The print studies (ui/app.py:1166-1263): "Split selected for
 //! printing…", "Check strength", "Plan print settings and plates", "Whole
 //! or split for strength?", "Assembly guide…" and "Test coupons…". Each
-//! start is one RoboCAD call through `actions::edit_at` (`POST
-//! /print/split` with `background: true`, as RoboCAD's menu uses
-//! `split_job`, or `POST /print/{kind}`), refused by name with nothing sent
-//! when RoboCAD's document moved since the selection or form was read
-//! (`expected_revision` makes RoboCAD refuse it too). The answer is the
-//! started job, which [`super::jobs_tracker`] adopts and polls.
+//! start runs in process on the shown snapshot ([`super::jobs_tracker`]),
+//! refused by name with nothing started when the document moved since the
+//! selection or form was read.
 //!
-//! - **The printing registry** (`GET /print/registry`: printers with
-//!   their usable size, filaments, in the registry's order) is read on one
-//!   `Pool::Dedicated` job once per connection generation; a failed read is
-//!   kept with its error and read again after a reconnect or Refresh
-//!   (`CadDocument::mesh_retry` moves) or in a new generation. The forms'
-//!   "Printer:" and "Filament:" lists come from it ([`picks`]); the split
-//!   and coupon forms (and `ops.print_split`'s) are refused by name until
-//!   it is read ([`precheck`]).
-//! - **The print study** (`GET /print/study`: `robot_settings
-//!   ["print_study"]` and the split groups) is read on one Dedicated job
-//!   per (generation, shown revision), the `robot::data` pattern: a job for
-//!   an older key is dropped (cancelled) when a newer one starts.
+//! - **The printing registry** (`library/printing/registry.json`, read by
+//!   `sim_print::registry`: printers with their usable size, filaments, in
+//!   the file's order) is read on one `Pool::Io` job once per document
+//!   generation; a failed read is kept with its error and read again after
+//!   Refresh (`CadDocument::mesh_retry` moves) or in a new generation. The
+//!   forms' "Printer:" and "Filament:" lists come from it ([`picks`]); the
+//!   split and coupon forms (and `ops.print_split`'s) are refused by name
+//!   until it is read ([`precheck`]).
+//! - **The print study** (`robot_settings["print_study"]` and the split
+//!   groups, nodes with `robot.print_split`, in tree order) is read from
+//!   the shown archive when asked ([`study`]): nothing to wait for.
 //! - **Selection rules and texts** are RoboCAD's handlers': a strength
 //!   check or plan without a study answers RoboCAD's explanation
 //!   ([`NO_STUDY`], verbatim); whole-or-split takes the first study part
@@ -28,15 +24,14 @@
 use super::PrintCall;
 use crate::app::actions::Call;
 use crate::app::{ViewerMode, ViewerSet};
-use crate::cad::actions::edit_at;
-use crate::cad::document::{CadDocument, EditDone};
+use crate::cad::document::CadDocument;
 use crate::cad::ops::{Env, OpEntry, Resolved};
 use crate::cad::sync::value;
 use crate::jobs::{Job, Pool};
 use bevy::prelude::*;
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{PrintRegistry, PrintStudy, SelectionItem, SplitRequest};
+use crate::cad::types::{FilamentInfo, Ordered, PrintRegistry, PrintStudy, PrinterInfo, SelectionItem, SplitRequest};
 
 /// RoboCAD's "Check strength" explanation when the document has no print
 /// study (ui/app.py:1190-1193), verbatim; Plan shows it too.
@@ -47,20 +42,8 @@ pub(super) const REGISTRY_READING: &str = "the printing registry is still being 
 const STRENGTH_SPLIT_KEYS: [&str; 5] = ["printer", "material", "simulation", "safety_target", "space"];
 
 /// (document generation, `CadDocument::mesh_retry`) a read was made at: a
-/// failed read is tried again when either moves (a reconnect or Refresh).
+/// failed read is tried again when either moves (a Refresh).
 type Retry = (u64, u64);
-/// (document generation, shown revision) the study was read at.
-type Key = (u64, u64);
-
-/// A print start this window sent: its edit and what it starts, so
-/// `jobs_tracker::edit_answered` adopts the job RoboCAD answers.
-#[derive(Clone, Debug, PartialEq)]
-pub(super) struct Started {
-    pub seq: u64,
-    pub generation: u64,
-    /// split | analyze | plan | strength_split | assembly | coupons.
-    pub kind: &'static str,
-}
 
 /// The studies' state on the document.
 #[derive(Default)]
@@ -68,11 +51,6 @@ pub(crate) struct StudiesState {
     /// The printing registry as last read, with when it was read.
     pub(super) registry: Option<(Retry, Result<PrintRegistry, String>)>,
     registry_job: Option<(Retry, Job<PrintRegistry>)>,
-    /// The print study as last read: its key, the retry stamp, the answer.
-    pub(super) study: Option<(Key, u64, Result<PrintStudy, String>)>,
-    study_job: Option<(Key, u64, Job<PrintStudy>)>,
-    /// The latest print start sent (until its edit answered).
-    pub(super) started: Option<Started>,
 }
 
 /// What a study start sends.
@@ -102,28 +80,45 @@ pub(crate) struct StudyPlan {
 pub(super) fn registry(doc: &CadDocument) -> Result<&PrintRegistry, String> {
     match doc.print.studies.registry.as_ref().filter(|(k, _)| k.0 == doc.generation) {
         Some((_, Ok(r))) => Ok(r),
-        Some((_, Err(e))) => Err(format!("RoboCAD's printing registry could not be read: {e}")),
-        None if doc.connected() && doc.client.is_some() => Err(REGISTRY_READING.to_string()),
-        None => Err(super::PRINT_UNPORTED.to_string()),
+        Some((_, Err(e))) => Err(format!("the printing registry could not be read: {e}")),
+        None => Err(REGISTRY_READING.to_string()),
     }
 }
 
-/// The print study read at the shown revision, or why not.
-pub(super) fn study(doc: &CadDocument) -> Result<&PrintStudy, String> {
-    let now = (doc.generation, doc.shown_revision());
-    match doc.print.studies.study.as_ref().filter(|(k, _, _)| *k == now) {
-        Some((_, _, Ok(s))) => Ok(s),
-        Some((_, _, Err(e))) => Err(format!("RoboCAD's print study could not be read: {e}")),
-        None if doc.connected() && doc.client.is_some() => Err(format!("the print study is still being read (revision {}); try again in a moment", now.1)),
-        None => Err(super::PRINT_UNPORTED.to_string()),
+/// The printing registry as the forms list it: printers (with their usable
+/// box) and filaments in the file's order, its path, sha256 and revision.
+pub(crate) fn read_registry() -> Result<PrintRegistry, String> {
+    let path = sim_print::registry::default_path();
+    let loaded = sim_print::registry::load(&path)?;
+    let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+    #[derive(serde::Deserialize)]
+    struct Order {
+        #[serde(default)]
+        printers: Ordered<Value>,
+        #[serde(default)]
+        materials: Ordered<Value>,
     }
+    let order: Order = serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?;
+    let r = &loaded.registry;
+    let printers = order.printers.keys().filter_map(|k| r.printers.get(k).map(|p| (k.to_string(), PrinterInfo { name: p.name.clone(), usable_mm: p.usable_mm().to_vec() }))).collect();
+    let materials = order.materials.keys().filter_map(|k| r.materials.get(k).map(|m| (k.to_string(), FilamentInfo { name: m.name.clone(), cad_material: Some(m.cad_material.clone()).filter(|c| !c.is_empty()) }))).collect();
+    Ok(PrintRegistry { path: Some(path.display().to_string()), sha256: Some(loaded.sha256), revision: json!(r.revision), printers: Ordered(printers), materials: Ordered(materials) })
+}
+
+/// The print study of the shown archive: `robot_settings["print_study"]`
+/// and the split groups in tree order.
+pub(super) fn study(doc: &CadDocument) -> Result<PrintStudy, String> {
+    let local = doc.local.as_ref().ok_or("no CAD document is open")?;
+    let study = local.archive.manifest["robot_settings"]["print_study"].clone();
+    let splits = local.tree.nodes.iter().filter(|n| local.archive.node(&n.id).is_some_and(|m| m["robot"]["print_split"].is_object())).map(|n| n.id.clone()).collect();
+    Ok(PrintStudy { revision: doc.shown_revision(), study, splits })
 }
 
 /// The study as read at `revision` (the run's), or why not.
-fn study_at(doc: &CadDocument, revision: u64) -> Result<&PrintStudy, String> {
+fn study_at(doc: &CadDocument, revision: u64) -> Result<PrintStudy, String> {
     let s = study(doc)?;
     if s.revision != revision {
-        return Err(format!("the print study was read at revision {}, the selection at {revision}; try again in a moment", s.revision));
+        return Err(format!("the document is at revision {}, the selection was read at {revision}; try again", s.revision));
     }
     Ok(s)
 }
@@ -263,21 +258,15 @@ pub(super) fn build(call: PrintCall, entry: &OpEntry, r: &Resolved, values: &Map
     }
 }
 
-/// `print::send` for a study: ONE RoboCAD call through `actions::edit_at`
-/// at the plan's revision; the edit's result is the started job
-/// (`PrintJob`), adopted by `jobs_tracker::edit_answered`.
-pub(super) fn send(doc: &mut CadDocument, call: &mut Call, plan: StudyPlan) -> Outcome {
-    let StudyPlan { kind, revision, request, label, message } = plan;
-    let before = doc.edit_seq;
-    let outcome = match request {
-        Request::Split(req) => edit_at(doc, call, Some(revision), label, move |c| c.print_split_job(&req).map(|job| EditDone { message, result: value(&job) })),
-        Request::Start(body) => edit_at(doc, call, Some(revision), label, move |c| c.print_start(kind, &body).map(|job| EditDone { message, result: value(&job) })),
+/// `print::send` for a study: the job started in process at the plan's
+/// revision; its answer is the started job (`PrintJob`).
+pub(super) fn send(doc: &mut CadDocument, _call: &mut Call, plan: StudyPlan) -> Outcome {
+    let StudyPlan { kind, revision, request, label: _, message } = plan;
+    let body = match request {
+        Request::Split(req) => value(&req),
+        Request::Start(body) => body,
     };
-    if doc.edit.is_some() && doc.edit_seq != before {
-        doc.print.studies.started = Some(Started { seq: doc.edit_seq, generation: doc.generation, kind });
-        doc.touch();
-    }
-    outcome
+    Outcome::Done(super::jobs_tracker::start(doc, kind, body, revision, message).map(|job| value(&job)))
 }
 
 /// A pick list of the registry (key, label), in the registry's order:
@@ -322,29 +311,20 @@ pub(super) fn state_json(doc: &CadDocument) -> Value {
         Some((_, Err(e))) => json!({"read": false, "error": e, "reading": s.registry_job.is_some()}),
         None => json!({"read": false, "reading": s.registry_job.is_some()}),
     };
-    let now = (doc.generation, doc.shown_revision());
-    let study = match s.study.as_ref() {
-        Some((k, _, Ok(st))) => json!({"read_at": k.1, "current": *k == now, "revision": st.revision, "has_study": st.has_study(), "parts": st.part_nodes(), "splits": st.splits}),
-        Some((k, _, Err(e))) => json!({"read_at": k.1, "current": *k == now, "error": e}),
-        None => Value::Null,
+    let study = match study(doc) {
+        Ok(st) => json!({"revision": st.revision, "has_study": st.has_study(), "parts": st.part_nodes(), "splits": st.splits}),
+        Err(e) => json!({"error": e}),
     };
-    json!({
-        "registry": registry,
-        "study": study,
-        "study_reading": s.study_job.is_some(),
-        "started": s.started.as_ref().map(|st| json!({"edit": st.seq, "generation": st.generation, "kind": st.kind})),
-    })
+    json!({"registry": registry, "study": study})
 }
 
-/// The reads at the current keys: started when needed, an older key's job
-/// dropped, a result landed (the `robot::data::sync` pattern).
+/// The registry read: started once per generation (again after a failed
+/// read and a Refresh), landed when done.
 pub(super) fn tick(doc: &mut CadDocument) {
     let (generation, retry_count) = (doc.generation, doc.mesh_retry);
     let retry = (generation, retry_count);
-    let now = (generation, doc.shown_revision());
     let mut touched = false;
     let s = &mut doc.print.studies;
-    // Registry: one read per generation.
     if s.registry_job.as_ref().is_some_and(|(k, _)| k.0 != generation) {
         s.registry_job = None;
     }
@@ -354,46 +334,16 @@ pub(super) fn tick(doc: &mut CadDocument) {
         s.registry = Some((k, result));
         touched = true;
     }
-    // Study: one read per (generation, shown revision).
-    if s.study_job.as_ref().is_some_and(|(k, _, _)| *k != now) {
-        s.study_job = None;
-    }
-    let landed = s.study_job.as_ref().and_then(|(k, at, job)| job.poll().map(|r| (*k, *at, r)));
-    if let Some((k, at, result)) = landed {
-        s.study_job = None;
-        s.study = Some((k, at, result));
-        touched = true;
-    }
-    let want_registry = s.registry_job.is_none()
+    let want = s.registry_job.is_none()
         && match &s.registry {
             None => true,
             Some((k, Ok(_))) => k.0 != generation,
             Some((k, Err(_))) => *k != retry,
         };
-    let want_study = s.study_job.is_none()
-        && match &s.study {
-            None => true,
-            Some((k, _, Ok(_))) => *k != now,
-            Some((k, at, Err(_))) => *k != now || *at != retry_count,
-        };
-    let client = doc.client.clone().filter(|_| doc.connected());
-    if let Some(client) = client {
-        if want_registry {
-            let c = client.clone();
-            let job = Job::spawn(Pool::Dedicated, generation, "cad print registry", move |_| c.print_registry().map_err(|e| e.to_string()));
-            doc.print.studies.registry_job = Some((retry, job));
-            touched = true;
-        }
-        if want_study && doc.doc_key.is_some() {
-            let job = Job::spawn(Pool::Dedicated, generation, "cad print study", move |ctx| {
-                if ctx.cancelled() {
-                    return Err("superseded by a newer revision".to_string());
-                }
-                client.print_study().map_err(|e| e.to_string())
-            });
-            doc.print.studies.study_job = Some((now, retry_count, job));
-            touched = true;
-        }
+    if want {
+        let job = Job::spawn(Pool::Io, generation, "cad print registry", |_| read_registry());
+        s.registry_job = Some((retry, job));
+        touched = true;
     }
     if touched {
         doc.touch();

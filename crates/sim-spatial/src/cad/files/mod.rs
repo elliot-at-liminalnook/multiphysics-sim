@@ -18,7 +18,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{FILE_TIMEOUT, IMPORT_EXTENSIONS, IMPORT_UNITS, MESH_EXTENSIONS, RENDER_MODES, RENDER_VIEWS, RenderRequest, extension};
+use crate::cad::types::{IMPORT_EXTENSIONS, IMPORT_UNITS, MESH_EXTENSIONS, RENDER_MODES, RENDER_VIEWS, RenderRequest, extension};
 use std::path::PathBuf;
 use std::collections::BTreeMap;
 
@@ -208,7 +208,7 @@ pub(crate) fn absolute(path: &str, what: &str) -> Result<String, String> {
 }
 
 /// What the document supplies to export defaults.
-fn export_context(doc: &CadDocument, selection: &[sim_runtime::cad_client::SelectionItem], display: Option<&crate::cad::display::CadDisplay>) -> formats::Context {
+fn export_context(doc: &CadDocument, selection: &[crate::cad::types::SelectionItem], display: Option<&crate::cad::display::CadDisplay>) -> formats::Context {
     let sketch = crate::cad::selection::CadItems::nodes(selection).into_iter().find(|id| doc.doc.as_ref().and_then(|d| d.nodes.iter().find(|n| n.id == *id)).is_some_and(|n| n.kind == "sketch"));
     let title = doc_path(doc).and_then(|p| std::path::Path::new(&p).file_name().map(|f| f.to_string_lossy().into_owned())).unwrap_or_else(|| "untitled".into());
     let section = display.filter(|d| d.section.enabled).and_then(|d| d.section.plane).map(|p| json!({"origin": p.origin, "normal": p.normal, "x_axis": p.x_axis}));
@@ -351,8 +351,13 @@ fn file(args: &FileArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
                 Ok(p) => return done(Err(format!("{p}: not a mesh file ({}); only meshes ask for units", MESH_EXTENSIONS.join(", ")))),
                 Err(e) => return done(Err(e)),
             };
-            let _ = path;
-            done(Err("mesh import (and its unit guess) is not available in the in-process editor yet; STEP and IGES import are".into()))
+            // RoboCAD's `GET /import/units`: the raw extent and the prompt's guess, read off the UI thread.
+            let label = format!("Guess the units of {path}");
+            let then = jobs::Then::Guess { path: path.clone() };
+            jobs::start(cx, call, "guess_unit", label, false, then, move |_| {
+                let (_, extent) = sim_cad::mesh::read_raw(std::path::Path::new(&path))?;
+                Ok(json!({"path": path, "extent": extent, "guess": sim_cad::mesh::units_guess(extent), "units": IMPORT_UNITS}))
+            })
         }
         FileOp::Close | FileOp::Cancel => unreachable!("handled above"),
     }
@@ -447,7 +452,7 @@ fn export(args: &ExportArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
     if let Ok(f) = files(cx) {
         f.export_settings.insert(fmt.id.to_string(), settings.clone());
     }
-    let request = sim_runtime::cad_client::ExportRequest { format: fmt.id.to_string(), path: path.clone(), settings: Some(Value::Object(settings)), ids: args.ids.clone() };
+    let request = crate::cad::types::ExportRequest { format: fmt.id.to_string(), path: path.clone(), settings: Some(Value::Object(settings)), ids: args.ids.clone() };
     let label = format!("{what} to {path}");
     let l = label.clone();
     let format_label = fmt.label;

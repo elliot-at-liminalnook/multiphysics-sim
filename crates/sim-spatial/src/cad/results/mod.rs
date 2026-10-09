@@ -275,7 +275,7 @@ pub(in crate::cad) fn note_save(doc: &mut CadDocument, path: Option<&str>) {
 }
 
 /// One edit through `edit_at`, remembered when it started.
-fn edit_noted(doc: &mut CadDocument, call: &mut Call, label: String, what: Waiting, work: impl FnOnce(&mut crate::cad::local::Workspace) -> Result<EditDone, sim_runtime::cad_client::CadError> + Send + 'static) -> Outcome {
+fn edit_noted(doc: &mut CadDocument, call: &mut Call, label: String, what: Waiting, work: impl FnOnce(&mut crate::cad::local::Workspace) -> Result<EditDone, crate::cad::types::CadError> + Send + 'static) -> Outcome {
     let before = doc.edit_seq;
     let outcome = edit_at(doc, call, None, label, work);
     if doc.edit_seq != before {

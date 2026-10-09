@@ -61,7 +61,7 @@ use crate::camera::{CameraAction, ViewPreset};
 use crate::cad::ops::{self, Flow, Needs, OpEntry};
 use crate::cad::panel::Control;
 use crate::cad::selection::CadItems;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use serde_json::json;
 use sim_api::Outcome;
 

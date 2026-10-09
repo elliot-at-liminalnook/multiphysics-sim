@@ -20,7 +20,7 @@ use bevy::prelude::*;
 use bevy::window::FileDragAndDrop;
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{CadClient, DocState, Health, ImagePlacement, LinkState, NodeSummary, PlaneJson, SystemStatus, SystemSummary};
+use crate::cad::types::{DocState, Health, ImagePlacement, LinkState, NodeSummary, PlaneJson, SystemStatus, SystemSummary};
 use std::path::PathBuf;
 
 const SYSTEM: &str = "/work/arm/arm.system.json";
@@ -38,7 +38,6 @@ fn front() -> ImagePlacement {
 fn document(connected: bool) -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
     if connected {
-        doc.client = Some(CadClient::new("http://127.0.0.1:8420").unwrap());
         doc.connection = Connection::Connected;
     }
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });

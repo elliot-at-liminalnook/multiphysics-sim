@@ -43,7 +43,7 @@ use crate::cad::ops::{Built, Env, OpEntry};
 use crate::cad::selection::CadItems;
 use crate::cad::transform::round6;
 use serde_json::{Map, Value};
-use sim_runtime::cad_client::{PlaneFrame, SketchCall, Uv};
+use crate::cad::types::{PlaneFrame, SketchCall, Uv};
 
 const fn row(shape: SketchShape, finish: Finish, chains: bool, readout: Readout, text_form: bool) -> SketchSpec {
     SketchSpec { shape, finish, chains, readout, text_form }

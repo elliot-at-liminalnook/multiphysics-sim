@@ -13,7 +13,7 @@ use crate::cad::ops::{self, Env, FormState, Resolved};
 use crate::cad::selection::Fixture;
 use serde_json::{Map, Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{CadClient, DocState, FastenerSpec, Health, NodeSummary, SelectionItem};
+use crate::cad::types::{DocState, FastenerSpec, Health, NodeSummary, SelectionItem};
 
 fn node(id: &str, name: &str) -> NodeSummary {
     NodeSummary { id: id.into(), kind: "body".into(), name: name.into(), visible: true, effective_visible: true, ..Default::default() }
@@ -22,7 +22,6 @@ fn node(id: &str, name: &str) -> NodeSummary {
 /// Two bodies at RoboCAD's revision 4, connected.
 fn document() -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
-    doc.client = Some(CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
     doc.doc = Some(DocState { nodes: vec![node("b1", "Bracket"), node("b2", "Plate")], revision: 4, ..Default::default() });
@@ -103,7 +102,6 @@ fn the_forms_open_with_the_remembered_values() {
 #[ignore = "RoboCAD's print service is not ported to the in-process editor (cad::print::PRINT_UNPORTED)"]
 fn a_refused_edit_sends_nothing_and_remembers_nothing() {
     let mut doc = document();
-    doc.client = None;
     let (mut continuation, mut replies) = (Value::Null, Replies::default());
     let mut call = Call { origin: Origin::Ui, continuation: &mut continuation, cancelled: false, replies: &mut replies };
     let mut settings = crate::app::settings::SettingsOwner::default();
@@ -189,7 +187,6 @@ fn a_click_pick_is_one_fastener_run_refused_with_nothing_sent() {
     // The tool's click on a disconnected document: the run is refused by
     // name, shown in the tool's form, nothing sent or remembered, the tool stays.
     active(&mut doc);
-    doc.client = None;
     doc.print.edits.click = Some(FastenerClick { item: face("b1", 2), picked_at: 4, point: [1.0, 2.0, 3.0], snap: None });
     let out = apply(&pick, &mut doc, &mut f);
     assert!(matches!(&out, Outcome::Done(Err(e)) if e.starts_with("not connected to RoboCAD")));
@@ -199,7 +196,6 @@ fn a_click_pick_is_one_fastener_run_refused_with_nothing_sent() {
     assert_eq!(doc.print.edits.last_pick, Some((face("b1", 2), 4)));
     assert!(doc.edit.is_none());
     // Without a click or a typed point, the face's point needs the topology.
-    doc.client = Some(CadClient::new("http://127.0.0.1:8420").unwrap());
     assert!(matches!(apply(&pick, &mut doc, &mut f), Outcome::Done(Err(e)) if e.starts_with("the faces are not available")));
     assert!(doc.edit.is_none());
 }

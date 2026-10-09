@@ -22,7 +22,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::composition::*;
+use crate::cad::types::composition::*;
 use std::collections::{BTreeMap, BTreeSet};
 pub(crate) use ui::{build, draw};
 
@@ -170,7 +170,7 @@ pub(crate) fn handle(a: &CadCompositionArgs, call: &mut Call, cx: &mut Cx) -> Ou
                     .and_then(|s| s.graph.graph.components.get(id))
                     .ok_or("composition.id: unavailable component")?;
                 if let Some(body) = &c.body_id {
-                    cx.shared.set([sim_runtime::cad_client::SelectionItem(
+                    cx.shared.set([crate::cad::types::SelectionItem(
                         body.clone(),
                         "body".into(),
                         0,
@@ -343,7 +343,7 @@ pub(crate) fn handle(a: &CadCompositionArgs, call: &mut Call, cx: &mut Cx) -> Ou
             if check.trim().is_empty() {
                 return Err("composition.check_id: completed check ID required".into());
             }
-            let client = doc.client.clone().ok_or("Not connected to RoboCAD")?;
+            let client = crate::cad::component_service::service(doc)?;
             set_check(st, check.clone());
             st.imported_job = Some((
                 doc.generation,
@@ -627,7 +627,6 @@ fn mutation(
             &snapshot.recipes,
         )?;
     }
-    let client = doc.client.clone().ok_or("Not connected to RoboCAD")?;
     // The shared CAD edit path starts the job and guards document/generation.
     let sent = command.clone();
     let bound = graph.components.values().any(|c| c.binding.is_some());
@@ -645,8 +644,8 @@ fn mutation(
         call,
         Some(revision),
         "Edit system composition".into(),
-        move |_| {
-            let result = client.composition_edit_guarded(
+        move |ws| {
+            let result = ws.composition_edit(
                 revision,
                 &sent,
                 check.as_deref(),

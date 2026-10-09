@@ -7,7 +7,7 @@ use crate::cad::actions::Dimension;
 use crate::cad::document::{CadDocument, CadTool};
 use crate::cad::mesh::CadMeshes;
 use crate::cad::topology::CadTopology;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use bevy::prelude::Vec3;
 
 /// How a numeric field is read: a length (bare numbers mm), an angle

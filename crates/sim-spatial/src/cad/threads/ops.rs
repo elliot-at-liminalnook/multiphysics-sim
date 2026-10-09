@@ -16,7 +16,7 @@ use crate::cad::selection::CadItems;
 use serde_json::{Value, json};
 use sim_annotate::{Thread, ThreadCommand};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{AnchorStatus, CadThread, part_link};
+use crate::cad::types::{AnchorStatus, CadThread, part_link};
 
 fn done(r: Result<Value, String>) -> Outcome {
     Outcome::Done(r)
@@ -76,7 +76,7 @@ fn commit(cx: &mut Cx, call: &mut Call, began: Option<u64>, label: &str, op: Thr
 /// Captured review uses the same annotation adapter, validation, edit and undo
 /// path as surface comments. Evidence names captured time/source, not live pose.
 pub(crate) fn annotate_evidence(cx: &mut Cx, call: &mut Call, evidence: serde_json::Value, body: String) -> Outcome {
-    let parsed = serde_json::from_value::<sim_runtime::cad_client::threads::ExperimentEvidence>(evidence.clone());
+    let parsed = serde_json::from_value::<crate::cad::types::threads::ExperimentEvidence>(evidence.clone());
     match parsed.map_err(|e| e.to_string()).and_then(|e| e.validate()) {
         Ok(()) => {},
         Err(e) => return done(Err(format!("evidence: {e}"))),

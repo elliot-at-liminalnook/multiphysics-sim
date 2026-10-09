@@ -20,7 +20,7 @@ use crate::app::actions::{Act, Origin};
 use crate::app::switch::{Document, ModeSwitch, WindowAction};
 use crate::cad::document::CadDocument;
 use serde_json::{Value, json};
-use sim_runtime::cad_client::{LinkState, SystemStatus};
+use crate::cad::types::{LinkState, SystemStatus};
 use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 

@@ -1,7 +1,7 @@
 //! RoboCAD's comment threads as the fourth `annotations::ThreadSource`
 //! (native-viewer.md §7): a remote source. The threads live in RoboCAD's
 //! document (`annotations.py`'s `doc.annotations`), reached over its REST
-//! routes (api.py:375-426, `sim_runtime::cad_client::threads`).
+//! routes (api.py:375-426, `crate::cad::types::threads`).
 //!
 //! - **Anchor** ([`CadAnchor`]): a thread's first target is its surface pin
 //!   (`annotations.anchor`: the part, the point in mm in RoboCAD's frame,
@@ -46,7 +46,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use sim_annotate::{Anchor, Comment, Thread, ThreadCommand};
 use sim_api::Outcome;
-use sim_runtime::cad_client::{AnchorStatus, CadClient, CadError, CadThread, NewThread, PartRef, ThreadPatch, part_links};
+use crate::cad::types::{AnchorStatus, CadThread, NewThread, PartRef, ThreadPatch, part_links};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// RoboCAD's `validate_part_refs` limit.
@@ -269,7 +269,7 @@ pub(crate) fn thread_of(t: &CadThread) -> Thread<CadAnchor> {
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum Request {
     Create(NewThread),
-    Evidence(sim_runtime::cad_client::threads::NewEvidenceThread),
+    Evidence(crate::cad::types::threads::NewEvidenceThread),
     Update { id: String, patch: ThreadPatch },
     DeleteThread { id: String },
     Reply { thread: String, body: String, author: String },
@@ -329,20 +329,6 @@ impl Request {
             }
             Request::EditComment { id, body } => serde_json::json!({"id": id, "thread": a::change_comment(&mut ws.edit, &id, Some(&body))?}),
             Request::DeleteComment { id } => serde_json::json!({"deleted": id, "thread": a::change_comment(&mut ws.edit, &id, None)?}),
-        })
-    }
-
-    /// Send it; RoboCAD's answer as the edit's result (a thread, a comment
-    /// or `{"deleted": id}`).
-    pub(crate) fn send(self, c: &CadClient) -> Result<Value, CadError> {
-        Ok(match self {
-            Request::Create(t) => value(&c.create_thread(&t)?),
-            Request::Evidence(t) => value(&c.create_evidence_thread(&t)?),
-            Request::Update { id, patch } => value(&c.update_thread(&id, &patch)?),
-            Request::DeleteThread { id } => value(&c.delete_thread(&id)?),
-            Request::Reply { thread, body, author } => value(&c.add_comment(&thread, &body, &author)?),
-            Request::EditComment { id, body } => value(&c.update_comment(&id, &body)?),
-            Request::DeleteComment { id } => value(&c.delete_comment(&id)?),
         })
     }
 }
@@ -479,11 +465,11 @@ impl ThreadSource for CadThreadSource<'_, '_> {
         match command {
             ThreadCommand::PutThread { thread } if !self.threads.contains_key(&thread.id) => {
                 if let Some(CadAnchor::Evidence { evidence }) = thread.targets.first() {
-                    let evidence: sim_runtime::cad_client::threads::ExperimentEvidence =
+                    let evidence: crate::cad::types::threads::ExperimentEvidence =
                         serde_json::from_value(evidence.clone()).map_err(|e| format!("evidence: {e}"))?;
                     evidence.validate()?;
                     let first = thread.comments.first().ok_or("Comment must not be empty")?;
-                    let request = sim_runtime::cad_client::threads::NewEvidenceThread {
+                    let request = crate::cad::types::threads::NewEvidenceThread {
                         body: first.body.clone(), author: first.author.clone(), evidence,
                         document_id: self.doc.doc.as_ref().and_then(|d| d.document_id.clone())
                             .ok_or("evidence.document_id: unavailable document identity")?,

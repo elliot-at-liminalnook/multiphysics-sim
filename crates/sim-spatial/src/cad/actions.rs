@@ -9,7 +9,7 @@ use crate::app::ViewerMode;
 use super::document::{CadTool, SelectMode};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use std::path::PathBuf;
 
 /// One end of a measurement (RoboCAD's `MeasureTool` pick): the picked item
@@ -208,6 +208,18 @@ pub(crate) enum CadAction {
         args: Vec<Value>,
         #[serde(default)]
         kwargs: Map<String, Value>,
+    },
+    /// Run a repository `.rhai` model script (`sim_cad::scripts`) as one
+    /// undo step; with `replace` (the default) the nodes its previous run
+    /// created are removed first. `revision`: the shown revision it was asked at.
+    CadScript {
+        path: String,
+        #[serde(default)]
+        params: Map<String, Value>,
+        #[serde(default)]
+        replace: Option<bool>,
+        #[serde(default)]
+        revision: Option<u64>,
     },
     /// Invoke catalogue operation `id` (`ops::CATALOGUE`, RoboCAD's command
     /// id) as its menu entry, toolbar button, palette row or key does: an
@@ -588,6 +600,13 @@ pub(super) fn handle(action: &CadAction, call: &mut Call, cx: &mut Cx) -> Outcom
             let (name, args, kwargs) = (name.clone(), args.clone(), kwargs.clone());
             edit(doc, call, format!("Op {name}"), move |c| c.op(&name, &args, &kwargs).map(|r| EditDone { message: format!("Ran {name}"), result: value(&r) }))
         }
+        CadAction::CadScript { path, params, replace, revision } => {
+            let request = json!({"path": path, "params": params, "replace": replace.unwrap_or(true), "changes": true});
+            let label = format!("Model script {path}");
+            super::actions::edit_at(doc, call, *revision, label, move |c| {
+                c.model_script(&request).map(|r| EditDone { message: format!("Ran {}: {} part(s) made, {} replaced", r["script"].as_str().unwrap_or(""), r["created"], r["removed"].as_array().map_or(0, Vec::len)), result: r })
+            })
+        }
         CadAction::CadInvoke { .. } | CadAction::CadRun { .. } | CadAction::CadFormSet { .. } | CadAction::CadFormSubmit | CadAction::CadFormCancel | CadAction::CadSketch { .. } => super::ops::handle(action, call, cx),
         CadAction::CadSurface { .. } => super::surfaces::handle(action, call, cx),
         CadAction::CadRefresh => {
@@ -663,7 +682,7 @@ fn open(doc: &mut CadDocument, call: &mut Call, path: Option<&PathBuf>, url: Opt
         }
         return Outcome::Pending;
     }
-    if url.is_some() { return Outcome::Done(Err("CAD service attachment awaiting Rust migration; open a local .rcad file".into())); }
+    if url.is_some() { return Outcome::Done(Err("There is no CAD service to attach to; open a local .rcad file".into())); }
     let Some(path) = path else { return Outcome::Done(Err("cad_open needs path to a .rcad archive".into())); };
     if path.extension().is_none_or(|e| e != "rcad") { return Outcome::Done(Err(format!("{}: expected .rcad archive", path.display()))); }
     let blockers = doc.switch_blockers();

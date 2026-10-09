@@ -25,7 +25,7 @@ use crate::ui_kit::path_field::PathView;
 use crate::ui_kit::{ACCENT_BG, DANGER, Kit, Look, SUBTLE, TEXT, Tint, WARN, size, wrap};
 use bevy::prelude::*;
 use bevy::ui::prelude::AccessibleLabel;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 
 /// RoboCAD's intro (references.py:29).
 pub(crate) const INTRO: &str = "Drop images here or in the viewport. Align a view, calibrate its scale, then sketch over it.";

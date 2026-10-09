@@ -2,7 +2,7 @@
 //! selection) and the refusals every edit path shares (`commit_refusal`,
 //! `edit_refusal`, `switch_blockers`), and the release of a self-started service.
 use super::{CadDocument, CadTarget, Connection, TreeRow};
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use std::collections::HashMap;
 
 impl CadDocument {
@@ -50,17 +50,11 @@ impl CadDocument {
         self.doc.as_ref().is_none_or(|d| d.nodes.iter().any(|n| n.id == id))
     }
 
-    /// The URL the window talks to, once known.
-    pub(crate) fn url(&self) -> Option<&str> {
-        self.url.as_deref()
-    }
-
-    /// The service: self-started (with its pid) or attached, its URL, and
-    /// RoboCAD's GUI or headless service once it has answered.
+    /// What the document is: an archive opened in process.
     pub(crate) fn service_line(&self) -> String {
         match &self.target {
             CadTarget::File(path) => format!("In-process Rust CAD · {} · direct OCCT", path.display()),
-            CadTarget::Service(_) => "Service attachment awaiting Rust migration; open a local .rcad file".into(),
+            CadTarget::Service(_) => "No CAD service is attached in this viewer; open a local .rcad file".into(),
         }
     }
 
@@ -212,11 +206,8 @@ impl CadDocument {
         self.touch();
     }
 
-    /// Compatibility seam for close callers: cancel a local pending load.
-    /// There is no child process, service stop, release or detach operation.
-    pub(crate) fn release_child(&mut self, why: &str) -> Option<String> {
-        let _ = why;
-        self.local_load = None; // cancel-on-drop; no service exists to release.
-        None
+    /// Leaving: a pending open is cancelled (its job drops).
+    pub(crate) fn cancel_load(&mut self) {
+        self.local_load = None;
     }
 }

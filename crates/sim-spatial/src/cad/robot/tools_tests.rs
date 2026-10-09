@@ -3,12 +3,11 @@
 //! validation verdict, the motor library's rows and the controls.
 use super::*;
 use crate::cad::document::{CadTarget, Connection};
-use sim_runtime::cad_client::{CadClient, DocState, Health, MotorSpec, NodeSummary, RobotIssue};
+use crate::cad::types::{DocState, Health, MotorSpec, NodeSummary, RobotIssue};
 use std::collections::BTreeMap;
 
 fn document() -> CadDocument {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:8420".into()));
-    doc.client = Some(CadClient::new("http://127.0.0.1:8420").unwrap());
     doc.connection = Connection::Connected;
     doc.health = Some(Health { ok: true, app: "robocad".into(), revision: 4, ..Default::default() });
     doc.doc = Some(DocState { nodes: vec![NodeSummary { id: "b1".into(), kind: "body".into(), name: "Bracket".into(), visible: true, effective_visible: true, ..Default::default() }], revision: 4, ..Default::default() });

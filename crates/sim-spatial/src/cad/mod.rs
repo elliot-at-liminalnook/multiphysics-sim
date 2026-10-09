@@ -1,6 +1,6 @@
-//! Native CAD opening/display/body selection/exact mass inspection are local
-//! through sim-cad and direct OCCT. The retained modelling UI is migration
-//! scaffolding: unsupported controls refuse by name and never attach a service.
+//! CAD mode, in process: opening, display, selection, modelling, components,
+//! composition, print, experiments and export run through sim-cad and OCCT
+//! on jobs, with one undo history. There is no CAD service to attach to.
 //! Local jobs preserve the active source until an accepted replacement succeeds.
 mod actions;
 mod edit;
@@ -9,7 +9,6 @@ pub(crate) mod experiments;
 pub(crate) mod experiment_review;
 pub(crate) mod motion;
 mod analysis_overlay;
-mod attach;
 pub(crate) mod components;
 pub(crate) mod composition;
 mod display;
@@ -18,6 +17,10 @@ mod files;
 mod inspector;
 mod keys;
 pub(crate) mod local;
+pub(crate) mod lab;
+pub(crate) mod types;
+pub(crate) mod motion_service;
+pub(crate) mod component_service;
 mod local_client;
 mod materials;
 mod measure;
@@ -55,7 +58,7 @@ mod tests;
 
 pub(crate) use actions::CadAction;
 pub use actions::{Dimension, MeasurePick};
-pub use document::{CadDocument, CadTarget, CadTool, Candidates, ChildSlot, Connection, Edit, EditDone, PollCommand, PollSnapshot, SelectMode, TreeRow};
+pub use document::{CadDocument, CadTarget, CadTool, Candidates, Connection, Edit, EditDone, PollCommand, PollSnapshot, SelectMode, TreeRow};
 pub use mesh::{BODY_KINDS, CadBody, CadMeshes, MeshCounts};
 pub use ops::{FormState, OpsState};
 pub use sketch::{ActivePlane, BasePlane, CadActivePlane, CadSketches};
@@ -237,7 +240,6 @@ impl Plugin for CadPlugin {
         display::build(app);
         views::build(app);
         files::build(app);
-        // Service attachment is intentionally unavailable in local CAD mode.
         // cad-physical-inspect: the Robot panel, robot tools and glyphs, the
         // materials panel, the inspector's physical rows' input, the stress
         // overlay and the result, export and live-link forms.

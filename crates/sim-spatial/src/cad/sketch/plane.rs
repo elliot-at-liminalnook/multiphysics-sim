@@ -57,7 +57,7 @@ use bevy::picking::mesh_picking::ray_cast::MeshRayCast;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use serde_json::{Map, Value, json};
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 use std::ops::DerefMut;
 
 /// RoboCAD's status line when the active plane is set (app.py:1026).

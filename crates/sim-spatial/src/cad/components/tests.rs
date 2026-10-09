@@ -3,11 +3,10 @@
 //! precedence rather than mirroring UI rendering.
 use super::*;
 use crate::cad::{CadTarget, Connection};
-use sim_runtime::cad_client::{CadClient, ComponentRecipes, DocState, Health, NodeSummary};
+use crate::cad::types::{ComponentRecipes, DocState, Health, NodeSummary};
 
 fn fixture() -> (CadDocument, ComponentsState) {
     let mut doc = CadDocument::new(CadTarget::Service("http://127.0.0.1:1".into()));
-    doc.client = Some(CadClient::new("http://127.0.0.1:1").unwrap());
     doc.connection = Connection::Connected;
     doc.doc_key = Some((Some("doc-a".into()), 4));
     doc.health = Some(Health {

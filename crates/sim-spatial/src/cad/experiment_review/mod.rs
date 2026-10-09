@@ -18,7 +18,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sim_api::Outcome;
-use sim_runtime::cad_client::experiments::CapturedGeometry;
+use crate::cad::types::experiments::CapturedGeometry;
 pub(crate) use ui::{build, draw};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Deserialize, Serialize)]
@@ -243,7 +243,7 @@ pub(crate) fn handle(a: &ReviewArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
                 if cx.motion.export.is_some() {
                     return Err("Cancel export and wait for its terminal receipt before opening captured review".into());
                 }
-                let client = d.client.clone().ok_or("Connect to RoboCAD first")?;
+                let client = crate::cad::lab::service(d)?;
                 let id = a.id.clone();
                 let candidate = a.candidate.clone();
                 if id.is_none() == candidate.is_none() {
@@ -365,7 +365,7 @@ pub(crate) fn handle(a: &ReviewArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
             ReviewOp::Field => s.note = a.value.clone().unwrap_or_default(),
             ReviewOp::Baseline => {
                 s.baseline = a.id.clone().or(s.run.clone());
-                let c = d.client.clone().ok_or("Connect to RoboCAD")?;
+                let c = crate::cad::lab::service(d)?;
                 let baseline = s.baseline.clone().ok_or("Choose a baseline run")?;
                 let run = s.run.clone().ok_or("Open a captured run")?;
                 let stamp = Stamp::of(d, s.sequence);
@@ -417,7 +417,7 @@ pub(crate) fn handle(a: &ReviewArgs, call: &mut Call, cx: &mut Cx) -> Outcome {
 }
 fn request_sample(d: &CadDocument, s: &mut ReviewState) -> Result<(), String> {
     let id = s.run.clone().ok_or("Candidate geometry has no replay")?;
-    let client = d.client.clone().ok_or("Connect to RoboCAD first")?;
+    let client = crate::cad::lab::service(d)?;
     let time = s.cursor;
     let scale = if s.flex_scale > 0. { s.flex_scale } else { 1. };
     let stamp = Stamp::of(d, s.sequence);

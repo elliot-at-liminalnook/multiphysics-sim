@@ -28,7 +28,7 @@ use crate::ui_kit::threads::{self, Composer, Host};
 use crate::ui_kit::{ACCENT, DANGER, FAINT, Kit, Look, SUBTLE, TEXT, WARN, size, wrap};
 use bevy::prelude::*;
 use sim_annotate::{Comment, Thread};
-use sim_runtime::cad_client::{AnchorStatus, SelectionItem};
+use crate::cad::types::{AnchorStatus, SelectionItem};
 use std::collections::HashMap;
 
 /// A press on the composer's parts and the dock's text fields (`input`).
@@ -68,7 +68,7 @@ impl Host<CadAnchor> for CadHost<'_> {
     }
     /// `[label](part:ID)`: selects the part and shows it alone (`open_part_link`).
     fn link(&self, _comment: &Comment<CadAnchor>, link: &sim_markdown::Link) -> Option<CadButton> {
-        let id = link.target.strip_prefix(sim_runtime::cad_client::PART_LINK_SCHEME)?;
+        let id = link.target.strip_prefix(crate::cad::types::PART_LINK_SCHEME)?;
         exists(self.doc, id).then(|| CadButton(ThreadsArgs { op: ThreadsOp::PartLink, node: Some(id.to_string()), ..ThreadsArgs::default() }.action()))
     }
     fn anchor_text(&self, a: &CadAnchor) -> String {
@@ -233,9 +233,9 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
         // Messages, with a deleted part's link named as RoboCAD's `comment_html` names it.
         let mut shown = thread_of(t);
         for c in &mut shown.comments {
-            for (label, id) in sim_runtime::cad_client::part_links(&c.body) {
+            for (label, id) in crate::cad::types::part_links(&c.body) {
                 if !exists(doc, &id) {
-                    c.body = c.body.replace(&sim_runtime::cad_client::part_link(&label, &id), &format!("{label} (part deleted)"));
+                    c.body = c.body.replace(&crate::cad::types::part_link(&label, &id), &format!("{label} (part deleted)"));
                 }
             }
         }

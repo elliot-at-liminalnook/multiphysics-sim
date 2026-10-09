@@ -1,0 +1,87 @@
+menu "Robot link"
+
+    config RL_UART_TX_GPIO
+        int "GPIO: P4 TX -> FPGA host_rx"
+        default 20
+        help
+            Confirm against the ESP32-P4-WIFI6-M header silkscreen before
+            wiring. Pins 14-19 and 54 belong to the C6 (SDIO), 24/25 to USB,
+            37/38 to the console UART, 7/8 to the camera I2C.
+
+    config RL_UART_RX_GPIO
+        int "GPIO: P4 RX <- FPGA host_tx"
+        default 21
+
+    config RL_UART_BAUD
+        int "Host link baud"
+        default 115200
+        help
+            The bridge's HOST_CLKS: 115200 for the supervised bench profile
+            (bridge_safety), 1000000 for the device-clock experiment profile.
+
+    config RL_FIRST_ID
+        int "First servo ID of the FPGA profile"
+        default 1
+        help
+            Must match the loaded image: 1 for the leg's calibration profile
+            (bridge_calibration_esp32, IDs 1-3), 4 for bridge_safety (IDs 4-12).
+
+    config RL_PRESENT_MASK
+        hex "Servos on the bus (bit 0 = first ID)"
+        default 0x7
+        help
+            0x7 with first ID 1: the printed leg, IDs 1 (knee), 2 (worm),
+            3 (belt/hip). With first ID 4: 0x1C0 is IDs 10-12, 0x1FF IDs 4-12.
+
+    config RL_DUTY_CAP
+        int "Largest jog drive the page may command (0..1000)"
+        default 100
+
+    config RL_STATUS_LOG_MS
+        int "Log a link summary to the USB console every N ms (0: off)"
+        default 2000
+        help
+            Request and reply rates, the FPGA's latch, and each servo's last
+            telemetry, so the bus can be diagnosed from the USB cable without
+            joining the access point.
+
+    config RL_BUS_SCAN_S
+        int "Ping every servo ID every N seconds while no configured servo answers (0: off)"
+        default 20
+        help
+            Pings IDs 0-253 one at a time and logs which answer, to tell a
+            wrong ID from a dead bus. The FPGA forwards pings to any ID;
+            pings cannot move a servo. Runs only while the FPGA is latched
+            with nothing armed, no page or tunnel owns the link, and none of
+            the configured servos has answered for 5 s. Takes about 3 s.
+
+    choice RL_WIFI_MODE
+        prompt "Wi-Fi"
+        default RL_WIFI_AP
+        config RL_WIFI_AP
+            bool "Access point (the laptop joins the robot)"
+        config RL_WIFI_STA
+            bool "Station (join an existing network)"
+    endchoice
+
+    config RL_WIFI_SSID
+        string "SSID"
+        default "robot-link"
+
+    config RL_WIFI_PASSWORD
+        string "Password (8+ characters; AP is otherwise open)"
+        default "change-me-please"
+
+    config RL_HTTP_PORT
+        int "HTTP port"
+        default 80
+
+    config RL_TUNNEL_PORT
+        int "Raw UART tunnel TCP port (0 disables)"
+        default 4196
+        help
+            The FPGA's host UART as a TCP byte stream, for the simulator's own
+            Rust hardware layer (socat makes it a pty). Only while no page
+            owns the link; a disconnect sends STOP.
+
+endmenu

@@ -1,0 +1,39 @@
+// The supervised bench bridge (bridge_safety profile) with its host UART on
+// header pins instead of the dock's FT2232, so the ESP32-P4 can be the host.
+//
+// Why a new constraints file and not new logic: the FT2232 drives B3
+// (host_rx) continuously, so an ESP32 cannot share it, and nothing else in
+// the design changes. The RTL is byte-for-byte the same bridge the Rust
+// hardware layer has been driven through; only these two balls move.
+//
+// G7/G8 are the second column of the bottom-right 6x2 header (underside
+// view, dock name upright, USB left), next to the servo pins F5/G5:
+//
+//   top row:     F5 (servo_rx)   G7 (host_rx <- ESP32 TX)   H8 H5 GND 3V3
+//   bottom row:  G5 (servo_tx)   G8 (host_tx -> ESP32 RX)   H7 J5 GND 3V3
+//
+// Both boards are 3.3 V I/O; join their grounds. Build from the Tang repo:
+//
+//   cd ~/projects/sipeed-tang-primer-25k/servo
+//   make bridge-safety CST=/path/to/this/file          (see fpga/README)
+//
+// Flashing the dock is an operator action (safety.md); nothing here does it.
+
+IO_LOC "clk"       E2;
+IO_LOC "host_rx"   G7;
+IO_LOC "host_tx"   G8;
+IO_LOC "servo_tx"  G5;
+IO_LOC "servo_rx"  F5;
+IO_LOC "led_done"  D7;
+IO_LOC "led_ready" E8;
+
+IO_PORT "clk"       PULL_MODE=NONE BANK_VCCIO=3.3;
+IO_PORT "host_rx"   PULL_MODE=UP   DRIVE=OFF BANK_VCCIO=3.3;
+IO_PORT "host_tx"   PULL_MODE=NONE DRIVE=8   BANK_VCCIO=3.3;
+IO_PORT "servo_tx"  PULL_MODE=NONE DRIVE=8   BANK_VCCIO=3.3;
+IO_PORT "servo_rx"  PULL_MODE=UP   DRIVE=OFF BANK_VCCIO=3.3;
+IO_PORT "led_done"  PULL_MODE=NONE DRIVE=8   BANK_VCCIO=3.3;
+IO_PORT "led_ready" PULL_MODE=NONE DRIVE=8   BANK_VCCIO=3.3;
+
+IO_LOC "key2" H10;
+IO_PORT "key2" PULL_MODE=DOWN DRIVE=OFF BANK_VCCIO=3.3;

@@ -707,6 +707,7 @@ mod tests;
 
 mod campaign;
 mod gait;
+pub mod gait_pack;
 mod worker;
 use campaign::*;
 use gait::*;

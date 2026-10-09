@@ -143,6 +143,101 @@ pub(super) fn lab_catalog(base: &std::path::Path) -> Vec<Value> {
 pub(super) fn gait_with_governor(rel: &str) -> R<Value> {
     Ok(crate::gait_playback::compiled_with_governor(&gait_file(rel)?)?.0)
 }
+/// A taught axis's working range in encoder counts, six counts inside its poses.
+pub(super) fn taught_window(a: &AxisCalibration) -> (f64, f64) {
+    let (lo, hi) = a.encoder_bounds();
+    (
+        lo.unwrap().min(hi.unwrap()) as f64 + 6.,
+        lo.unwrap().max(hi.unwrap()) as f64 - 6.,
+    )
+}
+/// The gait must fit the taught poses as mapped: a wrong sign or alignment
+/// puts it outside, and every target would be pinned at a pose. One reason
+/// per motor whose binding keeps less than 95% of the gait inside its window.
+pub(super) fn gait_misfit(
+    cfg: &Config,
+    gait: &crate::gait_playback::Gait,
+    bindings: &[crate::gait_playback::LegBinding],
+    axes: &[AxisCalibration],
+) -> R<Vec<String>> {
+    use crate::gait_playback::LegBinding;
+    let mut misfit = Vec::new();
+    for (bd, a) in bindings.iter().zip(axes) {
+        let (lo, hi) = taught_window(a);
+        let i = gait.index(&bd.joint).ok_or(format!("the gait has no joint {}", bd.joint))?;
+        let fit = |polarity: f64| -> R<f64> {
+            let flipped = LegBinding {
+                polarity,
+                ..bd.clone()
+            };
+            let mut inside = 0;
+            for k in 0..200 {
+                let q = gait.sample(gait.info.period_s * k as f64 / 200.)?[i];
+                inside += usize::from((lo..=hi).contains(&flipped.counts(q)));
+            }
+            Ok(inside as f64 / 200.)
+        };
+        let (here, flipped) = (fit(bd.polarity)?, fit(-bd.polarity)?);
+        if here < 0.95 {
+            let role = &cfg.roles[&bd.id];
+            misfit.push(if flipped >= 0.95 {
+                format!("{role}: only {:.0}% of the gait fits its taught poses with this direction, {:.0}% with the opposite; its mirror sign is probably reversed (flip +/− in the leg mirror, check with Q)", here * 100., flipped * 100.)
+            } else {
+                format!("{role}: only {:.0}% of the gait fits its taught poses ({:.0}% reversed); re-save its sim alignment at the CAD home pose or widen its poses", here * 100., flipped * 100.)
+            });
+        }
+    }
+    Ok(misfit)
+}
+/// Per-motor limits on a leg gait: effort × measured capability (accepted
+/// registry, at `supply` volts), belt acceleration from the campaign plan,
+/// each joint clamped inside its taught window. Applied to `governed`;
+/// returns the per-motor record and the registry it came from.
+pub(super) fn govern_leg(
+    cfg: &Config,
+    governed: &mut crate::gait_playback::GovernedGait,
+    bindings: &[crate::gait_playback::LegBinding],
+    axes: &[AxisCalibration],
+    effort: f64,
+    supply: f64,
+) -> R<(serde_json::Map<String, Value>, crate::actuator_registry::Registry)> {
+    const RAD: f64 = std::f64::consts::TAU / 4096.;
+    let registry = crate::actuator_registry::Registry::load(
+        &repo_root().join("examples/actuators/hx30hm/accepted/registry.json"),
+    )?;
+    let plan_limits: Value = cfg
+        .campaign_plan
+        .as_ref()
+        .and_then(|p| fs::read(p).ok())
+        .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
+        .map(|v| v["limits"].clone())
+        .unwrap_or(Value::Null);
+    let mut limits = serde_json::Map::new();
+    for (bd, a) in bindings.iter().zip(axes) {
+        let i = governed.gait.index(&bd.joint).ok_or(format!("the gait has no joint {}", bd.joint))?;
+        let family_name = registry.role_family(&bd.joint)?.to_string();
+        let family = &registry.families[&family_name];
+        let (full_speed, measured_acc) = crate::actuator_registry::family_limits(family, supply)?;
+        let role = &cfg.roles[&bd.id];
+        let belt_acc = plan_limits[role.as_str()]["max_acceleration_counts_s2"]
+            .as_f64()
+            .map(|c| c * RAD);
+        let speed = effort * full_speed;
+        let acc = measured_acc
+            .map(|m| effort * m)
+            .unwrap_or(f64::INFINITY)
+            .min(belt_acc.unwrap_or(f64::INFINITY));
+        governed.limit(i, speed, acc)?;
+        let (lo, hi) = taught_window(a);
+        governed.clamp(i, bd.joint_rad(lo), bd.joint_rad(hi));
+        let c = governed.config(i).unwrap();
+        limits.insert(bd.id.to_string(), json!({"role": role, "family": family_name, "family_hash": family.content_hash(),
+            "motor_full_drive_speed_rad_s": full_speed, "motor_measured_acceleration_rad_s2": measured_acc, "belt_acceleration_limit_rad_s2": belt_acc,
+            "governor_speed_rad_s": c.maximum_speed_rad_s, "governor_acceleration_rad_s2": c.maximum_acceleration_rad_s2,
+            "governor_speed_counts_s": c.maximum_speed_rad_s / RAD, "governor_acceleration_counts_s2": c.maximum_acceleration_rad_s2 / RAD}));
+    }
+    Ok((limits, registry))
+}
 /// Per-motor statistics of one leg gait run.
 pub(super) fn gait_statistics(
     rows: &[Value],
@@ -321,56 +416,11 @@ pub(super) fn run_gait(
         bindings.push(binding);
         axes.push(a);
     }
-    // The gait must fit the taught poses as mapped: a wrong sign or alignment
-    // puts it outside, and every target would be pinned at a pose.
-    let window = |a: &AxisCalibration| {
-        let (lo, hi) = a.encoder_bounds();
-        (
-            lo.unwrap().min(hi.unwrap()) as f64 + 6.,
-            lo.unwrap().max(hi.unwrap()) as f64 - 6.,
-        )
-    };
-    let mut misfit = Vec::new();
-    for (bd, a) in bindings.iter().zip(&axes) {
-        let (lo, hi) = window(a);
-        let i = gait.index(&bd.joint).unwrap();
-        let fit = |polarity: f64| -> R<f64> {
-            let flipped = LegBinding {
-                polarity,
-                ..bd.clone()
-            };
-            let mut inside = 0;
-            for k in 0..200 {
-                let q = gait.sample(gait.info.period_s * k as f64 / 200.)?[i];
-                inside += usize::from((lo..=hi).contains(&flipped.counts(q)));
-            }
-            Ok(inside as f64 / 200.)
-        };
-        let (here, flipped) = (fit(bd.polarity)?, fit(-bd.polarity)?);
-        if here < 0.95 {
-            let role = &cfg.roles[&bd.id];
-            misfit.push(if flipped >= 0.95 {
-                format!("{role}: only {:.0}% of the gait fits its taught poses with this direction, {:.0}% with the opposite; its mirror sign is probably reversed (flip +/− in the leg mirror, check with Q)", here * 100., flipped * 100.)
-            } else {
-                format!("{role}: only {:.0}% of the gait fits its taught poses ({:.0}% reversed); re-save its sim alignment at the CAD home pose or widen its poses", here * 100., flipped * 100.)
-            });
-        }
-    }
+    let window = taught_window;
+    let misfit = gait_misfit(cfg, &gait, &bindings, &axes)?;
     if !misfit.is_empty() {
         return Err(misfit.join("; "));
     }
-    // Per-motor limits: effort × measured capability (accepted registry, at the
-    // measured supply), belt acceleration from the campaign plan.
-    let registry = crate::actuator_registry::Registry::load(
-        &repo_root().join("examples/actuators/hx30hm/accepted/registry.json"),
-    )?;
-    let plan_limits: Value = cfg
-        .campaign_plan
-        .as_ref()
-        .and_then(|p| fs::read(p).ok())
-        .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
-        .map(|v| v["limits"].clone())
-        .unwrap_or(Value::Null);
     // A zero or non-finite reading is no supply (family_limits would divide by
     // it and govern every motor to zero speed); such readings are skipped.
     let measured_supply = app.state.lock().unwrap()["samples"]
@@ -383,30 +433,7 @@ pub(super) fn run_gait(
         });
     let supply = measured_supply.unwrap_or(12.0);
     let mut governed = GovernedGait::new(gait.clone());
-    let mut limits = serde_json::Map::new();
-    for (bd, a) in bindings.iter().zip(&axes) {
-        let i = gait.index(&bd.joint).unwrap();
-        let family_name = registry.role_family(&bd.joint)?.to_string();
-        let family = &registry.families[&family_name];
-        let (full_speed, measured_acc) = crate::actuator_registry::family_limits(family, supply)?;
-        let role = &cfg.roles[&bd.id];
-        let belt_acc = plan_limits[role.as_str()]["max_acceleration_counts_s2"]
-            .as_f64()
-            .map(|c| c * RAD);
-        let speed = effort * full_speed;
-        let acc = measured_acc
-            .map(|m| effort * m)
-            .unwrap_or(f64::INFINITY)
-            .min(belt_acc.unwrap_or(f64::INFINITY));
-        governed.limit(i, speed, acc)?;
-        let (lo, hi) = window(a);
-        governed.clamp(i, bd.joint_rad(lo), bd.joint_rad(hi));
-        let c = governed.config(i).unwrap();
-        limits.insert(bd.id.to_string(), json!({"role": role, "family": family_name, "family_hash": family.content_hash(),
-            "motor_full_drive_speed_rad_s": full_speed, "motor_measured_acceleration_rad_s2": measured_acc, "belt_acceleration_limit_rad_s2": belt_acc,
-            "governor_speed_rad_s": c.maximum_speed_rad_s, "governor_acceleration_rad_s2": c.maximum_acceleration_rad_s2,
-            "governor_speed_counts_s": c.maximum_speed_rad_s / RAD, "governor_acceleration_counts_s2": c.maximum_acceleration_rad_s2 / RAD}));
-    }
+    let (limits, registry) = govern_leg(cfg, &mut governed, &bindings, &axes, effort, supply)?;
     // Simulated tracking of the same gait (the search's evaluation), for comparison.
     let evaluation: Value = fs::read(gait_file(&r.gait)?.with_file_name("evaluation.json"))
         .ok()

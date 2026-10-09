@@ -1,0 +1,47 @@
+{
+  "time": "2026-10-09T00:16:27Z",
+  "purpose": "Make the leg's ESP32-host calibration image persistent: written to the dock's SPI flash, so the dock boots it at every power-up instead of an unknown older image. Operator request after repeated SRAM losses.",
+  "previous_receipt": "deployment-robot-link-2026-10-08-calibration.json (the same image, SRAM)",
+  "motor_supply_off_reported_by_operator": "Operator: 'supply off, p4 unplugged, go ahead' just before the write. The P4's USB port was absent.",
+  "fpga_image": "Tang repo bridge-calibration recipe (RELEASE_TX=1, SAFETY_ENABLE=1, SAFETY_FIRST_ID=1, SAFETY_COUNT=3, CALIBRATION=1, SAFETY_FEEDBACK_TIMEOUT=20000000 (400 ms), SAFETY_COMMAND_TIMEOUT=30000000 (600 ms)) with the host UART on G7 (host_rx) and G8 (host_tx). Supervisor profile 8, the same as the leg's deployment-v8 image ae912f43; only the host pins differ.",
+  "bitstream": "firmware/robot-link/fpga/impl/bridge_calibration_esp32.fs (make calibration)",
+  "bitstream_sha256": "3f8c5fdff194613e76e7f7ea98cb88f1178be3e1d775d22150ed376f92103fee",
+  "constraints_sha256": {
+    "firmware/robot-link/fpga/bridge_safety_esp32.cst": "e2a35e2064fa953ebf29e40245bd130fd59988a50a4e098a31682dd607278cec"
+  },
+  "rtl_sources": {
+    "repo": "~/projects/sipeed-tang-primer-25k at 3733582 with uncommitted changes. All five sources predate the v8 image (2026-09-22 21:20), so the RTL is the same as v8.",
+    "sha256": {
+      "servo/src/bridge.v": "2f1892ff12e47a69f4a2af16bc925cf2b92bac9a28c09de037bbda03e138c706",
+      "servo/src/uart_tx.v": "23e6690a69e1c25db555efe9822168c51d370443638c598ca65d7c4709038eb7",
+      "servo/src/uart_rx.v": "d08e66b6ffd40d2c2e393462a62473fddd4766b2863daeaae023adb90a1ab3b2",
+      "servo/src/hx_safety.v": "fe76e337ed1b954772ce992c613440fccc43c3b4da7d969d1a66fc04b868be20",
+      "servo/src/button.v": "cb791c547c6a4e09b9ef442e1a8698e62d71d36c5ea418dbc769a21bbcff6e15"
+    }
+  },
+  "tests_before_load": {
+    "tang: make sim-calibration": "PASS (SYNC length predicates; multi-axis calibration arming; continuous encoder; servo modes; calibration profile: outward-only window, PWM cap, ID isolation, command gating, watchdog, S2, temperature; reply survives inter-byte pause)",
+    "tang: make sim-safety": "PASS (21 safety cases; UART safety; released TX during reply)",
+    "robot-link cosim": "Not applicable: the robot-link engine does not send travel windows, so this profile refuses to arm it. Motion goes through the Rust calibration panel over the TCP tunnel."
+  },
+  "jtag_detect": "GW5A-25, idcode 0x1281b",
+  "flash_backup_before_write": {
+    "file": "dock-flash-backup-2026-10-08.bin (kept beside this receipt, excluded from git through .git/info/exclude because it is 1 MB)",
+    "sha256": "7b91b335c097498b0bb9992016d92f31f3f3567e0813d80822963d8412d19f80",
+    "read": "openFPGALoader -b tangprimer25k --dump-flash --file-size 1048576 (2026-10-09T00:16:00Z)",
+    "contents": "A GW5A-25 bitstream (header carries idcode 0x1281b) of 741,960 bytes. Everything after it is erased (0xFF). Which design it is was not recorded; the Tang repo's make prog targets are servo.fs and lidar.fs.",
+    "restore": "openFPGALoader -b tangprimer25k -f --verify with that design's .fs, or write the raw dump back: openFPGALoader -b tangprimer25k --write-flash --verify --file-type bin dock-flash-backup-2026-10-08.bin (that raw-restore command is untested; supply off, P4 unplugged, new receipt)"
+  },
+  "programming": "Persistent SPI flash: openFPGALoader -b tangprimer25k -f --verify, erase/write 0x00000-0xC0000, verify Done, exit 0 (00:16:27Z to 00:16:51Z)",
+  "readback": {
+    "2026-10-09T12:55Z": "Through the P4 (new firmware, GET /api/state fpga.version): supervisor profile 8 answering on G7/G8, latched with reason 1 (boot), nothing armed; servos silent with the motor supply off. No image has been loaded into SRAM since the flash write, so the running image is the flash's.",
+    "cold_power_cycle": "Not confirmed: openFPGALoader -f also reconfigures from flash after writing, so a boot latch alone does not show the dock booting it from a cold power-up. Confirm by unplugging the dock's USB for 5 s with nothing loaded, then checking profile 8 again."
+  },
+  "host": {
+    "board": "ESP32-P4-WIFI6-M, chip revision v1.0",
+    "firmware": "firmware/robot-link/esp32/build/robot_link.bin: first ID 1, mask 0x7, 2 s status log, bus scan, station mode on the home network, esp_hosted pinned ^2.12.12 (resolved to 2.12.13); page STOP is written straight to the FPGA while the tunnel or bus scan owns the UART; page drive cap 1000 (see raised-limits.json)",
+    "firmware_sha256": "7226fd64c9952bdd0767afa1658294bf903bc02c20ec5d8d3415a3de746d3dd2"
+  },
+  "boot_behaviour": "At every power-up the FPGA boots this image latched (load/boot latch), with nothing armed and host link on G7/G8. The dock's USB UART does not host the bridge unless another image is loaded into SRAM for that session.",
+  "powered_motor_verification": false
+}

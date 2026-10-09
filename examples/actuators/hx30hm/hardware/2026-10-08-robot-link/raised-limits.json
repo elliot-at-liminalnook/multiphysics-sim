@@ -1,0 +1,12 @@
+[
+  {
+    "time": "2026-10-08T23:47:00Z",
+    "limit": "robot-link page jog drive cap (CONFIG_RL_DUTY_CAP, in firmware/robot-link/esp32/sdkconfig)",
+    "previous_value": 100,
+    "new_value": 1000,
+    "units": "HX-30HM PWM register counts, 0-1000 = 0-100 % duty",
+    "reason": "Operator request: 'we need the signal to be able to go all the way up to 100% PWM'.",
+    "what_still_bounds_it": "The FPGA's own PWM limit is 1000, the hx_safety default, which bridge_calibration does not override. Under the calibration profile now loaded, the FPGA forwards nonzero PWM only to an armed joint with a taught window, and refuses outward drive at a window edge. The page sends no windows, so it cannot arm the leg under this profile. A jog still needs a held button renewed every 80 ms, and the FPGA's 400 ms telemetry and 600 ms command leases still apply.",
+    "kconfig_default": "Unchanged at 100. Only this bench's sdkconfig is raised."
+  }
+]

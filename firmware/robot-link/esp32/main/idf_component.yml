@@ -1,0 +1,9 @@
+dependencies:
+  idf: ">=5.5"
+  # The C6 co-processor's Wi-Fi, as esp_wifi calls on the P4. Pinned to the
+  # 2.12 line because that is what this board's C6 runs (the camera project
+  # upgraded it to 2.12.12 over SDIO on 2026-08-29). esp_hosted 3.x against
+  # it logs "major version mismatch"; in station mode its data path stalled
+  # within a minute (2026-10-08). Move both together, never the host alone.
+  espressif/esp_hosted: "^2.12.12"
+  espressif/esp_wifi_remote: "*"

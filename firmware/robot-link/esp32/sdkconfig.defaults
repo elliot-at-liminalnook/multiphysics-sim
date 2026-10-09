@@ -1,0 +1,29 @@
+CONFIG_IDF_TARGET="esp32p4"
+
+# Wi-Fi is the ESP32-C6 co-processor over SDIO (esp_hosted; esp_wifi_remote
+# routes esp_wifi calls to it). The P4<->C6 pins (CLK 18, CMD 19, D0-D3 14-17,
+# reset 54) are esp_hosted's ESP32-P4 defaults and match the
+# ESP32-P4-WIFI6-M board, as the camera firmware on the same board found.
+CONFIG_SLAVE_IDF_TARGET_ESP32C6=y
+
+# This board carries an early ESP32-P4 (chip revision v1.0). IDF 5.5 builds for
+# v3.x by default, and esptool refuses that bootloader on this chip. The camera
+# firmware on the same board uses the same two settings.
+CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y
+CONFIG_ESP32P4_REV_MIN_100=y
+
+# 32 MB flash on this board, with a partition for the gait pack.
+CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# esp_hosted wants a 1 kHz tick (it reports "bus level jitters" otherwise),
+# and the link task runs every millisecond anyway.
+CONFIG_FREERTOS_HZ=1000
+
+# WebSocket control channel and a few concurrent browser sockets.
+CONFIG_HTTPD_WS_SUPPORT=y
+CONFIG_HTTPD_MAX_REQ_HDR_LEN=1024
+CONFIG_LWIP_MAX_SOCKETS=16
+
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192

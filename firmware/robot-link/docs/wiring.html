@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robot Link Wiring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: an animated bench stage beside a step card, transport under the stage, wire list and open items below. */
+:root{
+  --bg:#eceff1; --surface:#fbfcfc; --ink:#131b22; --muted:#55626d; --line:#d0d8dd;
+  --accent:#a3561a; --accent-ink:#ffffff; --accent-soft:#f2e2d2;
+  --mat:#d2dce1; --mat-grid:#c3ced4; --mat-ink:#3b4852;
+  --danger:#bf3329; --danger-soft:#f7dcd8; --ok:#2c7a4c; --ok-soft:#d8ede0;
+  --wire-edge:rgba(8,12,16,.55); --co-bg:#ffffff; --co-ink:#131b22; --co-line:#131b22;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1317; --surface:#151c21; --ink:#e3e9ed; --muted:#94a2ac; --line:#25303a;
+    --accent:#e2924c; --accent-ink:#1b0f04; --accent-soft:#3a2615;
+    --mat:#19232a; --mat-grid:#212d35; --mat-ink:#a3b3be;
+    --danger:#ff7b6f; --danger-soft:#3a1c19; --ok:#6fcf97; --ok-soft:#163024;
+    --wire-edge:rgba(225,234,240,.55); --co-bg:#0d1215; --co-ink:#e3e9ed; --co-line:#e3e9ed;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1317; --surface:#151c21; --ink:#e3e9ed; --muted:#94a2ac; --line:#25303a;
+  --accent:#e2924c; --accent-ink:#1b0f04; --accent-soft:#3a2615;
+  --mat:#19232a; --mat-grid:#212d35; --mat-ink:#a3b3be;
+  --danger:#ff7b6f; --danger-soft:#3a1c19; --ok:#6fcf97; --ok-soft:#163024;
+  --wire-edge:rgba(225,234,240,.55); --co-bg:#0d1215; --co-ink:#e3e9ed; --co-line:#e3e9ed;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.55 var(--body);margin:0}
+.wrap{max-width:1440px;margin:0 auto;padding-inline:clamp(16px,3vw,40px);padding-block:28px 64px;display:grid;gap:28px}
+header{display:grid;gap:10px}
+.eyebrow{font:500 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+h1{font:800 clamp(34px,5vw,58px)/.95 var(--display);font-stretch:72%;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.sub{max-width:72ch;color:var(--muted);margin:0}
+.sub b{color:var(--ink);font-weight:600}
+.status{display:inline-flex;align-items:center;gap:8px;width:fit-content;font:600 12px/1 var(--mono);padding:7px 10px;border-radius:999px;background:var(--accent-soft);color:var(--ink)}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--accent);display:block}
+
+.studio{display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:1080px){.studio{grid-template-columns:minmax(0,1fr) minmax(320px,400px);align-items:start}}
+.stagecol{display:grid;gap:12px;min-width:0}
+.stage{position:relative;aspect-ratio:3/2;max-width:100%;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--mat)}
+.stage svg{display:block;width:100%;height:100%}
+.stage-tag{position:absolute;left:12px;top:12px;font:600 11px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;background:var(--co-bg);color:var(--co-ink);padding:6px 8px;border-radius:6px;border:1px solid var(--line);pointer-events:none}
+
+.transport{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 13px/1 var(--body);padding:10px 14px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--muted)}
+.btn:focus-visible,.dot:focus-visible,select:focus-visible,.chk input:focus-visible,tr[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn svg{width:14px;height:14px;fill:currentColor}
+.dots{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 280px;min-width:0}
+.dot{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:600 11px/1 var(--mono);min-width:30px;height:30px;padding:0 6px;border-radius:7px;cursor:pointer;font-variant-numeric:tabular-nums}
+.dot.done{color:var(--ink);background:var(--accent-soft);border-color:transparent}
+.dot.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.speed{display:flex;align-items:center;gap:6px;font:500 12px/1 var(--mono);color:var(--muted)}
+select{font:500 13px/1 var(--mono);padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.progress{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--accent)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 22px 24px;display:grid;gap:14px;min-width:0}
+.card .num{font:600 12px/1 var(--mono);color:var(--accent);letter-spacing:.05em;text-transform:uppercase}
+.card h2{font:750 28px/1.05 var(--display);font-stretch:80%;margin:0;text-wrap:balance}
+.card p{margin:0}
+.card code,.tbl code,.notes code{font:500 .86em/1.4 var(--mono);background:var(--accent-soft);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+pre{margin:0;font:500 12.5px/1.6 var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.chk{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;align-items:start;cursor:pointer}
+.chk input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--accent)}
+.chk input:checked + span{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+.ol{margin:0;padding-left:20px;display:grid;gap:8px}
+.why{font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.why b{color:var(--ink)}
+.warn{font-size:14px;background:var(--danger-soft);border-radius:9px;padding:10px 12px}
+.warn b{color:var(--danger)}
+.lbl{font:600 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+.pinmap{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.pm-h{font:600 11px/1.3 var(--mono);color:var(--muted);margin-bottom:6px}
+.pm-list{list-style:none;margin:0;padding:0;display:grid;gap:3px;font:500 12.5px/1.25 var(--mono)}
+.pm-list li{display:grid;grid-template-columns:22px 1fr;gap:6px;padding:3px 6px;border-radius:5px}
+.pm-list li b{color:var(--muted);font-weight:600}
+.pm-list li.use{background:var(--accent-soft)}
+.pm-list li.no{background:var(--danger-soft)}
+.pm-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px;margin-bottom:10px}
+.pm-grid span{font:600 11px/1 var(--mono);text-align:center;padding:6px 0;border-radius:4px;background:var(--bg);border:1px solid var(--line)}
+.pm-grid span.use{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.pm-grid span.no{background:var(--danger-soft);border-color:transparent}
+
+section h3{font:750 22px/1.1 var(--display);font-stretch:80%;margin:0 0 12px}
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.tbl{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+.tbl th{font:600 11px/1.2 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-align:left;padding:12px 14px;border-bottom:1px solid var(--line)}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr{cursor:pointer}
+.tbl tbody tr:hover{background:var(--bg)}
+.tbl tr.active{background:var(--accent-soft)}
+.tbl td.n{font:600 12px/1.5 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.sw{display:inline-block;width:22px;height:8px;border-radius:4px;margin-right:8px;vertical-align:middle;border:1px solid var(--wire-edge)}
+.notes{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.note{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.note h4{margin:0 0 8px;font:700 15px/1.2 var(--body)}
+.note ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:14px}
+.note a{color:var(--accent)}
+.keys{font:500 12px/1.4 var(--mono);color:var(--muted)}
+
+/* Scene */
+.mat-bg{fill:var(--mat)}
+.mat-line{stroke:var(--mat-grid);stroke-width:1;fill:none}
+.mat-ink{fill:var(--mat-ink);font-family:var(--mono)}
+.silk{font-family:var(--mono);font-weight:600;fill:#e9e5d8}
+.w-edge{fill:none;stroke:var(--wire-edge);stroke-width:9;stroke-linecap:round;stroke-linejoin:round}
+.w-core{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.w-hi{fill:none;stroke:#fff;stroke-opacity:.35;stroke-width:1.4;stroke-linecap:round}
+.callout .co-line{stroke:var(--co-line);fill:none}
+.callout .co-dot{fill:var(--co-line)}
+.callout .co-box{fill:var(--co-bg);stroke:var(--co-line)}
+.callout .co-text{fill:var(--co-ink);font-family:var(--mono);font-weight:600}
+.callout.warn .co-line,.callout.warn .co-dot{stroke:var(--danger);fill:var(--danger)}
+.callout.warn .co-line{fill:none}
+.callout.warn .co-box{stroke:var(--danger)}
+.callout.warn .co-text{fill:var(--danger)}
+.callout.ok .co-box{stroke:var(--ok)}
+.wifi-arc{fill:none;stroke:var(--accent);stroke-width:5;stroke-linecap:round}
+.ring{fill:none;stroke:var(--accent)}
+.ring.warn{stroke:var(--danger)}
+.ring.ok{stroke:var(--ok)}
+.badge circle{fill:var(--accent)}
+.badge text{fill:var(--accent-ink);font-family:var(--mono);font-weight:700}
+.badge.warn circle{fill:var(--danger)}
+.probe-label{font-family:var(--mono);font-weight:600;fill:var(--mat-ink)}
+@media (prefers-reduced-motion: reduce){ .btn,.dot{transition:none} }
+
+/* Chapter tabs: the build, and the bus check that diagnoses it. */
+.chapters{display:flex;flex-wrap:wrap;gap:6px}
+.chapters button{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--muted);font:600 13px/1 var(--body);padding:10px 14px;border-radius:9px;cursor:pointer}
+.chapters button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chapters button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chapters small{font:500 11px/1 var(--mono);opacity:.75;margin-left:6px}
+
+/* The multimeter: a fixed readout in the stage corner; its probes move in the scene. */
+.meter{position:absolute;right:12px;top:12px;width:clamp(118px,17%,176px);background:#e9b92c;border:2px solid #7a5c0c;border-radius:12px;padding:8px;display:grid;gap:6px;box-shadow:0 6px 16px rgba(0,0,0,.25);pointer-events:none}
+.meter[hidden]{display:none}
+.m-lcd{background:#b9c7a4;border:2px solid #4a4a3a;border-radius:5px;padding:4px 7px;display:flex;align-items:baseline;justify-content:flex-end;gap:4px;color:#1c241a;font:600 clamp(16px,2.4vw,26px)/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.m-lcd small{font-size:.5em}
+.m-row{display:flex;justify-content:space-between;align-items:center;font:600 clamp(9px,1vw,11px)/1.2 var(--mono);color:#2b2003}
+.m-beep{opacity:0;color:#2b2003}
+.m-beep.on{opacity:1}
+.m-jacks{display:flex;gap:10px;font:600 clamp(8px,.9vw,10px)/1 var(--mono);color:#2b2003}
+.m-jacks i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px;vertical-align:-1px;border:1px solid #000}
+.m-jacks i.r{background:#d4372c}
+.m-jacks i.b{background:#1c1d20}
+.res{display:grid;gap:6px;margin:0;padding:0;list-style:none;font-size:14px}
+.res li{display:grid;grid-template-columns:84px minmax(0,1fr);gap:10px;align-items:start;padding:7px 9px;border-radius:8px;background:var(--bg)}
+.res li b{font:600 12.5px/1.5 var(--mono)}
+.res li.ok b{color:var(--ok)}
+.res li.bad b{color:var(--danger)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">firmware/robot-link · bench wiring, step by step</div>
+    <h1>Robot Link Wiring</h1>
+    <p class="sub">Connecting the <b>ESP32-P4-WIFI6-M</b> to the <b>Tang Primer 25K dock</b>, with the dock driving three <b>HX-30HM</b> servos. Pin positions come from Waveshare's published pinout for the P4 and the print on the dock's underside. The resistor, power and ground rules come from the Tang repo's <code>wiring.md</code> and <code>daisy-chain.md</code>.</p>
+    <span class="status"><i></i>2026-10-08 bring-up · P4 ↔ FPGA link works on hardware · servo bus not yet answering</span>
+  </header>
+
+  <section class="studio" aria-label="Animated wiring guide">
+    <div class="stagecol">
+      <div class="chapters" role="tablist" aria-label="Chapters">
+        <button type="button" role="tab" id="tab-build" aria-selected="true">Build<small>14 steps</small></button>
+        <button type="button" role="tab" id="tab-check" aria-selected="false">Bus check<small>6 checks</small></button>
+      </div>
+      <div class="stage">
+        <svg id="scene" viewBox="0 0 1800 1200" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Animated bench: laptop, ESP32-P4, Tang Primer 25K dock, breadboard, bench supply and three HX-30HM servos, wired one connection at a time.">
+          <defs>
+            <pattern id="matgrid" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" class="mat-bg"/><path d="M40 0H0V40" class="mat-line"/></pattern>
+            <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3e6e9"/><stop offset="1" stop-color="#9aa1a8"/></linearGradient>
+            <linearGradient id="shield" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d4d8dc"/><stop offset="1" stop-color="#a7adb3"/></linearGradient>
+            <linearGradient id="servoBody" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#202327"/><stop offset=".5" stop-color="#17191c"/><stop offset="1" stop-color="#101214"/></linearGradient>
+            <radialGradient id="glow"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+            <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#000" flood-opacity=".28"/></filter>
+            <filter id="ledglow" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="4"/></filter>
+          </defs>
+          <g id="cam">
+            <g id="l-mat"><rect x="-1200" y="-1200" width="4400" height="3800" fill="url(#matgrid)"/></g>
+            <g id="l-obj"></g>
+            <g id="l-comps"></g>
+            <g id="l-cables"></g>
+            <g id="l-wires"></g>
+            <g id="l-fx"></g>
+            <g id="l-probe"></g>
+            <g id="l-call"></g>
+          </g>
+        </svg>
+        <div class="stage-tag" id="stageTag">Overview</div>
+        <div class="meter" id="meter" hidden aria-hidden="true">
+          <div class="m-lcd"><span id="mVal">OL</span><small id="mUnit">Ω</small></div>
+          <div class="m-row"><span id="mMode">Ω · continuity</span><span class="m-beep" id="mBeep">beep</span></div>
+          <div class="m-jacks"><span><i class="r"></i>VΩ</span><span><i class="b"></i>COM</span></div>
+        </div>
+      </div>
+      <div class="progress" aria-hidden="true"><i id="prog"></i></div>
+      <div class="transport">
+        <button class="btn" id="prev" type="button" aria-label="Previous step"><svg viewBox="0 0 16 16"><path d="M10.5 2 4.5 8l6 6z"/></svg>Back</button>
+        <button class="btn primary" id="play" type="button"><svg viewBox="0 0 16 16" id="playIcon"><path d="M4 2.5v11l9-5.5z"/></svg><span id="playLabel">Play the build</span></button>
+        <button class="btn" id="next" type="button" aria-label="Next step">Next<svg viewBox="0 0 16 16"><path d="M5.5 2l6 6-6 6z"/></svg></button>
+        <button class="btn" id="replay" type="button">Replay step</button>
+        <label class="speed" for="speed">Speed
+          <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.6">1.6×</option><option value="2.5">2.5×</option></select>
+        </label>
+      </div>
+      <div class="dots" id="dots" role="group" aria-label="Steps"></div>
+      <div class="keys">← → step · space play/pause · R replay</div>
+    </div>
+
+    <aside class="card" id="card" aria-live="polite"></aside>
+  </section>
+
+  <section>
+    <h3>Every connection</h3>
+    <div class="tblwrap">
+      <table class="tbl">
+        <thead><tr><th>#</th><th>Wire</th><th>From</th><th>To</th><th>Carries</th></tr></thead>
+        <tbody id="wtbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="notes">
+    <div class="note">
+      <h4>Unverified until you check it on the bench</h4>
+      <ul>
+        <li>The P4 pins come from Waveshare's pinout for the ESP32-P4-WIFI6. Check that your -M board has <code>20</code> and <code>21</code> printed beside pins 6 and 7.</li>
+        <li>The top view of the dock here is the underside print mirrored left to right. Before power, use continuity to confirm the G7, G8 and GND sockets match their printed pads.</li>
+        <li>The robot link has passed its engine tests and a Verilator co-simulation against the real <code>bridge.v</code> and <code>hx_safety.v</code>. It has never run on this hardware.</li>
+        <li>The order of SIG, V+ and GND on the PH2.0 lead is only illustrative. Go by the servo's own label.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h4>Rules that hold the whole way through</h4>
+      <ul>
+        <li>The FPGA is the only safety authority. The P4 only adds a transport.</li>
+        <li>Load FPGA images only with the motor supply off, and write a deployment receipt.</li>
+        <li>Drive the servos only with the operator at the bench and every servo supported.</li>
+        <li>Keep 11.1 V away from every 3V3, 5V and GPIO pin on both boards.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h4>Sources</h4>
+      <ul>
+        <li><a href="https://www.waveshare.com/wiki/ESP32-P4-WIFI6" target="_blank" rel="noopener">Waveshare ESP32-P4-WIFI6 wiki</a> (pinout figure)</li>
+        <li><code>firmware/robot-link/README.md</code>, <code>esp32/main/Kconfig.projbuild</code>, <code>fpga/bridge_safety_esp32.cst</code></li>
+        <li>Tang repo: <code>servo/wiring.md</code>, <code>servo/daisy-chain.md</code>, <code>servo/safety.md</code></li>
+        <li><code>AGENTS.md</code> hardware safety rules</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+const NS = 'http://www.w3.org/2000/svg';
+const $ = (id) => document.getElementById(id);
+const svg = $('scene');
+const L = { obj: $('l-obj'), comps: $('l-comps'), cables: $('l-cables'), wires: $('l-wires'), fx: $('l-fx'), probe: $('l-probe'), call: $('l-call') };
+function el(tag, a, parent) { const e = document.createElementNS(NS, tag); if (a) for (const k in a) e.setAttribute(k, a[k]); if (parent) parent.appendChild(e); return e; }
+function txt(parent, x, y, s, a) { const t = el('text', Object.assign({ x, y }, a || {}), parent); t.textContent = s; return t; }
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const ease = (x) => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const VW = 1800, VH = 1200, ASP = VW / VH;
+
+/* ---------- geometry (9 px per mm for the boards) ---------- */
+const P4 = { x: 440, y: 120, w: 189, h: 639 };
+const p4pin = (side, i) => [P4.x + (side === 'R' ? 174.6 : 14.4), P4.y + 42 + i * 22.86];
+const P4R = ['VBUS','VSYS','GND','EN','3V3','20','21','GND','22','23','RUN','26','GND','27','32','33','46','GND','47','48'];
+const P4L = ['52','51','GND','31','30','29','28','GND','50','49','5','4','GND','3','2','8','7','GND','24','25'];
+const D = { x: 880, y: 110, w: 571, h: 369 };
+const dpin = (row, c) => [D.x + 27.4 + c * 22.86, D.y + 243.5 + (row === 'edge' ? 22.86 : 0)];
+const DIN = ['3V3','GND','H5','H8','G7','F5'];
+const DEDGE = ['3V3','GND','J5','H7','G8','G5'];
+const B = { x: 880, y: 580, w: 620, h: 320 };
+const bcol = (c) => B.x + 40 + 18 * c;
+const brow = (r) => { const i = 'abcdefghij'.indexOf(r); return i < 5 ? B.y + 70 + 18 * i : B.y + 178 + 18 * (i - 5); };
+const RAIL = { tm: B.y + 22, tp: B.y + 40, bp: B.y + 280, bm: B.y + 298 };
+const S = { x: 440, y: 900, w: 340, h: 220 };
+const POST = { plus: [S.x + 230, S.y + 178], minus: [S.x + 282, S.y + 178], earth: [S.x + 178, S.y + 178] };
+const LAP = { x: 60, y: 380, w: 290, h: 192 };
+const SV = [ { id: 10, x: 870, y: 940 }, { id: 11, x: 1100, y: 940 }, { id: 12, x: 1330, y: 940 } ];
+const SVW = 170, SVH = 150;
+const sock = (s, which) => [s.x + (which === 'A' ? 48 : 122), s.y + 128];
+const servo = (id) => SV.find(s => s.id === id);
+
+/* ---------- static objects ---------- */
+function buildLaptop(g) {
+  const { x, y, w, h } = LAP;
+  el('rect', { x, y, width: w, height: h, rx: 10, fill: '#1b1f24', stroke: '#30363d', 'stroke-width': 2, filter: 'url(#soft)' }, g);
+  el('rect', { x: x + 12, y: y + 12, width: w - 24, height: h - 24, rx: 3, fill: '#0a0e12' }, g);
+  el('path', { d: `M${x - 20} ${y + h}H${x + w + 20}L${x + w + 34} ${y + h + 26}H${x - 34}Z`, fill: '#2a2f35', stroke: '#3a4047', 'stroke-width': 2 }, g);
+  el('rect', { x: x + w / 2 - 30, y: y + h + 4, width: 60, height: 6, rx: 3, fill: '#1c2025' }, g);
+  txt(g, x + w / 2, y + h + 50, 'Laptop', { class: 'mat-ink', 'font-size': 15, 'text-anchor': 'middle', 'font-weight': 600 });
+  const sx = x + 12, sy = y + 12, sw = w - 24, sh = h - 24;
+  const scr = {};
+  const term = (lines) => { const t = el('g', { opacity: 0 }, g); lines.forEach((ln, i) => { const [s, c] = Array.isArray(ln) ? ln : [ln, '#c8d3db']; txt(t, sx + 8, sy + 16 + i * 13.2, s, { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 8.6, fill: c }); }); return t; };
+  scr.flash = term([
+    ['$ cd firmware/robot-link/esp32', '#86d3ad'], ['$ . ~/esp/esp-idf/export.sh', '#86d3ad'], ['$ idf.py set-target esp32p4', '#86d3ad'],
+    ['$ idf.py menuconfig      # Robot link', '#86d3ad'], ['$ idf.py build', '#86d3ad'], ['$ idf.py -p PORT flash monitor', '#86d3ad'],
+    'I (…) robot-link: FPGA link on UART1 at', '    115200 baud (tx GPIO20, rx GPIO21)', 'I (…) robot-link: access point', '    "robot-link": http://192.168.4.1:80/'
+  ]);
+  scr.fpga = term([
+    ['$ cd firmware/robot-link/fpga', '#86d3ad'], ['$ shasum -a 256 impl/bridge_safety_esp32.fs', '#86d3ad'], '52d074e6f66fedee…a47e9b2c0b',
+    ['$ openFPGALoader -b tangprimer25k \\', '#86d3ad'], ['    impl/bridge_safety_esp32.fs', '#86d3ad'], '  SRAM only · motor supply off',
+    ['→ write the deployment receipt', '#f2c46d']
+  ]);
+  scr.log = term([
+    ['$ idf.py -p PORT monitor', '#86d3ad'], 'I (…) robot-link: FPGA link on UART1 at', '    115200 baud (tx GPIO20, rx GPIO21)',
+    'I (…) robot-link: access point', '    "robot-link": http://192.168.4.1:80/', ['Wi-Fi: robot-link appears', '#f2c46d']
+  ]);
+  // The P4's status line, printed to its USB console every 2 s.
+  scr.bad = term([
+    ['P4 USB console · every 2 s', '#86d3ad'], 'robot-link: per s: 11.0 sent,', '  5.0 replies, 6.0 timeouts', 'FPGA latched: host stop',
+    ['10: never answered', '#ff8a7a'], ['11: never answered', '#ff8a7a'], ['12: never answered', '#ff8a7a'],
+    ['→ FPGA answers, servos do not', '#f2c46d']
+  ]);
+  scr.good = term([
+    ['P4 USB console · every 2 s', '#86d3ad'], 'robot-link: per s: 11.0 sent,', '  11.0 replies, 0.0 timeouts', 'FPGA latched: host stop',
+    ['10: 11.1V pos …', '#86d3ad'], ['11: 11.1V pos …', '#86d3ad'], ['12: 11.1V pos …', '#86d3ad'],
+    ['→ the bus answers; go to step 13', '#f2c46d']
+  ]);
+  const pg = el('g', { opacity: 0 }, g);
+  el('rect', { x: sx, y: sy, width: sw, height: sh, fill: '#f4f5f6' }, pg);
+  el('rect', { x: sx, y: sy, width: sw, height: 16, fill: '#dde1e5' }, pg);
+  el('rect', { x: sx + 26, y: sy + 3, width: sw - 52, height: 10, rx: 5, fill: '#fff' }, pg);
+  txt(pg, sx + 32, sy + 11, '192.168.4.1', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7.5, fill: '#333' });
+  txt(pg, sx + 8, sy + 32, 'Robot link', { 'font-family': 'Archivo, sans-serif', 'font-size': 12, 'font-weight': 700, fill: '#111' });
+  el('rect', { x: sx + 8, y: sy + 40, width: 64, height: 26, rx: 5, fill: '#d23b2f' }, pg);
+  txt(pg, sx + 40, sy + 57, 'STOP', { 'font-family': 'Archivo, sans-serif', 'font-size': 11, 'font-weight': 800, fill: '#fff', 'text-anchor': 'middle' });
+  el('rect', { x: sx + 80, y: sy + 40, width: 82, height: 26, rx: 5, fill: '#fff', stroke: '#888' }, pg);
+  txt(pg, sx + 121, sy + 57, 'Take the link', { 'font-family': 'Archivo, sans-serif', 'font-size': 8.5, 'font-weight': 600, fill: '#222', 'text-anchor': 'middle' });
+  txt(pg, sx + 170, sy + 51, 'Owner: this page', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7, fill: '#444' });
+  txt(pg, sx + 170, sy + 62, 'Supervisor: ok', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7, fill: '#444' });
+  const rows = [['10', 'fresh, disarmed'], ['11', 'fresh, disarmed'], ['12', 'armed']];
+  rows.forEach((r, i) => {
+    const yy = sy + 80 + i * 17;
+    el('rect', { x: sx + 8, y: yy, width: sw - 16, height: 14, rx: 3, fill: i === 2 ? '#fde8d6' : '#fff', stroke: '#e0e3e6' }, pg);
+    txt(pg, sx + 14, yy + 10, 'ID ' + r[0], { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7.5, 'font-weight': 600, fill: '#222' });
+    txt(pg, sx + 52, yy + 10, r[1], { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7.5, fill: '#333' });
+    txt(pg, sx + 150, yy + 10, 'mode 2 · 11.1 V', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7.5, fill: '#666' });
+  });
+  txt(pg, sx + 8, sy + 141, 'Jog drive', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7.5, fill: '#333' });
+  el('rect', { x: sx + 56, y: sy + 135, width: 150, height: 4, rx: 2, fill: '#ccd' }, pg);
+  el('rect', { x: sx + 56, y: sy + 135, width: 45, height: 4, rx: 2, fill: '#a3561a' }, pg);
+  el('circle', { cx: sx + 101, cy: sy + 137, r: 5, fill: '#a3561a' }, pg);
+  txt(pg, sx + 214, sy + 141, '30 / cap 100', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7.5, fill: '#333' });
+  scr.page = pg;
+  return scr;
+}
+
+function buildP4(g) {
+  const { x, y, w, h } = P4;
+  const b = el('g', { filter: 'url(#soft)' }, g);
+  el('rect', { x, y, width: w, height: h, rx: 10, fill: '#121519', stroke: '#2b3036', 'stroke-width': 2 }, b);
+  // USB-C receptacle
+  el('rect', { x: x + w / 2 - 40, y: y - 8, width: 80, height: 60, rx: 12, fill: 'url(#metal)', stroke: '#6f767d' }, g);
+  el('rect', { x: x + w / 2 - 28, y: y - 3, width: 56, height: 15, rx: 7, fill: '#17191c' }, g);
+  // PWR LED
+  txt(g, x + 150, y + 16, 'PWR', { class: 'silk', 'font-size': 7, 'text-anchor': 'end' });
+  const pwr = el('rect', { x: x + 154, y: y + 9, width: 10, height: 6, rx: 1, fill: '#3a1d1d' }, g);
+  const pwrGlow = el('circle', { cx: x + 159, cy: y + 12, r: 9, fill: '#ff3b2f', opacity: 0, filter: 'url(#ledglow)' }, g);
+  // inductor, buttons
+  el('rect', { x: x + 100, y: y + 68, width: 32, height: 32, rx: 4, fill: '#2b2e33', stroke: '#3c4047' }, g);
+  txt(g, x + 116, y + 88, '4R7', { class: 'silk', 'font-size': 9, 'text-anchor': 'middle', fill: '#9aa0a6' });
+  [[x + 63, 'BOOT'], [x + 122, 'RESET']].forEach(([bx, lab]) => {
+    el('rect', { x: bx - 15, y: y + 112, width: 30, height: 30, rx: 3, fill: 'url(#metal)', stroke: '#71777e' }, g);
+    el('circle', { cx: bx, cy: y + 127, r: 8, fill: '#25282c' }, g);
+    txt(g, bx, y + 154, lab, { class: 'silk', 'font-size': 6.5, 'text-anchor': 'middle' });
+  });
+  // FPC connectors, flash, H4 pads, USB JST, C6 module, antenna
+  const fpc = (yy, lab) => { el('rect', { x: x + 44, y: yy, width: 100, height: 14, rx: 2, fill: '#d9d2bf', stroke: '#9b927b' }, g); el('rect', { x: x + 48, y: yy + 4, width: 92, height: 6, fill: '#3b3a36' }, g); txt(g, x + 94, yy + 25, lab, { class: 'silk', 'font-size': 6.5, 'text-anchor': 'middle' }); };
+  fpc(y + 192, 'DISPLAY');
+  el('rect', { x: x + 64, y: y + 232, width: 62, height: 56, rx: 3, fill: '#1d1f22', stroke: '#33373c' }, g);
+  txt(g, x + 95, y + 258, 'GigaDevice', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 6.5, fill: '#8b9097', 'text-anchor': 'middle' });
+  fpc(y + 300, 'CAMERA');
+  ['IO9', 'GND', 'RXD', 'TXD'].forEach((lab, i) => { const cx = x + 62 + i * 22; el('circle', { cx, cy: y + 382, r: 6, fill: '#c9a24a', stroke: '#8a6a22' }, g); txt(g, cx, y + 398, lab, { class: 'silk', 'font-size': 5.8, 'text-anchor': 'middle' }); });
+  el('rect', { x: x + 64, y: y + 420, width: 62, height: 28, rx: 3, fill: '#efeadb', stroke: '#b6ad94' }, g);
+  txt(g, x + 95, y + 460, 'USB', { class: 'silk', 'font-size': 6.5, 'text-anchor': 'middle' });
+  el('rect', { x: x + 27, y: y + 490, width: 135, height: 108, rx: 4, fill: 'url(#shield)', stroke: '#868c92' }, g);
+  txt(g, x + 94.5, y + 540, 'ESP32-C6', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 9, 'font-weight': 600, fill: '#4b5056', 'text-anchor': 'middle' });
+  txt(g, x + 94.5, y + 554, 'Wi-Fi 6', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7.5, fill: '#5b6066', 'text-anchor': 'middle' });
+  el('path', { d: `M${x + 30} ${y + 612}h120v8h-120v8h120v8h-120`, fill: 'none', stroke: '#6d5a2c', 'stroke-width': 3 }, g);
+  // mounting holes
+  [[14.4, 12.6], [174.6, 12.6], [14.4, 500], [174.6, 500]].forEach(([hx, hy]) => { el('circle', { cx: x + hx, cy: y + hy, r: 7.6, fill: '#b8963d' }, g); el('circle', { cx: x + hx, cy: y + hy, r: 4.5, class: 'mat-bg' }, g); });
+  // header pins + silkscreen
+  for (let i = 0; i < 20; i++) {
+    for (const side of ['L', 'R']) {
+      const [px, py] = p4pin(side, i);
+      el('circle', { cx: px, cy: py, r: 7, fill: '#caa34b', stroke: '#8a6a22', 'stroke-width': 1.2 }, g);
+      el('circle', { cx: px, cy: py, r: 3.2, fill: '#3b2f12' }, g);
+      const lab = side === 'R' ? P4R[i] : P4L[i];
+      txt(g, side === 'R' ? px - 11 : px + 11, py + 2.6, lab, { class: 'silk', 'font-size': 7, 'text-anchor': side === 'R' ? 'end' : 'start' });
+    }
+  }
+  txt(g, x + w / 2, y + h + 26, 'ESP32-P4-WIFI6-M', { class: 'mat-ink', 'font-size': 15, 'text-anchor': 'middle', 'font-weight': 600 });
+  txt(g, x + w / 2, y + h + 44, 'top view · USB-C up', { class: 'mat-ink', 'font-size': 11, 'text-anchor': 'middle', opacity: .75 });
+  return { pwr, pwrGlow };
+}
+
+function socketBlock(g, x0, y0, cols, rows) {
+  el('rect', { x: x0 - 14, y: y0 - 14, width: (cols - 1) * 22.86 + 28, height: (rows - 1) * 22.86 + 28, rx: 3, fill: '#0a0b0d', stroke: '#2c3036', 'stroke-width': 1.5 }, g);
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) el('rect', { x: x0 + c * 22.86 - 4.5, y: y0 + r * 22.86 - 4.5, width: 9, height: 9, rx: 1, fill: '#2a2d32' }, g);
+}
+
+function buildDock(g) {
+  const { x, y, w, h } = D;
+  el('rect', { x, y, width: w, height: h, rx: 12, fill: '#111316', stroke: '#272b30', 'stroke-width': 2, filter: 'url(#soft)' }, g);
+  [[.962, .065], [.06, .038], [.675, .92], [.315, .92]].forEach(([rx, ry]) => { el('circle', { cx: x + rx * w, cy: y + ry * h, r: 13, fill: '#c29b45' }, g); el('circle', { cx: x + rx * w, cy: y + ry * h, r: 7.5, class: 'mat-bg' }, g); });
+  socketBlock(g, x + .14 * w, y + 14, 20, 2);
+  socketBlock(g, x + .4 * w, y + 243.5, 6, 2);
+  socketBlock(g, x + .76 * w, y + 243.5, 6, 2);
+  socketBlock(g, dpin('in', 0)[0], dpin('in', 0)[1], 6, 2);
+  // core module
+  const cx0 = x + .33 * w, cy0 = y + 75, cw = 198, ch = 153;
+  el('rect', { x: cx0, y: cy0, width: cw, height: ch, rx: 6, fill: '#1a1c20', stroke: '#363a40', 'stroke-width': 1.5 }, g);
+  el('rect', { x: cx0 + 62, y: cy0 + 40, width: 74, height: 74, rx: 4, fill: '#262a2f', stroke: '#3c4148' }, g);
+  txt(g, cx0 + 99, cy0 + 76, 'GW5A-25', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 9, 'font-weight': 600, fill: '#9aa0a7', 'text-anchor': 'middle' });
+  txt(g, cx0 + 99, cy0 + 89, 'Gowin', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7, fill: '#7d838a', 'text-anchor': 'middle' });
+  txt(g, cx0 + 12, cy0 + 22, 'TANG', { 'font-family': 'Archivo, sans-serif', 'font-size': 15, 'font-weight': 800, fill: '#c9a24a' });
+  txt(g, cx0 + 12, cy0 + 34, 'Primer 25K', { 'font-family': 'Archivo, sans-serif', 'font-size': 9, 'font-weight': 600, fill: '#c9a24a' });
+  const ledReady = el('circle', { cx: cx0 + 160, cy: cy0 + 135, r: 4, fill: '#16301e' }, g);
+  const ledDone = el('circle', { cx: cx0 + 178, cy: cy0 + 135, r: 4, fill: '#16301e' }, g);
+  const glowA = el('circle', { cx: cx0 + 160, cy: cy0 + 135, r: 10, fill: '#3dff7f', opacity: 0, filter: 'url(#ledglow)' }, g);
+  const glowB = el('circle', { cx: cx0 + 178, cy: cy0 + 135, r: 10, fill: '#3dff7f', opacity: 0, filter: 'url(#ledglow)' }, g);
+  const tag = el('g', { opacity: 0 }, g);
+  el('rect', { x: cx0 + 10, y: cy0 + 120, width: 128, height: 20, rx: 4, fill: '#a3561a' }, tag);
+  txt(tag, cx0 + 74, cy0 + 134, 'bridge_safety_esp32', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 8.5, 'font-weight': 600, fill: '#fff', 'text-anchor': 'middle' });
+  // USB-C on the right edge
+  el('rect', { x: x + w - 14, y: 280, width: 22, height: 30, rx: 6, fill: 'url(#metal)', stroke: '#6f767d' }, g);
+  // our socket's labels (printed on the underside)
+  for (let c = 0; c < 6; c++) {
+    const [ix, iy] = dpin('in', c), [, ey] = dpin('edge', c);
+    txt(g, ix, iy - 20, DIN[c], { class: 'silk', 'font-size': 7.5, 'text-anchor': 'middle', opacity: .9 });
+    txt(g, ix, ey + 26, DEDGE[c], { class: 'silk', 'font-size': 7.5, 'text-anchor': 'middle', opacity: .9 });
+  }
+  txt(g, dpin('in', 0)[0] - 14, dpin('edge', 0)[1] + 44, 'names printed underneath', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7, fill: '#8a8f96', 'font-style': 'italic' });
+  txt(g, x + w - 6, y + h + 26, 'Tang Primer 25K dock', { class: 'mat-ink', 'font-size': 15, 'text-anchor': 'end', 'font-weight': 600 });
+  txt(g, x + w - 6, y + h + 44, 'top view · USB-C right', { class: 'mat-ink', 'font-size': 11, 'text-anchor': 'end', opacity: .75 });
+  return { glowA, glowB, ledReady, ledDone, tag };
+}
+
+function buildBreadboard(g) {
+  const { x, y, w, h } = B;
+  el('rect', { x, y, width: w, height: h, rx: 8, fill: '#f2f1ea', stroke: '#d3d0c2', 'stroke-width': 2, filter: 'url(#soft)' }, g);
+  el('rect', { x: x + 10, y: y + 152, width: w - 20, height: 10, rx: 2, fill: '#e1dfd3' }, g);
+  const hole = (cx, cy) => el('rect', { x: cx - 3, y: cy - 3, width: 6, height: 6, rx: 1, fill: '#5d5c56' }, g);
+  for (let c = 1; c <= 30; c++) for (const r of 'abcdefghij') hole(bcol(c), brow(r));
+  for (let c = 1; c <= 30; c++) { if (c % 6 === 0) continue; for (const k of ['tm', 'tp', 'bp', 'bm']) hole(bcol(c), RAIL[k]); }
+  const rl = (yy, col) => el('line', { x1: x + 22, x2: x + w - 22, y1: yy, y2: yy, stroke: col, 'stroke-width': 2 }, g);
+  rl(RAIL.tm - 10, '#3b6fd0'); rl(RAIL.tp + 10, '#d0453b'); rl(RAIL.bp - 10, '#d0453b'); rl(RAIL.bm + 10, '#3b6fd0');
+  txt(g, x + 12, RAIL.bp + 4, '+', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13, 'font-weight': 700, fill: '#d0453b' });
+  txt(g, x + 12, RAIL.bm + 4, '−', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13, 'font-weight': 700, fill: '#3b6fd0' });
+  for (let c = 1; c <= 30; c++) if (c === 1 || c % 5 === 0) txt(g, bcol(c), brow('a') - 10, String(c), { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7.5, fill: '#8d8a7d', 'text-anchor': 'middle' });
+  'abcdefghij'.split('').forEach(r => txt(g, x + 22, brow(r) + 3, r, { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7.5, fill: '#8d8a7d', 'text-anchor': 'middle' }));
+  txt(g, x + w / 2, y + h + 24, 'Breadboard', { class: 'mat-ink', 'font-size': 15, 'text-anchor': 'middle', 'font-weight': 600 });
+}
+
+function buildSupply(g) {
+  const { x, y, w, h } = S;
+  el('rect', { x, y, width: w, height: h, rx: 10, fill: '#2a2f35', stroke: '#3c434b', 'stroke-width': 2, filter: 'url(#soft)' }, g);
+  el('rect', { x: x + 10, y: y + 10, width: w - 20, height: h - 20, rx: 6, fill: '#22272c' }, g);
+  const disp = (dx, unit, col) => {
+    el('rect', { x: x + dx, y: y + 24, width: 136, height: 54, rx: 4, fill: '#0c0a0a', stroke: '#000' }, g);
+    txt(g, x + dx + 66, y + 64, '88.88', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 32, 'font-weight': 600, fill: col, opacity: .08, 'text-anchor': 'middle' });
+    const t = txt(g, x + dx + 66, y + 64, '', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 32, 'font-weight': 600, fill: col, 'text-anchor': 'middle' });
+    txt(g, x + dx + 128, y + 72, unit, { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 10, fill: '#8d949b', 'text-anchor': 'end' });
+    return t;
+  };
+  const vT = disp(20, 'V', '#ff5444'), aT = disp(178, 'A', '#45f08a');
+  const lim = txt(g, x + 182, y + 92, '', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 9, 'font-weight': 600, fill: '#f2c46d' });
+  [[x + 60, 'VOLTAGE'], [x + 120, 'CURRENT']].forEach(([kx, lab]) => { el('circle', { cx: kx, cy: y + 128, r: 19, fill: '#16191c', stroke: '#4a5058', 'stroke-width': 2 }, g); el('line', { x1: kx, y1: y + 128, x2: kx + 8, y2: y + 112, stroke: '#c8ccd0', 'stroke-width': 2.5 }, g); txt(g, kx, y + 160, lab, { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 7.5, fill: '#8d949b', 'text-anchor': 'middle' }); });
+  el('rect', { x: x + 160, y: y + 112, width: 56, height: 28, rx: 5, fill: '#3a4047', stroke: '#535a62' }, g);
+  txt(g, x + 188, y + 130, 'OUTPUT', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 8, 'font-weight': 600, fill: '#cfd3d7', 'text-anchor': 'middle' });
+  const outLed = el('circle', { cx: x + 230, cy: y + 126, r: 5, fill: '#1d3324' }, g);
+  const outGlow = el('circle', { cx: x + 230, cy: y + 126, r: 11, fill: '#3dff7f', opacity: 0, filter: 'url(#ledglow)' }, g);
+  const post = ([px, py], col) => { el('circle', { cx: px, cy: py, r: 14, fill: col, stroke: '#111', 'stroke-width': 2 }, g); el('circle', { cx: px, cy: py, r: 5, fill: '#1a1a1a' }, g); };
+  post(POST.earth, '#2e8a4a'); post(POST.plus, '#c8322a'); post(POST.minus, '#1c1c1c');
+  txt(g, POST.plus[0], POST.plus[1] - 20, '+', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 12, fill: '#e2e5e8', 'text-anchor': 'middle' });
+  txt(g, POST.minus[0], POST.minus[1] - 20, '−', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 12, fill: '#e2e5e8', 'text-anchor': 'middle' });
+  txt(g, x + 20, y + 200, 'DPS3010U · 30 V 10 A', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 9, fill: '#8d949b' });
+  txt(g, x + w / 2, y + h + 24, 'Bench supply', { class: 'mat-ink', 'font-size': 15, 'text-anchor': 'middle', 'font-weight': 600 });
+  return { vT, aT, lim, outLed, outGlow };
+}
+
+function buildServo(g, s) {
+  const { x, y } = s;
+  el('rect', { x, y, width: SVW, height: SVH, rx: 12, fill: 'url(#servoBody)', stroke: '#2e3237', 'stroke-width': 2, filter: 'url(#soft)' }, g);
+  el('rect', { x: x + 8, y: y + 8, width: SVW - 16, height: 20, rx: 6, fill: '#1f2226' }, g);
+  const led = el('circle', { cx: x + SVW / 2, cy: y + 18, r: 4, fill: '#24283a' }, g);
+  const glow = el('circle', { cx: x + SVW / 2, cy: y + 18, r: 11, fill: '#6b7dff', opacity: 0, filter: 'url(#ledglow)' }, g);
+  const hx = x + 58, hy = y + 70;
+  el('circle', { cx: hx, cy: hy, r: 32, fill: '#25282d', stroke: '#3c4148', 'stroke-width': 2 }, g);
+  const horn = el('g', {}, g);
+  el('rect', { x: hx - 7, y: hy - 30, width: 14, height: 60, rx: 7, fill: '#a9afb6' }, horn);
+  el('circle', { cx: hx, cy: hy - 22, r: 3, fill: '#55595f' }, horn);
+  el('circle', { cx: hx, cy: hy, r: 9, fill: '#7b8188' }, horn);
+  el('rect', { x: x + 104, y: y + 48, width: 54, height: 30, rx: 4, fill: '#f1ede2' }, g);
+  txt(g, x + 131, y + 68, 'ID ' + s.id, { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 13, 'font-weight': 700, fill: '#1a1a1a', 'text-anchor': 'middle' });
+  txt(g, x + 104, y + 96, 'HX-30HM', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 8.5, fill: '#7b8188' });
+  for (const k of ['A', 'B']) {
+    const [sx, sy] = sock(s, k);
+    el('rect', { x: sx - 26, y: sy - 9, width: 52, height: 18, rx: 2, fill: '#efeadb', stroke: '#b7ae95' }, g);
+    for (let p = -1; p <= 1; p++) el('rect', { x: sx + p * 15 - 4, y: sy - 4, width: 8, height: 8, rx: 1, fill: '#3e3b33' }, g);
+  }
+  return { led, glow, horn, hx, hy, angle: s.id === 10 ? -20 : s.id === 11 ? 15 : 0 };
+}
+
+const objs = {};
+objs.scr = buildLaptop(L.obj);
+objs.p4 = buildP4(L.obj);
+objs.dock = buildDock(L.obj);
+buildBreadboard(L.obj);
+objs.sup = buildSupply(L.obj);
+objs.servos = SV.map(s => buildServo(L.obj, s));
+const servo12 = objs.servos[2];
+
+/* ---------- wires, cables and parts (each belongs to the step that adds it) ---------- */
+const items = {};
+function plug(g, color, size) {
+  const p = el('g', { opacity: 0 }, g);
+  el('rect', { x: -size / 2, y: -size / 2, width: size, height: size, rx: 3, fill: '#0f1012', stroke: color, 'stroke-width': 3 }, p);
+  el('rect', { x: -size / 5, y: -size / 5, width: size / 2.5, height: size / 2.5, rx: 1, fill: '#5b5f64' }, p);
+  return p;
+}
+function addWire(id, d, color, opts) {
+  opts = opts || {};
+  const g = el('g', { opacity: 0 }, opts.layer || L.wires);
+  const w = opts.width || 6;
+  const edge = el('path', { d, class: 'w-edge', 'stroke-width': w + 3 }, g);
+  const core = el('path', { d, class: 'w-core', stroke: color, 'stroke-width': w }, g);
+  const hi = el('path', { d, class: 'w-hi' }, g);
+  const len = core.getTotalLength();
+  [edge, core, hi].forEach(p => { p.style.strokeDasharray = len + ' ' + len; p.style.strokeDashoffset = len; });
+  const capA = opts.noCaps ? null : plug(g, color, opts.capA || 20);
+  const capB = opts.noCaps ? null : plug(g, color, opts.capB || 18);
+  if (capA) { const p0 = core.getPointAtLength(0); capA.setAttribute('transform', `translate(${p0.x} ${p0.y})`); }
+  return items[id] = { id, kind: 'wire', g, paths: [edge, core, hi], core, len, capA, capB, extra: opts.extra };
+}
+function addGroup(id, build) { const g = el('g', { opacity: 0 }, L.comps); build(g); return items[id] = { id, kind: 'part', g }; }
+function addMulti(id, strands, endPlug) {
+  const g = el('g', { opacity: 0 }, L.wires);
+  const parts = strands.map(s => { const sub = addWire(id + ':' + s.k, s.d, s.c, { layer: g, width: 5, capA: 14, noCaps: false }); delete items[id + ':' + s.k]; sub.g.setAttribute('opacity', 1); return sub; });
+  const end = el('g', { opacity: 0 }, g); endPlug(end);
+  return items[id] = { id, kind: 'multi', g, parts, end };
+}
+
+const C = { gnd: '#1d1f22', tx: '#f2c230', rx: '#2fa463', g5: '#ef7f1a', f5: '#2f7fe0', red: '#d23b2f', white: '#efefe8' };
+const [p6x, p6y] = p4pin('R', 5), [p7x, p7y] = p4pin('R', 6), [p8x, p8y] = p4pin('R', 7);
+const dIn = (c) => dpin('in', c), dEd = (c) => dpin('edge', c);
+addWire('w-gnd', `M${p8x} ${p8y} C700 430, 860 450, ${dIn(1)[0]} ${dIn(1)[1]}`, C.gnd);
+addWire('w-tx', `M${p6x} ${p6y} C730 370, 920 440, ${dIn(4)[0]} ${dIn(4)[1]}`, C.tx);
+addWire('w-rx', `M${p7x} ${p7y} C710 410, 900 480, ${dEd(4)[0]} ${dEd(4)[1]}`, C.rx);
+addWire('w-g5', `M${dEd(5)[0]} ${dEd(5)[1]} C1050 470, 1005 560, ${bcol(5)} ${brow('a')}`, C.g5);
+addWire('w-f5', `M${dIn(5)[0]} ${dIn(5)[1]} C1090 410, ${bcol(19)} 520, ${bcol(19)} ${brow('a')}`, C.f5);
+addWire('w-sp', `M${POST.plus[0]} ${POST.plus[1]} C${POST.plus[0]} 960, 800 880, ${bcol(2)} ${RAIL.bp}`, C.red, { capA: 24, width: 7 });
+addWire('w-sm', `M${POST.minus[0]} ${POST.minus[1]} C${POST.minus[0]} 975, 830 900, ${bcol(1)} ${RAIL.bm}`, C.gnd, { capA: 24, width: 7 });
+addWire('w-dg', `M${dEd(1)[0]} ${dEd(1)[1]} C840 440, 830 780, 862 860 C885 905, 960 905, ${bcol(4)} ${RAIL.bm}`, C.gnd);
+
+function resistor(g, a, b, bands) {
+  const [ax, ay] = a, [bx] = b, mx = (ax + bx) / 2;
+  el('line', { x1: ax, y1: ay, x2: bx, y2: ay, stroke: '#9ea3a8', 'stroke-width': 2.5 }, g);
+  [ax, bx].forEach(px => el('circle', { cx: px, cy: ay, r: 3.2, fill: '#9ea3a8' }, g));
+  el('rect', { x: mx - 32, y: ay - 9, width: 64, height: 18, rx: 8, fill: '#d8c294', stroke: '#a88f5c' }, g);
+  bands.forEach((col, i) => el('rect', { x: mx - 22 + i * 11 + (i === 3 ? 8 : 0), y: ay - 9, width: 5, height: 18, fill: col }, g));
+}
+const BAND = { brown: '#6b3b1f', black: '#141414', red: '#c42f25', gold: '#c9a13b' };
+addGroup('r220', g => resistor(g, [bcol(5), brow('c')], [bcol(12), brow('c')], [BAND.red, BAND.red, BAND.brown, BAND.gold]));
+addGroup('r1k', g => resistor(g, [bcol(19), brow('d')], [bcol(12), brow('d')], [BAND.brown, BAND.black, BAND.red, BAND.gold]));
+addGroup('c100u', g => {
+  const cx = (bcol(25) + bcol(26)) / 2, cy = (RAIL.bp + RAIL.bm) / 2;
+  el('circle', { cx, cy, r: 14, fill: '#1f3f78', stroke: '#0e1f3e', 'stroke-width': 2 }, g);
+  el('path', { d: `M${cx - 12} ${cy + 7}A14 14 0 0 0 ${cx + 12} ${cy + 7}Z`, fill: '#c7ccd3' }, g);
+  el('path', { d: `M${cx - 5} ${cy - 4}l10 0 M${cx} ${cy - 9}l0 10`, stroke: '#c7ccd3', 'stroke-width': 1.6 }, g);
+});
+addGroup('c100n', g => {
+  const cx = (bcol(27) + bcol(28)) / 2, cy = (RAIL.bp + RAIL.bm) / 2;
+  el('ellipse', { cx, cy, rx: 9, ry: 7, fill: '#d9a441', stroke: '#9a7020' }, g);
+  txt(g, cx, cy + 2.5, '104', { 'font-family': 'IBM Plex Mono, monospace', 'font-size': 6, fill: '#4d3608', 'text-anchor': 'middle' });
+});
+
+const s12 = servo(12), s11 = servo(11), s10 = servo(10);
+const sB12 = sock(s12, 'B'), sA12 = sock(s12, 'A'), sB11 = sock(s11, 'B'), sA11 = sock(s11, 'A'), sB10 = sock(s10, 'B');
+function phPlug(g, at) { el('rect', { x: at[0] - 24, y: at[1] - 2, width: 48, height: 16, rx: 2, fill: '#f6f2e6', stroke: '#b7ae95' }, g); }
+addMulti('lead', [
+  { k: 'sig', c: C.white, d: `M${bcol(12)} ${brow('b')} C${bcol(12)} 600, 1560 610, 1560 830 C1560 1010, 1560 1150, ${sB12[0] + 15} 1150 L${sB12[0] + 15} ${sB12[1] + 8}` },
+  { k: 'vp', c: C.red, d: `M${bcol(29)} ${RAIL.bp} C${bcol(29)} 905, 1542 905, 1542 990 C1542 1120, ${sB12[0]} 1138, ${sB12[0]} ${sB12[1] + 8}` },
+  { k: 'gn', c: C.gnd, d: `M${bcol(30)} ${RAIL.bm} C${bcol(30)} 912, 1524 918, 1524 995 C1524 1105, ${sB12[0] - 15} 1126, ${sB12[0] - 15} ${sB12[1] + 8}` }
+], g => phPlug(g, sB12));
+const chainD = (a, b) => `M${a[0]} ${a[1] + 10} C${a[0]} 1160, ${b[0]} 1160, ${b[0]} ${b[1] + 10}`;
+addWire('ch1', chainD(sA12, sB11), '#151617', { width: 12, noCaps: true, extra: [sA12, sB11] });
+addWire('ch2', chainD(sA11, sB10), '#151617', { width: 12, noCaps: true, extra: [sA11, sB10] });
+['ch1', 'ch2'].forEach(id => { const it = items[id]; it.ends = it.extra.map(p => { const e = el('g', { opacity: 0 }, it.g); phPlug(e, p); return e; }); });
+
+// The bus lead pulled out of servo 12, for the bus check: how far it drops,
+// where its three contacts are, and an empty socket left behind.
+const LEAD_OFF = 46;
+const leadPin = (k) => [sB12[0] + (k === 'sig' ? 15 : k === 'gnd' ? -15 : 0), sB12[1] + 6 + LEAD_OFF];
+const leadLabels = el('g', { opacity: 0 }, L.wires);
+[['gnd', 'GND'], ['vp', 'V+'], ['sig', 'SIG']].forEach(([k, s]) => {
+  const [px, py] = leadPin(k);
+  el('rect', { x: px - 3, y: py - 3, width: 6, height: 6, rx: 1, fill: '#3e3b33' }, leadLabels);
+  txt(leadLabels, px, py + 26, s, { class: 'probe-label', 'font-size': 8, 'text-anchor': 'middle' });
+});
+
+// USB cables (state, not wiring)
+const usbP4 = addWire('usb-p4', `M${LAP.x + LAP.w + 22} ${LAP.y + LAP.h + 18} C430 ${LAP.y + LAP.h + 10}, ${P4.x + P4.w / 2} -10, ${P4.x + P4.w / 2} 60`, '#3a3f45', { layer: L.cables, width: 10, noCaps: true });
+const usbP4Plug = el('rect', { x: P4.x + P4.w / 2 - 15, y: 58, width: 30, height: 52, rx: 6, fill: '#1c1f23', stroke: '#454b52', opacity: 0 }, usbP4.g);
+const usbDock = addWire('usb-dock', `M${D.x + D.w + 58} ${D.y + 295 - D.y} C1680 295, 1690 36, 1320 36 L560 36 C420 36, 420 520, ${LAP.x + LAP.w + 26} ${LAP.y + LAP.h + 24}`, '#3a3f45', { layer: L.cables, width: 10, noCaps: true });
+const usbDockPlug = el('rect', { x: D.x + D.w + 6, y: 280, width: 52, height: 30, rx: 6, fill: '#1c1f23', stroke: '#454b52', opacity: 0 }, usbDock.g);
+delete items['usb-p4']; delete items['usb-dock'];
+
+// Wi-Fi arcs from the C6 antenna toward the laptop
+const ant = [P4.x + P4.w / 2, P4.y + 618], lapC = [LAP.x + LAP.w / 2, LAP.y + LAP.h / 2];
+const wifiG = el('g', { opacity: 0 }, L.fx);
+const ang = Math.atan2(lapC[1] - ant[1], lapC[0] - ant[0]);
+const arcD = (r) => { const a0 = ang - .55, a1 = ang + .55; return `M${ant[0] + r * Math.cos(a0)} ${ant[1] + r * Math.sin(a0)} A${r} ${r} 0 0 1 ${ant[0] + r * Math.cos(a1)} ${ant[1] + r * Math.sin(a1)}`; };
+const arcs = [60, 100, 140, 180].map(r => el('path', { d: arcD(r), class: 'wifi-arc' }, wifiG));
+txt(wifiG, 250, 720, 'Wi-Fi “robot-link”', { class: 'mat-ink', 'font-size': 14, 'font-weight': 600, 'text-anchor': 'middle' });
+txt(wifiG, 250, 738, 'http://192.168.4.1', { class: 'mat-ink', 'font-size': 12, 'text-anchor': 'middle', opacity: .8 });
+
+// danger overlay for the pre-power check
+const dangerG = el('g', { opacity: 0 }, L.fx);
+el('rect', { x: B.x + 22, y: RAIL.bp - 8, width: B.w - 44, height: 16, rx: 4, fill: '#ff3b2f', opacity: .28 }, dangerG);
+el('rect', { x: B.x + 22, y: RAIL.bm - 8, width: B.w - 44, height: 16, rx: 4, fill: '#3b6fd0', opacity: .22 }, dangerG);
+
+// data packets
+const pktG = el('g', {}, L.fx);
+function pktPool(n, col) { return Array.from({ length: n }, () => el('circle', { r: 5, fill: '#fff', stroke: col, 'stroke-width': 3, opacity: 0 }, pktG)); }
+// grp: 'host' is the P4 <-> FPGA link, 'out' a request on the servo bus, 'back' a servo's reply.
+const FLOWS = [
+  { path: () => items['w-tx'].core, dir: 1, ph: 0.00, col: C.tx, grp: 'host' },
+  { path: () => items['w-g5'].core, dir: 1, ph: 0.16, col: C.g5, grp: 'out' },
+  { path: () => items['lead'].parts[0].core, dir: 1, ph: 0.32, col: '#8f8f86', grp: 'out' },
+  { path: () => items['lead'].parts[0].core, dir: -1, ph: 0.50, col: '#8f8f86', grp: 'back' },
+  { path: () => items['w-f5'].core, dir: -1, ph: 0.66, col: C.f5, grp: 'back' },
+  { path: () => items['w-rx'].core, dir: -1, ph: 0.82, col: C.rx, grp: 'host' }
+].map(f => Object.assign(f, { dots: pktPool(3, f.col) }));
+
+/* ---------- multimeter probes ---------- */
+// A probe drawn tip-down at the origin; the step places it with a rotation and
+// keyframes. Sized against the camera so it reads the same at every zoom.
+function makeProbe(color, rot, k) {
+  const g = el('g', { opacity: 0 }, L.probe);
+  const body = el('g', { transform: `rotate(${rot})` }, g);
+  const dark = color === 'red' ? '#9c2219' : '#0b0c0d', fill = color === 'red' ? '#d4372c' : '#1c1d20';
+  el('path', { d: 'M0 -116 C0 -190, 34 -240, 46 -420', fill: 'none', stroke: dark, 'stroke-width': 7, 'stroke-linecap': 'round' }, body);
+  el('rect', { x: -9, y: -118, width: 18, height: 84, rx: 8, fill, stroke: '#000', 'stroke-opacity': .4 }, body);
+  el('rect', { x: -14, y: -40, width: 28, height: 8, rx: 3, fill, stroke: '#000', 'stroke-opacity': .4 }, body);
+  el('rect', { x: -2, y: -32, width: 4, height: 30, fill: 'url(#metal)' }, body);
+  el('path', { d: 'M-2 -3L0 3L2 -3Z', fill: '#c9cdd1' }, body);
+  const r = rot * Math.PI / 180;
+  return { g, rot, k, back: [Math.sin(r), -Math.cos(r)] };
+}
+// Where a probe is at time `ta`: slides in to its first point, then hops between points.
+function probePos(pr, kf) {
+  const s = pr.k * 1.25, lift = 170 * s;
+  const first = kf[0];
+  const u0 = ease(clamp((ta - (first.at - 700)) / 700, 0, 1));
+  if (ta < first.at) return { p: [first.p[0] + pr.back[0] * lift * (1 - u0), first.p[1] + pr.back[1] * lift * (1 - u0)], o: clamp(u0 * 4, 0, 1) };
+  for (let i = kf.length - 1; i > 0; i--) {
+    const a = kf[i - 1], b = kf[i];
+    if (ta >= b.at - 650) {
+      const u = ease(clamp((ta - (b.at - 650)) / 650, 0, 1)), h = Math.sin(Math.PI * u) * 60 * s;
+      return { p: [a.p[0] + (b.p[0] - a.p[0]) * u + pr.back[0] * h, a.p[1] + (b.p[1] - a.p[1]) * u + pr.back[1] * h], o: 1 };
+    }
+  }
+  return { p: first.p, o: 1 };
+}
+
+/* ---------- steps ---------- */
+const FULL = [0, 0, 1800];
+const ALLFLAGS = { p4usb: [0], dockusb: [0], p4pwr: [0], dockpwr: [0], fpga: [0], wifi: [0], supplySet: [0], supplyOut: [0], servoPwr: [0], data: [0], 'scr-page': [0] };
+const pin = (side, i) => p4pin(side, i);
+const BUILD = [
+ { tag: 'Overview', title: 'The finished bench', cam: FULL, items: [], flags: ALLFLAGS,
+   call: [
+     { a: [P4.x + 95, 640], l: [60, 790], t: 'ESP32-P4 · Wi-Fi host' },
+     { a: [1165, 255], l: [1460, 70], t: 'FPGA · safety supervisor' },
+     { a: [bcol(12), brow('c')], l: [1530, 650], t: 'SIG junction' },
+     { a: [1415, 1000], l: [1530, 1180], t: 'HX-30HM × 3' },
+     { a: [S.x + 120, S.y + 50], l: [60, 1080], t: 'Bench supply 11.1 V' },
+     { a: [LAP.x + 60, LAP.y + 40], l: [60, 320], t: 'Laptop on robot-link' }
+   ],
+   card: {
+     do: 'Three jumper wires join the ESP32-P4 to the dock. Everything from the dock to the servos stays as your USB bench already has it. The laptop reaches the P4 over the P4\'s own Wi-Fi network, and the P4 sends the FPGA the same bytes the simulator sends over USB.',
+     why: '<b>The FPGA is still the only part that can refuse a command.</b> A closed tab, a lost radio link or a dead P4 all end the same way: the FPGA\'s own 300 ms command lease runs out and it stops the servos.',
+     extra: '<p class="lbl">Press “Play the build” to build it from nothing, or use Next to go one step at a time.</p>'
+   } },
+ { tag: 'Step 1', title: 'Start with everything off', cam: FULL, items: [], flags: {},
+   call: [ { a: [S.x + 188, S.y + 126], l: [60, 1000], t: 'Output OFF', tone: 'warn' }, { a: [P4.x + 94, 112], l: [690, 70], t: 'Unplugged' }, { a: [D.x + D.w + 4, 295], l: [1500, 210], t: 'Unplugged' } ],
+   card: {
+     do: 'Unplug both USB cables and switch the bench supply\'s output off. If the bench is already wired for USB, leave the servo side alone. Nothing there changes.',
+     checks: ['ESP32-P4-WIFI6-M and a USB-C data cable', 'Tang Primer 25K on its dock and a USB-C cable', 'Three female-to-male jumpers, about 15 cm: black, yellow and green', 'Breadboard with 220 Ω, 1 kΩ, 100 µF and 100 nF parts', 'A PH2.0 3-pin lead with breadboard pins, plus two servo-to-servo leads', 'HX-30HM IDs 10, 11 and 12, each held so that turning torque off drops nothing', 'Bench supply and multimeter'],
+     why: 'The female ends go on the P4\'s header pins and the male ends go into the dock\'s socket. If your boards have different headers, match the jumpers to them.'
+   } },
+ { tag: 'Step 2', title: 'Flash the ESP32-P4 on its own', cam: [10, 20, 1000], items: [],
+   flags: { p4usb: [900], p4pwr: [2000], 'scr-flash': [2300] },
+   call: [ { a: [P4.x + 94, 70], l: [680, 64], t: 'USB-C: power + flashing', at: 1500 }, { a: pin('R', 5), l: [690, 250], t: 'GPIO20 to GND ≈ 3.3 V', at: 4800, tone: 'ok' }, { a: pin('R', 7), l: [690, 340], t: 'meter COM on pin 8', at: 5200 } ],
+   rings: [ { p: pin('R', 5), at: 4800, tone: 'ok' }, { p: pin('R', 7), at: 5200 } ],
+   card: {
+     do: 'Plug only the P4 into the laptop. Run <code>set-target</code> first, because it rewrites <code>sdkconfig</code>. Then open menuconfig → <b>Robot link</b> and check the values below before you build and flash.',
+     code: 'cd firmware/robot-link/esp32\n. ~/esp/esp-idf/export.sh\nidf.py set-target esp32p4\nidf.py menuconfig\nidf.py build\nidf.py -p PORT flash monitor',
+     checks: ['TX GPIO 20, RX GPIO 21, baud 115200', 'Servos 0x1C0 (IDs 10–12), duty cap 100', 'Wi-Fi password changed from <code>change-me-please</code>', 'Monitor shows <code>FPGA link on UART1 at 115200 baud (tx GPIO20, rx GPIO21)</code>', 'GPIO20 (pin 6) to GND (pin 8) reads about 3.3 V. An idle UART line sits high.', 'Unplug the P4'],
+     why: '<b>Why do this alone?</b> You prove the pin number and its voltage before the P4 can reach the FPGA, so a wrong pin cannot harm anything.'
+   } },
+ { tag: 'Step 3', title: 'Find the pins on both boards', cam: [570, 130, 500], items: [], flags: {},
+   badges: [0,1,2,3,4,5,6,7].map(i => ({ p: pin('R', i), n: i + 1, at: 1100 + i * 320, tone: i < 2 ? 'warn' : '' })),
+   call: [
+     { a: pin('R', 0), l: [700, 160], t: '1–2 · 5 V, leave free', tone: 'warn', at: 3900 },
+     { a: pin('R', 5), l: [700, 262], t: '6 · GPIO20 · P4 TX', at: 4300 },
+     { a: pin('R', 6), l: [700, 292], t: '7 · GPIO21 · P4 RX', at: 4500 },
+     { a: pin('R', 7), l: [700, 322], t: '8 · GND', at: 4700 },
+     { a: dIn(4), l: [1000, 300], t: 'G7 · host_rx', anchor: 'mid', at: 5300 },
+     { a: dEd(4), l: [1000, 432], t: 'G8 · host_tx', anchor: 'mid', at: 5500 },
+     { a: dIn(1), l: [915, 300], t: 'GND', anchor: 'mid', at: 5700 },
+     { a: dEd(0), l: [880, 432], t: '3V3 · free', anchor: 'mid', tone: 'warn', at: 5900 }
+   ],
+   rings: [ { p: pin('R', 5), at: 4300 }, { p: pin('R', 6), at: 4500 }, { p: pin('R', 7), at: 4700 }, { p: dIn(4), at: 5300 }, { p: dEd(4), at: 5500 }, { p: dIn(1), at: 5700 }, { p: dIn(0), at: 5900, tone: 'warn' }, { p: dEd(0), at: 5900, tone: 'warn' } ],
+   card: {
+     do: 'On the P4, hold it with the USB-C at the top and the parts facing you, then count down the right-hand column from the USB-C end. You will use pins 6, 7 and 8. On the dock, the pin names are printed only on the underside. From the top, with the USB-C on the right, the 2×6 socket you want is at the front-left corner.',
+     pinmap: true,
+     checks: ['The silkscreen shows <code>20</code> and <code>21</code> beside pins 6 and 7', 'Flip the dock over and find <code>F5 G7 H8 H5 GND 3V3</code> at the bottom-right of the underside', 'Continuity from the G7 and G8 sockets on top to their printed pads underneath'],
+     warn: '<b>Pins 1 and 2 on the P4 carry 5 V</b> and sit only four pins above GPIO20. Count them twice.'
+   } },
+ { tag: 'Step 4', title: 'Wire 1 · ground (black)', cam: [570, 150, 480], items: ['w-gnd'], flags: {},
+   call: [ { a: pin('R', 7), l: [640, 430], t: 'P4 pin 8 · GND', at: 2600 }, { a: dIn(1), l: [915, 300], t: 'Dock GND · inner row', anchor: 'mid', at: 2800 } ],
+   card: {
+     do: 'Run the black jumper from P4 pin 8 (GND) to the dock\'s inner-row GND, the second socket from the left. Ground goes first, so the signal wires always have a reference.',
+     checks: ['Female end pushed all the way onto the pin, no bare metal showing', 'Male end in the inner row. The edge-row GND takes the supply ground later.'],
+     why: 'Both boards use 3.3 V I/O, so no level shifter is needed. They do need a shared ground.'
+   } },
+ { tag: 'Step 5', title: 'Wire 2 · TX (yellow)', cam: [570, 150, 480], items: ['w-tx'], flags: {},
+   call: [ { a: pin('R', 5), l: [650, 205], t: 'P4 pin 6 · GPIO20 · TX', at: 2600 }, { a: dIn(4), l: [1000, 300], t: 'G7 · FPGA host_rx', anchor: 'mid', at: 2800 } ],
+   card: {
+     do: 'Run the yellow jumper from P4 pin 6 (GPIO20, the P4\'s transmit pin) to <b>G7</b> on the dock: inner row, fifth socket from the left. This is the FPGA\'s <code>host_rx</code>. Commands travel this way at 115200 baud.',
+     checks: ['G7, not F5. F5 is right next to it and belongs to the servo bus.'],
+     why: 'The FPGA holds <code>host_rx</code> high with a pull-up, so this line rests in the idle state until the P4 drives it.'
+   } },
+ { tag: 'Step 6', title: 'Wire 3 · RX (green)', cam: [570, 150, 480], items: ['w-rx'], flags: {},
+   call: [ { a: pin('R', 6), l: [640, 445], t: 'P4 pin 7 · GPIO21 · RX', at: 2600 }, { a: dEd(4), l: [1000, 445], t: 'G8 · FPGA host_tx', anchor: 'mid', at: 2800 } ],
+   card: {
+     do: 'Run the green jumper from <b>G8</b> on the dock (edge row, fifth from the left) to P4 pin 7 (GPIO21, the P4\'s receive pin). Replies, telemetry and supervisor status come back on this wire.',
+     checks: ['Transmit goes to receive: yellow runs from P4 TX to FPGA RX, green from FPGA TX to P4 RX', 'G8, not G5'],
+     why: 'G7 and G8 take over from the dock\'s own USB serial link. This bitstream moves only those two pins (<code>fpga/bridge_safety_esp32.cst</code>). Its safety logic is byte-for-byte the same bridge the Rust hardware layer already drives.'
+   } },
+ { tag: 'Step 7', title: 'Check the servo bus side', cam: [840, 300, 640], items: ['w-g5', 'r220', 'w-f5', 'r1k'], flags: {},
+   call: [ { a: dEd(5), l: [1080, 420], t: 'G5 · servo_tx', at: 1900 }, { a: dIn(5), l: [1080, 330], t: 'F5 · servo_rx', at: 5300 }, { a: [(bcol(5) + bcol(12)) / 2, brow('c')], l: [1000, 605], t: '220 Ω · red red brown', anchor: 'mid', at: 3700 }, { a: [(bcol(19) + bcol(12)) / 2, brow('d')], l: [1340, 600], t: '1 kΩ · brown black red', anchor: 'mid', at: 7100 }, { a: [bcol(12), brow('a')], l: [1170, 560], t: 'Column 12 · SIG junction', anchor: 'mid', at: 7600 } ],
+   rings: [ { p: [bcol(12), brow('b')], at: 7600 } ],
+   card: {
+     do: 'Your USB bench already has this, so check it against the picture. G5 (<code>servo_tx</code>) goes through 220 Ω, F5 (<code>servo_rx</code>) goes through 1 kΩ, and the far ends of both resistors meet in one breadboard column, the SIG junction.',
+     checks: ['Orange: G5 (edge row, rightmost) to column 5, then 220 Ω from column 5 to column 12', 'Blue: F5 (inner row, rightmost) to column 19, then 1 kΩ from column 19 to column 12', 'G5 and F5 never touch on the dock side of the resistors'],
+     why: 'Commands and replies share one SIG wire at 1 Mbaud, and the resistors let the FPGA and the servo take turns on it. They are not level shifters, so the 3.3 V level on SIG is still a measurement to make (<code>wiring.md</code>).'
+   } },
+ { tag: 'Step 8', title: 'Power rails and one ground point', cam: [360, 320, 1300], items: ['w-sp', 'w-sm', 'w-dg', 'c100u', 'c100n'],
+   flags: { supplySet: [9800] },
+   call: [ { a: [bcol(1), RAIL.bm], l: [760, 832], t: 'Common ground point', at: 3600 }, { a: [bcol(20), RAIL.bp], l: [1512, 869], t: '11.1 V rails', anchor: 'start', at: 2000 }, { a: dEd(1), l: [840, 470], t: 'Dock GND · edge row', at: 5300 }, { a: [(bcol(25) + bcol(26)) / 2, RAIL.bp], l: [1380, 790], t: '100 µF · stripe to −', anchor: 'mid', at: 7000 }, { a: [S.x + 99, S.y + 50], l: [440, 872], t: 'Set 11.10 V · 2.00 A', anchor: 'start', at: 9800 } ],
+   card: {
+     do: 'Run red from supply + to the bottom + rail, and black from supply − to the − rail at its left end. That end is the common ground point, so run the dock\'s edge-row GND (second from the left) to the same rail beside it. Put the 100 µF (stripe to −) and the 100 nF across the rails at the servo end. Set the supply with its output still off.',
+     checks: ['Supply set to 11.10 V with a 2.00 A current limit, output off', 'Dock GND lands at the supply end, not at the far end of the servo chain', 'Nothing on these rails runs to the dock or the P4'],
+     why: 'The first PH2.0 connector carries all three servos\' current and is rated around 2 A, so the current limit protects the wiring. Grounding the FPGA at the supply keeps servo return current off its logic reference (<code>daisy-chain.md</code>).',
+     warn: '<b>11.1 V must never reach</b> the dock\'s 3V3 or 5V pins, or any GPIO on either board.'
+   } },
+ { tag: 'Step 9', title: 'Bus lead to servo 12', cam: [860, 580, 860], items: ['lead'], flags: { supplySet: [0] },
+   call: [ { a: [bcol(12), brow('b')], l: [1136, 612], t: 'SIG → column 12', anchor: 'mid', at: 2600 }, { a: [bcol(29), RAIL.bp], l: [1300, 925], t: 'V+ → +  ·  GND → −', anchor: 'end', at: 2800 }, { a: [s12.x + 85, s12.y + 30], l: [1420, 925], t: 'Servo 12 · first on the bus', anchor: 'mid', at: 3000 }, { a: [sB12[0], sB12[1] + 10], l: [1560, 1130], t: 'pin order: servo label', anchor: 'end', tone: 'warn', at: 3300 } ],
+   card: {
+     do: 'Take the PH2.0 lead with breadboard pins. Put SIG into column 12, V+ into the + rail and GND into the − rail, then plug its PH2.0 end into either of servo 12\'s two sockets.',
+     checks: ['SIG, V+ and GND identified from the servo\'s own label or manual, not from the lead colours', 'Servo 12 is the first servo on the bus, as <code>wiring.md</code> draws it'],
+     why: 'The strand order in this drawing only illustrates the idea. The project\'s wiring notes do not give the connector orientation, so go by the servo\'s own label.'
+   } },
+ { tag: 'Step 10', title: 'Chain servo 12 → 11 → 10', cam: [800, 700, 860], items: ['ch1', 'ch2'], flags: { supplySet: [0] },
+   call: [ { a: [(sA12[0] + sB11[0]) / 2, 1140], l: [1300, 1200], t: '12 → 11', anchor: 'mid', at: 2600 }, { a: [(sA11[0] + sB10[0]) / 2, 1140], l: [1070, 1200], t: '11 → 10', anchor: 'mid', at: 4300 }, { a: [sA12[0], sA12[1]], l: [1560, 760], t: 'two sockets, in parallel', anchor: 'end', at: 1200 } ],
+   card: {
+     do: 'Each HX-30HM has two PH2.0 sockets wired in parallel. Run a lead from servo 12\'s free socket to servo 11, then another from servo 11\'s free socket to servo 10.',
+     checks: ['IDs were assigned one servo at a time and read 10, 11 and 12', 'Horns can turn freely and the fixture holds every body'],
+     why: 'Chaining power through the servos is fine for an unloaded bench, which draws about 0.5 A in motion. Once the shafts carry load, chain only signal and ground, and feed power to each servo separately from the supply point.'
+   } },
+ { tag: 'Step 11', title: 'Check before power', cam: FULL, items: [], flags: { supplySet: [0], danger: [900] },
+   call: [ { a: [bcol(30), RAIL.bp], l: [1530, 780], t: '11.1 V rails only', tone: 'warn', at: 1200 }, { a: pin('R', 1), l: [650, 80], t: 'P4 pins 1–5: nothing', tone: 'warn', at: 1700 }, { a: dEd(0), l: [760, 540], t: 'Dock 3V3: nothing', anchor: 'mid', tone: 'warn', at: 2200 }, { a: dIn(4), l: [1520, 480], t: 'G7 G8 GND: beep', anchor: 'start', tone: 'ok', at: 2900 } ],
+   rings: [0,1,2,3,4].map(i => ({ p: pin('R', i), at: 1700, tone: 'warn' })).concat([ { p: dIn(0), at: 2200, tone: 'warn' }, { p: dEd(0), at: 2200, tone: 'warn' }, { p: pin('R', 5), at: 2900, tone: 'ok' }, { p: pin('R', 6), at: 2900, tone: 'ok' }, { p: pin('R', 7), at: 2900, tone: 'ok' }, { p: dIn(4), at: 2900, tone: 'ok' }, { p: dEd(4), at: 2900, tone: 'ok' } ]),
+   card: {
+     do: 'Everything is still unpowered. Go round once with the meter.',
+     checks: ['Continuity: P4 pin 6 to G7, pin 7 to G8, and pin 8 to dock GND to supply −', 'No continuity from G7 to G8, or from P4 pin 6 to pin 7', 'No short between the + and − rails (the 100 µF reads as charging for a moment)', 'Nothing attached to P4 pins 1–5 or to either 3V3 socket on the dock', 'Operator at the bench, servos supported, a hand free for STOP']
+   } },
+ { tag: 'Step 12', title: 'Power up in order', cam: FULL, items: [],
+   flags: { supplySet: [0], dockusb: [900], dockpwr: [1900], 'scr-fpga': [2300, 5700], fpga: [3800], p4usb: [5100], p4pwr: [5900], 'scr-log': [6200], wifi: [6800], supplyOut: [8600], servoPwr: [9000] },
+   call: [ { a: [D.x + D.w + 30, 295], l: [1480, 210], t: '1 · Dock, load image', anchor: 'start', at: 1900 }, { a: [P4.x + 94, 70], l: [690, 70], t: '2 · P4 USB-C', at: 5900 }, { a: [S.x + 188, S.y + 126], l: [60, 1000], t: '3 · Output on', at: 8600 } ],
+   card: {
+     do: 'Power the dock first, the P4 second and the servo supply last.',
+     list: [
+       'Connect the dock\'s USB-C to the laptop. With the motor supply off, load the ESP32-host image into SRAM and write a deployment receipt.',
+       'Connect the P4\'s USB-C. The monitor repeats the two lines from step 2 and the <code>robot-link</code> network appears.',
+       'Turn the supply output on. The servo LEDs light. Idle current is small: this bench read 0.01 A on the supply at 12.5 V.'
+     ],
+     code: 'openFPGALoader -b tangprimer25k \\\n  firmware/robot-link/fpga/impl/bridge_safety_esp32.fs',
+     checks: ['Receipt has the time, bitstream path, sha256 <code>52d074e6…a47e9b2c0b</code>, SRAM only, motor supply off', 'Monitor shows the FPGA link line again', 'Supply holds 11.10 V and stays below the 2.00 A limit'],
+     why: '<b>Why this order?</b> An SRAM image is lost at power-off, and the dock then boots whatever is in its flash, where G7 and G8 could be doing anything. Give the P4 power only once this image is running, and never drive a pin into an unpowered FPGA.'
+   } },
+ { tag: 'Step 13', title: 'Join robot-link and commission', cam: FULL, items: [],
+   flags: { p4usb: [0], dockusb: [0], p4pwr: [0], dockpwr: [0], fpga: [0], wifi: [0], supplySet: [0], supplyOut: [0], servoPwr: [0], 'scr-page': [600], data: [1600], jog: [4200] },
+   call: [ { a: [LAP.x + 52, LAP.y + 66], l: [60, 320], t: 'STOP first', tone: 'warn', at: 1000 }, { a: [servo12.hx, servo12.hy], l: [1530, 900], t: 'Arm 12 · jog at 30', at: 4200 }, { a: [D.x + D.w - 60, D.y + 40], l: [1480, 70], t: 'S2 on the dock: stop', at: 6000 } ],
+   card: {
+     do: 'Join the <code>robot-link</code> network and open <code>http://192.168.4.1</code>. Then go through these in order, and watch the shaft rather than the page.',
+     checks: ['Press STOP first and check the page reports it', 'Take the link', 'Arm servo 12 (it needs fresh telemetry and control mode 2)', 'Hold to jog at drive 30. The cap is 100 of 1000.', 'Press S2 on the dock and check it latches a stop', 'Close the tab and check the drive stops when the lease runs out', 'Test the telemetry-loss stop, then rearm explicitly (<code>safety.md</code>)'],
+     why: '<b>An acknowledgement is not a stop.</b> Watch the encoder until the shaft is still. The page renews a jog every 80 ms. The P4 zeroes the drive 250 ms after the last hold and sends STOP one second after it last hears from the page.',
+     warn: 'If the page says <b>“refused by the FPGA, or not answering”</b>, the FPGA dropped the packet. Read the latch reason on the supervisor line before you change anything.'
+   } },
+ { tag: 'Step 14', title: 'Power down in reverse', cam: FULL, items: [],
+   flags: { p4usb: [0, 2400], dockusb: [0, 3800], p4pwr: [0, 2400], dockpwr: [0, 3800], fpga: [0, 3800], wifi: [0, 2400], supplySet: [0], supplyOut: [0, 1000], servoPwr: [0, 1000], 'scr-page': [0, 2400] },
+   call: [ { a: [S.x + 188, S.y + 126], l: [60, 1000], t: '1 · Output off', at: 1000 }, { a: [P4.x + 94, 70], l: [690, 70], t: '2 · Unplug P4', at: 2400 }, { a: [D.x + D.w + 30, 295], l: [1480, 210], t: '3 · Unplug dock', anchor: 'start', at: 3800 } ],
+   card: {
+     do: 'Turn the supply output off, then unplug the P4, then the dock.',
+     checks: ['Next session, reload the SRAM image and write a new receipt before the P4 gets power'],
+     why: 'To drive the bench from the simulator, run <code>socat pty,link=/tmp/fpga,raw tcp:192.168.4.1:4196</code> and point <code>server.json</code> at <code>/tmp/fpga</code>. The tunnel works only while no page holds the link, and disconnecting it sends STOP.'
+   } }
+];
+/* ---------- bus check: where does the servo signal stop? ---------- */
+// The bench as built, every USB cable in; each check adds or removes only what changes.
+const LIVE = { p4usb: [0], dockusb: [0], p4pwr: [0], dockpwr: [0], fpga: [0], supplySet: [0] };
+const on = (extra) => Object.assign({}, LIVE, extra);
+const COL5 = [bcol(5), brow('e')], COL12 = [bcol(12), brow('e')];
+const CHECK = [
+ { tag: 'Bus check', title: 'Find where the servo signal stops', cam: FULL, items: [],
+   flags: on({ supplyOut: [0], servoPwr: [0], 'scr-bad': [0], dataHost: [0], dataOut: [0] }),
+   call: [
+     { a: [1165, 255], l: [1240, 60], t: 'FPGA answers · 5 replies/s', anchor: 'start', tone: 'ok' },
+     { a: [bcol(12), brow('b')], l: [1515, 560], t: 'Requests go out', anchor: 'start' },
+     { a: [s12.x + 85, s12.y + 18], l: [1180, 1185], t: 'Servos 10–12 · never answered', anchor: 'mid', tone: 'warn' },
+     { a: [LAP.x + 60, LAP.y + 40], l: [60, 330], t: 'P4 status line (USB)', anchor: 'start' }
+   ],
+   card: {
+     do: 'The servo LEDs are lit, so power reaches them. The FPGA answers the P4, so the host link works. But no servo has ever replied. Somewhere between the dock\'s G5 pin and the servo, the signal or its ground is missing. These checks find where, with a multimeter, from the dock outward.',
+     code: 'per s: 11.0 sent, 5.0 replies, 6.0 timeouts\nFPGA latched: host stop\n10: never answered  11: never answered\n12: never answered',
+     why: '<b>How to read it:</b> the P4 asks the FPGA for its status 5 times a second, and those are the 5 replies. It also asks each of the three servos twice a second, and those are the 6 timeouts. With 0 bad checksums and 0 dropped bytes, nothing is coming back at all, not even noise.',
+     extra: '<p class="lbl">Press “Play the check” to go through all of it, or use Next.</p>'
+   } },
+ { tag: 'Check 1', title: 'Supply off, USB cables stay in', cam: FULL, items: [],
+   flags: on({ supplyOut: [0, 900], servoPwr: [0, 900], 'scr-bad': [0] }),
+   call: [ { a: [S.x + 188, S.y + 126], l: [60, 1000], t: 'Output OFF', tone: 'warn', at: 900 }, { a: [D.x + D.w + 30, 295], l: [1480, 210], t: 'Stays in · image is in SRAM', anchor: 'start', at: 1700 }, { a: [P4.x + 94, 70], l: [690, 70], t: 'Stays in', at: 2100 } ],
+   card: {
+     do: 'Switch only the bench supply\'s output off. The servo LEDs go dark. Leave both USB cables plugged in.',
+     checks: ['Supply output off, servo LEDs dark', 'Dock USB still in. Unplugging it loses the FPGA image, and the reload needs a new receipt.', 'P4 USB still in', 'Meter and both probes to hand'],
+     why: '<b>Why the supply goes off:</b> check 3 puts probes on a PH2.0 plug whose pins are 2 mm apart. With the supply off, the only voltage on that plug is the FPGA\'s 3.3 V signal, so a slipped probe cannot put 11 V into a logic pin.'
+   } },
+ { tag: 'Check 2', title: 'Ground: dock GND to supply −', cam: [230, 300, 1350], items: [],
+   flags: on({}),
+   meter: { mode: 'ohm', reads: [ { at: 2500, v: '0.2', beep: true } ] },
+   probes: { black: { rot: 160, kf: [ { p: POST.minus, at: 1000 } ] }, red: { rot: 200, kf: [ { p: dEd(1), at: 1800 } ] } },
+   call: [ { a: POST.minus, l: [560, 1180], t: 'COM · supply −', anchor: 'end', at: 1100 }, { a: dEd(1), l: [840, 540], t: 'VΩ · dock GND, edge row', anchor: 'end', at: 1900 }, { a: [bcol(4), RAIL.bm], l: [880, 1180], t: 'expect a beep, under 1 Ω', anchor: 'start', tone: 'ok', at: 2600 } ],
+   rings: [ { p: [bcol(4), RAIL.bm], at: 2600, tone: 'ok' } ],
+   card: {
+     do: 'Set the meter to continuity (Ω with the beep symbol). Put black on the supply\'s − terminal and red on the metal of the jumper pin in the dock\'s edge-row GND socket, the second from the left.',
+     results: [ ['ok', 'beep, < 1 Ω', 'The FPGA and the servos share a ground. Go to check 3.'], ['bad', 'OL, silent', 'This is the fault. Reseat the black jumper from the dock\'s edge-row GND at both ends. It must land in the − rail (the blue line), beside supply −.'] ],
+     checks: ['Dock GND to supply −: beep', 'P4 pin 8 to supply −: beep as well. It runs through the dock\'s ground.'],
+     why: 'The servo reads SIG relative to its own GND pin. If the dock\'s ground is not joined to the servos\' ground, the servos still light up, because their power has its own return path, but they never see a clean signal.'
+   } },
+ { tag: 'Check 3', title: 'Unplug the lead, read SIG at its end', cam: [1100, 800, 640], items: [],
+   flags: on({ leadOff: [700] }),
+   meter: { mode: 'v', reads: [ { at: 3300, v: '3.29' } ] },
+   probes: { black: { rot: 205, kf: [ { p: leadPin('gnd'), at: 1900 } ] }, red: { rot: 155, kf: [ { p: leadPin('sig'), at: 2700 } ] } },
+   call: [ { a: [sB12[0], sB12[1]], l: [1300, 1180], t: 'Unplug from servo 12', anchor: 'end', at: 900 }, { a: leadPin('gnd'), l: [1360, 1212], t: 'COM · lead GND', anchor: 'end', at: 2000 }, { a: leadPin('sig'), l: [1590, 1200], t: 'VΩ · lead SIG', anchor: 'start', at: 2800 } ],
+   card: {
+     do: 'Pull the PH2.0 plug out of servo 12. Set the meter to DC volts. Put black on the plug\'s GND contact and red on its SIG contact. SIG is the strand that goes to breadboard column 12.',
+     results: [ ['ok', '≈ 3.3 V', 'Signal and ground both reach the end of the lead. Go to check 5.'], ['bad', '0 V', 'The signal stops somewhere before the plug. Check 4 walks back to find where.'] ],
+     why: 'This image (<code>RELEASE_TX=1</code>) lets go of G5 between packets, so the idle 3.3 V comes from F5\'s weak pull-up through the 1 kΩ. That shows the RX path and the ground. It does not prove G5 is connected: check 4 tests that with ohms. 0 V here still means a break. The order of the three contacts in this drawing is only illustrative. Go by where each strand runs.'
+   } },
+ { tag: 'Check 4', title: '0 V at the plug? Walk back to the dock', cam: [520, 330, 1240], items: [],
+   flags: on({ leadOff: [0] }),
+   meter: { mode: 'v', reads: [ { at: 2300, v: '3.29' }, { at: 3900, v: '3.29' }, { at: 5500, v: '3.28' }, { at: 7100, v: '0.00' } ] },
+   probes: { black: { rot: 160, kf: [ { p: POST.minus, at: 900 } ] }, red: { rot: 30, kf: [ { p: dEd(5), at: 1700 }, { p: COL5, at: 3300 }, { p: COL12, at: 4900 }, { p: leadPin('sig'), at: 6500 } ] } },
+   call: [ { a: POST.minus, l: [790, 1140], t: 'COM stays on supply −', anchor: 'start', at: 1000 }, { a: dEd(5), l: [1180, 430], t: '1 · G5 · 3.3 V', anchor: 'start', tone: 'ok', at: 2300 }, { a: COL5, l: [720, 640], t: '2 · column 5 · 3.3 V', anchor: 'end', tone: 'ok', at: 3900 }, { a: COL12, l: [1180, 560], t: '3 · column 12 · 3.3 V', anchor: 'start', tone: 'ok', at: 5500 }, { a: leadPin('sig'), l: [1290, 1125], t: '4 · lead SIG · 0 V (example)', anchor: 'end', tone: 'warn', at: 7100 } ],
+   card: {
+     do: 'Leave the lead unplugged and clip black to the supply\'s − terminal. Touch red to each point in turn, working out from the dock. The first point that reads 0 V is just past the break. In this example, the break is in the lead.',
+     results: [ ['bad', '1 · G5', 'With this image G5 floats between packets, so its volts prove little. Supply off: pull the orange jumper from G5 and read ohms from its end to column 12. It should be about 220 Ω. Then reseat it in G5 (edge row, rightmost).'], ['bad', '2 · col 5', 'The orange jumper is not seated in column 5.'], ['bad', '3 · col 12', 'The 220 Ω is not in columns 5 and 12 on the same half of the board.'], ['bad', '4 · lead', 'The lead\'s SIG pin is not in column 12, or its crimp is broken.'] ],
+     why: 'Each hop checks one joint. Breadboard holes join only in fives within a half (a–e or f–j), so a part one row off can look right and connect nothing.'
+   } },
+ { tag: 'Check 5', title: '3.3 V at the plug? Orientation, then IDs', cam: [840, 760, 800], items: [],
+   flags: on({ leadOff: [0, 900] }),
+   call: [ { a: sB12, l: [1300, 1215], t: 'SIG meets SIG', anchor: 'end', at: 1400 }, { a: [s10.x + 131, s10.y + 63], l: [s10.x + 131, 920], t: 'ID 10?', anchor: 'mid', at: 2200 }, { a: [s11.x + 131, s11.y + 63], l: [s11.x + 131, 920], t: 'ID 11?', anchor: 'mid', at: 2500 }, { a: [s12.x + 131, s12.y + 63], l: [s12.x + 131, 920], t: 'ID 12?', anchor: 'mid', at: 2800 } ],
+   rings: [ { p: sB12, at: 1400 } ],
+   card: {
+     do: 'If the end of the lead reads 3.3 V, the wiring up to the plug is good. Plug it back into servo 12. Two causes are left.',
+     list: ['<b>Plug orientation.</b> The lead\'s SIG must meet SIG on the servo\'s own label. A lead wired the other way round swaps SIG and GND.', '<b>IDs.</b> The firmware asks for 10, 11 and 12. A servo with any other ID ignores every request, and the status line reads <code>never answered</code> even when the wiring is perfect.'],
+     warn: '<b>The FPGA only forwards IDs 4–12</b> (the <code>bridge_safety</code> profile). A servo outside that range cannot be found through it. Reading its ID needs the USB bench image, loaded with the supply off and recorded in a new receipt.',
+     checks: ['Lead back in servo 12, SIG to SIG by the servo\'s label', 'Each servo\'s ID was set alone on the bus and reads 10, 11 or 12']
+   } },
+ { tag: 'Check 6', title: 'Power back up and read the status line', cam: FULL, items: [],
+   flags: on({ supplyOut: [900], servoPwr: [1300], 'scr-good': [1900], data: [2500] }),
+   call: [ { a: [S.x + 188, S.y + 126], l: [60, 1000], t: 'Output on · 11.1 V', at: 900 }, { a: [LAP.x + 60, LAP.y + 40], l: [60, 330], t: 'Status line every 2 s', anchor: 'start', at: 1900 }, { a: [s12.x + 85, s12.y + 18], l: [1180, 1185], t: 'Servos answering', anchor: 'mid', tone: 'ok', at: 2600 } ],
+   card: {
+     do: 'Turn the supply output back on. Within 2 seconds the P4\'s status line and the page\'s servo table show each servo\'s voltage and position.',
+     code: 'per s: 11.0 sent, 11.0 replies, 0.0 timeouts\n10: 11.1V pos …  11: 11.1V pos …\n12: 11.1V pos …',
+     checks: ['More than 5 replies a second, and timeouts near 0', 'IDs 10, 11 and 12 each show about 11.1 V', 'Back to the Build chapter, step 13'],
+     why: 'Each servo that answers adds 2 replies a second on top of the FPGA\'s 5. If one servo stays silent while the others answer, its own plug or ID is the cause. The bus and ground are fine.'
+   } }
+];
+BUILD.forEach((s, i) => s.items.forEach((id, k) => { items[id].step = i; items[id].k = k; }));
+let STEPS = BUILD, chapter = 'build';
+const ITEM_START = 1100, ITEM_DUR = 1500, ITEM_GAP = 1700;
+function stepDur(s) {
+  let end = 5000;
+  if (s.items.length) end = Math.max(end, ITEM_START + (s.items.length - 1) * ITEM_GAP + ITEM_DUR);
+  for (const k in s.flags) end = Math.max(end, s.flags[k][0] + 700, s.flags[k][1] ? s.flags[k][1] + 700 : 0);
+  (s.call || []).forEach(c => end = Math.max(end, (c.at || 1000) + 600));
+  (s.badges || []).forEach(b => end = Math.max(end, b.at + 600));
+  if (s.meter) s.meter.reads.forEach(r => end = Math.max(end, r.at + 600));
+  return end + 3600;
+}
+
+/* ---------- step card, dots, table ---------- */
+const card = $('card'), dotsEl = $('dots');
+const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+const PINMAP = `<div class="pinmap">
+  <div><div class="pm-h">P4 · right column from USB-C</div><ol class="pm-list">
+    <li class="no"><b>1</b>VBUS · 5 V</li><li class="no"><b>2</b>VSYS · 5 V</li><li><b>3</b>GND</li><li><b>4</b>EN</li><li><b>5</b>3V3</li>
+    <li class="use"><b>6</b>GPIO20 · TX</li><li class="use"><b>7</b>GPIO21 · RX</li><li class="use"><b>8</b>GND</li></ol></div>
+  <div><div class="pm-h">Dock socket · top, USB-C right</div>
+    <div class="pm-grid"><span class="no">3V3</span><span class="use">GND</span><span>H5</span><span>H8</span><span class="use">G7</span><span>F5</span></div>
+    <div class="pm-grid"><span class="no">3V3</span><span>GND</span><span>J5</span><span>H7</span><span class="use">G8</span><span>G5</span></div>
+    <div class="pm-h">Underside print · USB-C left</div>
+    <div class="pm-grid"><span>F5</span><span class="use">G7</span><span>H8</span><span>H5</span><span class="use">GND</span><span class="no">3V3</span></div>
+    <div class="pm-grid"><span>G5</span><span class="use">G8</span><span>H7</span><span>J5</span><span>GND</span><span class="no">3V3</span></div></div>
+</div>`;
+function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+function renderCard(i) {
+  const s = STEPS[i], c = s.card;
+  const word = chapter === 'build' ? 'Step' : 'Check';
+  let h = `<div class="num">${i === 0 ? s.tag : word + ' ' + i + ' of ' + (STEPS.length - 1)}</div><h2>${s.title}</h2><p>${c.do}</p>`;
+  if (c.list) h += `<ol class="ol">${c.list.map(x => `<li>${x}</li>`).join('')}</ol>`;
+  if (c.code) h += `<pre>${esc(c.code)}</pre>`;
+  if (c.pinmap) h += PINMAP;
+  if (c.results) h += `<div class="lbl">What the meter says</div><ul class="res">${c.results.map(([cls, k, v]) => `<li class="${cls}"><b>${k}</b><span>${v}</span></li>`).join('')}</ul>`;
+  if (c.warn) h += `<div class="warn">${c.warn}</div>`;
+  if (c.checks) h += `<div class="lbl">${chapter === 'build' && i === 1 ? 'On the bench' : 'Check'}</div><ul class="checks">${c.checks.map((x, j) => { const id = `chk-${chapter === 'build' ? 's' : 'c'}${i}-${j}`; return `<li><label class="chk" for="${id}"><input type="checkbox" id="${id}" ${store.get(id) === '1' ? 'checked' : ''}><span>${x}</span></label></li>`; }).join('')}</ul>`;
+  if (c.why) h += `<p class="why">${c.why}</p>`;
+  if (c.extra) h += c.extra;
+  card.innerHTML = h;
+  card.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', () => store.set(cb.id, cb.checked ? '1' : '0')));
+}
+function buildDots() {
+  dotsEl.textContent = '';
+  STEPS.forEach((s, i) => { const b = document.createElement('button'); b.className = 'dot'; b.type = 'button'; b.textContent = i === 0 ? '◎' : String(i); b.setAttribute('aria-label', (i === 0 ? 'Overview: ' : s.tag + ': ') + s.title); b.title = s.title; b.addEventListener('click', () => go(i)); dotsEl.appendChild(b); });
+}
+function setChapter(name) {
+  if (name === chapter) return;
+  chapter = name; STEPS = name === 'build' ? BUILD : CHECK;
+  $('tab-build').setAttribute('aria-selected', String(name === 'build'));
+  $('tab-check').setAttribute('aria-selected', String(name === 'check'));
+  buildDots();
+}
+buildDots();
+$('tab-build').addEventListener('click', () => { setChapter('build'); go(0); });
+$('tab-check').addEventListener('click', () => { setChapter('check'); go(0); });
+
+const WT = [
+  [4, 'GND', C.gnd, 'P4 pin 8 · GND', 'Dock inner row · GND (2nd from left)', 'Shared reference for the two signals'],
+  [5, 'TX', C.tx, 'P4 pin 6 · GPIO20', 'Dock <b>G7</b> · <code>host_rx</code> (inner, 5th)', 'Commands, 115200 baud'],
+  [6, 'RX', C.rx, 'Dock <b>G8</b> · <code>host_tx</code> (edge, 5th)', 'P4 pin 7 · GPIO21', 'Replies, telemetry, supervisor status'],
+  [7, 'servo_tx', C.g5, 'Dock G5 (edge, rightmost)', 'Column 5 → 220 Ω → column 12 (SIG)', 'Servo bus out, 1 Mbaud'],
+  [7, 'servo_rx', C.f5, 'Dock F5 (inner, rightmost)', 'Column 19 → 1 kΩ → column 12 (SIG)', 'Servo bus in'],
+  [8, '+11.1 V', C.red, 'Supply +', 'Bottom + rail', 'Servo power, 2.00 A limit'],
+  [8, 'Supply −', C.gnd, 'Supply −', 'Bottom − rail, left end', 'Common ground point'],
+  [8, 'Dock GND', C.gnd, 'Dock edge row · GND (2nd from left)', 'Bottom − rail, beside supply −', 'FPGA ground at the star point'],
+  [9, 'Bus lead', C.white, 'Column 12 · + rail · − rail', 'Servo 12, PH2.0', 'SIG, V+, GND'],
+  [10, 'Chain', '#151617', 'Servo 12', 'Servo 11, then servo 10', 'SIG, V+, GND in parallel']
+];
+const tb = $('wtbody');
+WT.forEach((r, i) => { const tr = document.createElement('tr'); tr.dataset.step = r[0]; tr.tabIndex = 0; tr.innerHTML = `<td class="n">${String(i + 1).padStart(2, '0')}</td><td><span class="sw" style="background:${r[2]}"></span>${r[1]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td>`; tr.addEventListener('click', () => { setChapter('build'); go(r[0]); }); tr.addEventListener('keydown', e => { if (e.key === 'Enter') { setChapter('build'); go(r[0]); } }); tb.appendChild(tr); });
+
+/* ---------- callouts, rings, badges ---------- */
+let fxNodes = [];
+function buildFx(s) {
+  L.call.textContent = '';
+  fxNodes.forEach(n => n.remove()); fxNodes = [];
+  const k = s.cam[2] / VW, fs = 22 * k, pad = 8 * k, h = fs * 1.8;
+  (s.rings || []).forEach(r => { const c = el('circle', { cx: r.p[0], cy: r.p[1], r: 10, class: 'ring ' + (r.tone || ''), 'stroke-width': 3 * k + .6, opacity: 0 }, L.fx); fxNodes.push(c); r._el = c; r._k = k; });
+  (s.call || []).forEach(c => {
+    const g = el('g', { class: 'callout ' + (c.tone || ''), opacity: 0 }, L.call);
+    const [ax, ay] = c.a, [lx, ly] = c.l;
+    const line = el('path', { class: 'co-line', 'stroke-width': 1.8 * k }, g);
+    el('circle', { cx: ax, cy: ay, r: 3.6 * k, class: 'co-dot' }, g);
+    const box = el('rect', { class: 'co-box', rx: 5 * k, 'stroke-width': 1.4 * k }, g);
+    const t = txt(g, 0, 0, c.t, { class: 'co-text', 'font-size': fs });
+    let w = 0; try { w = t.getComputedTextLength(); } catch (e) {}
+    if (!w) w = c.t.length * fs * .6;
+    w += pad * 2;
+    const anchor = c.anchor || (lx >= ax ? 'start' : 'end');
+    // Keep the label inside the camera frame; the leader then meets its nearest edge.
+    const [cx0, , cw] = s.cam, edge = 10 * k;
+    const bx = clamp(anchor === 'start' ? lx : anchor === 'end' ? lx - w : lx - w / 2, cx0 + edge, cx0 + cw - edge - w);
+    box.setAttribute('x', bx); box.setAttribute('y', ly - h / 2); box.setAttribute('width', w); box.setAttribute('height', h);
+    t.setAttribute('x', bx + pad); t.setAttribute('y', ly + fs * .36);
+    let ex = clamp(ax, bx, bx + w), ey = ly;
+    if (ex > bx && ex < bx + w) ey = ay < ly ? ly - h / 2 : ly + h / 2;
+    line.setAttribute('d', `M${ax} ${ay}L${ex} ${ey}`);
+    c._el = g;
+  });
+  L.probe.textContent = '';
+  if (s.probes) for (const col of ['black', 'red']) { const pr = s.probes[col]; if (pr) pr._el = makeProbe(col, pr.rot, k); }
+  (s.badges || []).forEach(b => { const g = el('g', { class: 'badge ' + (b.tone || ''), opacity: 0 }, L.call); el('circle', { cx: b.p[0] + 26, cy: b.p[1], r: 9 }, g); txt(g, b.p[0] + 26, b.p[1] + 3.6, String(b.n), { 'font-size': 10, 'text-anchor': 'middle' }); fxNodes.push(g); b._el = g; });
+}
+
+/* ---------- state + render ---------- */
+let ta = 0, cur = 0, t = 0, playing = false, speed = 1, last = performance.now(), clock = 0;
+let camFrom = FULL.slice(), camNow = FULL.slice();
+const camEl = $('cam');
+function setCam(c) { const [x, y, w] = c; svg.setAttribute('viewBox', `${x} ${y} ${w} ${w / ASP}`); }
+function flagVal(s, name) {
+  const f = s.flags[name]; if (!f) return 0;
+  const on = clamp((ta - f[0]) / 450, 0, 1), off = f[1] != null ? clamp((ta - f[1]) / 450, 0, 1) : 0;
+  return on * (1 - off);
+}
+function setWire(it, p) {
+  it.g.setAttribute('opacity', p > 0 ? 1 : 0);
+  const off = it.len * (1 - p);
+  it.paths.forEach(pp => pp.style.strokeDashoffset = off);
+  if (it.capA) it.capA.setAttribute('opacity', p > 0 ? 1 : 0);
+  if (it.capB) {
+    it.capB.setAttribute('opacity', p > 0 ? 1 : 0);
+    const pt = it.core.getPointAtLength(it.len * p);
+    it.capB.setAttribute('transform', `translate(${pt.x} ${pt.y})`);
+  }
+  if (it.ends) { it.ends[0].setAttribute('opacity', p > 0 ? 1 : 0); it.ends[1].setAttribute('opacity', p >= 1 ? 1 : 0); }
+}
+function itemProg(it) {
+  if (cur === 0 || chapter === 'check') return 1;
+  if (it.step < cur) return 1;
+  if (it.step > cur) return 0;
+  return ease(clamp((ta - ITEM_START - it.k * ITEM_GAP) / ITEM_DUR, 0, 1));
+}
+let lastSupply = '';
+function render(now, dt) {
+  const s = STEPS[cur];
+  // camera
+  const cp = reduce ? 1 : ease(clamp(t / 1000, 0, 1));
+  camNow = camFrom.map((v, i) => v + (s.cam[i] - v) * cp);
+  setCam(camNow);
+  // items
+  for (const id in items) {
+    const it = items[id], p = itemProg(it);
+    if (it.kind === 'wire') setWire(it, p);
+    else if (it.kind === 'part') { it.g.setAttribute('opacity', p); it.g.setAttribute('transform', `translate(0 ${-24 * (1 - p)})`); }
+    else if (it.kind === 'multi') { it.g.setAttribute('opacity', p > 0 ? 1 : 0); it.parts.forEach(sub => setWire(sub, p)); it.end.setAttribute('opacity', p >= 1 ? 1 : 0); }
+  }
+  const lo = ease(flagVal(s, 'leadOff')), lead = items['lead'];
+  if (lo > 0) { const d = LEAD_OFF * lo; lead.parts.forEach(sub => setWire(sub, 1 - d / sub.len)); }
+  lead.end.setAttribute('transform', lo > 0 ? `translate(0 ${LEAD_OFF * lo})` : '');
+  leadLabels.setAttribute('opacity', lo);
+  // flags
+  const F = (n) => flagVal(s, n);
+  const fu = F('p4usb'); setWire(usbP4, reduce ? (fu > 0 ? 1 : 0) : fu); usbP4Plug.setAttribute('opacity', fu >= 1 ? 1 : 0);
+  const fd = F('dockusb'); setWire(usbDock, reduce ? (fd > 0 ? 1 : 0) : fd); usbDockPlug.setAttribute('opacity', fd >= 1 ? 1 : 0);
+  const p4p = F('p4pwr'); objs.p4.pwr.setAttribute('fill', p4p > .5 ? '#ff4a3d' : '#3a1d1d'); objs.p4.pwrGlow.setAttribute('opacity', p4p * .8);
+  const dp = F('dockpwr'); objs.dock.glowA.setAttribute('opacity', dp * .8); objs.dock.ledReady.setAttribute('fill', dp > .5 ? '#5dff9a' : '#16301e');
+  const fp = F('fpga'); objs.dock.glowB.setAttribute('opacity', fp * .8); objs.dock.ledDone.setAttribute('fill', fp > .5 ? '#5dff9a' : '#16301e'); objs.dock.tag.setAttribute('opacity', fp);
+  for (const k of ['flash', 'fpga', 'log', 'page', 'bad', 'good']) objs.scr[k].setAttribute('opacity', F('scr-' + k));
+  const sp = F('servoPwr'); objs.servos.forEach(o => { o.glow.setAttribute('opacity', sp * .85); o.led.setAttribute('fill', sp > .5 ? '#8c9bff' : '#24283a'); });
+  dangerG.setAttribute('opacity', F('danger'));
+  const wf = F('wifi'); wifiG.setAttribute('opacity', wf);
+  arcs.forEach((a, i) => a.setAttribute('opacity', reduce ? .7 : .25 + .75 * Math.max(0, Math.sin(clock / 260 - i * .9))));
+  const jog = F('jog');
+  if (jog > 0 && !reduce) servo12.angle += dt * 0.06 * jog;
+  objs.servos.forEach(o => o.horn.setAttribute('transform', `rotate(${o.angle} ${o.hx} ${o.hy})`));
+  // supply display (steady values only)
+  const so = F('supplyOut'), ss = F('supplySet');
+  const sv = so > .5 || ss > .5 ? '11.10' : '';
+  const sa = so > .5 ? '0.01' : ss > .5 ? '2.00' : '';
+  const sl = so > .5 ? 'OUT ON' : ss > .5 ? 'LIMIT · OUT OFF' : '';
+  const key = sv + sa + sl;
+  if (key !== lastSupply) { objs.sup.vT.textContent = sv; objs.sup.aT.textContent = sa; objs.sup.lim.textContent = sl; lastSupply = key; }
+  objs.sup.outLed.setAttribute('fill', so > .5 ? '#5dff9a' : '#1d3324'); objs.sup.outGlow.setAttribute('opacity', so * .8);
+  // packets
+  const all = F('data') > .5;
+  const flowOn = { host: all || F('dataHost') > .5, out: all || F('dataOut') > .5, back: all };
+  const cyc = (clock % 2400) / 2400;
+  FLOWS.forEach(f => {
+    const path = f.path(); const len = path.getTotalLength();
+    f.dots.forEach((d, j) => {
+      const u = (cyc - f.ph) / .16 - j * .18;
+      if (reduce || !flowOn[f.grp] || u < 0 || u > 1) { d.setAttribute('opacity', 0); return; }
+      const pt = path.getPointAtLength(len * (f.dir > 0 ? u : 1 - u));
+      d.setAttribute('cx', pt.x); d.setAttribute('cy', pt.y); d.setAttribute('opacity', 1);
+    });
+  });
+  // callouts / rings / badges
+  (s.call || []).forEach(c => c._el && c._el.setAttribute('opacity', clamp((ta - (c.at || 1000)) / 350, 0, 1)));
+  (s.badges || []).forEach(b => b._el && b._el.setAttribute('opacity', clamp((ta - b.at) / 250, 0, 1)));
+  (s.rings || []).forEach(r => {
+    if (!r._el) return;
+    const v = clamp((ta - r.at) / 300, 0, 1);
+    const puls = reduce ? 0 : (Math.sin(clock / 220) + 1) / 2;
+    r._el.setAttribute('opacity', v * (.55 + .45 * puls));
+    r._el.setAttribute('r', 11 + 9 * r._k + puls * 4 * r._k);
+  });
+  if (s.probes) for (const col of ['black', 'red']) {
+    const pr = s.probes[col]; if (!pr || !pr._el) continue;
+    const { p, o } = probePos(pr._el, pr.kf);
+    pr._el.g.setAttribute('transform', `translate(${p[0]} ${p[1]}) scale(${pr._el.k * 1.25})`);
+    pr._el.g.setAttribute('opacity', o);
+  }
+  renderMeter(s);
+  $('prog').style.width = (100 * clamp(t / stepDur(s), 0, 1)) + '%';
+}
+
+let lastMeter = '';
+function renderMeter(s) {
+  const m = s.meter, box = $('meter');
+  if (!m) { if (!box.hidden) { box.hidden = true; lastMeter = ''; } return; }
+  let r = null;
+  m.reads.forEach(x => { if (ta >= x.at) r = x; });
+  const ohm = m.mode === 'ohm';
+  const val = r ? r.v : ohm ? 'OL' : '0.00', unit = ohm ? 'Ω' : 'V';
+  const beep = !!(r && r.beep) && (reduce || Math.floor(clock / 300) % 2 === 0);
+  const key = val + unit + beep;
+  if (key === lastMeter) return;
+  lastMeter = key; box.hidden = false;
+  $('mVal').textContent = val; $('mUnit').textContent = unit;
+  $('mMode').textContent = ohm ? 'Ω · continuity' : 'V · DC';
+  $('mBeep').classList.toggle('on', beep);
+}
+function go(i, keepPlaying) {
+  i = clamp(i, 0, STEPS.length - 1);
+  camFrom = camNow.slice();
+  cur = i; t = 0;
+  if (!keepPlaying) setPlaying(false);
+  buildFx(STEPS[i]);
+  renderCard(i);
+  $('stageTag').textContent = STEPS[i].tag + ' · ' + STEPS[i].title;
+  [...dotsEl.children].forEach((b, j) => { b.classList.toggle('on', j === i); b.classList.toggle('done', j > 0 && j < i); b.setAttribute('aria-current', j === i ? 'step' : 'false'); });
+  [...tb.children].forEach(tr => tr.classList.toggle('active', chapter === 'build' && Number(tr.dataset.step) === i));
+  const hash = chapter === 'build' ? (i === 0 ? '' : '#step-' + i) : '#check-' + i;
+  try { history.replaceState(null, '', hash || location.pathname + location.search); } catch (e) {}
+}
+function setPlaying(p) {
+  playing = p;
+  $('playLabel').textContent = p ? 'Pause' : (cur === STEPS.length - 1 ? 'Play again' : cur === 0 ? (chapter === 'build' ? 'Play the build' : 'Play the check') : 'Play from here');
+  $('playIcon').innerHTML = p ? '<path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/>' : '<path d="M4 2.5v11l9-5.5z"/>';
+}
+$('play').addEventListener('click', () => {
+  if (playing) { setPlaying(false); return; }
+  if (cur === 0 || cur === STEPS.length - 1) go(1, true); else if (t >= stepDur(STEPS[cur])) go(cur + 1, true);
+  setPlaying(true);
+});
+$('next').addEventListener('click', () => go(cur + 1));
+$('prev').addEventListener('click', () => go(cur - 1));
+$('replay').addEventListener('click', () => { camFrom = camNow.slice(); t = 0; });
+$('speed').addEventListener('change', e => { speed = Number(e.target.value) || 1; });
+document.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('input,select,textarea')) return;
+  if (e.key === ' ' && e.target.closest && e.target.closest('button,tr')) return;
+  if (e.key === 'ArrowRight') { go(cur + 1); e.preventDefault(); }
+  else if (e.key === 'ArrowLeft') { go(cur - 1); e.preventDefault(); }
+  else if (e.key === ' ') { $('play').click(); e.preventDefault(); }
+  else if (e.key === 'r' || e.key === 'R') $('replay').click();
+});
+
+function frame(now) {
+  const dt = Math.min(64, now - last); last = now;
+  t += dt * speed; clock += dt; ta = (reduce || cur === 0) ? 1e6 : t;
+  render(now, dt * speed);
+  if (playing && t >= stepDur(STEPS[cur])) { if (cur < STEPS.length - 1) go(cur + 1, true); else setPlaying(false); }
+  requestAnimationFrame(frame);
+}
+const m = /^#(step|check)-(\d+)$/.exec(location.hash || '');
+if (m && m[1] === 'check') setChapter('check');
+go(m ? Number(m[2]) : 0);
+// ?at=ms opens the step at that moment, camera already in place (for stills and links).
+const at0 = Number(new URLSearchParams(location.search).get('at')) || 0;
+if (at0 > 0) { t = at0; camFrom = STEPS[cur].cam.slice(); }
+ta = (reduce || cur === 0) ? 1e6 : t; render(performance.now(), 0);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => buildFx(STEPS[cur]));
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

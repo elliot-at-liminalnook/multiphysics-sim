@@ -23,6 +23,11 @@ use sim_api::Outcome;
 #[derive(Deserialize, Clone)]
 #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
 pub(crate) enum LessonCommand {
+    /// How Lessons mode works, for an agent starting cold (`lesson_guide`).
+    LessonGuide {
+        #[serde(default)]
+        topic: Option<String>,
+    },
     LessonList,
     LessonCategories,
     LessonFold { category: String },
@@ -161,6 +166,7 @@ impl actions::Action for LessonCommand {
             spec(name, actions::LESSON, example, description)
         }
         vec![
+            c("lesson_guide", json!({}), "Start here: how Lessons mode works (concepts, workflows in order, every lesson command with an example, rules) for an agent starting cold; topic narrows it (about, how_to_call, concepts, workflows, commands, rules). Answers even with no lessons open. Also GET /v1/lesson_guide."),
             c("lesson_list", json!({}), "Lessons in the lesson folder, in reading order (slug, title, category, scenes, parse errors)"),
             c("lesson_categories", json!({}), "Lessons grouped by category (categories.yaml order; uncategorised last), with which groups are folded in the list"),
             c("lesson_fold", json!({"category":"mechanisms"}), "Fold or unfold a category in the lesson list"),
@@ -268,7 +274,11 @@ pub(super) fn apply(
     (shared, registry, builder): (Option<ResMut<crate::selection::Selection>>, Option<Res<crate::document::DocumentRegistry>>, Option<Res<Builder>>),
 ) {
     let (Some(mut learn), Some(mut scene)) = (learn, scene) else {
-        actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err(NO_LESSONS.into())));
+        // The guide answers without lessons: it is how an agent learns to open them.
+        actions::apply(&mut messages, &mut in_flight, &mut replies, |command, _| match command {
+            LessonCommand::LessonGuide { topic } => Outcome::Done(super::guide::guide(topic.as_deref())),
+            _ => Outcome::Done(Err(NO_LESSONS.into())),
+        });
         return;
     };
     if messages.is_empty() && in_flight.is_empty() {
@@ -492,6 +502,7 @@ fn author(learn: &Learn, a: Option<String>) -> String {
 /// The lesson REST commands that answer at once (the rest: [`handle`]).
 fn execute(learn: &mut Learn, scene: &mut SpatialScene, command: LessonCommand) -> sim_api::Result {
     match command {
+        LessonCommand::LessonGuide { topic } => super::guide::guide(topic.as_deref()),
         LessonCommand::LessonList => Ok(json!(learn.entries)),
         LessonCommand::LessonCategories => Ok(json!(sim_lesson::categories::group(&learn.entries, &learn.categories).iter().map(|g| json!({
             "id": g.category.id, "title": g.category.title, "summary": g.category.summary, "folded": learn.folded.contains(&g.category.id),

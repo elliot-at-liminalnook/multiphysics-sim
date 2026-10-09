@@ -25,6 +25,7 @@
 //!   panel state.
 mod actions;
 mod gallery;
+mod guide;
 mod keys;
 mod panel;
 mod run;

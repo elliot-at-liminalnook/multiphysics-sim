@@ -10,7 +10,7 @@ use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
 use crate::app::actions::{self, Act, InFlight, Replies, Spec, spec};
 use crate::app::{ModeScope, ViewerMode, ViewerSet};
-use crate::camera::fly::{Fly, orientation};
+use crate::camera::fly::{Fly, angles_toward, orientation};
 use bevy::ecs::message::Messages;
 use serde::Deserialize;
 use sim_api::Outcome;
@@ -21,7 +21,6 @@ struct PlaceInfo {
     stations: Vec<Vec3>,
     views: Vec<(Vec3, Vec3)>,
     start: Vec3,
-    look: Vec3,
     description: String,
 }
 
@@ -97,7 +96,7 @@ fn load_place(dir: &std::path::Path) -> Result<(PlaceInfo, Mesh), String> {
     // Start above and behind the first station (outside the ring of photo markers), looking across the room.
     let start = stations.first().copied().unwrap_or(Vec3::ZERO) + Vec3::Y * (eye_height + 0.6) - Vec3::X * 0.8;
     let mesh = read_mesh(&dir.join(v["mesh_file"].as_str().unwrap_or("mesh.ply")))?;
-    let info = PlaceInfo { stations, views, start, look: Vec3::X, description: v["description"].as_str().unwrap_or("").to_string() };
+    let info = PlaceInfo { stations, views, start, description: v["description"].as_str().unwrap_or("").to_string() };
     Ok((info, mesh))
 }
 
@@ -152,6 +151,11 @@ impl Plugin for PlacePlugin {
 #[derive(Deserialize, Clone)]
 #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
 pub(crate) enum PlaceAction {
+    /// How Place mode works, for an agent starting cold (`place_guide`).
+    PlaceGuide {
+        #[serde(default)]
+        topic: Option<String>,
+    },
     State,
     Camera {
         #[serde(default)]
@@ -164,6 +168,9 @@ pub(crate) enum PlaceAction {
         speed: Option<f32>,
         #[serde(default)]
         station: Option<usize>,
+        /// A photo's viewpoint: index into `state.photo_views`.
+        #[serde(default)]
+        view: Option<usize>,
     },
     /// Key P: the photo and station markers.
     #[serde(skip)]
@@ -176,8 +183,9 @@ pub(crate) enum PlaceAction {
 impl actions::Action for PlaceAction {
     fn commands() -> Vec<Spec> {
         vec![
-            spec("state", actions::PLACE, json!({}), "Place mode: dir, description, stations (positions in the viewer frame: metres, Y up; the place's +Z up maps to +Y), views (photo count), station (the station last jumped to with keys 1-9 or camera {station}, null before any), camera {position, yaw, pitch (radians), speed (m/s)}, help_visible, markers_visible and viewer_mode. Presentation only: the place model is not changed."),
-            spec("camera", actions::PLACE, json!({"position":[0.5,0.9,0.2],"yaw":0.6,"pitch":-0.25}), "Place mode: set the fly camera, any subset of position [x, y, z] (viewer frame, metres), yaw and pitch (radians; pitch within ±1.5), speed (m/s, 0.05-8) and station (index into state.stations: the same jump as keys 1-9, applied before position). Refused naming the field: a non-finite value, pitch or speed out of range, an unknown station. Returns state."),
+            spec("place_guide", actions::PLACE, json!({}), "Start here: how Place mode works (concepts, workflows in order, every command with an example, rules) for an agent starting cold; topic narrows it (about, how_to_call, concepts, workflows, commands, rules). Also GET /v1/place_guide."),
+            spec("state", actions::PLACE, json!({}), "Place mode: dir, description, stations (positions in the viewer frame: metres, Y up; the place's +Z up maps to +Y), views (photo count), photo_views (each photo's position and unit viewing direction, in the viewer frame), station (the station last jumped to with keys 1-9 or camera {station}, null before any), camera {position, yaw, pitch (radians), speed (m/s)}, help_visible, markers_visible and viewer_mode. Presentation only: the place model is not changed."),
+            spec("camera", actions::PLACE, json!({"position":[0.5,0.9,0.2],"yaw":0.6,"pitch":-0.25}), "Place mode: set the fly camera, any subset of position [x, y, z] (viewer frame, metres), yaw and pitch (radians; pitch within ±1.5), speed (m/s, 0.05-8), station (index into state.stations: the same jump as keys 1-9) or view (index into state.photo_views: stand where that photo was taken, looking where it looked); a station or view jump is applied first, then position, yaw and pitch override it. Yaw 0 looks along +X, positive yaw turns toward -Z; pitch tilts the view up (positive) or down. Refused naming the field: a non-finite value, pitch or speed out of range, an unknown station or view, or both a station and a view. Returns state."),
         ]
     }
 }
@@ -187,11 +195,17 @@ fn state(view: &PlaceView, t: &Transform, fly: &Fly) -> serde_json::Value {
         "dir": view.dir, "description": view.info.description,
         "stations": view.info.stations.iter().map(|s| s.to_array()).collect::<Vec<_>>(),
         "views": view.info.views.len(), "station": view.station,
+        "photo_views": view.info.views.iter().map(|(p, f)| json!({"position": p.to_array(), "direction": f.normalize_or_zero().to_array()})).collect::<Vec<_>>(),
         "camera": {"position": t.translation.to_array(), "yaw": fly.yaw, "pitch": fly.pitch, "speed": fly.speed},
         "help_visible": view.help, "markers_visible": view.markers,
         "frame": "viewer frame: metres, Y up (the place's +Z up maps to +Y)",
     })
 }
+
+/// The walkthrough's first heading: along +X (across the room), tilted
+/// down a little; the camera starts with exactly this rotation, so the
+/// first mouse look continues from what is shown.
+const START: Fly = Fly { yaw: 0.0, pitch: -0.25, speed: 0.8 };
 
 /// The camera over the station `index` (as keys 1-9 place it).
 fn station_pose(info: &PlaceInfo, index: usize) -> Option<Vec3> {
@@ -201,9 +215,13 @@ fn station_pose(info: &PlaceInfo, index: usize) -> Option<Vec3> {
 /// The one handler of place mode's actions; REST gets `state` back.
 fn execute(view: &mut PlaceView, t: &mut Transform, fly: &mut Fly, markers: &mut Query<&mut Visibility, (With<PhotoMarker>, Without<Help>)>, help: &mut Query<&mut Visibility, With<Help>>, action: &PlaceAction) -> sim_api::Result {
     match action {
+        PlaceAction::PlaceGuide { topic } => return crate::place_guide::guide(topic.as_deref()),
         PlaceAction::State => {}
-        PlaceAction::Camera { position, yaw, pitch, speed, station } => {
-            let (position, yaw, pitch, speed, station) = (*position, *yaw, *pitch, *speed, *station);
+        PlaceAction::Camera { position, yaw, pitch, speed, station, view: photo } => {
+            let (position, yaw, pitch, speed, station, photo) = (*position, *yaw, *pitch, *speed, *station, *photo);
+            if station.is_some() && photo.is_some() {
+                return Err("camera: give a station or a view, not both".into());
+            }
             let finite = |name: &str, v: Option<f32>| match v {
                 Some(x) if !x.is_finite() => Err(format!("camera {name} must be finite")),
                 _ => Ok(()),
@@ -224,9 +242,22 @@ fn execute(view: &mut PlaceView, t: &mut Transform, fly: &mut Fly, markers: &mut
                 Some(i) => Some(station_pose(&view.info, i).ok_or_else(|| format!("camera station {i}: no such station (the place has {})", view.info.stations.len()))?),
                 None => None,
             };
+            // A photo's viewpoint: its position, looking along its direction.
+            let shot = match photo {
+                Some(i) => {
+                    let (p, f) = *view.info.views.get(i).ok_or_else(|| format!("camera view {i}: no such photo view (the place has {})", view.info.views.len()))?;
+                    Some((p, angles_toward(f).ok_or_else(|| format!("camera view {i}: the photo has no viewing direction"))?))
+                }
+                None => None,
+            };
             if let Some(p) = jump {
                 t.translation = p;
                 view.station = station;
+            }
+            if let Some((p, (y, pi))) = shot {
+                t.translation = p;
+                fly.yaw = y;
+                fly.pitch = pi;
             }
             if let Some(p) = position {
                 t.translation = Vec3::from_array(p);
@@ -264,7 +295,11 @@ fn apply(
     mut help: Query<&mut Visibility, With<Help>>,
 ) {
     let (Some(mut view), Some(camera)) = (view, camera) else {
-        actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("the place is not open".into())));
+        // The guide answers without a place: it is how an agent learns to open one.
+        actions::apply(&mut messages, &mut in_flight, &mut replies, |action, _| match action {
+            PlaceAction::PlaceGuide { topic } => Outcome::Done(crate::place_guide::guide(topic.as_deref())),
+            _ => Outcome::Done(Err("the place is not open".into())),
+        });
         return;
     };
     let (mut t, mut fly) = camera.into_inner();
@@ -277,7 +312,7 @@ fn keys(keys: Res<ButtonInput<KeyCode>>, mut out: MessageWriter<Act<PlaceAction>
     let digits = [KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3, KeyCode::Digit4, KeyCode::Digit5, KeyCode::Digit6, KeyCode::Digit7, KeyCode::Digit8, KeyCode::Digit9];
     for (i, k) in digits.iter().enumerate() {
         if keys.just_pressed(*k) {
-            out.write(Act::ui(PlaceAction::Camera { position: None, yaw: None, pitch: None, speed: None, station: Some(i) }));
+            out.write(Act::ui(PlaceAction::Camera { position: None, yaw: None, pitch: None, speed: None, station: Some(i), view: None }));
         }
     }
     if keys.just_pressed(KeyCode::KeyP) {
@@ -315,6 +350,7 @@ fn publish(rest: Option<ResMut<crate::rest::Rest>>, view: Res<PlaceView>, camera
         let mut shown = state(&view, t, fly);
         shown["viewer_mode"] = json!(ViewerMode::Place.name());
         rest.0.publish("state", shown);
+        rest.0.publish_changed("place_guide", "1", || crate::place_guide::guide(None).unwrap_or_default());
     }
 }
 
@@ -340,7 +376,7 @@ fn setup(mut commands: Commands, fonts: Res<crate::ui_kit::UiFonts>, mut meshes:
     for s in &info.stations {
         commands.spawn((Mesh3d(post.clone()), MeshMaterial3d(blue.clone()), Transform::from_translation(*s + Vec3::Y * 0.1), PhotoMarker));
     }
-    commands.spawn((Camera3d::default(), bevy::core_pipeline::tonemapping::Tonemapping::None, Projection::Perspective(PerspectiveProjection { fov: 75f32.to_radians(), near: 0.01, ..default() }), Transform::from_translation(info.start).looking_to(info.look, Vec3::Y), Fly { yaw: 0.0, pitch: -0.25, speed: 0.8 }));
+    commands.spawn((Camera3d::default(), bevy::core_pipeline::tonemapping::Tonemapping::None, Projection::Perspective(PerspectiveProjection { fov: 75f32.to_radians(), near: 0.01, ..default() }), Transform::from_translation(info.start).with_rotation(orientation(&START)), START));
     // UI over the whole window (the help line, the switcher strip); the
     // walkthrough's camera draws above the strip (`viewport`).
     commands.spawn((Camera2d, Camera { order: 3, clear_color: ClearColorConfig::None, ..default() }, IsDefaultUiCamera));

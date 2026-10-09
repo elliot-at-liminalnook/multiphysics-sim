@@ -32,6 +32,7 @@ mod editing;
 pub(crate) mod extras;
 mod lab;
 pub(crate) mod frames;
+pub(crate) mod guide;
 mod handler;
 pub(crate) mod narrate;
 mod opening;

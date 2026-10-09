@@ -19,6 +19,11 @@ use sim_api::Outcome;
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
 pub enum PhenomenaAction {
+    /// How Phenomena mode works, for an agent starting cold (`phenomena_guide`).
+    PhenomenaGuide {
+        #[serde(default)]
+        topic: Option<String>,
+    },
     /// `state` (as every mode answers it): the same as `phenomena_state`.
     State,
     /// The gallery as shown: exhibits, current, knob, readouts, verdict,
@@ -65,6 +70,7 @@ impl actions::Action for PhenomenaAction {
     fn commands() -> Vec<Spec> {
         let changing = |text: &str| format!("{text}{ANSWER}");
         vec![
+            spec("phenomena_guide", PHENOMENA, json!({}), "Start here: how Phenomena mode works (concepts, workflows in order, every command with an example, rules) for an agent starting cold; topic narrows it (about, how_to_call, concepts, workflows, commands, rules). Answers while the exhibits are still being built. Also GET /v1/phenomena_guide."),
             spec("state", PHENOMENA, json!({}), "Phenomena mode: the same answer as phenomena_state, plus viewer_mode."),
             spec("phenomena_state", PHENOMENA, json!({}), "Phenomena mode: the gallery as this window shows it: ready (false while the exhibits are being built, with message), exhibits (number, title), current (1-based number, title, summary), knob (label, unit, min, max, step, value), readouts (label, value, unit), verdict, signal (label, value), chart (one sample per 1/30 s of real time on ticks that advance the exhibit, so a pause adds none; the last 1800), time and time_unit (the exhibit's own clock), speed, paused, error (the exhibit's simulation error verbatim, or null; the run stops until reset or another exhibit), notice (an --exhibit no title matched, or null), status (the last refusal of a key or click, or null), generation (bumped by every select, next, previous, knob change and reset; older frames are never shown), requested_generation and applied (the sequence number of the last command the shown frame includes)."),
             spec("phenomena_select", PHENOMENA, json!({"exhibit": 1}), changing("Phenomena mode: open an exhibit by 1-based number or by title fragment (case-insensitive, the first title containing it), the same rule as --exhibit. The chart restarts; the error clears; the exhibit continues from where it was left (reset rebuilds it). Refused, naming the reason, when neither rule matches (a number out of range is then tried as a title fragment, as sim-app did).")),
@@ -87,7 +93,11 @@ impl actions::Action for PhenomenaAction {
 /// it, or waits for the run thread to apply its command.
 pub(crate) fn apply(mut messages: ResMut<Messages<Act<PhenomenaAction>>>, mut in_flight: ResMut<InFlight<PhenomenaAction>>, mut replies: ResMut<Replies>, gallery: Option<ResMut<Gallery>>) {
     let Some(mut gallery) = gallery else {
-        actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("phenomena mode has no gallery open".into())));
+        // The guide answers without a gallery: it is how an agent learns the mode.
+        actions::apply(&mut messages, &mut in_flight, &mut replies, |action, _| match action {
+            PhenomenaAction::PhenomenaGuide { topic } => Outcome::Done(super::guide::guide(topic.as_deref())),
+            _ => Outcome::Done(Err("phenomena mode has no gallery open".into())),
+        });
         return;
     };
     actions::apply(&mut messages, &mut in_flight, &mut replies, |action, call| {
@@ -114,6 +124,7 @@ fn handle(action: &PhenomenaAction, call: &mut Call, g: &mut Gallery) -> Outcome
         return wait(g, call, seq);
     }
     let op = match action {
+        PhenomenaAction::PhenomenaGuide { topic } => return Outcome::Done(super::guide::guide(topic.as_deref())),
         PhenomenaAction::State | PhenomenaAction::PhenomenaState => return Outcome::Done(Ok(state_json(g))),
         PhenomenaAction::SystemUi(args) => return system_ui(g, call, args),
         other => match op_for(other, g) {
@@ -154,7 +165,7 @@ fn op_for(action: &PhenomenaAction, g: &Gallery) -> Result<Op, String> {
             (None, Some(n)) => Op::Speed { speed: None, steps: Some(n) },
             _ => return Err("phenomena_speed takes speed or steps, exactly one".into()),
         },
-        PhenomenaAction::State | PhenomenaAction::PhenomenaState | PhenomenaAction::SystemUi(_) => return Err("not a changing action".into()),
+        PhenomenaAction::PhenomenaGuide { .. } | PhenomenaAction::State | PhenomenaAction::PhenomenaState | PhenomenaAction::SystemUi(_) => return Err("not a changing action".into()),
     })
 }
 
@@ -213,5 +224,6 @@ pub(crate) fn publish(rest: Option<ResMut<crate::rest::Rest>>, gallery: Option<R
     let mut shown = state.clone();
     shown["viewer_mode"] = json!(ViewerMode::Phenomena.name());
     rest.0.publish("phenomena_state", state);
+    rest.0.publish_changed("phenomena_guide", "1", || super::guide::guide(None).unwrap_or_default());
     rest.0.publish("state", shown);
 }

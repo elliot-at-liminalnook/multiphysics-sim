@@ -694,3 +694,25 @@ fn the_first_home_framing_uses_the_view_areas_aspect() {
 
 #[path = "gesture_tests.rs"]
 mod gesture_tests;
+
+/// Place's fly camera: yaw 0 pitch 0 looks along +X; pitch tilts the view
+/// up and down and never rolls it (the right axis stays level); and
+/// `angles_toward` inverts the view direction.
+#[test]
+fn fly_pitch_tilts_and_never_rolls() {
+    use fly::{Fly, angles_toward, orientation};
+    let look = |yaw: f32, pitch: f32| orientation(&Fly { yaw, pitch, speed: 1.0 });
+    assert!(close(look(0.0, 0.0) * Vec3::NEG_Z, Vec3::X, EPS));
+    for (yaw, pitch) in [(0.0f32, 0.5f32), (1.0, -0.7), (-2.5, 1.2), (3.0, 0.0)] {
+        let q = look(yaw, pitch);
+        let forward = q * Vec3::NEG_Z;
+        let expected = Vec3::new(pitch.cos() * yaw.cos(), pitch.sin(), -pitch.cos() * yaw.sin());
+        assert!(close(forward, expected, 1e-5), "yaw {yaw} pitch {pitch}: {forward} vs {expected}");
+        assert!((q * Vec3::X).y.abs() < 1e-5, "yaw {yaw} pitch {pitch}: the right axis tilted (a roll)");
+        assert!((q * Vec3::Y).y > 0.0, "yaw {yaw} pitch {pitch}: upside down");
+        let (y2, p2) = angles_toward(forward).unwrap();
+        assert!(close(look(y2, p2) * Vec3::NEG_Z, forward, 1e-5), "yaw {yaw} pitch {pitch}: angles_toward gave {y2} {p2}");
+    }
+    assert!(angles_toward(Vec3::ZERO).is_none());
+    assert_eq!(angles_toward(Vec3::Y).unwrap().1, 1.5);
+}

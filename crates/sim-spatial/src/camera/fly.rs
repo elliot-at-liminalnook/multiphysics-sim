@@ -34,9 +34,22 @@ pub(crate) struct Fly {
     pub(crate) speed: f32,
 }
 
-/// The fly camera's rotation from its yaw and pitch.
+/// The fly camera's rotation from its yaw and pitch: yaw 0 looks along +X,
+/// positive yaw turns toward −Z, and pitch tilts the view up or down about
+/// the camera's own horizontal axis (it never rolls). The view direction is
+/// `(cos p·cos y, sin p, −cos p·sin y)`; [`angles_toward`] inverts it.
 pub(crate) fn orientation(fly: &Fly) -> Quat {
-    Quat::from_euler(EulerRot::YXZ, fly.yaw, fly.pitch, 0.0) * Quat::from_rotation_y(-std::f32::consts::FRAC_PI_2)
+    // Yaw first, then pitch about the camera's right axis. (Pitch applied
+    // after the quarter turn, as before 2026-10-08, rolled the view.)
+    Quat::from_euler(EulerRot::YXZ, fly.yaw - std::f32::consts::FRAC_PI_2, fly.pitch, 0.0)
+}
+
+/// The yaw and pitch that look along `direction` (any length; pitch is
+/// clamped to ±1.5 rad as the mouse clamps it). None for a zero or
+/// non-finite direction.
+pub(crate) fn angles_toward(direction: Vec3) -> Option<(f32, f32)> {
+    let d = direction.try_normalize()?;
+    Some(((-d.z).atan2(d.x), d.y.clamp(-1.0, 1.0).asin().clamp(-1.5, 1.5)))
 }
 
 /// CameraSet::Place: continuous flying (W/A/S/D, Q/E, Shift), mouse look

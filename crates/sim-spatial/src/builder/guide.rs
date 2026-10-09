@@ -21,6 +21,8 @@ pub(crate) fn guide(topic: Option<&str>) -> Result<Value, String> {
             "artifacts": "An FMU block records the archive's SHA-256; a run refuses a changed file (re-add it to accept the new artifact). A generated robot records its ports; a run refuses a source that no longer offers them.",
             "robots": "system_add_robot places a robot as a generated assembly with boundary ports: supply_p/supply_n (motor bus), ambient (thermal environment), <joint>.target inputs (servo setpoints) and <joint>.angle / <joint>.speed / imu.* outputs. A battery, a cooling path and controller blocks are ordinary parts wired to them. A robot project's system (project_state.system.path) is such a file: its acceptance test (project_test) runs it as composed, so controller blocks wired to the robot here are what gets tested; own_supply / own_ambient keep the supply and ambient the robot's model defines. After the robot's model is re-exported with different joints, system_refresh_generated records its new ports.",
             "tests_and_evidence": "A test is requirements on observables (readable keys such as thermometer.temperature) judged on a run of the system as composed. Its evidence is kept beside the file, bound to the model, every artifact's bytes, the run settings and the test; any change makes it stale and says what changed. A requirement the run cannot judge is not assessed, never a pass.",
+            "teleoperation": "A drive input block (system_add_drive_input) turns a person's keys, gamepad or system_drive requests into a body twist (vx, vy in m/s, wz in rad/s), scaled, limited and watched by the deadman of the robot's sim.drive/1 profile on simulation time; wire it to whatever mixes a twist. Only a host that drives can run it (this window's Build run; Robot mode); a headless run refuses it by name.",
+            "setpoints": "A block input may be a setpoint: the input through which a person moves a robot joint when the controller already owns the joint's servo target. An FMU declares it with <Annotation type=\"sim.setpoint\">joint</Annotation> (empty: whichever joint the block drives); the system command set_block_setpoint {name, input, joint} sets or clears it. A setpoint nothing drives holds its start value. Robot mode's jog drives free targets and free setpoints and refuses a joint with neither, naming why.",
             "not_claimed": "An FMU proves the controller code runs against this model. It says nothing about firmware timing on a microcontroller or hardware fidelity: that is a hardware adapter's job.",
         },
         "workflows": [
@@ -37,6 +39,10 @@ pub(crate) fn guide(topic: Option<&str>) -> Result<Value, String> {
                 "add a battery (robot.battery) and ground (electrical.ground); connect battery.p to rover.supply_p and battery.n + ground.pin to rover.supply_n",
                 "connect rover.ambient to a thermal environment (thermal.ambient, or a capacitance vented through a conductance)",
                 "add one controller block per joint (system_add_fmu) and connect rover.<joint>.angle → controller input, controller output → rover.<joint>.target"]},
+            {"goal": "Drive a robot in its system", "steps": [
+                "system_add_drive_input {profile: rover.drive.json, name: teleop}",
+                "connect teleop.vx and teleop.wz to the controller's command inputs (the block that mixes a twist into wheel targets)",
+                "system_run {action: start}, then system_drive {forward: 0.5} (or the bound keys and gamepad); system_state.drive shows the commanded twist and the deadman"]},
             {"goal": "Change a block's timing", "steps": ["system {commands: [{command: set_block_timing, name, timing: {clock: {kind: periodic, period, offset}, input_delay, output_delay, deadline_s}}]}"]},
             {"goal": "Prove a requirement", "steps": [
                 "system_test {action: set, name, test: {duration_s, requirements: [{id, observable, reduce, window, min, max}]}}",
@@ -45,6 +51,8 @@ pub(crate) fn guide(topic: Option<&str>) -> Result<Value, String> {
         ],
         "commands": {
             "system_guide": {"example": {"topic": "workflows"}, "does": "This guide; topic narrows it."},
+            "system_add_drive_input": {"example": {"profile": "rover.drive.json", "name": "teleop", "period": 0.02}, "does": "Add a drive input block: a person's twist, limited by the robot's drive profile."},
+            "system_drive": {"example": {"forward": 0.5}, "does": "Drive the running drive input block: axes, a profile action or stop."},
             "system_inspect_fmu": {"example": {"path": "fmus/thermostat.fmu"}, "does": "What an FMU offers and why a block could not use it."},
             "system_add_fmu": {"example": {"path": "fmus/thermostat.fmu", "name": "thermostat", "period": 0.5, "parameters": {"setpoint": 294.15}}, "does": "Add an FMU block (interface and SHA-256 from the archive)."},
             "system_add_robot": {"example": {"source": "rover.simrobot.json", "name": "rover"}, "does": "Add a generated robot assembly."},

@@ -217,6 +217,10 @@ fn dispatch(view: &mut RobotView, orbit: &mut Orbit, selection: &mut Selection, 
         // for robot_state.drive.last_refusal. The run thread limits it under
         // the profile's acceleration and deadman rule.
         let run = view.run.as_mut().ok_or("the robot has not loaded")?;
+        // A robot project's system: its drive input block takes the request.
+        if run.composed().is_some() {
+            return run.drive_composed(&request);
+        }
         let (twist, halt) = drive_request(run, &request)?;
         return run.drive(twist, halt);
     }

@@ -39,12 +39,41 @@ pub enum Source {
     /// every build fails with `error` ("controller binding <path>: …"); it
     /// never falls back to the file's hold run.
     Unbound { model: PhysicalModel, error: String },
+    /// A `--robot FILE` that belongs to a robot project: the project's
+    /// system runs (`sim_runtime::teleop::compose_robot`), its controllers
+    /// as they are, the robot measured inside it.
+    Composed(Arc<ComposedRun>),
+}
+
+/// A robot project's system as Robot mode runs it (read by the loader, off
+/// the UI thread): the files, the document, the jog plan (which joints a
+/// person may move, and why the others cannot be) and the drive link a
+/// drive input block in the system is bound to.
+pub struct ComposedRun {
+    pub project: std::path::PathBuf,
+    pub system: std::path::PathBuf,
+    pub base: std::path::PathBuf,
+    pub document: sim_system::SystemDocument,
+    pub robot_instance: String,
+    pub jog: sim_runtime::teleop::JogPlan,
+    pub drive: sim_runtime::teleop::DriveLink,
+}
+impl ComposedRun {
+    /// `robot_state.composed`.
+    pub fn json(&self) -> Value {
+        serde_json::json!({
+            "project": self.project, "system": self.system, "robot": self.robot_instance,
+            "jog": self.jog,
+            "drive": {"bound": self.drive.bound(), "status": self.drive.status().map(|s| s.json())},
+            "rule": "Robot mode runs the project's system: its controller blocks run as they are; a joint moves through its free servo target or its controller's free setpoint input, and is refused (jog.refused) when it has neither. A drive input block in the system follows robot_drive and the bound keys.",
+        })
+    }
 }
 impl Source {
     /// Sim time per chunk: the seam period for a drive session (one action per period).
     pub(super) fn chunk_s(&self) -> f64 {
         match self {
-            Source::Robot(_) | Source::Unbound { .. } => CHUNK_S,
+            Source::Robot(_) | Source::Unbound { .. } | Source::Composed(_) => CHUNK_S,
             Source::Preset(p) => p.chunk_s(),
             Source::Controlled(r) => r.scene.period_s,
         }

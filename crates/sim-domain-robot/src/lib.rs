@@ -26,7 +26,7 @@ pub mod stress_results;
 pub mod drive_geometry;
 
 pub use articulated::{Articulated, Generalized, Options, ARTICULATED};
-pub use model::{model_by_handle, register_model, PhysicalModel};
+pub use model::{model_by_handle, register_model, register_model_in, PhysicalModel};
 pub use motor::{BATTERY, H_BRIDGE, MOTOR_UNIT, SERVO_FIRMWARE, THERMAL_PROBE};
 
 use sim_core::{BehaviorRegistry, RegistryError};

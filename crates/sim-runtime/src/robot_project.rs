@@ -147,6 +147,28 @@ impl ProjectFile {
     }
 }
 
+/// The robot project whose model is `model` (a `*.robot.json` in the
+/// model's folder or the one above it whose `model` names this file), or
+/// None. Robot mode uses it to run the project's system instead of the
+/// model alone. A project file that does not parse is skipped.
+pub fn find_for_model(model: &Path) -> Option<Project> {
+    let model = std::fs::canonicalize(model).ok()?;
+    let folder = model.parent()?;
+    for dir in [Some(folder), folder.parent()].into_iter().flatten() {
+        let Ok(entries) = std::fs::read_dir(dir) else { continue };
+        let mut files: Vec<std::path::PathBuf> = entries.filter_map(|e| e.ok().map(|e| e.path())).filter(|p| p.to_string_lossy().ends_with(SUFFIX)).collect();
+        files.sort();
+        for path in files {
+            let Ok(file) = ProjectFile::load(&path) else { continue };
+            let project = Project { path, file };
+            if std::fs::canonicalize(project.model()).ok().as_deref() == Some(model.as_path()) {
+                return Some(project);
+            }
+        }
+    }
+    None
+}
+
 /// An open project: its file and where it lives.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Project {

@@ -354,10 +354,17 @@ fn script_runtime_diagnostic(mut message: String, plan: &sim_script::System, nat
 
 /// Runs only captured inputs. The caller owns cancellation of this process and
 /// controller descendants. Progress events are flushed as newline-delimited JSON.
-pub fn run(
+pub fn run(spec: Specification, output: &Path, progress: impl FnMut(Value)) -> Result<Value, String> {
+    run_cancellable(spec, output, progress, &|| false)
+}
+
+/// [`run`], stopping between samples once `cancelled` answers true: the
+/// samples so far are kept as `partial.json` and the error is "cancelled".
+pub fn run_cancellable(
     mut spec: Specification,
     output: &Path,
     mut progress: impl FnMut(Value),
+    cancelled: &dyn Fn() -> bool,
 ) -> Result<Value, String> {
     if spec.version != 1 {
         return Err("unsupported experiment specification version".into());
@@ -446,8 +453,8 @@ pub fn run(
         let mut k = 0;
         while !spec.preflight && runtime.time < s.seconds - 1e-10 {
             let stepping = Instant::now();
-            if let Err(error) = runtime.advance(s.sample.min(s.seconds - runtime.time), s.step) {
-                let error = error.to_string();
+            let step = if cancelled() { Err("cancelled".to_string()) } else { runtime.advance(s.sample.min(s.seconds - runtime.time), s.step).map_err(|e| e.to_string()) };
+            if let Err(error) = step {
                 partial(
                     output,
                     &spec,
@@ -550,7 +557,8 @@ pub fn run(
         while !spec.preflight && robot.runtime.time < s.seconds - 1e-10 {
             let stepping = Instant::now();
             let count = robot.recorded_samples();
-            if let Err(error) = robot.advance(s.sample.min(s.seconds - robot.runtime.time)) {
+            let step = if cancelled() { Err("cancelled".to_string()) } else { robot.advance(s.sample.min(s.seconds - robot.runtime.time)) };
+            if let Err(error) = step {
                 let mut result = robot.results("captured CAD assembly");
                 result["trace"]["poses"] = json!(poses);
                 result["trace"]["flex"] = json!(flex);

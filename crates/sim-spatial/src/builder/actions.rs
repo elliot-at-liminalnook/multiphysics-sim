@@ -6,7 +6,7 @@
 //! `Builder::apply` (the validated command path and the shared undo history).
 use super::*;
 use super::system_actions::SystemAction;
-use crate::app::actions::{Act, Origin};
+use crate::app::actions::Act;
 use crate::app::switch::{ModeSwitch, WindowAction};
 
 /// A builder button, key or marker: the chrome's actions. The serialized

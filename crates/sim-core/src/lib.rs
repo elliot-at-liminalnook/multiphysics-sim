@@ -6,6 +6,7 @@ pub mod definitions;
 pub mod equations;
 pub mod parameters;
 pub mod primitive;
+pub mod resources;
 pub use parameters::ParameterDeclaration;
 pub use block::{BLOCK, BlockDecl, BlockImplementation, BlockInterface, BlockPort, BlockTiming, Checkpoint, Clock, CouplerBlock, ImplementationRef};
 pub use couple::{Channel, Contract, Coupler, CouplerError, FnCoupler};
@@ -98,6 +99,11 @@ pub struct ModelWorld {
     /// Executable blocks, each with its shadow element in `behaviors`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub blocks: Vec<BlockDecl>,
+    /// Content-addressed resources its elements read by key (a robot's
+    /// physical model): key → text ([`resources`]). They travel with the
+    /// world, so a serialised world rebuilds in another process.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub resources: BTreeMap<u64, String>,
 }
 
 impl Default for ModelWorld {
@@ -109,6 +115,7 @@ impl Default for ModelWorld {
             connections: Vec::new(),
             state: StateStore::default(),
             blocks: Vec::new(),
+            resources: BTreeMap::new(),
         }
     }
 }
@@ -306,6 +313,26 @@ impl ModelWorld {
             self.connect([block.ports[*n], *p]);
         }
         Ok(block)
+    }
+
+    /// Carry `text` as a resource of this world and make it available to
+    /// factories in this process; its key, as an element parameter holds it.
+    pub fn add_resource(&mut self, text: String) -> Result<f64, String> {
+        let key = resources::install(&text)?;
+        self.resources.insert(key, text);
+        Ok(key as f64)
+    }
+
+    /// Install every resource this world carries into this process's cache
+    /// (compiling does this first, so a world read from a file works).
+    pub fn install_resources(&self) -> Result<(), String> {
+        for (key, text) in &self.resources {
+            let installed = resources::install(text)?;
+            if installed != *key {
+                return Err(format!("resource {key} does not match its content (its key is {installed})"));
+            }
+        }
+        Ok(())
     }
 
     /// The block whose shadow element is `behavior`.

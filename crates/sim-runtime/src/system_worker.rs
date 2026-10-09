@@ -126,6 +126,7 @@ pub fn serve(registry: BehaviorRegistry) -> Result<(), String> {
         source_hash: launch.source_hash,
         revision: launch.revision,
         base: launch.base.map(std::path::PathBuf::from),
+        drive: None,
     };
     let mut session =
         match SystemSession::new(launch.run_id, launch.config, move |c| source.build(c)) {

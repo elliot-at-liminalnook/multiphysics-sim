@@ -134,7 +134,7 @@ pub(super) fn panels(
 }
 
 /// The header's short pose label for a controlled run's frames (the Drive
-/// block states the fidelity in full, `controls::DRIVE_FIDELITY`).
+/// block states the fidelity in full, `controls::drive::DRIVE_FIDELITY`).
 const CONTROLLED_POSE: &str = "simulated pose (PhysicalRobot physics; the external controller replaces the hold coupler)";
 
 /// The run is driven by an external controller (`RunController::controlled`).

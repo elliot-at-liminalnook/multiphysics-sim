@@ -16,6 +16,10 @@ use super::{Drive, Frame, OverlayFlags, Pace, Phase, ReplayPhase, ReplayState, S
 /// Sets one servo target by the file's joint name. `set_target` ignores a bad
 /// index silently, so an unresolved name is an error here instead.
 fn apply_jog(robot: &sim_runtime::physical::PhysicalRobot, joint: &str, target: f64) -> Result<(), String> {
+    // A composed system's controller may own the joint and offer no free setpoint.
+    if let Some(why) = robot.jog_refused.get(joint) {
+        return Err(format!("joint `{joint}`: not moved here: {why}"));
+    }
     let index = robot.joint_names.iter().position(|n| short(n) == joint).ok_or_else(|| format!("joint `{joint}`: the built robot has no servo target named `{joint}` (its targets: {})", robot.joint_names.join(", ")))?;
     if index >= robot.targets.lock().unwrap_or_else(|p| p.into_inner()).len() {
         return Err(format!("joint `{joint}`: the built robot lists it (index {index}) but holds no servo target for it"));

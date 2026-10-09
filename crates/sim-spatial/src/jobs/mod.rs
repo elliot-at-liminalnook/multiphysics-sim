@@ -15,10 +15,9 @@
 //!   commands in and a shared, generation-stamped snapshot out; dropping it
 //!   closes the command channel and joins within a bound.
 //! - **Child processes** ([`ChildProcess`]): a process the viewer started
-//!   and owns (CAD mode's self-started RoboCAD service). `stop` kills it and
-//!   a reaper thread waits for it; dropping it does the same; `detach` leaves
-//!   it running. Only self-started processes are ever owned, so an attached
-//!   service is never stopped.
+//!   and owns. `stop` kills it and a reaper thread waits for it; dropping it
+//!   does the same; `detach` leaves it running. Only self-started processes
+//!   are ever owned.
 //! - **Helpers**: [`spawn_detached`] starts a process whose lifetime is not
 //!   tied to ours (the linked `sim-viewer` schematic window) and
 //!   [`open_in_browser`] opens an http(s) link with `open`/`xdg-open`

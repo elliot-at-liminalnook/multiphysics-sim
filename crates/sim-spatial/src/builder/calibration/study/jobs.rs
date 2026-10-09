@@ -77,8 +77,17 @@ pub struct JobReceipt {
 impl JobReceipt {
     /// Bounded-to-inputs receipt representation for the saved Study envelope.
     /// Never recursively embeds older receipts or duplicates the archive samples.
+    /// The terminal reference as attached: the worker's outcome keeps its own
+    /// cancellation observation, and a cancel requested after it finished
+    /// classifies the reference cancelled, unapplied and unscored here.
+    fn terminal_result(&self)->Option<refinement::terminal::Reference> {
+        self.refinement.as_ref().and_then(refinement::terminal::reference).map(|mut r|{
+            if self.cancelled {r.cancelled=true;r.unapplied=true;r.unscored=true;}
+            r
+        })
+    }
     pub fn durable(&self)->serde_json::Value {
-        json!({"id":self.id,"kind":format!("{:?}",self.kind),"stamp":self.stamp,"source":self.source,"trial_ids":self.trial_ids,"launch":self.launch,"cancelled":self.cancelled,"cancellation_requested":self.cancelled,"displaced":self.displaced,"stale":self.stale,"message":self.message,"error":self.error,"terminal_result":self.refinement.as_ref().and_then(refinement::terminal::reference),"document":self.document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),"inputs":self.captured.as_ref().map(|s|json!({"baseline":s.baseline,"candidate":s.draft,"limits":s.limits,"validation_seen":s.validation_seen,"validation_influenced":s.validation_influenced,"observation_blake3":s.archive.observation_blake3,"model_blake3":s.archive.model_blake3,"assumptions":experiment_study::ASSUMPTIONS}))})
+        json!({"id":self.id,"kind":format!("{:?}",self.kind),"stamp":self.stamp,"source":self.source,"trial_ids":self.trial_ids,"launch":self.launch,"cancelled":self.cancelled,"cancellation_requested":self.cancelled,"displaced":self.displaced,"stale":self.stale,"message":self.message,"error":self.error,"terminal_result":self.terminal_result(),"document":self.document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source})),"inputs":self.captured.as_ref().map(|s|json!({"baseline":s.baseline,"candidate":s.draft,"limits":s.limits,"validation_seen":s.validation_seen,"validation_influenced":s.validation_influenced,"observation_blake3":s.archive.observation_blake3,"model_blake3":s.archive.model_blake3,"assumptions":experiment_study::ASSUMPTIONS}))})
     }
     pub fn snapshot(&self)->serde_json::Value {
         json!({"id":self.id,"kind":format!("{:?}",self.kind),"stamp":self.stamp,"source":self.source,"trial_ids":self.trial_ids,"launch":self.launch,"cancelled":self.cancelled,"cancellation_requested":self.cancelled,"displaced":self.displaced,"stale":self.stale,"message":self.message,"error":self.error,"evaluation":self.evaluation,"refinement":self.refinement,"captured":self.captured,"document":self.document.as_ref().map(|d|json!({"id":d.id,"revision":d.revision,"source":d.source}))})

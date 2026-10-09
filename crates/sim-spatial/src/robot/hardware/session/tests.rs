@@ -880,6 +880,21 @@ fn ready_remote_hardware(fake: &Fake) -> crate::robot::hardware::Hardware {
     hw
 }
 
+/// Waits until the link has started a motion session on a ready motor, then
+/// copies its status into the panel (the frame's copy, `actions::jobs::poll_jobs`).
+fn refresh_moving(hw: &mut crate::robot::hardware::Hardware) {
+    let deadline = Instant::now() + Duration::from_secs(5);
+    loop {
+        let s = hw.link.as_ref().unwrap().snapshot();
+        if s.ready && !s.busy && !s.starting && s.run.is_some() && !s.stale(Instant::now()) {
+            hw.snapshot = s;
+            return;
+        }
+        assert!(Instant::now() < deadline, "motion start deadline");
+        std::thread::sleep(Duration::from_millis(1));
+    }
+}
+
 /// The listed `hardware:jog_upper` control: (label, action, ready).
 fn jog_upper(hw: &crate::robot::hardware::Hardware) -> (String, crate::robot::hardware::actions::HardwareAction, Result<(), String>) {
     let (_, label, action, ready) = crate::robot::hardware::panel::controls(hw).into_iter().find(|(id, ..)| id == "hardware:jog_upper").expect("jog_upper is listed");
@@ -993,11 +1008,19 @@ fn a_refused_remote_press_of_a_held_direction_keeps_the_operators_hold() {
     let mut local = Value::Null;
     assert!(matches!(dispatch_as(&mut hw, &press, Origin::Ui, &mut local, &mut replies), Answer::Done(Ok(_))));
     assert!(hw.form.held_upper && hw.jog_presses[0] == 1);
+    // The link has started the operator's motion (a STOP bumped before it
+    // ran would refuse the operator's own press), and the panel holds this
+    // frame's copy of its status (as `poll_jobs` takes it each frame; the
+    // copy from when the motor became ready may have aged past `STALE_AFTER`).
+    refresh_moving(&mut hw);
     // STOP pressed, its `Stopped` not sent: the link refuses the remote press.
     hw.link.as_ref().unwrap().epoch.fetch_add(1, SeqCst);
     let origin = Origin::Rest(replies.open());
     let mut continuation = Value::Null;
-    assert!(matches!(dispatch_as(&mut hw, &press, origin, &mut continuation, &mut replies), Answer::Pending));
+    match dispatch_as(&mut hw, &press, origin, &mut continuation, &mut replies) {
+        Answer::Pending => {}
+        Answer::Done(r) => panic!("the remote press is queued on the link, not answered: {r:?}"),
+    }
     assert_eq!(hw.pending_presses.len(), 1);
     assert!(hw.pending_presses[0].before && !hw.pending_presses[0].one_way);
     assert_eq!(settle_remote(&mut hw, &press, origin, &mut continuation, &mut replies), Err(STOP_PENDING.to_string()));

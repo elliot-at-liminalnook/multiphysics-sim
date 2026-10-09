@@ -206,3 +206,81 @@ fn evidence_is_bound_to_the_model_the_artifacts_the_settings_and_the_test() {
     let evidence = system_evidence::assess(&store.load().unwrap(), &registry(), &d, "comfort", None).unwrap();
     assert_eq!(evidence.verdict, Verdict::Failed);
 }
+
+/// A flattened system is a self-contained model world: the generated
+/// robot's physical model travels with it as a resource (the articulated
+/// element's `model` parameter is its key), so the world serialises, reads
+/// back, compiles and runs exactly as the original.
+#[test]
+fn a_flattened_robot_system_serialises_and_runs_the_same() {
+    let d = dir("serialise");
+    let path = composition_examples::rover(&d, &registry()).unwrap();
+    let document = SystemStore::new(&path).load().unwrap();
+    let registry = registry();
+    let flat = sim_system::flatten_with(&document, &registry, &sim_runtime::robot_generator::generators(&d)).unwrap();
+    assert_eq!(flat.model.resources.len(), 1, "the robot's model is carried by the world");
+    let key = *flat.model.resources.keys().next().unwrap();
+    let robot = flat.model.behaviors.values().find(|b| b.kind.0 == sim_domain_robot::ARTICULATED).expect("an articulated robot");
+    assert_eq!(robot.parameters["model"].value_si, key as f64, "the element names its model by key");
+    let copy: sim_core::ModelWorld = serde_json::from_str(&serde_json::to_string(&flat.model).unwrap()).unwrap();
+    assert_eq!(copy.resources, flat.model.resources);
+    let config = system_builder::config_for(&document);
+    let run = |model: sim_core::ModelWorld| -> Vec<(String, f64)> {
+        let mut runtime = sim_compile::Runtime::new(model, &registry, config.integrator).unwrap();
+        sim_runtime::system_blocks::bind(&mut runtime, Some(&d)).unwrap();
+        runtime.advance(0.05, config.interval.min(1.0e-3)).unwrap();
+        runtime.model.state.iter().map(|(_, s)| (s.name.clone(), s.committed)).collect()
+    };
+    let (a, b) = (run(flat.model.clone()), run(copy));
+    assert_eq!(a.len(), b.len());
+    for ((name, x), (other, y)) in a.iter().zip(&b) {
+        assert_eq!(name, other);
+        assert!(x == y || (x.is_nan() && y.is_nan()), "{name}: {x} vs {y}");
+    }
+}
+
+/// Robot mode runs a robot project's system as composed. Where a controller
+/// owns a joint's servo target, a person moves the joint through the
+/// controller's free setpoint (the joint-controller FMU's `setpoint` input,
+/// annotated `sim.setpoint`): the jog plan names it, and moving it moves
+/// the joint. Nothing is refused here: both axles have a setpoint.
+#[test]
+fn a_controlled_joint_is_jogged_through_its_controllers_setpoint() {
+    use sim_runtime::teleop::{Via, compose_robot, plan_for};
+    let d = dir("jog");
+    let path = composition_examples::rover(&d, &registry()).unwrap();
+    let document = SystemStore::new(&path).load().unwrap();
+    let (robot, plan) = plan_for(&document, &d).unwrap();
+    assert_eq!(robot, "rover");
+    assert!(plan.refused.is_empty(), "{:?}", plan.refused);
+    let left = plan.channels.iter().find(|c| c.joint == "left axle").expect("the left axle can be moved");
+    assert_eq!(left.via, Via::Setpoint { block: "left_controller".into(), input: "setpoint".into() });
+    let run = |offset: f64| -> f64 {
+        let mut composed = compose_robot(&document, &d, &registry(), &Default::default()).unwrap();
+        let index = composed.robot.joint_names.iter().position(|n| n.trim_start_matches("joint.") == "left axle").unwrap();
+        composed.robot.set_target(index, offset);
+        composed.robot.advance(1.0).unwrap();
+        composed.robot.joint_angles()[index]
+    };
+    let (still, moved) = (run(0.0), run(0.5));
+    assert!((moved - still) > 0.2, "the setpoint did not move the joint: {still} → {moved}");
+}
+
+/// A joint whose target a block drives without a setpoint input is refused
+/// by name, and a free target is moved directly.
+#[test]
+fn a_joint_without_a_free_setpoint_is_refused_by_name() {
+    use sim_runtime::teleop::{Via, plan_for};
+    let d = dir("jog-refused");
+    let path = composition_examples::rover(&d, &registry()).unwrap();
+    let mut document = SystemStore::new(&path).load().unwrap();
+    // Clear the right controller's setpoint, and free the left axle's target.
+    let commands = vec![
+        Command::SetBlockSetpoint { at: String::new(), name: "right_controller".into(), input: "setpoint".into(), joint: None },
+        Command::Disconnect { at: String::new(), terminal: sim_system::Terminal::port("rover", "left axle.target") },
+    ];
+    sim_system::commands::apply(&mut document, &registry(), &commands).unwrap();
+    let (_, plan) = plan_for(&document, &d).unwrap();
+    assert!(plan.refused.get("right axle").is_some_and(|why| why.contains("right_controller") && why.contains("no setpoint")), "{:?}", plan.refused);
+    assert!(plan.channels.iter().any(|c| c.joint == "left axle" && c.via == Via::Target), "{:?}", plan.channels);
+}

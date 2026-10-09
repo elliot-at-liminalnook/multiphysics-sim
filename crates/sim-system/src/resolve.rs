@@ -400,6 +400,10 @@ impl<'a> Resolver<'a> {
                     if matches!(ports.get(port), Some(Some(PortSchema::SignalOut(_)))) {
                         continue;
                     }
+                    // A block's setpoint input may stay open: it holds its start value.
+                    if matches!(&instance.kind, InstanceKind::Block { interface, .. } if interface.inputs.iter().any(|p| &p.name == port && p.setpoint.is_some())) {
+                        continue;
+                    }
                     let members_connected = connected.iter().any(|t| matches!(t, Terminal::Port { instance: i, port: p } if i == name && p.starts_with(&format!("{port}."))));
                     if !connected.contains(&Terminal::port(name, port)) && !members_connected {
                         out.push(Finding { code: "unconnected_port".into(), message: format!("{here}.{port} is not connected"), subject: Some(here.clone()) });

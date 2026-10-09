@@ -26,6 +26,11 @@ pub struct Loaded {
     /// did not load (the run then fails with it, never falling back to the hold
     /// run), else the drive session to run. Always None for presets.
     pub controlled: Option<Result<std::sync::Arc<crate::robot::run::ControlledRun>, String>>,
+    /// `--robot FILE` only, without a controller binding: the robot project
+    /// the file belongs to (`sim_runtime::robot_project::find_for_model`),
+    /// whose system Robot mode runs; `Err` names a project whose system or
+    /// model does not load (the run then fails with it). None otherwise.
+    pub composed: Option<Result<std::sync::Arc<crate::robot::run::ComposedRun>, String>>,
 }
 /// Free text the file carries that `PhysicalModel` does not keep, read from
 /// the same bytes. Shown verbatim; never mapped to a provenance label.
@@ -112,7 +117,21 @@ pub fn loaded(model: PhysicalModel, raw: &Value, path: &Path) -> Loaded {
             (!g.positions.is_empty()).then_some(g)
         })
         .collect();
-    Loaded { model, geometry, notes, cad_link, controlled: None }
+    Loaded { model, geometry, notes, cad_link, controlled: None, composed: None }
+}
+
+/// The robot project a physical `--robot FILE` (`path`) belongs to, read
+/// for Robot mode: its system document and the jog plan over it (reads
+/// files: call off the UI thread). None when the file is no project's model.
+pub fn load_composed(path: &Path) -> Option<Result<std::sync::Arc<crate::robot::run::ComposedRun>, String>> {
+    let project = sim_runtime::robot_project::find_for_model(path)?;
+    let system = project.system();
+    Some((|| {
+        let document = sim_system::SystemStore::new(&system).load().map_err(|e| format!("{}: {e}", system.display()))?;
+        let base = system.parent().unwrap_or(Path::new(".")).to_path_buf();
+        let (robot_instance, jog) = sim_runtime::teleop::plan_for(&document, &base)?;
+        Ok(std::sync::Arc::new(crate::robot::run::ComposedRun { project: project.path.clone(), system: system.clone(), base, document, robot_instance, jog, drive: Default::default() }))
+    })().map_err(|e: String| format!("robot project {}: {e}", project.path.display())))
 }
 
 /// The controller binding beside a physical `--robot FILE` (`path`), loaded

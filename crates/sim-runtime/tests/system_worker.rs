@@ -137,6 +137,7 @@ fn authored_motor_connection_samples_match_headless_session_and_reset() {
         source_hash: launch.source_hash.clone(),
         revision: launch.revision,
         base: None,
+        drive: None,
     };
     let mut headless = SystemSession::new(launch.run_id.clone(), launch.config.clone(), move |c| {
         source.build(c)

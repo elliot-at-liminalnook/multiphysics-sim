@@ -494,7 +494,7 @@ impl SystemRun {
             registry: registry.clone(),
             identities: compiled.flat.identities.clone(),
             source_hash: compiled.flat.source_hash.clone(),
-            revision: document.revision.max(1), base: None
+            revision: document.revision.max(1), base: None, drive: None
         };
         let interval = config.interval;
         let mut session = sim_runtime::system_session::SystemSession::new("browser".into(), config, move |c| source.build(c)).map_err(error)?;

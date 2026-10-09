@@ -9,7 +9,7 @@
 //! See `cad/PHYSICAL_MODEL.md`.
 
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::{Arc, Mutex, OnceLock};
 
 pub type V3 = [f64; 3];
@@ -1389,26 +1389,47 @@ impl PhysicalModel {
 }
 
 // ---- handle store ---------------------------------------------------------
-// Element factories only take scalar parameters, so the description is
-// parked here and referenced by a numeric handle (`model = <handle>`).
+// Element factories only take scalar parameters, so the description is a
+// content-addressed resource (`sim_core::resources`) and the element's
+// `model` parameter is its key. The text travels with the model world
+// (`register_model_in`), so a flattened system can be serialised and rebuilt
+// in another process; parsed models are cached here by key.
 
-static MODELS: OnceLock<Mutex<Vec<Arc<PhysicalModel>>>> = OnceLock::new();
-
-/// Park a model; the returned handle is what `robot.articulated` reads.
-pub fn register_model(model: PhysicalModel) -> f64 {
-    let store = MODELS.get_or_init(|| Mutex::new(Vec::new()));
-    let mut s = store.lock().unwrap_or_else(|p| p.into_inner());
-    s.push(Arc::new(model));
-    (s.len() - 1) as f64
+fn parsed() -> &'static Mutex<HashMap<u64, Arc<PhysicalModel>>> {
+    static PARSED: OnceLock<Mutex<HashMap<u64, Arc<PhysicalModel>>>> = OnceLock::new();
+    PARSED.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
+/// Carry `model` in `world` as a resource; the key `robot.articulated`'s
+/// `model` parameter takes. The model is the one assembled (identification
+/// applied); its serialised form is what another process rebuilds.
+pub fn register_model_in(world: &mut sim_core::ModelWorld, model: Arc<PhysicalModel>) -> Result<f64, String> {
+    let text = serde_json::to_string(&*model).map_err(|e| format!("robot model: {e}"))?;
+    let key = world.add_resource(text)?;
+    parsed().lock().unwrap_or_else(|p| p.into_inner()).entry(key as u64).or_insert(model);
+    Ok(key)
+}
+
+/// Make `model` available to factories in this process only (tests and
+/// rigs that build an element by hand); the key. A world built this way
+/// cannot be rebuilt elsewhere: use [`register_model_in`].
+pub fn register_model(model: PhysicalModel) -> f64 {
+    let text = serde_json::to_string(&model).expect("a physical model serialises");
+    let key = sim_core::resources::install(&text).expect("no resource key collision");
+    parsed().lock().unwrap_or_else(|p| p.into_inner()).entry(key).or_insert_with(|| Arc::new(model));
+    key as f64
+}
+
+/// The model under `handle` (a resource key): the cached parse, or the
+/// installed text parsed now.
 pub fn model_by_handle(handle: f64) -> Option<Arc<PhysicalModel>> {
-    let store = MODELS.get_or_init(|| Mutex::new(Vec::new()));
-    let s = store.lock().unwrap_or_else(|p| p.into_inner());
-    if !handle.is_finite() || handle < 0.0 || handle.fract() != 0.0 {
-        return None;
+    let key = sim_core::resources::key_from_parameter(handle)?;
+    if let Some(model) = parsed().lock().unwrap_or_else(|p| p.into_inner()).get(&key) {
+        return Some(model.clone());
     }
-    s.get(handle as usize).cloned()
+    let text = sim_core::resources::get(key)?;
+    let model = Arc::new(serde_json::from_str::<PhysicalModel>(&text).ok()?);
+    Some(parsed().lock().unwrap_or_else(|p| p.into_inner()).entry(key).or_insert(model).clone())
 }
 
 #[cfg(test)]

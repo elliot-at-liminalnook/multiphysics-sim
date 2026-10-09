@@ -441,3 +441,63 @@ fn an_adaptive_advance_ending_just_past_a_tick_takes_the_short_segment() {
     let err = rt.advance_adaptive(0.01, 1.0e-3, 1.0e-6, 1.0e-2, 1.0e-3).unwrap_err().to_string();
     assert!(err.contains("h_min"), "{err}");
 }
+
+/// Two separate motor plants; `block` adds a controller block that reads
+/// motor A's speed and drives motor B's voltage.
+fn two_plants(block: bool) -> (sim_compile::Runtime, Option<sim_core::BehaviorId>, sim_core::StateId, sim_core::StateId) {
+    let registry = registry();
+    let mut m = ModelWorld::default();
+    let mut speeds = Vec::new();
+    let mut sources = Vec::new();
+    let mut tachos = Vec::new();
+    for name in ["a", "b"] {
+        let source = m.part(&registry, &format!("{name}.source"), el::CONTROLLED_VOLTAGE_SOURCE, []).unwrap();
+        let ground = m.part(&registry, &format!("{name}.ground"), el::GROUND, []).unwrap();
+        let motor = m.part(&registry, &format!("{name}.motor"), bridge::BRUSHED_MOTOR, [("resistance", 0.6), ("inductance", 0.0), ("torque_constant", 0.05), ("back_emf_constant", 0.05)]).unwrap();
+        let rotor = m.part(&registry, &format!("{name}.rotor"), rot::INERTIA, [("inertia", 2.0e-4), ("damping", 2.0e-4), ("initial.speed", 10.0)]).unwrap();
+        let mount = m.part(&registry, &format!("{name}.mount"), rot::GROUND, []).unwrap();
+        let tacho = m.part(&registry, &format!("{name}.tacho"), rot::SPEED_SENSOR, []).unwrap();
+        m.connect([source.port("p"), motor.port("p")]);
+        m.connect([source.port("n"), motor.port("n"), ground.port("pin")]);
+        m.connect([motor.port("shaft"), rotor.port("shaft"), tacho.port("shaft")]);
+        m.connect([motor.port("case"), mount.port("flange")]);
+        speeds.push(rotor);
+        sources.push(source);
+        tachos.push(tacho);
+    }
+    // A source no block drives holds zero volts; a speed no block reads is a lone output.
+    let zero = |m: &mut ModelWorld, name: &str| m.part(&registry, name, ctl::CONSTANT, [("value", 0.0)]).unwrap();
+    let za = zero(&mut m, "a.zero");
+    m.connect([za.port("value"), sources[0].port("voltage")]);
+    m.connect([tachos[1].port("speed")]);
+    let controller = if block {
+        Some(m.add_wired_block("controller", BlockTiming::periodic(PERIOD), true, host("p"), &[("speed", tachos[0].port("speed"))], &[("voltage", sources[1].port("voltage"))]).unwrap().behavior)
+    } else {
+        let zb = zero(&mut m, "b.zero");
+        m.connect([zb.port("value"), sources[1].port("voltage")]);
+        m.connect([tachos[0].port("speed")]);
+        None
+    };
+    let rt = runtime(m, &registry);
+    let a = rt.state_id(speeds[0].behavior, "speed");
+    let b = rt.state_id(speeds[1].behavior, "speed");
+    (rt, controller, a, b)
+}
+
+/// A block joins no islands: one that reads plant A and drives plant B
+/// leaves them two islands (stepped in parallel), and A runs exactly as it
+/// does with no block at all.
+#[test]
+fn a_block_does_not_merge_the_islands_it_reads_and_drives() {
+    let (mut free, _, free_a, _) = two_plants(false);
+    let (mut blocked, controller, a, b) = two_plants(true);
+    assert_eq!(free.islands.len(), 2);
+    assert_eq!(blocked.islands.len(), 2, "the block merged the plants it touches");
+    blocked.bind_coupler(controller.unwrap(), proportional(), false).unwrap();
+    let alone = free.advance_recording(0.1, 5.0e-4, 1, &[free_a]).unwrap();
+    let run = blocked.advance_recording(0.1, 5.0e-4, 1, &[a, b]).unwrap();
+    let worst = alone.column(0).iter().zip(run.column(0)).map(|(x, y)| (x - y).abs()).fold(0.0, f64::max);
+    assert!(worst < 1.0e-9, "plant A changed when a block read it: {worst}");
+    // B is driven by -GAIN × A's speed: it spins the other way once A has a speed.
+    assert!(run.column(1).last().unwrap() < &0.0, "B was not driven: {:?}", run.column(1).last());
+}

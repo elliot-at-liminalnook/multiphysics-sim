@@ -12,7 +12,7 @@ use super::*;
 use crate::annotations::{self, ThreadOp};
 use crate::app::switch::Document;
 use crate::cad::CadTarget;
-use sim_runtime::cad_client::CadThread;
+use crate::cad::types::CadThread;
 
 /// A pin on `m2` (a member of link 1), a pin on `p9` (a plate under group
 /// `g1`, whose parent `b0` is link 0's body), a pin on `x1` (on no link)

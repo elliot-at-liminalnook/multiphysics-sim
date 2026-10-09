@@ -218,7 +218,9 @@ pub fn default_system(registry: &BehaviorRegistry, base: &Path, model_file: &str
 
 /// The one generated robot at the system's top level: its instance name,
 /// source file, generator parameters and recorded ports.
-fn robot_of(document: &SystemDocument) -> Result<(String, String, BTreeMap<String, f64>, BTreeMap<String, PortSchema>), String> {
+/// The system's one generated robot at its top level: its instance name,
+/// source file, generator options and port signature.
+pub(crate) fn robot_of(document: &SystemDocument) -> Result<(String, String, BTreeMap<String, f64>, BTreeMap<String, PortSchema>), String> {
     let root = document.definitions.get(&document.root).ok_or("the system has no root definition")?;
     let mut robots = root.instances.iter().filter_map(|(name, i)| match &i.kind {
         InstanceKind::Generated { generator, source, ports } if generator == crate::robot_generator::NAME => Some((name, i, source, ports)),

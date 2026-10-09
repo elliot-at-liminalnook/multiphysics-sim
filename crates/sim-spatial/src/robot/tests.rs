@@ -23,7 +23,7 @@ fn robot_mode_loads_wheeled_baseline_and_names_bad_paths() {
     assert!(err.contains(&*missing.to_string_lossy()), "{err}");
 }
 
-/// The drive poller's run identity for Robot mode (`controls::run_identity`,
+/// The drive poller's run identity for Robot mode (`controls::drive::run_identity`,
 /// `LiveTarget::run`): the file and the run controller's generation, so a
 /// Reset and a reload (`RunController::replace`) each change it and the
 /// poller disarms a key held across them. A replay start bumps the

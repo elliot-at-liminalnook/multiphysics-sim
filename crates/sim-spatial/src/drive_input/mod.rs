@@ -60,7 +60,7 @@ pub struct LiveTarget {
     pub supported: [bool; 3],
     /// What is driven, with the run's identity: a change disarms held
     /// inputs. Robot: the model file, the run controller's generation and
-    /// whether a replay is in progress (`robot::controls::robot_target`), so
+    /// whether a replay is in progress (`robot::controls::drive::robot_target`), so
     /// another file, a reload, a Reset, a replay start and a replay end each
     /// change it. Build: the system file, the run thread's run id (content
     /// hash and revision), the run's start number and its generation

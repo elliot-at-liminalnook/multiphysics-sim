@@ -65,6 +65,16 @@ impl Builder {
         self.add_instance(pick, at, name, spec, &format!("Add FMU {relative}"))
     }
 
+    /// Add a drive input block driven through the robot's `sim.drive/1`
+    /// profile at `profile` (`system_add_drive_input`): outputs vx, vy (m/s)
+    /// and wz (rad/s), the twist a person asks for, limited and watched by
+    /// the profile's deadman. Wire them to whatever mixes a twist.
+    pub(crate) fn add_drive_input(&mut self, pick: Option<&mut Picked>, at: &str, name: Option<String>, profile: &str, period: f64) -> Result<String, String> {
+        let relative = self.relative_to_system(profile)?;
+        let spec = sim_runtime::teleop::drive_instance(&self.system_dir(), &relative, period)?;
+        self.add_instance(pick, at, name, spec, &format!("Add drive input {relative}"))
+    }
+
     /// Add a robot generated from the `.simrobot.json` at `source`
     /// (`system_add_robot`); `options` are the robot generator's flags that
     /// are set (`driver_control`, `own_supply`, `own_ambient`).

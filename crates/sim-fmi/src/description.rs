@@ -95,6 +95,9 @@ pub struct Variable {
     pub clocked: bool,
     pub intermediate_update: bool,
     pub description: Option<String>,
+    /// An input's `sim.setpoint` annotation: the robot joint it is the
+    /// setpoint for (`<Annotations><Annotation type="sim.setpoint">knee</Annotation></Annotations>`).
+    pub setpoint: Option<String>,
 }
 
 /// A unit definition's SI base-unit exponents and conversion.
@@ -274,6 +277,7 @@ pub fn parse(xml: &str) -> Result<ModelDescription, String> {
                         clocked: v.attribute("clocks").is_some(),
                         intermediate_update: boolean(v, "intermediateUpdate")?,
                         description: v.attribute("description").map(str::to_owned),
+                        setpoint: setpoint_annotation(v),
                         name,
                     });
                 }
@@ -282,4 +286,17 @@ pub fn parse(xml: &str) -> Result<ModelDescription, String> {
         }
     }
     Ok(md)
+}
+
+/// The joint a variable's `sim.setpoint` annotation names (its trimmed
+/// text), if it has one. An empty annotation is `*`: the setpoint of
+/// whichever joint the block's outputs command (an FMU reused for several
+/// joints cannot name one).
+fn setpoint_annotation(v: roxmltree::Node) -> Option<String> {
+    let annotation = v.children()
+        .filter(|n| n.has_tag_name("Annotations"))
+        .flat_map(|a| a.children().filter(|n| n.has_tag_name("Annotation")))
+        .find(|a| a.attribute("type") == Some("sim.setpoint"))?;
+    let joint = annotation.text().map(str::trim).unwrap_or("");
+    Some(if joint.is_empty() { "*".to_owned() } else { joint.to_owned() })
 }

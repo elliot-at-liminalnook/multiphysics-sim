@@ -13,7 +13,7 @@ use crate::jobs::{Ctx, Job, Pool};
 use crate::robot::RobotView;
 use bevy::prelude::*;
 use serde_json::Value;
-use sim_runtime::cad_client::CadThread;
+use crate::cad::types::CadThread;
 use std::path::Path;
 use std::time::{Duration, Instant, SystemTime};
 

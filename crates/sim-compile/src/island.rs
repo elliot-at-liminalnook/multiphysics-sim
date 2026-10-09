@@ -1296,15 +1296,27 @@ fn acausal_ports_in_order(model: &ModelWorld, descriptor: &sim_core::BehaviorDes
 }
 
 /// Compile every behavior of `model` into islands: connected components over
-/// acausal *and* signal connections.
+/// acausal and signal connections, except through blocks.
+///
+/// A block's shadow element joins no island to another. Its inputs are
+/// sampled by the scheduler from committed state (the producer's island
+/// computes the signal), and its outputs are held states with zero rate,
+/// written only at ticks, between integration segments. So connections that
+/// touch a shadow are left out of the grouping, and the shadow is placed in
+/// every island that reads one of its outputs (each island gets its own
+/// copy of the held states, and the scheduler writes every copy), or in an
+/// island of its own when no plant element reads it. Two rooms with two
+/// thermostats are two islands, stepped in parallel.
 pub fn build_islands(
     model: &mut ModelWorld,
     registry: &BehaviorRegistry,
     connections: &[CompiledConnection],
     definitions: &FrozenDefinitions,
 ) -> Result<Vec<Island>, CompileError> {
-    // Union–find over behaviors through every connection.
-    let behavior_ids: Vec<BehaviorId> = model.behaviors.keys().collect();
+    let shadows: std::collections::HashSet<BehaviorId> = model.blocks.iter().map(|b| b.behavior).collect();
+    let touches_shadow = |connection: &CompiledConnection| connection.ports.iter().any(|p| shadows.contains(&model.ports[*p].owner));
+    // Union–find over the plant's behaviors through every connection that touches no block.
+    let behavior_ids: Vec<BehaviorId> = model.behaviors.keys().filter(|b| !shadows.contains(b)).collect();
     let index_of: HashMap<BehaviorId, usize> = behavior_ids.iter().enumerate().map(|(i, b)| (*b, i)).collect();
     let mut parent: Vec<usize> = (0..behavior_ids.len()).collect();
     fn find(p: &mut Vec<usize>, i: usize) -> usize {
@@ -1314,7 +1326,7 @@ pub fn build_islands(
         }
         p[i]
     }
-    for connection in connections {
+    for connection in connections.iter().filter(|c| !touches_shadow(c)) {
         let owners: Vec<usize> = connection.ports.iter().map(|p| index_of[&model.ports[*p].owner]).collect();
         for pair in owners.windows(2) {
             let (a, b) = (find(&mut parent, pair[0]), find(&mut parent, pair[1]));
@@ -1327,7 +1339,30 @@ pub fn build_islands(
     for (i, id) in behavior_ids.iter().enumerate() {
         groups.entry(find(&mut parent, i)).or_default().push(*id);
     }
-    groups.into_values().map(|members| build_island(model, registry, connections, &members, definitions)).collect()
+    // Each shadow joins the islands of the plant elements that read its outputs.
+    let mut alone: Vec<Vec<BehaviorId>> = Vec::new();
+    for block in &model.blocks {
+        let shadow = block.behavior;
+        let mut homes = std::collections::BTreeSet::new();
+        for connection in connections.iter().filter(|c| matches!(c.kind, CompiledConnectionKind::Signal(_))) {
+            let produced_here = connection.ports.iter().any(|p| model.ports[*p].owner == shadow && matches!(model.ports[*p].schema, PortSchema::SignalOut(_)));
+            if !produced_here {
+                continue;
+            }
+            for port in &connection.ports {
+                if let Some(&i) = index_of.get(&model.ports[*port].owner) {
+                    homes.insert(find(&mut parent, i));
+                }
+            }
+        }
+        if homes.is_empty() {
+            alone.push(vec![shadow]);
+        }
+        for home in homes {
+            groups.get_mut(&home).expect("a group of the plant").push(shadow);
+        }
+    }
+    groups.into_values().chain(alone).map(|members| build_island(model, registry, connections, &members, definitions)).collect()
 }
 
 fn build_island(
@@ -1509,10 +1544,13 @@ fn build_island(
     let mut signal_index: HashMap<PortId, usize> = HashMap::new();
     for connection in connections {
         let CompiledConnectionKind::Signal(kind) = connection.kind else { continue };
-        if !connection.ports.iter().any(|p| member_set.contains(&model.ports[*p].owner)) {
+        let producer = connection.ports.iter().find(|p| matches!(model.ports[**p].schema, PortSchema::SignalOut(_))).copied().unwrap();
+        // A signal is computed where its producer is. Only a block's input
+        // reads a signal from another island, and the scheduler samples
+        // that from committed state (`build_islands`).
+        if !member_set.contains(&model.ports[producer].owner) {
             continue;
         }
-        let producer = connection.ports.iter().find(|p| matches!(model.ports[**p].schema, PortSchema::SignalOut(_))).copied().unwrap();
         let index = dimension;
         dimension += 1;
         signal_rows += 1;
@@ -1535,10 +1573,12 @@ fn build_island(
         }
         // Fixed ports in descriptor order; a family's members sorted by name.
         let mut bound_ports: Vec<(PortId, PortSchema)> = Vec::new();
-        // A block's shadow: its own signals, inputs then outputs, in its
-        // interface's order (the descriptor declares none).
+        // A block's shadow: its own signal outputs, in its interface's order
+        // (the descriptor declares none). Its inputs are not bound: the
+        // shadow never reads them (the scheduler samples them from committed
+        // state), and their producers may be in other islands.
         if let Some(block) = model.block_of(*id).filter(|_| descriptor.dynamic_ports) {
-            for port in block.interface.inputs.iter().chain(&block.interface.outputs) {
+            for port in &block.interface.outputs {
                 let pid = ports_by_name[port.name.as_str()];
                 bound_ports.push((pid, model.ports[pid].schema.clone()));
             }

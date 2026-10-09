@@ -18,6 +18,8 @@ pub(crate) enum Source {
     Plant(StateId),
     /// Output `output` of block `block` (its applied value).
     Block { block: usize, output: usize },
+    /// A setpoint input nothing drives: its start value, held.
+    Held(f64),
 }
 
 pub(crate) struct RuntimeBlock {
@@ -26,8 +28,9 @@ pub(crate) struct RuntimeBlock {
     /// made through `&mut` (`get_mut`), except checkpoints.
     pub implementation: Option<Mutex<Box<dyn BlockImplementation>>>,
     pub inputs: Vec<Source>,
-    /// The shadow element's held states, one per output.
-    pub output_ids: Vec<StateId>,
+    /// The shadow element's held states, per output: one in every island
+    /// that reads the output (`island::build_islands`), all written together.
+    pub output_ids: Vec<Vec<StateId>>,
     /// Index of the next tick.
     pub next: u64,
     pub initialized: bool,
@@ -127,8 +130,9 @@ fn roundoff(a: f64, b: f64, period: f64) -> f64 {
 impl Scheduler {
     /// Resolve every block's input sources and outputs, and the execution
     /// order. `signal` finds a port's committed signal unknown; `state` a
-    /// behavior's state by name. Errors name the block and the port.
-    pub fn build(model: &ModelWorld, t0: f64, signal: &dyn Fn(sim_core::PortId) -> Option<StateId>, state: &dyn Fn(sim_core::BehaviorId, &str) -> Option<StateId>) -> Result<Self, BlockFault> {
+    /// behavior's state by name, in every island that has a copy of it
+    /// (empty when none does). Errors name the block and the port.
+    pub fn build(model: &ModelWorld, t0: f64, signal: &dyn Fn(sim_core::PortId) -> Option<StateId>, state: &dyn Fn(sim_core::BehaviorId, &str) -> Vec<StateId>) -> Result<Self, BlockFault> {
         let fault = |block: &str, message: String| BlockFault { block: block.to_owned(), time: t0, message };
         let index_of: std::collections::HashMap<sim_core::BehaviorId, usize> = model.blocks.iter().enumerate().map(|(k, b)| (b.behavior, k)).collect();
         let mut blocks = Vec::with_capacity(model.blocks.len());
@@ -145,8 +149,14 @@ impl Scheduler {
             for port in &decl.interface.inputs {
                 let id = model.ports.iter().find(|(_, p)| p.owner == decl.behavior && p.name == port.name && matches!(p.schema, PortSchema::SignalIn(_))).map(|(id, _)| id)
                     .ok_or_else(|| fault(&decl.name, format!("input `{}` has no port in the model", port.name)))?;
-                let connection = model.connections.iter().find(|c| c.ports.contains(&id))
-                    .ok_or_else(|| fault(&decl.name, format!("input `{}` is not connected to anything: wire it to a signal output", port.name)))?;
+                let Some(connection) = model.connections.iter().find(|c| c.ports.contains(&id)) else {
+                    // A setpoint nothing drives holds its start value; any other input must be wired.
+                    if port.setpoint.is_some() {
+                        inputs.push(Source::Held(port.start.unwrap_or(0.0)));
+                        continue;
+                    }
+                    return Err(fault(&decl.name, format!("input `{}` is not connected to anything: wire it to a signal output", port.name)));
+                };
                 let driver = connection.ports.iter().copied().find(|p| matches!(model.ports[*p].schema, PortSchema::SignalOut(_)))
                     .ok_or_else(|| fault(&decl.name, format!("input `{}` is connected, but nothing drives it (no signal output on its net)", port.name)))?;
                 let owner = model.ports[driver].owner;
@@ -162,7 +172,7 @@ impl Scheduler {
                 inputs.push(source);
             }
             let output_ids = (0..decl.interface.outputs.len())
-                .map(|k| state(decl.behavior, &format!("out.{k}")).ok_or_else(|| fault(&decl.name, format!("output `{}` has no held state", decl.interface.outputs[k].name))))
+                .map(|k| Some(state(decl.behavior, &format!("out.{k}"))).filter(|ids| !ids.is_empty()).ok_or_else(|| fault(&decl.name, format!("output `{}` has no held state", decl.interface.outputs[k].name))))
                 .collect::<Result<Vec<_>, _>>()?;
             let applied = decl.interface.outputs.iter().map(|p| p.start.unwrap_or(0.0)).collect();
             blocks.push(RuntimeBlock {
@@ -266,7 +276,7 @@ impl Scheduler {
             return Err(f);
         }
         // Plant inputs: the committed state before any write at this instant.
-        let plant: Vec<Vec<Option<f64>>> = self.blocks.iter().map(|b| b.inputs.iter().map(|s| match s { Source::Plant(id) => Some(read(*id)), Source::Block { .. } => None }).collect()).collect();
+        let plant: Vec<Vec<Option<f64>>> = self.blocks.iter().map(|b| b.inputs.iter().map(|s| match s { Source::Plant(id) => Some(read(*id)), Source::Held(value) => Some(*value), Source::Block { .. } => None }).collect()).collect();
         let mut changed: Vec<usize> = Vec::new();
         // 1. Every due block's output for this instant that was decided
         //    before it: a pending end-of-step output, or the delayed output
@@ -295,7 +305,7 @@ impl Scheduler {
             let inputs: Vec<f64> = self.blocks[k].inputs.iter().zip(&plant[k]).map(|(s, p)| match (s, p) {
                 (_, Some(v)) => *v,
                 (Source::Block { block, output }, None) => before[*block][*output],
-                (Source::Plant(_), None) => unreachable!("plant inputs were read"),
+                (Source::Plant(_) | Source::Held(_), None) => unreachable!("plant and held inputs were read"),
             }).collect();
             if let Err(message) = self.initial_outputs(k, time, &inputs) {
                 let f = BlockFault { block: self.blocks[k].decl.name.clone(), time, message };
@@ -311,7 +321,7 @@ impl Scheduler {
             let inputs: Vec<f64> = self.blocks[k].inputs.iter().zip(&plant[k]).map(|(s, p)| match (s, p) {
                 (_, Some(v)) => *v,
                 (Source::Block { block, output }, None) => self.blocks[*block].applied[*output],
-                (Source::Plant(_), None) => unreachable!("plant inputs were read"),
+                (Source::Plant(_) | Source::Held(_), None) => unreachable!("plant and held inputs were read"),
             }).collect();
             let result = self.execute(k, time, inputs);
             if let Err(message) = result {
@@ -327,7 +337,9 @@ impl Scheduler {
         let mut writes = Vec::new();
         for k in changed {
             let b = &self.blocks[k];
-            writes.extend(b.output_ids.iter().copied().zip(b.applied.iter().copied()));
+            for (ids, value) in b.output_ids.iter().zip(&b.applied) {
+                writes.extend(ids.iter().map(|id| (*id, *value)));
+            }
         }
         Ok(writes)
     }

@@ -171,6 +171,9 @@ pub fn check_controlled(path: &Path, loaded_hash: Option<&str>, loaded_controlle
                 match load_file_bytes(path, &bytes) {
                     Ok(FileModel::Physical(mut l)) => {
                         l.controlled = super::loader::load_controller(path, &l.model);
+                        if l.controlled.is_none() {
+                            l.composed = super::loader::load_composed(path);
+                        }
                         let fp = fingerprint(&l.controlled);
                         if same_bytes && loaded_controller == Some(fp.as_str()) { (Outcome::Unchanged, Some(fp)) } else { (Outcome::Loaded(FileModel::Physical(l)), Some(fp)) }
                     }

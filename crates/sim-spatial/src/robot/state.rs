@@ -257,6 +257,10 @@ impl RobotView {
             "display_hz": self.display_hz, "display_rates": super::view_tools::DISPLAY_RATES, "display_rule": super::view_tools::DISPLAY_RULE,
             "drive_preset": self.drive_preset.as_ref().map(|p| json!({"id": p.id, "label": p.label, "readiness": p.readiness(), "evidence": p.evidence(), "description": p.entry.get("description"), "drive": p.entry.get("drive"), "runs_as": crate::robot::preset::DRIVE_RUNS_AS}))});
         out["inputs"] = self.run.as_ref().map_or(Value::Null, RunController::inputs_json);
+        // A robot project's model runs the project's system: its files, the jog plan
+        // (joints moved through free targets or controller setpoints, and why others are refused)
+        // and its drive input block. Null for any other run.
+        out["composed"] = self.run.as_ref().and_then(|r| r.composed()).map_or(Value::Null, |c| c.json());
         // A controlled run's drive state (RunController::drive_json: controller, profile,
         // limits with units, geometry with provenance, twists, deadman), or {bound: false,
         // binding_error} when the binding beside the model failed to load; null for any other run.
@@ -295,7 +299,7 @@ impl RobotView {
             "ui_revision": self.ui_revision, "controls_ready": self.panels_ready});
         // The v3-only blocks, null (kept out of the literal: json! hits the default recursion limit with every key in one call).
         for key in ["link_count", "joints", "motors", "transmissions", "battery", "actuator_profiles", "uncertainty", "uncertainty_parsed", "identification", "materials", "source", "cad_link",
-            "preset", "motion", "recording", "recordings", "replay", "gait_preview", "drive"] {
+            "preset", "motion", "recording", "recordings", "replay", "gait_preview", "drive", "composed"] {
             out[key] = Value::Null;
         }
         out

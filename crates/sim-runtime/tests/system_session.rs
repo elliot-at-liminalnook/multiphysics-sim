@@ -49,7 +49,7 @@ fn source() -> ModelSource {
         registry,
         identities: Default::default(),
         source_hash: "thermal-session-fixture".into(),
-        revision: 1, base: None
+        revision: 1, base: None, drive: None
     }
 }
 fn session() -> SystemSession {
@@ -273,7 +273,7 @@ fn failed_solve_keeps_last_completed_values_and_reset_recreates_behavior_state()
         registry,
         identities: Default::default(),
         source_hash: "failure".into(),
-        revision: 1, base: None
+        revision: 1, base: None, drive: None
     };
     let mut s = SystemSession::new("failure".into(), config(), move |c| source.build(c)).unwrap();
     let all = ids(&s);
@@ -368,7 +368,7 @@ fn draining_event_history_preserves_hybrid_states_and_cumulative_counts() {
         registry,
         identities: Default::default(),
         source_hash: "pulse".into(),
-        revision: 1, base: None
+        revision: 1, base: None, drive: None
     };
     let mut direct = source.build(&config()).unwrap();
     direct.runtime.seed(71);

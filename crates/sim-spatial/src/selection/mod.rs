@@ -41,7 +41,7 @@ use serde::Serialize;
 use serde_json::{Value, json};
 use sim_api::Outcome;
 use sim_inspect::selection::SelectionTarget;
-use sim_runtime::cad_client::SelectionItem;
+use crate::cad::types::SelectionItem;
 
 /// What can be selected.
 /// Serialized adjacently tagged (`{"kind": "cad", "item": [node, kind, index]}`):

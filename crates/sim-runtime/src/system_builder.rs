@@ -86,6 +86,7 @@ pub fn source(compiled: &Compiled, registry: &BehaviorRegistry, document: &Syste
         source_hash: compiled.flat.source_hash.clone(),
         revision: document.revision.max(1),
         base: compiled.launch.base.as_ref().map(PathBuf::from),
+        drive: None,
     }
 }
 

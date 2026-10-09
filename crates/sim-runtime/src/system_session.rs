@@ -71,13 +71,23 @@ pub struct ModelSource {
     pub revision: u64,
     /// The system file's directory: FMU paths are relative to it.
     pub base: Option<std::path::PathBuf>,
+    /// The host's drive input (`crate::teleop`): when given, a drive input
+    /// block in the model is bound to it at every build; without it such a
+    /// block is refused by name, as on any host that cannot drive.
+    pub drive: Option<crate::teleop::DriveLink>,
 }
 impl ModelSource {
     pub fn build(&self, config: &SessionConfig) -> Result<PreparedSystem, String> {
         config.validate()?;
         let mut runtime = Runtime::new(self.model.clone(), &self.registry, config.integrator)
             .map_err(|e| e.to_string())?;
-        crate::system_blocks::bind(&mut runtime, self.base.as_deref())?;
+        match &self.drive {
+            Some(link) => {
+                let mut hosts = crate::teleop::drive_hosts(&runtime.model, self.base.as_deref(), link)?;
+                crate::system_blocks::bind_with(&mut runtime, self.base.as_deref(), &mut hosts)?;
+            }
+            None => crate::system_blocks::bind(&mut runtime, self.base.as_deref())?,
+        }
         let inspection = RuntimeInspection::new(
             &runtime,
             &self.registry,

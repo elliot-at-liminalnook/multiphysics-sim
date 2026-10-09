@@ -330,16 +330,21 @@ shows blocks, tests, standing and evidence.
   arrays, strings or event mode.
 - Integer and Boolean FMU ports carry dimensionless values only.
 - A host block runs only where its host binds it (`system_blocks::bind_with`:
-  a robot test binds its test bench). Build mode binds none, so
-  teleoperating a robot from Build mode is not available (Robot mode's
-  teleoperation is unchanged).
+  a robot test binds its test bench; Build mode's live run binds
+  `drive_input`, `sim_runtime::teleop`). Headless runs refuse a
+  `drive_input` block by name.
 - A robot test judges one robot: a system with several generated robots is
-  refused. Robot mode's live view still runs the model on its own
-  (`PhysicalRobot::build`), not the project's system.
+  refused. Robot mode runs a project's composed system when the open model
+  belongs to one (`teleop::compose_robot`); a model without a project runs on
+  its own (`PhysicalRobot::build`).
+- Jogging a joint whose target a controller drives needs a free setpoint
+  input on that controller (`BlockPort.setpoint`); otherwise the jog is
+  refused by name (`PhysicalRobot::jog_refused`).
 - Printed-part strength loads a link that is driven and also carries a
   further joint with both load cases, which overstates.
-- The articulated robot element still takes its model through a
-  process-local handle (`register_model`).
-- Islands are connected components over all connections, signals included,
-  so a block joins the islands it reads and writes into one.
+- A system with a robot travels as a whole: the robot model is a
+  content-addressed resource of the model world (`sim_core::resources`, a
+  52-bit BLAKE3 key), installed into a process cache when compiled.
+- Blocks do not join islands: each island that reads a block output holds
+  its own copy, written at every block tick (`sim_compile::blocks`).
 - The browser build runs systems without FMU blocks only.

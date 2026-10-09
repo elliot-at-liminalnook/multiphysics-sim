@@ -29,7 +29,7 @@ pub use frames::{DEFLECTION_MAGNIFICATION, FORCE_SCALE_M_PER_N, Frame, JOINT_AXI
 pub(crate) use jog::short;
 pub use jog::{JOG_LABEL, JOG_SEMANTICS, JOG_STEP_M, JOG_STEP_RAD, Servo, check_target, servo};
 pub use pacing::{CHUNK_S, COMPUTE_LIMITED_FRACTION, COMPUTE_LIMITED_RULE, PACING, Pace, SPEED_SCALES, SpeedRequest, pace, speed_target};
-pub use protocol::{Drive, MotionRequest, Phase, RunAction, Source};
+pub use protocol::{ComposedRun, Drive, MotionRequest, Phase, RunAction, Source};
 pub use replay::{ReplayPhase, ReplayState};
 pub use inputs::{INPUTS_RULE, RESIDUAL_PREFIX};
 pub use history::{HISTORY_RULE, HISTORY_S};

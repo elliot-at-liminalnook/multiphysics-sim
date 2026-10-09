@@ -17,7 +17,7 @@ use sim_domain_robot::articulated::friction::FloorFrictionModel;
 use sim_domain_robot::math::{M, V};
 use sim_domain_robot::model::{Motor, PhysicalModel};
 use sim_domain_robot::sdf::Rng;
-use sim_domain_robot::{register_model, Articulated, Generalized, Options, ARTICULATED, BATTERY, H_BRIDGE, MOTOR_UNIT, SERVO_FIRMWARE, THERMAL_PROBE};
+use sim_domain_robot::{Articulated, Generalized, Options, ARTICULATED, BATTERY, H_BRIDGE, MOTOR_UNIT, SERVO_FIRMWARE, THERMAL_PROBE};
 use sim_domain_sensing as sense;
 use sim_dynamics::Integrator;
 use std::collections::BTreeMap;
@@ -151,6 +151,10 @@ pub struct PhysicalRobot {
     /// Port DOF names in port order (e.g. `joint.hip`), the joints the UI moves.
     pub joint_names: Vec<String>,
     pub targets: Arc<Mutex<Vec<f64>>>,
+    /// Joints a person may not move here, with why (a robot inside a
+    /// composed system whose controller owns the joint and offers no free
+    /// setpoint: `crate::teleop::JogPlan`). Empty for a robot run alone.
+    pub jog_refused: BTreeMap<String, String>,
     pub seam: Option<BehaviorId>,
     pub warnings: Vec<String>,
     pub step: f64,
@@ -241,7 +245,9 @@ pub fn assemble(m: &mut ModelWorld, registry: &BehaviorRegistry, model: Physical
     let art_opts = Options { floor_friction: opts.floor_friction, floor_dissipation_s_m: opts.floor_dissipation_s_m, hybrid_jacobian: opts.hybrid_articulated_jacobian, rate_partials:opts.articulated_rate_partials, constraint_state_step:opts.constraint_state_step.unwrap_or(0.0), structural_loop_identities: opts.structural_loop_identities, planar: opts.planar, flex: opts.flex, contact: opts.contact, omit_inter_link_contact: opts.omit_inter_link_contact, flex_modes: opts.flex_modes.max(1), ..Options::default() };
     let art = Articulated::new(model.clone(), &art_opts)?;
     warnings.extend(art.warnings.iter().cloned());
-    let handle = register_model(model.as_ref().clone());
+    // The model travels with the world as a resource (its key is the parameter),
+    // so the flattened system can be serialised and rebuilt in another process.
+    let handle = sim_domain_robot::register_model_in(m, model.clone())?;
     let mut params: Vec<(&'static str, f64)> = vec![("model", handle), ("jacobian.hybrid", if opts.hybrid_articulated_jacobian { 1.0 } else { 0.0 }), ("jacobian.rates", if opts.articulated_rate_partials {1.0} else {0.0}), ("jacobian.constraint_state_step", opts.constraint_state_step.unwrap_or(0.0)), ("loop.structural_identities", if opts.structural_loop_identities { 1.0 } else { 0.0 }), ("planar", if opts.planar { 1.0 } else { 0.0 }), ("flex", if opts.flex { 1.0 } else { 0.0 }), ("contact", if opts.contact { 1.0 } else { 0.0 }), ("flex.modes", opts.flex_modes.max(1) as f64)];
     params.push(("collision.omit_inter_link", if opts.omit_inter_link_contact { 1.0 } else { 0.0 }));
     params.push(("floor.regularized_slip_speed", opts.floor_friction.registry_speed()));
@@ -722,6 +728,7 @@ impl PhysicalRobot {
             art,
             joint_names,
             targets,
+            jog_refused: BTreeMap::new(),
             seam: None,
             warnings,
             step: opts.step,

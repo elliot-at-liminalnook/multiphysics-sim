@@ -668,19 +668,19 @@ mod drive {
         use super::super::{Phase, RunController};
         let run = wheeled();
         // Nothing is built until Run or Step, so no Python process starts here.
-        let mut c = RunController::spawn_file(run.model.clone(), Some(Ok(run.clone())), 0);
+        let mut c = RunController::spawn_file(run.model.clone(), Some(Ok(run.clone())), None, 0);
         // Idle: a stop and a halt are accepted (kept by the run thread for the build); a nonzero request is refused by name.
         c.drive(BodyTwist::ZERO, false).unwrap();
         c.drive(BodyTwist::ZERO, true).unwrap();
         assert_eq!(c.twist_requested, Some((BodyTwist::ZERO, true)));
         let e = c.drive(BodyTwist::new(0.1, 0.0, 0.0), false).unwrap_err();
-        assert!(e.contains("phase idle") && e.contains("press Run (the Run button"), "{e}");
+        assert!(e.contains("phase idle") && e.contains("press Run first"), "{e}");
         assert_eq!(c.twist_refusal.as_deref(), Some(e.as_str()));
         assert_eq!(c.twist_requested, Some((BodyTwist::ZERO, true)), "a refused request is not sent");
         // Paused: the same rule (the UI's last Run/Pause decides; commands are ordered).
         c.status.phase = Phase::Paused;
         let e = c.drive(BodyTwist::new(0.0, 0.0, 1.0), false).unwrap_err();
-        assert!(e.contains("phase paused") && e.contains("press Run (the Run button"), "{e}");
+        assert!(e.contains("phase paused") && e.contains("press Run first"), "{e}");
         assert!(c.check_drive_request(BodyTwist::ZERO, false).is_ok() && c.drive_json()["accepts_motion"] == false);
         c.drive(BodyTwist::ZERO, false).unwrap();
         assert!(c.twist_refusal.is_none());
@@ -689,7 +689,7 @@ mod drive {
         c.drive(BodyTwist::new(0.1, 0.0, 0.0), false).unwrap();
         super::wait(&mut c, "the run thread's drop of a request made while not running", |c| c.twist_error.is_some());
         let e = c.twist_error.clone().unwrap();
-        assert!(e.contains("was not running when it arrived") && e.contains("press Run (the Run button"), "{e}");
+        assert!(e.contains("was not running when it arrived") && e.contains("press Run first"), "{e}");
         c.running = false;
     }
 

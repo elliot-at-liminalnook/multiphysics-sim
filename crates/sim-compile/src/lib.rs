@@ -117,6 +117,8 @@ pub enum CompileError {
 /// Validate, then build one integrable island per connected component,
 /// registering every unknown as a stable state in `model.state`.
 pub fn compile_islands(model: &mut ModelWorld, registry: &BehaviorRegistry) -> Result<Vec<Island>, CompileError> {
+    // Resources first: a world read from a file names its robot model by key.
+    model.install_resources().map_err(CompileError::State)?;
     let compiled = compile(model, registry)?;
     island::build_islands(model, registry, &compiled.connections, &compiled.definitions)
 }
@@ -259,6 +261,10 @@ pub fn compile(
             // observable through the store; anything else must be wired.
             if let PortSchema::SignalOut(kind) = &declaration.schema {
                 compiled_connections.push(CompiledConnection { ports: vec![port], kind: CompiledConnectionKind::Signal(definitions.quantity_handle(&builtins::quantity_id(kind))?) });
+            } else if model.block_of(declaration.owner).is_some_and(|b| b.interface.inputs.iter().any(|p| p.name == declaration.name && p.setpoint.is_some())) {
+                // A block's setpoint input nothing drives holds its start
+                // value (the scheduler reads it as a constant).
+                continue;
             } else {
                 return Err(CompileError::DanglingPort { port });
             }

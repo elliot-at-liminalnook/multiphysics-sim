@@ -107,7 +107,7 @@ impl Runtime {
         runtime.commit()?;
         let scheduler = {
             let rt = &runtime;
-            Scheduler::build(&rt.model, rt.time, &|port| rt.try_signal_id(port), &|behavior, name| rt.try_state_id(behavior, name))
+            Scheduler::build(&rt.model, rt.time, &|port| rt.try_signal_id(port), &|behavior, name| rt.state_ids_of(behavior, name))
         };
         runtime.blocks = scheduler.map_err(RuntimeError::from)?;
         Ok(runtime)
@@ -435,8 +435,10 @@ impl Runtime {
         self.commit()
     }
 
-    fn try_state_id(&self, behavior: BehaviorId, name: &str) -> Option<StateId> {
-        self.islands.iter().find_map(|island| island.system.state_index(behavior, name).map(|i| island.system.state_ids[i]))
+    /// A behavior's state in every island that has a copy of it: a block's
+    /// shadow is in each island that reads its outputs (`build_islands`).
+    fn state_ids_of(&self, behavior: BehaviorId, name: &str) -> Vec<StateId> {
+        self.islands.iter().filter_map(|island| island.system.state_index(behavior, name).map(|i| island.system.state_ids[i])).collect()
     }
 
     fn try_signal_id(&self, port: PortId) -> Option<StateId> {

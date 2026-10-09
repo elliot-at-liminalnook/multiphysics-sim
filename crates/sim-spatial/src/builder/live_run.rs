@@ -10,8 +10,10 @@ impl LiveRun {
     pub(super) fn spawn(document: SystemDocument, base: PathBuf, registry: BehaviorRegistry, observed: Vec<String>, description_id: String, fidelity: Fidelity) -> Self {
         let initial = RunShared { snapshot: None, running: true, speed: 1.0, history: BTreeMap::new(), reset_pending: false };
         let (simulated, source_id) = (document.clone(), description_id.clone());
-        let worker = crate::jobs::RunThread::spawn("builder-run", initial, move |commands, shared| run_thread(simulated, base, registry, observed, source_id, commands, shared));
-        Self { worker, description_id, fidelity, document, edited: false, requested_running: true }
+        let drive = sim_runtime::teleop::DriveLink::default();
+        let link = drive.clone();
+        let worker = crate::jobs::RunThread::spawn("builder-run", initial, move |commands, shared| run_thread(simulated, base, registry, observed, source_id, link, commands, shared));
+        Self { worker, description_id, fidelity, document, edited: false, requested_running: true, drive }
     }
 }
 
@@ -172,6 +174,37 @@ impl Builder {
         self.panel_dirty = true;
     }
 
+    /// Drive the run's drive input block (`system_drive`, the window's keys
+    /// and gamepad): the request is interpreted against the block's
+    /// `sim.drive/1` profile and applied at its next tick, limited and
+    /// watched by the profile's deadman on simulation time. Refused, naming
+    /// why, without a run, without a drive input block in it, and for held
+    /// axes while paused (a stop or named action is accepted then).
+    pub(crate) fn drive(&mut self, request: &sim_runtime::drive_host::DriveRequest) -> Result<serde_json::Value, String> {
+        let run = self.run.as_ref().ok_or("nothing is running: add a drive input block (system_add_drive_input), then Run")?;
+        if matches!(request, sim_runtime::drive_host::DriveRequest::Axes { .. }) && !self.running() {
+            return Err("the run is paused: Run, then drive (a stop or named action is accepted while paused)".into());
+        }
+        run.drive.drive(request)?;
+        Ok(self.drive_state())
+    }
+
+    /// `system_state.drive`: the drive input block this run binds (its
+    /// profile, or null: nothing to drive) and what it last commanded.
+    pub(crate) fn drive_state(&self) -> serde_json::Value {
+        let Some(run) = &self.run else { return serde_json::json!({"bound": null, "status": null}) };
+        serde_json::json!({"bound": run.drive.bound(), "status": run.drive.status().map(|s| s.json())})
+    }
+
+    /// What Build offers the device poller: a running run with a bound
+    /// drive input block, identified by the file and the run's description
+    /// (an edit or a new run changes it, so held inputs disarm).
+    pub(crate) fn drive_target(&self) -> Option<crate::drive_input::LiveTarget> {
+        let run = self.run.as_ref()?;
+        let supported = run.drive.supported()?;
+        self.running().then(|| crate::drive_input::LiveTarget { mode: ViewerMode::Build, supported, run: format!("{} ({})", self.store.path.display(), run.description_id) })
+    }
+
     /// Advance a paused run by exactly one timestep on its run thread
     /// (`Command::Step`). Refused, never ignored, without a paused run.
     pub fn run_step(&mut self) -> Result<(), String> {
@@ -258,7 +291,8 @@ impl Builder {
     }
 }
 
-fn run_thread(document: SystemDocument, base: PathBuf, registry: BehaviorRegistry, observed: Vec<String>, source_id: String, commands: mpsc::Receiver<RunControl>, shared: Arc<Mutex<RunShared>>) {
+#[allow(clippy::too_many_arguments)]
+fn run_thread(document: SystemDocument, base: PathBuf, registry: BehaviorRegistry, observed: Vec<String>, source_id: String, drive: sim_runtime::teleop::DriveLink, commands: mpsc::Receiver<RunControl>, shared: Arc<Mutex<RunShared>>) {
     let source_id = std::cell::RefCell::new(source_id);
     let publish = |status: Option<sim_inspect::live::SessionStatus>, frame: Option<sim_inspect::SampleFrame>, error: Option<String>, running: bool| {
         if let Ok(mut s) = shared.lock() {
@@ -271,7 +305,9 @@ fn run_thread(document: SystemDocument, base: PathBuf, registry: BehaviorRegistr
         Ok(c) => c,
         Err(e) => return publish(None, None, Some(e), false),
     };
-    let source = system_builder::source(&compiled, &registry, &document);
+    let mut source = system_builder::source(&compiled, &registry, &document);
+    // A drive input block in the system is bound to this run's drive link.
+    source.drive = Some(drive.clone());
     let mut session = match sim_runtime::system_session::SystemSession::new(compiled.launch.run_id.clone(), config.clone(), move |c| source.build(c)) {
         Ok(s) => s,
         Err(e) => return publish(None, None, Some(system_builder::locate(&compiled.flat, e)), false),
@@ -324,13 +360,16 @@ fn run_thread(document: SystemDocument, base: PathBuf, registry: BehaviorRegistr
                 }
                 Ok(RunControl::Pause) => {
                     running = false;
+                    // A live drive request must not drive again on resume.
+                    drive.pause();
                     let _ = session.execute(sim_runtime::system_session::Command::Pause);
                 }
                 Ok(RunControl::Swap(next, description_id)) => {
                     let config = system_builder::config_for(&next);
                     match system_builder::compile_at(&next, &registry, config, &base) {
                         Ok(compiled) => {
-                            let source = system_builder::source(&compiled, &registry, &next);
+                            let mut source = system_builder::source(&compiled, &registry, &next);
+                            source.drive = Some(drive.clone());
                             match session.hot_swap(move |c| source.build(c)) {
                                 Ok(preserved) => {
                                     *source_id.borrow_mut() = description_id;
@@ -529,4 +568,41 @@ pub(super) fn swap_with(builder: &mut Builder, parameter: &str, value: f64) -> b
         return builder.hot_swap(&doc, id);
     }
     true
+}
+
+/// Keys Build mode keeps while a run is driven: its own editing keys (nudge
+/// with the arrows, G, N, R, U, Z), never read for driving.
+const BUILD_KEYS: [KeyCode; 9] = [KeyCode::ArrowUp, KeyCode::ArrowDown, KeyCode::ArrowLeft, KeyCode::ArrowRight, KeyCode::KeyG, KeyCode::KeyN, KeyCode::KeyR, KeyCode::KeyU, KeyCode::KeyZ];
+
+/// Input, before `InputSet::Window` (Build mode): what Build offers the one
+/// device poller (`Builder::drive_target`: a running run with a bound drive
+/// input block), its editing keys kept for itself.
+pub(super) fn drive_target(builder: Option<Res<Builder>>, target: Option<ResMut<crate::drive_input::DriveTarget>>) {
+    let (Some(builder), Some(mut target)) = (builder, target) else { return };
+    let live = builder.drive_target();
+    let owned_keys = if live.is_some() { BUILD_KEYS.to_vec() } else { Vec::new() };
+    target.set_if_neq(crate::drive_input::DriveTarget { live, owned_keys });
+}
+
+/// Actions (Build mode): the device poller's requests for Build drive the
+/// run's drive input block (`Builder::drive`, the same path as REST
+/// `system_drive`); a refusal shows in `drive_input.last_error`.
+pub(super) fn drive_devices(mut devices: MessageReader<crate::app::actions::Act<crate::drive_input::DriveDevice>>, builder: Option<ResMut<Builder>>, input: Option<ResMut<crate::drive_input::DriveInput>>) {
+    let requests: Vec<sim_runtime::drive_host::DriveRequest> = devices.read().filter(|d| d.action.mode == ViewerMode::Build).map(|d| d.action.request.clone()).collect();
+    let Some(mut builder) = builder else { return };
+    let mut input = input;
+    for request in requests {
+        match builder.drive(&request) {
+            Ok(_) => {
+                if let Some(input) = input.as_mut().filter(|i| i.last_error.is_some()) {
+                    input.last_error = None;
+                }
+            }
+            Err(e) => {
+                if let Some(input) = input.as_mut() {
+                    input.last_error = Some(e);
+                }
+            }
+        }
+    }
 }

@@ -93,7 +93,7 @@ impl Host<CadAnchor> for RobotHost<'_> {
     }
     /// `[label](part:ID)` selects the link the part is on.
     fn link(&self, _comment: &Comment<CadAnchor>, link: &sim_markdown::Link) -> Option<RobotAction> {
-        self.select(link.target.strip_prefix(sim_runtime::cad_client::PART_LINK_SCHEME)?)
+        self.select(link.target.strip_prefix(crate::cad::types::PART_LINK_SCHEME)?)
     }
     fn anchor_text(&self, a: &CadAnchor) -> String {
         use sim_annotate::Anchor;

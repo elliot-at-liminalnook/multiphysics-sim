@@ -17,7 +17,7 @@ fn load(path: &str) -> SystemDocument {
 
 fn source(doc: &SystemDocument, registry: &sim_core::BehaviorRegistry) -> ModelSource {
     let compiled = system_builder::compile(doc, registry, system_builder::config_for(doc)).unwrap();
-    ModelSource { model: compiled.flat.model.clone(), registry: registry.clone(), identities: compiled.flat.identities.clone(), source_hash: compiled.flat.source_hash.clone(), revision: doc.revision.max(1), base: None }
+    ModelSource { model: compiled.flat.model.clone(), registry: registry.clone(), identities: compiled.flat.identities.clone(), source_hash: compiled.flat.source_hash.clone(), revision: doc.revision.max(1), base: None, drive: None }
 }
 
 fn session(doc: &SystemDocument, registry: &sim_core::BehaviorRegistry, observe: &str) -> (SystemSession, String) {

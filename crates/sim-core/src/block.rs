@@ -108,11 +108,22 @@ pub struct BlockPort {
     pub min: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max: Option<f64>,
+    /// An input that is a controller's setpoint for the robot joint named
+    /// here (an FMU declares it with a `sim.setpoint` annotation; a system
+    /// file may set it). Teleoperation drives a joint through its setpoint
+    /// when the controller already owns the joint's servo target.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub setpoint: Option<String>,
 }
 
 impl BlockPort {
     pub fn new(name: impl Into<String>, kind: QuantityKind) -> Self {
-        Self { name: name.into(), kind, start: None, min: None, max: None }
+        Self { name: name.into(), kind, start: None, min: None, max: None, setpoint: None }
+    }
+    /// This input is the setpoint for robot joint `joint`.
+    pub fn setpoint(mut self, joint: impl Into<String>) -> Self {
+        self.setpoint = Some(joint.into());
+        self
     }
     pub fn start(mut self, value: f64) -> Self {
         self.start = Some(value);

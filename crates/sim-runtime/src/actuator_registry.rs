@@ -139,6 +139,25 @@ pub fn robot_pointers(doc: &Value) -> Vec<&'static str> {
     ROBOT_POINTERS.into_iter().filter(|p| doc.pointer(p).is_some_and(|r| r.get("motors").is_some() && r.get("actuator_profiles").is_some())).collect()
 }
 
+/// The repository's accepted registry: `SIM_ACTUATOR_REGISTRY`, else
+/// `examples/actuators/hx30hm/accepted/registry.json` found upwards from
+/// the current directory.
+pub fn default_path() -> std::path::PathBuf {
+    if let Ok(p) = std::env::var("SIM_ACTUATOR_REGISTRY") {
+        return p.into();
+    }
+    const RELATIVE: &str = "examples/actuators/hx30hm/accepted/registry.json";
+    let mut dir = std::env::current_dir().unwrap_or_default();
+    loop {
+        if dir.join(RELATIVE).exists() {
+            return dir.join(RELATIVE);
+        }
+        if !dir.pop() {
+            return RELATIVE.into();
+        }
+    }
+}
+
 impl Registry {
     pub fn load(path: &Path) -> R<Self> {
         let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;

@@ -173,6 +173,8 @@ pub(super) fn receive(
     // A FILE's controller binding, loaded by the reload worker (`Loaded::controlled`):
     // none runs the hold controller, a loaded one the drive session, a failed one a failed run naming it.
     let controlled = loaded.controlled.take();
+    // A robot project's model runs the project's system (`Loaded::composed`).
+    let composed = loaded.composed.take();
     let (mut run, mut run_reset) = match preset {
         Some(Opened::Preset(run)) => {
             let run = RunController::spawn_preset(std::sync::Arc::new(run));
@@ -183,8 +185,8 @@ pub(super) fn receive(
         Some(Opened::Recorded(run)) => (RunController::spawn_recorded(std::sync::Arc::new(run)), false),
         // Replacing a planar run: the physical run continues its generation (older frames stay stale).
         None => match (planar.as_ref(), previous) {
-            (Some((_, _, _, p)), None) => (RunController::spawn_file(loaded.model.clone(), controlled, p.run.generation() + 1), false),
-            (_, previous) => RunController::replace_file(previous, loaded.model.clone(), controlled),
+            (Some((_, _, _, p)), None) => (RunController::spawn_file(loaded.model.clone(), controlled, composed, p.run.generation() + 1), false),
+            (_, previous) => RunController::replace_file(previous, loaded.model.clone(), controlled, composed),
         },
     };
     if let Some((speed, contacts, had_run, replaced)) = planar {

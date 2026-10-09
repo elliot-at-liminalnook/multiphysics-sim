@@ -26,6 +26,9 @@
   <ModelVariables>
     <Float64 name="time" valueReference="999" causality="independent" variability="continuous" unit="s" description="Simulation time"/>
     <Float64 name="angle" valueReference="0" causality="input" unit="rad" start="0" description="Measured joint angle"/>
+    <Float64 name="setpoint" valueReference="2" causality="input" unit="rad" start="0" description="Setpoint offset a person can drive (teleoperation)">
+      <Annotations><Annotation type="sim.setpoint"/></Annotations>
+    </Float64>
     <Float64 name="target" valueReference="1" causality="output" unit="rad" min="-3.2" max="3.2" initial="calculated" description="Servo target angle"/>
     <Float64 name="amplitude" valueReference="10" causality="parameter" variability="fixed" unit="rad" start="0.3" description="Reference amplitude"/>
     <Float64 name="frequency" valueReference="11" causality="parameter" variability="fixed" unit="Hz" start="0.5" min="0" description="Reference frequency"/>

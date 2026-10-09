@@ -71,6 +71,11 @@ impl Sim {
             }
             // Never a fallback hold run: the binding's error is the build's.
             Source::Unbound { error, .. } => Err(error.clone()),
+            // The project's system, measured as the acceptance test measures it.
+            Source::Composed(run) => {
+                let registry = registry.get_or_insert_with(sim_runtime::registry);
+                sim_runtime::teleop::compose_robot(&run.document, &run.base, registry, &run.drive).map(|c| Sim::Robot(c.robot)).map_err(|e| format!("robot project {}: {e}", run.project.display()))
+            }
         }
     }
     pub(super) fn time(&self) -> f64 {

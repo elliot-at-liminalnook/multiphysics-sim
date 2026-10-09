@@ -200,6 +200,19 @@ pub enum Command {
         name: String,
         timing: sim_core::BlockTiming,
     },
+    /// Mark a block's input as the setpoint of a robot joint (`joint`;
+    /// `*`: whichever joint the block's outputs command), or clear it
+    /// (`joint` null). Teleoperation drives a joint through a free setpoint
+    /// when the block owns the joint's servo target; a setpoint nothing
+    /// drives holds its start value.
+    SetBlockSetpoint {
+        #[serde(default)]
+        at: String,
+        name: String,
+        input: String,
+        #[serde(default)]
+        joint: Option<String>,
+    },
     /// Record the ports a generated instance's source offers now (the host
     /// reads them with its generator, as when the instance was added). A
     /// connection to a port the source no longer offers is refused by name.
@@ -628,6 +641,25 @@ fn apply_one(document: &mut SystemDocument, registry: &BehaviorRegistry, command
                 other => return Err(SystemError::Invalid(format!("`{name}` is a {}, not a block", kind_label(other)))),
             }
             Ok(outcome(document, registry, &id, format!("Set the timing of block {name}")))
+        }
+        Command::SetBlockSetpoint { at, name, input, joint } => {
+            let id = at_definition(document, at)?;
+            if joint.as_deref().is_some_and(|j| j.trim().is_empty()) {
+                return Err(SystemError::Invalid(format!("block `{name}`: a setpoint names a joint (or `*`); give null to clear it")));
+            }
+            match &mut instance_mut(document, &id, name)?.kind {
+                InstanceKind::Block { interface, .. } => {
+                    let names: Vec<String> = interface.inputs.iter().map(|p| p.name.clone()).collect();
+                    let port = interface.inputs.iter_mut().find(|p| &p.name == input).ok_or_else(|| SystemError::Invalid(format!("block `{name}` has no input `{input}` (its inputs: {})", names.join(", "))))?;
+                    port.setpoint = joint.clone();
+                }
+                other => return Err(SystemError::Invalid(format!("`{name}` is a {}, not a block", kind_label(other)))),
+            }
+            let what = match joint {
+                Some(j) => format!("Made {name}.{input} the setpoint of joint {j}"),
+                None => format!("Cleared the setpoint {name}.{input}"),
+            };
+            Ok(outcome(document, registry, &id, what))
         }
         Command::RefreshGenerated { at, name, ports } => {
             let id = at_definition(document, at)?;

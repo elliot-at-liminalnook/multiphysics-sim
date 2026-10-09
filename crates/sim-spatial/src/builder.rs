@@ -153,6 +153,9 @@ struct LiveRun {
     edited: bool,
     /// The last Run (true) or Pause/Reset (false) sent.
     requested_running: bool,
+    /// The run's drive input (`sim_runtime::teleop`): the window's devices
+    /// and REST `system_drive` drive a drive input block through it.
+    drive: sim_runtime::teleop::DriveLink,
 }
 
 #[derive(Resource)]
@@ -516,6 +519,7 @@ impl Builder {
             "actuator_view": self.actuator_view,
             "calibration_review": self.calibration_json(),
             "composition": self.composition_json(),
+            "drive": self.drive_state(),
             "schematic": self.schematic.json(self.document.revision, &self.level, selected),
             "history": self.store.history(),
         })
@@ -541,7 +545,10 @@ impl Plugin for BuilderPlugin {
         // Buttons and keys write the builder's actions (after REST's, as the old chain
         // applied them); its one handler applies them and REST's in Actions.
         app.add_systems(Update, (actions::buttons, actions::keys.run_if(building.clone()).run_if(not(crate::ui_kit::text::typing))).chain().in_set(crate::app::InputSet::Window).run_if(in_state(ModeScope::Builder)))
-            .add_systems(Update, system_actions::apply.in_set(ViewerSet::Actions).run_if(in_state(ModeScope::Builder)));
+            .add_systems(Update, system_actions::apply.in_set(ViewerSet::Actions).run_if(in_state(ModeScope::Builder)))
+            // Teleoperation: what the device poller may drive (before it), and its requests for Build.
+            .add_systems(Update, live_run::drive_target.in_set(ViewerSet::Input).before(crate::app::InputSet::Window).run_if(in_state(ViewerMode::Build)))
+            .add_systems(Update, live_run::drive_devices.in_set(ViewerSet::Actions).run_if(in_state(ViewerMode::Build)));
         app.add_systems(
             Update,
             (frame_timing, watch, agent::tick, reference::tick, sync_field.run_if(building.clone()), drops.run_if(building.clone()), grab_push.run_if(building.clone()), open_system, picked::track, (finish_actuators, finish_gait_reports, finish_calibration, composition::finish_tests, calibration::update_chart.run_if(building.clone())).chain(), rebuild_scene, sync_run, graphs::update.run_if(building.clone()), schematic::update.run_if(building.clone()), ui::rebuild_panel.run_if(building.clone()), ui::scroll_panels.run_if(building.clone()), clear_for_learn.run_if(in_state(ViewerMode::Lessons)))

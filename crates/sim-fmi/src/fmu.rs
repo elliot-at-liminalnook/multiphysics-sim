@@ -185,6 +185,9 @@ impl Fmu {
                 Ok(kind) => {
                     let mut port = BlockPort::new(v.name.clone(), kind).range(v.min, v.max);
                     port.start = v.start;
+                    if v.causality == Causality::Input {
+                        port.setpoint = v.setpoint.clone();
+                    }
                     Some(port)
                 }
                 Err(e) => {

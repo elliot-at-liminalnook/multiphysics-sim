@@ -1,0 +1,63 @@
+{
+ "gait": "examples/full-robot/measured-actuator-integration/gait-search-fast-12v5-2026-09-25/comparison/3701-Bayesian-020/compiled.json",
+ "plan_bytes": 4376,
+ "ids": [
+  1,
+  2,
+  3
+ ],
+ "needs_turn": [
+  2
+ ],
+ "axes": [
+  {
+   "id": 1,
+   "role": "knee",
+   "drive": "servo_position",
+   "multi_turn": false,
+   "travel_counts": [
+    2514,
+    3329
+   ],
+   "turn_margin_counts": 0
+  },
+  {
+   "id": 2,
+   "role": "worm",
+   "drive": "servo_speed",
+   "multi_turn": true,
+   "travel_counts": [
+    -1407,
+    3116
+   ],
+   "turn_margin_counts": 256
+  },
+  {
+   "id": 3,
+   "role": "belt/hip",
+   "drive": "servo_position",
+   "multi_turn": false,
+   "travel_counts": [
+    2236,
+    3322
+   ],
+   "turn_margin_counts": 0
+  }
+ ],
+ "source": {
+  "bindings_from": "/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements/gait-runs/run-1790381869286.json",
+  "bindings_sha256": "30b4d481262f8b8e0c2623eabc3cd459ef2e3af8862fc77a7ad0244df6df46ca",
+  "calibration": "/Users/elliot/physics-simulator/examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/measurements/calibration.json",
+  "calibration_sha256": "ed5979bcaeb2e769b7131dcab76f3e7c7684236790566a04705f0cbe27cbd2c2",
+  "config": "examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/server.json",
+  "config_sha256": "8793b653bae55fabcb3c1a18fd7ec81bc328f5a4d6ff5eab4cb1359abe902255",
+  "registry": "examples/actuators/hx30hm/accepted/registry.json",
+  "registry_sha256": "7b891951f6794ed331cd8bf7162a0fc2c178215b6a1864245bec726f13a18022",
+  "scene": "examples/full-robot/measured-actuator-integration/browser-control-400hz/scene.json",
+  "scene_sha256": "03e853784eb69176f8d45ca67ead25e32cccda0190dd74c8b1374651892f3e9d"
+ },
+ "effort": 0.5,
+ "supply_v": 11.1,
+ "pack_version": 2,
+ "made_with": "cargo run -p sim-runtime --example leg_gait_pack -- examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/server.json --out leg.rlgp; first gait's plan bytes"
+}

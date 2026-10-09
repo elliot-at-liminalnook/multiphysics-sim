@@ -1,0 +1,42 @@
+{
+  "time": "2026-10-08T22:59:49Z",
+  "purpose": "The bench servos are the printed leg's IDs 1 (knee), 2 (worm) and 3 (belt/hip), not IDs 10-12. The bus scan in the robot-link firmware found them. This load puts the leg's own commissioning profile behind the ESP32 host pins.",
+  "previous_receipt": "deployment-robot-link-2026-10-08-reload3.json (bridge_safety_esp32, IDs 4-12)",
+  "motor_supply_off_reported_by_operator": "Operator: 'supply off, p4 unplugged' just before the load. The P4's USB port was absent.",
+  "fpga_image": "Tang repo bridge-calibration recipe (RELEASE_TX=1, SAFETY_ENABLE=1, SAFETY_FIRST_ID=1, SAFETY_COUNT=3, CALIBRATION=1, SAFETY_FEEDBACK_TIMEOUT=20000000 (400 ms), SAFETY_COMMAND_TIMEOUT=30000000 (600 ms)) with the host UART on G7 (host_rx) and G8 (host_tx). Supervisor profile 8, the same as the leg's deployment-v8 image ae912f43; only the host pins differ.",
+  "bitstream": "firmware/robot-link/fpga/impl/bridge_calibration_esp32.fs (make calibration)",
+  "bitstream_sha256": "3f8c5fdff194613e76e7f7ea98cb88f1178be3e1d775d22150ed376f92103fee",
+  "constraints_sha256": {
+    "firmware/robot-link/fpga/bridge_safety_esp32.cst": "e2a35e2064fa953ebf29e40245bd130fd59988a50a4e098a31682dd607278cec"
+  },
+  "constraints_diff_from_tang_bridge_safety_cst": "Only host_rx B3 -> G7 and host_tx C3 -> G8",
+  "rtl_sources": {
+    "repo": "~/projects/sipeed-tang-primer-25k at 3733582 with uncommitted changes. All five sources predate the v8 image (2026-09-22 21:20), so the RTL is the same as v8.",
+    "sha256": {
+      "servo/src/bridge.v": "2f1892ff12e47a69f4a2af16bc925cf2b92bac9a28c09de037bbda03e138c706",
+      "servo/src/uart_tx.v": "23e6690a69e1c25db555efe9822168c51d370443638c598ca65d7c4709038eb7",
+      "servo/src/uart_rx.v": "d08e66b6ffd40d2c2e393462a62473fddd4766b2863daeaae023adb90a1ab3b2",
+      "servo/src/hx_safety.v": "fe76e337ed1b954772ce992c613440fccc43c3b4da7d969d1a66fc04b868be20",
+      "servo/src/button.v": "cb791c547c6a4e09b9ef442e1a8698e62d71d36c5ea418dbc769a21bbcff6e15"
+    }
+  },
+  "timing": "nextpnr: PASS at 50 MHz (worst reported 70.80 MHz)",
+  "tests_before_load": {
+    "tang: make sim-calibration": "PASS (SYNC length predicates; multi-axis calibration arming; continuous encoder; servo modes; calibration profile: outward-only window, PWM cap, ID isolation, command gating, watchdog, S2, temperature; reply survives inter-byte pause)",
+    "tang: make sim-safety": "PASS (21 safety cases; UART safety; released TX during reply)",
+    "robot-link cosim": "Not applicable: the robot-link engine does not send travel windows, so this profile refuses to arm it. Motion goes through the Rust calibration panel over the TCP tunnel."
+  },
+  "jtag_detect": "GW5A-25, idcode 0x1281b",
+  "programming": "SRAM only; openFPGALoader -b tangprimer25k, DONE (22:59:49Z to 22:59:52Z)",
+  "readback": "Supervisor status over Wi-Fi through the P4's TCP tunnel, 2026-10-08 19:17 local: [8, 1, 9, 254, 0, 0, 0, 0, 60, 90, 126, 208, 7]. That is profile 8, latched with reason 9 (the usual load-time latch), nothing armed or fresh, and limits 60 C, 9.0-12.6 V, current 2000, matching the leg's deployment-v8 readback and the Rust calibration panel's profile check.",
+  "host": {
+    "board": "ESP32-P4-WIFI6-M, chip revision v1.0",
+    "firmware": "firmware/robot-link/esp32/build/robot_link.bin: first ID 1, mask 0x7, 2 s status log, bus scan, station mode on the home network, esp_hosted pinned ^2.12.12 (resolved to 2.12.13); page STOP is written straight to the FPGA while the tunnel or bus scan owns the UART",
+    "firmware_sha256": "d323500b35cf4eaf77aec0f1dbe4b4812fdc47814dfe91ab787def33ee4ef321"
+  },
+  "leg_before_load": "Read through the previous image (reads are allowed to any ID), 2026-10-08 18:5x local: ID 1 11.1 V pos 2822 35 C; ID 2 11.1 V pos 1347 34 C; ID 3 11.1 V pos 2291 34 C. No motion commanded.",
+  "powered_motor_verification": false,
+  "note": "SRAM image: a dock power cycle reverts to its flash image. Reload with a new receipt, supply off, P4 unplugged.",
+  "tunnel_latency": "200 FPGA status round trips over Wi-Fi and the tunnel: 0 lost; median 7.7 ms, p90 12.9 ms, p99 22.6 ms, max 26.6 ms. A 90 s ping: 90/90, median 4 ms, max 35 ms. With esp_hosted 3.0.9 on the host, the station data path stalled within a minute.",
+  "stop_while_tunnel_held": "2026-10-08 19:20 local: with the tunnel held, POST /api/stop on the P4 produced two FPGA STOP replies on the tunnel: [8, 1, 10, 254], latched, host stop. The third copy was ignored while the bridge was busy."
+}

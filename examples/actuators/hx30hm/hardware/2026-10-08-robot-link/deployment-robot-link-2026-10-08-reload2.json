@@ -1,0 +1,37 @@
+{
+  "time": "2026-10-08T21:47:03Z",
+  "purpose": "Second reload of the same image: the operator unplugged the dock after the 21:44 load, so its SRAM image was lost again",
+  "previous_receipt": "deployment-robot-link-2026-10-08-reload.json (2026-10-08T21:44:09Z)",
+  "motor_supply_off_reported_by_operator": "Operator confirmed the bench supply output was off ('yes') just before the load. The P4's USB port was absent, so the P4 was unplugged.",
+  "fpga_image": "bridge_safety (supervised bridge, SAFETY_ENABLE=1, RELEASE_TX=1) with host UART moved to G7 (host_rx) / G8 (host_tx)",
+  "bitstream": "firmware/robot-link/fpga/impl/bridge_safety_esp32.fs",
+  "bitstream_sha256": "52d074e6f66fedeed864eec3eadf7f98983556c2496734d24dae07a47e9b2c0b",
+  "constraints_sha256": {
+    "firmware/robot-link/fpga/bridge_safety_esp32.cst": "e2a35e2064fa953ebf29e40245bd130fd59988a50a4e098a31682dd607278cec"
+  },
+  "rtl_sources": {
+    "repo": "~/projects/sipeed-tang-primer-25k at 3733582 with uncommitted changes to servo/src/bridge.v; hashes below identify the files used",
+    "sha256": {
+      "servo/src/bridge.v": "2f1892ff12e47a69f4a2af16bc925cf2b92bac9a28c09de037bbda03e138c706",
+      "servo/src/uart_tx.v": "23e6690a69e1c25db555efe9822168c51d370443638c598ca65d7c4709038eb7",
+      "servo/src/uart_rx.v": "d08e66b6ffd40d2c2e393462a62473fddd4766b2863daeaae023adb90a1ab3b2",
+      "servo/src/hx_safety.v": "fe76e337ed1b954772ce992c613440fccc43c3b4da7d969d1a66fc04b868be20",
+      "servo/src/button.v": "cb791c547c6a4e09b9ef442e1a8698e62d71d36c5ea418dbc769a21bbcff6e15"
+    }
+  },
+  "hashes_rechecked_before_load": "Bitstream, constraints and all five RTL sources match the previous receipts.",
+  "tests_before_load": "Unchanged image and sources since the previous receipt, whose make -C test and make -C cosim both passed",
+  "jtag_detect": "GW5A-25, idcode 0x1281b",
+  "programming": "SRAM only. openFPGALoader -b tangprimer25k reported DONE (21:47:03Z to 21:47:06Z).",
+  "readback": "Through the P4 USB status line, 2026-10-08 17:48 local: FPGA answering (5 status replies/s); latched with reason 9 (stop button) and S2 not pressed. Every load today started this way, and so did the 2026-09-14 full-drive load (see its README). Earlier today a host STOP replaced reason 9 and held for over an hour without returning to 9, so S2 is not continuously asserted. Servos 10-12 are still not answering.",
+  "host": {
+    "board": "ESP32-P4-WIFI6-M, chip revision v1.0",
+    "firmware": "firmware/robot-link/esp32/build/robot_link.bin, rebuilt 2026-10-08 with a 2 s link summary on the USB console (CONFIG_RL_STATUS_LOG_MS=2000)",
+    "config": "UART1 115200 baud, TX GPIO20 -> G7, RX GPIO21 <- G8, servos 0x1C0 (IDs 10-12), duty cap 100, AP robot-link on channel 6",
+    "firmware_sha256": "9e0a5495c27e9c75cd524c8647291e8c567e4a801734b0434345e0e6c7fe9ccc"
+  },
+  "event_before_load": "The dock was unplugged and replugged after the 21:44 load. The P4 stayed unplugged throughout.",
+  "open_issue": "Servo bus: IDs 10-12 have never answered (about 6 timeouts/s) while the FPGA answered. Bus checks (ground, SIG at the lead) were pending at the time of this load.",
+  "powered_motor_verification": false,
+  "note": "SRAM image: a dock power cycle reverts to its flash image. Reload this image (with a new receipt) before powering the P4."
+}

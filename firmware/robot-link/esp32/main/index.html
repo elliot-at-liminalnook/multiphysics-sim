@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robot link</title>
+<style>
+  :root { --bg:#14161a; --panel:#1d2026; --text:#e6e6e6; --muted:#9aa0a6; --ok:#5fcf80; --warn:#f0b35a; --bad:#ff6b6b; --accent:#6aa7ff; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--text); font:15px/1.4 -apple-system, system-ui, sans-serif; }
+  h1 { font-size:18px; margin:0 0 12px; font-weight:600; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; align-items:stretch; }
+  .panel { background:var(--panel); border-radius:10px; padding:12px 14px; flex:1 1 280px; min-width:260px; }
+  .panel h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 8px; font-weight:600; }
+  button { font:inherit; border:0; border-radius:8px; padding:10px 14px; cursor:pointer; color:#fff; background:#394150; touch-action:none; user-select:none; -webkit-user-select:none; }
+  button:disabled { opacity:.4; cursor:default; }
+  button.stop { background:var(--bad); font-size:20px; font-weight:700; padding:18px 24px; width:100%; }
+  button.primary { background:var(--accent); color:#0b1320; }
+  button.jog { font-size:22px; width:64px; height:48px; }
+  button.jog:active, button.jog.down { background:var(--ok); color:#0b1320; }
+  .kv { display:grid; grid-template-columns:auto 1fr; gap:2px 12px; font-variant-numeric:tabular-nums; }
+  .kv div:nth-child(odd) { color:var(--muted); }
+  .ok { color:var(--ok); } .warn { color:var(--warn); } .bad { color:var(--bad); }
+  table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+  th, td { text-align:left; padding:6px 6px; border-bottom:1px solid #2a2f38; vertical-align:middle; white-space:nowrap; }
+  th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+  .jogs { display:flex; gap:6px; align-items:center; }
+  .note { color:var(--warn); min-height:1.4em; margin-top:8px; }
+  .muted { color:var(--muted); }
+  input[type=range] { width:100%; }
+  footer { margin-top:14px; color:var(--muted); font-size:12px; }
+  select { font:inherit; background:#262b33; color:var(--text); border:1px solid #39404b; border-radius:8px; padding:8px; max-width:100%; }
+  canvas { width:100%; background:#101216; border-radius:8px; display:block; }
+  .gaitgrid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.4fr); gap:12px; }
+  @media (max-width:760px) { .gaitgrid { grid-template-columns:1fr; } }
+  .controls { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:8px 0; }
+  .controls label { display:flex; gap:6px; align-items:center; }
+  .tag { font-size:12px; padding:2px 6px; border-radius:6px; background:#2a2f38; }
+  .legend span { margin-right:12px; font-size:12px; }
+  .turnbox { border:1px solid var(--warn); border-radius:8px; padding:10px 12px; margin:8px 0; }
+  .turnbox h3 { margin:0 0 6px; font-size:14px; color:var(--warn); }
+  .places { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
+  .place { flex:1 1 300px; max-width:440px; }
+  .place canvas { margin-bottom:6px; }
+  .tb { display:flex; gap:6px; flex-wrap:wrap; }
+  .tb button { padding:6px 10px; font-size:13px; }
+  .badge { font-size:12px; padding:2px 6px; border-radius:6px; background:#2a2f38; }
+  .badge.ok { color:var(--ok); } .badge.bad { color:var(--bad); } .badge.warn { color:var(--warn); }
+</style>
+</head>
+<body>
+<h1>Robot link <span id="addr" class="muted"></span></h1>
+<div class="row">
+  <div class="panel" style="flex:0 0 260px">
+    <button class="stop" id="stop">STOP</button>
+    <p class="muted" style="margin:8px 0 0">Space bar stops too. STOP works whether or not you own the link.</p>
+  </div>
+  <div class="panel">
+    <h2>Link</h2>
+    <div class="kv">
+      <div>Page</div><div id="ws">connecting…</div>
+      <div>Owner</div><div id="owner">–</div>
+      <div>FPGA</div><div id="fpga">–</div>
+      <div>Supervisor</div><div id="latch">–</div>
+      <div>Traffic</div><div id="traffic">–</div>
+    </div>
+    <div style="margin-top:10px"><button class="primary" id="claim">Take the link</button></div>
+  </div>
+  <div class="panel">
+    <h2>Jog drive</h2>
+    <input type="range" id="duty" min="0" max="100" value="30">
+    <div class="kv"><div>Drive</div><div><span id="dutyv">30</span> / 1000 (open-loop PWM; the cap is the firmware's)</div></div>
+    <p class="muted" style="margin:8px 0 0">Hold a ◄ ► button to move; let go to stop. A servo must be armed and in PWM mode. The FPGA's travel windows apply only on its calibration profile: watch the mechanism.</p>
+  </div>
+</div>
+<div class="panel" style="margin-top:12px">
+  <h2>Servos</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Supervision</th><th>Position</th><th>Speed</th><th>Voltage</th><th>Temp</th><th>Load</th><th>Current</th><th>Status</th><th>Age</th><th></th><th>Jog</th></tr></thead>
+    <tbody id="servos"></tbody>
+  </table>
+  <div class="note" id="note"></div>
+</div>
+<div class="panel" style="margin-top:12px" id="calpanel">
+  <h2>Calibration <span class="muted" id="calinfo"></span></h2>
+  <div class="turnbox" id="turnbox" hidden>
+    <h3 id="turntitle">Confirm the worm's turn</h3>
+    <div id="turntext" class="muted"></div>
+    <div class="places" id="places"></div>
+  </div>
+  <table>
+    <thead><tr><th>Motor</th><th>Taught poses</th><th>Position</th><th>State</th><th>Set a pose at the motor's position</th></tr></thead>
+    <tbody id="travel"></tbody>
+  </table>
+  <p class="muted" style="margin:8px 0 0;font-size:13px">On the leg's FPGA image a motor arms only inside its taught travel: <b>Arm</b> sends that window, then hold ◄ ► to move. A motor outside its travel is armed to come back in only. Poses are named as in the Mac's calibration panel (a reversed motor's lower pose is its high-count end); each row says which jog arrow moves toward which pose. To move a pose: <b>Open</b> it, jog to the new place while watching, then <b>Set</b> it. Poses set here are used at once but kept on this board until the Mac promotes them (<code>leg_gait_pack … --pull-calibration</code>, then rebuild and push the pack); gaits wait for that.</p>
+</div>
+<div class="panel" style="margin-top:12px" id="gaitpanel">
+  <h2>Gaits <span class="muted" id="packinfo"></span></h2>
+  <div class="controls">
+    <select id="gaitpick"><option>no gait pack stored</option></select>
+    <span id="gaittag" class="tag"></span>
+  </div>
+  <div class="gaitgrid">
+    <div>
+      <canvas id="leg" width="560" height="380"></canvas>
+      <div class="legend"><span style="color:#8a93a0">■ hip</span><span style="color:#b07cd6">■ worm</span><span style="color:#4a86d8">■ thigh</span><span style="color:#e0913a">■ foot crank and link</span><span style="color:#3fa96b">■ sliding foot</span><span style="color:#f0b35a">▒ the real leg, live</span></div>
+    </div>
+    <div>
+      <canvas id="plots" width="640" height="420"></canvas>
+      <div class="legend"><span style="color:#9aa0a6">— desired</span><span style="color:#6aa7ff">— governed command</span><span style="color:#f0b35a">● measured</span></div>
+    </div>
+  </div>
+  <div class="controls">
+    <button id="pvplay">Pause preview</button>
+    <label style="flex:1 1 200px">Phase <input type="range" id="phase" min="0" max="1000" value="0"></label>
+    <label>Speed <input type="range" id="speed" min="10" max="100" value="50" style="width:120px"> <span id="speedv">0.50×</span></label>
+  </div>
+  <div class="controls">
+    <label><input type="checkbox" id="supported"> The leg is suspended with clear space around every joint</label>
+  </div>
+  <div class="controls">
+    <button class="primary" id="legplay">Play on the leg</button>
+    <button id="legpause">Pause</button>
+    <button id="legstop" style="background:var(--bad)">Stop gait</button>
+    <span id="gaitstate" class="muted"></span>
+  </div>
+  <div class="note" id="gaitnote"></div>
+  <p class="muted" id="gaitfidelity" style="margin:6px 0 0;font-size:12px"></p>
+</div>
+<footer>
+  The FPGA supervisor owns every safety promise: temperature, voltage and current trips, the dock's S2 button, its telemetry and command leases and, on the calibration profile, the taught travel windows. This page renews its session every 300 ms and a hold every 80 ms; the firmware zeroes a drive 250 ms after the last hold and stops everything, a playing gait included, 1 s after the last sign of the page. Closing this tab, hiding it or leaving it stops the robot.
+</footer>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const stateEl = { ws: $('ws'), owner: $('owner'), fpga: $('fpga'), latch: $('latch'), traffic: $('traffic'), servos: $('servos'), note: $('note') };
+  $('addr').textContent = location.host;
+  let ws = null, youOwn = false, holding = null, lastState = null, dutyCap = 100;
+  const rows = new Map();
+  const duty = $('duty'), dutyv = $('dutyv');
+  duty.oninput = () => dutyv.textContent = duty.value;
+
+  function send(m) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(m)); }
+  function connect() {
+    ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
+    ws.onopen = () => { stateEl.ws.textContent = 'connected'; stateEl.ws.className = 'ok'; };
+    ws.onclose = () => { stateEl.ws.textContent = 'disconnected — reconnecting'; stateEl.ws.className = 'bad'; youOwn = false; holding = null; setTimeout(connect, 1000); };
+    ws.onerror = () => ws.close();
+    ws.onmessage = e => {
+      const m = JSON.parse(e.data);
+      if (m.t === 'refused') { stateEl.note.textContent = 'Refused: ' + m.why; $('gaitnote').textContent = 'Refused: ' + m.why; return; }
+      if (m.t === 'state') render(m);
+    };
+  }
+  function render(s) {
+    lastState = s; youOwn = s.you_own; dutyCap = s.duty_cap;
+    duty.max = dutyCap;
+    // While the tunnel or the bus scan holds the UART this page's engine is
+    // paused, so a stale status means "someone else is talking", not a fault.
+    const lent = s.owner === 'tunnel' || s.owner === 'bus scan';
+    stateEl.owner.textContent = s.owner === 'none' ? 'nobody' : s.owner === 'tunnel' ? 'the simulator tunnel (calibration panel)' : s.owner === 'bus scan' ? 'the bus scan (a few seconds)' : (s.you_own ? 'you' : 'another page');
+    $('claim').textContent = s.you_own ? 'You hold the link' : lent ? 'Free once the tunnel closes' : 'Take the link';
+    $('claim').disabled = s.you_own || lent;
+    stateEl.fpga.textContent = lent ? 'in use by the ' + (s.owner === 'tunnel' ? 'tunnel; status is in its tool' : 'bus scan') : s.link.ok ? 'answering' : 'not answering (check wiring, power, bitstream)';
+    stateEl.fpga.className = lent ? 'warn' : s.link.ok ? 'ok' : 'bad';
+    if (s.fpga) {
+      stateEl.latch.textContent = s.fpga.latched ? `latched: ${s.fpga.reason_name}` + (s.fpga.fault_id !== 254 ? ` (ID ${s.fpga.fault_id})` : '') : 'running';
+      stateEl.latch.className = s.fpga.latched ? (s.fpga.reason === 1 ? 'warn' : 'bad') : 'ok';
+    } else { stateEl.latch.textContent = 'no status yet'; stateEl.latch.className = 'warn'; }
+    stateEl.traffic.textContent = `${s.link.replies} replies, ${s.link.timeouts} timeouts, ${s.link.refused} refused, ${s.link.checksum_errors} bad checksums`;
+    // Rows are updated in place: rebuilding them would destroy a held jog button mid-press.
+    for (const v of s.servos) {
+      let r = rows.get(v.id);
+      if (!r) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${v.id}</td><td class="sup"></td><td class="pos"></td><td class="spd"></td><td class="volt"></td><td class="temp"></td><td class="load"></td><td class="cur"></td><td class="stat"></td><td class="age"></td>` +
+          `<td><button class="arm" data-id="${v.id}"></button></td>` +
+          `<td><div class="jogs"><button class="jog" data-jog="-1" data-id="${v.id}">◄</button><button class="jog" data-jog="1" data-id="${v.id}">►</button></div></td>`;
+        stateEl.servos.appendChild(tr);
+        r = { tr, cells: Object.fromEntries([...tr.querySelectorAll('td[class]')].map(td => [td.className, td])), arm: tr.querySelector('button.arm'), jogs: [...tr.querySelectorAll('button.jog')] };
+        rows.set(v.id, r);
+      }
+      r.cells.sup.innerHTML = v.armed ? '<span class="ok">armed</span>' : v.fresh ? '<span class="warn">fresh, disarmed</span>' : '<span class="muted">no fresh telemetry</span>';
+      if (v.seen) {
+        r.cells.pos.innerHTML = `${v.position_deg.toFixed(1)}° <span class="muted">(${v.position_raw})</span>` +
+          (v.turn_known && v.position_counts !== v.position_raw ? ` <span class="muted">= ${v.position_counts} with turns</span>` : '');
+        r.cells.spd.textContent = v.speed_counts_s;
+        r.cells.volt.textContent = v.voltage_v.toFixed(1) + ' V';
+        r.cells.temp.textContent = v.temperature_c + ' °C';
+        r.cells.load.textContent = v.load_raw;
+        r.cells.cur.textContent = v.current_raw;
+        r.cells.stat.innerHTML = (v.status ? '<span class="bad">' + v.status + '</span>' : '0') + (v.mode >= 0 ? ' <span class="muted">mode ' + v.mode + '</span>' : '');
+        r.cells.age.textContent = v.age_ms + ' ms';
+      } else {
+        for (const k of ['pos', 'spd', 'volt', 'temp', 'load', 'cur', 'stat', 'age']) r.cells[k].textContent = '–';
+        r.cells.pos.textContent = 'not answering';
+      }
+      r.arm.textContent = v.armed ? 'Disarm' : 'Arm';
+      r.arm.dataset.act = v.armed ? 'disarm' : 'arm';
+      r.arm.disabled = !(youOwn && (v.armed || v.seen));
+      for (const j of r.jogs) {
+        j.disabled = !(youOwn && v.armed);
+        j.classList.toggle('down', !!holding && holding.id === v.id && holding.sign === +j.dataset.jog);
+      }
+    }
+    if (s.note && s.note_age_ms < 5000) stateEl.note.textContent = s.note;
+    else if (!stateEl.note.textContent.startsWith('Refused')) stateEl.note.textContent = '';
+    renderTravel(s);
+    renderGait(s);
+  }
+
+  /* ---- calibration: each motor's taught travel ------------------------- */
+  const travelRows = new Map();
+  const roleOf = id => (pack && (pack.axes.find(a => a.id === id) || {}).role) || `motor ${id}`;
+  // The calibration's pose names: a reversed motor's lower pose is its high-count end.
+  function poses(t, lo, hi, open) {
+    const end = k => open && open[k] ? 'open' : (k ? hi : lo);
+    return t.reversed ? `lower ${end(1)} · upper ${end(0)}` : `lower ${end(0)} · upper ${end(1)}`;
+  }
+  function renderTravel(s) {
+    const tbody = $('travel');
+    const known = s.servos.filter(v => v.travel && v.travel.known);
+    $('calinfo').textContent = known.length ? '' : '(no taught travel: store a gait pack, which carries calibration.json\'s poses)';
+    const changed = known.filter(v => v.travel.changed);
+    if (changed.length) $('calinfo').textContent = `(${changed.map(v => roleOf(v.id)).join(', ')} taught here, not yet promoted to the Mac)`;
+    for (const v of known) {
+      const t = v.travel;
+      let r = travelRows.get(v.id);
+      if (!r) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="who"></td><td class="span"></td><td class="pos"></td><td class="st"></td><td><div class="tb">` +
+          ['set_lower:Set lower pose here', 'set_upper:Set upper pose here', 'open_lower:Open lower', 'open_upper:Open upper', 'revert:Revert'].map(x => {
+            const [a, l] = x.split(':'); return `<button data-tact="${a}" data-id="${v.id}">${l}</button>`; }).join('') + `</div></td>`;
+        tbody.appendChild(tr);
+        r = { who: tr.querySelector('.who'), span: tr.querySelector('.span'), pos: tr.querySelector('.pos'), st: tr.querySelector('.st'), buttons: [...tr.querySelectorAll('button')] };
+        travelRows.set(v.id, r);
+      }
+      r.who.textContent = `${v.id} ${roleOf(v.id)}`;
+      r.span.innerHTML = (t.changed ? `${poses(t, t.taught[0], t.taught[1], t.open)} <span class="muted">(Mac: ${poses(t, t.pack[0], t.pack[1])})</span>` : poses(t, t.pack[0], t.pack[1])) +
+        `<div class="muted" style="font-size:12px">◄ toward ${t.reversed ? 'upper' : 'lower'}, ► toward ${t.reversed ? 'lower' : 'upper'}</div>`;
+      const placed = t.position !== undefined;
+      r.pos.textContent = placed ? t.position : t.multi_turn ? 'turn not confirmed' : '–';
+      const badges = [];
+      if (placed) badges.push(t.inside ? '<span class="badge ok">inside</span>' : '<span class="badge bad">outside: Arm recovers it</span>');
+      if (t.armed) badges.push(t.recovering ? '<span class="badge warn">armed, coming back in only</span>' : `<span class="badge ok">armed ${t.armed_window[0] <= -8000000 ? '(open)' : t.armed_window[0]}..${t.armed_window[1] >= 8000000 ? '(open)' : t.armed_window[1]}</span>`);
+      if (t.changed) badges.push('<span class="badge warn">taught here</span>');
+      if (s.arming_id === v.id) badges.push('<span class="badge">arming…</span>');
+      r.st.innerHTML = badges.join(' ');
+      const busy = s.gait.phase !== 'idle';
+      for (const b of r.buttons) {
+        const a = b.dataset.tact;
+        b.disabled = !youOwn || busy || (a.startsWith('set') && !placed) || (a === 'revert' && !t.changed) ||
+          (a.startsWith('open') && (t.open[0] || t.open[1]));
+      }
+    }
+    renderTurn(s);
+  }
+  $('travel').addEventListener('click', e => {
+    const b = e.target.closest('button[data-tact]');
+    if (b && !b.disabled) send({ t: 'travel', id: +b.dataset.id, action: b.dataset.tact });
+  });
+
+  $('stop').onclick = () => { release(); send({ t: 'stop' }); fetch('/api/stop', { method: 'POST' }).catch(() => {}); };
+  $('claim').onclick = () => send({ t: 'claim' });
+  stateEl.servos.addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]');
+    if (b) send({ t: b.dataset.act, id: +b.dataset.id });
+  });
+  // Hold-to-move: pointer down starts, anything else ends.
+  function hold(id, sign) { holding = { id, sign }; sendHold(); }
+  function sendHold() { if (holding) send({ t: 'hold', id: holding.id, duty: holding.sign * +duty.value }); }
+  function release() { if (holding) { holding = null; send({ t: 'release' }); } }
+  stateEl.servos.addEventListener('pointerdown', e => {
+    const b = e.target.closest('button[data-jog]');
+    if (!b || b.disabled) return;
+    e.preventDefault();
+    b.setPointerCapture(e.pointerId);
+    hold(+b.dataset.id, +b.dataset.jog);
+  });
+  for (const ev of ['pointerup', 'pointercancel', 'pointerleave', 'lostpointercapture']) stateEl.servos.addEventListener(ev, e => { if (e.target.closest('button[data-jog]')) release(); });
+  // Focus loss, a hidden tab, closing the page or Escape release a hold and stop a gait on the leg.
+  const legActive = () => lastState && lastState.gait && lastState.gait.phase !== 'idle';
+  function lose() { release(); if (youOwn && legActive()) send({ t: 'gait_stop' }); }
+  window.addEventListener('blur', lose);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) lose(); });
+  window.addEventListener('pagehide', lose);
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') { e.preventDefault(); $('stop').onclick(); }
+    if (e.code === 'Escape') { send({ t: 'gait_stop' }); lose(); }
+  });
+
+  /* ---- gaits ---------------------------------------------------------- */
+  // The pack (GET /api/gaits) holds each gait's frames (motor angles), plots and
+  // plan location, and the leg figure the page draws them and the real leg with.
+  let pack = null, packSha = null, gi = -1, pvPlaying = true, pvT = 0, lastFrameMs = performance.now();
+  const RAD = 2 * Math.PI / 4096;
+  const legCv = $('leg'), plotCv = $('plots');
+  async function loadPack(sha) {
+    packSha = sha;
+    try {
+      const r = await fetch('/api/gaits', { cache: 'no-store' });
+      const j = await r.json();
+      if (!j.valid && !j.gaits) { pack = null; return; }
+      pack = j;
+      prepareFigure();
+      const pick = $('gaitpick');
+      pick.innerHTML = '';
+      pack.gaits.forEach((g, i) => {
+        const o = document.createElement('option');
+        o.value = i;
+        o.textContent = `${g.name} — ${(g.nominal_speed_m_s || 0).toFixed(3)} m/s, ${g.period_s.toFixed(2)} s` + (g.playable ? '' : ' (preview only)');
+        pick.appendChild(o);
+      });
+      $('gaitfidelity').textContent = `${pack.fidelity} Effort ${pack.effort} of measured capability at ${pack.supply_v} V. ` +
+        pack.axes.filter(a => a.multi_turn).map(a => `The ${a.role} turns more than once over its travel: it is driven in servo speed mode from the turn you confirm.`).join(' ') + ' ' +
+        pack.excluded.map(e => `${e.role} not driven from here: ${e.reason}.`).join(' ');
+      choose(0);
+    } catch (e) { $('gaitnote').textContent = 'Could not read the gait pack: ' + e; }
+  }
+  function choose(i) {
+    gi = i;
+    $('gaitpick').value = i;
+    const g = pack.gaits[i];
+    $('gaittag').textContent = g.playable ? 'plays on the leg' : 'preview only';
+    $('gaittag').className = 'tag ' + (g.playable ? 'ok' : 'warn');
+    $('gaitnote').textContent = g.playable ? '' : 'Not playable on the leg: ' + g.reasons.join('; ');
+    pvT = 0;
+    if (g.playable && youOwn && !legActive()) send({ t: 'gait_select', offset: g.plan.offset, length: g.plan.length, name: g.name });
+  }
+  $('gaitpick').onchange = e => choose(+e.target.value);
+  $('pvplay').onclick = () => { pvPlaying = !pvPlaying; $('pvplay').textContent = pvPlaying ? 'Pause preview' : 'Play preview'; };
+  $('phase').oninput = e => { const g = pack && pack.gaits[gi]; if (g) { pvPlaying = false; $('pvplay').textContent = 'Play preview'; pvT = (+e.target.value / 1000) * g.period_s; } };
+  const speedOf = () => +$('speed').value / 100;
+  $('speed').oninput = () => { $('speedv').textContent = speedOf().toFixed(2) + '×'; if (legActive()) send({ t: 'gait_control', speed: speedOf() }); };
+  $('legplay').onclick = () => {
+    const g = pack && pack.gaits[gi];
+    if (!g || !g.playable) return;
+    if (!lastState.gait.loaded || lastState.gait.offset !== g.plan.offset) send({ t: 'gait_select', offset: g.plan.offset, length: g.plan.length, name: g.name });
+    send({ t: 'gait_play', speed: speedOf(), supported: $('supported').checked });
+  };
+  $('legpause').onclick = () => send({ t: 'gait_control', playing: !(lastState && lastState.gait.playing), speed: speedOf() });
+  $('legstop').onclick = () => { send({ t: 'gait_stop' }); fetch('/api/gait', { method: 'POST', body: '{"action":"stop"}' }).catch(() => {}); };
+
+  function renderGait(s) {
+    const p = s.pack || {};
+    $('packinfo').textContent = p.valid ? `(pack ${(p.json_bytes / 1024).toFixed(0)} KB, ${p.sha256.slice(0, 8)})` : '(no pack stored: upload one from the Mac with leg_gait_pack --push)';
+    if (p.valid && p.sha256 !== packSha) loadPack(p.sha256);
+    const g = s.gait, active = g.phase !== 'idle';
+    const sel = pack && pack.gaits[gi];
+    const turnsPending = !!(sel && sel.plan && (sel.plan.needs_turn || []).some(id => unconfirmed(s).some(x => x.id === id)));
+    $('legplay').disabled = !(youOwn && sel && sel.playable && !active && $('supported').checked && !turnsPending);
+    $('legpause').disabled = !(youOwn && active && g.phase === 'playing');
+    $('legpause').textContent = active && !g.playing ? 'Resume' : 'Pause';
+    $('legstop').disabled = !active;
+    $('gaitpick').disabled = active;
+    $('gaitstate').textContent = active ? `${g.name}: ${g.phase}${g.phase === 'playing' ? ` at ${g.t.toFixed(1)} s (${g.speed.toFixed(2)}×)` : ''}${g.phase === 'preparing' ? ` motor ${g.preparing_id}` : ''}`
+      : g.result ? `last run: ${g.result}` : '';
+    $('gaitstate').className = !active && g.result ? (g.stop_verified ? 'ok' : 'bad') : 'muted';
+  }
+  $('supported').onchange = () => lastState && renderGait(lastState);
+
+  // A motor's counts in the pack's frame: the reading, or for a multi-turn
+  // motor its counted turns once the operator has confirmed them (else unknown).
+  function countsOf(a) {
+    const v = lastState && lastState.servos.find(x => x.id === a.id);
+    if (!v || !v.seen) return undefined;
+    if (!a.multi_turn) return v.position_raw;
+    return v.turn_known ? v.position_counts : undefined;
+  }
+  const angleOf = (a, counts) => a.home_rad + a.polarity * (counts - a.reference_counts) * RAD;
+  // Joint angle (rad) of each commandable motor whose place is known.
+  function liveAngles() {
+    const out = {};
+    if (!pack || !lastState) return out;
+    for (const a of pack.axes) {
+      const c = countsOf(a);
+      if (c !== undefined) out[a.id] = angleOf(a, c);
+    }
+    return out;
+  }
+  /* The leg figure (pack.figure): every link's CAD collision mesh, placed by
+   * composing each link's transform relative to its parent, read from the
+   * table of the one motor that moves it (linear between samples). The same
+   * composition as leg_gait_pack's --svg sheet; the pack checked it against
+   * the kinematic mirror (figure.check). Angles are joint radians by motor id. */
+  let fig = null;
+  function prepareFigure() {
+    const f = pack.figure;
+    fig = { f, links: f.links.map(l => ({ ...l, v: Float64Array.from(l.vertices), t: Int32Array.from(l.triangles), colour: colourOf(l.name) })) };
+  }
+  function colourOf(name) {
+    const n = name.toLowerCase();
+    return n.includes('crosshead') || n.includes('foot rod') ? '#3fa96b' : n.includes('crank') || n.includes('connecting') ? '#e0913a'
+      : n.includes('thigh') ? '#4a86d8' : n.includes('worm') ? '#b07cd6' : '#8a93a0';
+  }
+  const mul = (a, b) => { const o = new Array(12); for (let i = 0; i < 3; i++) { for (let j = 0; j < 3; j++) o[4 * i + j] = a[4 * i] * b[j] + a[4 * i + 1] * b[4 + j] + a[4 * i + 2] * b[8 + j];
+    o[4 * i + 3] = a[4 * i] * b[3] + a[4 * i + 1] * b[7] + a[4 * i + 2] * b[11] + a[4 * i + 3]; } return o; };
+  // World transforms of every link at these angles, or null if a motor's angle is unknown.
+  function compose(angles) {
+    if (!fig || fig.f.motors.some(m => angles[m.id] === undefined)) return null;
+    const world = new Array(fig.links.length);
+    for (const k of fig.f.order) {
+      const l = fig.links[k];
+      let rel = l.rel;
+      if (l.motor !== null) {
+        const m = fig.f.motors.find(x => x.id === l.motor), n = m.samples;
+        const x = Math.min(1, Math.max(0, (angles[l.motor] - m.rad[0]) / (m.rad[1] - m.rad[0]))) * (n - 1);
+        const i = Math.min(n - 2, Math.floor(x)), f = x - i, a = l.table[i], b = l.table[i + 1];
+        rel = a.map((v, c) => v + (b[c] - v) * f);
+      }
+      world[k] = l.parent === null ? rel : mul(world[l.parent], rel);
+    }
+    return world;
+  }
+  // One view of the figure into rect [x, y, w, h] of ctx: links filled far to near, or all in `solid`.
+  function drawView(ctx, world, view, x0, y0, w, h, solid) {
+    const [u, v, b] = [view.u, view.v, view.bounds];
+    const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    const sc = Math.min(w / (b[1] - b[0]), h / (b[3] - b[2])), cu = (b[0] + b[1]) / 2, cv = (b[2] + b[3]) / 2;
+    const placed = fig.links.map((l, k) => {
+      const T = world[k], P = new Float64Array(l.v.length / 3 * 2);
+      let depth = 0;
+      for (let p = 0, q = 0; p < l.v.length; p += 3, q += 2) {
+        const X = T[0] * l.v[p] + T[1] * l.v[p + 1] + T[2] * l.v[p + 2] + T[3], Y = T[4] * l.v[p] + T[5] * l.v[p + 1] + T[6] * l.v[p + 2] + T[7], Z = T[8] * l.v[p] + T[9] * l.v[p + 1] + T[10] * l.v[p + 2] + T[11];
+        P[q] = x0 + w / 2 + (X * u[0] + Y * u[1] + Z * u[2] - cu) * sc;
+        P[q + 1] = y0 + h / 2 - (X * v[0] + Y * v[1] + Z * v[2] - cv) * sc;
+        depth += X * n[0] + Y * n[1] + Z * n[2];
+      }
+      return { l, P, depth: depth / (l.v.length / 3) };
+    }).sort((a, c) => a.depth - c.depth);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x0, y0, w, h); ctx.clip();
+    ctx.lineJoin = 'round'; ctx.lineWidth = 0.6;
+    for (const { l, P } of placed) {
+      ctx.fillStyle = ctx.strokeStyle = solid || l.colour;
+      ctx.beginPath();
+      for (let t = 0; t < l.t.length; t += 3) {
+        const a = 2 * l.t[t], b2 = 2 * l.t[t + 1], c = 2 * l.t[t + 2];
+        ctx.moveTo(P[a], P[a + 1]); ctx.lineTo(P[b2], P[b2 + 1]); ctx.lineTo(P[c], P[c + 1]); ctx.closePath();
+      }
+      ctx.fill(); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  const overlay = document.createElement('canvas');
+  // Every view of the figure side by side on `cv`: `angles` in link colours, `live` as a translucent orange silhouette over it.
+  function drawFigure(cv, angles, live, note) {
+    const ctx = cv.getContext('2d'), W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+    if (!fig) return;
+    const views = fig.f.views, w = W / views.length, h = H - 18;
+    const world = angles && compose(angles), liveWorld = live && compose(live);
+    if (liveWorld) { overlay.width = W; overlay.height = H; const o = overlay.getContext('2d'); o.clearRect(0, 0, W, H); }
+    views.forEach((view, k) => {
+      ctx.fillStyle = '#16181d'; ctx.fillRect(k * w + 2, 0, w - 4, h);
+      if (world) drawView(ctx, world, view, k * w + 2, 0, w - 4, h, null);
+      if (liveWorld) drawView(overlay.getContext('2d'), liveWorld, view, k * w + 2, 0, w - 4, h, '#f0b35a');
+      ctx.fillStyle = '#9aa0a6'; ctx.font = '12px system-ui';
+      ctx.fillText(view.name === 'side' ? 'side (from +y)' : view.name === 'top' ? 'top (from above)' : view.name, k * w + 8, 14);
+    });
+    if (liveWorld) { ctx.globalAlpha = 0.5; ctx.drawImage(overlay, 0, 0); ctx.globalAlpha = 1; }
+    ctx.fillStyle = '#9aa0a6'; ctx.font = '12px system-ui';
+    if (note) ctx.fillText(note, 6, H - 4);
+  }
+  // A gait frame's angles by motor id, between the stored frames.
+  function frameAngles(g, phase) {
+    const fr = g.frames_rad, n = fr.length, x = phase * n, i = Math.floor(x) % n, j = (i + 1) % n, f = x - Math.floor(x);
+    const out = {};
+    fig.f.motors.forEach((m, k) => out[m.id] = fr[i][k] + (fr[j][k] - fr[i][k]) * f);
+    return out;
+  }
+
+  // A multi-turn motor of the selected gait whose turn is not confirmed: the
+  // places its reading allows, drawn with the other motors where they are, for
+  // the operator to pick the one that matches the real leg.
+  let turnKey = '';
+  function unconfirmed(s) {
+    return s.servos.filter(v => v.travel && v.travel.known && v.travel.multi_turn && !v.turn_known).map(v => ({ id: v.id, candidates: v.travel.candidates || [] }));
+  }
+  function renderTurn(s) {
+    const box = $('turnbox'), pending = unconfirmed(s);
+    if (!pack || !pending.length) { box.hidden = true; turnKey = ''; return; }
+    box.hidden = false;
+    const x = pending[0], a = pack.axes.find(v => v.id === x.id), v = s.servos.find(o => o.id === x.id);
+    if (!a) { box.hidden = true; return; }
+    $('turntitle').textContent = `Where is the ${a.role}? Its turn is not confirmed`;
+    $('turntext').textContent = !x.candidates.length
+      ? `Its reading (${v && v.seen ? v.position_raw : 'none'}) puts it nowhere inside its taught travel ${a.travel_counts[0]}..${a.travel_counts[1]} (±${a.turn_margin_counts}). Bring it inside with the calibration panel on the Mac.`
+      : `It turns more than once over its travel, so its encoder (${v.position_raw}) allows ${x.candidates.length === 1 ? 'one place' : 'two places a full turn apart'}. ` +
+        `Look at the leg and pick the drawing that matches it. The FPGA guards its window from the place you pick; a wrong pick puts that window a turn off.` +
+        (s.you_own ? '' : ' Take the link to pick.');
+    for (const b of $('places').querySelectorAll('button')) b.disabled = !s.you_own;
+    const key = x.id + ':' + x.candidates.join(',') + ':' + s.you_own;
+    if (key === turnKey) return;
+    turnKey = key;
+    const places = $('places');
+    places.innerHTML = '';
+    for (const c of x.candidates) {
+      const d = document.createElement('div');
+      d.className = 'place';
+      const deg = (angleOf(a, c) * 180 / Math.PI).toFixed(0);
+      d.innerHTML = `<canvas width="420" height="260" data-counts="${c}"></canvas><button class="primary" data-turn="${c}"${s.you_own ? '' : ' disabled'}>The leg looks like this</button>` +
+        `<div class="muted" style="font-size:12px;margin-top:4px">${c} counts, ${deg}° at the servo output</div>`;
+      places.appendChild(d);
+    }
+    const none = document.createElement('div');
+    none.className = 'place';
+    none.innerHTML = `<button data-turn="none"${s.you_own ? '' : ' disabled'}>None of these</button><div class="muted" style="font-size:12px;margin-top:4px">Nothing moves. Check the leg and its wiring, or teach the ${a.role} again in the calibration panel.</div>`;
+    places.appendChild(none);
+  }
+  $('places').addEventListener('click', e => {
+    const b = e.target.closest('button[data-turn]');
+    if (!b) return;
+    const x = unconfirmed(lastState)[0];
+    if (b.dataset.turn === 'none') { $('turntext').textContent = 'Not confirmed: it cannot be armed or play a gait until its place is known.'; return; }
+    if (x) send({ t: 'turn_confirm', id: x.id, counts: +b.dataset.turn });
+  });
+  function drawPlaces() {
+    const x = lastState && unconfirmed(lastState)[0];
+    if (!x || $('turnbox').hidden || !pack || gi < 0) return;
+    const a = pack.axes.find(v => v.id === x.id), q = liveAngles();
+    for (const cv of $('places').querySelectorAll('canvas')) {
+      const angles = Object.assign({}, q, { [x.id]: angleOf(a, +cv.dataset.counts) });
+      const missing = fig && fig.f.motors.filter(m => angles[m.id] === undefined).map(m => roleOf(m.id));
+      drawFigure(cv, angles, null, missing && missing.length ? `${missing.join(', ')} not read: drawn where unknown` : '');
+    }
+  }
+  function drawPlots(phase, live) {
+    const ctx = plotCv.getContext('2d'), W = plotCv.width, H = plotCv.height, g = pack.gaits[gi];
+    ctx.clearRect(0, 0, W, H);
+    const plots = g.plots, rowH = H / plots.length;
+    plots.forEach((pl, r) => {
+      const top = r * rowH + 18, h = rowH - 30, all = pl.desired_deg.concat(pl.command_deg || []);
+      const axis = pack.axes.find(a => a.joint === pl.joint);
+      const liveDeg = axis && live[axis.id] !== undefined ? live[axis.id] * 180 / Math.PI : undefined;
+      if (liveDeg !== undefined) all.push(liveDeg);
+      const lo = Math.min(...all) - 2, hi = Math.max(...all) + 2;
+      const X = k => 40 + (W - 50) * k / (pl.desired_deg.length - 1 || 1), Y = v => top + h - (v - lo) / (hi - lo) * h;
+      ctx.fillStyle = '#9aa0a6'; ctx.font = '12px system-ui';
+      ctx.fillText(pl.joint.replace('+X | ', '') + (pl.id ? ` (motor ${pl.id})` : ' (not driven here)'), 40, top - 4);
+      ctx.fillText(hi.toFixed(0) + '°', 2, top + 10); ctx.fillText(lo.toFixed(0) + '°', 2, top + h);
+      const line = (vals, colour, width) => { ctx.strokeStyle = colour; ctx.lineWidth = width; ctx.beginPath(); vals.forEach((v, k) => k ? ctx.lineTo(X(k), Y(v)) : ctx.moveTo(X(k), Y(v))); ctx.stroke(); };
+      line(pl.desired_deg, '#5d636b', 1.5);
+      if (pl.command_deg) line(pl.command_deg, '#6aa7ff', 2);
+      const cx = 40 + (W - 50) * phase;
+      ctx.strokeStyle = '#e6e6e6'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx, top); ctx.lineTo(cx, top + h); ctx.stroke();
+      if (liveDeg !== undefined) { ctx.fillStyle = '#f0b35a'; ctx.beginPath(); ctx.arc(cx, Y(liveDeg), 5, 0, 7); ctx.fill(); }
+    });
+  }
+  function frameLoop(now) {
+    const dt = Math.min(0.1, (now - lastFrameMs) / 1000);
+    lastFrameMs = now;
+    if (pack && gi >= 0) {
+      const g = pack.gaits[gi], s = lastState && lastState.gait;
+      // On the leg the gait's own clock leads; otherwise the preview's.
+      const onLeg = s && s.loaded && s.phase === 'playing' && s.offset === (g.plan || {}).offset;
+      if (onLeg) pvT = s.t;
+      else if (pvPlaying) pvT += dt * speedOf();
+      const phase = ((pvT % g.period_s) + g.period_s) % g.period_s / g.period_s;
+      if (!$('phase').matches(':active')) $('phase').value = Math.round(phase * 1000);
+      const live = liveAngles(), unknown = fig ? fig.f.motors.filter(m => live[m.id] === undefined).map(m => roleOf(m.id)) : [];
+      drawFigure(legCv, frameAngles(g, phase), unknown.length ? null : live,
+        unknown.length ? `Kinematic preview from CAD. The real leg is not drawn: ${unknown.join(', ')} not placed.` : 'Kinematic preview from CAD: no physics, no ground contact.');
+      drawPlots(phase, liveAngles());
+      drawPlaces();
+    }
+    requestAnimationFrame(frameLoop);
+  }
+  requestAnimationFrame(frameLoop);
+  setInterval(sendHold, 80);
+  setInterval(() => { if (youOwn) send({ t: 'ping' }); }, 300);
+  connect();
+})();
+</script>
+</body>
+</html>

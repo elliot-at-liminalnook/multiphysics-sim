@@ -27,10 +27,6 @@ pub(in crate::cad) fn name(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
         return;
     };
     k.header(p, &n.name, &format!("{} · {}", n.kind, n.id));
-    if doc.local.is_some() {
-        p.spawn(k.note("Archived source is read only; renaming awaits Rust modelling migration."));
-        return;
-    }
     let editing = draft.editing().filter(|(edit, _)| *edit == id);
     let shown = editing.map_or(n.name.as_str(), |(_, text)| text);
     p.spawn(k.input(shown, "Name", NameField { id: id.to_string(), name: n.name.clone() }, editing.is_some()));
@@ -39,7 +35,7 @@ pub(in crate::cad) fn name(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
             p.spawn(k.text(why.clone(), size::SMALL, WARN, 0));
         }
         (Some(_), None) => {
-            p.spawn(k.note("Enter renames it in RoboCAD (one undo step); Escape cancels."));
+            p.spawn(k.note("Enter renames it (one undo step); Escape cancels."));
         }
         (None, _) => {
             p.spawn(k.note("Click the name to rename it."));

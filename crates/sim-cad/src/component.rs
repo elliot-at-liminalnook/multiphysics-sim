@@ -303,7 +303,7 @@ pub(crate) fn arguments(f: &Value, vars: &HashMap<String, Quantity>) -> Result<V
         "joint_ratio" => &[("ratio", "1", 1)],
         "joint_home" => &[("angle_deg", "deg", 1)],
         "joint_frame" => &[("pivot", "mm", 3), ("axis", "1", 3)],
-        _ => return Err(format!("component feature {kind} awaits Rust migration")),
+        _ => return Err(format!("component feature {kind} is not in the catalogue")),
     };
     let object = f["arguments"]
         .as_object()

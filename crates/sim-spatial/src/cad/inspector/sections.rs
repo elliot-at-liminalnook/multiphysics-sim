@@ -34,8 +34,7 @@ pub(in crate::cad) fn physical(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadD
         }
         field(p, k, "Model identity", &local.masses.model_identity, "");
         field(p, k, "Derivation identity", &local.masses.derivation_identity, "");
-        p.spawn(k.note("Exact B-rep properties are authoritative. Triangles are display only. Editing, physical export and print/flex derivations await Rust migration."));
-        return;
+        p.spawn(k.note("Exact B-rep properties are authoritative. Triangles are display only."));
     }
     link(p, k, doc, selection);
     super::rows::draw(p, k, doc, selection);

@@ -1,7 +1,7 @@
 //! The inspector's lower sections: the physical link holding the inspected
-//! body (`GET /physical?flex=0`) with the physical rows under it
-//! ([`super::rows`]), the node's flags, material and Delete, RoboCAD's
-//! history and its GUI command registry.
+//! body (the in-process physical model at the shown revision) with the
+//! physical rows under it ([`super::rows`]), the node's flags, material
+//! and Delete, the edit history and the GUI command registry.
 use super::{current_revision, field, inline, lines, node, provenance};
 use crate::cad::document::CadDocument;
 use crate::cad::panel::{CadButton, Control, control, controls, edit_blocked, material};
@@ -40,12 +40,12 @@ pub(in crate::cad) fn physical(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadD
     super::rows::draw(p, k, doc, selection);
 }
 
-/// The physical link holding the inspected body, from `GET /physical?flex=0`.
+/// The physical link holding the inspected body, from the physical model.
 fn link(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem]) {
     let Some(id) = selection.first_node() else { return };
     p.spawn(k.section("Physical link"));
     if doc.physical_job.is_some() {
-        p.spawn(k.caption("Fetching RoboCAD's physical model…"));
+        p.spawn(k.caption("Deriving the physical model…"));
         return;
     }
     let hint = "Press Physical in the toolbar to fetch RoboCAD's physical model for this revision (GET /physical; nothing is written).";

@@ -91,7 +91,7 @@ pub(crate) fn draw(
         return;
     }
     p.spawn(k.title("Experiments · captured sources"));
-    p.spawn(k.note("Runs in this process on the captured snapshot (sim_cad physical export, the shared Rust runner). Quick check disables contact and noise; validation enables contact and noise but needs flex set false (flexible links are not derived in process). Results are provisional until physically qualified."));
+    p.spawn(k.note("Runs in this process on the captured snapshot (sim_cad physical export, the shared Rust runner). Quick check disables contact, noise and flex; validation enables contact, noise and flexible links. Results are provisional until physically qualified."));
     for id in ["new", "rebase", "refresh"] {
         draw_control(p, k, &controls, id);
     }

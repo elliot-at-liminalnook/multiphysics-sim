@@ -122,15 +122,26 @@ Every A and B step is written; the build, tests and REST walkthroughs follow.
 
 Limits, said where they apply:
 
-- Flexible links are not derived in process: exports are rigid and say so; an
-  experiment with `settings.flex` is refused (the validation profile needs
-  `flex: false`).
-- Geometry-derived components (`derivation` recipes) are validated but not
-  derived inside experiments; such a run is refused by name.
 - Process controllers belong to the controller seam; a captured experiment
   takes Rhai controllers only.
-- Removing a composition component drops its ports from their connections;
-  RoboCAD also dropped connections left with only signal receivers, which
-  needs the native port schemas and is not done here.
 - `loopback_http` and `hardware_client` stay: the hardware sessions still use
   them (moving hardware in process is separate work).
+
+Closed since (2026-10-12):
+
+- Flexible links are derived in process (`sim_cad::physical::flex`, a port
+  of `flex.py`'s voxel-FE modal reduction): `physical`/`simulation` exports
+  and `settings.flex` experiments (the validation profile) carry them;
+  `rigid` and live-link exports stay rigid and say so. Joint physics now
+  carries `flex_patch_radius`/`flex_patch_source` as RoboCAD writes it.
+- Geometry-derived components (`derivation` recipes) are derived inside
+  experiments from the captured archive (`sim_cad::component_derivation`),
+  with RoboCAD's evidence records in `component_derivations.json`.
+- Removing a composition component also drops connections left with only
+  signal receivers, via the native catalogue's port schemas
+  (`component_graph::edit_with_catalogue`); the inspector's name field and
+  physical rows, still gated on the read-only CD1–CD4 phase, work on local
+  documents again.
+
+Still named in every export's `source.not_modelled`: no signed-distance
+grid for link-to-link contact, and no bearing inference from cylinder pairs.

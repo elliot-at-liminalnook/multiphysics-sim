@@ -60,7 +60,7 @@ pub(crate) fn guide(topic: Option<&str>) -> Result<Value, String> {
             "cad_composition": {"example": {"op": "state"}, "does": "The system composition graph: components, connections, imported bindings."},
             "cad_experiments": {"example": {"op": "dock", "open": true}, "does": "Captured experiments and candidates (run in process; records in runs/experiments)."},
             "cad_experiment_review": {"example": {"op": "open", "id": "RUN"}, "does": "Replay a captured run (or view a candidate) on its captured geometry."},
-            "cad_results": {"example": {"op": "export", "path": "/abs/robot.physical.json"}, "does": "The physical model export (rigid), results loading and identification. An export answers with its seq and runs in the background (a second one queues); poll cad_state.results.exports.recent for that seq (the last entry is the newest)."},
+            "cad_results": {"example": {"op": "export", "path": "/abs/robot.physical.json"}, "does": "The physical model export (flexible links for kind physical/simulation, rigid on request), results loading and identification. An export answers with its seq and runs in the background (a second one queues); poll cad_state.results.exports.recent for that seq (the last entry is the newest)."},
         },
         "rules": [
             "Read cad_state (and topology) before editing; check the result after.",
@@ -69,7 +69,7 @@ pub(crate) fn guide(topic: Option<&str>) -> Result<Value, String> {
             "Face/edge indices change after geometry edits: read topology again.",
             "Refusals name their reason (a locked part, a too-large fillet, a stale revision): fix the cause, do not retry blindly.",
             "Masses are exact geometry × catalogue density, provisional until measured; say so when it matters.",
-            "Not derived in process (refused or labelled by name): flexible links and link-to-link contact in the simulator export (it writes rigid links; an experiment with settings.flex is refused), geometry-derived component recipes inside experiments, process controllers in captured experiments (use the controller seam).",
+            "Derived in process: flexible links in physical/simulation exports and settings.flex experiments (rigid and live-link exports stay rigid and say so), and geometry-derived component recipes inside experiments. Not modelled (labelled in the export's source.not_modelled): the signed-distance grid for link-to-link contact, and bearing inference from cylinder pairs. Captured experiments take Rhai controllers; process controllers belong to the controller seam.",
             "Long work (print jobs, experiments, component preparation) runs on jobs: poll its state, never assume it finished; a result that would change the document is refused if the document moved meanwhile.",
         ],
     });

@@ -1,16 +1,17 @@
 # CAD mode: parity ledger against RoboCAD
 
-**Current scope, 2026-10-03:** `cad-rust-physical-derivations` CD1–CD4 migrates
-opening existing archives, B-rep body display, shared body selection and exact
-body/assembly mass, centroid and full inertia inspection. See the
-[focused inventory and reference/replacement source ledger](cad-rust-physical-derivations.md).
-Evidence is source-reviewed and unexecuted. The historical rows below retain
-their original receipts; server-backed reading traces are superseded for these
-selected paths. Full modelling, sketch editing, booleans, fillets, print/flex
-and physical export await Rust migration, and native controls refuse rather
-than contacting the preserved Python/browser implementations. Retaining legacy
-code does not retain an active native server adapter. Complete corpus/GUI parity
-is not claimed.
+**Current scope, 2026-10-12:** the native viewer is the CAD editor — document
+model and history, modelling operations, components and composition, print,
+experiments and the physical export all run in process on `sim-cad` (the
+A1–A9 steps of [the migration plan](cad-migration-and-composition-plan.md),
+plus flexible-link derivation, geometry-derived component recipes in
+experiments, and receiver-only connection cleanup on component removal).
+No native path contacts the preserved Python/browser implementations;
+RoboCAD's source remains the behaviour reference for the rows below, whose
+historical receipts retain their original wording. Named limits: no
+signed-distance grid for link-to-link contact, and no bearing inference
+from cylinder pairs (each export lists them in `source.not_modelled`).
+Complete corpus/GUI parity is not claimed.
 
 **Current repair scope (source-reviewed, unexecuted):** empty component material
 overrides follow reference truthiness without bypassing declaration validation.

@@ -1,17 +1,18 @@
 //! The physical model kept at the shown revision while something shows
-//! it: RoboCAD's `GET /physical?flex=0` answers for one revision, so every
-//! edit leaves it behind, and the joint physics rows ([`super::rows`]) and
-//! the material properties dialog's defaults (`materials::form`) read it
-//! only at the shown revision. While a joint is the inspected node (the
-//! first selected node) or a material properties dialog is open at the
-//! shown revision, [`sync`] fetches it again (`sync::fetch_physical`, one
+//! it: the in-process derivation answers for one revision, so every edit
+//! leaves it behind, and the joint physics rows ([`super::rows`]) and the
+//! material properties dialog's defaults (`materials::form`) read it only
+//! at the shown revision. While a joint is the inspected node (the first
+//! selected node) or a material properties dialog is open at the shown
+//! revision, [`sync`] derives it again (`sync::fetch_physical`, one
 //! Dedicated job) when it is missing or answers for another revision, no
 //! fetch runs, no edit is in flight (the revision is about to move) and
-//! the window is connected, once the revision has stayed put for half a second (RoboCAD derives the whole model for it): at most once per (document generation,
-//! revision), so a failed fetch is shown, not retried in a loop (the rows'
-//! "Fetch physical model" retries it). The rows show "Fetching RoboCAD's
-//! physical model…" meanwhile. When it lands, an open properties dialog
-//! takes the defaults it lacked (`materials::refilled_form`).
+//! the window is connected, once the revision has stayed put for half a
+//! second (the whole model is derived for it): at most once per (document
+//! generation, revision), so a failed derivation is shown, not retried in
+//! a loop (the rows' "Fetch physical model" retries it). The rows show
+//! "Deriving the physical model…" meanwhile. When it lands, an open
+//! properties dialog takes the defaults it lacked (`materials::refilled_form`).
 use crate::cad::document::CadDocument;
 use crate::cad::selection::{CadItems, CadSelection};
 use bevy::prelude::*;

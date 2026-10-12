@@ -421,7 +421,7 @@ fn footer(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, f: &form::Ma
         }
         FormKind::Properties { .. } => {
             if doc.physical_job.is_some() {
-                p.spawn(k.caption("Fetching RoboCAD's physical model…"));
+                p.spawn(k.caption("Deriving the physical model…"));
             }
             p.spawn(k.note("Each field names where its value comes from. OK sends only the fields you changed, in SI, as one undo step. RoboCAD reports its defaults in its physical model, for the materials the model uses; it is fetched for this revision while the dialog is open."));
         }

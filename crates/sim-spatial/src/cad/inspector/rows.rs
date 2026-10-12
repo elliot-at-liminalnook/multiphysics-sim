@@ -276,7 +276,7 @@ fn joint(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, n: &NodeSumma
 /// Why the joint physics rows are not shown, and the fetch.
 fn physics_missing(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
     if doc.physical_job.is_some() {
-        p.spawn(k.caption("Fetching RoboCAD's physical model…"));
+        p.spawn(k.caption("Deriving the physical model…"));
         return;
     }
     match &doc.physical {

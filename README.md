@@ -88,20 +88,26 @@ The browser workspace is built and served as described in
 ### CAD mode in the native viewer
 
 `cargo run -p sim-spatial -- path/to/model.rcad` selects native CAD mode.
-Opening, displayed B-rep bodies, body selection and mass/centroid/full inertia
-inspection use shared Rust libraries and OCCT in the viewer process. The CAD
-path picker and native REST `cad_open` use the same typed opening action.
-No RoboCAD process, Python environment or CAD HTTP service belongs to these
-paths. Building requires OCCT development headers and libraries; see
-[the shared CAD crate](crates/sim-cad/README.md) for dependency setup and
-[the source-review ledger](docs/cad-rust-physical-derivations.md) for supported
-archive content and limitations. This implementation has not been built or run.
+The whole CAD editor runs in the viewer process on shared Rust libraries and
+OCCT: opening and saving `.rcad` archives, the document model and history,
+modelling operations (sketches, solids, booleans, fillets), components and
+the system composition graph, print studies/splits/plates, captured
+experiments, annotations, and the physical simrobot export — including
+flexible-link modal reduction for `physical`/`simulation` exports and
+`settings.flex` experiments, and geometry-derived component recipes inside
+experiments. The CAD path picker and native REST `cad_open` use the same
+typed opening action. No RoboCAD process, Python environment or CAD HTTP
+service belongs to any native path; RoboCAD's Python source in `cad/` is
+the behaviour reference only. Building requires OCCT development headers
+and libraries; see [the shared CAD crate](crates/sim-cad/README.md) for
+dependency setup and [the source-review ledger](docs/cad-rust-physical-derivations.md)
+for supported archive content.
 
-Full modelling, sketch editing, booleans, fillets, print/flex derivation and
-physical simrobot export await Rust migration. Their native controls refuse
-with a named migration status. Legacy RoboCAD and browser sources remain the
-behaviour reference; their historical execution receipts do not establish
-parity for this Rust replacement. See [the CAD ledger](docs/cad-parity.md).
+Named limits, stated where they apply (each export lists its own in
+`source.not_modelled`): no signed-distance grid is built for link-to-link
+contact, and joint bearings are estimated rather than inferred from
+cylinder pairs unless set in CAD. See [the CAD ledger](docs/cad-parity.md)
+and [the migration plan](docs/cad-migration-and-composition-plan.md).
 
 ### Leg calibration in the native viewer
 

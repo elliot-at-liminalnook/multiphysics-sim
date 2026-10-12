@@ -624,7 +624,7 @@ fn document(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
     if !connected && let Some(stale) = &doc.stale {
         p.spawn(k.text(format!("Previous local snapshot retained: {stale}"), size::SMALL, WARN, 0));
     }
-    p.spawn(k.note("Flexible links are not derived in process (exports and experiments are rigid and say so)."));
+    p.spawn(k.note("Flexible links are derived in physical and simulation exports; rigid exports say so in source.not_modelled."));
 }
 
 /// The status bar: the edit in flight, then the last outcome (one line each).

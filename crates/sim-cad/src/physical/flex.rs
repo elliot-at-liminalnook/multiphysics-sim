@@ -702,7 +702,12 @@ pub fn flexible_link(solids: &[Mesh], all: &[Mesh], link: &Value, props: &Value,
     };
     let apply_mc = |v: &[f64], out: &mut [f64]| {
         let u = apply_t(&expand(v));
-        let mu: Vec<f64> = (0..nn).flat_map(|n| (0..3).map(move |a| m_node[n] * u[3 * n + a])).collect();
+        let mut mu = vec![0.0; ndof];
+        for n in 0..nn {
+            for a in 0..3 {
+                mu[3 * n + a] = m_node[n] * u[3 * n + a];
+            }
+        }
         let q = apply_tt(&mu);
         for (slot, &col) in keep.iter().enumerate() {
             out[slot] = q[col] + 1e-12 * mass * v[slot];

@@ -17,6 +17,14 @@ fn op_result(result: Value) -> OpResult {
     OpResult { result, history: History::default(), job: None }
 }
 
+/// The native component catalogue (types, parameters, typed ports) the
+/// graph editor reads port schemas from, built once from the same
+/// registry the experiment runner compiles against.
+fn native_catalogue() -> &'static Value {
+    static CATALOGUE: std::sync::OnceLock<Value> = std::sync::OnceLock::new();
+    CATALOGUE.get_or_init(|| sim_script::catalogue(&sim_phenomena::world::registry()))
+}
+
 impl Workspace<'_> {
     /// `Ops.<name>(*args, **kwargs)` (`sim_cad::ops::run`).
     pub fn op(&mut self, name: &str, args: &[Value], kwargs: &Map<String, Value>) -> R<OpResult> {
@@ -169,7 +177,7 @@ impl Workspace<'_> {
         }
         let command = serde_json::to_value(command).map_err(|e| err(e.to_string()))?;
         let graph = self.edit.manifest["component_graph"].clone();
-        let (graph, id) = sim_cad::component_graph::edit(&graph, &self.edit.manifest, &command).map_err(err)?;
+        let (graph, id) = sim_cad::component_graph::edit_with_catalogue(&graph, &self.edit.manifest, &command, native_catalogue()).map_err(err)?;
         self.edit.manifest["component_graph"] = graph.clone();
         serde_json::from_value(json!({"revision": revision + 1, "document_id": self.archive.manifest["document_id"], "id": id, "graph": graph})).map_err(|e| err(e.to_string()))
     }

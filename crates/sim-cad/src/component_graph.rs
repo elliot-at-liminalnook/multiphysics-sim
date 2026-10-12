@@ -136,6 +136,85 @@ mod tests {
         g["connections"]["k2"] = json!({"id": "k2", "ports": [{"component_id": "c1", "port": "p"}]});
         assert!(validate(&g, &manifest).unwrap_err().contains("more than one connection"));
     }
+
+    #[test]
+    fn removing_a_signal_source_drops_its_receiver_only_connection() {
+        let manifest = json!({"nodes": []});
+        let catalogue = json!([
+            {"type": "src", "ports": [{"name": "y", "schema": {"SignalOut": "Dimensionless"}}]},
+            {"type": "snk", "ports": [{"name": "u", "schema": {"SignalIn": "Dimensionless"}}, {"name": "p", "schema": {"Acausal": "Thermal"}}]},
+            {"type": "wal", "ports": [{"name": "p", "schema": {"Acausal": "Thermal"}}]},
+        ]);
+        let g = json!({"version": 1, "components": {
+            "a": {"id": "a", "name": "Source", "type": "src"},
+            "b": {"id": "b", "name": "Sink", "type": "snk"},
+            "c": {"id": "c", "name": "Wall", "type": "wal"},
+        }, "connections": {
+            "s1": {"id": "s1", "ports": [{"component_id": "a", "port": "y"}, {"component_id": "b", "port": "u"}]},
+            "t1": {"id": "t1", "ports": [{"component_id": "b", "port": "p"}, {"component_id": "c", "port": "p"}]},
+        }});
+        let remove = json!({"op": "remove", "id": "a"});
+        // With the catalogue, the receiver-only signal connection goes and
+        // the shared physical node stays; without it, both stay.
+        let (out, _) = edit_with_catalogue(&g, &manifest, &remove, &catalogue).unwrap();
+        assert!(out["connections"].get("s1").is_none());
+        assert!(out["connections"].get("t1").is_some());
+        let (out, _) = edit(&g, &manifest, &remove).unwrap();
+        assert!(out["connections"].get("s1").is_some());
+        // Removing a physical neighbour keeps the shared node's other port.
+        let (out, _) = edit_with_catalogue(&g, &manifest, &json!({"op": "remove", "id": "c"}), &catalogue).unwrap();
+        assert_eq!(out["connections"]["t1"]["ports"], json!([{"component_id": "b", "port": "p"}]));
+    }
+}
+
+/// RoboCAD's `parameter_matches`: a declared name with one `*` wildcard.
+fn pattern_matches(pattern: &str, name: &str) -> bool {
+    match pattern.split_once('*') {
+        None => pattern == name,
+        Some((a, b)) => name.starts_with(a) && name.ends_with(b) && name.len() > a.len() + b.len(),
+    }
+}
+
+/// The declared schema of one connection endpoint in the native catalogue
+/// (RoboCAD's `RegistryView.port` over `sim_script::catalogue` JSON:
+/// entries `{type, ports: [{name, schema}]}` with `*` port names expanded
+/// over the component's parameters). `None` when the type or port is
+/// not in the catalogue — an imported component's ports, say — so a caller
+/// without the full imported set keeps the connection rather than guessing
+/// (compilation remains authoritative, as RoboCAD puts it).
+fn port_schema<'a>(catalogue: &'a Value, graph: &Value, endpoint: &Value) -> Option<&'a Value> {
+    let component = &graph["components"][endpoint["component_id"].as_str()?];
+    let entry = catalogue.as_array()?.iter().find(|e| e["type"] == component["type"])?;
+    let wanted = endpoint["port"].as_str()?;
+    let parameters: Vec<&str> = component["parameters"].as_object().map(|p| p.keys().map(String::as_str).collect()).unwrap_or_default();
+    for declared in entry["ports"].as_array()? {
+        let name = declared["name"].as_str()?;
+        let names: Vec<&str> = if name.contains('*') {
+            let mut expanded: Vec<&str> = parameters.iter().copied().filter(|p| pattern_matches(name, p)).collect();
+            expanded.sort_unstable();
+            expanded
+        } else {
+            vec![name]
+        };
+        if names.contains(&wanted) {
+            return Some(&declared["schema"]);
+        }
+        // A composite plug's member endpoint (`plug.member`) takes the
+        // declared (acausal) schema for the signal test.
+        if let Some((base, _)) = wanted.split_once('.')
+            && names.contains(&base)
+        {
+            return Some(&declared["schema"]);
+        }
+    }
+    if component.get("binding").is_some_and(|b| !b.is_null()) {
+        for declared in entry["ports"].as_array()? {
+            if declared["name"].as_str().is_some_and(|n| n.contains('*') && pattern_matches(n, wanted)) {
+                return Some(&declared["schema"]);
+            }
+        }
+    }
+    None
 }
 
 /// One graph edit (RoboCAD's `edit_graph`): `command` is `{op: add,
@@ -146,6 +225,19 @@ mod tests {
 /// removed) or `{op: replace, graph}`. The new graph, validated, and the
 /// id the edit made or touched.
 pub fn edit(graph: &Value, manifest: &Value, command: &Value) -> Result<(Value, Option<String>), String> {
+    edit_inner(graph, manifest, command, None)
+}
+
+/// [`edit`] with the native component catalogue: removing a component
+/// also drops a connection left with only signal receivers (its signal
+/// source was the removed component), as RoboCAD's `edit_graph` does.
+/// Shared physical nodes and connections whose ports are not all known
+/// signal inputs stay.
+pub fn edit_with_catalogue(graph: &Value, manifest: &Value, command: &Value, catalogue: &Value) -> Result<(Value, Option<String>), String> {
+    edit_inner(graph, manifest, command, Some(catalogue))
+}
+
+fn edit_inner(graph: &Value, manifest: &Value, command: &Value, catalogue: Option<&Value>) -> Result<(Value, Option<String>), String> {
     let mut g = if graph.is_object() { graph.clone() } else { empty() };
     let new_id = || format!("{}{}{}", crate::edit::new_id(), crate::edit::new_id(), &crate::edit::new_id()[..8]);
     let op = command["op"].as_str().ok_or("a system edit needs op (add, update, remove, connect, open, replace)")?;
@@ -184,13 +276,37 @@ pub fn edit(graph: &Value, manifest: &Value, command: &Value) -> Result<(Value, 
         "remove" => {
             let id = touched.clone().ok_or("remove needs the component's id")?;
             g["components"].as_object_mut().ok_or("components must be an object")?.remove(&id).ok_or_else(|| format!("no component {id}"))?;
-            let connections = g["connections"].as_object_mut().ok_or("connections must be an object")?;
-            for c in connections.values_mut() {
-                if let Some(ports) = c["ports"].as_array_mut() {
-                    ports.retain(|p| p["component_id"].as_str() != Some(id.as_str()));
+            {
+                let connections = g["connections"].as_object_mut().ok_or("connections must be an object")?;
+                for c in connections.values_mut() {
+                    if let Some(ports) = c["ports"].as_array_mut() {
+                        ports.retain(|p| p["component_id"].as_str() != Some(id.as_str()));
+                    }
+                }
+                connections.retain(|_, c| c["ports"].as_array().is_some_and(|p| !p.is_empty()));
+            }
+            if let Some(catalogue) = catalogue {
+                // Preserve shared physical nodes and remaining signal
+                // receivers, unless their signal source was deleted: a
+                // connection whose every remaining port is a signal input
+                // has nothing left to drive it.
+                let orphaned: Vec<String> = g["connections"]
+                    .as_object()
+                    .into_iter()
+                    .flatten()
+                    .filter(|(_, c)| {
+                        c["ports"].as_array().is_some_and(|ports| {
+                            ports.iter().all(|p| port_schema(catalogue, &g, p).is_some_and(|s| s.as_object().is_some_and(|o| o.contains_key("SignalIn"))))
+                        })
+                    })
+                    .map(|(cid, _)| cid.clone())
+                    .collect();
+                if let Some(connections) = g["connections"].as_object_mut() {
+                    for cid in orphaned {
+                        connections.remove(&cid);
+                    }
                 }
             }
-            connections.retain(|_, c| c["ports"].as_array().is_some_and(|p| !p.is_empty()));
         }
         "connect" => {
             let mut ports: Vec<Value> = command["ports"].as_array().cloned().ok_or("connect needs ports")?;

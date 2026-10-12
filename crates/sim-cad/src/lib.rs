@@ -19,6 +19,7 @@ pub mod mesh;
 pub mod printing;
 pub mod print;
 pub mod component_graph;
+pub mod component_derivation;
 pub mod component_edit;
 pub mod belt;
 pub mod scripts;

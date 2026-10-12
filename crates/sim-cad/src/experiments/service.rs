@@ -253,12 +253,27 @@ impl Lab {
         let emit = |f: Map<String, Value>| {
             let _ = self.update(id, f);
         };
-        let graph = spec.as_object_mut().and_then(|m| m.remove("component_graph")).unwrap_or_else(empty_graph);
-        if graph["components"].as_object().into_iter().flatten().any(|(_, c)| c.get("derivation").is_some_and(|d| !d.is_null())) {
-            return Err("component derivations (geometry-derived components such as fluid volumes) are not derived in process yet; remove the derivation or run the component by its parameters".into());
+        let mut graph = spec.as_object_mut().and_then(|m| m.remove("component_graph")).unwrap_or_else(empty_graph);
+        let has_recipes = graph["components"].as_object().into_iter().flatten().any(|(_, c)| c.get("derivation").is_some_and(|d| !d.is_null()));
+        let derivation_started = std::time::Instant::now();
+        let mut derivations: Vec<Value> = Vec::new();
+        if has_recipes {
+            emit(fields([("state", json!("building")), ("stage", json!("component derivation"))]));
+            let captured = folder.join("model.rcad");
+            if !captured.is_file() {
+                return Err("component derivations need the run's captured CAD document (model.rcad)".into());
+            }
+            let doc = ArchiveDocument::open(&captured)?;
+            let (resolved, evidence) = crate::component_derivation::derive_graph(&graph, &doc, stop)?;
+            graph = resolved;
+            derivations = evidence;
+            if stop() {
+                return Err("cancelled".into());
+            }
         }
+        let component_derive_s = derivation_started.elapsed().as_secs_f64();
         emit(fields([("state", json!("building")), ("stage", json!("composition"))]));
-        write_json(&folder.join("component_derivations.json"), &json!([]))?;
+        write_json(&folder.join("component_derivations.json"), &json!(derivations))?;
         let (system, graph_mapping) = compose_sources(&spec["system"], &graph)?;
         spec["system"] = system;
         write_json(&folder.join("component_graph_mapping.json"), &json!(graph_mapping))?;
@@ -266,7 +281,7 @@ impl Lab {
         emit(fields([("stage", json!("resolve"))]));
         let plan = sim.resolve(&spec)?;
         let cads: Vec<String> = plan["cad"].as_array().into_iter().flatten().filter_map(|c| c.as_str().map(str::to_string)).collect();
-        spec["provenance"]["uses_cad"] = json!(!cads.is_empty());
+        spec["provenance"]["uses_cad"] = json!(!cads.is_empty() || has_recipes);
         write_json(&folder.join("system.json"), &plan)?;
         let script_mapping: Vec<Value> = plan["components"]
             .as_array()
@@ -365,12 +380,12 @@ impl Lab {
         };
         let mut result = sim.run(&spec, &folder, &progress, stop)?;
         result["timing"]["derive_s"] = json!(derive_seconds);
-        result["timing"]["component_derive_s"] = json!(0.0);
+        result["timing"]["component_derive_s"] = json!(component_derive_s);
         result["timing"]["worker_total_s"] = json!(started.elapsed().as_secs_f64());
         result["cache"] = json!({"cad_hit": cache_hit, "derived": {}, "component_derivations": {}});
         result["configuration"] = evidence;
         result["component_graph_mapping"] = json!(graph_mapping);
-        result["component_derivations"] = json!([]);
+        result["component_derivations"] = json!(derivations);
         result["script_component_mapping"] = json!(script_mapping);
         result["limitations"] = json!(LIMITATIONS);
         result["expectations"] = configuration.get("expectations").cloned().unwrap_or_else(|| json!([]));

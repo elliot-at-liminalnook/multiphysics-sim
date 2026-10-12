@@ -325,6 +325,8 @@ pub(super) fn gait_path_draw(mut commands: Commands, ui: Res<RobotPanelUi>, typi
         placeholder: "/path/to/compiled.json, or relative to the workspace root",
         focused,
         selected: f.draft.select_all,
+        caret: Some(f.draft.caret),
+        selection: f.draft.selection(),
         submit: Some("Open"),
         submit_enabled: enabled,
         listing,

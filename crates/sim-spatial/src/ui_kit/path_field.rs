@@ -186,6 +186,10 @@ pub(crate) struct PathView<'a> {
     pub focused: bool,
     /// The focused text is selected (the next key replaces it).
     pub selected: bool,
+    /// The draft's caret (byte index into `text`) when the caller has it.
+    pub caret: Option<usize>,
+    /// The draft's selection range (byte indices into `text`), when known.
+    pub selection: Option<(usize, usize)>,
     /// The submit button's label, or None for no button (Enter still submits).
     pub submit: Option<&'a str>,
     pub submit_enabled: bool,
@@ -204,7 +208,7 @@ impl Kit<'_> {
                 // The kit input labels itself with its text; the field's label
                 // names it, followed by the typed text (or the placeholder).
                 let shown = if view.text.is_empty() { view.placeholder } else { view.text };
-                line.spawn(self.input_selectable(view.text, view.placeholder, hit(PathHit::Field), view.focused, view.selected)).insert((super::activation::InputIdentity(format!("path:{}",view.label)), AccessibleLabel::new(format!("{}: {shown}", view.label)), Node {
+                line.spawn(self.input_at(view.text, view.placeholder, hit(PathHit::Field), view.focused, view.caret, view.selection.or_else(|| view.selected.then_some((0, view.text.len()))))).insert((super::activation::InputIdentity(format!("path:{}",view.label)), AccessibleLabel::new(format!("{}: {shown}", view.label)), Node {
                     flex_grow: 1.0,
                     min_width: Val::Px(0.0),
                     border_radius: BorderRadius::all(Val::Px(5.)),

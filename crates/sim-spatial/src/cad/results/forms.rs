@@ -120,7 +120,7 @@ impl PathForm {
     pub(crate) fn new(kind: FormKind, doc: Option<&Path>) -> Self {
         let home = std::env::var("HOME").unwrap_or_else(|_| "/".into());
         let text = default_path(kind, doc, &home);
-        PathForm { kind, draft: TextDraft { text, select_all: false }, focused: true, error: None, listing_asked: None }
+        PathForm { kind, draft: TextDraft::new(text, false), focused: true, error: None, listing_asked: None }
     }
     fn text(&self) -> &str {
         self.draft.text.trim()
@@ -189,7 +189,7 @@ pub(in crate::cad) fn handle(args: &ResultsArgs, call: &mut Call, cx: &mut Cx) -
         ResultsOp::FormSet => {
             let Some(text) = &args.text else { return done(Err("form_set needs text (the path)".into())) };
             if let Some(f) = cx.doc.results.form.as_mut() {
-                f.draft = TextDraft { text: text.clone(), select_all: false };
+                f.draft = TextDraft::new(text.clone(), false);
                 f.error = None;
             }
             cx.doc.touch();
@@ -290,12 +290,12 @@ pub(super) fn input(
                 if let Some(listing) = doc.results.listed.as_ref().filter(|l| before.listing_key().is_some_and(|(key, _)| key == l.key))
                     && let Some((entry, is_dir)) = listing.entries.get(i)
                 {
-                    form.draft = TextDraft { text: path_field::pick(&form.draft.text, &listing.dir, entry, *is_dir, form.kind.writes()), select_all: false };
+                    form.draft = TextDraft::new(path_field::pick(&form.draft.text, &listing.dir, entry, *is_dir, form.kind.writes()), false);
                     form.error = None;
                 }
             }
             Part::Path(PathHit::Up) => {
-                form.draft = TextDraft { text: path_field::up(&form.draft.text, form.kind.writes()), select_all: false };
+                form.draft = TextDraft::new(path_field::up(&form.draft.text, form.kind.writes()), false);
                 form.error = None;
             }
             Part::Path(PathHit::Field | PathHit::Submit) => {}
@@ -380,7 +380,7 @@ pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts:
     let Some(form) = form else { return };
     let k = Kit::new(&fonts);
     let title = form.kind.title();
-    let rows = [FormRow { label: form.kind.label(), kind: FieldKind::Text, text: &form.draft.text, focused: form.focused, optional: false, selected: form.focused && form.draft.select_all, picks: &[] }];
+    let rows = [FormRow { label: form.kind.label(), kind: FieldKind::Text, text: &form.draft.text, focused: form.focused, optional: false, selected: form.focused && form.draft.select_all, caret: Some(form.draft.caret), selection: form.draft.selection(), picks: &[] }];
     // Covering the switcher strip too: a switch would drop the typed path.
     commands.spawn((k.backdrop(title, true), ResultsFormRoot, DespawnOnExit(ModeScope::Cad))).with_children(|backdrop| {
         k.form(backdrop, title, &rows, form.ok_ready(), Some(460.0), Part::Form, |p| footer(p, &k, form, listed));

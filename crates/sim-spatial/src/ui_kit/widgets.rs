@@ -267,6 +267,50 @@ impl Kit<'_> {
         )
     }
 
+    /// [`Kit::input`] with the caret drawn at `caret` (a byte index into
+    /// `shown`, clamped to a char boundary) and `selection` (a byte range)
+    /// on the accent fill instead of the caret. The three spans are
+    /// separate text nodes in a row.
+    pub(crate) fn input_at<A: Component + std::fmt::Debug>(&self, shown: &str, placeholder: &str, action: A, focused: bool, caret: Option<usize>, selection: Option<(usize, usize)>) -> impl Bundle + use<A> {
+        let identity = super::activation::InputIdentity(format!("{}:{action:?}", std::any::type_name::<A>()));
+        let empty = shown.is_empty();
+        let clamp = |at: usize| {
+            let mut at = at.min(shown.len());
+            while !shown.is_char_boundary(at) {
+                at -= 1;
+            }
+            at
+        };
+        let (before, mid, after, colour) = if empty && !focused {
+            (placeholder.to_string(), String::new(), String::new(), FAINT)
+        } else if focused && let Some((a, b)) = selection.filter(|(a, b)| a < b) {
+            let (a, b) = (clamp(a), clamp(b));
+            (shown[..a].to_string(), shown[a..b].to_string(), shown[b..].to_string(), TEXT)
+        } else if focused {
+            let at = clamp(caret.unwrap_or(shown.len()));
+            (format!("{}|", &shown[..at]), String::new(), shown[at..].to_string(), TEXT)
+        } else {
+            (shown.to_string(), String::new(), String::new(), TEXT)
+        };
+        (
+            Button,
+            super::activation::Ordinary,
+            action,
+            super::text::KitInput,
+            identity,
+            Tint::RAISED,
+            AccessibleLabel::new(if empty { placeholder.to_string() } else { shown.to_string() }),
+            Node { border_radius: BorderRadius::all(Val::Px(5.)), padding: UiRect::axes(Val::Px(10.), Val::Px(7.)), border: UiRect::all(Val::Px(1.)), flex_shrink: 0., flex_direction: FlexDirection::Row, ..default() },
+            BorderColor::all(if focused { ACCENT } else { BORDER }),
+            BackgroundColor(RAISED),
+            children![
+                self.text(before, size::BODY, colour, 0),
+                (self.text(mid, size::BODY, TEXT, 0), BackgroundColor(ACCENT_BG)),
+                self.text(after, size::BODY, colour, 0),
+            ],
+        )
+    }
+
     /// A small status dot.
     pub(crate) fn dot(&self, color: Color) -> impl Bundle + use<> {
         (Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Px(7.), height: Val::Px(7.), flex_shrink: 0., ..default() }, BackgroundColor(color))

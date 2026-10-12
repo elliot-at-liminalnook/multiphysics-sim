@@ -301,29 +301,72 @@ fn text_drafts_edit_as_the_numeric_bar() {
     use bevy::input::keyboard::Key;
     use super::text::draft::{DraftKey, TextDraft};
     let ch = |s: &str| Key::Character(s.into());
-    let mut d = TextDraft { text: "10".into(), select_all: true };
-    assert_eq!(d.key(&ch("5"), false, None), DraftKey::Edited);
-    assert_eq!(d, TextDraft { text: "5".into(), select_all: false });
-    assert_eq!(d.key(&ch("0"), false, None), DraftKey::Edited);
-    assert_eq!(d.key(&Key::Space, false, None), DraftKey::Edited);
+    let mut d = TextDraft::new("10", true);
+    assert_eq!(d.key(&ch("5"), false, false, None), DraftKey::Edited);
+    assert_eq!(d, TextDraft::new("5", false));
+    assert_eq!(d.key(&ch("0"), false, false, None), DraftKey::Edited);
+    assert_eq!(d.key(&Key::Space, false, false, None), DraftKey::Edited);
     assert_eq!(d.text, "50 ");
-    assert_eq!(d.key(&Key::Backspace, false, None), DraftKey::Edited);
+    assert_eq!(d.key(&Key::Backspace, false, false, None), DraftKey::Edited);
     assert_eq!(d.text, "50");
-    assert_eq!(d.key(&ch("c"), true, None), DraftKey::Ignored);
-    assert_eq!(d.key(&Key::Space, true, None), DraftKey::Ignored);
-    assert_eq!(d.key(&ch("\u{8}"), false, None), DraftKey::Ignored);
-    assert_eq!(d.key(&Key::Enter, false, None), DraftKey::Enter);
-    assert_eq!(d.key(&Key::Tab, false, None), DraftKey::Tab);
-    assert_eq!(d.key(&Key::Escape, false, None), DraftKey::Escape);
+    assert_eq!(d.key(&ch("c"), true, false, None), DraftKey::Ignored);
+    assert_eq!(d.key(&Key::Space, true, false, None), DraftKey::Ignored);
+    assert_eq!(d.key(&ch("\u{8}"), false, false, None), DraftKey::Ignored);
+    assert_eq!(d.key(&Key::Enter, false, false, None), DraftKey::Enter);
+    assert_eq!(d.key(&Key::Tab, false, false, None), DraftKey::Tab);
+    assert_eq!(d.key(&Key::Escape, false, false, None), DraftKey::Escape);
     assert_eq!(d.text, "50");
     d.select_all = true;
-    assert_eq!(d.key(&Key::Backspace, false, None), DraftKey::Edited);
+    assert_eq!(d.key(&Key::Backspace, false, false, None), DraftKey::Edited);
     assert_eq!(d, TextDraft::default());
-    assert_eq!(d.key(&Key::Backspace, false, None), DraftKey::Ignored);
+    assert_eq!(d.key(&Key::Backspace, false, false, None), DraftKey::Ignored);
     // Typing a selected text's own character over it is an edit: the selection clears.
-    let mut d = TextDraft { text: "5".into(), select_all: true };
-    assert_eq!(d.key(&ch("5"), false, None), DraftKey::Edited);
-    assert_eq!(d, TextDraft { text: "5".into(), select_all: false });
+    let mut d = TextDraft::new("5", true);
+    assert_eq!(d.key(&ch("5"), false, false, None), DraftKey::Edited);
+    assert_eq!(d, TextDraft::new("5", false));
+}
+
+/// The caret moves by character, Home/End by line; Shift selects a range
+/// the next character replaces; Backspace/Delete eat one char at the caret.
+#[test]
+fn text_drafts_have_a_caret_and_a_selection() {
+    use bevy::input::keyboard::Key;
+    use super::text::draft::{DraftKey, TextDraft};
+    let ch = |s: &str| Key::Character(s.into());
+    let mut d = TextDraft::new("héllo", false);
+    assert_eq!(d.caret, 6);
+    assert_eq!(d.key(&Key::ArrowLeft, false, false, None), DraftKey::Edited);
+    assert_eq!(d.caret, 5);
+    // Inserting happens at the caret, over a multi-byte char boundary.
+    assert_eq!(d.key(&ch("!"), false, false, None), DraftKey::Edited);
+    assert_eq!(d.text, "héll!o");
+    // Shift+Left twice selects "l!"; typing replaces it.
+    d.key(&Key::ArrowLeft, false, true, None);
+    d.key(&Key::ArrowLeft, false, true, None);
+    assert_eq!(d.selection(), Some((4, 6)));
+    assert_eq!(&d.text[4..6], "l!");
+    d.key(&ch("p"), false, false, None);
+    assert_eq!(d.text, "hélpo");
+    assert_eq!(d.selection(), None);
+    // ArrowLeft on a selection collapses to its start; Delete eats forward.
+    d.key(&Key::End, false, false, None);
+    d.key(&Key::ArrowLeft, false, true, None);
+    assert_eq!(d.selection(), Some((5, 6)));
+    d.key(&Key::ArrowLeft, false, false, None);
+    assert_eq!((d.caret, d.selection()), (5, None));
+    d.key(&Key::Delete, false, false, None);
+    assert_eq!(d.text, "hélp");
+    assert_eq!(d.key(&Key::Delete, false, false, None), DraftKey::Ignored);
+    // Home/End are line-wise.
+    let mut d = TextDraft::new("ab\ncde", false);
+    d.key(&Key::Home, false, false, None);
+    assert_eq!(d.caret, 3);
+    d.key(&Key::End, false, false, None);
+    assert_eq!(d.caret, 6);
+    // A stranded caret (draft replaced under it) clamps instead of panicking.
+    d.text = "x".into();
+    assert_eq!(d.key(&Key::Backspace, false, false, None), DraftKey::Edited);
+    assert_eq!(d.text, "");
 }
 
 /// The pie, palette and form spawn (no duplicate component in a bundle).
@@ -338,14 +381,14 @@ fn modify_widgets_spawn() {
     let rows = palette::rank(&entries, "");
     let picks = [(String::new(), "(world)".to_string()), ("b1".to_string(), "Bracket".to_string())];
     let fields = [
-        form::FormRow { label: "Count", kind: form::FieldKind::Number { unit: form::Unit::Count, min: Some(1.0), max: Some(10.0), decimals: 0 }, text: "3", focused: true, optional: false, selected: true, picks: &[] },
-        form::FormRow { label: "Spacing", kind: form::FieldKind::Vector { unit: form::Unit::Length }, text: "1, 2", focused: false, optional: false, selected: false, picks: &[] },
-        form::FormRow { label: "Kind", kind: form::FieldKind::Choice { options: &["rectangular", "radial"] }, text: "radial", focused: false, optional: false, selected: false, picks: &[] },
-        form::FormRow { label: "Merge into one body", kind: form::FieldKind::Check, text: "true", focused: false, optional: false, selected: false, picks: &[] },
-        form::FormRow { label: "Components", kind: form::FieldKind::Json, text: "{}", focused: false, optional: false, selected: false, picks: &[] },
-        form::FormRow { label: "Axis", kind: form::FieldKind::Vector { unit: form::Unit::Length }, text: "", focused: false, optional: true, selected: false, picks: &[] },
-        form::FormRow { label: "Parent", kind: form::FieldKind::Pick { source: "bodies_or_world" }, text: "b1", focused: false, optional: true, selected: false, picks: &picks },
-        form::FormRow { label: "Child", kind: form::FieldKind::Pick { source: "bodies" }, text: "", focused: false, optional: false, selected: false, picks: &[] },
+        form::FormRow { label: "Count", kind: form::FieldKind::Number { unit: form::Unit::Count, min: Some(1.0), max: Some(10.0), decimals: 0 }, text: "3", focused: true, optional: false, selected: true, caret: None, selection: None, picks: &[] },
+        form::FormRow { label: "Spacing", kind: form::FieldKind::Vector { unit: form::Unit::Length }, text: "1, 2", focused: false, optional: false, selected: false, caret: None, selection: None, picks: &[] },
+        form::FormRow { label: "Kind", kind: form::FieldKind::Choice { options: &["rectangular", "radial"] }, text: "radial", focused: false, optional: false, selected: false, caret: None, selection: None, picks: &[] },
+        form::FormRow { label: "Merge into one body", kind: form::FieldKind::Check, text: "true", focused: false, optional: false, selected: false, caret: None, selection: None, picks: &[] },
+        form::FormRow { label: "Components", kind: form::FieldKind::Json, text: "{}", focused: false, optional: false, selected: false, caret: None, selection: None, picks: &[] },
+        form::FormRow { label: "Axis", kind: form::FieldKind::Vector { unit: form::Unit::Length }, text: "", focused: false, optional: true, selected: false, caret: None, selection: None, picks: &[] },
+        form::FormRow { label: "Parent", kind: form::FieldKind::Pick { source: "bodies_or_world" }, text: "b1", focused: false, optional: true, selected: false, caret: None, selection: None, picks: &picks },
+        form::FormRow { label: "Child", kind: form::FieldKind::Pick { source: "bodies" }, text: "", focused: false, optional: false, selected: false, caret: None, selection: None, picks: &[] },
     ];
     let pie = {
         let mut commands = world.commands();
@@ -485,7 +528,7 @@ fn document_picker_spawns_labelled_buttons() {
         PickerSection { title: "Examples".into(), entries: vec![], empty: "No examples".into() },
     ];
     let listing = Listing { key: "/w/|system.json".into(), dir: "/w/".into(), entries: vec![("sub".into(), true), ("board.system.json".into(), false)], more: 0, error: None };
-    let view = PathView { label: "Open file", text: "/w/", placeholder: "~/path/to/file", focused: true, selected: false, submit: Some("Open"), submit_enabled: false, listing: Some(&listing) };
+    let view = PathView { label: "Open file", text: "/w/", placeholder: "~/path/to/file", focused: true, selected: false, caret: None, selection: None, submit: Some("Open"), submit_enabled: false, listing: Some(&listing) };
     let root = {
         let mut commands = world.commands();
         let mut root = commands.spawn(k.backdrop("Open a system", false));

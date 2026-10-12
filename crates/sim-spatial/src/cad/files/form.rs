@@ -631,7 +631,7 @@ pub(super) fn draw(mut commands: Commands, files: Option<Res<CadFiles>>, doc: Op
         .iter()
         .map(|r| {
             let focused = form.focus.as_deref() == Some(r.name.as_str());
-            FormRow { label: &r.label, kind: r.kind, text: form.text(&r.name), focused, optional: false, selected: focused && form.select_all, picks: &[] }
+            FormRow { label: &r.label, kind: r.kind, text: form.text(&r.name), focused, optional: false, selected: focused && form.select_all, caret: None, selection: None, picks: &[] }
         })
         .collect();
     let title = form.title();

@@ -390,7 +390,7 @@ pub(in crate::cad) fn draw_form(mut commands: Commands, doc: Option<Res<CadDocum
         .iter()
         .zip(&f.texts)
         .enumerate()
-        .map(|(i, (field, text))| FormRow { label: &field.label, kind: field.kind, text, focused: at == Some(i), optional: field.optional(), selected: at == Some(i) && doc.materials.select_all, picks: &[] })
+        .map(|(i, (field, text))| FormRow { label: &field.label, kind: field.kind, text, focused: at == Some(i), optional: field.optional(), selected: at == Some(i) && doc.materials.select_all, caret: None, selection: None, picks: &[] })
         .collect();
     let ok = form::ok_ready(f).is_ok() && doc.edit_refusal().is_none();
     commands.spawn((k.backdrop(&title, true), FormRoot, DespawnOnExit(ModeScope::Cad))).with_children(|backdrop| {

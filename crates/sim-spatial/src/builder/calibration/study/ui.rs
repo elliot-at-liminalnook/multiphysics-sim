@@ -72,7 +72,7 @@ pub(super) fn field(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:Stud
 }
 fn path(body:&mut ChildSpawnerCommands,k:&Kit,ui:&StudyUi,stamp:Option<StudyStamp>,field:Field,label:&str,submit:&str,enabled:bool) {
     let text=ui.shown(stamp,&field,String::new());
-    let view=PathView{label,text:&text,placeholder:label,focused:ui.focused(stamp,&field),selected:false,submit:Some(submit),submit_enabled:enabled,listing:None};
+    let view=PathView{label,text:&text,placeholder:label,focused:ui.focused(stamp,&field),selected:false,caret:None,selection:None,submit:Some(submit),submit_enabled:enabled,listing:None};
     k.path_field(body,&view,|hit|match hit {
         PathHit::Field=>Hit::Focus{stamp,field:field.clone(),text:text.clone()},
         _=>Hit::Path{stamp,field:field.clone(),text:text.clone()},

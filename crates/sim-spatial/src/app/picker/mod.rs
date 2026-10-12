@@ -251,7 +251,7 @@ impl Picker {
 
     /// Set the draft (a pick, "..", a REST text) and follow it with the listing.
     pub(crate) fn set_text(&mut self, text: String) {
-        self.draft = TextDraft { text, select_all: false };
+        self.draft = TextDraft::new(text, false);
         self.prefilled = false;
         self.edited = true;
         self.follow_listing();
@@ -464,7 +464,7 @@ pub(crate) fn receive(
             && !picker.edited
             && let Some(dir) = &sources.start_dir
         {
-            picker.draft = TextDraft { text: dir.clone(), select_all: text.focused(PATH) };
+            picker.draft = TextDraft::new(dir.clone(), text.focused(PATH));
             picker.prefilled = true;
             picker.follow_listing();
         }
@@ -579,6 +579,8 @@ pub(crate) fn draw(mut commands: Commands, picker: Option<Res<Picker>>, switch: 
         placeholder: &placeholder,
         focused,
         selected: focused && picker.draft.select_all,
+        caret: Some(picker.draft.caret),
+        selection: picker.draft.selection(),
         submit: Some("Open"),
         submit_enabled: picker.typed().is_some(),
         listing: picker.current_listing(),

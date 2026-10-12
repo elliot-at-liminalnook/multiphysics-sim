@@ -440,10 +440,22 @@ commits, targeted tests only — the runs named per item, nothing broader).
   scattered `delta_secs().min(0.1)` clamps retired; the stale
   "no gamepad" feature comment corrected. Pointer-lock for the fly
   camera was *not* added: `camera/fly.rs` records a deliberate decision
-  against cursor grabbing, which stands. Targeted (output filtered
-  through head/grep; no failures shown but the pass count was not
-  captured redone):
+  against cursor grabbing, which stands. Targeted:
   `cargo test -p sim-spatial --lib -- camera::tests app::tests` —
   green except five `rest::bind` tests that the shell sandbox cannot
   run (`PermissionDenied` binding a socket); the same five pass outside
   the sandbox.
+- **Item 3 (text caret + selection) — done.** `TextDraft` carries a byte
+  caret (char-boundary clamped) and an anchor; Left/Right/Home/End move
+  it (Home/End line-wise), Shift extends a range selection, typing and
+  Backspace/Delete act on the selection or the char at the caret, and
+  `select_all` focus semantics are unchanged. `Kit::input_at` draws the
+  caret at its position and the selection as an accent span; wired
+  through `FormRow`, `PathView` and the CAD inspector's physical rows
+  (callers whose forms keep their own text storage pass no caret yet and
+  keep the end caret; the materials search, tree rename and references
+  row fields still use their own append-only mini-drafts). IME
+  composition remains future work, as the audit sized it. Targeted:
+  `cargo test -p sim-spatial --lib -- ui_kit::tests text::tests text_drafts`
+  (26 passed, including the new caret/selection test).
+

@@ -386,7 +386,7 @@ pub(super) fn draw(mut commands: Commands, doc: Option<Res<CadDocument>>, fonts:
             let p = &entry.params[*i];
             let focused = form.focus == Some(*i);
             // An empty default is optional (`ok_ready` and `ops::values` leave it out empty).
-            FormRow { label: p.label, kind: p.kind, text: form.texts.get(*i).map_or(p.default, String::as_str), focused, optional: p.default.is_empty(), selected: focused && form.select_all, picks: picks.get(*i).map_or(&[][..], Vec::as_slice) }
+            FormRow { label: p.label, kind: p.kind, text: form.texts.get(*i).map_or(p.default, String::as_str), focused, optional: p.default.is_empty(), selected: focused && form.select_all, caret: None, selection: None, picks: picks.get(*i).map_or(&[][..], Vec::as_slice) }
         })
         .collect();
     let param = |r: usize| rows_at.get(r).copied().unwrap_or(usize::MAX);

@@ -183,6 +183,10 @@ pub(crate) struct FormRow<'a> {
     pub optional: bool,
     /// The focused field's text is selected (the next key replaces it).
     pub selected: bool,
+    /// The draft's caret (byte index into `text`) when the caller has it.
+    pub caret: Option<usize>,
+    /// The draft's selection range (byte indices into `text`), when known.
+    pub selection: Option<(usize, usize)>,
     /// A `FieldKind::Pick` field's choices as (key, label), in order;
     /// empty for every other kind. `FormHit::Option(i, k)` names `picks[k]`.
     pub picks: &'a [(String, String)],
@@ -281,14 +285,14 @@ impl Kit<'_> {
                 cell.spawn(self.text(row.label, size::CAPTION, SUBTLE, 1));
                 // An empty optional field is left out, not an error.
                 if row.optional && row.text.is_empty() {
-                    let mut input = cell.spawn(self.input_selectable(row.text, "(optional)", hit(FormHit::Field(i)), row.focused, row.selected));
+                    let mut input = cell.spawn(self.input_at(row.text, "(optional)", hit(FormHit::Field(i)), row.focused, row.caret, row.selection.or_else(|| row.selected.then_some((0, row.text.len())))));
                     input.insert(AccessibleLabel::new(row.label));
                     return;
                 }
                 let result = evaluate(&row.kind, row.text);
                 {
                     // The kit input labels itself with its text; the field is named by its label.
-                    let mut input = cell.spawn(self.input_selectable(row.text, row.label, hit(FormHit::Field(i)), row.focused, row.selected));
+                    let mut input = cell.spawn(self.input_at(row.text, row.label, hit(FormHit::Field(i)), row.focused, row.caret, row.selection.or_else(|| row.selected.then_some((0, row.text.len())))));
                     input.insert(AccessibleLabel::new(row.label));
                     if result.is_err() {
                         // RoboCAD's red border (cad/numeric.rs `body`).

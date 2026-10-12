@@ -116,7 +116,7 @@ pub(in crate::cad) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocum
         let listing = st.listed.as_ref().filter(|l| key.as_deref() == Some(l.key.as_str()));
         let focused = st.focus == Some(Focus::Path);
         let text = b.draft.text.trim();
-        let view = PathView { label, text: &b.draft.text, placeholder: "~/…", focused, selected: focused && st.select_all, submit: Some(submit), submit_enabled: !text.is_empty() && !text.ends_with('/'), listing };
+        let view = PathView { label, text: &b.draft.text, placeholder: "~/…", focused, selected: focused && st.select_all, caret: Some(b.draft.caret), selection: b.draft.selection(), submit: Some(submit), submit_enabled: !text.is_empty() && !text.ends_with('/'), listing };
         k.path_field(p, &view, RefPath);
         if let Some(e) = &b.error {
             p.spawn(k.text(e.clone(), size::SMALL, DANGER, 0));

@@ -17,7 +17,7 @@ fn late_readiness_supersedes_discovery_without_replacing_picker_edits() {
     let mut picker = Picker::default();
     picker.open = Some(ViewerMode::Cad);
     picker.from = Some(ViewerMode::Inspect);
-    picker.draft = TextDraft { text: "/typed/new.rcad".into(), select_all: false };
+    picker.draft = TextDraft::new("/typed/new.rcad", false);
     picker.edited = true;
     picker.scroll = 81.0;
     picker.listing_asked = Some("retained-listing".into());

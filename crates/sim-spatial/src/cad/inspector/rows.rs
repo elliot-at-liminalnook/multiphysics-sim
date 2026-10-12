@@ -190,7 +190,7 @@ fn input_row(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, id: &str,
     let shown = draft.map_or(text, |d| d.draft.text.as_str());
     p.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), padding: UiRect::vertical(Val::Px(2.0)), flex_shrink: 0.0, ..default() }).with_children(|c| {
         c.spawn(k.text(label, size::BODY, SUBTLE, 0));
-        c.spawn(k.input_selectable(shown, placeholder, PhysicalField { node: id.to_string(), field: which }, draft.is_some(), draft.is_some_and(|d| d.draft.select_all)));
+        c.spawn(k.input_at(shown, placeholder, PhysicalField { node: id.to_string(), field: which }, draft.is_some(), draft.map(|d| d.draft.caret), draft.and_then(|d| d.draft.selection())));
     });
     match draft {
         Some(d) if d.error.is_some() => {

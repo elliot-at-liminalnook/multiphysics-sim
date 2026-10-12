@@ -100,7 +100,7 @@ fn apply(field: &mut TextField, key: &Key, command: bool, shift: bool) -> Outcom
                 Outcome::Edited
             }
         },
-        key => match field.draft.key(key, command, field.filter) {
+        key => match field.draft.key(key, command, shift, field.filter) {
             DraftKey::Edited => Outcome::Edited,
             _ => Outcome::Ignored,
         },

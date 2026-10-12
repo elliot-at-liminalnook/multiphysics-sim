@@ -150,7 +150,7 @@ pub(super) fn draw(
     if let Some(dialog) = &doc.tree.dialog {
         let blocked = edit_blocked(doc);
         let ok = blocked.is_none() && !dialog.draft.trim().is_empty();
-        let rows = [FormRow { label: "Group name:", kind: FieldKind::Text, text: &dialog.draft, focused: true, optional: false, selected: false, picks: &[] }];
+        let rows = [FormRow { label: "Group name:", kind: FieldKind::Text, text: &dialog.draft, focused: true, optional: false, selected: false, caret: None, selection: None, picks: &[] }];
         let what = if dialog.ids.is_empty() { "OK adds an empty group.".to_string() } else { format!("OK groups the {} selected nodes into a new group (one undo step).", dialog.ids.len()) };
         commands.spawn((k.backdrop("Organize components", true), TreeDialogRoot, DespawnOnExit(ModeScope::Cad))).with_children(|backdrop| {
             k.form(backdrop, "Organize components", &rows, ok, Some(DIALOG_WIDTH), DialogPart, |p| {

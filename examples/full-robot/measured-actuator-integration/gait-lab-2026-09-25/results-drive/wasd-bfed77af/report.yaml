@@ -1,0 +1,768 @@
+kind: drive_set
+set: wasd
+gait: 6216-Bayesian-009
+file: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/drive/wasd.yaml
+status: ready
+summary: 'Ready (kinematics only): 9 variants on a 1.462 s cycle. Fastest: joint.-X | Worm servo output at 48% of motor speed (arc-right).'
+reasons: []
+period_s: 1.46231338636833
+samples_per_cycle: 146
+gait_overlap_mm: 0.3138137932387919
+variants:
+- name: step-in-place
+  keys: ''
+  forward_m_s: 0.0
+  lateral_m_s: 0.0
+  yaw_deg_s: 0.0
+  status: ready
+  reasons: []
+  closure_deg: 2.8624992133171654e-14
+  settle_change_deg: 1.0495830448829606e-13
+  overlap_mm: 0.0
+  joints:
+  - joint: joint.-Y | Foot servo output
+    reference_peak_rad_s: 0.6743900252432946
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 14.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Foot servo output
+    reference_peak_rad_s: 0.6571251054161651
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 13.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Foot servo output
+    reference_peak_rad_s: 0.6709169405518333
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 13.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Foot servo output
+    reference_peak_rad_s: 0.6710892216983417
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 13.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Worm servo output
+    reference_peak_rad_s: 0.06431007426090528
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 1.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Worm servo output
+    reference_peak_rad_s: 0.06667583589772712
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 1.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Hip servo output
+    reference_peak_rad_s: 2.0217425050072573e-13
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 0.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Worm servo output
+    reference_peak_rad_s: 0.012608472832527627
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 0.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Hip servo output
+    reference_peak_rad_s: 3.474783140835379e-15
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 0.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Worm servo output
+    reference_peak_rad_s: 0.01496147169358405
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 0.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Hip servo output
+    reference_peak_rad_s: 9.167299793471155e-13
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 0.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Hip servo output
+    reference_peak_rad_s: 3.0316618660167574e-15
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 0.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  compiled_gait: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/step-in-place/compiled.json
+- name: forward
+  keys: w
+  forward_m_s: 0.12
+  lateral_m_s: 0.0
+  yaw_deg_s: 0.0
+  status: ready
+  reasons: []
+  closure_deg: 2.321804917468367e-13
+  settle_change_deg: 4.2818217399202594e-13
+  overlap_mm: 0.04724486963061273
+  joints:
+  - joint: joint.-X | Worm servo output
+    reference_peak_rad_s: 2.590519682074236
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 42.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Worm servo output
+    reference_peak_rad_s: 2.4533855284994597
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 40.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Worm servo output
+    reference_peak_rad_s: 2.4051228652250267
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 39.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Worm servo output
+    reference_peak_rad_s: 2.3785815481561827
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 38.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Foot servo output
+    reference_peak_rad_s: 1.6256107881453772
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 33.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Hip servo output
+    reference_peak_rad_s: 1.3118533811847297
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 30.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Foot servo output
+    reference_peak_rad_s: 1.4635612763294596
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 29.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Foot servo output
+    reference_peak_rad_s: 1.4644581531470502
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 29.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Foot servo output
+    reference_peak_rad_s: 1.3697034256708847
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 28.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Hip servo output
+    reference_peak_rad_s: 1.231015777062786
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 28.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Hip servo output
+    reference_peak_rad_s: 1.1654143312131031
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 26.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Hip servo output
+    reference_peak_rad_s: 1.1112064504219552
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 25.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  compiled_gait: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/forward/compiled.json
+- name: backward
+  keys: s
+  forward_m_s: -0.1
+  lateral_m_s: 0.0
+  yaw_deg_s: 0.0
+  status: ready
+  reasons: []
+  closure_deg: 1.335832966214677e-13
+  settle_change_deg: 2.8306936665025297e-13
+  overlap_mm: 0.041546575251133276
+  joints:
+  - joint: joint.-X | Worm servo output
+    reference_peak_rad_s: 2.150595355956382
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 35.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Worm servo output
+    reference_peak_rad_s: 2.0304948475967244
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 33.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Worm servo output
+    reference_peak_rad_s: 1.964010032920523
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 32.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Worm servo output
+    reference_peak_rad_s: 1.985327737444444
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 32.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Foot servo output
+    reference_peak_rad_s: 1.4178749707225997
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 28.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Foot servo output
+    reference_peak_rad_s: 1.2904498712260584
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 26.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Foot servo output
+    reference_peak_rad_s: 1.2925159774111072
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 26.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Hip servo output
+    reference_peak_rad_s: 1.049874944478404
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 24.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Foot servo output
+    reference_peak_rad_s: 1.216414085625389
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 24.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Hip servo output
+    reference_peak_rad_s: 0.9778357246180416
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 22.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Hip servo output
+    reference_peak_rad_s: 0.9326753940358963
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 21.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Hip servo output
+    reference_peak_rad_s: 0.8866489931046371
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 20.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  compiled_gait: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/backward/compiled.json
+- name: turn-left
+  keys: a
+  forward_m_s: 0.0
+  lateral_m_s: 0.0
+  yaw_deg_s: 20.0
+  status: ready
+  reasons: []
+  closure_deg: 3.29187409531474e-13
+  settle_change_deg: 9.827913965722266e-13
+  overlap_mm: 0.045734011657877945
+  joints:
+  - joint: joint.+Y | Hip servo output
+    reference_peak_rad_s: 1.1762881435495005
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 27.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Hip servo output
+    reference_peak_rad_s: 1.1428347416862938
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 26.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Hip servo output
+    reference_peak_rad_s: 1.1625988654422224
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 26.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Hip servo output
+    reference_peak_rad_s: 1.1265834420847938
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 25.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Foot servo output
+    reference_peak_rad_s: 0.9130980052273356
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 18.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Foot servo output
+    reference_peak_rad_s: 0.885787438172021
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 18.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Foot servo output
+    reference_peak_rad_s: 0.8743506659075231
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 18.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Worm servo output
+    reference_peak_rad_s: 1.0737766331394685
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 17.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Foot servo output
+    reference_peak_rad_s: 0.8611777903042618
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 17.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Worm servo output
+    reference_peak_rad_s: 0.9883129867336411
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 16.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Worm servo output
+    reference_peak_rad_s: 1.0096617225160776
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 16.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Worm servo output
+    reference_peak_rad_s: 1.0033998176885617
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 16.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  compiled_gait: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/turn-left/compiled.json
+- name: turn-right
+  keys: d
+  forward_m_s: 0.0
+  lateral_m_s: 0.0
+  yaw_deg_s: -20.0
+  status: ready
+  reasons: []
+  closure_deg: 3.2044088415744933e-13
+  settle_change_deg: 9.81201119231495e-13
+  overlap_mm: 0.045754728471416255
+  joints:
+  - joint: joint.+Y | Hip servo output
+    reference_peak_rad_s: 1.1762881554581242
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 27.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Hip servo output
+    reference_peak_rad_s: 1.1428347479538068
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 26.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Hip servo output
+    reference_peak_rad_s: 1.162598854332161
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 26.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Hip servo output
+    reference_peak_rad_s: 1.1265834433799176
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 25.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Foot servo output
+    reference_peak_rad_s: 0.913120743217366
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 18.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Foot servo output
+    reference_peak_rad_s: 0.8858693446883176
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 18.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Foot servo output
+    reference_peak_rad_s: 0.8744043918404526
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 18.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Worm servo output
+    reference_peak_rad_s: 1.0738458619254747
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 17.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Foot servo output
+    reference_peak_rad_s: 0.861162875511587
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 17.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Worm servo output
+    reference_peak_rad_s: 0.9883136897831001
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 16.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Worm servo output
+    reference_peak_rad_s: 1.0096498770536395
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 16.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Worm servo output
+    reference_peak_rad_s: 1.0033868810095918
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 16.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  compiled_gait: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/turn-right/compiled.json
+- name: arc-left
+  keys: wa
+  forward_m_s: 0.1
+  lateral_m_s: 0.0
+  yaw_deg_s: 12.0
+  status: ready
+  reasons: []
+  closure_deg: 1.2404163257707715e-13
+  settle_change_deg: 5.597776239375789e-13
+  overlap_mm: 0.04153517937907204
+  joints:
+  - joint: joint.-Y | Worm servo output
+    reference_peak_rad_s: 2.8188706106651917
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 46.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Worm servo output
+    reference_peak_rad_s: 2.751556792273958
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 45.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Hip servo output
+    reference_peak_rad_s: 1.7410730544079616
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 39.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Hip servo output
+    reference_peak_rad_s: 1.6989814604376952
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 38.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Foot servo output
+    reference_peak_rad_s: 1.6830477006022617
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 34.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Worm servo output
+    reference_peak_rad_s: 2.01002306674564
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 33.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Foot servo output
+    reference_peak_rad_s: 1.525296100335017
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 31.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Worm servo output
+    reference_peak_rad_s: 1.8483775796463995
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 30.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Foot servo output
+    reference_peak_rad_s: 1.2225587650747634
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 25.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Foot servo output
+    reference_peak_rad_s: 1.1582051916453586
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 23.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Hip servo output
+    reference_peak_rad_s: 0.20010696061450486
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 5.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Hip servo output
+    reference_peak_rad_s: 0.14555069428779452
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 3.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  compiled_gait: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/arc-left/compiled.json
+- name: arc-right
+  keys: wd
+  forward_m_s: 0.1
+  lateral_m_s: 0.0
+  yaw_deg_s: -12.0
+  status: ready
+  reasons: []
+  closure_deg: 1.606180114139076e-13
+  settle_change_deg: 4.945815466032748e-7
+  overlap_mm: 0.0808786727010112
+  joints:
+  - joint: joint.-X | Worm servo output
+    reference_peak_rad_s: 2.9394604943837948
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 48.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Worm servo output
+    reference_peak_rad_s: 2.778746849720773
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 45.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Hip servo output
+    reference_peak_rad_s: 1.871368765013345
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 42.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Hip servo output
+    reference_peak_rad_s: 1.8384826781975618
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 42.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Worm servo output
+    reference_peak_rad_s: 1.9622246249894426
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 32.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Worm servo output
+    reference_peak_rad_s: 1.8943829152188592
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 31.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Foot servo output
+    reference_peak_rad_s: 1.5123994800801615
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 30.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Foot servo output
+    reference_peak_rad_s: 1.419999127223862
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 29.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Foot servo output
+    reference_peak_rad_s: 1.3393911882171137
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 27.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Foot servo output
+    reference_peak_rad_s: 1.2260232110931575
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 25.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Hip servo output
+    reference_peak_rad_s: 0.11453634543425716
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 3.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Hip servo output
+    reference_peak_rad_s: 0.14039898104121382
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 3.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  compiled_gait: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/arc-right/compiled.json
+- name: back-left
+  keys: as
+  forward_m_s: -0.08
+  lateral_m_s: 0.0
+  yaw_deg_s: 12.0
+  status: ready
+  reasons: []
+  closure_deg: 3.3713879623513276e-13
+  settle_change_deg: 4.2566621608972097e-7
+  overlap_mm: 0.06645560602517128
+  joints:
+  - joint: joint.-X | Worm servo output
+    reference_peak_rad_s: 2.4222256633287005
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 39.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Worm servo output
+    reference_peak_rad_s: 2.2720509539893823
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 37.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Hip servo output
+    reference_peak_rad_s: 1.5997102234240372
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 36.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Hip servo output
+    reference_peak_rad_s: 1.5684204064919336
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 35.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Foot servo output
+    reference_peak_rad_s: 1.324450652239887
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 27.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Worm servo output
+    reference_peak_rad_s: 1.5741136407338117
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 25.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Worm servo output
+    reference_peak_rad_s: 1.5276749808877719
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 25.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Foot servo output
+    reference_peak_rad_s: 1.2485614878798859
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 25.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Foot servo output
+    reference_peak_rad_s: 1.1907373328258406
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 24.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Foot servo output
+    reference_peak_rad_s: 1.1043553437406222
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 22.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Hip servo output
+    reference_peak_rad_s: 0.1362146392940641
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 3.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Hip servo output
+    reference_peak_rad_s: 0.1072935271912467
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 2.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  compiled_gait: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/back-left/compiled.json
+- name: back-right
+  keys: sd
+  forward_m_s: -0.08
+  lateral_m_s: 0.0
+  yaw_deg_s: -12.0
+  status: ready
+  reasons: []
+  closure_deg: 1.2265013990393687e-13
+  settle_change_deg: 4.6846043858926796e-7
+  overlap_mm: 0.029992616199849238
+  joints:
+  - joint: joint.-Y | Worm servo output
+    reference_peak_rad_s: 2.322282112938482
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 38.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Worm servo output
+    reference_peak_rad_s: 2.255362447268311
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 36.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Hip servo output
+    reference_peak_rad_s: 1.4946479608375565
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 34.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Hip servo output
+    reference_peak_rad_s: 1.4583700457232753
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 33.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-Y | Foot servo output
+    reference_peak_rad_s: 1.458075744314813
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 29.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+X | Foot servo output
+    reference_peak_rad_s: 1.3330573112044835
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 27.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Worm servo output
+    reference_peak_rad_s: 1.630091419485355
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 26.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Worm servo output
+    reference_peak_rad_s: 1.5113744882881308
+    motor_limit_rad_s: 6.182239023058187
+    percent_of_limit: 24.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Foot servo output
+    reference_peak_rad_s: 1.0997884704787284
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 22.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Foot servo output
+    reference_peak_rad_s: 1.0529301459285914
+    motor_limit_rad_s: 4.975999470435482
+    percent_of_limit: 21.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.-X | Hip servo output
+    reference_peak_rad_s: 0.11613472478631864
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 3.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  - joint: joint.+Y | Hip servo output
+    reference_peak_rad_s: 0.05558888591509314
+    motor_limit_rad_s: 4.425520274745219
+    percent_of_limit: 1.0
+    tracking_rms_deg: null
+    tracking_peak_deg: null
+  compiled_gait: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/back-right/compiled.json
+results_directory: examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af

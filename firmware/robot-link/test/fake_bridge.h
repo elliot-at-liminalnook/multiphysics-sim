@@ -14,11 +14,13 @@
 #include "../core/hx.h"
 #include <stdbool.h>
 
-#define FB_COUNT 9
+#define FB_COUNT 16 /* supervisor axes (the robot profile's 1-16) */
+#define FB_SPARES 4 /* servos that may carry any ID (a replacement motor) */
 #define FB_FIRST 4
 
 typedef struct {
     bool     present;
+    uint8_t  id;                  /* its bus ID (EEPROM register 0x05) */
     uint8_t  mode, torque, lock;
     float    position_f;          /* the shaft in counts, turns included: toward goal in position mode, at speed_goal in speed mode */
     uint16_t goal, goal_speed;
@@ -43,11 +45,15 @@ typedef struct {
     uint32_t feedback_timeout_ms, command_timeout_ms;
     bool     latched;
     uint8_t  reason, fault_id;
+    uint8_t  version;             /* the status version byte: 1, 8, or 9 (robot) */
+    bool     permit;              /* robot profile: a re-addressing permit */
+    uint8_t  permit_old, permit_new;
+    uint32_t permit_until_ms;
     uint16_t armed;
     uint32_t feedback_age_ms[FB_COUNT], command_age_ms[FB_COUNT];
     bool     seen[FB_COUNT], healthy[FB_COUNT];
     bool     s2;
-    fb_servo_t servo[FB_COUNT];
+    fb_servo_t servo[FB_COUNT + FB_SPARES]; /* servo[i] starts as ID first + i; spares absent */
     /* Bytes waiting to go to the host, with the time they become visible. */
     uint8_t  out[512];
     size_t   out_len;
@@ -59,6 +65,10 @@ typedef struct {
 void fb_init(fb_t *fb, uint16_t present_mask);
 /* The calibration profile: IDs 1..3, present_mask bit 0 = ID 1. */
 void fb_init_calibration(fb_t *fb, uint16_t present_mask);
+/* The robot profile (9): IDs 1..16 with taught windows and the re-addressing permit. */
+void fb_init_robot(fb_t *fb, uint16_t present_mask);
+/* A spare servo on the bus with this ID (outside or inside the profile's range). */
+fb_servo_t *fb_add_spare(fb_t *fb, uint8_t id);
 /* Advance the clock (timeouts age). */
 void fb_tick(fb_t *fb, uint32_t now_ms);
 /* Bytes from the host. */

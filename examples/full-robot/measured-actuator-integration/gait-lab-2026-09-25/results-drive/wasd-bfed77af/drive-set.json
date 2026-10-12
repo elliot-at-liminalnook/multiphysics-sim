@@ -1,0 +1,200 @@
+{
+  "drive_set": {
+    "limits": {
+      "forward_m_s": 0.3,
+      "forward_m_s2": 0.15,
+      "lateral_m_s": 0.25,
+      "lateral_m_s2": 0.15,
+      "yaw_deg_s": 25.0,
+      "yaw_deg_s2": 20.0
+    },
+    "name": "wasd",
+    "notes": "Keyboard driving on the robot link (the ESP32 page). Hold W/S to walk forward/back, A/D to turn in place, W+A and so on to arc. Releasing every key steps in place, then stops at the end of a cycle. Each variant is one steady command traced into one gait cycle on the gait's own clock, so the ESP32 blends between them at matching phase. Commands are below the gait's 0.200 m/s native walk, which already reaches 99% of motor speed on one joint at 12.5 V; the leg runs at about 11 V.",
+    "settle_cycles": 4,
+    "variants": [
+      {
+        "keys": "",
+        "name": "step-in-place"
+      },
+      {
+        "forward_m_s": 0.12,
+        "keys": "w",
+        "name": "forward"
+      },
+      {
+        "forward_m_s": -0.1,
+        "keys": "s",
+        "name": "backward"
+      },
+      {
+        "keys": "a",
+        "name": "turn-left",
+        "yaw_deg_s": 20.0
+      },
+      {
+        "keys": "d",
+        "name": "turn-right",
+        "yaw_deg_s": -20.0
+      },
+      {
+        "forward_m_s": 0.1,
+        "keys": "wa",
+        "name": "arc-left",
+        "yaw_deg_s": 12.0
+      },
+      {
+        "forward_m_s": 0.1,
+        "keys": "wd",
+        "name": "arc-right",
+        "yaw_deg_s": -12.0
+      },
+      {
+        "forward_m_s": -0.08,
+        "keys": "sa",
+        "name": "back-left",
+        "yaw_deg_s": 12.0
+      },
+      {
+        "forward_m_s": -0.08,
+        "keys": "sd",
+        "name": "back-right",
+        "yaw_deg_s": -12.0
+      }
+    ],
+    "version": 1
+  },
+  "file": "examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/drive/wasd.yaml",
+  "gait": "6216-Bayesian-009",
+  "kind": "drive_set",
+  "period_s": 1.46231338636833,
+  "samples_per_cycle": 146,
+  "set": "wasd",
+  "variants": [
+    {
+      "compiled": "examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/step-in-place/compiled.json",
+      "forward_m_s": 0.0,
+      "keys": "",
+      "lateral_m_s": 0.0,
+      "name": "step-in-place",
+      "status": "ready",
+      "twist": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "yaw_deg_s": 0.0
+    },
+    {
+      "compiled": "examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/forward/compiled.json",
+      "forward_m_s": 0.12,
+      "keys": "w",
+      "lateral_m_s": 0.0,
+      "name": "forward",
+      "status": "ready",
+      "twist": [
+        0.12,
+        0.0,
+        0.0
+      ],
+      "yaw_deg_s": 0.0
+    },
+    {
+      "compiled": "examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/backward/compiled.json",
+      "forward_m_s": -0.1,
+      "keys": "s",
+      "lateral_m_s": 0.0,
+      "name": "backward",
+      "status": "ready",
+      "twist": [
+        -0.1,
+        0.0,
+        0.0
+      ],
+      "yaw_deg_s": 0.0
+    },
+    {
+      "compiled": "examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/turn-left/compiled.json",
+      "forward_m_s": 0.0,
+      "keys": "a",
+      "lateral_m_s": 0.0,
+      "name": "turn-left",
+      "status": "ready",
+      "twist": [
+        0.0,
+        0.0,
+        0.3490658503988659
+      ],
+      "yaw_deg_s": 20.0
+    },
+    {
+      "compiled": "examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/turn-right/compiled.json",
+      "forward_m_s": 0.0,
+      "keys": "d",
+      "lateral_m_s": 0.0,
+      "name": "turn-right",
+      "status": "ready",
+      "twist": [
+        0.0,
+        0.0,
+        -0.3490658503988659
+      ],
+      "yaw_deg_s": -20.0
+    },
+    {
+      "compiled": "examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/arc-left/compiled.json",
+      "forward_m_s": 0.1,
+      "keys": "wa",
+      "lateral_m_s": 0.0,
+      "name": "arc-left",
+      "status": "ready",
+      "twist": [
+        0.1,
+        0.0,
+        0.20943951023931956
+      ],
+      "yaw_deg_s": 12.0
+    },
+    {
+      "compiled": "examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/arc-right/compiled.json",
+      "forward_m_s": 0.1,
+      "keys": "wd",
+      "lateral_m_s": 0.0,
+      "name": "arc-right",
+      "status": "ready",
+      "twist": [
+        0.1,
+        0.0,
+        -0.20943951023931956
+      ],
+      "yaw_deg_s": -12.0
+    },
+    {
+      "compiled": "examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/back-left/compiled.json",
+      "forward_m_s": -0.08,
+      "keys": "as",
+      "lateral_m_s": 0.0,
+      "name": "back-left",
+      "status": "ready",
+      "twist": [
+        -0.08,
+        0.0,
+        0.20943951023931956
+      ],
+      "yaw_deg_s": 12.0
+    },
+    {
+      "compiled": "examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/results-drive/wasd-bfed77af/back-right/compiled.json",
+      "forward_m_s": -0.08,
+      "keys": "sd",
+      "lateral_m_s": 0.0,
+      "name": "back-right",
+      "status": "ready",
+      "twist": [
+        -0.08,
+        0.0,
+        -0.20943951023931956
+      ],
+      "yaw_deg_s": -12.0
+    }
+  ]
+}

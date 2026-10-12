@@ -3,17 +3,32 @@
 //!
 //!     cargo run -p sim-runtime --example leg_gait_pack -- \
 //!         examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/server.json \
-//!         --out /tmp/leg.rlgp [--effort 0.5] [--hz 25] [--supply 11.1] \
+//!         --out /tmp/leg.rlgp [--effort 1.0] [--hz 25] [--supply 11.1] \
 //!         [--gait examples/.../compiled.json]... [--max 12] [--bindings RUN.json] \
+//!         [--drive .../results-drive/wasd-<hash>/drive-set.json] \
 //!         [--svg /tmp/leg.svg] [--push 192.168.1.39]
+//!
+//! Motors are governed at their measured capability (`--effort` of it), not at
+//! the slower governor the gaits were simulated with; `--simulated-governor`
+//! plays the gaits as simulated (the calibration panel's way).
+//!
+//! `--drive` makes a drive set's variants (`gait_lab drive`: one steered
+//! cycle per held W/A/S/D chord, on one clock) the pack's gaits and its
+//! keyboard driving table, which the ESP32 page plays with the keys.
 //!
 //!     ... leg_gait_pack -- SERVER.json --pull 192.168.1.39
 //!
 //!     ... leg_gait_pack -- SERVER.json --pull-calibration 192.168.1.39 [--reason "..."]
 //!
+//!     ... leg_gait_pack -- SERVER.json --pull-robot 192.168.1.39
+//!
 //! `--pull` saves the ESP32's last gait run (`GET /api/gait_log`) into the
 //! leg's `gait-runs/` folder as `esp32-run-<ms>.json`, with tracking
 //! statistics, beside the panel's runs.
+//!
+//! `--pull-robot` saves the ESP32's robot configuration (servo IDs in CAD
+//! slots, directions, alignment, poses, limits; `gait_pack::save_esp32_robot`)
+//! as `robot-link-config.json` beside the leg's calibration.
 //!
 //! `--pull-calibration` promotes poses taught on the ESP32's page into the
 //! leg's `calibration.json` (`gait_pack::promote_esp32_poses`); a widened
@@ -24,7 +39,7 @@
 //! The pack is built by `sim_runtime::hardware::calibration::gait_pack` from
 //! the same sources the calibration panel plays from. `--svg` draws every
 //! gait's first frame and the live-pose grid's corners, to check the drawing.
-use sim_runtime::hardware::calibration::gait_pack::{PackOptions, build_gait_pack, esp32_run_record, promote_esp32_poses, read_pack};
+use sim_runtime::hardware::calibration::gait_pack::{PackOptions, build_gait_pack, esp32_run_record, promote_esp32_poses, read_pack, save_esp32_robot};
 use std::io::{Read, Write};
 
 fn main() {
@@ -39,7 +54,7 @@ fn run() -> Result<(), String> {
     let config = args.next().ok_or("usage: leg_gait_pack SERVER.json --out FILE [options]")?;
     let mut options = PackOptions::default();
     let (mut out, mut svg, mut push, mut pull) = (None, None, None, None);
-    let (mut pull_calibration, mut reason, mut discard, mut live) = (None, None, false, None);
+    let (mut pull_calibration, mut reason, mut discard, mut live, mut pull_robot) = (None, None, false, None, None);
     while let Some(a) = args.next() {
         let mut value = || args.next().ok_or(format!("{a} needs a value"));
         match a.as_str() {
@@ -48,12 +63,15 @@ fn run() -> Result<(), String> {
             "--hz" => options.sample_hz = value()?.parse().map_err(|e| format!("--hz: {e}"))?,
             "--supply" => options.supply_v = value()?.parse().map_err(|e| format!("--supply: {e}"))?,
             "--gait" => options.gaits.push(value()?),
+            "--drive" => options.drive_set = Some(value()?.into()),
+            "--simulated-governor" => options.motor_capability = false,
             "--max" => options.max_gaits = value()?.parse().map_err(|e| format!("--max: {e}"))?,
             "--bindings" => options.bindings_from = Some(value()?.into()),
             "--svg" => svg = Some(value()?),
             "--push" => push = Some(value()?),
             "--pull" => pull = Some(value()?),
             "--pull-calibration" => pull_calibration = Some(value()?),
+            "--pull-robot" => pull_robot = Some(value()?),
             "--reason" => reason = Some(value()?),
             "--discard-esp32-poses" => discard = true,
             "--live" => live = Some(value()?),
@@ -62,6 +80,12 @@ fn run() -> Result<(), String> {
     }
     if let Some(host) = pull {
         return pull_run(&config, &host);
+    }
+    if let Some(host) = pull_robot {
+        let robot: serde_json::Value = serde_json::from_str(&http(&host, "GET", "/api/robot", &[])?).map_err(|e| format!("robot: {e}"))?;
+        let out = save_esp32_robot(std::path::Path::new(&config), &robot, &host)?;
+        println!("{}", serde_json::to_string_pretty(&out).unwrap());
+        return Ok(());
     }
     if let Some(host) = pull_calibration {
         let esp32: serde_json::Value = serde_json::from_str(&http(&host, "GET", "/api/calibration", &[])?).map_err(|e| format!("calibration: {e}"))?;
@@ -134,18 +158,21 @@ impl Figure<'_> {
         }
         o
     }
-    fn compose(&self, angles: &std::collections::HashMap<u64, f64>) -> Vec<Rt> {
+    /// Angles by figure motor key (a servo ID, or the CAD joint of a motor without one); a missing one is at CAD home.
+    fn compose(&self, angles: &std::collections::HashMap<String, f64>) -> Vec<Rt> {
         let links = self.f["links"].as_array().unwrap();
         let motors = self.f["motors"].as_array().unwrap();
         let mut world = vec![[0.; 12]; links.len()];
         for k in self.f["order"].as_array().unwrap().iter().map(|v| v.as_u64().unwrap() as usize) {
             let l = &links[k];
-            let rel = match l["motor"].as_u64() {
-                None => Self::rt(&l["rel"]),
-                Some(id) => {
-                    let m = motors.iter().find(|m| m["id"] == id).unwrap();
+            let rel = match l["motor"].is_null() {
+                true => Self::rt(&l["rel"]),
+                false => {
+                    let key = key_of(&l["motor"]);
+                    let m = motors.iter().find(|m| key_of(&m["key"]) == key).unwrap();
                     let (lo, hi, n) = (m["rad"][0].as_f64().unwrap(), m["rad"][1].as_f64().unwrap(), m["samples"].as_u64().unwrap() as usize);
-                    let x = ((angles.get(&id).copied().unwrap_or((lo + hi) / 2.) - lo) / (hi - lo)).clamp(0., 1.) * (n - 1) as f64;
+                    let home = m["home_rad"].as_f64().unwrap_or((lo + hi) / 2.);
+                    let x = ((angles.get(&key).copied().unwrap_or(home) - lo) / (hi - lo)).clamp(0., 1.) * (n - 1) as f64;
                     let i = (x.floor() as usize).min(n - 2);
                     let (a, b) = (Self::rt(&l["table"][i]), Self::rt(&l["table"][i + 1]));
                     std::array::from_fn(|k| a[k] + (b[k] - a[k]) * (x - i as f64))
@@ -158,6 +185,10 @@ impl Figure<'_> {
         }
         world
     }
+}
+/// A figure motor's key as text: its servo ID, or its CAD joint.
+fn key_of(v: &serde_json::Value) -> String {
+    v.as_str().map_or_else(|| v.to_string(), str::to_string)
 }
 fn link_colour(name: &str) -> &'static str {
     let n = name.to_lowercase();
@@ -205,16 +236,18 @@ fn draw_view(out: &mut String, f: &serde_json::Value, world: &[Rt], view: &serde
 fn preview_svg(pack: &serde_json::Value, state: Option<&serde_json::Value>) -> Result<String, String> {
     let f = &pack["figure"];
     let fig = Figure { f };
-    let motors: Vec<u64> = f["motors"].as_array().ok_or("pack has no figure")?.iter().map(|m| m["id"].as_u64().unwrap()).collect();
-    let mut rows: Vec<(String, std::collections::HashMap<u64, f64>)> = Vec::new();
+    let all = f["motors"].as_array().ok_or("pack has no figure")?;
+    let keys: Vec<String> = all.iter().map(|m| key_of(&m["key"])).collect();
+    let motors: Vec<u64> = all.iter().filter_map(|m| m["id"].as_u64()).collect();
+    let mut rows: Vec<(String, std::collections::HashMap<String, f64>)> = Vec::new();
     let axis = |id: u64| pack["axes"].as_array().unwrap().iter().find(|a| a["id"] == id).unwrap().clone();
     let rad = |id: u64, counts: f64| { let a = axis(id); a["home_rad"].as_f64().unwrap() + a["polarity"].as_f64().unwrap() * (counts - a["reference_counts"].as_f64().unwrap()) * std::f64::consts::TAU / 4096. };
-    rows.push(("alignment pose (each motor at its saved reference)".into(), motors.iter().map(|&id| (id, axis(id)["home_rad"].as_f64().unwrap())).collect()));
+    rows.push(("alignment pose (each motor at its saved reference, the rest at CAD home)".into(), motors.iter().map(|&id| (id.to_string(), axis(id)["home_rad"].as_f64().unwrap())).collect()));
     if let Some(g) = pack["gaits"].get(0) {
         let frames = g["frames_rad"].as_array().unwrap();
         for q in [0., 0.25, 0.5, 0.75] {
             let fr = &frames[(q * frames.len() as f64) as usize];
-            rows.push((format!("{} at {:.0}% of its cycle", g["name"].as_str().unwrap_or("gait"), q * 100.), motors.iter().enumerate().map(|(i, &id)| (id, fr[i].as_f64().unwrap())).collect()));
+            rows.push((format!("{} at {:.0}% of its cycle", g["name"].as_str().unwrap_or("gait"), q * 100.), keys.iter().enumerate().map(|(i, k)| (k.clone(), fr[i].as_f64().unwrap())).collect()));
         }
     }
     if let Some(s) = state {
@@ -229,7 +262,7 @@ fn preview_svg(pack: &serde_json::Value, state: Option<&serde_json::Value>) -> R
                     places.push((id, c.as_f64().unwrap()));
                 }
             } else if let Some(p) = v["position"].as_f64() {
-                base.insert(id, rad(id, p));
+                base.insert(id.to_string(), rad(id, p));
             }
         }
         if places.is_empty() {
@@ -237,7 +270,7 @@ fn preview_svg(pack: &serde_json::Value, state: Option<&serde_json::Value>) -> R
         }
         for (id, c) in places {
             let mut q = base.clone();
-            q.insert(id, rad(id, c));
+            q.insert(id.to_string(), rad(id, c));
             rows.push((format!("as read now, {} at {c:.0} counts", axis(id)["role"].as_str().unwrap_or("motor")), q));
         }
     }

@@ -162,7 +162,10 @@ int main(int argc, char **argv) {
         w.run(100, true);
         CHECK(w.servo(1)->shaft <= 3520 + 120 && w.servo(1)->pwm == 0, "stopped at the stretched edge, drive zero: %.0f (pwm %u)", w.servo(1)->shaft, w.servo(1)->pwm);
         CHECK(w.rl.refused == refused && !w.rl.status.latched, "nothing refused, nothing tripped (refused %u, %s)", w.rl.refused - refused, hx_reason_name(w.rl.status.reason));
-        // A raw outward write at the edge: the RTL drops it (no reply).
+        // A raw outward write at the edge: the RTL drops it (no reply). The engine stops just
+        // short of the edge (predictively), so put the knee on it and let the RTL read it there.
+        w.servo(1)->shaft = 3524;
+        w.run(200, true);
         uint32_t before = w.rl.timeouts;
         uint8_t pwm[3] = {HX_REG_PWM, 100, 0}, frame[HX_MAX_FRAME];
         rl_pause(&w.rl, true);

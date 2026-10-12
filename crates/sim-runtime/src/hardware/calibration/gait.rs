@@ -200,6 +200,7 @@ pub(super) fn govern_leg(
     axes: &[AxisCalibration],
     effort: f64,
     supply: f64,
+    at_motor_capability: bool,
 ) -> R<(serde_json::Map<String, Value>, crate::actuator_registry::Registry)> {
     const RAD: f64 = std::f64::consts::TAU / 4096.;
     let registry = crate::actuator_registry::Registry::load(
@@ -227,12 +228,22 @@ pub(super) fn govern_leg(
             .map(|m| effort * m)
             .unwrap_or(f64::INFINITY)
             .min(belt_acc.unwrap_or(f64::INFINITY));
-        governed.limit(i, speed, acc)?;
+        // The panel tightens the gait's own governor to the motor; the robot link may
+        // instead govern at the motor's measured capability (faster than simulated).
+        // A family without a measured acceleration keeps the gait's (the only value on record).
+        if at_motor_capability {
+            let gait_acc = governed.config(i).map_or(f64::INFINITY, |c| c.maximum_acceleration_rad_s2);
+            governed.set_limits(i, speed, if acc.is_finite() { acc } else { gait_acc })?;
+        } else {
+            governed.limit(i, speed, acc)?;
+        }
         let (lo, hi) = taught_window(a);
         governed.clamp(i, bd.joint_rad(lo), bd.joint_rad(hi));
         let c = governed.config(i).unwrap();
         limits.insert(bd.id.to_string(), json!({"role": role, "family": family_name, "family_hash": family.content_hash(),
             "motor_full_drive_speed_rad_s": full_speed, "motor_measured_acceleration_rad_s2": measured_acc, "belt_acceleration_limit_rad_s2": belt_acc,
+            "governor_at_motor_capability": at_motor_capability,
+            "governor_acceleration_from": if !at_motor_capability { "the lower of the gait's governor and the motor" } else if acc.is_finite() { "the motor's measured acceleration (or the belt's limit)" } else { "the gait's governor: no measured acceleration for this family" },
             "governor_speed_rad_s": c.maximum_speed_rad_s, "governor_acceleration_rad_s2": c.maximum_acceleration_rad_s2,
             "governor_speed_counts_s": c.maximum_speed_rad_s / RAD, "governor_acceleration_counts_s2": c.maximum_acceleration_rad_s2 / RAD}));
     }
@@ -433,7 +444,7 @@ pub(super) fn run_gait(
         });
     let supply = measured_supply.unwrap_or(12.0);
     let mut governed = GovernedGait::new(gait.clone());
-    let (limits, registry) = govern_leg(cfg, &mut governed, &bindings, &axes, effort, supply)?;
+    let (limits, registry) = govern_leg(cfg, &mut governed, &bindings, &axes, effort, supply, false)?;
     // Simulated tracking of the same gait (the search's evaluation), for comparison.
     let evaluation: Value = fs::read(gait_file(&r.gait)?.with_file_name("evaluation.json"))
         .ok()

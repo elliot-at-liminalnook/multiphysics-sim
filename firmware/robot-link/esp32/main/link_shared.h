@@ -25,6 +25,19 @@ void link_stop_now(void);
 enum { OWNER_NONE = 0, OWNER_PAGE, OWNER_TUNNEL, OWNER_SCAN };
 extern int g_owner_kind, g_owner_fd;
 
+/* The last bus scan: which IDs 0-253 answered a ping. */
+typedef struct {
+    bool     running, done;
+    uint32_t at_ms, took_ms;
+    uint32_t answered[8];   /* bit per ID */
+    uint32_t errors[8];     /* answered with a device error */
+} link_scan_t;
+extern link_scan_t g_scan;
+/* Ask for a scan (lock held): refused unless the FPGA is latched with nothing armed and no gait. */
+bool link_scan_request(char *why, size_t why_len);
+/* The FPGA link's baud rate now (it follows whichever image answers). */
+extern volatile uint32_t g_link_baud;
+
 void web_start(void);
 /* The tunnel passes bytes it received from the FPGA to the web layer for counting only. */
 #endif

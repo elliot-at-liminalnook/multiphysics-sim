@@ -9,21 +9,17 @@
  * header written. A partition without a whole, matching pack therefore never
  * reads as valid, whatever interrupted the upload.
  *
- * The plans section starts with the pack's axes table: each motor's taught
- * travel, which becomes the engine's (rl_travel_set_pack). Poses the operator
- * teaches on the page are kept in NVS ("rlcal"/"travel") with the digest of
- * the pack they were taught against and restored at boot only onto that pack.
- * Storing another pack keeps a motor's taught poses when the new pack has
- * that motor's travel unchanged (new gaits, say), and replaces them when it
- * changes it (the Mac promotes taught poses first: leg_gait_pack
- * --pull-calibration).
+ * The plans section starts with the pack's axes table: the travel each motor
+ * had when the pack was built (rl_travel_set_pack), which its plans assume.
+ * The motors' taught poses themselves are the robot configuration's
+ * (robot_cfg.c); a slot not yet taught is seeded from the pack.
  */
 #include "gait_store.h"
 #include "link_shared.h"
 #include <string.h>
 #include "esp_log.h"
 #include "esp_partition.h"
-#include "nvs.h"
+#include "robot_cfg.h"
 #include "mbedtls/sha256.h"
 
 static const char *TAG = "gait-store";
@@ -36,6 +32,11 @@ static const char *TAG = "gait-store";
 
 static const esp_partition_t *part;
 static gait_store_info_t info;
+
+/* Pack reads and writes, 4 KB at a time: at boot and on the one HTTP server task, never at once.
+ * From the heap after start-up, not .bss (internal RAM the Wi-Fi link needs at boot). */
+#define CHUNK 4096
+static uint8_t *chunk;
 
 static uint32_t le32(const uint8_t *p)
 {
@@ -52,11 +53,11 @@ static void scan(void)
     uint32_t j = le32(h + 8), b = le32(h + 12);
     if ((uint64_t)HEADER + j + b > part->size) return;
     mbedtls_sha256_context sha;
+    if (!chunk) return;
     mbedtls_sha256_init(&sha);
     mbedtls_sha256_starts(&sha, 0);
-    static uint8_t chunk[4096];
     for (uint32_t at = HEADER; at < HEADER + j + b;) {
-        uint32_t n = HEADER + j + b - at > sizeof chunk ? sizeof chunk : HEADER + j + b - at;
+        uint32_t n = HEADER + j + b - at > CHUNK ? CHUNK : HEADER + j + b - at;
         if (esp_partition_read(part, at, chunk, n) != ESP_OK) { mbedtls_sha256_free(&sha); return; }
         mbedtls_sha256_update(&sha, chunk, n);
         at += n;
@@ -99,60 +100,10 @@ static int load_travel(void)
     return n;
 }
 
-typedef struct {
-    char    pack[17];            /* the first 16 hex digits of the pack's digest */
-    uint8_t count;
-    struct { uint8_t id, open_lo, open_hi, pad; int32_t lo, hi; } m[RL_MAX_SERVOS];
-} saved_travel_t;
-
-/* Poses taught on the page, back onto the pack they were taught against (lock held). */
-static void restore_travel(void)
-{
-    nvs_handle_t h;
-    saved_travel_t saved;
-    size_t len = sizeof saved;
-    if (nvs_open("rlcal", NVS_READONLY, &h) != ESP_OK) return;
-    esp_err_t r = nvs_get_blob(h, "travel", &saved, &len);
-    nvs_close(h);
-    if (r != ESP_OK || len != sizeof saved || saved.count > RL_MAX_SERVOS) return;
-    saved.pack[16] = 0;
-    if (strncmp(saved.pack, info.sha256, 16)) {
-        ESP_LOGW(TAG, "poses taught on the page belong to another pack: not restored");
-        return;
-    }
-    for (int k = 0; k < saved.count; k++)
-        if (rl_travel_restore(&g_rl, saved.m[k].id, saved.m[k].lo, saved.m[k].hi, saved.m[k].open_lo, saved.m[k].open_hi))
-            ESP_LOGW(TAG, "motor %u: travel taught on the page restored (%ld..%ld%s%s), not yet promoted", saved.m[k].id, (long)saved.m[k].lo,
-                     (long)saved.m[k].hi, saved.m[k].open_lo ? ", low end open" : "", saved.m[k].open_hi ? ", high end open" : "");
-}
-
-esp_err_t gait_store_save_travel(void)
-{
-    saved_travel_t saved = {0};
-    snprintf(saved.pack, sizeof saved.pack, "%.16s", info.sha256);
-    for (int i = 0; i < RL_MAX_SERVOS; i++) {
-        const rl_travel_t *t = &g_rl.servo[i].travel;
-        if (!rl_travel_changed(t)) continue;
-        saved.m[saved.count].id = (uint8_t)(g_rl.cfg.first_id + i);
-        saved.m[saved.count].open_lo = t->open[0];
-        saved.m[saved.count].open_hi = t->open[1];
-        saved.m[saved.count].lo = t->lo;
-        saved.m[saved.count].hi = t->hi;
-        saved.count++;
-    }
-    nvs_handle_t h;
-    esp_err_t r = nvs_open("rlcal", NVS_READWRITE, &h);
-    if (r != ESP_OK) return r;
-    r = saved.count ? nvs_set_blob(h, "travel", &saved, sizeof saved) : nvs_erase_key(h, "travel");
-    if (r == ESP_ERR_NVS_NOT_FOUND) r = ESP_OK;
-    if (r == ESP_OK) r = nvs_commit(h);
-    nvs_close(h);
-    g_rl.travel_dirty = false;
-    return r;
-}
-
 void gait_store_init(void)
 {
+    chunk = malloc(CHUNK);
+    if (!chunk) ESP_LOGE(TAG, "no memory for pack reads");
     part = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, PACK_SUBTYPE, "gaitpack");
     if (!part) {
         ESP_LOGE(TAG, "no gaitpack partition (partitions.csv)");
@@ -162,10 +113,13 @@ void gait_store_init(void)
     if (info.valid) ESP_LOGI(TAG, "gait pack: %lu bytes of JSON, %lu of plans, sha256 %.16s...", (unsigned long)info.json_len, (unsigned long)info.bin_len, info.sha256);
     else ESP_LOGI(TAG, "no gait pack stored; upload one with POST /api/gaits");
     RL_LOCK("gait_store_init");
+    robot_cfg_apply(); /* the configured motors present first: the pack's travel is only taken for them */
     int n = load_travel();
-    if (n) restore_travel();
+    bool seeded = robot_cfg_seed_travel();
+    robot_cfg_apply();
+    if (seeded) robot_cfg_save();
     xSemaphoreGive(g_rl_lock);
-    if (n) ESP_LOGI(TAG, "taught travel for %d motors from the pack", n);
+    if (n) ESP_LOGI(TAG, "the pack carries travel for %d motors%s", n, seeded ? "; untaught slots seeded from it" : "");
 }
 
 gait_store_info_t gait_store_info(void)
@@ -205,10 +159,9 @@ esp_err_t gait_store_upload(httpd_req_t *req)
     mbedtls_sha256_context sha;
     mbedtls_sha256_init(&sha);
     mbedtls_sha256_starts(&sha, 0);
-    static uint8_t chunk[4096];
     size_t at = HEADER;
     while (at < total) {
-        size_t want = total - at > sizeof chunk ? sizeof chunk : total - at;
+        size_t want = total - at > CHUNK ? CHUNK : total - at;
         int r = httpd_req_recv(req, (char *)chunk, want);
         if (r == HTTPD_SOCK_ERR_TIMEOUT) continue;
         if (r <= 0) { mbedtls_sha256_free(&sha); return ESP_FAIL; }
@@ -226,20 +179,14 @@ esp_err_t gait_store_upload(httpd_req_t *req)
     /* The new pack's multi-turn poses may count from another turn, and its travel replaces any taught here. */
     RL_LOCK("gait_store_upload");
     rl_turn_forget_all(&g_rl, "a new gait pack was stored", rl_now_ms());
-    rl_travel_t before[RL_MAX_SERVOS];
-    for (int i = 0; i < RL_MAX_SERVOS; i++) before[i] = g_rl.servo[i].travel;
+    /* The pack's travel is what its gaits were built from; the robot configuration's
+     * taught poses stay (a motor whose poses differ refuses gaits until promoted). */
+    robot_cfg_apply();
     load_travel();
-    int dropped = 0;
-    for (int i = 0; i < RL_MAX_SERVOS; i++) {
-        const rl_travel_t *was = &before[i], *now = &g_rl.servo[i].travel;
-        if (!rl_travel_changed(was)) continue;
-        if (now->known && now->pack_lo == was->pack_lo && now->pack_hi == was->pack_hi)
-            rl_travel_restore(&g_rl, (uint8_t)(g_rl.cfg.first_id + i), was->lo, was->hi, was->open[0], was->open[1]);
-        else dropped++;
-    }
-    gait_store_save_travel();
+    bool seeded = robot_cfg_seed_travel();
+    robot_cfg_apply();
+    if (seeded) robot_cfg_save();
     xSemaphoreGive(g_rl_lock);
-    if (dropped) ESP_LOGW(TAG, "the new pack's travel replaced poses taught on the page for %d motors", dropped);
     ESP_LOGI(TAG, "gait pack stored: %u bytes, sha256 %.16s...", (unsigned)total, info.sha256);
     char text[160];
     snprintf(text, sizeof text, "{\"stored\":true,\"bytes\":%u,\"sha256\":\"%s\"}", (unsigned)total, info.sha256);
@@ -250,10 +197,9 @@ esp_err_t gait_store_send_json(httpd_req_t *req)
 {
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Cache-Control", "no-store");
-    if (!info.valid) return httpd_resp_send(req, "{\"valid\":false}", HTTPD_RESP_USE_STRLEN);
-    static uint8_t chunk[4096];
+    if (!info.valid || !chunk) return httpd_resp_send(req, "{\"valid\":false}", HTTPD_RESP_USE_STRLEN);
     for (uint32_t at = 0; at < info.json_len;) {
-        uint32_t n = info.json_len - at > sizeof chunk ? sizeof chunk : info.json_len - at;
+        uint32_t n = info.json_len - at > CHUNK ? CHUNK : info.json_len - at;
         if (esp_partition_read(part, HEADER + at, chunk, n) != ESP_OK) return httpd_resp_send_chunk(req, NULL, 0);
         if (httpd_resp_send_chunk(req, (const char *)chunk, n) != ESP_OK) return ESP_FAIL;
         at += n;

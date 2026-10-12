@@ -67,7 +67,7 @@ int hx_status_decode(const uint8_t *p, size_t n, hx_status_t *s)
 {
     /* Version 1: bridge_safety. 5-8: the calibration profiles (taught windows,
      * IDs 1-3), which add reason 13, an ambiguous half-turn encoder jump. */
-    bool known_version = p[0] == 1 || (p[0] >= 5 && p[0] <= 8);
+    bool known_version = p[0] == 1 || (p[0] >= 5 && p[0] <= 9);
     if (n != HX_STATUS_LEN || !known_version || p[1] > 1 || p[2] > 13 || p[2] == 12) return 0;
     uint16_t armed = (uint16_t)(p[4] | (p[5] << 8)), fresh = (uint16_t)(p[6] | (p[7] << 8));
     if (((armed | fresh) & ~0x1FF) || (p[1] == 1 && armed) || p[9] > p[10]) return 0;

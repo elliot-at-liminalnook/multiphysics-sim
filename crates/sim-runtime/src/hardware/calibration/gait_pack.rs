@@ -92,6 +92,8 @@ const LEG_PREFIX: &str = "+X |";
 #[derive(Clone, Debug)]
 pub struct PackOptions {
     /// Fraction of each motor's measured capability (as the panel's effort).
+    /// The robot link plays at full measured capability by default (the user's
+    /// call, 2026-10-09): the FPGA's trips hold whatever the governor allows.
     pub effort: f64,
     /// Samples per second of the stored plan and preview.
     pub sample_hz: f64,
@@ -103,11 +105,19 @@ pub struct PackOptions {
     /// A gait-run record whose `bindings` give each motor's CAD joint and
     /// polarity; None means the newest run in the leg's output.
     pub bindings_from: Option<PathBuf>,
-
+    /// Govern each motor at `effort` of its measured speed and acceleration
+    /// (true, the robot link's default), not at the lower of that and the
+    /// gait's own simulated governor (the calibration panel's way). The
+    /// motion then follows the gait's desired curve more closely and faster
+    /// than it was simulated.
+    pub motor_capability: bool,
+    /// A drive set's `drive-set.json` (`gait_lab drive`): its variants become
+    /// the pack's first gaits and the keyboard driving table.
+    pub drive_set: Option<PathBuf>,
 }
 impl Default for PackOptions {
     fn default() -> Self {
-        Self { effort: 0.5, sample_hz: 25., supply_v: 11.1, gaits: vec![], max_gaits: 12, bindings_from: None }
+        Self { effort: 1.0, sample_hz: 25., supply_v: 11.1, gaits: vec![], max_gaits: 12, bindings_from: None, drive_set: None, motor_capability: true }
     }
 }
 
@@ -294,8 +304,11 @@ struct Figure {
 /// it, or by FIGURE_MARGIN_COUNTS if more.
 const FIGURE_MARGIN: f64 = 0.15;
 const FIGURE_MARGIN_COUNTS: f64 = 300.;
-/// Mesh simplification cell, m.
+/// Mesh simplification cell, m: the leg with commandable motors, and the rest of the robot.
 const FIGURE_CELL_M: f64 = 0.003;
+const FIGURE_CELL_OTHER_M: f64 = 0.006;
+/// The kinematic mirror's lift of the robot off the floor (m), as the panel's.
+const MIRROR_LIFT_M: f64 = 0.2;
 /// Samples of each motor's range in a link's table.
 const FIGURE_SAMPLES: usize = 81;
 /// The composed figure must match a direct mirror solve this well (mm, any vertex).
@@ -364,12 +377,24 @@ fn simplify(vertices: &[[f64; 3]], triangles: &[[usize; 3]], cell: f64) -> (Vec<
     (out_v, out_t)
 }
 
-/// Build the figure: the leg's links, each one's tree parent and driving
+/// How the page names a figure motor: its servo ID where one drives it, else its CAD joint.
+fn motor_key(m: &(Option<u8>, usize, f64, f64), joints: &[String]) -> Value {
+    match m.0 {
+        Some(id) => json!(id),
+        None => json!(joints[m.1]),
+    }
+}
+
+/// Build the figure: the robot's links, each one's tree parent and driving
 /// motor, its sampled relative transform, and the composition check.
-fn build_figure(scene: &Scene, mirror: &mut KinematicMirror, home: &[f64], motors: &[(u8, usize, f64, f64)], taught: &[(f64, f64)]) -> R<Figure> {
+/// `poses` are whole-robot coordinate vectors the pack's gaits reach: the other
+/// legs are checked and framed there (their joints are not independent over
+/// their ranges), the commandable motors at random and at their taught corners.
+fn build_figure(scene: &Scene, mirror: &mut KinematicMirror, home: &[f64], motors: &[(Option<u8>, usize, f64, f64)], taught: &[(f64, f64)], poses: &[Vec<f64>]) -> R<Figure> {
     let robot = &scene.robot;
+    let joints: Vec<String> = mirror.coordinates().iter().map(|c| c.joint.clone()).collect();
     let posed: Vec<String> = mirror.pose(home)?.poses.into_iter().map(|p| p.name).collect();
-    let leg: Vec<&sim_domain_robot::model::Link> = robot.links.iter().filter(|l| l.name.starts_with(LEG_PREFIX) && posed.contains(&l.name)).collect();
+    let leg: Vec<&sim_domain_robot::model::Link> = robot.links.iter().filter(|l| posed.contains(&l.name)).collect();
     let names: Vec<String> = leg.iter().map(|l| l.name.clone()).collect();
     // Tree parent among the leg's links (None: the body, held still by the mirror).
     let parent: Vec<Option<usize>> = names.iter().map(|n| {
@@ -399,17 +424,37 @@ fn build_figure(scene: &Scene, mirror: &mut KinematicMirror, home: &[f64], motor
         }
     };
     let home_world = pose_at(mirror, home)?;
+    // The mirror solves closures by continuation: every move is walked in
+    // steps no longer than a table sample, so it stays on its branch.
+    const WALK_RAD: f64 = 0.02;
+    let walk = |mirror: &mut KinematicMirror, from: &[f64], to: &[f64]| -> R<()> {
+        let span = from.iter().zip(to).fold(0f64, |m, (a, b)| m.max((a - b).abs()));
+        let steps = (span / WALK_RAD).ceil().max(1.) as usize;
+        for k in 1..=steps {
+            let f = k as f64 / steps as f64;
+            let q: Vec<f64> = from.iter().zip(to).map(|(a, b)| a + (b - a) * f).collect();
+            mirror.pose(&q).map_err(|e| format!("walking the mirror to {q:.3?}: {e}"))?;
+        }
+        Ok(())
+    };
     // Each motor swept alone from home (the mirror continues along its branch).
     let mut tables: Vec<Vec<Vec<Rt>>> = Vec::new(); // motor -> sample -> link -> relative
     for &(_, coordinate, lo, hi) in motors {
         let mut rows = Vec::new();
+        let mut start = home.to_vec();
+        start[coordinate] = lo;
+        walk(mirror, home, &start).map_err(|e| format!("figure: motor coordinate {coordinate} to {lo:.3} rad: {e}"))?;
+        let mut q = start.clone();
         for s in 0..FIGURE_SAMPLES {
-            let mut q = home.to_vec();
-            q[coordinate] = lo + (hi - lo) * s as f64 / (FIGURE_SAMPLES - 1) as f64;
+            let next = lo + (hi - lo) * s as f64 / (FIGURE_SAMPLES - 1) as f64;
+            let mut to = q.clone();
+            to[coordinate] = next;
+            walk(mirror, &q, &to).map_err(|e| format!("figure: motor coordinate {coordinate} at {next:.3} rad: {e}"))?;
+            q = to;
             let world = pose_at(mirror, &q).map_err(|e| format!("figure: motor coordinate {coordinate} at {:.3} rad: {e}", q[coordinate]))?;
             rows.push((0..names.len()).map(|k| relative(&world, k)).collect());
         }
-        pose_at(mirror, home)?;
+        walk(mirror, &q, home)?;
         tables.push(rows);
     }
     // Which motor moves each link relative to its parent.
@@ -449,21 +494,39 @@ fn build_figure(scene: &Scene, mirror: &mut KinematicMirror, home: &[f64], motor
         world
     };
     // Meshes, simplified.
-    let meshes: Vec<(Vec<[f64; 3]>, Vec<[usize; 3]>)> = leg.iter().map(|l| simplify(&l.collision.vertices, &l.collision.triangles, FIGURE_CELL_M)).collect();
+    // The leg with commandable motors at the fine cell, the rest of the robot coarser.
+    let fine: Vec<&str> = motors.iter().filter(|m| m.0.is_some()).filter_map(|m| joints[m.1].split('|').next()).collect();
+    let meshes: Vec<(Vec<[f64; 3]>, Vec<[usize; 3]>)> = leg.iter().map(|l| {
+        let cell = if fine.iter().any(|p| l.name.starts_with(p)) { FIGURE_CELL_M } else { FIGURE_CELL_OTHER_M };
+        simplify(&l.collision.vertices, &l.collision.triangles, cell)
+    }).collect();
     // The check: random motor combinations, composed vs solved, every vertex.
     let mut worst: f64 = 0.;
     let mut seed: u64 = 0x9e3779b97f4a7c15;
     let mut rand = || { seed ^= seed << 13; seed ^= seed >> 7; seed ^= seed << 17; (seed >> 11) as f64 / (1u64 << 53) as f64 };
     const CHECKS: usize = 40;
+    let (mut checked, mut unsolved) = (0usize, Vec::<String>::new());
     for _ in 0..CHECKS {
-        let angles: Vec<f64> = motors.iter().map(|&(_, _, lo, hi)| lo + (hi - lo) * rand()).collect();
-        let mut q = home.to_vec();
+        let base = if poses.is_empty() { home } else { &poses[((rand() * poses.len() as f64) as usize).min(poses.len() - 1)][..] };
+        let angles: Vec<f64> = motors.iter().map(|&(id, c, lo, hi)| if id.is_some() { lo + (hi - lo) * rand() } else { base[c] }).collect();
+        let mut q = base.to_vec();
         for (m, &(_, c, _, _)) in motors.iter().enumerate() {
             q[c] = angles[m];
         }
         // From home each time, as the sweeps were: the mirror follows its branch along the way.
-        pose_at(mirror, home)?;
-        let solved = pose_at(mirror, &q).map_err(|e| format!("figure check at motor angles {angles:.3?} rad: {e}"))?;
+        // A pose the mirror's closure solver refuses is recorded, not compared; the mirror starts again.
+        let solved = match walk(mirror, home, &q).and_then(|_| pose_at(mirror, &q)) {
+            Ok(w) => w,
+            Err(e) => {
+                unsolved.push(format!("at {angles:.3?} rad: {e}"));
+                *mirror = KinematicMirror::new(scene.clone(), MIRROR_LIFT_M)?;
+                continue;
+            }
+        };
+        if walk(mirror, &q, home).is_err() {
+            *mirror = KinematicMirror::new(scene.clone(), MIRROR_LIFT_M)?;
+        }
+        checked += 1;
         let composed = compose(&angles);
         for k in 0..names.len() {
             for v in &meshes[k].0 {
@@ -473,6 +536,9 @@ fn build_figure(scene: &Scene, mirror: &mut KinematicMirror, home: &[f64], motor
         }
     }
     pose_at(mirror, home)?;
+    if checked < 3 * CHECKS / 4 {
+        return Err(format!("the figure could be checked at only {checked} of {CHECKS} poses: {}", unsolved.first().map_or("", |s| s.as_str())));
+    }
     if worst > FIGURE_TOLERANCE_MM {
         return Err(format!("the composed leg figure differs from the mirror by {worst:.2} mm (limit {FIGURE_TOLERANCE_MM} mm)"));
     }
@@ -481,8 +547,13 @@ fn build_figure(scene: &Scene, mirror: &mut KinematicMirror, home: &[f64], motor
     // travel may run off the edge).
     let views = [("side", [1., 0., 0.], [0., 0., 1.]), ("top", [1., 0., 0.], [0., 1., 0.])];
     let mut bounds = vec![[f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY]; views.len()];
-    for corner in 0..(1usize << motors.len()) {
-        let angles: Vec<f64> = taught.iter().enumerate().map(|(m, &(lo, hi))| if corner >> m & 1 == 1 { hi } else { lo }).collect();
+    let bound: Vec<usize> = (0..motors.len()).filter(|&m| motors[m].0.is_some()).collect();
+    let bases: Vec<&[f64]> = if poses.is_empty() { vec![home] } else { poses.iter().map(|p| &p[..]).collect() };
+    for (base, corner) in bases.iter().flat_map(|b| (0..(1usize << bound.len())).map(move |c| (b, c))) {
+        let angles: Vec<f64> = motors.iter().enumerate().map(|(m, &(_, c, _, _))| match bound.iter().position(|&b| b == m) {
+            Some(i) => if corner >> i & 1 == 1 { taught[m].1 } else { taught[m].0 },
+            None => base[c],
+        }).collect();
         let world = compose(&angles);
         for k in 0..names.len() {
             for v in &meshes[k].0 {
@@ -502,7 +573,7 @@ fn build_figure(scene: &Scene, mirror: &mut KinematicMirror, home: &[f64], motor
     let r6 = |v: f64| round(v, 6);
     let links: Vec<Value> = names.iter().enumerate().map(|(k, n)| {
         let (v, t) = &meshes[k];
-        let mut row = json!({"name": n, "parent": parent[k], "motor": driver[k].map(|m| motors[m].0),
+        let mut row = json!({"name": n, "parent": parent[k], "motor": driver[k].map(|m| motor_key(&motors[m], &joints)),
             "vertices": v.iter().flat_map(|p| p.map(r4)).collect::<Vec<_>>(), "triangles": t.iter().flatten().collect::<Vec<_>>()});
         match driver[k] {
             None => row["rel"] = json!(relative(&home_world, k).map(r6)),
@@ -511,13 +582,44 @@ fn build_figure(scene: &Scene, mirror: &mut KinematicMirror, home: &[f64], motor
         row
     }).collect();
     Ok(Figure { json: json!({
-        "motors": motors.iter().map(|&(id, _, lo, hi)| json!({"id": id, "rad": [lo, hi], "samples": FIGURE_SAMPLES})).collect::<Vec<_>>(),
+        "motors": motors.iter().map(|m| json!({"key": motor_key(m, &joints), "id": m.0, "joint": joints[m.1], "rad": [m.2, m.3], "home_rad": round(home[m.1], 6), "samples": FIGURE_SAMPLES})).collect::<Vec<_>>(),
         "order": order, "links": links,
         "views": views.iter().zip(&bounds).map(|((n, u, v), b)| json!({"name": n, "u": u, "v": v, "bounds": b.map(r4)})).collect::<Vec<_>>(),
-        "check": {"combinations": CHECKS, "max_error_mm": round(worst, 3), "tolerance_mm": FIGURE_TOLERANCE_MM,
+        "check": {"combinations": checked, "unsolved": unsolved.len(), "first_unsolved": unsolved.first(), "max_error_mm": round(worst, 3), "tolerance_mm": FIGURE_TOLERANCE_MM,
             "method": "every simplified mesh vertex, the figure composed from the sampled per-link transforms against the kinematic mirror solved directly, at random motor angles inside the sampled ranges"},
-        "mesh_cell_m": FIGURE_CELL_M,
+        "mesh_cell_m": [FIGURE_CELL_M, FIGURE_CELL_OTHER_M],
     })})
+}
+
+/// The fastest a plan can be played (a multiple of its own clock) before its
+/// desired motion asks any motor for more than the governor's speed (rates
+/// scale with the tempo; the governor still bounds acceleration).
+/// Faster than 1 is faster than the gait was simulated; between 0.05 and
+/// MAX_TEMPO, in steps of 0.05.
+pub const MAX_TEMPO: f64 = 4.0;
+pub fn max_tempo(plan: &Plan) -> f64 {
+    let n = plan.desired.len();
+    if n < 3 {
+        return 1.;
+    }
+    let dt = plan.period_s as f64 / n as f64;
+    let mut tempo = MAX_TEMPO;
+    for (k, a) in plan.axes.iter().enumerate() {
+        let x = |i: usize| plan.desired[i % n][k] as f64;
+        let (mut v, mut acc) = (0f64, 0f64);
+        for i in 0..n {
+            v = v.max((x(i + 1) - x(i)).abs() / dt);
+            acc = acc.max((x(i + 2) - 2. * x(i + 1) + x(i)).abs() / (dt * dt));
+        }
+        if v > 0. {
+            tempo = tempo.min(a.max_speed_counts_s as f64 / v);
+        }
+        // Acceleration is left to the governor: the desired curve's corners are
+        // what it rounds off at any tempo, and bounding by them would rule out
+        // even 1x for most gaits.
+        let _ = acc;
+    }
+    ((tempo * 20.).floor() / 20.).clamp(0.05, MAX_TEMPO)
 }
 
 /// Build the pack for the leg described by the calibration server config at `config_path`.
@@ -539,7 +641,7 @@ pub fn build_gait_pack(config_path: &Path, options: &PackOptions) -> R<GaitPack>
     let scene: Scene = serde_json::from_slice(&std::fs::read(&scene_path).map_err(|e| format!("{}: {e}", scene_path.display()))?)
         .map_err(|e| format!("{}: {e}", scene_path.display()))?;
     let scene_robot = scene.clone();
-    let mut mirror = KinematicMirror::new(scene, 0.2)?;
+    let mut mirror = KinematicMirror::new(scene, MIRROR_LIFT_M)?;
     let coordinates = mirror.coordinates();
     let home: Vec<f64> = coordinates.iter().map(|c| c.home).collect();
 
@@ -595,29 +697,71 @@ pub fn build_gait_pack(config_path: &Path, options: &PackOptions) -> R<GaitPack>
         return Err(format!("no motor can be commanded from the ESP32: {}", excluded.iter().map(|e| format!("{}: {}", e["role"].as_str().unwrap_or(""), e["reason"].as_str().unwrap_or(""))).collect::<Vec<_>>().join("; ")));
     }
 
-    // The figure: each commandable motor swept over its taught travel widened
-    // by FIGURE_MARGIN (so a motor found outside it still draws where it is).
-    let motors: Vec<(u8, usize, f64, f64)> = bindings.iter().zip(&axes).map(|(b, a)| {
-        let (lo, hi) = a.encoder_bounds();
-        let (lo, hi) = (lo.unwrap().min(hi.unwrap()) as f64, lo.unwrap().max(hi.unwrap()) as f64);
-        let margin = (FIGURE_MARGIN * (hi - lo)).max(FIGURE_MARGIN_COUNTS);
-        let (x, y) = (b.joint_rad(lo - margin), b.joint_rad(hi + margin));
-        (b.id, coordinates.iter().position(|c| c.joint == b.joint).unwrap(), x.min(y), x.max(y))
-    }).collect();
-    let taught: Vec<(f64, f64)> = bindings.iter().zip(&axes).map(|(b, a)| {
-        let (lo, hi) = taught_window(a);
-        let (x, y) = (b.joint_rad(lo), b.joint_rad(hi));
-        (x.min(y), x.max(y))
-    }).collect();
-    let figure = build_figure(&scene_robot, &mut mirror, &home, &motors, &taught)?;
-
-    // Gaits.
-    let paths: Vec<String> = if options.gaits.is_empty() {
+    // A drive set: its variants first, in its order, then the named gaits (or the catalog's).
+    let drive_manifest = options.drive_set.as_ref().map(|p| -> R<(PathBuf, Value)> {
+        let p = if p.is_absolute() { p.clone() } else { repo_root().join(p) };
+        let text = std::fs::read(&p).map_err(|e| format!("{}: {e}", p.display()))?;
+        let v: Value = serde_json::from_slice(&text).map_err(|e| format!("{}: {e}", p.display()))?;
+        if v["kind"] != "drive_set" {
+            return Err(format!("{}: not a drive set (gait_lab drive writes drive-set.json)", p.display()));
+        }
+        if let Some(bad) = v["variants"].as_array().into_iter().flatten().find(|x| x["status"] != "ready") {
+            return Err(format!("{}: variant {} is not ready", p.display(), bad["name"]));
+        }
+        Ok((p, v))
+    }).transpose()?;
+    let drive_paths: Vec<String> = drive_manifest.as_ref().map(|(_, v)| v["variants"].as_array().into_iter().flatten().filter_map(|x| x["compiled"].as_str().map(str::to_string)).collect()).unwrap_or_default();
+    let named: Vec<String> = if options.gaits.is_empty() {
         super::gait::gait_catalog()?["gaits"].as_array().cloned().unwrap_or_default().iter()
             .filter_map(|g| g["path"].as_str().map(str::to_string)).take(options.max_gaits).collect()
     } else {
         options.gaits.clone()
     };
+    let paths: Vec<String> = drive_paths.into_iter().chain(named).collect();
+    // The figure: each commandable motor swept over its taught travel widened
+    // by FIGURE_MARGIN (so a motor found outside it still draws where it is).
+    let mut motors: Vec<(Option<u8>, usize, f64, f64)> = bindings.iter().zip(&axes).map(|(b, a)| {
+        let (lo, hi) = a.encoder_bounds();
+        let (lo, hi) = (lo.unwrap().min(hi.unwrap()) as f64, lo.unwrap().max(hi.unwrap()) as f64);
+        let margin = (FIGURE_MARGIN * (hi - lo)).max(FIGURE_MARGIN_COUNTS);
+        let (x, y) = (b.joint_rad(lo - margin), b.joint_rad(hi + margin));
+        (Some(b.id), coordinates.iter().position(|c| c.joint == b.joint).unwrap(), x.min(y), x.max(y))
+    }).collect();
+    let mut taught: Vec<(f64, f64)> = bindings.iter().zip(&axes).map(|(b, a)| {
+        let (lo, hi) = taught_window(a);
+        let (x, y) = (b.joint_rad(lo), b.joint_rad(hi));
+        (x.min(y), x.max(y))
+    }).collect();
+    // The rest of the robot: every other motor, over what the pack's gaits ask
+    // of it (widened as above, inside its CAD limits), drawn from the gaits.
+    let mut used: Vec<(f64, f64)> = coordinates.iter().map(|c| (c.home, c.home)).collect();
+    let mut poses: Vec<Vec<f64>> = Vec::new();
+    for path in &paths {
+        let gait = Gait::from_compiled(&gait_with_governor(path)?, path)?;
+        for k in 0..64 {
+            let q = gait.sample(gait.info.period_s * k as f64 / 64.)?;
+            let pose: Vec<f64> = coordinates.iter().map(|c| gait.index(&c.joint).map_or(c.home, |i| q[i])).collect();
+            for (u, &v) in used.iter_mut().zip(&pose) {
+                *u = (u.0.min(v), u.1.max(v));
+            }
+            if k % 8 == 0 {
+                poses.push(pose);
+            }
+        }
+    }
+    for (c, coordinate) in coordinates.iter().enumerate() {
+        if motors.iter().any(|m| m.1 == c) {
+            continue;
+        }
+        let (lo, hi) = used[c];
+        let margin = (FIGURE_MARGIN * (hi - lo)).max(0.1);
+        let (x, y) = ((lo - margin).max(coordinate.lower.unwrap_or(f64::NEG_INFINITY)), (hi + margin).min(coordinate.upper.unwrap_or(f64::INFINITY)));
+        motors.push((None, c, x, y));
+        taught.push((lo, hi));
+    }
+    let figure = build_figure(&scene_robot, &mut mirror, &home, &motors, &taught, &poses)?;
+
+    // Gaits.
     let mut gait_rows = Vec::new();
     let mut binary = axes_table(&bindings, &axes);
     for path in &paths {
@@ -632,7 +776,7 @@ pub fn build_gait_pack(config_path: &Path, options: &PackOptions) -> R<GaitPack>
             reasons.push("the gait drives none of the commandable motors".into());
         }
         let mut governed = GovernedGait::new(gait.clone());
-        let (limits, _registry) = govern_leg(&cfg, &mut governed, &gb, &ga, options.effort, options.supply_v)?;
+        let (limits, _registry) = govern_leg(&cfg, &mut governed, &gb, &ga, options.effort, options.supply_v, options.motor_capability)?;
         // The preview's governed curve: one cycle after WARM cycles from rest
         // (the live governor on the leg settles to about this).
         const WARM: usize = 8;
@@ -665,7 +809,7 @@ pub fn build_gait_pack(config_path: &Path, options: &PackOptions) -> R<GaitPack>
             let q = gait.sample(k as f64 * dt)?;
             frames.push(motors.iter().map(|&(_, c, _, _)| round(gait.index(&coordinates[c].joint).map_or(home[c], |i| q[i]), 5)).collect::<Vec<_>>());
         }
-        let mut row = json!({"name": gait.info.name.rsplit('/').nth(1).unwrap_or(path), "path": path, "period_s": gait.info.period_s, "samples": n, "frames_rad": frames,
+        let mut row = json!({"name": gait.info.name.rsplit('/').nth(1).unwrap_or(path), "path": path, "period_s": gait.info.period_s, "samples": n, "frames_rad": frames, "drive": compiled.get("drive"),
             "nominal_speed_m_s": gait.info.nominal_speed_m_s, "governor": gait.info.governor, "limits": limits, "plots": plots,
             "playable": reasons.is_empty(), "reasons": reasons});
         if reasons_ok(&row) {
@@ -707,6 +851,7 @@ pub fn build_gait_pack(config_path: &Path, options: &PackOptions) -> R<GaitPack>
                 check_dt_s: CHECK_DT as f32,
                 check,
             };
+            row["max_tempo"] = json!(max_tempo(&plan));
             let bytes = plan.encode();
             row["plan"] = json!({"offset": binary.len(), "length": bytes.len(), "ids": gb.iter().map(|b| b.id).collect::<Vec<_>>(), "desired_samples": dense,
                 "needs_turn": gb.iter().zip(&ga).filter(|(_, a)| is_multi_turn(a)).map(|(b, _)| b.id).collect::<Vec<_>>()});
@@ -715,9 +860,29 @@ pub fn build_gait_pack(config_path: &Path, options: &PackOptions) -> R<GaitPack>
         gait_rows.push(row);
     }
 
+    // Keyboard driving: which gait each held chord plays. The ESP32 blends
+    // between them at matching phase, so they must share one cycle.
+    let drive = match &drive_manifest {
+        None => Value::Null,
+        Some((p, v)) => {
+            let mut table = vec![];
+            for (k, row) in gait_rows.iter().enumerate().filter(|(_, r)| !r["drive"].is_null()) {
+                if row["playable"] != true {
+                    return Err(format!("drive variant {} is not playable on this leg: {}", row["name"], row["reasons"]));
+                }
+                if (row["period_s"].as_f64().unwrap_or(0.) - v["period_s"].as_f64().unwrap_or(-1.)).abs() > 1e-9 {
+                    return Err(format!("drive variant {} has another cycle than its set", row["name"]));
+                }
+                table.push(json!({"name": row["name"], "keys": row["drive"]["keys"], "twist": row["drive"]["twist"], "gait": k}));
+            }
+            json!({"set": v["set"], "gait": v["gait"], "period_s": v["period_s"], "source": rel(p), "source_sha256": sha256_file(p)?, "variants": table,
+                "fidelity": "Kinematic: each variant is a steered-gait cycle placed through the study's CAD model (IK, motor speed, limits, overlap); no physics. Blending between variants on the ESP32 is not simulated."})
+        }
+    };
     let json = json!({
-        "format": "robot-link gait pack", "version": PACK_VERSION,
-        "fidelity": "Kinematic preview: the CAD collision meshes placed by the kinematic mirror (no physics, no contact). Plans are the desired reference and governor the Rust panel would command; the ESP32 runs the governor live. The preview's governed curve is one cycle after eight from rest.",
+        "format": "robot-link gait pack", "version": PACK_VERSION, "drive": drive,
+        "fidelity": if options.motor_capability { "Kinematic preview: the CAD collision meshes placed by the kinematic mirror (no physics, no contact). Plans are the desired reference, governed at each motor's measured capability (not the slower governor the gaits were simulated with), so the leg moves faster and closer to the desired curve than in simulation; the ESP32 runs the governor live. The preview's governed curve is one cycle after eight from rest." } else { "Kinematic preview: the CAD collision meshes placed by the kinematic mirror (no physics, no contact). Plans are the desired reference and governor the Rust panel would command; the ESP32 runs the governor live. The preview's governed curve is one cycle after eight from rest." },
+        "governor": if options.motor_capability { "motor capability" } else { "gait (as simulated)" },
         "effort": options.effort, "sample_hz": options.sample_hz, "supply_v": options.supply_v,
         "fixture": cfg.fixture,
         "source": {
@@ -817,6 +982,29 @@ fn multi_turn_misfit(a: &AxisCalibration) -> Option<String> {
 /// refused. Widening a motor's travel raises a limit, so it needs `reason`.
 /// The previous file is kept as `calibration-<ms>-before-esp32.json` and the
 /// change is recorded in `esp32-poses-<ms>.json` beside it; returns that record.
+/// Keep the ESP32's robot configuration (`GET /api/robot`: which servo ID is in
+/// which CAD slot, direction, alignment, taught poses, limits) beside the leg's
+/// calibration as `robot-link-config.json`, so the repository holds what the
+/// robot was set up with in the field. The record says where and when it came
+/// from; git keeps its history. Poses taught there still reach
+/// `calibration.json` only through [`promote_esp32_poses`].
+pub fn save_esp32_robot(config_path: &Path, robot: &Value, host: &str) -> R<Value> {
+    let cfg: Config = serde_json::from_slice(&std::fs::read(config_path).map_err(|e| format!("{}: {e}", config_path.display()))?)
+        .map_err(|e| format!("{}: {e}", config_path.display()))?;
+    let config = robot.get("config").filter(|c| c["slots"].is_array()).ok_or("the ESP32's answer has no robot configuration (GET /api/robot)")?;
+    let path = cfg.output.join("robot-link-config.json");
+    let record = json!({
+        "version": 1, "kind": "robot-link robot configuration",
+        "pulled_from": host,
+        "pulled_at_unix_s": std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0),
+        "fpga": robot["fpga"], "link_baud": robot["link_baud"],
+        "provenance": "Measured on the robot: IDs and directions as the operator assigned them on the ESP32 page; poses taught there (promote with --pull-calibration).",
+        "config": config,
+    });
+    std::fs::write(&path, serde_json::to_vec_pretty(&record).map_err(|e| e.to_string())?).map_err(|e| format!("{}: {e}", path.display()))?;
+    Ok(json!({"saved": rel(&path), "revision": config["revision"], "slots_with_motors": config["slots"].as_array().map_or(0, |s| s.iter().filter(|x| x["id"].as_u64().unwrap_or(0) > 0).count())}))
+}
+
 pub fn promote_esp32_poses(config_path: &Path, esp32: &Value, reason: Option<&str>) -> R<Value> {
     let cfg: Config = serde_json::from_slice(&std::fs::read(config_path).map_err(|e| format!("{}: {e}", config_path.display()))?)
         .map_err(|e| format!("{}: {e}", config_path.display()))?;

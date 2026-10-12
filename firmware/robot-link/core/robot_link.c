@@ -1,4 +1,5 @@
 #include "robot_link.h"
+#include <limits.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -8,7 +9,9 @@ enum { T_NONE, T_STOP, T_STATUS, T_ARM, T_DISARM, T_HEARTBEAT, T_TELEMETRY, T_MO
        /* The gait's own: a supervisor command, a servo write, a servo read, a goal. */
        T_G_LOCAL, T_G_WRITE, T_G_READ, T_GOAL,
        /* The calibrated arm's. */
-       T_J_LOCAL, T_J_WRITE, T_J_READ };
+       T_J_LOCAL, T_J_WRITE, T_J_READ,
+       /* Raw transactions to any ID (re-addressing): the reply's ID is not an axis. */
+       T_R_LOCAL, T_R_SERVO };
 
 rl_config_t rl_default_config(void)
 {
@@ -16,8 +19,11 @@ rl_config_t rl_default_config(void)
         .first_id = 4, .present_mask = 0, .duty_cap = 100,
         .reply_timeout_ms = 25, .gap_ms = 2, .heartbeat_ms = 100,
         .fast_poll_ms = 50, .slow_poll_ms = 500, .status_ms = 200,
-        .jog_ms = 50, .hold_timeout_ms = 250, .session_timeout_ms = 1000,
+        .jog_ms = 50, .hold_timeout_ms = 400, .session_timeout_ms = 1000,
+        .jog_slew_per_s = 4000.f, .jog_slow_counts = 150, .jog_predict_ms = 100,
         .gait_period_ms = 30, .gait_approach_ms = 30000, .gait_tolerance_counts = 12.f,
+        .temp_stop_c = 55, .volt_min_raw = 90, .volt_max_raw = 126,
+        .drive_blend_cycles = 0.5f, .drive_timeout_ms = 600, .drive_idle_cycles = 2.f,
     };
     return c;
 }
@@ -58,22 +64,29 @@ bool rl_link_ok(const rl_t *rl, uint32_t now)
     return rl->status_valid && !before(rl->status_at_ms + 3 * rl->cfg.status_ms + 2 * rl->cfg.reply_timeout_ms, now);
 }
 
+/* A jog that stopped this close to its window's edge is at it (the predictive stop lands just short). */
+#define RL_EDGE_COUNTS 12
+
 static bool session_alive(const rl_t *rl, uint32_t now)
 {
     return rl->session && before(now, rl->session_until_ms);
 }
 
+/* A jog runs while its session lives: at the held drive until the hold lapses, then ramping to zero. */
 static bool jog_active(const rl_t *rl, uint32_t now)
 {
-    return rl->jog_id && before(now, rl->jog_until_ms) && session_alive(rl, now);
+    return rl->jog_id && session_alive(rl, now);
 }
 
+/* Immediately: STOP, refusals, a lost session or arm. A release ramps instead (rl_release). */
 static void end_jog(rl_t *rl)
 {
     int axis = rl->jog_id ? rl_axis(rl, rl->jog_id) : -1;
     if (axis >= 0) rl->zero_pending[axis] = true;
     rl->jog_id = 0;
     rl->jog_duty = 0;
+    rl->jog_out = 0.f;
+    rl->jog_coasting = false;
 }
 
 /* ---- the operator ----------------------------------------------------- */
@@ -149,23 +162,38 @@ bool rl_hold(rl_t *rl, uint8_t id, int duty, uint32_t now)
     const rl_travel_t *tr = &rl->servo[axis].travel;
     if (rl->status.version >= 5 && tr->armed && duty) {
         /* The FPGA drops drive outward past its window's edge; say so instead of timing out. */
-        int32_t p = rl_position(rl, id);
-        if (duty > 0 && p >= tr->armed_hi) return note(rl, now, "motor %u is at its window's end by the %s (%ld): only ◄", id, pose_name(tr, RL_END_HI), (long)tr->armed_hi), false;
-        if (duty < 0 && p <= tr->armed_lo) return note(rl, now, "motor %u is at its window's end by the %s (%ld): only ►", id, pose_name(tr, RL_END_LO), (long)tr->armed_lo), false;
+        int32_t p = rl_position(rl, id) + (duty > 0 ? RL_EDGE_COUNTS : -RL_EDGE_COUNTS); /* stopped just short of it is at it */
+        if (duty > 0 && p >= tr->armed_hi) return note(rl, now, "motor %u is at its %s (%ld): it can only move back toward its %s (◄)", id, pose_name(tr, RL_END_HI), (long)tr->armed_hi, pose_name(tr, RL_END_LO)), false;
+        if (duty < 0 && p <= tr->armed_lo) return note(rl, now, "motor %u is at its %s (%ld): it can only move back toward its %s (►)", id, pose_name(tr, RL_END_LO), (long)tr->armed_lo, pose_name(tr, RL_END_HI)), false;
     }
     if (rl->jog_id && rl->jog_id != id) end_jog(rl); /* one servo at a time */
     if (duty > rl->cfg.duty_cap) duty = rl->cfg.duty_cap;
     if (duty < -rl->cfg.duty_cap) duty = -rl->cfg.duty_cap;
+    if (rl->jog_id != id) {
+        rl->jog_out = 0.f;
+        rl->jog_out_ms = now;
+        rl->jog_gap_max_ms = 0;
+    } else if (rl->jog_hold_ms && rl->jog_duty) {
+        uint32_t gap = now - rl->jog_hold_ms;
+        if (gap > rl->jog_gap_max_ms) rl->jog_gap_max_ms = gap;
+    }
     if (rl->jog_id != id || rl->jog_duty != duty) rl->next_jog_ms = now;
     rl->jog_id = id;
     rl->jog_duty = duty;
+    rl->jog_hold_ms = now;
     rl->jog_until_ms = now + rl->cfg.hold_timeout_ms;
+    rl->jog_coasting = false;
     return true;
 }
 
+/* Let go: the drive ramps to zero at the slew rate, then the PWM is zeroed. */
 void rl_release(rl_t *rl)
 {
-    end_jog(rl);
+    if (!rl->jog_id) return;
+    rl->jog_duty = 0;
+    rl->jog_until_ms = rl->tick_ms;
+    rl->jog_hold_ms = 0;
+    rl->next_jog_ms = rl->tick_ms; /* start the ramp now */
 }
 
 void rl_pause(rl_t *rl, bool paused)
@@ -212,14 +240,48 @@ static void finish(rl_t *rl, uint32_t now)
 static void gait_observe(rl_t *rl, uint8_t id, uint32_t now);
 static bool gait_tick(rl_t *rl, uint32_t now);
 static bool arm_tick(rl_t *rl, uint32_t now);
+static bool readdress_tick(rl_t *rl, uint32_t now);
 
-/* The held jog on axis i drives outward at or past the edge of the window it was armed in. */
+/* Where the jogged motor is now: its last reading carried forward at its measured speed
+ * (at most jog_predict_ms), so the edge acts before the next reading rather than after. */
+static float jog_predicted(const rl_t *rl, int i, uint32_t now)
+{
+    const rl_servo_t *s = &rl->servo[i];
+    float ahead = (float)(now - s->at_ms);
+    if (ahead > (float)rl->cfg.jog_predict_ms) ahead = (float)rl->cfg.jog_predict_ms;
+    return (float)rl_position(rl, id_of(rl, i)) + (float)s->t.speed_counts_s * ahead / 1000.f;
+}
+
+/* The jog on axis i drives outward at or past the edge of the window it was armed in. */
 static bool jog_outward(const rl_t *rl, int i)
 {
     const rl_travel_t *t = &rl->servo[i].travel;
-    if (!t->armed || rl->jog_id != id_of(rl, i) || !rl->jog_duty) return false;
-    int32_t p = rl_position(rl, rl->jog_id);
-    return (rl->jog_duty > 0 && p >= t->armed_hi) || (rl->jog_duty < 0 && p <= t->armed_lo);
+    float drive = rl->jog_out != 0.f ? rl->jog_out : (float)rl->jog_duty;
+    if (!t->armed || rl->jog_id != id_of(rl, i) || drive == 0.f) return false;
+    float p = jog_predicted(rl, i, rl->tick_ms);
+    return (drive > 0.f && p >= (float)(t->armed_hi - RL_EDGE_COUNTS)) || (drive < 0.f && p <= (float)(t->armed_lo + RL_EDGE_COUNTS));
+}
+
+/* The drive to write now: the held drive (or zero once the hold has lapsed), tapered
+ * within jog_slow_counts of the edge it moves toward, reached at the slew rate. */
+static float jog_drive(rl_t *rl, int i, uint32_t now)
+{
+    bool held = before(now, rl->jog_until_ms);
+    rl->jog_coasting = held && rl->jog_duty && now - rl->jog_hold_ms > 2 * rl->cfg.jog_ms + 50;
+    float target = held ? (float)rl->jog_duty : 0.f;
+    const rl_travel_t *t = &rl->servo[i].travel;
+    if (target != 0.f && t->armed && rl->cfg.jog_slow_counts > 0) {
+        float p = jog_predicted(rl, i, now);
+        float room = target > 0.f ? (float)t->armed_hi - p : p - (float)t->armed_lo;
+        float f = room / (float)rl->cfg.jog_slow_counts;
+        if (f < 1.f) target *= f < 0.25f ? 0.25f : f; /* still moving, slowly, until the edge stops it */
+    }
+    float dt = (float)(now - rl->jog_out_ms) / 1000.f;
+    rl->jog_out_ms = now;
+    float step = rl->cfg.jog_slew_per_s * (dt > 0.2f ? 0.2f : dt);
+    if (rl->jog_out < target) rl->jog_out = rl->jog_out + step < target ? rl->jog_out + step : target;
+    else if (rl->jog_out > target) rl->jog_out = rl->jog_out - step > target ? rl->jog_out - step : target;
+    return rl->jog_out;
 }
 
 /* ---- turns -------------------------------------------------------------- */
@@ -357,6 +419,33 @@ bool rl_travel_restore(rl_t *rl, uint8_t id, int32_t lo, int32_t hi, bool open_l
     return true;
 }
 
+void rl_travel_configure(rl_t *rl, uint8_t id, int32_t lo, int32_t hi, bool open_lo, bool open_hi, bool multi_turn, bool reversed, int32_t margin)
+{
+    int i = rl_axis(rl, id);
+    if (i < 0 || lo >= hi) return;
+    rl_travel_t *t = &rl->servo[i].travel;
+    if (!t->known) t->pack_lo = t->pack_hi = INT32_MIN; /* no pack travel yet */
+    t->known = true;
+    t->lo = lo;
+    t->hi = hi;
+    t->open[0] = open_lo;
+    t->open[1] = open_hi;
+    t->multi_turn = multi_turn;
+    t->reversed = reversed;
+    t->margin = margin;
+}
+
+void rl_travel_forget(rl_t *rl, uint8_t id)
+{
+    int i = rl_axis(rl, id);
+    if (i < 0) return;
+    rl_travel_t *t = &rl->servo[i].travel;
+    bool armed = t->armed;
+    memset(t, 0, sizeof *t);
+    t->armed = armed;
+    rl->servo[i].turn_known = false;
+}
+
 static rl_travel_t *travel_for_edit(rl_t *rl, uint8_t id, uint32_t now)
 {
     int i = rl_axis(rl, id);
@@ -460,11 +549,19 @@ static void on_frame(rl_t *rl, const uint8_t *f, size_t len, uint32_t now)
         } else if (rl->txn == T_J_LOCAL) {
             rl->arm_job.done = rl->arm_job.ok = true;
             finish(rl, now);
+        } else if (rl->txn == T_R_LOCAL) {
+            rl->readdress.done = rl->readdress.ok = true;
+            finish(rl, now);
         } else if (rl->txn == T_STOP || rl->txn == T_STATUS || rl->txn == T_ARM || rl->txn == T_DISARM || rl->txn == T_HEARTBEAT) {
             if (rl->txn == T_ARM && rl->status_valid && !(rl->status.armed_mask >> rl->txn_axis & 1))
                 note(rl, now, "the FPGA did not arm servo %u (%s)", id_of(rl, rl->txn_axis), rl->status.latched ? hx_reason_name(rl->status.reason) : "telemetry not fresh");
             finish(rl, now);
         }
+        return;
+    }
+    if (rl->txn == T_R_SERVO && (id == rl->raw_id[0] || id == rl->raw_id[1])) {
+        rl->readdress.done = rl->readdress.ok = true;
+        finish(rl, now);
         return;
     }
     int axis = rl_axis(rl, id);
@@ -484,7 +581,7 @@ static void on_frame(rl_t *rl, const uint8_t *f, size_t len, uint32_t now)
             s->t.status = error ? error : s->t.status;
             track_turns(rl, axis, previous, now);
             if (jog_outward(rl, axis)) {
-                note(rl, now, "motor %u reached its window's end by the %s: stopped", id, pose_name(&rl->servo[axis].travel, rl->jog_duty > 0 ? RL_END_HI : RL_END_LO));
+                note(rl, now, "motor %u reached its window's end by the %s: stopped", id, pose_name(&rl->servo[axis].travel, (rl->jog_out != 0.f ? rl->jog_out > 0.f : rl->jog_duty > 0) ? RL_END_HI : RL_END_LO));
                 end_jog(rl);
             }
             gait_observe(rl, id, now);
@@ -560,6 +657,11 @@ static void timed_out(rl_t *rl, uint32_t now)
     case T_J_READ:
         rl->arm_job.done = true;
         rl->arm_job.ok = false;
+        break;
+    case T_R_LOCAL:
+    case T_R_SERVO:
+        rl->readdress.done = true;
+        rl->readdress.ok = false;
         break;
     case T_TORQUE:
     case T_PWM:
@@ -670,8 +772,9 @@ void rl_tick(rl_t *rl, uint32_t now)
         send(rl, now, T_TELEMETRY, i, id_of(rl, i), HX_READ, p, 2);
         return;
     }
-    /* 6. Arming on the calibration profile, then the gait: preparation, goals, stop verification. */
+    /* 6. Arming on the calibration profile, re-addressing, then the gait: preparation, goals, stop verification. */
     if (arm_tick(rl, now)) return;
+    if (readdress_tick(rl, now)) return;
     if (gait_tick(rl, now)) return;
     /* 7. The held jog. */
     if (jog_active(rl, now)) {
@@ -694,14 +797,19 @@ void rl_tick(rl_t *rl, uint32_t now)
         } else if (jog_outward(rl, i)) {
             /* The FPGA only refuses the next outward write; the drive already given keeps
              * running. So the engine zeroes it at the window's edge itself, as the panel does. */
-            note(rl, now, "motor %u reached its window's end by the %s: stopped", rl->jog_id, pose_name(&rl->servo[i].travel, rl->jog_duty > 0 ? RL_END_HI : RL_END_LO));
+            note(rl, now, "motor %u reached its window's end by the %s: stopped", rl->jog_id, pose_name(&rl->servo[i].travel, (rl->jog_out != 0.f ? rl->jog_out > 0.f : rl->jog_duty > 0) ? RL_END_HI : RL_END_LO));
             end_jog(rl);
         } else if (!before(now, rl->next_jog_ms)) {
             rl->next_jog_ms = now + rl->cfg.jog_ms;
-            uint8_t p[3] = {HX_REG_PWM};
-            hx_pwm_bytes(rl->jog_duty, p + 1);
-            send(rl, now, T_PWM, i, rl->jog_id, HX_WRITE, p, 3);
-            return;
+            float out = jog_drive(rl, i, now);
+            if (!before(now, rl->jog_until_ms) && out == 0.f) {
+                end_jog(rl); /* ramped down: zero the PWM */
+            } else {
+                uint8_t p[3] = {HX_REG_PWM};
+                hx_pwm_bytes((int)lroundf(out), p + 1);
+                send(rl, now, T_PWM, i, rl->jog_id, HX_WRITE, p, 3);
+                return;
+            }
         }
     }
     /* 8. Status. */
@@ -762,7 +870,81 @@ bool rl_gait_load(rl_t *rl, const rl_plan_t *plan, uint32_t now)
         if (rl_axis(rl, plan->axis[k].id) < 0) return note(rl, now, "the gait drives motor %u, which is not on this bus", plan->axis[k].id), false;
     rl->gait.plan = *plan;
     rl->gait.have_plan = true;
+    rl->gait.drive = false;
     return true;
+}
+
+bool rl_drive_load(rl_t *rl, const rl_plan_t *plans, int n, int step, uint32_t now)
+{
+    if (n < 1 || n > RL_DRIVE_MAX || step < 0 || step >= n) return note(rl, now, "drive: %d variants, stepping in place at %d", n, step), false;
+    const rl_plan_t *s = &plans[step];
+    for (int v = 0; v < n; v++) {
+        const rl_plan_t *p = &plans[v];
+        if (p->axes != s->axes || fabsf(p->period_s - s->period_s) > 1e-4f * s->period_s)
+            return note(rl, now, "drive: variant %d has other motors or another cycle than stepping in place", v), false;
+        for (int k = 0; k < p->axes; k++) {
+            const rl_plan_axis_t *a = &p->axis[k], *b = &s->axis[k];
+            if (a->id != b->id || a->drive != b->drive || a->multi_turn != b->multi_turn || a->window_lo != b->window_lo || a->window_hi != b->window_hi)
+                return note(rl, now, "drive: variant %d drives motor %u differently", v, a->id), false;
+        }
+    }
+    if (!rl_gait_load(rl, s, now)) return false;
+    rl_gait_t *g = &rl->gait;
+    memcpy(g->drive_plan, plans, (size_t)n * sizeof *plans);
+    g->drive = true;
+    g->drive_n = (uint8_t)n;
+    g->drive_step = g->drive_target = (uint8_t)step;
+    for (int v = 0; v < RL_DRIVE_MAX; v++) g->drive_w[v] = v == step ? 1.f : 0.f;
+    g->drive_settled_t = -1.f;
+    g->drive_stop_at = 0.f;
+    g->drive_paused = false;
+    g->drive_cmd_ms = now;
+    return true;
+}
+
+void rl_drive_command(rl_t *rl, int variant, uint32_t now)
+{
+    rl_gait_t *g = &rl->gait;
+    if (!g->drive) return;
+    g->drive_target = (uint8_t)(variant >= 0 && variant < g->drive_n ? variant : g->drive_step);
+    g->drive_cmd_ms = now;
+}
+
+/* Move the weights toward the held chord's variant; after the keys are released and
+ * stepping in place has run its cycles, stop the clock at the next cycle start. */
+static void drive_update(rl_t *rl, uint32_t now, float dt)
+{
+    rl_gait_t *g = &rl->gait;
+    float period = g->plan.period_s;
+    int target = before(now, g->drive_cmd_ms + rl->cfg.drive_timeout_ms) ? g->drive_target : g->drive_step;
+    if (target != g->drive_step && g->drive_paused) {
+        g->drive_paused = false;
+        g->playing = true;
+        note(rl, now, "drive: walking");
+    }
+    if (g->drive_paused) return;
+    float rate = dt * g->speed_scale / fmaxf(rl->cfg.drive_blend_cycles * period, 0.05f);
+    float was = g->drive_w[target], now_w = fminf(1.f, was + rate), rest = 1.f - was;
+    float keep = rest > 1e-6f ? (1.f - now_w) / rest : 0.f;
+    for (int v = 0; v < g->drive_n; v++) g->drive_w[v] = v == target ? now_w : g->drive_w[v] * keep;
+    if (target != g->drive_step || now_w < 1.f) {
+        g->drive_settled_t = -1.f;
+        g->drive_stop_at = 0.f;
+    } else if (g->drive_settled_t < 0.f) {
+        g->drive_settled_t = g->t;
+    } else if (g->drive_stop_at == 0.f && g->t - g->drive_settled_t >= rl->cfg.drive_idle_cycles * period) {
+        g->drive_stop_at = (floorf(g->t / period) + 1.f) * period;
+    }
+}
+
+/* The plan's desired counts, or in driving the variants' weighted sum at one gait time. */
+static float gait_desired(const rl_gait_t *g, int k, float t)
+{
+    if (!g->drive) return rl_plan_desired(&g->plan, k, t);
+    float d = 0.f;
+    for (int v = 0; v < g->drive_n; v++)
+        if (g->drive_w[v] > 0.f) d += g->drive_w[v] * rl_plan_desired(&g->drive_plan[v], k, t);
+    return d;
 }
 
 bool rl_gait_start(rl_t *rl, float speed_scale, uint32_t now)
@@ -799,7 +981,7 @@ bool rl_gait_start(rl_t *rl, float speed_scale, uint32_t now)
     g->goal_pending = 0;
     g->t = 0.f;
     g->playing = true;
-    g->speed_scale = clampf(speed_scale > 0.f ? speed_scale : 1.f, 0.05f, 1.f);
+    g->speed_scale = clampf(speed_scale > 0.f ? speed_scale : 1.f, 0.05f, RL_MAX_TEMPO);
     g->phase_ms = g->clock_ms = now;
     g->stop_verified = false;
     g->result[0] = 0;
@@ -811,7 +993,7 @@ bool rl_gait_start(rl_t *rl, float speed_scale, uint32_t now)
 void rl_gait_control(rl_t *rl, bool playing, float speed_scale)
 {
     rl->gait.playing = playing;
-    if (speed_scale > 0.f) rl->gait.speed_scale = clampf(speed_scale, 0.05f, 1.f);
+    if (speed_scale > 0.f) rl->gait.speed_scale = clampf(speed_scale, 0.05f, RL_MAX_TEMPO);
 }
 
 /* Any end goes through a STOP and its verification. */
@@ -865,7 +1047,7 @@ static void gait_observe(rl_t *rl, uint8_t id, uint32_t now)
     if (k == g->plan.axes) return;
     const hx_telemetry_t *t = &rl->servo[rl_axis(rl, id)].t;
     /* The panel's commissioning limits (calibration_serial.rs healthy()). */
-    if (t->position_raw > 4095 || t->temperature_c >= 55 || t->voltage_raw < 90 || t->voltage_raw > 126) {
+    if (t->position_raw > 4095 || t->temperature_c >= rl->cfg.temp_stop_c || t->voltage_raw < rl->cfg.volt_min_raw || t->voltage_raw > rl->cfg.volt_max_raw) {
         gait_fail(rl, now, "motor %u outside commissioning limits: %u C, %.1f V, encoder %u", id, t->temperature_c, t->voltage_raw / 10.0, t->position_raw);
         return;
     }
@@ -1001,10 +1183,20 @@ static bool gait_drive(rl_t *rl, uint32_t now)
         g->next_goal_ms = now + rl->cfg.gait_period_ms;
         bool started = g->phase == RL_GAIT_PLAYING;
         if (started && g->playing) g->t += dt * g->speed_scale;
+        if (started && g->drive) {
+            if (g->drive_stop_at > 0.f && g->t >= g->drive_stop_at) {
+                g->t = g->drive_stop_at;
+                g->drive_stop_at = 0.f;
+                g->playing = false;
+                g->drive_paused = true;
+                note(rl, now, "drive: stopped after stepping in place; hold a key to walk");
+            }
+            drive_update(rl, now, dt);
+        }
         bool arrived = true;
         for (int k = 0; k < p->axes; k++) {
             const rl_plan_axis_t *a = &p->axis[k];
-            g->desired[k] = rl_plan_desired(p, k, started ? g->t : 0.f);
+            g->desired[k] = gait_desired(g, k, started ? g->t : 0.f);
             rl_gov_step(a, &g->gov[k], g->desired[k], dt);
             g->goal[k] = clampf(g->gov[k].x, (float)a->window_lo + 6.f, (float)a->window_hi - 6.f);
             g->goal_v[k] = g->gov[k].v;
@@ -1206,5 +1398,109 @@ static bool arm_tick(rl_t *rl, uint32_t now)
             else note(rl, now, "motor %u armed in window %ld..%ld", id, (long)t->armed_lo, (long)t->armed_hi);
             return false;
         }
+    }
+}
+
+/* ---- the present set and re-addressing ----------------------------------- */
+
+void rl_set_present(rl_t *rl, uint16_t mask)
+{
+    uint16_t gone = rl->cfg.present_mask & (uint16_t)~mask;
+    for (int i = 0; i < RL_MAX_SERVOS; i++) {
+        if (!(gone >> i & 1)) continue;
+        rl_travel_t travel = rl->servo[i].travel;
+        memset(&rl->servo[i], 0, sizeof rl->servo[i]);
+        rl->servo[i].mode = -1;
+        rl->servo[i].travel = travel;
+        rl->servo[i].travel.armed = rl->servo[i].travel.recovering = false;
+        rl->arm_req &= (uint16_t)~(1u << i);
+        if (rl->arm_job.axis == i) rl->arm_job.axis = -1;
+    }
+    for (int i = 0; i < RL_MAX_SERVOS; i++)
+        if ((mask >> i & 1) && !(rl->cfg.present_mask >> i & 1)) rl->next_poll_ms[i] = 0;
+    rl->cfg.present_mask = mask;
+}
+
+bool rl_readdress_active(const rl_t *rl)
+{
+    return rl->readdress.active;
+}
+
+bool rl_readdress(rl_t *rl, uint8_t from, uint8_t to, uint32_t now)
+{
+    if (!session_alive(rl, now)) return note(rl, now, "no live operator session"), false;
+    if (!rl->status_valid || rl->status.version != 9) return note(rl, now, "re-addressing needs the robot FPGA image (profile 9)"), false;
+    if (rl->status.armed_mask || rl_gait_active(rl) || rl->arm_job.axis >= 0) return note(rl, now, "stop everything first: nothing may be armed"), false;
+    if (rl->readdress.active) return note(rl, now, "already re-addressing a servo"), false;
+    if (!from || !to || from >= 254 || to >= 254 || from == to) return note(rl, now, "IDs must be 1-253 and different"), false;
+    memset(&rl->readdress, 0, sizeof rl->readdress);
+    rl->readdress.active = true;
+    rl->readdress.from = from;
+    rl->readdress.to = to;
+    /* The FPGA grants the permit only while latched: latch it first. */
+    rl->stop_req = true;
+    note(rl, now, "re-addressing servo %u as %u", from, to);
+    return true;
+}
+
+enum { R_PING_TO, R_PING_FROM, R_PERMIT, R_UNLOCK, R_WRITE_ID, R_LOCK, R_VERIFY_TO, R_VERIFY_FROM, R_DONE };
+
+static void readdress_end(rl_t *rl, uint32_t now, bool ok, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(rl->readdress.result, sizeof rl->readdress.result, fmt, ap);
+    va_end(ap);
+    rl->readdress.active = false;
+    rl->readdress.ok = ok;
+    note(rl, now, "%s", rl->readdress.result);
+}
+
+static void raw_servo(rl_t *rl, uint32_t now, uint8_t id, uint8_t also, uint8_t instruction, const uint8_t *p, size_t n)
+{
+    rl->readdress.waiting = true;
+    rl->readdress.done = rl->readdress.ok = false;
+    rl->raw_id[0] = id;
+    rl->raw_id[1] = also;
+    send(rl, now, T_R_SERVO, -1, id, instruction, p, n);
+}
+
+static bool readdress_tick(rl_t *rl, uint32_t now)
+{
+    if (!rl->readdress.active || rl->stop_req) return false;
+    uint8_t from = rl->readdress.from, to = rl->readdress.to;
+    if (rl->readdress.waiting) {
+        rl->readdress.waiting = false;
+        bool ok = rl->readdress.ok;
+        switch (rl->readdress.step) {
+        case R_PING_TO: if (ok) return readdress_end(rl, now, false, "ID %u already answers: pick a free ID", to), false; break;
+        case R_PING_FROM: if (!ok) return readdress_end(rl, now, false, "servo %u does not answer", from), false; break;
+        case R_PERMIT: if (!ok) return readdress_end(rl, now, false, "the FPGA did not answer the re-addressing permit"), false; break;
+        case R_UNLOCK: if (!ok) return readdress_end(rl, now, false, "servo %u did not unlock its EEPROM (refused by the FPGA?)", from), false; break;
+        case R_WRITE_ID: break; /* it may answer as either ID, or not at all */
+        case R_LOCK: if (!ok) return readdress_end(rl, now, false, "the servo did not answer as %u after the ID write; ping both IDs", to), false; break;
+        case R_VERIFY_TO: if (!ok) return readdress_end(rl, now, false, "the servo does not answer as %u", to), false; break;
+        case R_VERIFY_FROM: if (ok) return readdress_end(rl, now, false, "ID %u still answers after the change", from), false; break;
+        }
+        rl->readdress.step++;
+    }
+    switch (rl->readdress.step) {
+    case R_PING_TO: raw_servo(rl, now, to, to, HX_PING, NULL, 0); return true;
+    case R_PING_FROM: raw_servo(rl, now, from, from, HX_PING, NULL, 0); return true;
+    case R_PERMIT: {
+        if (!rl->status.latched) return readdress_end(rl, now, false, "the FPGA is not latched"), false;
+        uint8_t q[] = {9, from, to};
+        rl->readdress.waiting = true;
+        rl->readdress.done = rl->readdress.ok = false;
+        local(rl, now, T_R_LOCAL, 0, q, sizeof q);
+        return true;
+    }
+    case R_UNLOCK: { uint8_t q[] = {0x37, 0}; raw_servo(rl, now, from, from, HX_WRITE, q, 2); return true; }
+    case R_WRITE_ID: { uint8_t q[] = {0x05, to}; raw_servo(rl, now, from, to, HX_WRITE, q, 2); return true; }
+    case R_LOCK: { uint8_t q[] = {0x37, 1}; raw_servo(rl, now, to, to, HX_WRITE, q, 2); return true; }
+    case R_VERIFY_TO: raw_servo(rl, now, to, to, HX_PING, NULL, 0); return true;
+    case R_VERIFY_FROM: raw_servo(rl, now, from, from, HX_PING, NULL, 0); return true;
+    default:
+        return readdress_end(rl, now, true, "servo %u is now ID %u", from, to), false;
     }
 }

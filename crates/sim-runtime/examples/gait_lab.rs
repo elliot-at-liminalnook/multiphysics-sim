@@ -29,7 +29,7 @@ fn main() {
 
 fn run() -> R<()> {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    let usage = "usage: gait_lab export STUDY TRIAL_DIR OUT.yaml | validate STUDY FILE... | evaluate STUDY OUT_DIR [--parallel N] [--fidelity fast|detailed] FILE... | poses STUDY OUT_DIR FILE... | steer STUDY OUT_DIR GAIT MANEUVER... | tune STUDY GAIT_FILE NEW_STUDY_DIR [--attempts N] [--seeds S1,S2] [--run]";
+    let usage = "usage: gait_lab export STUDY TRIAL_DIR OUT.yaml | validate STUDY FILE... | evaluate STUDY OUT_DIR [--parallel N] [--fidelity fast|detailed] FILE... | poses STUDY OUT_DIR FILE... | steer STUDY OUT_DIR GAIT MANEUVER... | drive STUDY OUT_DIR GAIT DRIVE_SET | tune STUDY GAIT_FILE NEW_STUDY_DIR [--attempts N] [--seeds S1,S2] [--run]";
     let (command, rest) = args.split_first().ok_or(usage)?;
     let study_path = rest.first().ok_or(usage)?;
     let mut study = Study::load(Path::new(study_path), &repo())?;
@@ -191,6 +191,23 @@ fn run() -> R<()> {
             }
             if blocked > 0 {
                 return Err(format!("{blocked} maneuver file(s) not ready"));
+            }
+        }
+        "drive" => {
+            let [_, out, gait, set] = rest else { return Err(usage.into()) };
+            let gait = gait_lab::read_script(Path::new(gait))?;
+            let set_file = Path::new(set);
+            let set = gait_lab::read_drive_set(set_file)?;
+            let r = study.drive_set(&gait, &set, set_file, Path::new(out))?;
+            println!("{:<8} {}  {}", r.status, set_file.display(), r.summary);
+            for v in &r.variants {
+                let top = v.joints.first().map(|j| format!("{} at {:.0}%", j.joint, j.percent_of_limit.unwrap_or(0.))).unwrap_or_default();
+                println!("  {:<8} {:<14} keys {:<3} closes {:.3} deg, settled {:.3} deg, overlap {:.3} mm, fastest {top}{}", v.status, v.name, if v.keys.is_empty() { "-" } else { &v.keys }, v.closure_deg, v.settle_change_deg, v.overlap_mm,
+                    if v.reasons.is_empty() { String::new() } else { format!("\n           {}", v.reasons.join("; ")) });
+            }
+            println!("         {}/drive-set.json", r.results_directory);
+            if r.status != "ready" {
+                return Err("the drive set is not ready".into());
             }
         }
         "tune" => {

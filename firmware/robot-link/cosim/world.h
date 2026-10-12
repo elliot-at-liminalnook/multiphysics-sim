@@ -15,7 +15,10 @@
 #include <vector>
 #include "robot_link.h"
 
-static const int HOST_CLKS = 434, SERVO_CLKS = 50, CLK_PER_MS = 50000;
+#ifndef COSIM_HOST_CLKS
+#define COSIM_HOST_CLKS 434 // 115200 baud; the robot image runs the host link at 1 Mbaud (50)
+#endif
+static const int HOST_CLKS = COSIM_HOST_CLKS, SERVO_CLKS = 50, CLK_PER_MS = 50000;
 static int failures = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { failures++; printf("  FAIL line %d: ", __LINE__); printf(__VA_ARGS__); printf("\n"); } } while (0)
 
@@ -158,7 +161,10 @@ struct World {
                 regs[0] = (uint8_t)s->pwm; regs[1] = (uint8_t)(s->pwm >> 8);
                 rl_len = hx_packet(frame, s->id, 0, regs, 2);
             }
+        } else if (inst == HX_PING) {
+            rl_len = hx_packet(frame, s->id, s->error, nullptr, 0);
         } else if (inst == HX_WRITE && n >= 2) {
+            if (p[0] == 0x05 && n == 2 && !s->lock) s->id = p[1]; // EEPROM ID, only unlocked
             if (p[0] == HX_REG_TORQUE && n == 2) { s->torque = p[1]; s->torque_writes++; }
             if (p[0] == HX_REG_PWM && n == 3) { s->pwm = (uint16_t)(p[1] | p[2] << 8); s->pwm_writes++; }
             if (p[0] == HX_REG_MODE && n == 2) { if (!s->lock) s->mode = p[1]; s->mode_writes++; }

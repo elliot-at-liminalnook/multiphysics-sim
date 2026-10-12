@@ -126,6 +126,35 @@ impl Trajectory {
         }
         Ok(Self { config, dimension })
     }
+    /// The uniform periodic cubic B-spline whose curve passes through
+    /// `samples` (one value vector per knot, evenly spaced over `period_s`,
+    /// the first at 0 and none repeated at the period). At knot i the curve is
+    /// (c[i-1] + 4 c[i] + c[i+1]) / 6; the cyclic system is strictly
+    /// diagonally dominant, so Jacobi sweeps converge (halving the error each).
+    pub fn periodic_through(period_s: f64, samples: &[Vec<f64>]) -> Result<TrajectoryConfig, String> {
+        let n = samples.len();
+        if n < 4 || !(period_s.is_finite() && period_s > 0.) {
+            return Err("a periodic curve through samples needs at least four samples and a positive period".into());
+        }
+        let dimension = samples[0].len();
+        if samples.iter().any(|v| v.len() != dimension || v.iter().any(|x| !x.is_finite())) {
+            return Err("samples must be finite and of one dimension".into());
+        }
+        let mut controls = samples.to_vec();
+        for _ in 0..80 {
+            let previous = controls.clone();
+            for i in 0..n {
+                for j in 0..dimension {
+                    controls[i][j] = (6. * samples[i][j] - previous[(i + n - 1) % n][j] - previous[(i + 1) % n][j]) / 4.;
+                }
+            }
+        }
+        let mut keyframes: Vec<Keyframe> = controls.into_iter().enumerate().map(|(i, values)| Keyframe { time_s: period_s * i as f64 / n as f64, values }).collect();
+        keyframes.push(Keyframe { time_s: period_s, values: keyframes[0].values.clone() });
+        let config = TrajectoryConfig { interpolation: Interpolation::PeriodicCubicBSpline, keyframes };
+        Self::new(config.clone())?;
+        Ok(config)
+    }
     /// Double a uniform periodic cubic control grid without changing its curve.
     /// This is knot insertion, not sampling the curve as new controls.
     pub fn refined_periodic_config(&self) -> Result<TrajectoryConfig, String> {
@@ -600,6 +629,20 @@ impl Trajectory {
 #[cfg(test)]
 mod support_tests {
     use super::*;
+    #[test]
+    fn a_periodic_curve_passes_through_its_samples() {
+        let n = 40;
+        let samples: Vec<Vec<f64>> = (0..n).map(|i| {
+            let p = std::f64::consts::TAU * i as f64 / n as f64;
+            vec![p.sin() + 0.3 * (3. * p).cos(), if i % 10 < 5 { 1. } else { -1. }]
+        }).collect();
+        let curve = Trajectory::new(Trajectory::periodic_through(1.3, &samples).unwrap()).unwrap();
+        for (i, s) in samples.iter().enumerate() {
+            let v = curve.sample(1.3 * i as f64 / n as f64).unwrap().values;
+            assert!((v[0] - s[0]).abs() < 1e-12 && (v[1] - s[1]).abs() < 1e-12, "knot {i}: {v:?} vs {s:?}");
+        }
+        assert!(Trajectory::periodic_through(1., &samples[..3]).is_err());
+    }
     #[test]
     fn periodic_support_covers_value_and_two_derivatives_across_wraps() {
         for n in [8, 16] {

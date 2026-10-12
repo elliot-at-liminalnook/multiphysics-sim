@@ -11,7 +11,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use sim_domain_control::{
     gait_script::{GaitScript, NominalLeg, name_legs},
-    maneuver_script::ManeuverScript,
+    maneuver_script::{DriveSet, ManeuverScript},
     motion_parameters::Values,
     pose_script::{PoseScript, joint_refs},
     trajectory::Trajectory,
@@ -579,6 +579,146 @@ impl Study {
         finish(report)
     }
 
+    /// Trace each of a drive set's steady commands through the steered gait
+    /// and the study's CAD model (kinematics only, as [`Self::check_maneuver`])
+    /// and keep one settled cycle of each: every variant starts at gait time 0
+    /// and keeps samples at the same gait times, so a robot can switch between
+    /// them at matching phase. Writes `out/<set>-<hash>/` with `drive-set.json`
+    /// (the variants, keys and commands), `report.yaml`, and per variant a
+    /// playable `<name>/compiled.json` (a periodic curve through the samples)
+    /// with the study's reference governor beside it (`spec-identity.json`).
+    pub fn drive_set(&self, gait: &GaitScript, set: &DriveSet, file: &Path, out: &Path) -> R<DriveSetReport> {
+        let canonical = serde_json::to_string(&(gait, set)).map_err(|e| e.to_string())?;
+        let key = blake3::hash(format!("{}|drive|{canonical}", self.id).as_bytes()).to_hex().to_string();
+        let stem = file.file_stem().and_then(|s| s.to_str()).unwrap_or("drive");
+        let label = if set.name.is_empty() { stem } else { &set.name };
+        let slug: String = label.chars().map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '-' }).collect();
+        let dir = out.join(format!("{slug}-{}", &key[..8]));
+        fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+        let mut report = DriveSetReport {
+            kind: "drive_set".into(), set: label.into(), gait: gait.name.clone(), file: file.display().to_string(),
+            status: "invalid".into(), summary: String::new(), reasons: vec![], period_s: 0., samples_per_cycle: 0,
+            gait_overlap_mm: 0., variants: vec![], results_directory: dir.display().to_string(),
+        };
+        let finish = |report: DriveSetReport| -> R<DriveSetReport> {
+            fs::write(dir.join("report.yaml"), serde_norway::to_string(&report).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+            Ok(report)
+        };
+        let prepared = (|| {
+            let motion = gait.motion(&self.legs, self.direction())?;
+            let forward = gait.cycle.travel_direction(self.direction())?;
+            let steering = set.steering(forward[1].atan2(forward[0]))?;
+            Ok::<_, String>((motion, steering))
+        })();
+        let (motion, steering) = match prepared {
+            Ok(v) => v,
+            Err(e) => {
+                report.summary = format!("Not traced: {e}");
+                report.reasons = vec![e];
+                return finish(report);
+            }
+        };
+        // Playback runs the gait through the governor its simulation used.
+        let governor = {
+            let (recipe, values) = self.with_script(gait)?;
+            let prepared = recipe.prepare(&values)?;
+            let paired = exploration::Recipe { version: 1, detailed: prepared.spec, profile: self.config.profile.clone() }.prepare()?;
+            paired.detailed.scene.controller.as_ref().map(|c| c.parameters["reference_governor"].clone())
+        };
+        let recipe = &self.config.recipe;
+        let coordinates = &recipe.compiler.robot.independent_coordinates;
+        let mut session = crate::session::Session::new(recipe.planning_scene.clone(), 0)?;
+        session.robot.art.contact_on = false;
+        let seed = session.robot.generalized();
+        let planner = crate::contact_planning::ContactPlanner::new(&session.robot.art, &seed, &recipe.markers, recipe.compiler.robot.clone())?;
+        let period = motion.period_s;
+        let n = (period / 0.01).round().max(16.) as usize;
+        let dt = period / n as f64;
+        let settle = set.settle_cycles as usize;
+        report.period_s = period;
+        report.samples_per_cycle = n;
+        let deepest = |o: &[f64]| o.iter().copied().fold(0., f64::max);
+        let native = sim_domain_control::contact_phase::steered::native_twist(&motion, &steering);
+        let baseline = planner.trace_steered(motion.clone(), steering.clone(), 0., native, |_| native, 2. * period, dt)?;
+        report.gait_overlap_mm = 1e3 * deepest(&baseline.internal_overlap_m);
+        let tolerance = recipe.compiler.robot.penetration_tolerance_m.max(deepest(&baseline.internal_overlap_m));
+        // A kept cycle must close on itself and have stopped changing.
+        const CLOSURE_RAD: f64 = 0.5 * std::f64::consts::PI / 180.;
+        let mut manifest = vec![];
+        for v in &set.variants {
+            let twist = v.twist();
+            let mut line = DriveVariantReport {
+                name: v.name.clone(), keys: v.chord(), forward_m_s: v.forward_m_s, lateral_m_s: v.lateral_m_s, yaw_deg_s: v.yaw_deg_s,
+                status: "blocked".into(), reasons: vec![], closure_deg: 0., settle_change_deg: 0., overlap_mm: 0., joints: vec![], compiled_gait: None,
+            };
+            let trace = planner.trace_steered(motion.clone(), steering.clone(), 0., twist, |_| twist, (settle + 1) as f64 * period + 0.5 * dt, dt)?;
+            if let Some(e) = &trace.failure {
+                line.reasons.push(format!("stopped after {:.2} s: {e}", trace.times_s.last().copied().unwrap_or(0.)));
+            }
+            if trace.coordinates.len() < (settle + 1) * n + 1 {
+                line.reasons.push(format!("only {} of {} samples placed", trace.coordinates.len(), (settle + 1) * n + 1));
+                report.variants.push(line);
+                continue;
+            }
+            let c = &trace.coordinates;
+            let start = settle * n;
+            let gap = |a: &[f64], b: &[f64]| a.iter().zip(b).fold(0f64, |m, (x, y)| m.max((x - y).abs()));
+            let closure = gap(&c[start], &c[start + n]);
+            let change = (0..n).fold(0f64, |m, k| m.max(gap(&c[start + k], &c[start - n + k])));
+            line.closure_deg = closure.to_degrees();
+            line.settle_change_deg = change.to_degrees();
+            if closure > CLOSURE_RAD || change > CLOSURE_RAD {
+                line.reasons.push(format!("not periodic after {settle} cycles: the kept cycle closes within {:.2} deg and differs from the one before by {:.2} deg (limit {:.1} deg)", line.closure_deg, line.settle_change_deg, CLOSURE_RAD.to_degrees()));
+            }
+            let kept: Vec<Vec<f64>> = c[start..start + n].to_vec();
+            line.overlap_mm = 1e3 * deepest(&trace.internal_overlap_m[start..start + n]);
+            if line.overlap_mm * 1e-3 > tolerance {
+                line.reasons.push(format!("internal link overlap {:.3} mm, beyond the planner's {:.3} mm and the gait's own {:.3} mm", line.overlap_mm, recipe.compiler.robot.penetration_tolerance_m * 1e3, report.gait_overlap_mm));
+            }
+            let config = Trajectory::periodic_through(period, &kept)?;
+            let peaks = Trajectory::new(config.clone())?.maximum_absolute_rates()?;
+            let at = |k: usize| format!("{} at {:.0}% of the cycle", v.name, 100. * k as f64 / n as f64);
+            let bounded: Vec<_> = kept.iter().enumerate().map(|(k, q)| (at(k), q.clone())).collect();
+            let cad: Vec<_> = kept.iter().enumerate().step_by(5).map(|(k, q)| (at(k), q.clone())).collect();
+            let (reasons, joints) = self.joint_checks(&bounded, &peaks, "lower this variant's command", &cad)?;
+            line.reasons.extend(reasons);
+            line.joints = joints;
+            let vdir = dir.join(&v.name);
+            fs::create_dir_all(&vdir).map_err(|e| e.to_string())?;
+            let playable = serde_json::json!({
+                "kind": "drive_cycle", "name": v.name, "trajectory": config, "period_s": period,
+                "recipe": {"independent_coordinates": coordinates}, "nominal_speed_m_s": v.forward_m_s,
+                "drive": {"set": label, "variant": v.name, "keys": v.chord(), "twist": twist, "phase": "sample k is gait time k/n of the period, shared by every variant of the set"},
+                "scope": "Steered gait cycle placed through the study's CAD model: kinematics only (IK, command bounds, motor speed, CAD limits, overlap); no loads, contact or balance.",
+            });
+            fs::write(vdir.join("compiled.json"), serde_json::to_vec(&playable).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+            fs::write(vdir.join("spec-identity.json"), serde_json::to_vec(&serde_json::json!({"reference_governor": governor})).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+            if line.reasons.is_empty() {
+                line.status = "ready".into();
+            }
+            let compiled = vdir.join("compiled.json").display().to_string();
+            line.compiled_gait = Some(compiled.clone());
+            manifest.push(serde_json::json!({"name": v.name, "keys": v.chord(), "twist": twist, "forward_m_s": v.forward_m_s, "lateral_m_s": v.lateral_m_s, "yaw_deg_s": v.yaw_deg_s, "compiled": compiled, "status": line.status}));
+            report.variants.push(line);
+        }
+        fs::write(dir.join("drive-set.json"), serde_json::to_vec_pretty(&serde_json::json!({
+            "kind": "drive_set", "set": label, "gait": gait.name, "file": file.display().to_string(), "period_s": period, "samples_per_cycle": n,
+            "drive_set": set, "variants": manifest,
+        })).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+        let blocked: Vec<&DriveVariantReport> = report.variants.iter().filter(|v| v.status != "ready").collect();
+        report.reasons = blocked.iter().map(|v| format!("{}: {}", v.name, v.reasons.join("; "))).collect();
+        let fastest = report.variants.iter().flat_map(|v| v.joints.first().map(|j| (v.name.clone(), j.joint.clone(), j.percent_of_limit.unwrap_or(0.)))).max_by(|a, b| a.2.total_cmp(&b.2));
+        let top = fastest.map(|(v, j, p)| format!(" Fastest: {j} at {p:.0}% of motor speed ({v}).")).unwrap_or_default();
+        if blocked.is_empty() {
+            report.status = "ready".into();
+            report.summary = format!("Ready (kinematics only): {} variants on a {:.3} s cycle.{top}", report.variants.len(), period);
+        } else {
+            report.status = "blocked".into();
+            report.summary = format!("Blocked: {} of {} variants. {}", blocked.len(), report.variants.len(), report.reasons.join(" | "));
+        }
+        finish(report)
+    }
+
     /// A `compare_gait_search` config that searches the file's `tune` ranges
     /// from the file's values, with the study's settings. Controller values
     /// not being tuned become fixed controller parameters. Its reduced model
@@ -649,6 +789,47 @@ pub struct ManeuverReport {
     pub maneuver_overlap_mm: f64,
     pub gait_overlap_mm: f64,
     pub results_directory: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DriveSetReport {
+    pub kind: String,
+    pub set: String,
+    pub gait: String,
+    pub file: String,
+    /// ready (every variant passed) | blocked | invalid (file problem).
+    pub status: String,
+    pub summary: String,
+    pub reasons: Vec<String>,
+    pub period_s: f64,
+    pub samples_per_cycle: usize,
+    /// The gait's own straight walk through the same placement (mm).
+    pub gait_overlap_mm: f64,
+    pub variants: Vec<DriveVariantReport>,
+    pub results_directory: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DriveVariantReport {
+    pub name: String,
+    pub keys: String,
+    pub forward_m_s: f64,
+    pub lateral_m_s: f64,
+    pub yaw_deg_s: f64,
+    pub status: String,
+    pub reasons: Vec<String>,
+    /// How far the kept cycle's end is from its start, and from the cycle before it.
+    pub closure_deg: f64,
+    pub settle_change_deg: f64,
+    pub overlap_mm: f64,
+    pub joints: Vec<JointLine>,
+    pub compiled_gait: Option<String>,
+}
+
+/// Parse a drive set (YAML or JSON).
+pub fn read_drive_set(path: &Path) -> R<DriveSet> {
+    let text = fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    serde_norway::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))
 }
 
 /// Parse a maneuver file (YAML or JSON).

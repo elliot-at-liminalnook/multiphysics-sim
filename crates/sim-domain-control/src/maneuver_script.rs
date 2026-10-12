@@ -133,6 +133,118 @@ impl ManeuverScript {
     }
 }
 
+/// Steady commands a robot is driven between (keyboard driving on the
+/// robot link): each variant is one held command, traced into one gait cycle
+/// on a shared clock so the robot can switch between them at matching phase.
+/// Exactly one variant has no keys: stepping in place, where releasing every
+/// key goes before stopping.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DriveSet {
+    pub version: u32,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub name: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub notes: String,
+    pub limits: Limits,
+    /// Spacing of the planned body path.
+    #[serde(default = "plan_step", skip_serializing_if = "is_plan_step")]
+    pub plan_step_s: f64,
+    /// Whole gait cycles held at each command before the cycle that is kept.
+    #[serde(default = "settle_cycles")]
+    pub settle_cycles: u32,
+    pub variants: Vec<DriveVariant>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DriveVariant {
+    pub name: String,
+    /// The held keys that select it, from w a s d ("" for stepping in place).
+    #[serde(default)]
+    pub keys: String,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub forward_m_s: f64,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub lateral_m_s: f64,
+    /// Counterclockwise seen from above.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub yaw_deg_s: f64,
+}
+
+fn settle_cycles() -> u32 {
+    4
+}
+
+impl DriveVariant {
+    /// Forward, lateral (m/s), yaw rate (rad/s).
+    pub fn twist(&self) -> [f64; 3] {
+        [self.forward_m_s, self.lateral_m_s, self.yaw_deg_s.to_radians()]
+    }
+    /// The keys in w a s d order, so "aw" and "wa" are one chord.
+    pub fn chord(&self) -> String {
+        "wasd".chars().filter(|c| self.keys.contains(*c)).collect()
+    }
+}
+
+impl DriveSet {
+    /// Check the file; errors name the path.
+    pub fn validate(&self) -> Result<(), String> {
+        if self.version != VERSION {
+            return Err(format!("drive set version {} is not supported (expected {VERSION})", self.version));
+        }
+        // The limits and plan step mean what they mean in a maneuver.
+        ManeuverScript { version: VERSION, name: String::new(), notes: String::new(), limits: self.limits.clone(), start_phase: 0., plan_step_s: self.plan_step_s, commands: vec![Command::default()], duration_s: 1. }.validate()?;
+        if self.settle_cycles == 0 || self.settle_cycles > 20 {
+            return Err("settle_cycles must be 1 to 20".into());
+        }
+        if self.variants.is_empty() {
+            return Err("variants must not be empty".into());
+        }
+        let l = &self.limits;
+        let mut chords = Vec::new();
+        for (i, v) in self.variants.iter().enumerate() {
+            if v.name.is_empty() || !v.name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') {
+                return Err(format!("variants[{i}].name must be letters, digits, - or _"));
+            }
+            if self.variants[..i].iter().any(|o| o.name == v.name) {
+                return Err(format!("variants[{i}].name \"{}\" is used twice", v.name));
+            }
+            if let Some(c) = v.keys.chars().find(|c| !"wasd".contains(*c)) {
+                return Err(format!("variants[{i}].keys: '{c}' is not one of w a s d"));
+            }
+            let chord = v.chord();
+            if chords.contains(&chord) {
+                return Err(format!("variants[{i}].keys \"{}\" selects the same keys as an earlier variant", v.keys));
+            }
+            chords.push(chord);
+            for (name, x, bound) in [("forward_m_s", v.forward_m_s, l.forward_m_s), ("lateral_m_s", v.lateral_m_s, l.lateral_m_s), ("yaw_deg_s", v.yaw_deg_s, l.yaw_deg_s)] {
+                if !x.is_finite() || x.abs() > bound {
+                    return Err(format!("variants[{i}].{name} = {x} exceeds limits.{name} = {bound}"));
+                }
+            }
+        }
+        match self.variants.iter().position(|v| v.keys.is_empty()) {
+            None => return Err("variants: one must have no keys (stepping in place, before stopping)".into()),
+            Some(i) if self.variants[i].twist() != [0.; 3] => return Err(format!("variants[{i}]: the variant with no keys steps in place, so its commands must be zero")),
+            _ => {}
+        }
+        Ok(())
+    }
+
+    /// Steering for a gait whose walking direction is `forward_axis_rad`.
+    pub fn steering(&self, forward_axis_rad: f64) -> Result<SteeringConfig, String> {
+        self.validate()?;
+        let l = &self.limits;
+        Ok(SteeringConfig {
+            maximum_twist: [l.forward_m_s, l.lateral_m_s, l.yaw_deg_s.to_radians()],
+            maximum_twist_rate: [l.forward_m_s2, l.lateral_m_s2, l.yaw_deg_s2.to_radians()],
+            plan_step_s: self.plan_step_s,
+            forward_axis_rad,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -154,6 +266,34 @@ mod tests {
         assert_eq!(m.command_at(5.99), [0.19, 0., 0.]);
         assert_eq!(m.command_at(6.), [0.1, 0., 10f64.to_radians()]);
         assert_eq!(m.command_at(100.), [0.; 3]);
+    }
+    fn wasd() -> DriveSet {
+        serde_json::from_value(serde_json::json!({
+            "version": 1, "name": "wasd",
+            "limits": {"forward_m_s": 0.25, "lateral_m_s": 0.2, "yaw_deg_s": 20, "forward_m_s2": 0.15, "lateral_m_s2": 0.15, "yaw_deg_s2": 20},
+            "variants": [{"name": "step", "keys": ""}, {"name": "forward", "keys": "w", "forward_m_s": 0.12}, {"name": "arc-left", "keys": "aw", "forward_m_s": 0.1, "yaw_deg_s": 10}]
+        }))
+        .unwrap()
+    }
+    #[test]
+    fn a_drive_set_needs_one_way_to_step_in_place_and_distinct_chords() {
+        let d = wasd();
+        d.validate().unwrap();
+        assert_eq!(d.settle_cycles, 4);
+        assert_eq!(d.variants[2].chord(), "wa");
+        assert_eq!(d.variants[2].twist(), [0.1, 0., 10f64.to_radians()]);
+        let err = |f: fn(&mut DriveSet)| {
+            let mut s = d.clone();
+            f(&mut s);
+            s.validate().unwrap_err()
+        };
+        assert!(err(|s| s.variants[0].keys = "x".into()).contains("variants[0].keys"));
+        assert!(err(|s| s.variants[1].keys = "".into()).contains("variants[1].keys"));
+        assert!(err(|s| s.variants[2].keys = "w".into()).contains("variants[2].keys"));
+        assert!(err(|s| s.variants[0].forward_m_s = 0.1).contains("variants[0]"));
+        assert!(err(|s| { s.variants.remove(0); }).contains("no keys"));
+        assert!(err(|s| s.variants[1].yaw_deg_s = 30.).contains("variants[1].yaw_deg_s"));
+        assert!(err(|s| s.variants[1].name = "forward step".into()).contains("variants[1].name"));
     }
     #[test]
     fn mistakes_name_the_path() {

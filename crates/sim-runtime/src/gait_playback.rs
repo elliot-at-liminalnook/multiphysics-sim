@@ -130,6 +130,17 @@ impl GovernedGait {
         self.configs[i] = Some(c);
         Ok(())
     }
+    /// Govern joint `i` at exactly `speed` (rad/s) and `acceleration` (rad/s²),
+    /// above the gait's own governor if those are higher (its period and
+    /// response rate kept): playback at a motor's measured capability rather
+    /// than at the limits the gait was simulated with.
+    pub fn set_limits(&mut self, i: usize, speed: f64, acceleration: f64) -> R<()> {
+        let base = self.configs[i].clone().unwrap_or(GovernorConfig { period_s: 0.02, maximum_speed_rad_s: f64::INFINITY, maximum_acceleration_rad_s2: f64::INFINITY, response_rate_per_s: 10. });
+        let c = GovernorConfig { maximum_speed_rad_s: speed, maximum_acceleration_rad_s2: acceleration, ..base };
+        c.validate()?;
+        self.configs[i] = Some(c);
+        Ok(())
+    }
     pub fn config(&self, i: usize) -> Option<&GovernorConfig> {
         self.configs[i].as_ref()
     }

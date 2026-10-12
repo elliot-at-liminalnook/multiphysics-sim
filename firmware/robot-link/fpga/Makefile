@@ -27,7 +27,24 @@ impl/bridge_calibration_esp32.json: $(SRC)
 	@mkdir -p impl
 	yosys -q -p "read_verilog $(SRC); chparam -set RELEASE_TX 1 -set SAFETY_ENABLE 1 -set SAFETY_FIRST_ID 1 -set SAFETY_COUNT 3 -set CALIBRATION 1 -set SAFETY_FEEDBACK_TIMEOUT 20000000 -set SAFETY_COMMAND_TIMEOUT 30000000 top; synth_gowin -nolutram -top top -json $@"
 calibration: impl/bridge_calibration_esp32.fs
+# The whole robot's image (robot profile 9): the calibration profile for IDs
+# 1-16 (taught windows from the ESP32, 400/600 ms leases), the guarded
+# re-addressing permit for a replacement servo, and the ESP32 link at 1 Mbaud
+# (HOST_CLKS 50: 50 MHz / 1 Mbaud, exact). Which ID is which motor is the
+# ESP32's configuration; nothing about the robot's layout is in this image.
+impl/bridge_robot_esp32.fs: impl/bridge_robot_esp32_pnr.json
+	gowin_pack -d $(FAMILY) -o $@ $(PACKFLAGS) $<
+# Placement seed 2: 16 supervised axes leave little timing margin at 50 MHz,
+# and the result depends on the seed (2026-10-09: seeds 2/5/7 reached
+# 53.2/52.4/52.9 MHz, seed 3 and the default 45-48 MHz). nextpnr exits
+# nonzero when timing fails, so a failing build never produces an image.
+impl/bridge_robot_esp32_pnr.json: impl/bridge_robot_esp32.json bridge_safety_esp32.cst
+	nextpnr-himbaechel --json $< --write $@ --device "$(DEVICE)" --vopt cst=bridge_safety_esp32.cst --vopt $(SSPI) --freq $(FREQ) --seed 2
+impl/bridge_robot_esp32.json: $(SRC)
+	@mkdir -p impl
+	yosys -q -p "read_verilog $(SRC); chparam -set RELEASE_TX 1 -set SAFETY_ENABLE 1 -set SAFETY_FIRST_ID 1 -set SAFETY_COUNT 16 -set CALIBRATION 1 -set SAFETY_READDRESS 1 -set HOST_CLKS 50 -set SAFETY_FEEDBACK_TIMEOUT 20000000 -set SAFETY_COMMAND_TIMEOUT 30000000 top; synth_gowin -nolutram -top top -json $@"
+robot: impl/bridge_robot_esp32.fs
 
 clean:
 	rm -rf impl
-.PHONY: clean calibration
+.PHONY: clean calibration robot

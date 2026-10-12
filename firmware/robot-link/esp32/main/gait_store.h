@@ -20,6 +20,4 @@ esp_err_t gait_store_upload(httpd_req_t *req);
 esp_err_t gait_store_send_json(httpd_req_t *req);
 /* Copy the plan at [offset, offset + length) of the plans section into buf. */
 bool gait_store_read_plan(uint32_t offset, uint32_t length, uint8_t *buf, size_t cap);
-/* Keep the poses taught on the page (call with the engine's lock held). */
-esp_err_t gait_store_save_travel(void);
 #endif

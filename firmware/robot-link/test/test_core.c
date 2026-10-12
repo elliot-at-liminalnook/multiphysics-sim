@@ -84,10 +84,10 @@ static void test_arm_hold_release(void)
     /* Reverse. */
     run(&w, 200, true, 10, -40);
     CHECK(s->pwm_raw == (40 | 1 << HX_PWM_DIRECTION_BIT), "signed drive uses the direction bit: %04x", s->pwm_raw);
-    /* Release: zero written at once, and no further drive. */
+    /* Release: the drive ramps down at the slew rate (one write at this duty), then zero and nothing more. */
     rl_release(&w.rl);
-    run(&w, 10, true, 0, 0);
-    CHECK(s->pwm_raw == 0, "zero written on release (%u)", s->pwm_raw);
+    run(&w, 80, true, 0, 0);
+    CHECK(s->pwm_raw == 0, "zero written after the release ramp (%u)", s->pwm_raw);
     uint32_t writes = s->pwm_writes;
     run(&w, 300, true, 0, 0);
     CHECK(s->pwm_writes == writes, "nothing more after release");
@@ -104,9 +104,16 @@ static void test_hold_that_is_not_renewed_ends(void)
     run(&w, 300, true, 11, 60);
     fb_servo_t *s = &w.fb.servo[7];
     CHECK(s->pwm_raw == 60, "driving: %u", s->pwm_raw);
-    /* The page keeps the session alive but stops renewing the hold (a lost pointerup). */
-    run(&w, 400, true, 0, 0);
-    CHECK(s->pwm_raw == 0, "the hold timed out and the drive was zeroed: %u", s->pwm_raw);
+    /* A network gap: the page keeps the session but a renewal is 300 ms late. The motor coasts on. */
+    uint32_t before_gap = s->pwm_writes;
+    run(&w, 300, true, 0, 0);
+    CHECK(s->pwm_raw == 60 && s->pwm_writes > before_gap + 3, "coasting through the gap at the held drive: %u (%u writes)", s->pwm_raw, s->pwm_writes - before_gap);
+    CHECK(w.rl.jog_coasting && w.rl.jog_id == 11, "the engine says it is coasting");
+    run(&w, 200, true, 11, 60);
+    CHECK(s->pwm_raw == 60 && !w.rl.jog_coasting && w.rl.jog_gap_max_ms >= 300, "renewed: no step, the gap recorded (%u ms)", w.rl.jog_gap_max_ms);
+    /* The hold is never renewed again (a lost pointerup): after the coast it ramps to zero. */
+    run(&w, 600, true, 0, 0);
+    CHECK(s->pwm_raw == 0, "the hold lapsed and the drive was ramped to zero: %u", s->pwm_raw);
     CHECK(!w.fb.latched, "the FPGA stayed armed (the session is alive)");
 }
 
@@ -406,8 +413,14 @@ static void test_calibrated_arm_jogs_inside_the_taught_window(void)
     /* Up to the high end: the FPGA stops it there, and the engine says so. */
     hold_for(&w, 1, 300, 1000);
     float top = w.fb.servo[0].position_f;
-    CHECK(top >= 3329.f && top < 3329.f + 120.f, "jogged up to the window's end and held there: %.0f", top);
-    CHECK(!rl_hold(&w.rl, 1, 300, w.now) && strstr(w.rl.note, "window's end"), "outward refused at the edge: %s", w.rl.note);
+    CHECK(top >= 3329.f - 40.f && top < 3329.f + 20.f, "jogged up to the window's end, tapering, and stopped there: %.0f", top);
+    /* Held outward again: it creeps (tapered) to the edge and stops there, never past it; then it is refused. */
+    hold_for(&w, 1, 300, 600);
+    float edge = w.fb.servo[0].position_f;
+    CHECK(edge >= top - 1.f && edge < 3329.f + 20.f, "crept to the edge, no overshoot: %.0f (stopped first at %.0f)", edge, top);
+    hold_for(&w, 1, 300, 600);
+    CHECK(w.fb.servo[0].position_f < 3329.f + 20.f, "still not past it: %.0f", w.fb.servo[0].position_f);
+    CHECK(!rl_hold(&w.rl, 1, 300, w.now) && strstr(w.rl.note, "can only move back toward its lower pose"), "outward refused at the edge: %s", w.rl.note);
     hold_for(&w, 1, -300, 500);
     CHECK(w.fb.servo[0].position_f < top - 200.f, "back inward: %.0f", w.fb.servo[0].position_f);
     CHECK(!w.fb.latched, "nothing tripped (reason %u)", w.fb.reason);
@@ -475,6 +488,60 @@ static void test_poses_taught_on_the_page(void)
     CHECK(!rl_travel_changed(t) && t->hi == 3450, "promoted");
 }
 
+
+static void world_init_robot(world_t *w)
+{
+    memset(w, 0, sizeof *w);
+    rl_config_t cfg = rl_default_config();
+    cfg.first_id = 1;
+    cfg.present_mask = 0x7; /* the leg's three on the robot image */
+    rl_init(&w->rl, cfg, to_bridge, w);
+    rl_gait_set_log(&w->rl, w->log, RL_GAIT_LOG);
+    fb_init_robot(&w->fb, 0x7);
+}
+
+static void test_a_replacement_servo_is_readdressed_on_the_robot_profile(void)
+{
+    world_t w;
+    world_init_robot(&w);
+    fb_servo_t *spare = fb_add_spare(&w.fb, 20); /* a new motor with a factory ID outside the range */
+    run(&w, 700, true, 0, 0);
+    CHECK(w.rl.status_valid && w.rl.status.version == 9, "robot profile answers (version %u)", w.rl.status.version);
+    CHECK(!rl_readdress(&w.rl, 20, 2, w.now) || (run(&w, 600, true, 0, 0), !w.rl.readdress.ok && strstr(w.rl.readdress.result, "already answers")),
+          "an ID in use is refused: %s", w.rl.readdress.result);
+    CHECK(rl_readdress(&w.rl, 20, 4, w.now), "start: %s", w.rl.note);
+    run(&w, 800, true, 0, 0);
+    CHECK(!rl_readdress_active(&w.rl) && w.rl.readdress.ok && spare->id == 4 && spare->lock == 1, "re-addressed: %s (id %u, lock %u)", w.rl.readdress.result, spare->id, spare->lock);
+    CHECK(w.fb.latched && w.fb.armed == 0, "nothing armed throughout");
+    /* The permit is gone: another ID write is refused. */
+    uint32_t refused = w.fb.refused;
+    uint8_t q[] = {0x05, 9}, frame[HX_MAX_FRAME];
+    size_t n = hx_packet(frame, 4, HX_WRITE, q, 2);
+    fb_rx(&w.fb, frame, n);
+    CHECK(w.fb.refused == refused + 1 && spare->id == 4, "no ID write without a permit");
+    /* Not on the leg's calibration image. */
+    world_t c;
+    world_init_leg(&c);
+    run(&c, 700, true, 0, 0);
+    CHECK(!rl_readdress(&c.rl, 1, 9, c.now) && strstr(c.rl.note, "robot FPGA image"), "refused on profile 8: %s", c.rl.note);
+}
+
+static void test_the_present_set_and_health_limits_come_from_configuration(void)
+{
+    world_t w;
+    world_init_robot(&w);
+    fb_add_spare(&w.fb, 5);
+    run(&w, 700, true, 0, 0);
+    CHECK(!w.rl.servo[4].valid, "ID 5 is not polled until it is present");
+    rl_set_present(&w.rl, 0x17);
+    run(&w, 700, true, 0, 0);
+    CHECK(w.rl.servo[4].valid, "ID 5 polled once present");
+    rl_set_present(&w.rl, 0x7);
+    CHECK(!w.rl.servo[4].valid, "and forgotten when removed");
+    rl_config_t cfg = rl_default_config();
+    CHECK(cfg.temp_stop_c == 55 && cfg.volt_min_raw == 90 && cfg.volt_max_raw == 126, "commissioning limits by default");
+}
+
 static void test_gait_prepares_approaches_plays_and_stops(void)
 {
     world_t w;
@@ -518,6 +585,27 @@ static void test_gait_prepares_approaches_plays_and_stops(void)
     rl_gait_control(&w.rl, true, 0.5f);
     run_gait(&w, 1000, true);
     CHECK(fabsf(w.rl.gait.t - t0 - 0.5f) < 0.08f, "half speed: %.3f s in 1 s", w.rl.gait.t - t0);
+    /* Faster than simulated: the clock runs at the tempo, the governor still bounds every motor. */
+    rl_gait_control(&w.rl, true, 2.f);
+    float t1 = w.rl.gait.t;
+    uint32_t from = w.rl.gait.log_count;
+    run_gait(&w, 1000, true);
+    CHECK(fabsf(w.rl.gait.t - t1 - 2.f) < 0.15f, "double tempo: %.3f s in 1 s", w.rl.gait.t - t1);
+    /* Over windows of at least 150 ms: samples carry telemetry times, not goal times. */
+    float fastest[3] = {0};
+    for (uint32_t k = from; k < w.rl.gait.log_count && k < RL_GAIT_LOG; k++) {
+        const rl_gait_sample_t *s = &w.rl.gait.log[k];
+        for (uint32_t j = k + 1; j < w.rl.gait.log_count && j < RL_GAIT_LOG; j++) {
+            const rl_gait_sample_t *e = &w.rl.gait.log[j];
+            if (e->id != s->id || e->ms < s->ms + 150) continue;
+            fastest[s->id - 1] = fmaxf(fastest[s->id - 1], fabsf(e->command - s->command) / ((float)(e->ms - s->ms) / 1000.f));
+            break;
+        }
+    }
+    for (int a = 0; a < 3; a++)
+        CHECK(fastest[a] <= p.axis[a].max_speed_counts_s * 1.05f + 1.f, "motor %d's command within its governor speed at 2x: %.0f <= %.0f counts/s", a + 1, fastest[a], p.axis[a].max_speed_counts_s);
+    rl_gait_control(&w.rl, true, 9.f);
+    CHECK(w.rl.gait.speed_scale == RL_MAX_TEMPO, "tempo capped at %.1f", RL_MAX_TEMPO);
     /* STOP ends in a verified torque-off, and a verified stop keeps the turn. */
     rl_stop(&w.rl);
     run_gait(&w, 2000, true);
@@ -532,6 +620,60 @@ static void test_gait_prepares_approaches_plays_and_stops(void)
     CHECK(w.rl.gait.phase == RL_GAIT_PLAYING && w.fb.refused == 0, "playing again (%s, refused %u)", rl_gait_phase_name(w.rl.gait.phase), w.fb.refused);
     rl_stop(&w.rl);
     run_gait(&w, 2000, true);
+}
+
+/* Keyboard driving: two variants of one cycle, the second with the knee 40 counts further. */
+static void test_drive_blends_at_one_phase_and_stops_after_stepping_in_place(void)
+{
+    world_t w;
+    world_init_leg(&w);
+    rl_plan_t plans[2];
+    CHECK(load_fixture(&plans[0]), "fixture");
+    static uint8_t shifted[sizeof plan_bytes];
+    memcpy(shifted, plan_bytes, plan_len);
+    size_t at = (size_t)(plans[0].desired - plan_bytes);
+    for (int k = 0; k < plans[0].samples; k++) {
+        float v;
+        memcpy(&v, shifted + at + (size_t)k * plans[0].axes * 4, 4);
+        v += 40.f;
+        memcpy(shifted + at + (size_t)k * plans[0].axes * 4, &v, 4);
+    }
+    CHECK(rl_plan_parse(shifted, plan_len, &plans[1]), "shifted variant parses");
+    run_gait(&w, 700, true);
+    CHECK(rl_drive_load(&w.rl, plans, 2, 0, w.now), "drive loaded: %s", w.rl.note);
+    CHECK(confirm_worm(&w, WORM_AT), "worm confirmed: %s", w.rl.note);
+    CHECK(rl_gait_start(&w.rl, 1.f, w.now), "start: %s", w.rl.note);
+    run_gait(&w, 5000, true);
+    const rl_gait_t *g = &w.rl.gait;
+    CHECK(g->phase == RL_GAIT_PLAYING && g->drive_w[0] == 1.f, "stepping in place with no key held (%s)", g->result);
+    float t0 = g->t, period = g->plan.period_s;
+    /* Hold "w": renewed every 200 ms, as the page does. */
+    for (int k = 0; k < 10; k++) {
+        rl_drive_command(&w.rl, 1, w.now);
+        run_gait(&w, 200, true);
+    }
+    CHECK(g->drive_w[1] == 1.f && g->drive_w[0] == 0.f, "the held chord's variant took over: %.3f / %.3f", g->drive_w[0], g->drive_w[1]);
+    CHECK(fabsf(g->desired[0] - rl_plan_desired(&plans[1], 0, g->t)) < 0.01f, "the knee follows the variant at the same gait time");
+    CHECK(fabsf(g->t - t0 - 2.f) < 0.1f, "the clock kept running through the switch: %.3f s in 2 s", g->t - t0);
+    /* Released: back to stepping in place, then the clock stops at a cycle start, holding. */
+    run_gait(&w, (uint32_t)(1000.f * period * (0.5f + 2.f + 1.f)) + 1500, true);
+    CHECK(g->drive_paused && !g->playing && g->phase == RL_GAIT_PLAYING, "stopped after stepping in place (%s, playing %d)", w.rl.note, g->playing);
+    float cycles = g->t / period;
+    CHECK(fabsf(cycles - roundf(cycles)) < 1e-3f, "at a cycle start: %.4f cycles", cycles);
+    CHECK(w.fb.armed == 0x7 && w.fb.servo[0].torque, "holding with torque, motors armed");
+    float held = g->t;
+    run_gait(&w, 500, true);
+    CHECK(g->t == held, "the clock holds");
+    rl_drive_command(&w.rl, 1, w.now);
+    run_gait(&w, 300, true);
+    CHECK(g->playing && !g->drive_paused && g->t > held, "a key walks again");
+    CHECK(w.fb.refused == 0 && w.rl.refused == 0, "no write refused: bridge %u engine %u", w.fb.refused, w.rl.refused);
+    /* Variants that disagree are refused. */
+    rl_stop(&w.rl);
+    run_gait(&w, 2000, true);
+    plans[1].axis[0].window_hi += 1;
+    CHECK(!rl_drive_load(&w.rl, plans, 2, 0, w.now) && strstr(w.rl.note, "differently"), "a variant with another window is refused: %s", w.rl.note);
+    printf("  drive: switched at gait time %.2f s, stopped at cycle %.0f\n", t0, cycles);
 }
 
 static void test_gait_ends_when_the_worm_reading_is_missed(void)
@@ -625,7 +767,10 @@ int main(void)
     test_calibrated_arm_jogs_inside_the_taught_window();
     test_a_motor_outside_its_travel_is_armed_to_come_back_in();
     test_poses_taught_on_the_page();
+    test_a_replacement_servo_is_readdressed_on_the_robot_profile();
+    test_the_present_set_and_health_limits_come_from_configuration();
     test_gait_prepares_approaches_plays_and_stops();
+    test_drive_blends_at_one_phase_and_stops_after_stepping_in_place();
     test_gait_ends_when_the_worm_reading_is_missed();
     test_gait_ends_when_the_session_does();
     test_gait_refused_outside_the_window_and_on_the_bench_profile();

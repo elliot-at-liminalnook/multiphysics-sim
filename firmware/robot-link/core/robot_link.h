@@ -13,7 +13,9 @@
  *   - the operator's lease: heartbeats go to the FPGA only while a session
  *     says it is alive, so a closed page, a dropped Wi-Fi link or a crashed
  *     ESP32 all end in the FPGA's own 300 ms command timeout;
- *   - hold-to-move: a jog is driven only while it is being renewed, and is
+ *   - hold-to-move: a jog is driven only while it is being renewed (coasting
+ *     on the last renewal through a network gap of up to hold_timeout_ms, then
+ *     ramping down), slewed, tapered near the window's edge, and is
  *     written to zero the moment it is not.
  *
  * What it does not own: any safety promise. Temperature, voltage, current,
@@ -29,7 +31,7 @@ extern "C" {
 #include "gait.h"
 #include <stdbool.h>
 
-#define RL_MAX_SERVOS 9
+#define RL_MAX_SERVOS 16 /* the robot profile's IDs 1-16 */
 
 typedef struct {
     uint8_t  first_id;        /* the FPGA profile's first ID (bit 0 of its masks) */
@@ -42,15 +44,33 @@ typedef struct {
     uint32_t slow_poll_ms;    /* the others */
     uint32_t status_ms;
     uint32_t jog_ms;          /* PWM rewrite period while held */
-    uint32_t hold_timeout_ms; /* a jog not renewed for this long ends */
+    uint32_t hold_timeout_ms; /* a held jog not renewed for this long coasts no further: it ramps to zero */
+    float    jog_slew_per_s;  /* how fast the drive may change (duty units per second), up and down */
+    int32_t  jog_slow_counts; /* the drive tapers within this distance of the armed window's edge */
+    uint32_t jog_predict_ms;  /* the edge check looks this far ahead at the measured speed (at most) */
     uint32_t session_timeout_ms;
     uint32_t gait_period_ms;  /* goal period while a gait plays (the panel's sweep period) */
     uint32_t gait_approach_ms;/* the first pose must be reached within this */
     float    gait_tolerance_counts; /* a motor this close to its goal has arrived */
+    /* Host-side health limits while a gait plays: the panel's commissioning
+     * limits by default, which the robot configuration may only tighten (the
+     * FPGA's own trips, 60 C and 9.0-12.6 V, hold whatever these are). */
+    uint8_t  temp_stop_c;     /* stop at or above */
+    uint8_t  volt_min_raw, volt_max_raw; /* 0.1 V */
+    /* Keyboard driving (rl_drive_load): how fast a held chord's variant takes
+     * over, how long a chord holds without being renewed, and how many cycles
+     * of stepping in place come before the clock stops. */
+    float    drive_blend_cycles;
+    uint32_t drive_timeout_ms;
+    float    drive_idle_cycles;
 } rl_config_t;
 
 /* ---- gait playback on the leg (the FPGA's calibration profile) ----------- */
 enum { RL_GAIT_IDLE, RL_GAIT_PREPARE, RL_GAIT_APPROACH, RL_GAIT_PLAYING, RL_GAIT_STOPPING };
+#define RL_DRIVE_MAX 12
+/* The fastest a gait's clock may run (gait_pack::MAX_TEMPO): faster than 1 is faster
+ * than it was simulated; the reference governor bounds every motor whatever the tempo. */
+#define RL_MAX_TEMPO 4.f
 typedef struct {
     uint32_t ms;
     float    gait_t, command, desired;
@@ -83,6 +103,18 @@ typedef struct {
     uint32_t log_count;          /* total samples; the log keeps the last log_cap */
     rl_gait_sample_t *log;       /* the caller's buffer (none: nothing is logged) */
     uint32_t log_cap;
+    /* Keyboard driving: variants of one cycle (one per held chord), played as
+     * a weighted sum at one gait time so a switch keeps phase; the weights move
+     * toward the held chord's variant, and the governor bounds the result as it
+     * bounds any plan. `plan` is the stepping-in-place variant. */
+    bool     drive;
+    uint8_t  drive_n, drive_target, drive_step;
+    rl_plan_t drive_plan[RL_DRIVE_MAX];
+    float    drive_w[RL_DRIVE_MAX];
+    uint32_t drive_cmd_ms;       /* the last chord command; stale ones step in place */
+    float    drive_settled_t;    /* gait time stepping in place was fully reached, or -1 */
+    float    drive_stop_at;      /* the cycle start the clock stops at, or 0 */
+    bool     drive_paused;       /* stopped there, holding; a chord resumes */
 } rl_gait_t;
 
 rl_config_t rl_default_config(void);
@@ -159,8 +191,12 @@ typedef struct {
     bool     stop_req;
     uint16_t arm_req, disarm_req;
     uint8_t  jog_id;       /* 0: none */
-    int      jog_duty;
-    uint32_t jog_until_ms;
+    int      jog_duty;     /* the held drive (the operator's), before tapering and slewing */
+    uint32_t jog_until_ms; /* the hold coasts at jog_duty until then (network gaps), then ramps down */
+    float    jog_out;      /* the drive written: slewed toward the target, tapered near the edge */
+    uint32_t jog_out_ms, jog_hold_ms;
+    uint32_t jog_gap_max_ms; /* the longest wait for a renewal during this hold */
+    bool     jog_coasting;   /* renewals are late: driving on the last one */
     bool     zero_pending[RL_MAX_SERVOS];
     bool     session;
     uint32_t session_until_ms;
@@ -187,6 +223,16 @@ typedef struct {
         uint32_t clock_ms;
     } arm_job;
     bool     travel_dirty;       /* a taught pose changed: the firmware saves it */
+    /* Re-addressing a servo (rl_readdress), and the raw transactions it uses. */
+    struct {
+        bool     active;
+        uint8_t  from, to;
+        int      step;
+        bool     waiting, done, ok;
+        bool     consumed;       /* the firmware has acted on the result */
+        char     result[96];
+    } readdress;
+    uint8_t  raw_id[2];          /* a raw transaction's reply may come from either */
 
     rl_gait_t gait;
 } rl_t;
@@ -212,6 +258,15 @@ void rl_release(rl_t *rl);
 
 /* While paused the engine sends nothing (a raw tunnel has the UART); bytes received are still parsed. */
 void rl_pause(rl_t *rl, bool paused);
+/* Which servos the engine polls and may drive (bit 0 = first_id); a servo leaving the set is forgotten. */
+void rl_set_present(rl_t *rl, uint16_t mask);
+
+/* Give servo `from` the ID `to` (a replacement motor), on the robot profile (9) only:
+ * nothing armed, `to` silent, `from` answering; the FPGA's re-addressing permit, the
+ * EEPROM unlock, the ID write, the lock on the new ID, then `to` must answer and
+ * `from` must not. Neither ID needs to be in the present set. */
+bool rl_readdress(rl_t *rl, uint8_t from, uint8_t to, uint32_t now_ms);
+bool rl_readdress_active(const rl_t *rl);
 
 /* Gait playback. Load a parsed plan (it points into the caller's buffer) while idle;
  * start with a live owner session; control play/pause and speed; stop. A start
@@ -224,6 +279,12 @@ void rl_pause(rl_t *rl, bool paused);
 void rl_gait_set_log(rl_t *rl, rl_gait_sample_t *buf, uint32_t cap);
 bool rl_gait_load(rl_t *rl, const rl_plan_t *plan, uint32_t now_ms);
 bool rl_gait_start(rl_t *rl, float speed_scale, uint32_t now_ms);
+/* Load drive variants (each kept by the caller while used): one cycle, one set of
+ * motors and windows; `step` is the variant that steps in place. Start it with rl_gait_start. */
+bool rl_drive_load(rl_t *rl, const rl_plan_t *plans, int n, int step, uint32_t now_ms);
+/* The held chord's variant (renewed while held; -1 or the step variant when none). A chord
+ * after the clock stopped resumes it. */
+void rl_drive_command(rl_t *rl, int variant, uint32_t now_ms);
 void rl_gait_control(rl_t *rl, bool playing, float speed_scale);
 void rl_gait_stop(rl_t *rl, const char *why);
 bool rl_gait_active(const rl_t *rl);
@@ -235,6 +296,12 @@ const char *rl_gait_phase_name(int phase);
  * turn for a multi-turn motor); none of it while a gait is active. */
 void rl_travel_set_pack(rl_t *rl, uint8_t id, int32_t lo, int32_t hi, bool multi_turn, bool reversed, int32_t margin);
 bool rl_travel_restore(rl_t *rl, uint8_t id, int32_t lo, int32_t hi, bool open_lo, bool open_hi);
+/* The robot configuration's travel for a motor (its taught poses, in counts with
+ * turns): known from now on; the pack's travel, if any, is kept for comparison.
+ * A motor with no pack travel compares as changed, so gaits refuse it. */
+void rl_travel_configure(rl_t *rl, uint8_t id, int32_t lo, int32_t hi, bool open_lo, bool open_hi, bool multi_turn, bool reversed, int32_t margin);
+/* Forget a motor's taught travel (it is no longer configured, or is a new motor). */
+void rl_travel_forget(rl_t *rl, uint8_t id);
 bool rl_travel_teach(rl_t *rl, uint8_t id, int end, uint32_t now_ms);
 bool rl_travel_open(rl_t *rl, uint8_t id, int end, uint32_t now_ms);
 bool rl_travel_revert(rl_t *rl, uint8_t id, uint32_t now_ms);

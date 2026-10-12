@@ -1,0 +1,21 @@
+version: 1
+name: wasd
+notes: >-
+  Keyboard driving on the robot link (the ESP32 page). Hold W/S to walk
+  forward/back, A/D to turn in place, W+A and so on to arc. Releasing every
+  key steps in place, then stops at the end of a cycle. Each variant is one
+  steady command traced into one gait cycle on the gait's own clock, so the
+  ESP32 blends between them at matching phase. Commands are below the
+  gait's 0.200 m/s native walk, which already reaches 99% of motor speed on
+  one joint at 12.5 V; the leg runs at about 11 V.
+limits: {forward_m_s: 0.3, lateral_m_s: 0.25, yaw_deg_s: 25, forward_m_s2: 0.15, lateral_m_s2: 0.15, yaw_deg_s2: 20}
+variants:
+  - {name: step-in-place, keys: ""}
+  - {name: forward, keys: w, forward_m_s: 0.12}
+  - {name: backward, keys: s, forward_m_s: -0.10}
+  - {name: turn-left, keys: a, yaw_deg_s: 20}
+  - {name: turn-right, keys: d, yaw_deg_s: -20}
+  - {name: arc-left, keys: wa, forward_m_s: 0.10, yaw_deg_s: 12}
+  - {name: arc-right, keys: wd, forward_m_s: 0.10, yaw_deg_s: -12}
+  - {name: back-left, keys: sa, forward_m_s: -0.08, yaw_deg_s: 12}
+  - {name: back-right, keys: sd, forward_m_s: -0.08, yaw_deg_s: -12}

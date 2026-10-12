@@ -30,9 +30,14 @@ against the board's silkscreen first (see "Before it meets hardware").
   that host. Its two pins replace the dock's USB bridge; the RTL is
   unchanged (`fpga/`).
 - **The ESP32 drives nothing that is not being held.** The page renews a
-  session every 300 ms and a jog every 80 ms; the firmware zeroes a drive
-  250 ms after the last hold and sends STOP a second after the last sign of
-  the page. Heartbeats to the FPGA go only while a session is alive, so a
+  session every 300 ms and a jog every 80 ms. If a renewal is late (Wi-Fi
+  jitter), the firmware carries the drive on unchanged for up to 400 ms after
+  the last hold, then ramps it down. It sends STOP a second after the last
+  sign of the page. A jog is slewed (4000 duty units per second, up and down)
+  and tapers within 150 counts of its armed window's edge. The engine stops it
+  at the edge from the reading carried forward at the measured speed (up to
+  100 ms), before the FPGA would refuse the next write. STOP, a refusal or a
+  lost session still zero it at once. Heartbeats to the FPGA go only while a session is alive, so a
   closed tab, a lost radio link, or a dead ESP32 all end in the FPGA's own
   lease expiring. The co-simulation shows each of these ending in a latched
   supervisor with the drive at zero and torque off.
@@ -67,6 +72,9 @@ against the board's silkscreen first (see "Before it meets hardware").
 | `fpga/` | `bridge_safety_esp32.cst` and a Makefile that builds the Tang repo's bridge-safety image with the host UART on header pins G7/G8. |
 | `core/gait.{c,h}` | A gait plan from the pack, the reference governor (ported, and checked against the Rust output each plan carries), and servo position goal bytes. |
 | `esp32/main/gait_store.c` | The gait pack in its own flash partition: upload, the page's JSON, one plan at a time into RAM. |
+| `esp32/main/robot_cfg.c` | The robot configuration in NVS: which servo ID drives which CAD slot (leg × hip, worm, foot), direction, alignment, taught poses, and host limits that may only be tighter than the FPGA's. Edited on the page and `POST /api/robot`; the Mac keeps a copy (`leg_gait_pack --pull-robot`). |
+| `esp32/main/history.c` | Two minutes of per-motor telemetry at 2 Hz for the page's graphs (`GET /api/history`). |
+| `esp32/main/netcfg.c` | Saved Wi-Fi networks (tried in turn) and the board's own access point, always on in AP+STA mode (`GET`/`POST /api/network`). |
 | `docs/wiring.html` | Animated bench guide, opened straight from disk. **Build** wires the P4, dock, supply and servos in 14 steps. **Bus check** finds where the servo signal stops, using meter probes and readings. `#check-3` links to a check, and `?at=4000` opens a step at that moment. |
 
 ## The page's protocol
@@ -151,8 +159,23 @@ uploads it.
 ```sh
 cargo run -p sim-runtime --example leg_gait_pack -- \
     examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/server.json \
-    --out /tmp/leg.rlgp --push 192.168.1.39        # --effort 0.5 --hz 25 --supply 11.1
+    --out /tmp/leg.rlgp --push 192.168.1.39        # --effort 1.0 --hz 25 --supply 11.1
 ```
+
+Each motor is governed at its measured capability (the actuator registry's
+full-drive speed and measured acceleration, times `--effort`). The
+calibration panel instead tightens the slower governor the gait was
+simulated with, so on the robot link the leg moves faster and closer to the
+gait's desired curve than it did in simulation. `--simulated-governor` plays
+the gaits as simulated. Where a family has no measured acceleration (the
+worm's provisional family), the gait's own value stays. The belt's recorded
+acceleration limit still holds for the hip.
+
+Each gait also carries `max_tempo`: the fastest multiple of its own clock
+before its desired motion asks a motor for more than that speed, at most 4×.
+The page's speed sliders go up to it and default to 1×. Above 1× is faster
+than the gait was simulated, and the governor still bounds acceleration, so
+acceleration-bound motors swing less.
 
 The pack is built by `sim_runtime::hardware::calibration::gait_pack`, and its
 format is documented there. It contains:
@@ -278,11 +301,91 @@ Tests:
   play, pause, speed and verified stop against the calibration-profile model
   (multi-turn servo, speed mode, the FPGA's own turn count). A missed worm
   reading mid-gait stops it.
+- **`make -C test`, driving:** two variants of one cycle (the knee 40
+  counts apart). It checks that a held chord takes over without the clock
+  jumping, that the knee follows the held variant at the same gait time,
+  and that release steps in place, then stops at a cycle start holding
+  torque. A key resumes it, and a variant with another window is refused.
 - **`make -C cosim cal`:** the same run against the real RTL built with the
   calibration image's parameters. The worm starts at −300 (reading 3796) and
   crosses encoder zero into its gait. It covers every goal and speed
   accepted, a replay after a verified stop, STOP and a lost session ending in
   a verified stop, and the RTL's own leases stopping a silent host.
+
+## Setting up the robot in the field
+
+Everything that changes in the field lives on the ESP32, so nothing needs
+the Mac or a new FPGA image.
+
+- **Robot panel.** A top view of the robot with a dot per motor slot,
+  coloured by state (answering, silent, off or untaught, empty, armed), and
+  a card per leg. Each slot picks its servo by ID, which also covers a
+  swapped motor (a different motor starts untaught). Each slot can flip
+  direction, align at the CAD pose drawn for its joint, be switched off,
+  and teach poses (Set, Open, Revert). **Scan the bus** pings IDs 0–253.
+  The motor list shows every ID seen, which slot it is in, and lets you put
+  it in a slot.
+- **Changing a servo's ID.** On the robot FPGA image (profile 9), *Change
+  ID* writes a new ID into the servo's memory. The firmware checks that the
+  new ID is silent, then the FPGA grants a one-second permit while latched
+  (nothing armed). It unlocks, writes and locks, then checks that both IDs
+  answer as expected. The leg's calibration image (profile 8) cannot do it.
+- **Limits.** Gait stop temperature, supply window and jog drive cap. They
+  can only be tighter than the FPGA's own trips, which hold regardless.
+- **Graphs.** Current, temperature, supply, load, position or speed per
+  motor, over the last 30 s or 2 min.
+- **Network.** Up to four saved networks, tried in turn. The board's own
+  access point stays on, with a random password made once and kept in NVS
+  (shown on the page and the USB console), so a phone can always reach
+  `http://192.168.4.1/`.
+- **Download / Upload configuration** moves the whole setup as JSON.
+  `leg_gait_pack SERVER.json --pull-robot IP` writes it beside the leg's
+  calibration as `robot-link-config.json`. Poses taught on the board
+  still reach `calibration.json` only through `--pull-calibration`.
+
+The link to the FPGA finds its baud rate itself: it tries 1 Mbaud (the
+robot image) and 115200 (the leg's calibration image) in turn until the
+FPGA answers, and saves the rate that works.
+
+## Driving with W A S D
+
+A drive set (`examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25/drive/wasd.yaml`)
+names steady commands: forward, back, turn in place, arcs, and stepping in
+place, which has no key. `gait_lab drive` traces each through the steered
+gait and the study's CAD model and keeps one settled cycle. Every variant
+is sampled at the same gait times, so the cycles share a phase. Each
+variant is checked for closure, settling, motor speed, command bounds, CAD
+limits and link overlap. `leg_gait_pack … --drive …/drive-set.json` makes
+them the pack's first gaits and its `drive` table.
+
+```sh
+B=target/release/examples; L=examples/full-robot/measured-actuator-integration/gait-lab-2026-09-25
+$B/gait_lab drive $L/study.json $L/results-drive $L/gaits/aws-6216-Bayesian-009.yaml $L/drive/wasd.yaml
+$B/leg_gait_pack examples/actuators/hx30hm/hardware/2026-09-21-leg-calibration/server.json \
+    --drive $L/results-drive/wasd-<hash>/drive-set.json --push 192.168.1.39
+```
+
+On the board, `drive_select` loads every variant's plan. `gait_play`
+prepares and approaches stepping in place. The engine (`rl_drive_load`,
+`rl_drive_command`) then plays a weighted sum of the variants at one gait
+time. The weights move toward the held chord's variant over half a cycle,
+and the reference governor bounds speed and acceleration as it does for any
+plan. The page sends the held keys on every change and every 150 ms. When
+the keys are released, or the page stops renewing them for 600 ms, the
+robot steps in place. After two cycles it stops at a cycle start and holds
+with torque; a key walks again. STOP, Space, closing or hiding the page, or
+another window taking focus stop it with torque off.
+W+S and A+D cancel each other. A chord with no variant steps in place.
+
+The preview draws the whole robot from CAD: the body and all four legs.
+The legs without servos are drawn from the gait (blended by the board's
+weights while driving). The orange silhouette is the leg that is really
+there, read live.
+
+Fidelity: every variant is kinematic (IK, motor speed, limits, overlap;
+no loads, contact or balance). The blend between variants is not
+simulated. Physics qualification of steered walking is still open
+(`sim_runtime::steered_reference`).
 
 ## Not in this prototype
 

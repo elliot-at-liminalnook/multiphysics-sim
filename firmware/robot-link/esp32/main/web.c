@@ -19,11 +19,16 @@
  *   {"t":"turn_confirm","id":2,"counts":-300}
  *                                      the operator sees the leg where a multi-turn motor at
  *                                      `counts` puts it (one of gait.axes[k].candidates)
+ *   {"t":"drive_select","variants":[{"offset":0,"length":5432,"name":"forward","keys":"w"},...]}
+ *                                      load keyboard driving: the pack's drive.variants with
+ *                                      their gaits' plans (one must have keys "": stepping in place)
+ *   {"t":"drive","keys":"wa"}          the held keys, every <= 200 ms while held; "" or a
+ *                                      lapse steps in place, then the clock stops at a cycle start
  *   {"t":"gait_control","playing":false,"speed":0.5}
  *   {"t":"gait_stop"}                  anyone, any time (a STOP that is verified)
  *
  * HTTP: GET /api/state, POST /api/stop, GET /api/gaits (the stored pack's
- * JSON), POST /api/gaits (upload a pack), POST /api/gait {"action":"select"|"stop",...},
+ * JSON), POST /api/gaits (upload a pack), POST /api/gait {"action":"select"|"drive_select"|"stop",...},
  * GET /api/calibration (each motor's pack and taught travel, for leg_gait_pack
  * --pull-calibration), POST /api/calibration {"action":"set_lo"|…,"id":1,"operator_at_leg":true},
  * POST /api/gait {"action":"confirm_turn","id":2,"counts":-300,"operator_sees_leg":true}
@@ -34,15 +39,22 @@
  * and answers a refused command with {"t":"refused","why":...}. Closing the
  * owner's socket ends its session (the engine then zeroes and stops).
  */
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include "esp_http_server.h"
 #include "esp_log.h"
+#include "esp_heap_caps.h"
 #include "esp_timer.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "cJSON.h"
 #include "link_shared.h"
 #include "gait_store.h"
+#include "robot_cfg.h"
+#include "history.h"
+#include "netcfg.h"
 
 static const char *TAG = "robot-web";
 static httpd_handle_t server;
@@ -72,6 +84,90 @@ static bool select_gait(uint32_t offset, uint32_t length, const char *name, char
     ESP_LOGI(TAG, "gait selected: %s (%u axes, governor check %.3f counts)", gait_name, plan.axes, check);
     return true;
 }
+/* ---- keyboard driving ------------------------------------------------------------
+ * The pack's drive variants (one steered cycle per held W/A/S/D chord, on one clock):
+ * staged from flash without the lock into a fresh buffer, installed under it only
+ * while no gait plays, so the plans a drive is playing are never overwritten. */
+#define DRIVE_BUF (RL_DRIVE_MAX * 32768) /* a whole robot's plans are about 20 KB each */
+static uint8_t *drive_buf;
+static int drive_count;
+static char drive_chord[RL_DRIVE_MAX][5], drive_name[RL_DRIVE_MAX][32];
+typedef struct {
+    uint8_t  *buf;
+    int       n, step;
+    rl_plan_t plans[RL_DRIVE_MAX];
+    char      chord[RL_DRIVE_MAX][5], name[RL_DRIVE_MAX][32];
+} drive_staged_t;
+static drive_staged_t *staging; /* one HTTP server task: one staging at a time; heap, not .bss */
+
+/* {"variants":[{"offset","length","name","keys"}...]} from GET /api/gaits (drive.variants[k].gait -> gaits[g].plan). No lock. */
+static bool drive_stage(const cJSON *m, char *why, size_t why_len)
+{
+    const cJSON *vs = cJSON_GetObjectItem(m, "variants"), *v;
+    int n = cJSON_GetArraySize(vs);
+    if (!cJSON_IsArray(vs) || n < 1 || n > RL_DRIVE_MAX) return snprintf(why, why_len, "drive_select needs 1 to %d variants (GET /api/gaits: drive.variants, gaits[k].plan)", RL_DRIVE_MAX), false;
+    if (!staging && !(staging = calloc(1, sizeof *staging))) return snprintf(why, why_len, "no memory for the drive variants"), false;
+    size_t total = 0;
+    cJSON_ArrayForEach(v, vs) total += ((size_t)cJSON_GetNumberValue(cJSON_GetObjectItem(v, "length")) + 3u) & ~(size_t)3u;
+    if (total == 0 || total > DRIVE_BUF) return snprintf(why, why_len, "the drive variants' plans total %u bytes (at most %d KB)", (unsigned)total, DRIVE_BUF / 1024), false;
+    free(staging->buf);
+    staging->buf = heap_caps_malloc(total, MALLOC_CAP_SPIRAM);
+    if (!staging->buf) staging->buf = malloc(total);
+    if (!staging->buf) return snprintf(why, why_len, "no memory for the drive variants (%u bytes)", (unsigned)total), false;
+    staging->n = 0;
+    staging->step = -1;
+    size_t used = 0;
+    cJSON_ArrayForEach(v, vs) {
+        int k = staging->n;
+        const cJSON *off = cJSON_GetObjectItem(v, "offset"), *len = cJSON_GetObjectItem(v, "length"), *name = cJSON_GetObjectItem(v, "name"), *keys = cJSON_GetObjectItem(v, "keys");
+        if (!cJSON_IsNumber(off) || !cJSON_IsNumber(len) || !cJSON_IsString(keys) || strlen(keys->valuestring) > 4)
+            return snprintf(why, why_len, "variants[%d] needs offset, length and keys", k), false;
+        uint32_t length = (uint32_t)len->valuedouble;
+        if (used + length > total) return snprintf(why, why_len, "variants[%d] does not fit", k), false;
+        if (!gait_store_read_plan((uint32_t)off->valuedouble, length, staging->buf + used, total - used) || !rl_plan_parse(staging->buf + used, length, &staging->plans[k]))
+            return snprintf(why, why_len, "variants[%d] is not a plan in the stored pack", k), false;
+        float check = rl_plan_check(&staging->plans[k]);
+        if (!(check < 1.f)) return snprintf(why, why_len, "variants[%d]: this firmware's governor differs from the pack's by %.2f counts", k, check), false;
+        used += (length + 3u) & ~3u;
+        snprintf(staging->chord[k], sizeof staging->chord[k], "%s", keys->valuestring);
+        snprintf(staging->name[k], sizeof staging->name[k], "%s", cJSON_IsString(name) ? name->valuestring : "variant");
+        if (!keys->valuestring[0]) staging->step = k;
+        staging->n++;
+    }
+    if (staging->step < 0) return snprintf(why, why_len, "one variant must have no keys: stepping in place"), false;
+    return true;
+}
+
+/* Lock held. */
+static bool drive_install(char *why, size_t why_len)
+{
+    uint32_t now = rl_now_ms();
+    if (rl_gait_active(&g_rl)) return snprintf(why, why_len, "stop the playing gait first"), false;
+    if (!staging || !staging->buf || !rl_drive_load(&g_rl, staging->plans, staging->n, staging->step, now)) return snprintf(why, why_len, "%s", g_rl.note), false;
+    free(drive_buf);
+    drive_buf = staging->buf;
+    staging->buf = NULL;
+    drive_count = staging->n;
+    memcpy(drive_chord, staging->chord, sizeof drive_chord);
+    memcpy(drive_name, staging->name, sizeof drive_name);
+    snprintf(gait_name, sizeof gait_name, "keyboard driving");
+    gait_offset = gait_length = 0;
+    ESP_LOGI(TAG, "keyboard driving: %d variants on a %.3f s cycle", staging->n, g_rl.gait.plan.period_s);
+    return true;
+}
+
+/* The variant a held chord plays: keys in w a s d order, as the pack writes them. */
+static int drive_variant(const char *keys)
+{
+    char chord[5] = "";
+    int n = 0;
+    for (const char *c = "wasd"; *c; c++)
+        if (strchr(keys, *c)) chord[n++] = *c;
+    for (int k = 0; k < drive_count; k++)
+        if (!strcmp(drive_chord[k], chord)) return k;
+    return -1;
+}
+
 /* One motor's taught travel and turn into `o`, for the page and GET /api/calibration (lock held). */
 static void add_travel(const rl_t *rl, cJSON *o, int i, uint32_t now)
 {
@@ -132,7 +228,8 @@ static bool travel_action(uint8_t id, const char *action, char *why, size_t why_
     else if (!strcmp(action, "revert")) ok = rl_travel_revert(&g_rl, id, now);
     else return snprintf(why, why_len, "action must be set_lower, set_upper, open_lower, open_upper (the calibration's poses), set_lo, set_hi, open_lo, open_hi (encoder ends) or revert"), false;
     if (!ok) return snprintf(why, why_len, "%s", g_rl.note), false;
-    esp_err_t r = gait_store_save_travel();
+    robot_cfg_take_travel();
+    esp_err_t r = robot_cfg_save();
     if (r != ESP_OK) ESP_LOGE(TAG, "taught travel not saved: %s", esp_err_to_name(r));
     ESP_LOGW(TAG, "motor %u travel %s: %s", id, action, g_rl.note);
     return true;
@@ -156,6 +253,10 @@ static cJSON *state_json(const rl_t *rl, int for_fd)
     cJSON_AddStringToObject(o, "t", "state");
     cJSON_AddNumberToObject(o, "now_ms", now);
     cJSON_AddStringToObject(o, "owner", g_owner_kind == OWNER_NONE ? "none" : g_owner_kind == OWNER_TUNNEL ? "tunnel" : g_owner_kind == OWNER_SCAN ? "bus scan" : "page");
+    cJSON_AddNumberToObject(o, "link_baud", g_link_baud);
+    cJSON_AddNumberToObject(o, "robot_revision", g_robot.revision);
+    cJSON_AddBoolToObject(o, "scanning", g_scan.running);
+    if (rl->readdress.active) cJSON_AddStringToObject(o, "readdressing", "1");
     cJSON_AddBoolToObject(o, "you_own", g_owner_kind == OWNER_PAGE && g_owner_fd == for_fd);
     cJSON *link = cJSON_AddObjectToObject(o, "link");
     cJSON_AddBoolToObject(link, "ok", rl_link_ok(rl, now));
@@ -225,6 +326,22 @@ static cJSON *state_json(const rl_t *rl, int for_fd)
     cJSON_AddStringToObject(gait, "result", g->result);
     cJSON_AddBoolToObject(gait, "stop_verified", g->stop_verified);
     cJSON_AddNumberToObject(gait, "samples", g->log_count);
+    if (g->drive) {
+        cJSON *d = cJSON_AddObjectToObject(gait, "drive");
+        int target = (int32_t)(now - (g->drive_cmd_ms + rl->cfg.drive_timeout_ms)) < 0 ? g->drive_target : g->drive_step;
+        cJSON_AddStringToObject(d, "target", drive_name[target]);
+        cJSON_AddStringToObject(d, "keys", drive_chord[target]);
+        cJSON_AddBoolToObject(d, "paused", g->drive_paused);
+        cJSON_AddBoolToObject(d, "stopping", g->drive_stop_at > 0.f);
+        cJSON *w = cJSON_AddArrayToObject(d, "variants");
+        for (int k = 0; k < g->drive_n && k < drive_count; k++) {
+            cJSON *v = cJSON_CreateObject();
+            cJSON_AddStringToObject(v, "name", drive_name[k]);
+            cJSON_AddStringToObject(v, "keys", drive_chord[k]);
+            cJSON_AddNumberToObject(v, "weight", roundf(g->drive_w[k] * 1000.f) / 1000.f);
+            cJSON_AddItemToArray(w, v);
+        }
+    }
     if (g->phase == RL_GAIT_PREPARE) cJSON_AddNumberToObject(gait, "preparing_id", g->plan.axis[g->axis].id);
     cJSON *axes = cJSON_AddArrayToObject(gait, "axes");
     for (int k = 0; g->have_plan && k < g->plan.axes; k++) {
@@ -255,6 +372,9 @@ static cJSON *state_json(const rl_t *rl, int for_fd)
     cJSON *jog = cJSON_AddObjectToObject(o, "jog");
     cJSON_AddNumberToObject(jog, "id", rl->jog_id);
     cJSON_AddNumberToObject(jog, "duty", rl->jog_duty);
+    cJSON_AddNumberToObject(jog, "out", roundf(rl->jog_out));
+    cJSON_AddBoolToObject(jog, "coasting", rl->jog_coasting);
+    cJSON_AddNumberToObject(jog, "longest_gap_ms", rl->jog_gap_max_ms);
     cJSON_AddNumberToObject(o, "duty_cap", rl->cfg.duty_cap);
     if (rl->note[0]) {
         cJSON_AddStringToObject(o, "note", rl->note);
@@ -307,13 +427,22 @@ static esp_err_t gaits_post(httpd_req_t *req)
  * Playing needs the owner's live session, so it is the page's (WebSocket) alone. */
 static esp_err_t gait_post(httpd_req_t *req)
 {
-    char body[256] = "";
-    int n = req->content_len < sizeof body - 1 ? (int)req->content_len : (int)sizeof body - 1;
-    int got = n > 0 ? httpd_req_recv(req, body, n) : 0;
-    cJSON *m = got > 0 ? cJSON_ParseWithLength(body, (size_t)got) : NULL;
+    /* Up to 4 KB: a drive_select names every variant. */
+    size_t cap = 4096, got = 0;
+    char *body = req->content_len <= cap ? malloc(req->content_len + 1) : NULL;
+    while (body && got < req->content_len) {
+        int r = httpd_req_recv(req, body + got, req->content_len - got);
+        if (r == HTTPD_SOCK_ERR_TIMEOUT) continue;
+        if (r <= 0) break;
+        got += (size_t)r;
+    }
+    cJSON *m = body && got ? cJSON_ParseWithLength(body, got) : NULL;
+    free(body);
     const cJSON *action = m ? cJSON_GetObjectItem(m, "action") : NULL;
     char why[200] = "";
     bool ok = true;
+    /* Flash reads outside the lock. */
+    bool staged_ok = cJSON_IsString(action) && !strcmp(action->valuestring, "drive_select") && drive_stage(m, why, sizeof why);
     RL_LOCK("gait_post");
     if (cJSON_IsString(action) && !strcmp(action->valuestring, "stop")) {
         rl_gait_stop(&g_rl, "stopped over HTTP");
@@ -334,9 +463,14 @@ static esp_err_t gait_post(httpd_req_t *req)
         } else if (!(ok = rl_turn_confirm(&g_rl, (uint8_t)id->valueint, (int32_t)counts->valuedouble, rl_now_ms()))) {
             snprintf(why, sizeof why, "%s", g_rl.note);
         }
+    } else if (cJSON_IsString(action) && !strcmp(action->valuestring, "drive_select")) {
+        ok = staged_ok && drive_install(why, sizeof why);
+    } else if (cJSON_IsString(action) && !strcmp(action->valuestring, "drive")) {
+        ok = false;
+        snprintf(why, sizeof why, "drive from the page: the front end holding the session steers (one owner per motion session)");
     } else {
         ok = false;
-        snprintf(why, sizeof why, "action must be select, confirm_turn or stop; play from the page (it holds the session)");
+        snprintf(why, sizeof why, "action must be select, drive_select, confirm_turn or stop; play and drive from the page (it holds the session)");
     }
     cJSON *o = state_json(&g_rl, -1);
     xSemaphoreGive(g_rl_lock);
@@ -387,6 +521,184 @@ static esp_err_t calibration_post(httpd_req_t *req)
         snprintf(why, sizeof why, "needs action (set_lo, set_hi, open_lo, open_hi, revert) and id");
     } else ok = travel_action((uint8_t)id->valueint, action->valuestring, why, sizeof why);
     cJSON *o = state_json(&g_rl, -1);
+    xSemaphoreGive(g_rl_lock);
+    cJSON_Delete(m);
+    if (!ok) {
+        cJSON_AddStringToObject(o, "refused", why);
+        httpd_resp_set_status(req, "409 Conflict");
+    }
+    return send_json(req, o);
+}
+
+/* ---- the robot configuration ---------------------------------------------- */
+
+static bool busy_for_edit(char *why, size_t why_len)
+{
+    const char *no = g_rl.status_valid && g_rl.status.armed_mask ? "stop first: a motor is armed"
+                   : rl_gait_active(&g_rl) ? "stop the gait first"
+                   : g_rl.arm_job.axis >= 0 ? "a motor is being armed"
+                   : rl_readdress_active(&g_rl) ? "a servo is being re-addressed" : NULL;
+    if (no) snprintf(why, why_len, "%s", no);
+    return no != NULL;
+}
+
+/* Replace the configuration with `j` after validating it whole; applied and saved. Lock held. */
+static bool robot_replace(const cJSON *j, char *why, size_t why_len)
+{
+    rc_robot_t r;
+    if (!robot_cfg_from_json(j, &r, why, why_len)) return false;
+    r.revision = g_robot.revision;
+    g_robot = r;
+    robot_cfg_apply();
+    esp_err_t e = robot_cfg_save();
+    if (e != ESP_OK) return snprintf(why, why_len, "applied, but not saved: %s", esp_err_to_name(e)), false;
+    return true;
+}
+
+static cJSON *slot_of_json(cJSON *cfg, int k)
+{
+    return cJSON_GetArrayItem(cJSON_GetObjectItem(cfg, "slots"), k);
+}
+
+/* One robot action by name (the page's WebSocket and POST /api/robot). Lock held. */
+static bool robot_action(const cJSON *m, char *why, size_t why_len)
+{
+    const cJSON *action = cJSON_GetObjectItem(m, "action");
+    const char *a = cJSON_IsString(action) ? action->valuestring : "";
+    uint32_t now = rl_now_ms();
+    if (!strcmp(a, "scan")) return link_scan_request(why, why_len);
+    if (!strcmp(a, "readdress")) {
+        const cJSON *from = cJSON_GetObjectItem(m, "from"), *to = cJSON_GetObjectItem(m, "to");
+        if (!cJSON_IsNumber(from) || !cJSON_IsNumber(to)) return snprintf(why, why_len, "readdress needs from and to"), false;
+        if (!rl_readdress(&g_rl, (uint8_t)from->valueint, (uint8_t)to->valueint, now)) return snprintf(why, why_len, "%s", g_rl.note), false;
+        return true;
+    }
+    if (busy_for_edit(why, why_len)) return false;
+    const cJSON *slot = cJSON_GetObjectItem(m, "slot");
+    int k = cJSON_IsNumber(slot) ? slot->valueint : -1;
+    if (!strcmp(a, "replace")) return robot_replace(cJSON_GetObjectItem(m, "config"), why, why_len);
+    cJSON *cfg = robot_cfg_json(&g_robot);
+    cJSON *s = k >= 0 && k < g_robot.slots ? slot_of_json(cfg, k) : NULL;
+    bool ok = true;
+    if (!strcmp(a, "assign")) {
+        /* A different motor in this slot: its alignment and poses are the old motor's, so they go. */
+        const cJSON *id = cJSON_GetObjectItem(m, "id");
+        if (!s || !cJSON_IsNumber(id)) { snprintf(why, why_len, "assign needs slot and id"); ok = false; }
+        else {
+            int was = g_robot.slot[k].id;
+            cJSON_ReplaceItemInObject(s, "id", cJSON_CreateNumber(id->valueint));
+            if (was != id->valueint && !cJSON_IsTrue(cJSON_GetObjectItem(m, "keep_calibration"))) {
+                cJSON_ReplaceItemInObject(s, "alignment", cJSON_CreateNull());
+                cJSON_ReplaceItemInObject(s, "poses", cJSON_CreateNull());
+            }
+        }
+    } else if (!strcmp(a, "polarity")) {
+        const cJSON *v = cJSON_GetObjectItem(m, "polarity");
+        if (!s || !cJSON_IsNumber(v)) { snprintf(why, why_len, "polarity needs slot and polarity"); ok = false; }
+        else cJSON_ReplaceItemInObject(s, "polarity", cJSON_CreateNumber(v->valueint));
+    } else if (!strcmp(a, "enable")) {
+        const cJSON *v = cJSON_GetObjectItem(m, "enabled");
+        if (!s || !cJSON_IsBool(v)) { snprintf(why, why_len, "enable needs slot and enabled"); ok = false; }
+        else cJSON_ReplaceItemInObject(s, "enabled", cJSON_CreateBool(cJSON_IsTrue(v)));
+    } else if (!strcmp(a, "align")) {
+        /* The motor's reading now is the joint angle `rad` (the CAD pose the leg is held in). */
+        const cJSON *rad = cJSON_GetObjectItem(m, "rad");
+        int i = s ? rl_axis(&g_rl, g_robot.slot[k].id) : -1;
+        const rl_servo_t *sv = i >= 0 ? &g_rl.servo[i] : NULL;
+        if (!s || !cJSON_IsNumber(rad)) { snprintf(why, why_len, "align needs slot and rad"); ok = false; }
+        else if (!sv || !sv->valid || now - sv->at_ms > 300) { snprintf(why, why_len, "the slot's motor has no fresh reading"); ok = false; }
+        else if (g_robot.slot[k].multi_turn && !sv->turn_known) { snprintf(why, why_len, "confirm the motor's turn first"); ok = false; }
+        else {
+            cJSON *al = cJSON_CreateObject();
+            cJSON_AddNumberToObject(al, "counts", rl_position(&g_rl, g_robot.slot[k].id));
+            cJSON_AddNumberToObject(al, "rad", rad->valuedouble);
+            cJSON_ReplaceItemInObject(s, "alignment", al);
+        }
+    } else if (!strcmp(a, "limits")) {
+        const cJSON *v = cJSON_GetObjectItem(m, "limits");
+        if (!cJSON_IsObject(v)) { snprintf(why, why_len, "limits needs limits"); ok = false; }
+        else cJSON_ReplaceItemInObject(cfg, "limits", cJSON_Duplicate(v, 1));
+    } else if (!strcmp(a, "name")) {
+        const cJSON *v = cJSON_GetObjectItem(m, "name");
+        if (!cJSON_IsString(v)) { snprintf(why, why_len, "name needs name"); ok = false; }
+        else cJSON_ReplaceItemInObject(cfg, "name", cJSON_CreateString(v->valuestring));
+    } else {
+        snprintf(why, why_len, "action must be scan, readdress, assign, polarity, enable, align, limits, name or replace");
+        ok = false;
+    }
+    if (ok) {
+        ok = robot_replace(cfg, why, why_len);
+        if (ok) ESP_LOGW(TAG, "robot configuration: %s (revision %lu)", a, (unsigned long)g_robot.revision);
+    }
+    cJSON_Delete(cfg);
+    return ok;
+}
+
+/* GET /api/robot: the configuration, the FPGA profile, the last bus scan and every motor seen. */
+static cJSON *robot_json(void)
+{
+    uint32_t now = rl_now_ms();
+    cJSON *o = cJSON_CreateObject();
+    cJSON_AddItemToObject(o, "config", robot_cfg_json(&g_robot));
+    cJSON *prof = cJSON_AddObjectToObject(o, "fpga");
+    int v = g_rl.status_valid ? g_rl.status.version : 0;
+    cJSON_AddNumberToObject(prof, "version", v);
+    cJSON_AddStringToObject(prof, "image", v == 9 ? "robot (IDs 1-16, re-addressing)" : v == 8 ? "leg calibration (IDs 1-3)" : v == 1 ? "bench (IDs 4-12)" : v ? "older calibration" : "not answering");
+    cJSON_AddNumberToObject(prof, "first_id", 1);
+    cJSON_AddNumberToObject(prof, "count", v == 9 ? 16 : v == 1 ? 9 : 3);
+    cJSON_AddNumberToObject(o, "link_baud", g_link_baud);
+    cJSON *scan = cJSON_AddObjectToObject(o, "scan");
+    cJSON_AddBoolToObject(scan, "running", g_scan.running);
+    cJSON_AddBoolToObject(scan, "done", g_scan.done);
+    if (g_scan.done) {
+        cJSON_AddNumberToObject(scan, "age_ms", now - g_scan.at_ms);
+        cJSON_AddNumberToObject(scan, "took_ms", g_scan.took_ms);
+    }
+    cJSON *ids = cJSON_AddArrayToObject(scan, "ids"), *errs = cJSON_AddArrayToObject(scan, "errors");
+    for (int id = 0; id < 254; id++) {
+        if (g_scan.answered[id / 32] >> (id % 32) & 1) cJSON_AddItemToArray(ids, cJSON_CreateNumber(id));
+        if (g_scan.errors[id / 32] >> (id % 32) & 1) cJSON_AddItemToArray(errs, cJSON_CreateNumber(id));
+    }
+    cJSON *rd = cJSON_AddObjectToObject(o, "readdress");
+    cJSON_AddBoolToObject(rd, "active", g_rl.readdress.active);
+    cJSON_AddStringToObject(rd, "result", g_rl.readdress.result);
+    cJSON_AddBoolToObject(rd, "ok", g_rl.readdress.ok);
+    return o;
+}
+
+static esp_err_t robot_get(httpd_req_t *req)
+{
+    RL_LOCK("robot_get");
+    cJSON *o = robot_json();
+    xSemaphoreGive(g_rl_lock);
+    return send_json(req, o);
+}
+
+/* POST /api/robot {"action": ..., ...}: as the page's {"t":"robot"}; edits need operator_at_robot. */
+static esp_err_t robot_post(httpd_req_t *req)
+{
+    size_t cap = req->content_len + 1;
+    if (cap > 16384) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "too large");
+    char *body = calloc(1, cap);
+    int got = 0;
+    while (body && got < (int)req->content_len) {
+        int r = httpd_req_recv(req, body + got, req->content_len - got);
+        if (r <= 0) break;
+        got += r;
+    }
+    cJSON *m = body ? cJSON_ParseWithLength(body, (size_t)got) : NULL;
+    free(body);
+    const cJSON *action = m ? cJSON_GetObjectItem(m, "action") : NULL;
+    char why[200] = "";
+    bool ok;
+    RL_LOCK("robot_post");
+    bool harmless = cJSON_IsString(action) && !strcmp(action->valuestring, "scan");
+    if (!m) { ok = false; snprintf(why, sizeof why, "the body must be JSON"); }
+    else if (!harmless && !cJSON_IsTrue(cJSON_GetObjectItem(m, "operator_at_robot"))) {
+        ok = false;
+        snprintf(why, sizeof why, "configuration changes need operator_at_robot: true (someone at the robot)");
+    } else ok = robot_action(m, why, sizeof why);
+    cJSON *o = robot_json();
     xSemaphoreGive(g_rl_lock);
     cJSON_Delete(m);
     if (!ok) {
@@ -465,7 +777,7 @@ static esp_err_t ws_handler(httpd_req_t *req)
     httpd_ws_frame_t frame = {.type = HTTPD_WS_TYPE_TEXT};
     esp_err_t r = httpd_ws_recv_frame(req, &frame, 0);
     if (r != ESP_OK) return r;
-    if (frame.len == 0 || frame.len > 512) return ESP_OK;
+    if (frame.len == 0 || frame.len > 8192) return ESP_OK; /* a whole robot configuration fits */
     uint8_t *buf = calloc(1, frame.len + 1);
     frame.payload = buf;
     r = httpd_ws_recv_frame(req, &frame, frame.len);
@@ -482,6 +794,9 @@ static esp_err_t ws_handler(httpd_req_t *req)
     uint32_t now = rl_now_ms();
     char why[200] = "";
     bool ok = true;
+
+    /* Flash reads outside the lock: the link task must not wait on them. */
+    bool staged_ok = !strcmp(type, "drive_select") && drive_stage(m, why, sizeof why);
 
     RL_LOCK("ws_handler");
     bool owner = g_owner_kind == OWNER_PAGE && g_owner_fd == fd;
@@ -536,11 +851,30 @@ static esp_err_t ws_handler(httpd_req_t *req)
         const cJSON *action = cJSON_GetObjectItem(m, "action");
         ok = cJSON_IsString(action) && travel_action((uint8_t)id, action->valuestring, why, sizeof why);
         if (!cJSON_IsString(action)) snprintf(why, sizeof why, "travel needs an action");
+    } else if (!strcmp(type, "network")) {
+        rl_session_alive(&g_rl, now);
+        ok = net_action(m, why, sizeof why);
+    } else if (!strcmp(type, "robot")) {
+        rl_session_alive(&g_rl, now);
+        ok = robot_action(m, why, sizeof why);
     } else if (!strcmp(type, "turn_confirm")) {
         rl_session_alive(&g_rl, now);
         const cJSON *counts = cJSON_GetObjectItem(m, "counts");
         ok = cJSON_IsNumber(counts) && rl_turn_confirm(&g_rl, (uint8_t)id, (int32_t)counts->valuedouble, now);
         if (ok) ESP_LOGW(TAG, "motor %d's turn confirmed at %ld from socket %d", id, (long)g_rl.servo[rl_axis(&g_rl, (uint8_t)id)].counts, fd);
+    } else if (!strcmp(type, "drive_select")) {
+        rl_session_alive(&g_rl, now);
+        ok = staged_ok && drive_install(why, sizeof why);
+    } else if (!strcmp(type, "drive")) {
+        /* The held keys, renewed every <= 200 ms while held; none steps in place. */
+        rl_session_alive(&g_rl, now);
+        const cJSON *keys = cJSON_GetObjectItem(m, "keys");
+        if (!g_rl.gait.drive) {
+            ok = false;
+            snprintf(why, sizeof why, "load keyboard driving first (drive_select)");
+        } else {
+            rl_drive_command(&g_rl, drive_variant(cJSON_IsString(keys) ? keys->valuestring : ""), now);
+        }
     } else if (!strcmp(type, "gait_control")) {
         rl_session_alive(&g_rl, now);
         const cJSON *pl = cJSON_GetObjectItem(m, "playing"), *sp = cJSON_GetObjectItem(m, "speed");
@@ -557,9 +891,8 @@ static esp_err_t ws_handler(httpd_req_t *req)
 }
 
 /* Ten times a second: the state to every WebSocket. */
-static void broadcast(void *arg)
+static void broadcast(void)
 {
-    (void)arg;
     size_t n = 16;
     int fds[16];
     if (httpd_get_client_list(server, &n, fds) != ESP_OK) return;
@@ -568,16 +901,39 @@ static void broadcast(void *arg)
         /* A snapshot under the lock, the JSON built from it after: this task shares a core with
          * the Wi-Fi driver's higher-priority tasks, and holding the lock while they preempt it
          * kept the link task from its replies for 35 ms. */
-        static rl_t snapshot;
+        static rl_t *snapshot; /* the heap, not .bss: internal RAM the Wi-Fi link needs at boot */
+        if (!snapshot && !(snapshot = malloc(sizeof *snapshot))) return;
         RL_LOCK("broadcast");
-        memcpy(&snapshot, &g_rl, sizeof snapshot);
+        memcpy(snapshot, &g_rl, sizeof *snapshot);
         xSemaphoreGive(g_rl_lock);
-        cJSON *o = state_json(&snapshot, fds[i]);
+        cJSON *o = state_json(snapshot, fds[i]);
         char *text = cJSON_PrintUnformatted(o);
         cJSON_Delete(o);
         httpd_ws_frame_t frame = {.type = HTTPD_WS_TYPE_TEXT, .payload = (uint8_t *)text, .len = strlen(text)};
         httpd_ws_send_frame_async(server, fds[i], &frame);
         free(text);
+    }
+}
+
+/* The page's state, ten times a second, from a task of its own at low priority. It used to be an
+ * esp_timer callback: that task runs at priority 22 on the Wi-Fi driver's core, and once a pass
+ * (JSON, socket sends) overran its period it ran back to back, starved the idle task and the
+ * network with it (task watchdog, the page unreachable). Here an overrun only delays the next pass. */
+static void broadcast_task(void *arg)
+{
+    (void)arg;
+    TickType_t wake = xTaskGetTickCount();
+    uint32_t slow_logged = 0;
+    for (;;) {
+        vTaskDelayUntil(&wake, pdMS_TO_TICKS(100));
+        uint32_t t0 = rl_now_ms();
+        broadcast();
+        uint32_t took = rl_now_ms() - t0;
+        if (took > 80 && rl_now_ms() - slow_logged > 10000) {
+            slow_logged = rl_now_ms();
+            ESP_LOGW(TAG, "a state broadcast took %lu ms", (unsigned long)took);
+        }
+        if (took >= 100) wake = xTaskGetTickCount(); /* no catching up */
     }
 }
 
@@ -588,7 +944,7 @@ void web_start(void)
     httpd_config_t cfg = HTTPD_DEFAULT_CONFIG();
     cfg.server_port = CONFIG_RL_HTTP_PORT;
     cfg.max_open_sockets = 7;
-    cfg.max_uri_handlers = 12;
+    cfg.max_uri_handlers = 18;
     cfg.recv_wait_timeout = 20;
     cfg.lru_purge_enable = true;
     ESP_ERROR_CHECK(httpd_start(&server, &cfg));
@@ -612,9 +968,16 @@ void web_start(void)
     httpd_uri_t cal_post = {.uri = "/api/calibration", .method = HTTP_POST, .handler = calibration_post};
     httpd_register_uri_handler(server, &cal_get);
     httpd_register_uri_handler(server, &cal_post);
-    const esp_timer_create_args_t timer = {.callback = broadcast, .name = "ws-state", .dispatch_method = ESP_TIMER_TASK};
-    esp_timer_handle_t h;
-    ESP_ERROR_CHECK(esp_timer_create(&timer, &h));
-    ESP_ERROR_CHECK(esp_timer_start_periodic(h, 100000));
+    httpd_uri_t rob_get = {.uri = "/api/robot", .method = HTTP_GET, .handler = robot_get};
+    httpd_uri_t rob_post = {.uri = "/api/robot", .method = HTTP_POST, .handler = robot_post};
+    httpd_uri_t hist_get = {.uri = "/api/history", .method = HTTP_GET, .handler = history_get};
+    httpd_register_uri_handler(server, &rob_get);
+    httpd_register_uri_handler(server, &rob_post);
+    httpd_register_uri_handler(server, &hist_get);
+    httpd_uri_t net_g = {.uri = "/api/network", .method = HTTP_GET, .handler = net_get};
+    httpd_uri_t net_p = {.uri = "/api/network", .method = HTTP_POST, .handler = net_post};
+    httpd_register_uri_handler(server, &net_g);
+    httpd_register_uri_handler(server, &net_p);
+    xTaskCreate(broadcast_task, "ws-state", 6144, NULL, 2, NULL);
     ESP_LOGI(TAG, "page on port %d", CONFIG_RL_HTTP_PORT);
 }

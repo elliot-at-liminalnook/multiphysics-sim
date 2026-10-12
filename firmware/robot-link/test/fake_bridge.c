@@ -9,17 +9,21 @@ void fb_init(fb_t *fb, uint16_t present)
     memset(fb, 0, sizeof *fb);
     hx_framer_init(&fb->framer);
     fb->first = FB_FIRST;
-    fb->count = FB_COUNT;
+    fb->count = 9;
+    fb->version = 1;
     fb->feedback_timeout_ms = FEEDBACK_TIMEOUT;
     fb->command_timeout_ms = COMMAND_TIMEOUT;
     fb->latched = true;
     fb->reason = 1;
     fb->fault_id = 254;
-    for (int i = 0; i < FB_COUNT; i++) {
-        fb->feedback_age_ms[i] = FEEDBACK_TIMEOUT;
-        fb->command_age_ms[i] = COMMAND_TIMEOUT;
+    for (int i = 0; i < FB_COUNT + FB_SPARES; i++) {
+        if (i < FB_COUNT) {
+            fb->feedback_age_ms[i] = FEEDBACK_TIMEOUT;
+            fb->command_age_ms[i] = COMMAND_TIMEOUT;
+        }
         fb_servo_t *s = &fb->servo[i];
-        s->present = present >> i & 1;
+        s->present = i < FB_COUNT && (present >> i & 1);
+        s->id = (uint8_t)(FB_FIRST + i);
         s->mode = 2;
         s->position = (uint16_t)(1000 + 300 * i);
         s->position_f = s->position;
@@ -36,8 +40,39 @@ void fb_init_calibration(fb_t *fb, uint16_t present)
     fb->first = 1;
     fb->count = 3;
     fb->calibration = true;
+    fb->version = 8;
     fb->feedback_timeout_ms = 400;
     fb->command_timeout_ms = 600;
+    for (int i = 0; i < FB_COUNT; i++) fb->servo[i].id = (uint8_t)(1 + i);
+}
+
+void fb_init_robot(fb_t *fb, uint16_t present)
+{
+    fb_init_calibration(fb, present);
+    fb->count = 16;
+    fb->version = 9;
+}
+
+fb_servo_t *fb_add_spare(fb_t *fb, uint8_t id)
+{
+    for (int i = FB_COUNT; i < FB_COUNT + FB_SPARES; i++) {
+        fb_servo_t *s = &fb->servo[i];
+        if (s->present) continue;
+        *s = fb->servo[0];
+        s->present = true;
+        s->id = id;
+        s->position_f = 2000.f;
+        s->torque = 0;
+        return s;
+    }
+    return NULL;
+}
+
+static fb_servo_t *find_servo(fb_t *fb, uint8_t id)
+{
+    for (int i = 0; i < FB_COUNT + FB_SPARES; i++)
+        if (fb->servo[i].present && fb->servo[i].id == id) return &fb->servo[i];
+    return NULL;
 }
 
 static void trip(fb_t *fb, uint8_t reason, uint8_t id)
@@ -47,7 +82,7 @@ static void trip(fb_t *fb, uint8_t reason, uint8_t id)
     fb->fault_id = id;
     fb->armed = 0;
     fb->stops++;
-    for (int i = 0; i < FB_COUNT; i++) {
+    for (int i = 0; i < FB_COUNT + FB_SPARES; i++) {
         fb->servo[i].pwm_raw = 0;
         fb->servo[i].torque = 0;
     }
@@ -57,9 +92,10 @@ void fb_tick(fb_t *fb, uint32_t now)
 {
     uint32_t dt = now - fb->now_ms;
     fb->now_ms = now;
-    for (int i = 0; i < FB_COUNT; i++) {
-        if (fb->feedback_age_ms[i] < fb->feedback_timeout_ms) fb->feedback_age_ms[i] += dt;
-        if (fb->command_age_ms[i] < fb->command_timeout_ms) fb->command_age_ms[i] += dt;
+    if (fb->permit && (fb->latched == false || (int32_t)(now - fb->permit_until_ms) >= 0)) fb->permit = false;
+    for (int i = 0; i < FB_COUNT + FB_SPARES; i++) {
+        if (i < FB_COUNT && fb->feedback_age_ms[i] < fb->feedback_timeout_ms) fb->feedback_age_ms[i] += dt;
+        if (i < FB_COUNT && fb->command_age_ms[i] < fb->command_timeout_ms) fb->command_age_ms[i] += dt;
         /* Position mode: the shaft moves toward the goal at the goal's speed. */
         fb_servo_t *s = &fb->servo[i];
         float before = s->position_f;
@@ -114,7 +150,7 @@ static void status_reply(fb_t *fb)
 {
     uint16_t fresh_mask = 0;
     for (int i = 0; i < FB_COUNT; i++) fresh_mask |= (uint16_t)(fresh(fb, i) << i);
-    uint8_t p[HX_STATUS_LEN] = {fb->calibration ? 8 : 1, fb->latched, fb->reason, fb->fault_id, (uint8_t)fb->armed, (uint8_t)(fb->armed >> 8), (uint8_t)fresh_mask, (uint8_t)(fresh_mask >> 8), 60, 90, 126, 0xD0, 0x07};
+    uint8_t p[HX_STATUS_LEN] = {fb->version, fb->latched, fb->reason, fb->fault_id, (uint8_t)fb->armed, (uint8_t)(fb->armed >> 8), (uint8_t)fresh_mask, (uint8_t)(fresh_mask >> 8), 60, 90, 126, 0xD0, 0x07};
     fb->local++;
     reply(fb, HX_BRIDGE_ID, 0, p, HX_STATUS_LEN, 0);
 }
@@ -164,6 +200,14 @@ static void local_command(fb_t *fb, const uint8_t *p, size_t n)
         break;
     }
     case HX_OP_DISARM: if (n == 2 && a >= 0) trip(fb, 10, p[1]); break;
+    case 9: /* robot profile: [9, old, new], a one-second re-addressing permit, only latched */
+        if (fb->version == 9 && n == 3 && fb->latched && p[1] < 254 && p[2] < 254 && p[1] != p[2]) {
+            fb->permit = true;
+            fb->permit_old = p[1];
+            fb->permit_new = p[2];
+            fb->permit_until_ms = fb->now_ms + 1000;
+        }
+        break;
     default: break;
     }
     status_reply(fb);
@@ -175,8 +219,23 @@ static void forward(fb_t *fb, const uint8_t *f, size_t len)
     const uint8_t *p = f + 5;
     size_t n = len - 6;
     int a = axis_of(fb, id);
-    if (a < 0 || !fb->servo[a].present) { fb->refused++; return; }
-    fb_servo_t *s = &fb->servo[a];
+    fb_servo_t *s = find_servo(fb, id);
+    if (!s) { fb->refused++; return; } /* nobody answers */
+    /* The permit's lock and ID writes, as hx_safety.v READDRESS. */
+    if (fb->permit && fb->latched && inst == HX_WRITE && n == 2
+        && ((p[0] == 0x37 && (id == fb->permit_old || id == fb->permit_new) && p[1] <= 1) || (p[0] == 0x05 && id == fb->permit_old && p[1] == fb->permit_new))) {
+        fb->forwarded++;
+        if (p[0] == 0x37) s->lock = p[1];
+        if (p[0] == 0x05 && !s->lock) s->id = p[1];
+        reply(fb, s->id, 0, NULL, 0, SERVO_TURNAROUND_MS);
+        return;
+    }
+    if (a < 0 && inst != HX_PING && inst != HX_READ) { fb->refused++; return; }
+    if (inst == HX_PING) {
+        fb->forwarded++;
+        reply(fb, id, s->error, NULL, 0, SERVO_TURNAROUND_MS);
+        return;
+    }
     bool zero = (n == 2 && p[1] == 0) || (n == 3 && p[1] == 0 && p[2] == 0);
     bool allow = inst == HX_PING || inst == HX_READ;
     if (inst == HX_WRITE && n >= 2) {
@@ -217,12 +276,14 @@ static void forward(fb_t *fb, const uint8_t *f, size_t len)
             regs[2] = (uint8_t)sp; regs[3] = (uint8_t)(sp >> 8);
             regs[6] = s->voltage_raw; regs[7] = s->temperature_c; regs[9] = s->error;
             /* The supervisor judges the reply it sees forwarded, and counts its turns. */
-            fb->continuous[a] = fb->continuous_valid[a] ? fb->continuous[a] + nearest_turn(s->position, fb->sampled[a]) : s->position;
-            fb->continuous_valid[a] = true;
-            fb->sampled[a] = s->position;
-            fb->seen[a] = true;
-            fb->healthy[a] = s->error == 0 && s->temperature_c < 60 && s->voltage_raw >= 90 && s->voltage_raw <= 126;
-            fb->feedback_age_ms[a] = 0;
+            if (a >= 0) {
+                fb->continuous[a] = fb->continuous_valid[a] ? fb->continuous[a] + nearest_turn(s->position, fb->sampled[a]) : s->position;
+                fb->continuous_valid[a] = true;
+                fb->sampled[a] = s->position;
+                fb->seen[a] = true;
+                fb->healthy[a] = s->error == 0 && s->temperature_c < 60 && s->voltage_raw >= 90 && s->voltage_raw <= 126;
+                fb->feedback_age_ms[a] = 0;
+            }
             reply(fb, id, s->error, regs, HX_TELEMETRY_LEN, SERVO_TURNAROUND_MS);
         } else if (addr == HX_REG_MODE && width == 1) {
             regs[0] = s->mode;

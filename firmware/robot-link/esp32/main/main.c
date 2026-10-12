@@ -35,6 +35,9 @@
 #include "nvs_flash.h"
 #include "driver/uart.h"
 #include "link_shared.h"
+#include "robot_cfg.h"
+#include "history.h"
+#include "netcfg.h"
 #include "gait_store.h"
 
 static const char *TAG = "robot-link";
@@ -80,62 +83,16 @@ void link_stop_now(void)
     }
 }
 
-/* ---- Wi-Fi (on the C6, through esp_wifi_remote) ------------------------- */
-static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data)
-{
-    (void)arg; (void)data;
-    if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
-        ESP_LOGW(TAG, "station link lost; reconnecting");
-        esp_wifi_connect();
-    } else if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
-        ip_event_got_ip_t *e = data;
-        ESP_LOGI(TAG, "station address " IPSTR, IP2STR(&e->ip_info.ip));
-    } else if (base == WIFI_EVENT && id == WIFI_EVENT_AP_STACONNECTED) {
-        ESP_LOGI(TAG, "a device joined the access point");
-    }
-}
-
-static void wifi_start(void)
-{
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, on_wifi, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, on_wifi, NULL));
-    wifi_init_config_t init = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&init));
-    wifi_config_t wc = {0};
-#if CONFIG_RL_WIFI_STA
-    esp_netif_create_default_wifi_sta();
-    strncpy((char *)wc.sta.ssid, CONFIG_RL_WIFI_SSID, sizeof wc.sta.ssid - 1);
-    strncpy((char *)wc.sta.password, CONFIG_RL_WIFI_PASSWORD, sizeof wc.sta.password - 1);
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wc));
-#else
-    esp_netif_create_default_wifi_ap();
-    strncpy((char *)wc.ap.ssid, CONFIG_RL_WIFI_SSID, sizeof wc.ap.ssid - 1);
-    wc.ap.ssid_len = strlen(CONFIG_RL_WIFI_SSID);
-    strncpy((char *)wc.ap.password, CONFIG_RL_WIFI_PASSWORD, sizeof wc.ap.password - 1);
-    wc.ap.max_connection = 4;
-    wc.ap.authmode = strlen(CONFIG_RL_WIFI_PASSWORD) >= 8 ? WIFI_AUTH_WPA2_PSK : WIFI_AUTH_OPEN;
-    wc.ap.channel = 6;
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wc));
-#endif
-    ESP_ERROR_CHECK(esp_wifi_start());
-    ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
-#if CONFIG_RL_WIFI_STA
-    ESP_ERROR_CHECK(esp_wifi_connect());
-    ESP_LOGI(TAG, "joining \"%s\"", CONFIG_RL_WIFI_SSID);
-#else
-    ESP_LOGI(TAG, "access point \"%s\": http://192.168.4.1:%d/", CONFIG_RL_WIFI_SSID, CONFIG_RL_HTTP_PORT);
-#endif
-}
+/* ---- Wi-Fi: netcfg.c (saved networks and the board's own access point) ---- */
 
 /* ---- UART to the FPGA ---------------------------------------------------- */
+volatile uint32_t g_link_baud = CONFIG_RL_UART_BAUD;
+
 static void uart_start(void)
 {
+    g_link_baud = g_robot.link_baud == 1000000 || g_robot.link_baud == 115200 ? g_robot.link_baud : CONFIG_RL_UART_BAUD;
     uart_config_t uc = {
-        .baud_rate = CONFIG_RL_UART_BAUD,
+        .baud_rate = (int)g_link_baud,
         .data_bits = UART_DATA_8_BITS,
         .parity = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
@@ -145,7 +102,7 @@ static void uart_start(void)
     ESP_ERROR_CHECK(uart_driver_install(LINK_UART, 2048, 2048, 0, NULL, 0));
     ESP_ERROR_CHECK(uart_param_config(LINK_UART, &uc));
     ESP_ERROR_CHECK(uart_set_pin(LINK_UART, CONFIG_RL_UART_TX_GPIO, CONFIG_RL_UART_RX_GPIO, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-    ESP_LOGI(TAG, "FPGA link on UART%d at %d baud (tx GPIO%d, rx GPIO%d)", LINK_UART, CONFIG_RL_UART_BAUD, CONFIG_RL_UART_TX_GPIO, CONFIG_RL_UART_RX_GPIO);
+    ESP_LOGI(TAG, "FPGA link on UART%d at %lu baud (tx GPIO%d, rx GPIO%d)", LINK_UART, (unsigned long)g_link_baud, CONFIG_RL_UART_TX_GPIO, CONFIG_RL_UART_RX_GPIO);
 }
 
 /* The engine: bytes in, one tick, every millisecond. */
@@ -159,7 +116,7 @@ static void link_task(void *arg)
 {
     (void)arg;
     uint8_t chunk[128];
-    uint32_t last = rl_now_ms();
+    uint32_t last = rl_now_ms(), baud_since = last;
     for (;;) {
         int n = uart_read_bytes(LINK_UART, chunk, sizeof chunk, pdMS_TO_TICKS(1));
         const char *holder = g_rl_lock_holder;
@@ -180,6 +137,16 @@ static void link_task(void *arg)
         }
         rl_tick(&g_rl, rl_now_ms());
         last = rl_now_ms();
+        /* The robot image runs this link at 1 Mbaud, the leg's calibration image at 115200:
+         * with no FPGA answer, try the other rate until one answers. */
+        if (g_owner_kind != OWNER_TUNNEL && g_owner_kind != OWNER_SCAN && !rl_link_ok(&g_rl, last) && last - baud_since > 1500) {
+            g_link_baud = g_link_baud == 1000000 ? 115200 : 1000000;
+            uart_set_baudrate(LINK_UART, g_link_baud);
+            uart_flush_input(LINK_UART);
+            hx_framer_init(&g_rl.framer);
+            baud_since = last;
+        }
+        if (rl_link_ok(&g_rl, last)) baud_since = last;
         xSemaphoreGive(g_rl_lock);
     }
 }
@@ -201,10 +168,27 @@ static void status_log_task(void *arg)
         char line[400];
         int n = 0;
         /* A snapshot under the lock; the line is formatted after (see web.c's broadcast). */
-        static rl_t snap;
+        static rl_t *snapshot; /* the heap, not .bss: internal RAM the Wi-Fi link needs at boot */
+        if (!snapshot && !(snapshot = malloc(sizeof *snapshot))) continue;
+        rl_t *const snap = snapshot;
         RL_LOCK("status_log_task");
-        memcpy(&snap, &g_rl, sizeof snap);
+        memcpy(snap, &g_rl, sizeof *snap);
         uint32_t gap = link_gap_ms, wait = link_wait_ms;
+        /* A servo re-addressed: its slot follows it to the new ID, calibration kept (same motor). */
+        if (!g_rl.readdress.active && g_rl.readdress.ok && !g_rl.readdress.consumed) {
+            g_rl.readdress.consumed = true;
+            int k = robot_cfg_slot_of(g_rl.readdress.from);
+            if (k >= 0) {
+                g_robot.slot[k].id = g_rl.readdress.to;
+                robot_cfg_apply();
+                robot_cfg_save();
+            }
+        }
+        /* Remember the baud rate the FPGA answers at, for the next boot. */
+        if (rl_link_ok(&g_rl, rl_now_ms()) && g_link_baud != g_robot.link_baud) {
+            g_robot.link_baud = g_link_baud;
+            robot_cfg_save();
+        }
         const char *wait_for = link_wait_for;
         link_gap_ms = link_wait_ms = 0;
         link_wait_for = "";
@@ -212,18 +196,18 @@ static void status_log_task(void *arg)
         uint32_t now = rl_now_ms();
         float dt = (now - last_at) / 1000.0f;
         n += snprintf(line + n, sizeof line - n, "per s: %.1f sent, %.1f replies, %.1f timeouts; totals refused %lu, bad checksums %lu, dropped bytes %lu | ",
-            (snap.sent - last_sent) / dt, (snap.replies - last_replies) / dt, (snap.timeouts - last_timeouts) / dt,
-            (unsigned long)snap.refused, (unsigned long)snap.framer.checksum_errors, (unsigned long)snap.framer.dropped_bytes);
+            (snap->sent - last_sent) / dt, (snap->replies - last_replies) / dt, (snap->timeouts - last_timeouts) / dt,
+            (unsigned long)snap->refused, (unsigned long)snap->framer.checksum_errors, (unsigned long)snap->framer.dropped_bytes);
         n += snprintf(line + n, sizeof line - n, "longest link gap %lu ms, lock wait %lu ms (%s), unexpected %lu | ", (unsigned long)gap,
-                      (unsigned long)wait, wait_for, (unsigned long)snap.unexpected);
-        last_sent = snap.sent; last_replies = snap.replies; last_timeouts = snap.timeouts; last_at = now;
-        if (!rl_link_ok(&snap, now)) n += snprintf(line + n, sizeof line - n, "FPGA not answering | ");
-        else if (snap.status.latched) n += snprintf(line + n, sizeof line - n, "FPGA latched: %s | ", hx_reason_name(snap.status.reason));
-        else n += snprintf(line + n, sizeof line - n, "FPGA running, armed 0x%x fresh 0x%x | ", snap.status.armed_mask, snap.status.fresh_mask);
+                      (unsigned long)wait, wait_for, (unsigned long)snap->unexpected);
+        last_sent = snap->sent; last_replies = snap->replies; last_timeouts = snap->timeouts; last_at = now;
+        if (!rl_link_ok(snap, now)) n += snprintf(line + n, sizeof line - n, "FPGA not answering | ");
+        else if (snap->status.latched) n += snprintf(line + n, sizeof line - n, "FPGA latched: %s | ", hx_reason_name(snap->status.reason));
+        else n += snprintf(line + n, sizeof line - n, "FPGA running, armed 0x%x fresh 0x%x | ", snap->status.armed_mask, snap->status.fresh_mask);
         for (int i = 0; i < RL_MAX_SERVOS && n < (int)sizeof line - 48; i++) {
-            if (!(snap.cfg.present_mask >> i & 1)) continue;
-            const rl_servo_t *s = &snap.servo[i];
-            unsigned id = snap.cfg.first_id + i;
+            if (!(snap->cfg.present_mask >> i & 1)) continue;
+            const rl_servo_t *s = &snap->servo[i];
+            unsigned id = snap->cfg.first_id + i;
             if (!s->valid) n += snprintf(line + n, sizeof line - n, "%u: never answered  ", id);
             else if (now - s->at_ms > 2000) n += snprintf(line + n, sizeof line - n, "%u: silent %lus  ", id, (unsigned long)((now - s->at_ms) / 1000));
             else n += snprintf(line + n, sizeof line - n, "%u: %.1fV pos %u %uC  ", id, s->t.voltage_raw / 10.0, s->t.position_raw, s->t.temperature_c);
@@ -243,9 +227,30 @@ static void status_log_task(void *arg)
  * UART the way the tunnel does, and only while the FPGA is latched with
  * nothing armed, so the STOP it delays for ~3 s has nothing to stop.
  */
+link_scan_t g_scan;
+static volatile bool scan_requested;
+
+static bool scan_allowed(uint32_t now, char *why, size_t why_len)
+{
+    const char *no = !rl_link_ok(&g_rl, now) ? "the FPGA is not answering"
+                   : g_owner_kind == OWNER_TUNNEL ? "the tunnel has the link"
+                   : g_rl.status.armed_mask || rl_gait_active(&g_rl) || rl_readdress_active(&g_rl) ? "stop everything first: nothing may be armed"
+                   : g_scan.running ? "a scan is running" : NULL;
+    if (no && why) snprintf(why, why_len, "%s", no);
+    return !no;
+}
+
+bool link_scan_request(char *why, size_t why_len)
+{
+    if (!scan_allowed(rl_now_ms(), why, why_len)) return false;
+    scan_requested = true;
+    return true;
+}
+
 #if CONFIG_RL_BUS_SCAN_S
 static bool scan_wanted(uint32_t now)
 {
+    if (scan_requested) return scan_allowed(now, NULL, 0);
     if (g_owner_kind != OWNER_NONE || !rl_link_ok(&g_rl, now)) return false;
     if (!g_rl.status.latched || g_rl.status.armed_mask) return false;
     for (int i = 0; i < RL_MAX_SERVOS; i++)
@@ -257,11 +262,23 @@ static void bus_scan_task(void *arg)
 {
     (void)arg;
     scan_rx = xStreamBufferCreate(256, 1);
+    uint32_t next = rl_now_ms() + 3000; /* one scan soon after boot */
     for (;;) {
-        vTaskDelay(pdMS_TO_TICKS(CONFIG_RL_BUS_SCAN_S * 1000));
+        vTaskDelay(pdMS_TO_TICKS(100));
+        if (!scan_requested && (int32_t)(rl_now_ms() - next) < 0) continue;
+        next = rl_now_ms() + CONFIG_RL_BUS_SCAN_S * 1000;
         RL_LOCK("bus_scan_task");
         bool go = scan_wanted(rl_now_ms());
-        if (go) { g_owner_kind = OWNER_SCAN; rl_pause(&g_rl, true); }
+        /* The page that asked keeps the link: it gets it back afterwards. */
+        int was_kind = g_owner_kind, was_fd = g_owner_fd;
+        if (go) {
+            scan_requested = false;
+            g_owner_kind = OWNER_SCAN;
+            rl_pause(&g_rl, true);
+            g_scan.running = true;
+            memset(g_scan.answered, 0, sizeof g_scan.answered);
+            memset(g_scan.errors, 0, sizeof g_scan.errors);
+        }
         xSemaphoreGive(g_rl_lock);
         if (!go) continue;
 
@@ -287,17 +304,25 @@ static void bus_scan_task(void *arg)
                 else if (f) hx_framer_init(&fr);
             }
             if (answered) {
+                g_scan.answered[id / 32] |= 1u << (id % 32);
+                if (err) g_scan.errors[id / 32] |= 1u << (id % 32);
                 n_found++;
                 if (len < (int)sizeof found - 16) len += snprintf(found + len, sizeof found - len, " %d%s", id, err ? "(err)" : "");
             }
-            vTaskDelay(pdMS_TO_TICKS(3)); /* past the bridge's 2 ms reply window */
+            vTaskDelay(pdMS_TO_TICKS(g_link_baud >= 1000000 ? 2 : 3)); /* past the bridge's 2 ms reply window */
         }
         RL_LOCK("bus_scan_task");
-        g_owner_kind = OWNER_NONE;
+        g_owner_kind = was_kind == OWNER_PAGE ? OWNER_PAGE : OWNER_NONE;
+        g_owner_fd = was_kind == OWNER_PAGE ? was_fd : -1;
         rl_pause(&g_rl, false);
+        if (was_kind == OWNER_PAGE) rl_session_alive(&g_rl, rl_now_ms());
+        g_scan.running = false;
+        g_scan.done = true;
+        g_scan.at_ms = rl_now_ms();
+        g_scan.took_ms = rl_now_ms() - t0;
         xSemaphoreGive(g_rl_lock);
-        if (n_found) ESP_LOGW(TAG, "bus scan (%lu ms): %d ID(s) answer a ping:%s; configured mask 0x%x from ID %d",
-                              (unsigned long)(rl_now_ms() - t0), n_found, found, CONFIG_RL_PRESENT_MASK, CONFIG_RL_FIRST_ID);
+        if (n_found) ESP_LOGW(TAG, "bus scan (%lu ms): %d ID(s) answer a ping:%s",
+                              (unsigned long)(rl_now_ms() - t0), n_found, found);
         else ESP_LOGW(TAG, "bus scan (%lu ms): no ID 0-253 answers a ping", (unsigned long)(rl_now_ms() - t0));
     }
 }
@@ -371,10 +396,13 @@ void app_main(void)
     ESP_ERROR_CHECK(nvs);
 
     g_rl_lock = xSemaphoreCreateMutex();
+    robot_cfg_init();
     rl_config_t cfg = rl_default_config();
-    cfg.first_id = CONFIG_RL_FIRST_ID;
-    cfg.present_mask = CONFIG_RL_PRESENT_MASK;
-    cfg.duty_cap = CONFIG_RL_DUTY_CAP;
+    /* Both FPGA images start at ID 1 (the leg's 1-3, the robot's 1-16); which
+     * IDs are present is the robot configuration's (robot_cfg_apply). */
+    cfg.first_id = 1;
+    cfg.present_mask = 0;
+    cfg.duty_cap = g_robot.duty_cap;
     rl_init(&g_rl, cfg, uart_write_cb, NULL);
     /* The gait log from the heap, not static: see web.c's plan buffer. */
     rl_gait_sample_t *gait_log = malloc(RL_GAIT_LOG * sizeof *gait_log);
@@ -390,7 +418,8 @@ void app_main(void)
 #if CONFIG_RL_BUS_SCAN_S
     xTaskCreate(bus_scan_task, "bus_scan", 4096, NULL, 4, NULL);
 #endif
-    wifi_start();
+    net_start();
+    history_start();
     web_start();
 #if CONFIG_RL_TUNNEL_PORT
     xTaskCreate(tunnel_task, "tunnel", 4096, NULL, 5, NULL);

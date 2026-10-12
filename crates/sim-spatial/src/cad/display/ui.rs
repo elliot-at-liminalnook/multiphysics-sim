@@ -112,7 +112,7 @@ pub(super) fn cube_press(clicks: Query<(&CubeButton, Option<&Enabled>), (With<cr
 #[derive(Clone, PartialEq)]
 pub(super) struct Shown {
     root: Entity,
-    source: Option<String>,
+    source: Option<crate::cad::activation::RenderKey>,
     mode: DisplayMode,
     toggles: [bool; DisplaySetting::ALL.len()],
     section: bool,

@@ -376,7 +376,7 @@ fn scroll(
 #[derive(Default)]
 struct Drawn {
     root: Option<Entity>,
-    stamp: Option<String>,
+    stamp: Option<super::activation::RenderKey>,
 }
 
 /// Present: rebuild the parts whose content changed (see the module doc);

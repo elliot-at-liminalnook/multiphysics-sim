@@ -89,7 +89,7 @@ pub(crate) fn section(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui
     if ui.refinement_charts.current(owner){
         for (label,image,axes) in [("Selected captured target / feedback / physical angle [rad]",&ui.refinement_charts.angle,ui.refinement_charts.angle_axes),("Selected captured applied duty [fraction]",&ui.refinement_charts.duty,ui.refinement_charts.duty_axes)]{
             body.spawn(k.caption(format!("{label} · actual time {}–{} s · range {}–{}",axes.1.0,axes.1.1,axes.0.0,axes.0.1)));
-            if let Some(image)=image{body.spawn(k.chart_image(image.clone(),Node{width:Val::Percent(100.),height:Val::Px(180.),..default()},true));}
+            if let Some(image)=image{body.spawn(k.chart_image(image.clone(),Node{width:Val::Percent(100.),height:Val::Px(180.),..default()},true,"Refinement chart"));}
         }
     }
     if let Some(error)=&ui.refinement_charts.error{body.spawn(k.text(error,size::DETAIL,WARN,0));}

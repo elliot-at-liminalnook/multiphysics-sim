@@ -164,7 +164,7 @@ pub(super) fn refresh(
     mut menu_tabs: Query<(&MenuTab, &mut Look, &mut CadButton)>,
     tools: Query<Entity, With<ToolRow>>,
     mut last: Local<Option<(Entity, String)>>,
-    mut tabs_source: Local<Option<String>>,
+    mut tabs_source: Local<Option<crate::cad::activation::RenderKey>>,
     selection: CadSelection,
 ) {
     let (Some(doc), Ok((tabs, spawned)), Ok(tools)) = (doc, tabs.single(), tools.single()) else { return };

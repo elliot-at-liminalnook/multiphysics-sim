@@ -235,7 +235,7 @@ pub(super) fn setup(mut commands: Commands, fonts: Res<UiFonts>, mut images: Res
         ))
         .with_children(|p| {
             p.spawn((k.text("Chart", size::SMALL, SUBTLE, 1), Mark::ChartTitle));
-            p.spawn(k.chart_image(chart.clone(), Node { flex_grow: 1.0, min_height: Val::Px(40.0), ..default() }, true)).with_children(|c| {
+            p.spawn(k.chart_image(chart.clone(), Node { flex_grow: 1.0, min_height: Val::Px(40.0), ..default() }, true, "Exhibit chart")).with_children(|c| {
                 c.spawn((k.chart_label("", Corner::TopLeft), Mark::ChartLabel(Axis::Top)));
                 c.spawn((k.chart_label("", Corner::BottomLeft), Mark::ChartLabel(Axis::Bottom)));
                 c.spawn((k.chart_label("", Corner::BottomRight), Mark::ChartLabel(Axis::Window)));

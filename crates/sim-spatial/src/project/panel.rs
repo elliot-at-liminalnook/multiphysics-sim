@@ -131,10 +131,10 @@ fn strip(mut commands: Commands, st: Res<ProjectState>, fonts: Res<UiFonts>, roo
 
 /// Present: the card above the strip, rebuilt when the project or a field's focus changes.
 #[allow(clippy::too_many_arguments)]
-fn card(mut commands: Commands, st: Res<ProjectState>, drafts: Res<Drafts>, typing: Typing, fonts: Res<UiFonts>, roots: Query<Entity, With<CardRoot>>, mut last: Local<Option<String>>) {
+fn card(mut commands: Commands, st: Res<ProjectState>, drafts: Res<Drafts>, typing: Typing, fonts: Res<UiFonts>, roots: Query<Entity, With<CardRoot>>, mut last: Local<Option<(u64, bool, [bool; 4], bool, usize)>>) {
     let focus = [NAME, DESCRIPTION, CHAT, PATH].map(|f| typing.focused(f));
-    let key = format!("{}|{}|{focus:?}|{}|{}", st.revision, st.panel.open, drafts.is_changed(), roots.iter().count());
-    if last.as_deref() == Some(key.as_str()) && !drafts.is_changed() {
+    let key = (st.revision, st.panel.open, focus, drafts.is_changed(), roots.iter().count());
+    if last.as_ref() == Some(&key) && !drafts.is_changed() {
         return;
     }
     *last = Some(key);

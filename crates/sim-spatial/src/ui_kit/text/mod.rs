@@ -312,10 +312,11 @@ impl TextFieldApp for App {
         let world = self.world_mut();
         let exists = world.query::<&FieldId>().iter(world).any(|f| *f == id);
         if !exists {
-            // Its own accessibility node (no role: the `accesskit` crate is
-            // not a dependency): `InputFocus` names this entity, and Bevy
-            // skips AccessKit updates while the focus has no node.
-            let mut node = AccessibilityNode::default();
+            // Its own accessibility node with the text-input role:
+            // `InputFocus` names this entity, and Bevy skips AccessKit
+            // updates while the focus has no node.
+            let role = if field.enter == EnterKey::Submit { accesskit::Role::TextInput } else { accesskit::Role::MultilineTextInput };
+            let mut node = AccessibilityNode(accesskit::Node::new(role));
             node.set_label(field.label.as_str());
             if !field.placeholder.is_empty() {
                 node.set_placeholder(field.placeholder.as_str());

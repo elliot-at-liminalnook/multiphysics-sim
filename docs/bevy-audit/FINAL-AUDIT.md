@@ -408,3 +408,25 @@ Additional gaps from this synthesis:
   (all catalogued in `bevy-modern.md` but with no local usage evidence
   either way in the audits read) — absence from §3 means "not audited",
   not "not applicable".
+
+## 7. Execution log
+
+Updated as each item of §4 lands (2026-10-12 execution pass; small
+commits, targeted tests only — the runs named per item, nothing broader).
+
+- **Baseline**: `cargo check -p sim-cad` found one error in the previous
+  day's flex port (an `FnOnce` closure where `Fn` was required); fixed,
+  and `cargo test -p sim-cad --lib -- flex component_derivation
+  component_graph` passes (8). `cargo check -p sim-spatial` clean.
+- **Item 1 (typed rebuild keys + AccessKit roles) — done.**
+  `render_key` returns a typed `RenderKey` compared as values in the
+  CAD panel, display `Shown`, thread pins and toolbar (its `Display`
+  keeps the historical string byte-identical for the panels whose keys
+  are still strings); the project card and comments panel keys are typed
+  tuples. Direct `accesskit =0.24.1` dependency added; text fields carry
+  `Role::TextInput`/`MultilineTextInput`; `chart_image` requires an
+  accessible label (15 call sites). Note: `Button` and `Slider` headless
+  widgets already carried their roles through `#[require]`, so no kit
+  button change was needed. Targeted:
+  `cargo test -p sim-spatial --lib -- render_key_display activation_tests ui_kit::tests`
+  (31 passed).

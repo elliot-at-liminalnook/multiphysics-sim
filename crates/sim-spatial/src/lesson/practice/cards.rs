@@ -174,7 +174,7 @@ pub(in crate::lesson) fn quiz_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &
             let played = l.scene.as_ref().filter(|a| Some(&a.id) == q.scene.as_ref()).is_some_and(|a| a.run.is_some() && a.time >= l.sketch_window(q)[1].min(a.duration()) - 1e-6);
             match (predicted.is_some(), l.sketch_results.get(&q.id).filter(|_| played)) {
                 (true, Some((image, gap, _))) => {
-                    c.spawn(k.chart_image(image.clone(), Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, false));
+                    c.spawn(k.chart_image(image.clone(), Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, false, "Practice chart"));
                     let close = *gap <= q.tolerance.map(|t| match t { sim_lesson::quiz::Tolerance::Absolute(v) | sim_lesson::quiz::Tolerance::Relative(v) => v }).unwrap_or(0.15);
                     c.spawn(k.text(format!("Purple: your sketch. Teal: the simulation. {} (typical gap {:.0} % of the axis).", if close { "Your curve has the right shape and size" } else { "Your curve differs from the simulation" }, gap * 100.), 13., if close { OK } else { WARN }, 1));
                     if !q.explain.is_empty() {

@@ -174,7 +174,7 @@ pub(in crate::lesson) fn scene_card(col: &mut ChildSpawnerCommands, k: &Kit, l: 
                 // border lights when the chart's part is hovered.
                 body.spawn((Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., border: UiRect::all(Val::Px(1.)), ..default() }, BorderColor::all(Color::NONE), k.pointer_surface(&format!("{} chart", chart.key), false), super::super::ChartHover(chart.key.clone(), chart.window.0, chart.window.1), narrate::ChartNode(chart.key.clone(), chart.window.0, chart.window.1))).with_children(|img| {
                     let window = chart.window;
-                    img.spawn((k.chart_image(chart.image.clone(), Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, width: Val::Percent(100.), height: Val::Percent(100.), ..default() }, false), Pickable::IGNORE));
+                    img.spawn((k.chart_image(chart.image.clone(), Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, width: Val::Percent(100.), height: Val::Percent(100.), ..default() }, false, format!("{} chart", chart.key)), Pickable::IGNORE));
                     img.spawn((Node { position_type: PositionType::Absolute, top: Val::Px(0.), height: Val::Percent(100.), left: Val::Percent(0.), width: Val::Percent(100.), ..default() }, BackgroundColor(Color::srgba(0.07, 0.09, 0.11, 0.93)), ChartMask, ChartWindow(window.0, window.1), Pickable::IGNORE));
                     img.spawn((Node { position_type: PositionType::Absolute, top: Val::Px(0.), bottom: Val::Px(0.), width: Val::Px(2.), left: Val::Percent(0.), ..default() }, BackgroundColor(Color::srgba(1., 1., 1., 0.7)), Playhead, ChartWindow(window.0, window.1), Pickable::IGNORE));
                 });
@@ -185,7 +185,7 @@ pub(in crate::lesson) fn scene_card(col: &mut ChildSpawnerCommands, k: &Kit, l: 
                     r.spawn(k.text(format!("x: {} {} … {} ({})", chart.x.0, num(chart.window.0), num(chart.window.1), chart.x.1), 10.5, FAINT, 0));
                 });
                 body.spawn((Node { width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, narrate::ChartNode(chart.ids.1.clone(), chart.window.0, chart.window.1))).with_children(|img| {
-                    img.spawn((k.chart_image(chart.image.clone(), Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, width: Val::Percent(100.), height: Val::Percent(100.), ..default() }, false), Pickable::IGNORE));
+                    img.spawn((k.chart_image(chart.image.clone(), Node { border_radius: BorderRadius::all(Val::Px(4.)), position_type: PositionType::Absolute, width: Val::Percent(100.), height: Val::Percent(100.), ..default() }, false, chart.title.clone()), Pickable::IGNORE));
                     img.spawn((Node { border_radius: BorderRadius::all(Val::Px(6.)), position_type: PositionType::Absolute, width: Val::Px(12.), height: Val::Px(12.), margin: UiRect { left: Val::Px(-6.), top: Val::Px(-6.), ..default() }, border: UiRect::all(Val::Px(2.)), ..default() }, BackgroundColor(ACCENT), BorderColor::all(Color::WHITE), PhaseDot { ids: chart.ids.clone(), window: chart.window, range: chart.range }, Pickable::IGNORE));
                 });
                 body.spawn(k.text(format!("y: {} {} … {} ({}) · the dot is the operating point now; the line is the whole run", chart.y.0, num(chart.range.0), num(chart.range.1), chart.y.1), 10.5, FAINT, 0));

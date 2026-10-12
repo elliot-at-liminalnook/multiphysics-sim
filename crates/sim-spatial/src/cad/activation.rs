@@ -22,11 +22,28 @@ impl SourceStamp {
     }
 }
 
+/// The typed source lifetime every retained CAD renderer includes in its
+/// key: the document generation, the shown (document id, revision) and the
+/// document revision, compared as values rather than formatted text.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(in crate::cad) struct RenderKey {
+    generation: u64,
+    document: Option<(Option<String>, u64)>,
+    revision: u64,
+}
+impl std::fmt::Display for RenderKey {
+    /// The historical string form, for the panels whose retained keys are
+    /// still strings: byte-identical to the old debug tuple.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({:?}, {:?}, {:?})", self.generation, self.document, self.revision)
+    }
+}
+
 /// Every retained CAD renderer includes this source lifetime in its key.
 /// A new source gets new entities; old entities and captured actions keep their
 /// immutable stamps and are refused rather than being silently re-authorized.
-pub(in crate::cad) fn render_key(doc: &CadDocument) -> String {
-    format!("{:?}", (doc.generation, &doc.doc_key, doc.revision))
+pub(in crate::cad) fn render_key(doc: &CadDocument) -> RenderKey {
+    RenderKey { generation: doc.generation, document: doc.doc_key.clone(), revision: doc.revision }
 }
 
 pub(super) fn install(app: &mut App) {
@@ -133,6 +150,19 @@ pub(in crate::cad) fn guard_results(doc: &CadDocument, action: super::actions::C
     source.results = Some((doc.results.form_sequence, doc.results.form.is_some()));
     super::actions::CadAction::Captured { source, action: Box::new(action) }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn render_key_display_matches_the_historical_string_form() {
+        let key = RenderKey { generation: 3, document: Some((Some("doc".into()), 7)), revision: 12 };
+        assert_eq!(key.to_string(), format!("{:?}", (3u64, &Some((Some("doc".to_string()), 7u64)), 12u64)));
+        assert_ne!(key, RenderKey { revision: 13, ..key.clone() });
+        assert_eq!(RenderKey { generation: 0, document: None, revision: 0 }.to_string(), "(0, None, 0)");
+    }
+}
+
 pub(in crate::cad) fn tree_keyboard(doc: Option<Res<CadDocument>>, rows: Query<&super::tree::rows::TreeRowId, With<Activated>>, mut out: MessageWriter<crate::app::actions::Act<super::actions::CadAction>>) {
     let Some(doc) = doc else { return };
     for row in &rows {

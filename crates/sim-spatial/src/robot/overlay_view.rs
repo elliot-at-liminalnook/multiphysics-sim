@@ -173,7 +173,7 @@ pub(super) fn graph_dock(
             commands.entity(card).add_child(t);
         }
         if !c.traces.is_empty() {
-            let plot = commands.spawn(k.chart_image(handles[slot].clone(), Node { flex_grow: 1.0, min_height: Val::Px(60.0), ..default() }, true)).id();
+            let plot = commands.spawn(k.chart_image(handles[slot].clone(), Node { flex_grow: 1.0, min_height: Val::Px(60.0), ..default() }, true, "Overlay chart")).id();
             if drawable {
                 let with_unit = |v: f64| if unit.is_empty() { num(v) } else { format!("{} {unit}", num(v)) };
                 let top = commands.spawn(k.chart_label(with_unit(range.1), Corner::TopLeft)).id();

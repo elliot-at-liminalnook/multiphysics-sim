@@ -310,7 +310,7 @@ pub(super) fn measured_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, 
             Some(Ok(r)) => {
                 c.spawn(k.text(format!("{} ({}) against {} · orange: measured · teal: simulated", if m.y.label.is_empty() { &m.y.field } else { &m.y.label }, m.y.unit, if m.x.label.is_empty() { &m.x.field } else { &m.x.label }), 11.5, SUBTLE, 1));
                 if let Some(image) = l.model.measured_images.get(&m.id) {
-                    c.spawn(k.chart_image(image.clone(), Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, false));
+                    c.spawn(k.chart_image(image.clone(), Node { border_radius: BorderRadius::all(Val::Px(4.)), width: Val::Percent(100.), aspect_ratio: Some(720. / 200.), flex_shrink: 0., ..default() }, false, "Lesson chart"));
                 }
                 let (lo, hi) = r.points.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), p| (a.min(p.x), b.max(p.x)));
                 c.spawn(k.text(format!("{} {} … {}", m.x.field, num(lo), num(hi)), 10.5, FAINT, 0));

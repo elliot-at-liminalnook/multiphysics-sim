@@ -254,7 +254,7 @@ fn comparison(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui:&StudyU
     }
     if ui.chart.current(owner) {
         if let Some(image)=&ui.chart.image {
-            body.spawn(k.chart_image(image.clone(),Node{width:Val::Percent(100.),height:Val::Px(180.),..default()},true)).with_children(|plot|{
+            body.spawn(k.chart_image(image.clone(),Node{width:Val::Percent(100.),height:Val::Px(180.),..default()},true,"Study chart")).with_children(|plot|{
                 plot.spawn(k.chart_label(format!("{} {}",ui.chart.axes.0.1,t.measured.unit),Corner::TopLeft));
                 plot.spawn(k.chart_label(format!("{} {}",ui.chart.axes.0.0,t.measured.unit),Corner::BottomLeft));
                 plot.spawn(k.chart_label(format!("{}–{} s",ui.chart.axes.1.0,ui.chart.axes.1.1),Corner::BottomRight));

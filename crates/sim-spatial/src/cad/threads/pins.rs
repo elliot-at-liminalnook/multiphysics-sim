@@ -136,7 +136,7 @@ fn draw(
     view: Option<Res<CadView>>,
     fonts: Res<UiFonts>,
     mut pins: Query<(Entity, &Pin, &mut Node)>,
-    mut last: Local<Option<(String, bool, bool)>>,
+    mut last: Local<Option<(crate::cad::activation::RenderKey, bool, bool)>>,
     mut gizmos: Gizmos<ToolGizmos>,
 ) {
     let (Some(doc), Some(view)) = (doc, view) else {

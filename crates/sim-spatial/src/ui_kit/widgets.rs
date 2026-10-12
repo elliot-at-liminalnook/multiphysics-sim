@@ -299,10 +299,12 @@ impl Kit<'_> {
     }
 
     /// A chart texture (`crate::chart`) in a node with the caller's layout
-    /// (`layout`: its size); `framed` draws the 1 px BORDER frame.
-    pub(crate) fn chart_image(&self, image: Handle<Image>, layout: Node, framed: bool) -> impl Bundle + use<> {
+    /// (`layout`: its size); `framed` draws the 1 px BORDER frame. `label`
+    /// is the chart's accessible name (assistive technology cannot read
+    /// the raster).
+    pub(crate) fn chart_image<S: Into<String>>(&self, image: Handle<Image>, layout: Node, framed: bool, label: S) -> impl Bundle + use<S> {
         let node = if framed { Node { border: UiRect::all(Val::Px(1.)), ..layout } } else { layout };
-        (node, BorderColor::all(if framed { BORDER } else { Color::NONE }), ImageNode::new(image))
+        (node, BorderColor::all(if framed { BORDER } else { Color::NONE }), ImageNode::new(image), AccessibleLabel::new(label))
     }
 
     /// An axis label in a corner of a chart image (spawn it as the image's child).

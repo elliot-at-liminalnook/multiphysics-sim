@@ -131,7 +131,7 @@ fn sync_panel(mut commands: Commands, hw: Option<Res<Hardware>>, fonts: Res<UiFo
         let card = commands.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(3.0), flex_shrink: 0.0, ..default() }).id();
         let title = commands.spawn(k.text(c.title.as_str(), size::CAPTION, TEXT, 1)).id();
         let stats = commands.spawn(k.text(c.stats.as_str(), size::DETAIL, SUBTLE, 0)).id();
-        let plot = commands.spawn(k.chart_image(handles[slot].clone(), Node { width: Val::Percent(100.0), aspect_ratio: Some(crate::chart::RASTER.0 as f32 / crate::chart::RASTER.1 as f32), flex_shrink: 0.0, ..default() }, true)).id();
+        let plot = commands.spawn(k.chart_image(handles[slot].clone(), Node { width: Val::Percent(100.0), aspect_ratio: Some(crate::chart::RASTER.0 as f32 / crate::chart::RASTER.1 as f32), flex_shrink: 0.0, ..default() }, true, "Sync chart")).id();
         if !c.waiting {
             let labels = [
                 commands.spawn(k.chart_label(format!("±{}°", fixed(c.bound, 1)), Corner::TopLeft)).id(),

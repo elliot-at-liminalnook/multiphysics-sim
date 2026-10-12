@@ -152,7 +152,7 @@ fn kit_bundles_spawn() {
     world.spawn(k.section("Section"));
     world.spawn(k.dock(Dock::Top { height: TOPBAR }, Node::default()));
     world.spawn(k.scroll_area(Node::default(), 12.0));
-    world.spawn(k.chart_image(Handle::default(), Node::default(), true));
+    world.spawn(k.chart_image(Handle::default(), Node::default(), true, "Chart"));
     world.spawn(k.chart_label("1 s".to_string(), Corner::TopLeft));
     assert!(!slider_held(true, &Interaction::Hovered) && slider_held(true, &Interaction::Pressed) && !slider_held(false, &Interaction::Pressed));
 }

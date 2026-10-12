@@ -16,7 +16,7 @@
 //! shown (its Q/A hold-to-move and Z STOP keys are read whatever has
 //! focus) or the document picker is open, and gives it up when either
 //! opens, the section is left or no thread is shown.
-use super::{LinkKeys, Parents, Placed, RobotThreads, ThreadsAct, anchor_link, base_of, cad_path, line, link_note, placements, shown};
+use super::{Base, LinkKeys, Parents, Placed, RobotThreads, ThreadsAct, anchor_link, base_of, cad_path, line, link_note, placements, shown};
 use crate::app::actions::Act;
 use super::NO_UNDO;
 use crate::cad::threads::{CadAnchor, attachment, thread_of};
@@ -122,13 +122,13 @@ impl Host<CadAnchor> for RobotHost<'_> {
 /// Present: the section, rebuilt when the thread state changes or what it
 /// is drawn from (the section, the subject, the loaded model) does.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn draw(mut commands: Commands, view: Res<RobotView>, st: Res<RobotThreads>, fonts: Res<UiFonts>, roots: Query<Entity, With<ThreadsRoot>>, mut last: Local<Option<(Entity, String)>>) {
+pub(crate) fn draw(mut commands: Commands, view: Res<RobotView>, st: Res<RobotThreads>, fonts: Res<UiFonts>, roots: Query<Entity, With<ThreadsRoot>>, mut last: Local<Option<(Entity, (bool, Option<Base>, Option<&'static str>, u64))>>) {
     let Ok(root) = roots.single() else {
         *last = None;
         return;
     };
     let on = shown(&view);
-    let key = format!("{on}|{:?}|{:?}|{}", base_of(&view), link_note(view.cad_link.as_ref()), view.ui_revision);
+    let key = (on, base_of(&view), link_note(view.cad_link.as_ref()), view.ui_revision);
     if !st.is_changed() && last.as_ref().is_some_and(|(e, k)| *e == root && *k == key) {
         return;
     }

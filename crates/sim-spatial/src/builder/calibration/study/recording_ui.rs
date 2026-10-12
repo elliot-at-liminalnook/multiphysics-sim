@@ -70,7 +70,7 @@ pub(crate) fn section(body:&mut ChildSpawnerCommands,k:&Kit,owner:&StudyOwner,ui
         body.spawn(k.caption(&ui.recording_charts.label));
         body.spawn(k.caption(if s.refinement_evidence.selected_fit_case.is_some(){"Trace colors: measured teal, baseline orange, candidate blue; each series keeps its original sample times."}else{"Trace colors: measured teal, standalone prediction orange; each series keeps its original sample times."}));
         body.spawn(k.caption(format!("Captured-time angle [rad] · time {}–{} s · angle {}–{} rad",ui.recording_charts.axes.1.0,ui.recording_charts.axes.1.1,ui.recording_charts.axes.0.0,ui.recording_charts.axes.0.1)));
-        if let Some(image)=&ui.recording_charts.image{body.spawn(k.chart_image(image.clone(),Node{width:Val::Percent(100.),height:Val::Px(180.),..default()},true));}
+        if let Some(image)=&ui.recording_charts.image{body.spawn(k.chart_image(image.clone(),Node{width:Val::Percent(100.),height:Val::Px(180.),..default()},true,"Recording chart"));}
     }
     if let Some(error)=&ui.recording_charts.error{body.spawn(k.text(error,size::DETAIL,WARN,0));}
     apply(body,k,stamp,"study:recording:case:clear".into(),"Return chart to selected recording / standalone prediction",Command::SelectFitCase{selection:None},usable);

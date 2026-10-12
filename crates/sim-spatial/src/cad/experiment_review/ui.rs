@@ -158,6 +158,7 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, d: &CadDocument, s: &R
                     ..default()
                 },
                 true,
+                "Experiment chart",
             ));
             p.spawn(k.caption(
                 "Blue selected run · gold baseline matched by stable identity and declared unit",

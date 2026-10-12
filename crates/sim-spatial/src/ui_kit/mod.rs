@@ -44,7 +44,7 @@
 //!   `(&bevy::ui_widgets::SliderValue, Has<bevy::ui::Pressed>, &Interaction)` each
 //!   frame; it is held while both `Pressed` and `Interaction::Pressed` (`slider_held`)
 //! - `pointer_surface(label, block: bool)` with `surface_point(&RelativeCursorPosition) -> Option<Vec2>`
-//! - `chart_image(image, layout: Node, framed: bool)`, `chart_label(value, Corner)`
+//! - `chart_image(image, layout: Node, framed: bool, label)`, `chart_label(value, Corner)`
 //! - `pie(commands, at: Vec2, label, entries: Vec<(label, action, enabled)>, hover: Option<usize>) -> Entity`
 //!   (`pie.rs`, RoboCAD's `RadialMenu`): an absolutely placed pie root with one
 //!   kit button per entry (`Look::Primary` hovered, else `Secondary`), first

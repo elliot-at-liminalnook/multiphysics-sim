@@ -312,7 +312,7 @@ fn graph_dock(commands: &mut Commands, k: &Kit, b: &Builder) {
                         }
                     });
                     if let Some(image) = b.graphs.images.get(i) {
-                        card.spawn(k.chart_image(image.clone(), Node { flex_grow: 1., ..default() }, true)).with_children(|plot| {
+                        card.spawn(k.chart_image(image.clone(), Node { flex_grow: 1., ..default() }, true, "System chart")).with_children(|plot| {
                             let label = |v: f64| format!("{} {}", num(v), c.unit);
                             plot.spawn(k.chart_label(label(c.range.1), Corner::TopLeft));
                             plot.spawn(k.chart_label(label(c.range.0), Corner::BottomLeft));

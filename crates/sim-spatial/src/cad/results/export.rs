@@ -250,8 +250,9 @@ pub(crate) fn request(doc: &mut CadDocument, request: ExportRequest) -> Result<V
 /// dedicated job, written atomically. `source.cad_sha256` is recorded only
 /// when the snapshot is the saved file ([`saved_hash`]); otherwise the
 /// reason is kept, and Robot mode's `cad_link` reports no recorded hash.
-/// Flexible links are not ported: every export is rigid and says so in
-/// `source.not_modelled` (a `physical` or `simulation` request too).
+/// Flexible links are derived for a `physical` or `simulation` request
+/// (its `flex`), never for `rigid` or the live link; the model's
+/// `source.not_modelled` says so when flex is off.
 fn start(doc: &mut CadDocument, request: ExportRequest, seq: u64) -> Result<(), String> {
     let local = doc.local.clone().ok_or_else(|| format!("no CAD document is open: {}", doc.connection_line().0))?;
     let saved = doc.history.saved.clone();
@@ -259,12 +260,13 @@ fn start(doc: &mut CadDocument, request: ExportRequest, seq: u64) -> Result<(), 
         crate::cad::CadTarget::File(p) => Some(p.clone()),
         crate::cad::CadTarget::Service(_) => None,
     };
-    let (path, planar) = (request.path.clone(), request.planar);
+    let (path, planar, flex) = (request.path.clone(), request.planar, request.flex);
     let job = Job::spawn(Pool::Dedicated, doc.generation, format!("Physical export: {}", request.label), move |ctx| {
         ctx.message("Deriving the physical model");
         let registry = registry_json();
         let opts = sim_cad::physical::Options {
             planar: planar.then_some(([0.0, -1.0, 0.0], [0.0, 0.0, 0.0])),
+            flex,
             registry: registry.as_ref().map(|(json, sha)| sim_cad::materials::Registry { json, sha256: sha }),
             exported_at: crate::robot::recording::stamp(crate::robot::recording::now_ms()),
         };

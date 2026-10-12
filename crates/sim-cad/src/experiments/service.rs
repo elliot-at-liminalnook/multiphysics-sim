@@ -21,7 +21,7 @@ pub const DEFAULT_CONTROLLER: &str = "fn control(t, sensors, commands, state) {\
 /// The limits every result states.
 pub const LIMITATIONS: [&str; 5] = [
     "Accuracy bounds apply only to the documented geometry, material and boundary conditions.",
-    "Every link is rigid: flexible links are not derived in process (settings.flex is refused).",
+    "Flex replay shows attachment displacement arrows with rigid CAD meshes, not full surface deformation.",
     "A seeded run does not sweep the captured material/geometry Monte Carlo uncertainty distributions.",
     "CAD sensor noise flag controls stochastic noise and bias walk; fixed bias and quantization remain captured CAD inputs.",
     "Scripted stochastic components use their declared parameters; use seed() to select reproducible streams.",
@@ -317,12 +317,10 @@ impl Lab {
             if cads.len() != 1 {
                 return Err("Use one captured assembly per experiment".into());
             }
-            if spec["settings"]["flex"] == true {
-                return Err("settings.flex: flexible links are not derived in process (every link would be rigid, which a flex run must not substitute silently); set flex false, and the result says rigid".into());
-            }
+            let flex = spec["settings"]["flex"] == true;
             emit(fields([("stage", json!("cad"))]));
             let cad_hash = spec["provenance"]["cad_derivation_hash"].as_str().or(spec["provenance"]["physical_hash"].as_str()).unwrap_or("").to_string();
-            let key = digest(&canonical(&json!({"cad_derivation_hash": cad_hash, "mechanical_exclusions": [], "flex": false, "derivation": spec["provenance"]["derivation"]})));
+            let key = digest(&canonical(&json!({"cad_derivation_hash": cad_hash, "mechanical_exclusions": [], "flex": flex, "derivation": spec["provenance"]["derivation"]})));
             let cache = self.root.join("cache").join(&key);
             let mut model: Option<Value> = None;
             if let (Ok(bytes), Ok(meta)) = (std::fs::read(cache.join("model.json")), read_json(&cache.join("metadata.json")))
@@ -334,7 +332,7 @@ impl Lab {
             let mut model = match model {
                 Some(m) => m,
                 None => {
-                    let m = derive(&folder.join("model.rcad"), &cad_hash, stop)?;
+                    let m = derive(&folder.join("model.rcad"), &cad_hash, flex, stop)?;
                     write_json(&cache.join("model.json"), &m)?;
                     let bytes = std::fs::read(cache.join("model.json")).map_err(|e| e.to_string())?;
                     write_json(&cache.join("metadata.json"), &json!({"content_hash": digest(&bytes), "key": key}))?;
@@ -539,9 +537,9 @@ impl Lab {
     }
 }
 
-/// The physical model of a captured archive (rigid; the print registry's
-/// filament values when it can be read).
-pub fn derive(path: &Path, cad_hash: &str, stop: &dyn Fn() -> bool) -> Result<Value, String> {
+/// The physical model of a captured archive (flexible links when `flex`;
+/// the print registry's filament values when it can be read).
+pub fn derive(path: &Path, cad_hash: &str, flex: bool, stop: &dyn Fn() -> bool) -> Result<Value, String> {
     let doc = ArchiveDocument::open(path)?;
     let geometry = crate::geometry::load_geometry(&doc, stop, &|_| {})?;
     let masses = crate::mass::derive_document_with(&doc, &geometry, stop, &|_| {})?;
@@ -549,6 +547,7 @@ pub fn derive(path: &Path, cad_hash: &str, stop: &dyn Fn() -> bool) -> Result<Va
     let registry = std::fs::read(&registry_path).ok().and_then(|b| Some((serde_json::from_slice::<Value>(&b).ok()?, digest(&b))));
     let opts = crate::physical::Options {
         planar: None,
+        flex,
         registry: registry.as_ref().map(|(json, sha)| crate::materials::Registry { json, sha256: sha }),
         exported_at: crate::edit::now_iso(),
     };

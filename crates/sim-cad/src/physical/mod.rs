@@ -24,10 +24,11 @@
 //! Every value that is a guess rather than a CAD derivation or a
 //! measurement is listed in `source.assumptions`, each with where it is,
 //! what was assumed, whether it blocks evidence, and how to resolve it.
-//! Not ported (listed in `source.not_modelled`): flexible links (every link
-//! is rigid), the signed distance grid for link-to-link contact, and bearing
-//! pin/hole inference from cylinder pairs.
+//! Not ported (listed in `source.not_modelled`): the signed distance grid
+//! for link-to-link contact, and bearing pin/hole inference from cylinder
+//! pairs. Flexible links are reduced in [`flex`] when the export asks.
 pub mod collision;
+pub mod flex;
 pub mod motors;
 
 use crate::archive::ArchiveDocument;
@@ -45,8 +46,7 @@ const DEFAULT_WALL: f64 = 2.4e-3;
 /// RoboCAD's `_DEFAULT_SERVO_HORN_CLEARANCE` (m).
 const SERVO_HORN_CLEARANCE: f64 = 0.05e-3;
 pub const EXPORTER: &str = "sim_cad::physical (in-process Rust port of RoboCAD export_physical_model)";
-pub const NOT_MODELLED: [&str; 3] = [
-    "flexible links: every link is rigid (RoboCAD's modal reduction is not ported)",
+pub const NOT_MODELLED: [&str; 2] = [
     "link-to-link contact: no signed distance grid is built (floor contact uses the collision surface)",
     "bearing inference from cylinder pairs: joint bearings are estimated from the motor shaft or a 2 mm printed pin unless set in CAD",
 ];
@@ -56,6 +56,9 @@ pub const NOT_MODELLED: [&str; 3] = [
 pub struct Options<'a> {
     /// RoboCAD's planar hint (normal, origin mm), for the simulation model.
     pub planar: Option<([f64; 3], [f64; 3])>,
+    /// Reduce printed links to flexible modal models ([`flex`]); RoboCAD's
+    /// `flex=False` skips it for fast exports (the live link).
+    pub flex: bool,
     /// The print registry for filament engineering values.
     pub registry: Option<materials::Registry<'a>>,
     /// When the export was made (written as given).
@@ -255,6 +258,8 @@ pub fn export(doc: &ArchiveDocument, geometry: &[BodyGeometry], masses: &MassRes
     // Links (in body order), with exact mass properties.
     let mut links: Vec<LinkRec> = Vec::new();
     let mut out_links: Vec<Value> = Vec::new();
+    // What the flex pass (after joints, whose physics it reads) needs per link.
+    let mut flex_work: Vec<(Vec<String>, bool)> = Vec::new();
     let mut used_materials: BTreeSet<String> = BTreeSet::new();
     for root in &bodies {
         let lid = root["id"].as_str().unwrap_or("").to_string();
@@ -317,6 +322,7 @@ pub fn export(doc: &ArchiveDocument, geometry: &[BodyGeometry], masses: &MassRes
             let n = m["name"].as_str().unwrap_or("").to_lowercase();
             n == "ground" || n.split_whitespace().any(|w| w == "ground") || m["robot"]["ground"].as_bool() == Some(true)
         });
+        flex_work.push((ids.clone(), robot["kind"] == "motor"));
         out_links.push(json!({
             "name": name, "id": lid, "members": ids, "member_names": members.iter().map(|m| m["name"].clone()).collect::<Vec<_>>(),
             "material": material,
@@ -437,6 +443,18 @@ pub fn export(doc: &ArchiveDocument, geometry: &[BodyGeometry], masses: &MassRes
         {
             phys["drive_backlash"] = json!({"width_rad": w, "provenance": "estimated", "reference": "legacy scalar backlash override; interpreted as an estimated drive-connection gap"});
         }
+        // The flex patch radius (RoboCAD: declared by set_joint_physics, or
+        // inferred from the hole and a printed wall).
+        let declared_patch = phys.get("flex_patch_radius").filter(|v| !v.is_null()).cloned();
+        if let Some(r) = &declared_patch
+            && !r.as_f64().is_some_and(|x| x.is_finite() && x > 0.0)
+        {
+            return Err(format!("{}: flex_patch_radius must be finite and positive in metres", j.name));
+        }
+        phys["flex_patch_source"] = json!(if declared_patch.is_none() { "inferred" } else { "declared" });
+        if declared_patch.is_none() {
+            phys["flex_patch_radius"] = json!((phys["hole_radius"].as_f64().unwrap_or(0.0) + DEFAULT_WALL).max(0.004));
+        }
         let st_ident = &st["identification"][&j.name];
         if st_ident.is_object() {
             phys["identified"] = st_ident.clone();
@@ -474,6 +492,81 @@ pub fn export(doc: &ArchiveDocument, geometry: &[BodyGeometry], masses: &MassRes
             "physics": phys, "fastened": null, "motor": motor.map(|(n, _)| n["name"].clone()),
             "declared": {"damping": j.node["joint"]["damping"].as_f64().unwrap_or(0.0), "friction": j.node["joint"]["friction"].as_f64().unwrap_or(0.0), "stroke": j.node["joint"]["stroke"].as_f64().unwrap_or(0.0) * MM},
         }));
+    }
+
+    // Flexible links: the modal reduction per printed link over the
+    // boundary frames its joints and attachments make ([`flex`]). A link
+    // that cannot be reduced stays rigid and says why (`flex_error`).
+    if opts.flex {
+        for (li, link) in out_links.iter_mut().enumerate() {
+            let (member_ids, is_motor) = &flex_work[li];
+            let props = eng.get(&links[li].material).cloned().unwrap_or(Value::Null);
+            let extent = (0..3).map(|k| link["bbox"][1][k].as_f64().unwrap_or(0.0) - link["bbox"][0][k].as_f64().unwrap_or(0.0)).fold(0.0f64, f64::max);
+            let com = links[li].com;
+            let mut meshes: Vec<flex::Mesh> = Vec::new();
+            let mut solids: Vec<flex::Mesh> = Vec::new();
+            for id in member_ids {
+                let Some(g) = geo.get(id.as_str()).copied() else { continue };
+                if g.vertices_mm.is_empty() || g.triangles.is_empty() {
+                    continue;
+                }
+                let mesh: flex::Mesh = (g.vertices_mm.iter().map(|p| [p[0] * MM - com[0], p[1] * MM - com[1], p[2] * MM - com[2]]).collect(), g.triangles.clone());
+                if doc.node(id).is_some_and(|n| n["body_kind"].as_str().unwrap_or("solid") == "solid") {
+                    solids.push(mesh.clone());
+                }
+                meshes.push(mesh);
+            }
+            if props["print"].is_null() || *is_motor || extent < 5e-3 || meshes.is_empty() {
+                continue;
+            }
+            let name = links[li].name.as_str();
+            let mut frames: Vec<flex::Frame> = Vec::new();
+            for j in &out_joints {
+                let child = j["child"].as_str().unwrap_or("");
+                let parent = j["parent"].as_str().unwrap_or("");
+                if child != name && parent != name {
+                    continue;
+                }
+                let origin = [0, 1, 2].map(|k| j["origin"][k].as_f64().unwrap_or(0.0));
+                frames.push(flex::Frame {
+                    id: j["id"].clone(),
+                    name: j["name"].as_str().unwrap_or("joint").to_string(),
+                    point: sub(origin, com),
+                    role: Some(if child == name { "root".into() } else { "outboard".into() }),
+                    radius: j["physics"]["flex_patch_radius"].as_f64(),
+                    radius_source: j["physics"]["flex_patch_source"].as_str().map(str::to_string),
+                });
+            }
+            for n in &nodes {
+                if !matches!(n["kind"].as_str(), Some("sensor" | "cable")) || !n["robot"].is_object() {
+                    continue;
+                }
+                for (key, point_key) in [("body", "point"), ("from_body", "from_point"), ("to_body", "to_point")] {
+                    let Some(body) = n["robot"][key].as_str() else { continue };
+                    if group.get(body).map(String::as_str) != Some(links[li].id.as_str()) {
+                        continue;
+                    }
+                    let Some(point) = v3(&n["robot"][point_key]) else { continue };
+                    let nid = n["id"].as_str().unwrap_or("");
+                    frames.push(flex::Frame {
+                        id: json!(if key == "body" { nid.to_string() } else { format!("{nid}/{key}") }),
+                        name: n["name"].as_str().unwrap_or("attachment").to_string(),
+                        point: sub(to_m(point), com),
+                        role: Some("attachment".into()),
+                        radius: None,
+                        radius_source: None,
+                    });
+                }
+            }
+            match flex::flexible_link(&solids, &meshes, link, &props, &frames, 6) {
+                Ok(Some(f)) => link["flex"] = f,
+                Ok(None) => {}
+                Err(e) => {
+                    link["flex"] = Value::Null;
+                    link["flex_error"] = json!(e);
+                }
+            }
+        }
     }
 
     // Motors.
@@ -609,6 +702,10 @@ pub fn export(doc: &ArchiveDocument, geometry: &[BodyGeometry], masses: &MassRes
     }
 
     let blocking = assumptions.iter().filter(|a| a.blocking).count();
+    let mut not_modelled: Vec<&str> = NOT_MODELLED.to_vec();
+    if !opts.flex {
+        not_modelled.push("flexible links: this export did not derive them (flex off), so every link is rigid");
+    }
     let mut model = json!({
         "format": "simrobot", "version": SCHEMA_VERSION,
         "source": {
@@ -617,7 +714,7 @@ pub fn export(doc: &ArchiveDocument, geometry: &[BodyGeometry], masses: &MassRes
             "mass_model_identity": masses.model_identity, "mass_derivation_identity": masses.derivation_identity,
             "assumptions": assumptions.iter().map(Assumption::json).collect::<Vec<_>>(),
             "blocking_assumptions": blocking,
-            "not_modelled": NOT_MODELLED, "merged": merged,
+            "not_modelled": not_modelled, "merged": merged,
         },
         "gravity": [0.0, 0.0, -G],
         "world": world,

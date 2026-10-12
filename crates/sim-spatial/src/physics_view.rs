@@ -389,7 +389,7 @@ pub(crate) fn draw(scene: Res<SpatialScene>, time: Res<Time>, mut gizmos: Gizmos
     }
 
     // Moving dots along wires (current) and chevrons along thermal links (heat).
-    let dt = time.delta_secs().min(0.1);
+    let dt = time.delta_secs();
     for (layer, domain, color) in [(Overlay::Current, FlowDomain::Electrical, CURRENT), (Overlay::Heat, FlowDomain::Thermal, HEAT)] {
         if !on(layer) {
             continue;

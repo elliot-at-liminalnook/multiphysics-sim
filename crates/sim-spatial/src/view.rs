@@ -47,7 +47,7 @@ pub(crate) fn animate(time: Res<Time>, mut scene: ResMut<SpatialScene>) {
         return;
     }
     if (t - target).abs() > 1e-4 {
-        let step = time.delta_secs().min(0.1) / 0.8;
+        let step = time.delta_secs() / 0.8;
         scene.explode_t = if target > t { (t + step).min(target) } else { (t - step).max(target) };
     }
 }

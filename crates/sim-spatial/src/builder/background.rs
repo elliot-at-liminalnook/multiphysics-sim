@@ -62,10 +62,11 @@ pub(super) fn watch(time: Res<Time>, mut builder: ResMut<Builder>) {
     }
 }
 
-/// Measure UI-thread frame times: the worst frame and the count over 50 ms
-/// in each 10 s window (reported by `system_state`).
-pub(super) fn frame_timing(time: Res<Time>, mut builder: ResMut<Builder>) {
-    let dt = time.delta_secs_f64();
+/// Measure UI-thread frame times from Bevy's frame-time diagnostic: the
+/// worst frame and the count over 50 ms in each 10 s window (reported by
+/// `system_state`).
+pub(super) fn frame_timing(diagnostics: Res<bevy::diagnostic::DiagnosticsStore>, time: Res<Time>, mut builder: ResMut<Builder>) {
+    let Some(dt) = diagnostics.get(&bevy::diagnostic::FrameTimeDiagnosticsPlugin::FRAME_TIME).and_then(|d| d.value()).map(|ms| ms / 1000.0) else { return };
     let now = time.elapsed_secs_f64();
     let frames = builder.bypass_change_detection();
     if now - frames.frames.2 > 10. {

@@ -18,10 +18,11 @@ sim-markdown = { path = "../sim-markdown" }
 sim-render = { path = "../sim-render" }
 sim-api = { path = "../sim-api" }
 serde.workspace = true
-# Match the existing spatial host, without audio/gamepad/animation dependencies. Rebuilt from
+# Match the existing spatial host, without audio/animation dependencies (gamepad
+# input is included: bevy_gilrs drives teleoperation). Rebuilt from
 # bevy 0.19.1's cargo features (0.17 split camera/light/mesh/shader/ui_render/gizmos_render out of
 # render; picking backends are mesh_picking/ui_picking). Same effective set as the 0.16.1 list: no
-# tonemapping_luts, smaa_luts, hdr, scene, gltf, audio or gamepad. bevy_state (StatesPlugin in
+# tonemapping_luts, smaa_luts, hdr, scene, gltf or audio. bevy_state (StatesPlugin in
 # DefaultPlugins) was added for the one app's ViewerMode states (docs/architecture/native-viewer.md).
 # bevy_ui_widgets (with the bevy_input_focus it enables) is the UI kit's headless slider
 # (ui_kit::Kit::slider on bevy_ui_widgets::Slider, native-viewer.md "UI kit (2026-09-30)");

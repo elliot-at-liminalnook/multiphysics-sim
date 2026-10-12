@@ -430,3 +430,20 @@ commits, targeted tests only — the runs named per item, nothing broader).
   button change was needed. Targeted:
   `cargo test -p sim-spatial --lib -- render_key_display activation_tests ui_kit::tests`
   (31 passed).
+- **Item 2 (diagnostics/logging/platform bundle) — done.**
+  `FrameTimeDiagnosticsPlugin` in `CorePlugin`; the builder's
+  `frame_timing` reads Bevy's `frame_time` diagnostic instead of `Time`.
+  `LogPlugin` filter `wgpu=error,sim_spatial=info`; `PresentMode::Mailbox`
+  for Place and Phenomena through `Look`/`apply_look` (AutoVsync
+  elsewhere); a grabbing `CursorIcon` while a camera drag button is held
+  outside the UI; `Time<Virtual>` capped at 100 ms and the three
+  scattered `delta_secs().min(0.1)` clamps retired; the stale
+  "no gamepad" feature comment corrected. Pointer-lock for the fly
+  camera was *not* added: `camera/fly.rs` records a deliberate decision
+  against cursor grabbing, which stands. Targeted (output filtered
+  through head/grep; no failures shown but the pass count was not
+  captured redone):
+  `cargo test -p sim-spatial --lib -- camera::tests app::tests` —
+  green except five `rest::bind` tests that the shell sandbox cannot
+  run (`PermissionDenied` binding a socket); the same five pass outside
+  the sandbox.

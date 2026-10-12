@@ -419,7 +419,7 @@ pub(super) fn place(time: Res<Time>, window: Option<Single<&Window, With<Primary
             orbit.spin = 0.;
         }
         if orbit.glide.is_some() || orbit.spin != 0.0 {
-            orbit.step(time.delta_secs().min(0.1));
+            orbit.step(time.delta_secs());
         }
         let target = orbit.transform();
         if *transform != target {

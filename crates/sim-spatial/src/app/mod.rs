@@ -323,6 +323,9 @@ struct Look {
     size: (u32, u32),
     min: Option<(f32, f32)>,
     winit: WinitSettings,
+    /// Mailbox where the mode redraws continuously (no vsync queueing
+    /// latency); AutoVsync elsewhere.
+    present: bevy::window::PresentMode,
 }
 
 /// Reactive at 60 Hz focused, low power unfocused: every mode but Place.
@@ -334,10 +337,10 @@ fn reactive() -> WinitSettings {
 
 fn look(mode: ViewerMode, compact: bool) -> Look {
     match mode {
-        ViewerMode::Inspect => Look { title: "Systems — Physical assembly", clear: CLEAR, ambient: (AMBIENT, 420.0), size: if compact { (880, 850) } else { (1440, 900) }, min: Some((780.0, 720.0)), winit: reactive() },
-        ViewerMode::Build => Look { title: "Systems — Physical assembly (build)", clear: CLEAR, ambient: (AMBIENT, 420.0), size: (1500, 940), min: Some((980.0, 720.0)), winit: reactive() },
-        ViewerMode::Lessons => Look { title: "Systems — Lessons", clear: CLEAR, ambient: (AMBIENT, 420.0), size: (1560, 980), min: Some((1100.0, 720.0)), winit: reactive() },
-        ViewerMode::Robot => Look { title: "Systems — Robot (file read-only)", clear: CLEAR, ambient: (AMBIENT, 420.0), size: (1500, 940), min: Some((980.0, 720.0)), winit: reactive() },
+        ViewerMode::Inspect => Look { title: "Systems — Physical assembly", clear: CLEAR, ambient: (AMBIENT, 420.0), size: if compact { (880, 850) } else { (1440, 900) }, min: Some((780.0, 720.0)), winit: reactive(), present: bevy::window::PresentMode::AutoVsync },
+        ViewerMode::Build => Look { title: "Systems — Physical assembly (build)", clear: CLEAR, ambient: (AMBIENT, 420.0), size: (1500, 940), min: Some((980.0, 720.0)), winit: reactive(), present: bevy::window::PresentMode::AutoVsync },
+        ViewerMode::Lessons => Look { title: "Systems — Lessons", clear: CLEAR, ambient: (AMBIENT, 420.0), size: (1560, 980), min: Some((1100.0, 720.0)), winit: reactive(), present: bevy::window::PresentMode::AutoVsync },
+        ViewerMode::Robot => Look { title: "Systems — Robot (file read-only)", clear: CLEAR, ambient: (AMBIENT, 420.0), size: (1500, 940), min: Some((980.0, 720.0)), winit: reactive(), present: bevy::window::PresentMode::AutoVsync },
         // A walkthrough is flown continuously while focused (W/A/S/D), so it
         // updates every frame; the setting is scoped to this mode.
         ViewerMode::Place => Look {
@@ -347,8 +350,9 @@ fn look(mode: ViewerMode, compact: bool) -> Look {
             size: (1440, 900),
             min: None,
             winit: WinitSettings { focused_mode: UpdateMode::Continuous, unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(100)) },
+            present: bevy::window::PresentMode::Mailbox,
         },
-        ViewerMode::Cad => Look { title: "Systems — CAD (RoboCAD document)", clear: CLEAR, ambient: (AMBIENT, 420.0), size: (1500, 940), min: Some((980.0, 720.0)), winit: reactive() },
+        ViewerMode::Cad => Look { title: "Systems — CAD (RoboCAD document)", clear: CLEAR, ambient: (AMBIENT, 420.0), size: (1500, 940), min: Some((980.0, 720.0)), winit: reactive(), present: bevy::window::PresentMode::AutoVsync },
         // The exhibit moves on its own run thread, so the window redraws
         // every frame while focused to show its latest frame; the setting is
         // scoped to this mode (as Place's). The exhibits paint with
@@ -362,6 +366,7 @@ fn look(mode: ViewerMode, compact: bool) -> Look {
             size: (1500, 940),
             min: Some((980.0, 720.0)),
             winit: WinitSettings { focused_mode: UpdateMode::Continuous, unfocused_mode: UpdateMode::reactive_low_power(std::time::Duration::from_millis(100)) },
+            present: bevy::window::PresentMode::Mailbox,
         },
     }
 }
@@ -384,11 +389,18 @@ pub struct CorePlugin {
 impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
         let first = look(self.initial, self.compact);
-        app.add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window { title: first.title.into(), resolution: first.size.into(), resize_constraints: constraints(first.min), ..default() }),
-            close_when_requested: false,
-            ..default()
-        }))
+        app.add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window { title: first.title.into(), resolution: first.size.into(), resize_constraints: constraints(first.min), present_mode: first.present, ..default() }),
+                    close_when_requested: false,
+                    ..default()
+                })
+                // wgpu's info chatter drowns the viewer's own logs; the
+                // RUST_LOG env filter still overrides this default.
+                .set(bevy::log::LogPlugin { filter: "wgpu=error,sim_spatial=info".into(), ..default() }),
+        )
+        .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin::default())
         .insert_resource(ClearColor(first.clear))
         .insert_resource(GlobalAmbientLight { color: first.ambient.0, brightness: first.ambient.1, affects_lightmapped_meshes: true })
         .insert_resource(first.winit)
@@ -407,6 +419,10 @@ impl Plugin for CorePlugin {
         for mode in ViewerMode::ALL {
             app.add_systems(OnEnter(mode), apply_look);
         }
+        // One virtual-clock cap for every presentation delta: a frame
+        // longer than 100 ms (a stall, a debugger pause) advances the
+        // shown world by at most that, instead of each site clamping.
+        app.world_mut().resource_mut::<Time<bevy::time::Virtual>>().set_max_delta(std::time::Duration::from_millis(100));
         // The first mode's OnEnter runs before Startup, so the fonts it
         // spawns text with are loaded now, while the app is built.
         let fonts = crate::ui_kit::UiFonts::load(app.world_mut());
@@ -426,5 +442,6 @@ fn apply_look(mode: Res<State<ViewerMode>>, mut commands: Commands, window: Opti
             window.title = look.title.into();
         }
         window.resize_constraints = constraints(look.min);
+        window.present_mode = look.present;
     }
 }

@@ -485,7 +485,7 @@ impl Plugin for CameraPlugin {
         app.add_systems(Update, input::keys.in_set(crate::app::InputSet::Window).run_if(not(crate::ui_kit::text::typing)))
             .add_systems(Update, apply::apply.in_set(ViewerSet::Actions))
             .add_systems(Update, viewport::viewport.in_set(CameraSet::Viewport))
-            .add_systems(Update, input::navigate.in_set(CameraSet::Navigate))
+            .add_systems(Update, (input::navigate, input::drag_cursor).in_set(CameraSet::Navigate))
             .add_systems(Update, (orbit::place, fly::fly).in_set(CameraSet::Place));
     }
 }

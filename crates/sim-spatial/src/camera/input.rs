@@ -208,6 +208,27 @@ pub(super) fn navigate(
     }
 }
 
+/// The grabbing cursor while a camera drag button is held outside the UI
+/// (reset on release): presentation only, next to [`navigate`]'s latches.
+pub(super) fn drag_cursor(
+    mut commands: Commands,
+    buttons: Option<Res<ButtonInput<MouseButton>>>,
+    window: Option<Single<Entity, With<PrimaryWindow>>>,
+    hover: Option<Res<HoverMap>>,
+    nodes: Query<(), With<Node>>,
+    mut grabbing: Local<bool>,
+) {
+    let want = buttons.as_ref().is_some_and(|b| b.any_pressed([MouseButton::Right, MouseButton::Middle])) && !over_ui(hover.as_deref(), &nodes);
+    if want == *grabbing {
+        return;
+    }
+    *grabbing = want;
+    if let Some(window) = window {
+        let icon = if want { bevy::window::CursorIcon::System(bevy::window::SystemCursorIcon::Grabbing) } else { bevy::window::CursorIcon::default() };
+        commands.entity(*window).try_insert(icon);
+    }
+}
+
 /// The display-frame point under a window position (logical pixels, as
 /// `Window::cursor_position`) on the plane through the focus facing the view.
 /// The ray is cast from the orbit's own placement (the camera is a root

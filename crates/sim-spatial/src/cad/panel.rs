@@ -391,7 +391,7 @@ fn refresh(
     fonts: Res<UiFonts>,
     mut drawn: Local<Drawn>,
     mut seen_epoch: Local<Option<u64>>,
-    roots: Query<Entity, With<CadRoot>>,
+    roots: Option<Single<Entity, With<CadRoot>>>,
     mut lists: Query<(Entity, &mut CadList)>,
     mut rows: Query<(Entity, &super::tree::TreeRowId, &mut Tint, &mut BorderColor, &AccessibleLabel)>,
     mut eyes: Query<&mut Enabled, With<super::tree::EyeChip>>,
@@ -400,7 +400,7 @@ fn refresh(
     (components, composition): (Res<super::components::ComponentsState>, Res<super::composition::CadCompositionState>),
     (experiments, review, motion): (Res<super::experiments::ExperimentsState>, Res<super::experiment_review::ReviewState>, Res<super::motion::MotionState>),
 ) {
-    let root = roots.iter().next();
+    let root = roots.map(|s| *s);
     let stamp = doc.as_deref().map(super::activation::render_key);
     let added = doc.as_ref().is_some_and(|d| d.is_added());
     let epoch = topology.as_ref().map(|t| t.epoch);

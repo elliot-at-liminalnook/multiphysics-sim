@@ -92,8 +92,8 @@ pub(crate) const BACKDROP: Color = Color::srgba(0.04, 0.06, 0.08, 0.8);
 pub(crate) const COMPANION: Color = Color::srgb(0.72, 0.58, 1.0);
 
 /// 3D arrows with labels, anchored to parts (they follow the part and the camera).
-pub(crate) fn draw_pins(scene: Res<SpatialScene>, mut gizmos: Gizmos, mut labels: ResMut<crate::physics_view::Labels>, camera: Single<(&GlobalTransform, &Orbit)>) {
-    let (gt, orbit) = *camera;
+pub(crate) fn draw_pins(scene: Res<SpatialScene>, mut gizmos: Gizmos, mut labels: ResMut<crate::physics_view::Labels>, camera: Query<(&GlobalTransform, &Orbit)>) -> bevy::ecs::error::Result<()> {
+    let (gt, orbit) = camera.single()?;
     let up = gt.up().as_vec3();
     let right = gt.right().as_vec3();
     for (path, label) in &scene.directives.pins {
@@ -118,6 +118,7 @@ pub(crate) fn draw_pins(scene: Res<SpatialScene>, mut gizmos: Gizmos, mut labels
             labels.0.insert(0, (tail, label.clone(), color));
         }
     }
+    Ok(())
 }
 
 /// A camera's whole render target as a viewport (for a camera drawing
@@ -131,14 +132,15 @@ fn whole(camera: &Camera) -> Option<Viewport> {
 #[allow(clippy::type_complexity)]
 pub(crate) fn inset(
     scene: Res<SpatialScene>,
-    window: Single<&Window>,
-    main: Single<(&Camera, &Orbit), Without<InsetCamera>>,
-    mut inset: Single<(&mut Camera, &mut Transform), (With<InsetCamera>, Without<Orbit>)>,
+    window: Query<&Window>,
+    main: Query<(&Camera, &Orbit), Without<InsetCamera>>,
+    mut inset: Query<(&mut Camera, &mut Transform), (With<InsetCamera>, Without<Orbit>)>,
     mut frame: Query<(&mut Node, &mut Visibility, &Children), With<InsetFrame>>,
     mut texts: Query<&mut Text>,
-) {
-    let (main_camera, orbit) = *main;
-    let (camera, transform) = &mut *inset;
+) -> bevy::ecs::error::Result<()> {
+    let window = window.single()?;
+    let (main_camera, orbit) = main.single()?;
+    let (mut camera, mut transform) = inset.single_mut()?;
     let target = scene.directives.inset.clone().and_then(|(path, zoom)| Some((live_bounds(&scene, &path)?, path, zoom)));
     // The whole window when the docks leave no room (the shared camera then draws without a viewport).
     let viewport = main_camera.viewport.clone().or_else(|| whole(main_camera)).filter(|v| v.physical_size.x > 200 && v.physical_size.y > 150);
@@ -149,7 +151,7 @@ pub(crate) fn inset(
         for (_, mut vis, _) in &mut frame {
             *vis = Visibility::Hidden;
         }
-        return;
+        return Ok(());
     };
     let size = (v.physical_size.as_vec2() * 0.34).max(Vec2::new(120., 90.)).as_uvec2();
     let margin = UVec2::splat((10. * window.scale_factor()) as u32);
@@ -159,7 +161,7 @@ pub(crate) fn inset(
     let distance = radius.max(1e-3) * 2.9 / zoom.max(0.1) as f32;
     // The main camera's direction (turntable or trackball).
     let rotation = orbit.rotation();
-    **transform = Transform { translation: centre + rotation * Vec3::Z * distance, rotation, scale: Vec3::ONE };
+    *transform = Transform { translation: centre + rotation * Vec3::Z * distance, rotation, scale: Vec3::ONE };
     let scale = window.scale_factor();
     for (mut node, mut vis, children) in &mut frame {
         *vis = Visibility::Inherited;
@@ -177,6 +179,7 @@ pub(crate) fn inset(
             }
         }
     }
+    Ok(())
 }
 
 /// The part under the pointer in the 3D view (its component path).
@@ -255,26 +258,27 @@ pub(crate) fn draw_ghost(scene: Res<SpatialScene>, mut gizmos: Gizmos, mut label
 pub(crate) fn split(
     mut commands: Commands,
     scene: Res<SpatialScene>,
-    window: Single<&Window>,
+    window: Query<&Window>,
     originals: Query<(&Part, &Mesh3d, &MeshMaterial3d<StandardMaterial>), Without<CompanionPart>>,
     mut copies: Query<(Entity, &CompanionPart, &mut Transform), Without<SplitCamera>>,
-    main: Single<(&mut Camera, &Orbit, &Transform, Ref<Projection>), (Without<SplitCamera>, Without<InsetCamera>, Without<CompanionPart>)>,
-    mut split: Single<(&mut Camera, &mut Transform, &mut Projection), (With<SplitCamera>, Without<Orbit>, Without<CompanionPart>)>,
+    mut main: Query<(&mut Camera, &Orbit, &Transform, Ref<Projection>), (Without<SplitCamera>, Without<InsetCamera>, Without<CompanionPart>)>,
+    mut split: Query<(&mut Camera, &mut Transform, &mut Projection), (With<SplitCamera>, Without<Orbit>, Without<CompanionPart>)>,
     mut labels: Query<(&mut Node, &mut Visibility, &Children, &SplitLabel)>,
     mut texts: Query<&mut Text>,
-) {
+) -> bevy::ecs::error::Result<()> {
+    let window = window.single()?;
     let active = scene.companion.as_ref().filter(|c| !c.ghost);
-    let (mut main_camera, _orbit, main_transform, main_projection) = main.into_inner();
-    let (camera, transform, projection) = &mut *split;
+    let (mut main_camera, _orbit, main_transform, main_projection) = main.single_mut()?;
+    let (mut camera, mut transform, mut projection) = split.single_mut()?;
     let Some(c) = active else {
         for (e, _, _) in &copies {
-            commands.entity(e).despawn();
+            commands.entity(e).try_despawn();
         }
         camera.is_active = false;
         for (_, mut v, _, _) in &mut labels {
             *v = Visibility::Hidden;
         }
-        return;
+        return Ok(());
     };
     let offset = split_offset(&scene);
     if copies.is_empty() {
@@ -288,9 +292,9 @@ pub(crate) fn split(
         *t = pose;
     }
     // Halve the main view; the split camera takes the right half.
-    let Some(v) = main_camera.viewport.clone().or_else(|| whole(&main_camera)) else { return };
+    let Some(v) = main_camera.viewport.clone().or_else(|| whole(&main_camera)) else { return Ok(()) };
     if v.physical_size.x < 80 {
-        return;
+        return Ok(());
     }
     let half = UVec2::new(v.physical_size.x / 2, v.physical_size.y);
     let left = Viewport { physical_position: v.physical_position, physical_size: half, ..default() };
@@ -302,10 +306,10 @@ pub(crate) fn split(
     let opening = !camera.is_active;
     camera.is_active = true;
     camera.viewport = Some(right.clone());
-    **transform = Transform::from_translation(main_transform.translation + offset).with_rotation(main_transform.rotation);
+    *transform = Transform::from_translation(main_transform.translation + offset).with_rotation(main_transform.rotation);
     // `Projection` has no PartialEq: copied on a change rather than compared.
     if opening || main_projection.is_changed() {
-        **projection = Projection::clone(&main_projection);
+        *projection = Projection::clone(&main_projection);
     }
     let scale = window.scale_factor();
     for (mut node, mut vis, children, right_side) in &mut labels {
@@ -322,6 +326,7 @@ pub(crate) fn split(
             }
         }
     }
+    Ok(())
 }
 
 #[cfg(test)]

@@ -458,4 +458,18 @@ commits, targeted tests only — the runs named per item, nothing broader).
   composition remains future work, as the audit sized it. Targeted:
   `cargo test -p sim-spatial --lib -- ui_kit::tests text::tests text_drafts`
   (26 passed, including the new caret/selection test).
+- **Item 4 (Single + fallible sweep, Inspect) — done.** All eight
+  `Single`-using Inspect systems (`scroll_inspector`, `sync_camera`,
+  `draw_pins`, `inset`, `split`, physics `labels`, `overlay_bar`,
+  `publish`) now take plain queries and return
+  `bevy::ecs::error::Result<()>` with `single()?`/`single_mut()?`, so a
+  missing or duplicated singleton is a routed error, not a panic or an
+  arbitrary pick. The pooled-label and companion-copy despawns in those
+  systems are `try_despawn`. The two `.iter().next()` singleton sites
+  F10 named outside Inspect went with it (CAD panel root is
+  `Option<Single>`; the picker's existence check is `is_empty`). The
+  global warn handler stays for now — tightening it wants this pattern
+  in the remaining modes first. Targeted:
+  `cargo test -p sim-spatial --lib -- inspect_view::tests view::tests cad::panel`
+  (33 passed).
 

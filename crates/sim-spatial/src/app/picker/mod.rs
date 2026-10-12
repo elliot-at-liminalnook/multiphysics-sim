@@ -544,7 +544,7 @@ pub(crate) fn draw(mut commands: Commands, picker: Option<Res<Picker>>, switch: 
     // owned by the kit ring and must retain the PATH anchor for modal return.
     let focused = typing.focused(PATH);
     let key = open.map(|p| format!("{:?}|{}|{status:?}", p.open, p.revision));
-    let shown = roots.iter().next().is_some();
+    let shown = !roots.is_empty();
     if key == *last && shown == key.is_some() {
         return;
     }

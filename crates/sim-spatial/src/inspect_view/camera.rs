@@ -43,8 +43,8 @@ pub(super) fn view_area(scene: &SpatialScene) -> ViewArea {
 /// lesson card (the page scrolls with it), and the view area. The numpad
 /// keys stay on (`spatial_rules`): while a kit text field has the keyboard
 /// the camera's key system does not run (`ui_kit::text::typing`).
-pub(crate) fn sync_camera(scene: Res<SpatialScene>, camera: Single<(&mut Orbit, &mut OrbitRules, &mut ViewArea)>) {
-    let (mut orbit, mut rules, mut area) = camera.into_inner();
+pub(crate) fn sync_camera(scene: Res<SpatialScene>, mut camera: Query<(&mut Orbit, &mut OrbitRules, &mut ViewArea)>) -> bevy::ecs::error::Result<()> {
+    let (mut orbit, mut rules, mut area) = camera.single_mut()?;
     let (centre, extent) = scene.bounds();
     if orbit.centre != centre || orbit.extent != extent {
         orbit.centre = centre;
@@ -59,4 +59,5 @@ pub(crate) fn sync_camera(scene: Res<SpatialScene>, camera: Single<(&mut Orbit, 
     if *area != want {
         *area = want;
     }
+    Ok(())
 }

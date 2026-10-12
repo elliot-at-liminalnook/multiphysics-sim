@@ -512,7 +512,9 @@ const TEXT_REFRESH_S: f64 = 0.25;
 const EASE_S: f32 = 0.18;
 const SNAP_PX: f32 = 90.;
 
-pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<SpatialScene>, time: Res<Time>, window: Single<&Window>, camera: Single<(&Camera, &GlobalTransform), With<Orbit>>, inset: Query<&Camera, (With<crate::view::InsetCamera>, Without<Orbit>)>, fonts: Option<Res<crate::ui_kit::UiFonts>>, mut existing: Query<(Entity, &PhysicsLabel, &mut Node, &Children)>, mut texts: Query<&mut Text>, mut steady: Local<Steady>) {
+pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<SpatialScene>, time: Res<Time>, window: Query<&Window>, camera: Query<(&Camera, &GlobalTransform), With<Orbit>>, inset: Query<&Camera, (With<crate::view::InsetCamera>, Without<Orbit>)>, fonts: Option<Res<crate::ui_kit::UiFonts>>, mut existing: Query<(Entity, &PhysicsLabel, &mut Node, &Children)>, mut texts: Query<&mut Text>, mut steady: Local<Steady>) -> bevy::ecs::error::Result<()> {
+    let window = window.single()?;
+    let camera = camera.single()?;
     let mut remaining: HashMap<String, Entity> = existing.iter().map(|(e, label, _, _)| (label.0.clone(), e)).collect();
     let mut occurrences: HashMap<String, usize> = HashMap::new();
     let now = time.elapsed_secs_f64();
@@ -521,21 +523,21 @@ pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<Spa
     let sim_time = scene.live.snapshot.as_ref().and_then(|s| s.frame.as_ref()).map(|f| f.time);
     let playing = matches!((steady.sim_time, sim_time), (Some(a), Some(b)) if b > a && b - a < 0.25);
     steady.sim_time = sim_time;
-    let (cam, gt) = *camera;
+    let (cam, gt) = camera;
     let scale = window.scale_factor();
     let Some(viewport) = cam.viewport.as_ref() else {
-        for e in remaining.values() { commands.entity(*e).despawn(); }
-        return;
+        for e in remaining.values() { commands.entity(*e).try_despawn(); }
+        return Ok(());
     };
     if viewport.physical_size.x < 40 || viewport.physical_size.y < 40 {
-        for e in remaining.values() { commands.entity(*e).despawn(); }
-        return;
+        for e in remaining.values() { commands.entity(*e).try_despawn(); }
+        return Ok(());
     }
     let origin = viewport.physical_position.as_vec2() / scale;
     let size = viewport.physical_size.as_vec2() / scale;
     let Some(fonts) = fonts else {
-        for e in remaining.values() { commands.entity(*e).despawn(); }
-        return;
+        for e in remaining.values() { commands.entity(*e).try_despawn(); }
+        return Ok(());
     };
     let k = crate::ui_kit::Kit::new(&fonts);
     // Keep clear of the hint line (and the builder's layer chips) along the top.
@@ -606,7 +608,8 @@ pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<Spa
                 children![({ let mut label = k.text(text, 11., *color, 2); label.3 = TextLayout::default(); label }, Pickable::IGNORE)]));
         }
     }
-    for e in remaining.values() { commands.entity(*e).despawn(); }
+    for e in remaining.values() { commands.entity(*e).try_despawn(); }
+    Ok(())
 }
 
 /// A node whose children are the layer switches. The builder floats one over
@@ -616,9 +619,11 @@ pub(crate) fn labels(mut commands: Commands, labels: Res<Labels>, scene: Res<Spa
 pub(crate) struct LayerChips;
 
 /// Keep every [`LayerChips`] slot filled with switches that match the view state.
-pub(crate) fn overlay_bar(mut commands: Commands, scene: Res<SpatialScene>, camera: Single<&Camera, With<Orbit>>, window: Single<&Window>, fonts: Option<Res<crate::ui_kit::UiFonts>>, floating: Query<Entity, With<OverlayBar>>, slots: Query<Entity, With<LayerChips>>, added: Query<(), Added<LayerChips>>, mut last: Local<String>) {
+pub(crate) fn overlay_bar(mut commands: Commands, scene: Res<SpatialScene>, camera: Query<&Camera, With<Orbit>>, window: Query<&Window>, fonts: Option<Res<crate::ui_kit::UiFonts>>, floating: Query<Entity, With<OverlayBar>>, slots: Query<Entity, With<LayerChips>>, added: Query<(), Added<LayerChips>>, mut last: Local<String>) -> bevy::ecs::error::Result<()> {
+    let camera = camera.single()?;
+    let window = window.single()?;
     // The fonts are loaded while the app is built (`app::CorePlugin`).
-    let Some(fonts) = fonts else { return };
+    let Some(fonts) = fonts else { return Ok(()) };
     let scale = window.scale_factor();
     // The floating bar is for the builder only; lesson cards carry their own slot.
     let place = camera.viewport.as_ref().filter(|v| v.physical_size.x >= 320 && v.physical_size.y >= 120 && scene.animation.is_some() && scene.learn_view.is_none()).map(|v| {
@@ -627,19 +632,19 @@ pub(crate) fn overlay_bar(mut commands: Commands, scene: Res<SpatialScene>, came
     });
     let signature = format!("{place:?}{:?}{}{}{}", scene.state.overlays, scene.state.xray, scene.state.exploded, scene.state.strobe);
     if *last == signature && added.is_empty() {
-        return;
+        return Ok(());
     }
     let moved = !last.starts_with(&format!("{place:?}"));
     *last = signature;
     if moved {
         for e in &floating {
-            commands.entity(e).despawn();
+            commands.entity(e).try_despawn();
         }
         if let Some((right, top)) = place {
             // Floats over the top-right of the 3D view (layout only; the chips are kit chips).
             commands.spawn((OverlayBar, LayerChips, Node { position_type: PositionType::Absolute, left: Val::Px(right - 560.), top: Val::Px(top + 30.), width: Val::Px(552.), justify_content: JustifyContent::FlexEnd, flex_wrap: FlexWrap::Wrap, column_gap: Val::Px(4.), row_gap: Val::Px(4.), ..default() }, GlobalZIndex(25)));
             // Filled on the next frame, when the new slot counts as added.
-            return;
+            return Ok(());
         }
     }
     let k = crate::ui_kit::Kit::new(&fonts);
@@ -653,6 +658,7 @@ pub(crate) fn overlay_bar(mut commands: Commands, scene: Res<SpatialScene>, came
             }
         });
     }
+    Ok(())
 }
 
 /// Input: the overlay bar's toggles, as the view's actions (the display state

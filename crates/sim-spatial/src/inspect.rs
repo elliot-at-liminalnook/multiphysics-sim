@@ -349,13 +349,14 @@ pub(crate) fn input(
 pub(crate) fn publish(
     rest: Option<ResMut<crate::rest::Rest>>,
     scene: Res<SpatialScene>,
-    camera: Single<&Orbit>,
+    camera: Query<&Orbit>,
     builder: Option<Res<builder::Builder>>,
     learn: Option<Res<crate::lesson::Learn>>,
     mode: Res<State<ViewerMode>>,
     (selection, registry): (Option<Res<Selection>>, Option<Res<DocumentRegistry>>),
-) {
-    let Some(mut rest) = rest else { return };
+) -> bevy::ecs::error::Result<()> {
+    let Some(mut rest) = rest else { return Ok(()) };
+    let camera = camera.single()?;
     let mode = *mode.get();
     // The builder stays in the window in inspect mode, but inspect does not serve it.
     let family = mode.builder_family();
@@ -366,6 +367,7 @@ pub(crate) fn publish(
         _ => scene.shown.clone(),
     };
     publish_json(&mut rest.0, &scene, &camera, &selected, builder.as_deref().filter(|_| family), learn.as_deref().filter(|_| family), mode);
+    Ok(())
 }
 
 #[allow(clippy::too_many_arguments)]

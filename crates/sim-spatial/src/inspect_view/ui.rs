@@ -130,15 +130,18 @@ pub(super) fn update_layout(scene: Res<SpatialScene>, mut panels: Query<&mut Nod
 pub(super) fn scroll_inspector(
     scene: Res<SpatialScene>,
     mut wheel: MessageReader<MouseWheel>,
-    window: Single<&Window>,
-    mut panel: Single<&mut ScrollPosition, With<InspectorScroll>>,
-) {
+    window: Query<&Window>,
+    mut panel: Query<&mut ScrollPosition, With<InspectorScroll>>,
+) -> bevy::ecs::error::Result<()> {
+    let window = window.single()?;
+    let mut panel = panel.single_mut()?;
     let delta = ui_kit::wheel_delta(&mut wheel, 24.0);
     if window.cursor_position().is_some_and(|p| {
         p.x >= window.width() - scene.right() && p.y > TOP && p.y < window.height() - scene.bottom()
     }) {
         panel.y = (panel.y - delta).max(0.0);
     }
+    Ok(())
 }
 
 pub(super) fn inspector(scene: &SpatialScene) -> String {

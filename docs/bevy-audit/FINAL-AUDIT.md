@@ -501,4 +501,19 @@ commits, targeted tests only — the runs named per item, nothing broader).
   `cargo test -p sim-spatial --lib -- cad::inspector cad::snapshot cad::panel`
   (18 passed; the panel test world inits the new resource like its
   siblings).
+- **Item 7 (un-chain Robot Present) — done, measurement caveated.**
+  The two chained Present tuples (11 + 10 systems) are one un-chained
+  registration: every system fills its own panel root or text from state
+  written in earlier stages, and no pair reads another's same-frame
+  output, so access analysis now decides parallelism. No explicit edges
+  were needed. Measurement: the schedule builds and the targeted tests
+  pass, but a before/after frame-time A/B was **not** run — this
+  environment has no windowed Robot session, and windowless test apps
+  do not exercise Present rendering. Run the viewer in Robot mode and
+  compare `frame_ms` in `system_state` (now fed by
+  `FrameTimeDiagnosticsPlugin`, item 2) against the pre-change build;
+  treat any panel that lags a frame as a named edge to add back, not a
+  re-chain. Targeted:
+  `cargo test -p sim-spatial --lib -- ordering_guard robot::tests`
+  (11 passed).
 

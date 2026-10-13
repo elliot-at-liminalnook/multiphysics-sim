@@ -223,10 +223,10 @@ pub(crate) fn configure_sets(app: &mut App) {
 }
 
 /// Robot mode: worker load, posed link meshes, link list, inspector and
-/// REST. Its entities are spawned on entering the Robot scope; its two
-/// chains run in robot mode in their original order (the frame chain in
-/// SimSync, the panels in Present, one after the other as before). The
-/// view itself (`RobotView`) is removed on exit by `app::switch`.
+/// REST. Its entities are spawned on entering the Robot scope; the frame
+/// chain runs in SimSync in its original order, the Present panels are
+/// un-chained (disjoint roots, scheduler-ordered by access). The view
+/// itself (`RobotView`) is removed on exit by `app::switch`.
 pub struct RobotPlugin;
 impl Plugin for RobotPlugin {
     fn build(&self, app: &mut App) {
@@ -272,11 +272,16 @@ impl Plugin for RobotPlugin {
                     // ViewArea `view_area` sets, its place step frames the bounds `receive`
                     // and `planar_sync` write.
                     (watch.in_set(ViewerSet::SimSync), receive.in_set(ViewerSet::SimSync), stress_paint.in_set(ViewerSet::SimSync), apply_frames.in_set(RobotSet::Frames), view_tools::follow.in_set(ViewerSet::SimSync), view_tools::fit_selected.in_set(ViewerSet::SimSync), planar_sync.in_set(ViewerSet::SimSync), scroll.in_set(ViewerSet::SimSync), overlay_view::picker_scroll.in_set(ViewerSet::SimSync), leaderboard::scroll.in_set(ViewerSet::SimSync), view_area.in_set(ViewerSet::SimSync), highlight.in_set(ViewerSet::SimSync)).chain().before(CameraSet::Viewport),
+                    // Present is un-chained (audit item 7): every system here
+                    // fills its own panel root or text from state written in
+                    // earlier stages, so the scheduler's access analysis —
+                    // not tuple position — decides what runs in parallel.
+                    // No pair reads another's same-frame output; if one ever
+                    // does, name the edge explicitly instead of re-chaining.
                     (
-                        (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, inputs_panel::inputs_panel, controls::drive_panel, recorded_panel, timeline::timeline_panel, gait_panel).chain(),
-                        (panel_ui::gait_path_draw, view_tools::search_draw, view_tools::tools_panel, view_tools::display_rate, leaderboard::draw, video::button_label, graph_dock, draw, video::capture, actions::publish).chain(),
+                        (panels, speed_panel, overlay_panel, stress_panel, jog_panel, motion_panel, inputs_panel::inputs_panel, controls::drive_panel, recorded_panel, timeline::timeline_panel, gait_panel),
+                        (panel_ui::gait_path_draw, view_tools::search_draw, view_tools::tools_panel, view_tools::display_rate, leaderboard::draw, video::button_label, graph_dock, draw, video::capture, actions::publish),
                     )
-                        .chain()
                         .in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Robot)),

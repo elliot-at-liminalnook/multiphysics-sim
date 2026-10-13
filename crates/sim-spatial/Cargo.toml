@@ -48,6 +48,12 @@ sim-voice = { path = "../sim-voice" }
 serde_json.workspace = true
 clap.workspace = true
 
+[dev-dependencies]
+# bevy_ecs's `debug` feature carries `ScheduleBuildSettings.shuffle_seed`
+# (the seeded ordering test in app::ordering_tests). Test builds only;
+# feature unification turns it on for the one shared bevy_ecs.
+bevy_ecs = { version = "=0.20.0", features = ["debug"] }
+
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSProcessInfo", "NSString"] }
 # Window visibility for the REST screenshot (NSWindow.occlusionState via the

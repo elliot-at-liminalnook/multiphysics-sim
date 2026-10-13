@@ -39,7 +39,7 @@ fn public_sets_and_spatial_consumers_have_no_ordering_cycle() {
         || {}, || {}, || {},
         (|| {}).in_set(crate::robot::RobotSet::Frames),
         || {}, || {}, || {}, || {},
-    ).chain().before(CameraSet::Viewport).in_set(ViewerSet::SimSync));
+    ).chain_weak().before(CameraSet::Viewport).in_set(ViewerSet::SimSync));
     app.add_systems(Update, (
         (|| {}).after(crate::robot::RobotSet::Frames),
         (|| {}).before(crate::robot::RobotSet::Frames),
@@ -58,12 +58,12 @@ fn public_sets_and_spatial_consumers_have_no_ordering_cycle() {
         || {},
         || {},
         (|| {}).in_set(InspectViewSet::Camera),
-    ).chain().before(CameraSet::Viewport).in_set(ViewerSet::SimSync));
+    ).chain_weak().before(CameraSet::Viewport).in_set(ViewerSet::SimSync));
     app.add_systems(Update, (
         || {},
         (|| {}).in_set(InspectViewSet::Parts),
         || {}, || {}, || {}, || {}, || {},
-    ).chain().after(CameraSet::Place).in_set(ViewerSet::SimSync));
+    ).chain_weak().after(CameraSet::Place).in_set(ViewerSet::SimSync));
     // Selection projection, builder frame, placed-camera readers, and
     // lesson frame keep their original consumers' constraints.
     app.add_systems(Update, (
@@ -76,6 +76,14 @@ fn public_sets_and_spatial_consumers_have_no_ordering_cycle() {
     app.add_systems(Update, (|| {}).in_set(InputSet::Rest));
     app.add_systems(Update, (|| {}).in_set(InputSet::Window));
     app.world_mut().schedule_scope(Update, |world, schedule| {
+        // Shuffle within the constraints (audit item 7's 0.20 repeat): the
+        // public graph must stay acyclic and valid under any seed order,
+        // not just registration order. Needs bevy's `debug` feature,
+        // enabled for tests via dev-dependencies.
+        schedule.set_build_settings(bevy::ecs::schedule::ScheduleBuildSettings {
+            shuffle_seed: Some(0x5EED_2020),
+            ..default()
+        });
         schedule.initialize(world).expect("public Update sets must form an acyclic schedule");
     });
 }

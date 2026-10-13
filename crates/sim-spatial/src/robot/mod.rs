@@ -271,7 +271,7 @@ impl Plugin for RobotPlugin {
                     // Before the shared camera (`crate::camera`): its viewport reads the
                     // ViewArea `view_area` sets, its place step frames the bounds `receive`
                     // and `planar_sync` write.
-                    (watch.in_set(ViewerSet::SimSync), receive.in_set(ViewerSet::SimSync), stress_paint.in_set(ViewerSet::SimSync), apply_frames.in_set(RobotSet::Frames), view_tools::follow.in_set(ViewerSet::SimSync), view_tools::fit_selected.in_set(ViewerSet::SimSync), planar_sync.in_set(ViewerSet::SimSync), scroll.in_set(ViewerSet::SimSync), overlay_view::picker_scroll.in_set(ViewerSet::SimSync), leaderboard::scroll.in_set(ViewerSet::SimSync), view_area.in_set(ViewerSet::SimSync), highlight.in_set(ViewerSet::SimSync)).chain().before(CameraSet::Viewport),
+                    (watch.in_set(ViewerSet::SimSync), receive.in_set(ViewerSet::SimSync), stress_paint.in_set(ViewerSet::SimSync), apply_frames.in_set(RobotSet::Frames), view_tools::follow.in_set(ViewerSet::SimSync), view_tools::fit_selected.in_set(ViewerSet::SimSync), planar_sync.in_set(ViewerSet::SimSync), scroll.in_set(ViewerSet::SimSync), overlay_view::picker_scroll.in_set(ViewerSet::SimSync), leaderboard::scroll.in_set(ViewerSet::SimSync), view_area.in_set(ViewerSet::SimSync), highlight.in_set(ViewerSet::SimSync)).chain_weak().before(CameraSet::Viewport),
                     // Present is un-chained (audit item 7): every system here
                     // fills its own panel root or text from state written in
                     // earlier stages, so the scheduler's access analysis —

@@ -356,7 +356,7 @@ impl Plugin for SpatialViewerPlugin {
                 // The layout first: the camera's data (bounds, view area)
                 // goes to the shared camera before it sets the viewport.
                 (notes::update.in_set(InspectViewSet::Notes), buttons.in_set(ViewerSet::SimSync), linked::sync_link.in_set(InspectViewSet::Link), animation::sync_live.in_set(ViewerSet::SimSync), update_layout.in_set(ViewerSet::SimSync), sync_camera.in_set(InspectViewSet::Camera))
-                    .chain()
+                    .chain_weak()
                     .before(CameraSet::Viewport)
                     .run_if(in_state(SpatialScreen)),
             )
@@ -364,14 +364,14 @@ impl Plugin for SpatialViewerPlugin {
                 Update,
                 // Then what reads the placed camera.
                 (scroll_inspector.in_set(ViewerSet::SimSync), update_parts.in_set(InspectViewSet::Parts), linked::update_nets.in_set(ViewerSet::SimSync), update_ui.in_set(ViewerSet::SimSync), draw_guides.in_set(ViewerSet::SimSync), notes::guides.in_set(ViewerSet::SimSync), animation::draw_markers.in_set(ViewerSet::SimSync))
-                    .chain()
+                    .chain_weak()
                     .after(CameraSet::Place)
                     .run_if(in_state(SpatialScreen)),
             )
             .add_systems(
                 Update,
                 (view::animate, physics_view::update_internals, physics_view::draw, view::draw_pins, view::draw_ghost, view::split, view::inset, physics_view::labels, physics_view::overlay_bar, inspect::publish)
-                    .chain()
+                    .chain_weak()
                     .in_set(ViewerSet::Present)
                     .run_if(in_state(SpatialScreen)),
             );

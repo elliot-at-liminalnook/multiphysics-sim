@@ -390,5 +390,5 @@ pub(in crate::cad) fn build(app: &mut App) {
             .in_set(crate::cad::CadKeySet::Focus)
             .run_if(in_state(ViewerMode::Cad)),
     )
-    .add_systems(Update, (panel::scroll_form, panel::draw_form).chain().in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
+    .add_systems(Update, (panel::scroll_form, panel::draw_form).chain_weak().in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }

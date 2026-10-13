@@ -115,7 +115,7 @@ impl Plugin for PhenomenaPlugin {
                 (
                     (keys::keys.run_if(not(crate::ui_kit::text::typing)), panel::buttons, panel::slider).chain().in_set(crate::app::InputSet::Window),
                     panel::scroll.in_set(ViewerSet::SimSync),
-                    (scene::render, panel::rebuild, panel::refresh, panel::chart).chain().in_set(ViewerSet::Present),
+                    (scene::render, panel::rebuild, panel::refresh, panel::chart).chain_weak().in_set(ViewerSet::Present),
                 )
                     .run_if(in_state(ViewerMode::Phenomena)),
             );

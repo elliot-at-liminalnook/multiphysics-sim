@@ -344,7 +344,7 @@ pub(crate) fn controls(hw: &Hardware) -> Vec<(String, String, HardwareAction, Re
 }
 
 pub(crate) fn build(app: &mut App) {
-    app.add_systems(OnEnter(ModeScope::Robot), spawn).add_systems(Update, (scroll, refresh).chain().in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Robot)));
+    app.add_systems(OnEnter(ModeScope::Robot), spawn).add_systems(Update, (scroll, refresh).chain_weak().in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Robot)));
 }
 
 /// OnEnter(Robot): the panel, hidden until `Hardware::open`.

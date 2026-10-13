@@ -280,7 +280,7 @@ pub(super) fn build(app: &mut App) {
         .add_systems(OnEnter(ModeScope::Cad), spawn)
         // Before CAD's keys: a press that gives the name field the keyboard holds the frame's keys.
         .add_systems(Update, (name::buttons, name_entry).chain().in_set(crate::cad::CadKeySet::Focus).run_if(in_state(ViewerMode::Cad)))
-        .add_systems(Update, (scroll, refresh).chain().in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
+        .add_systems(Update, (scroll, refresh).chain_weak().in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }
 
 /// A column, `gap` px apart.

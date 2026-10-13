@@ -332,7 +332,7 @@ pub(super) fn build(app: &mut App) {
                 .before(crate::cad::CadKeySet::NumericEntry)
                 .run_if(in_state(ViewerMode::Cad)),
         )
-        .add_systems(Update, (toolbar::refresh, toolbar::hint, draw, form::draw).chain().in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
+        .add_systems(Update, (toolbar::refresh, toolbar::hint, draw, form::draw).chain_weak().in_set(ViewerSet::Present).run_if(in_state(ViewerMode::Cad)));
 }
 
 /// Input: a click on a popup's entry (its action, then closing), a press

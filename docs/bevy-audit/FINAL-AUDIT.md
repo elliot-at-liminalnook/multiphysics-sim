@@ -561,4 +561,21 @@ commits, targeted tests only — the runs named per item, nothing broader).
   `cad::tree::tests robot::hardware::actions::input::tests
   ordering_guard app::settings::` (pass), `app::close` (17),
   `cad::surfaces::form cad::files::form` (11 with picker batch).
+- **Post-bump weak ordering (item 7 repeat on 0.20) — done;
+  frame-time caveated.** The audited robot SimSync 12-system tuple, both
+  inspect-view SimSync tuples, and the inspect, phenomena, CAD,
+  and robot-hardware Present tuples now use `chain_weak()`: their
+  conflicting pairs (shared scene/view writes and Commands producers)
+  keep tuple order, while disjoint presenters can run in parallel.
+  The Input and Focus/key-gating chains and the public stage chains
+  stay strict because their comments name same-frame focus/key semantics.
+  The windowless public ordering test mirrors the robot/inspect weak
+  tuples and initializes its Update schedule with
+  `ScheduleBuildSettings.shuffle_seed = 0x5EED_2020`; `bevy_ecs`'s
+  `debug` feature is enabled only through dev-dependencies. No
+  windowed frame-time A/B was available in this environment, so the
+  performance effect is unverified; correctness evidence is schedule
+  construction only. Targeted:
+  `cargo test -p sim-spatial --lib -- app::ordering_tests ordering_guard`
+  (8 passed).
 

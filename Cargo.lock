@@ -945,6 +945,7 @@ dependencies = [
  "indexmap",
  "log",
  "nonmax",
+ "rand 0.10.3",
  "serde",
  "slotmap",
  "smallvec",
@@ -8239,6 +8240,7 @@ version = "0.1.0"
 dependencies = [
  "accesskit",
  "bevy",
+ "bevy_ecs",
  "clap",
  "image",
  "objc2 0.6.4",

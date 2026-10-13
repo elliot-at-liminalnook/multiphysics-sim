@@ -11,6 +11,7 @@
 //! cancels the pending job, and a layout for an old key is only ever shown
 //! dimmed under a "Stale" label with its boxes disabled.
 use super::*;
+use bevy::ui_widgets::Button;
 use crate::ui_kit::{BAR, BORDER, Kit, LEFT_WIDTH, RIGHT_WIDTH, STATUSBAR, SUBTLE, SWITCHER_STRIP, TEXT, TOPBAR, Tint, WARN, size};
 use sim_diagram::{Layout, layout as diagram_layout, projection, style};
 use std::sync::atomic::AtomicBool;

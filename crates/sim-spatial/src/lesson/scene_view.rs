@@ -39,7 +39,24 @@ pub(super) fn viewport(learn: Res<Learn>, mut scene: ResMut<SpatialScene>, nodes
                 let window_rect = Rect::new(0., 0., window.physical_width() as f32, window.physical_height() as f32);
                 let mut visible = full.intersect(window_rect);
                 if let Some(c) = clip {
-                    visible = visible.intersect(c.clip);
+                    // 0.20: inherited clips are rects in each clipping node's
+                    // local space; bring each back to window space.
+                    match c.rects() {
+                        None => visible = Rect::default(),
+                        Some(rects) => {
+                            for r in rects {
+                                let to_world = r.world_to_clip_local.inverse();
+                                let corners = [r.rect.min, Vec2::new(r.rect.min.x, r.rect.max.y), Vec2::new(r.rect.max.x, r.rect.min.y), r.rect.max];
+                                let (mut lo, mut hi) = (Vec2::splat(f32::INFINITY), Vec2::splat(f32::NEG_INFINITY));
+                                for p in corners {
+                                    let w = to_world.transform_point2(p);
+                                    lo = lo.min(w);
+                                    hi = hi.max(w);
+                                }
+                                visible = visible.intersect(Rect::from_corners(lo, hi));
+                            }
+                        }
+                    }
                 }
                 crate::LearnView { full, visible: if visible.is_empty() { Rect::default() } else { visible } }
             }

@@ -14,6 +14,7 @@ use crate::cad::selection::{CadItems, CadSelection};
 use crate::ui_kit::form::{FieldKind, FormRow};
 use crate::ui_kit::{BORDER, FAINT, Kit, LEFT_WIDTH, Look, SURFACE, SWITCHER_STRIP, TOPBAR, UiFonts, size};
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy::ui::prelude::AccessibleLabel;
 use bevy::ui::{ComputedNode, FocusPolicy, UiGlobalTransform};
 use bevy::window::PrimaryWindow;

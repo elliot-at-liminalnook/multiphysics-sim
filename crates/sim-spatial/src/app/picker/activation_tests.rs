@@ -1,5 +1,6 @@
 //! T49 rendered-control conversion fixtures. Written and inspected, unexecuted.
 use super::*;
+use bevy::ui_widgets::Button;
 use crate::ui_kit::activation::{Activated, Ordinary};
 use crate::ui_kit::text::TextFieldApp;
 
@@ -29,6 +30,11 @@ fn fixture() -> App {
     crate::app::configure_sets(&mut app);
     crate::ui_kit::activation::install(&mut app);
     app.add_systems(PreUpdate, (
+        // 0.20 tab navigation filters on `InheritedVisibility`; stand in
+        // for production's propagation (see the ui_kit activation fixture).
+        (|mut vis: Query<&mut bevy::camera::visibility::InheritedVisibility>| {
+            for mut v in &mut vis { *v = bevy::camera::visibility::InheritedVisibility::VISIBLE; }
+        }).before(crate::ui_kit::activation::ActivationSet::Eligibility),
         modal::sync.before(crate::ui_kit::activation::ActivationSet::Eligibility),
         modal::keys.after(crate::ui_kit::activation::ActivationSet::Consume),
         bevy::input_focus::dispatch_focused_input::<bevy::input::keyboard::KeyboardInput>
@@ -107,16 +113,17 @@ fn first_pointer_from_durable_path_dispatches_once() {
 
 fn pointer_press(app: &mut App, window: Entity, entity: Entity) {
     let camera = app.world_mut().spawn_empty().id();
-    app.world_mut().trigger(bevy::picking::events::Pointer::new(
-        bevy::picking::pointer::PointerId::Mouse,
-        bevy::picking::pointer::Location {
-            target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO,
-        },
-        bevy::picking::events::Press {
-            button: bevy::picking::pointer::PointerButton::Primary,
-            hit: bevy::picking::backend::HitData::new(camera, 0., None, None), count: 1,
-        }, entity,
-    ));
+    app.world_mut().trigger(bevy::picking::events::PointerPress {
+        entity,
+        pointer: bevy::picking::events::Pointer::new(
+            bevy::picking::pointer::PointerId::Mouse,
+            bevy::picking::pointer::Location {
+                target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO,
+            },
+        ),
+        button: bevy::picking::pointer::PointerButton::Primary,
+        hit: bevy::picking::backend::HitData::new(camera, 0., None, None), count: 1,
+    });
 }
 
 #[test]

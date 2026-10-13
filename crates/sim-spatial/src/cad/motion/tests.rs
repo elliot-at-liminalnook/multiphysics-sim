@@ -6,6 +6,7 @@ use crate::{
     ui_kit::{Kit, UiFonts},
 };
 use bevy::ecs::system::RunSystemOnce;
+use bevy::ui_widgets::Button;
 fn render(mut commands: Commands, doc: Res<CadDocument>, st: Res<MotionState>) {
     let fonts = UiFonts {
         regular: default(),

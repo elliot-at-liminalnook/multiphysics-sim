@@ -2,6 +2,7 @@
 //! kit widgets and the same stamped StudyAction path as REST/system_ui.
 use super::{StudyOwner, StudyAction, StudyStamp, forms::{StudyUi,Field,Hit}, chart};
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use crate::{app::{ViewerSet,InputSet}, builder::ui_api::Enabled, ui_kit::{Kit,UiFonts,Look,Corner,size,TEXT,FAINT,WARN,DANGER,wrap}};
 use crate::ui_kit::{text::{TextFieldApp,TextField,EnterKey},path_field::{PathView,PathHit}};
 use sim_runtime::experiment_study::commands::{self,Command,EvaluationSelection,ParameterGroup};

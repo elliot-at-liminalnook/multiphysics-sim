@@ -24,6 +24,7 @@ use crate::cad::panel::CadButton;
 use crate::ui_kit::path_field::PathView;
 use crate::ui_kit::{ACCENT_BG, DANGER, Kit, Look, SUBTLE, TEXT, Tint, WARN, size, wrap};
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy::ui::prelude::AccessibleLabel;
 use crate::cad::types::SelectionItem;
 

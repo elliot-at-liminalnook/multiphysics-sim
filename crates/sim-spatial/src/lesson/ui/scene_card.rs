@@ -1,6 +1,7 @@
 //! The scene card (the live 3D view, its controls, sliders, charts and
 //! claims) and the per-frame text that follows playback.
 use super::*;
+use bevy::ui_widgets::Button;
 
 pub(in crate::lesson) fn scene_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &Learn, b: &sim_lesson::Block, s: &Scene, notes: usize, scene: &SpatialScene) {
     let active = l.scene.as_ref().filter(|a| a.id == s.id);

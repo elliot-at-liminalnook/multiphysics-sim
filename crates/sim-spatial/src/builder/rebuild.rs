@@ -221,7 +221,7 @@ pub(super) fn rebuild_scene(
 }
 
 /// A click on a reference image, as the builder's `ReferencePoint` action.
-fn pick_reference(click: On<Pointer<Click>>, quads: Query<&ReferenceQuad>, mut out: MessageWriter<crate::app::actions::Act<system_actions::SystemAction>>) {
+fn pick_reference(click: On<bevy::picking::events::PointerClick>, quads: Query<&ReferenceQuad>, mut out: MessageWriter<crate::app::actions::Act<system_actions::SystemAction>>) {
     let Ok(quad) = quads.get(click.entity) else { return };
     let Some(position) = click.hit.position else { return };
     out.write(crate::app::actions::Act::ui(system_actions::SystemAction::Ui(BuildAction::ReferencePoint { id: quad.0.clone(), world: position.to_array() })));

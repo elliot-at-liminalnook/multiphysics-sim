@@ -3,6 +3,7 @@
 use super::{BOTTOM, Inspector, InspectorScroll, PartsPanel, SpatialScene, Status, TOP, UiRoot};
 use crate::{animation, inspect, linked, notes, ui_kit};
 use bevy::{input::mouse::MouseWheel, prelude::*};
+use bevy::ui_widgets::Button;
 use sim_inspect::ObservationLocation;
 use sim_inspect::selection::SelectionTarget;
 use sim_inspect::spatial::SpatialCommand;

@@ -9,6 +9,7 @@
 //! evaluation is started.
 use super::ui::num;
 use super::*;
+use bevy::ui_widgets::Button;
 use crate::ui_kit::{ACCENT, ACCENT_BG, DANGER, FAINT, Kit, Look, OK, SUBTLE, TEXT, Tint, WARN, size, wrap};
 use sim_runtime::gait_lab::{JointLine, LabReport, ResultsEntry, ResultsListing, scan_results};
 use std::path::Path;

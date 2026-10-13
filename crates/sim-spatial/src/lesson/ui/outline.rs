@@ -1,6 +1,7 @@
 //! The left dock: review, lessons by category, concepts, this lesson's
 //! headings, reading settings and scenes.
 use super::*;
+use bevy::ui_widgets::Button;
 
 pub(super) fn outline(commands: &mut Commands, k: &Kit, l: &Learn, offset: f32) {
     commands

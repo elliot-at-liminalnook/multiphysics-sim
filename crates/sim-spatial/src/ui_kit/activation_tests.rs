@@ -25,6 +25,15 @@ fn convert(controls: Query<&Intent, With<Activated>>, mut out: MessageWriter<Act
 fn fixture() -> (App, Entity, Entity, Entity) {
     let mut app = App::new();
     app.insert_resource(fonts()).add_plugins(text::TextEntryPlugin)
+        // 0.20's tab navigation skips subtrees whose `InheritedVisibility`
+        // is false. Production gets real propagation from DefaultPlugins
+        // (PostUpdate); this windowless fixture has no hidden subtrees, so
+        // stand in for it by marking every node's inherited visibility
+        // before eligibility runs. (`VisibilityPlugin` itself needs asset
+        // resources this fixture does not install.)
+        .add_systems(PreUpdate, (|mut vis: Query<&mut bevy::camera::visibility::InheritedVisibility>| {
+            for mut v in &mut vis { *v = bevy::camera::visibility::InheritedVisibility::VISIBLE; }
+        }).before(activation::ActivationSet::Eligibility))
         .add_systems(PreUpdate, bevy::input_focus::dispatch_focused_input::<KeyboardInput>.in_set(bevy::input_focus::InputFocusSystems::Dispatch).after(bevy::input::InputSystems))
         .add_message::<Act<Intent>>()
         .add_systems(Startup, render)
@@ -46,13 +55,16 @@ fn key(app: &mut App, window: Entity, code: KeyCode, repeat: bool) {
 }
 fn press(app: &mut App, window: Entity, entity: Entity, button: bevy::picking::pointer::PointerButton) {
     let camera = app.world_mut().spawn_empty().id();
-    app.world_mut().trigger(bevy::picking::events::Pointer::new(
-        bevy::picking::pointer::PointerId::Mouse,
-        bevy::picking::pointer::Location {
-            target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO,
-        },
-        bevy::picking::events::Press { button, hit: bevy::picking::backend::HitData::new(camera, 0., None, None), count: 1 }, entity,
-    ));
+    app.world_mut().trigger(bevy::picking::events::PointerPress {
+        entity,
+        pointer: bevy::picking::events::Pointer::new(
+            bevy::picking::pointer::PointerId::Mouse,
+            bevy::picking::pointer::Location {
+                target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO,
+            },
+        ),
+        button, hit: bevy::picking::backend::HitData::new(camera, 0., None, None), count: 1,
+    });
 }
 fn drain(app: &mut App) -> Vec<Intent> { app.world_mut().resource_mut::<Messages<Act<Intent>>>().drain().map(|a| a.action).collect() }
 #[test]

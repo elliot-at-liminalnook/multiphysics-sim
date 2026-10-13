@@ -4,6 +4,7 @@ use super::theme::*;
 use crate::builder::ui_api::Enabled;
 use bevy::a11y::AccessibilityNode;
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy::ui::prelude::AccessibleLabel;
 
 /// A text bundle: the kit's one way to make UI text.
@@ -102,9 +103,10 @@ impl Kit<'_> {
 
     /// A button with its label. `action` is what a press means (a typed
     /// action component read by the mode's input system); `enabled` is
-    /// the `Enabled` flag `system_ui` reports. The button is a `bevy::ui`
-    /// `Button` plus the pinned widget Button/ActivateOnPress contract with an
-    /// accessible label and its `Look`, which `repaint_buttons` keeps painted.
+    /// the `Enabled` flag `system_ui` reports. The button is the headless
+    /// `bevy::ui_widgets::Button` (the `Ordinary` ActivateOnPress contract)
+    /// with an accessible label and its `Look`, which `repaint_buttons`
+    /// keeps painted.
     pub(crate) fn button<A: Component>(&self, label: &str, action: A, look: Look, enabled: bool) -> impl Bundle + use<A> {
         let p = look.paint(enabled);
         (
@@ -394,15 +396,23 @@ pub(crate) fn wrap() -> Node {
 #[allow(clippy::type_complexity)]
 pub(crate) fn repaint_buttons(
     fonts: Option<Res<UiFonts>>,
-    mut buttons: Query<(&Look, Option<&Enabled>, &Interaction, &mut BackgroundColor, &mut BorderColor, &mut Node, Option<&Children>), Or<(Changed<Look>, Changed<Enabled>, Changed<Interaction>)>>,
+    mut buttons: Query<(Entity, &Look, Option<&Enabled>, &bevy::picking::hover::Hovered, Has<bevy::ui::Pressed>, &mut BackgroundColor, &mut BorderColor, &mut Node, Option<&Children>)>,
+    changed: Query<Entity, Or<(Changed<Look>, Changed<Enabled>, Changed<bevy::picking::hover::Hovered>, Added<bevy::ui::Pressed>)>>,
+    mut released: RemovedComponents<bevy::ui::Pressed>,
     mut labels: Query<(&mut TextColor, &mut TextFont)>,
 ) {
-    for (look, enabled, interaction, mut bg, mut border, mut node, children) in &mut buttons {
+    // `Pressed` removal has no Changed signal; collect it beside the filters.
+    let mut targets: std::collections::HashSet<Entity> = changed.iter().collect();
+    targets.extend(released.read());
+    if targets.is_empty() {
+        return;
+    }
+    for (entity, look, enabled, hovered, pressed, mut bg, mut border, mut node, children) in &mut buttons {
+        if !targets.contains(&entity) {
+            continue;
+        }
         let p = look.paint(enabled.is_none_or(|e| e.0));
-        let fill = match interaction {
-            Interaction::Hovered | Interaction::Pressed => p.hover,
-            Interaction::None => p.idle,
-        };
+        let fill = if hovered.get() || pressed { p.hover } else { p.idle };
         bg.set_if_neq(BackgroundColor(fill));
         border.set_if_neq(BorderColor::all(p.border));
         let edge = if p.underline { UiRect::bottom(Val::Px(2.)) } else { UiRect::all(Val::Px(1.)) };
@@ -433,12 +443,21 @@ pub(crate) fn repaint_buttons(
 
 /// Hover for `Tint` surfaces (list rows, fields, cards): the hover colour
 /// while hovered or pressed, else idle; also when the tint itself changes.
-pub(crate) fn repaint_tints(mut surfaces: Query<(&Interaction, &Tint, &mut BackgroundColor), Or<(Changed<Interaction>, Changed<Tint>)>>) {
-    for (interaction, tint, mut bg) in &mut surfaces {
-        let fill = match interaction {
-            Interaction::Hovered | Interaction::Pressed => tint.hover,
-            Interaction::None => tint.idle,
-        };
+pub(crate) fn repaint_tints(
+    mut surfaces: Query<(Entity, &bevy::picking::hover::Hovered, Has<bevy::ui::Pressed>, &Tint, &mut BackgroundColor)>,
+    changed: Query<Entity, Or<(Changed<bevy::picking::hover::Hovered>, Changed<Tint>, Added<bevy::ui::Pressed>)>>,
+    mut released: RemovedComponents<bevy::ui::Pressed>,
+) {
+    let mut targets: std::collections::HashSet<Entity> = changed.iter().collect();
+    targets.extend(released.read());
+    if targets.is_empty() {
+        return;
+    }
+    for (entity, hovered, pressed, tint, mut bg) in &mut surfaces {
+        if !targets.contains(&entity) {
+            continue;
+        }
+        let fill = if hovered.get() || pressed { tint.hover } else { tint.idle };
         bg.set_if_neq(BackgroundColor(fill));
     }
 }

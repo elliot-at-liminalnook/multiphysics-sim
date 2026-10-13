@@ -10,6 +10,7 @@ use crate::cad::panel::{CadButton, edit_blocked, patch};
 use crate::builder::ui_api::Enabled;
 use crate::ui_kit::{ACCENT, ACCENT_BG, DANGER, FAINT, Kit, Look, SUBTLE, TEXT, Tint, WARN, size, wrap};
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy::ui::prelude::AccessibleLabel;
 use serde_json::Value;
 use crate::cad::types::SelectionItem;

@@ -17,6 +17,7 @@ use crate::cad::document::CadDocument;
 use crate::cad::selection::{CadItems, CadSelection};
 use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextField, TextFocus};
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use serde_json::Value;
 
 /// The inspector's name field.

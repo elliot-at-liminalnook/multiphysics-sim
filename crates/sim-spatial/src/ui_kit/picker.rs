@@ -13,6 +13,7 @@ use super::path_field::{PathHit, PathView};
 use super::theme::*;
 use crate::builder::ui_api::Enabled;
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
 

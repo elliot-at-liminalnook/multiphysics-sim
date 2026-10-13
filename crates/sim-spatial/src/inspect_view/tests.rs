@@ -8,6 +8,7 @@ use bevy::picking::{
     pointer::{Location, PointerButton, PointerId},
 };
 use bevy::camera::RenderTarget;
+use bevy::ui_widgets::Button;
 
 #[test]
 fn linked_net_and_port_selection_reveal_geometry_without_editing_sources() {
@@ -93,22 +94,22 @@ fn mesh_click_and_list_button_resolve_the_same_source_identity() {
         .observe(pick_part)
         .id();
     let window = app.world_mut().spawn_empty().id();
-    let click = Pointer::new(
-        PointerId::Mouse,
-        Location {
-            target: RenderTarget::Window(bevy::window::WindowRef::Entity(window))
-                .normalize(Some(window))
-                .unwrap(),
-            position: Vec2::ZERO,
-        },
-        Click {
-            button: PointerButton::Primary,
-            hit: HitData::new(camera, 0.1, None, None),
-            duration: std::time::Duration::from_millis(50),
-            count: 1,
-        },
-        part,
-    );
+    let click = bevy::picking::events::PointerClick {
+        entity: part,
+        pointer: bevy::picking::events::Pointer::new(
+            PointerId::Mouse,
+            Location {
+                target: RenderTarget::Window(bevy::window::WindowRef::Entity(window))
+                    .normalize(Some(window))
+                    .unwrap(),
+                position: Vec2::ZERO,
+            },
+        ),
+        button: PointerButton::Primary,
+        hit: HitData::new(camera, 0.1, None, None),
+        duration: std::time::Duration::from_millis(50),
+        count: 1,
+    };
     app.world_mut().trigger(click);
     app.update();
     assert_eq!(
@@ -158,12 +159,14 @@ fn mesh_click_and_list_button_resolve_the_same_source_identity() {
 /// A primary click on `part`, as the picking backend sends it.
 fn click(app: &mut App, camera: Entity, part: Entity) {
     let window = app.world_mut().spawn_empty().id();
-    let click = Pointer::new(
-        PointerId::Mouse,
-        Location { target: RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO },
-        Click { button: PointerButton::Primary, hit: HitData::new(camera, 0.1, None, None), duration: std::time::Duration::from_millis(50), count: 1 },
-        part,
-    );
+    let click = bevy::picking::events::PointerClick {
+        entity: part,
+        pointer: bevy::picking::events::Pointer::new(
+            PointerId::Mouse,
+            Location { target: RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO },
+        ),
+        button: PointerButton::Primary, hit: HitData::new(camera, 0.1, None, None), duration: std::time::Duration::from_millis(50), count: 1,
+    };
     app.world_mut().trigger(click);
 }
 

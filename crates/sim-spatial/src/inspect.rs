@@ -5,6 +5,7 @@
 //! [`apply`] (`ViewerSet::Actions`) is its one handler, which the headless
 //! server calls directly ([`serve_headless`]).
 use super::*;
+use bevy::ui_widgets::Button;
 use crate::app::actions::{self, Act, Call, InFlight, Replies, Spec, spec};
 use crate::document::{DocumentId, DocumentRegistry};
 use crate::selection::{Selection, SelectionAction, target_items};

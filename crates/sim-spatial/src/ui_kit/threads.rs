@@ -20,6 +20,7 @@ use super::{ACCENT, ACCENT_BG, BORDER, FAINT, HOVER_BG, Kit, Look, RAISED, SUBTL
 use bevy::ui::prelude::AccessibleLabel;
 use crate::builder::ui::markdown_theme;
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use sim_annotate::{Anchor, Comment, Thread};
 
 /// What the host does when a part of the panel is pressed.

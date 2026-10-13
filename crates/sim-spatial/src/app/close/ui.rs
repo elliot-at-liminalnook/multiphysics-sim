@@ -6,6 +6,7 @@ use crate::app::{Persistent, ViewerSet, actions::Act};
 use crate::builder::ui_api::Enabled;
 use crate::ui_kit::{Kit, Look, UiFonts, above_strip, SURFACE, BORDER, MODAL_Z};
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy::ui::prelude::AccessibleLabel;
 
 pub(crate) fn controls_in(world: &World) -> Vec<serde_json::Value> {

@@ -186,12 +186,12 @@ pub(crate) fn inset(
 #[derive(Resource, Default)]
 pub(crate) struct PartHover(pub Option<String>);
 
-pub(crate) fn part_over(over: On<Pointer<Over>>, parts: Query<&Part>, scene: Res<SpatialScene>, mut hover: ResMut<PartHover>) {
+pub(crate) fn part_over(over: On<bevy::picking::events::PointerOver>, parts: Query<&Part>, scene: Res<SpatialScene>, mut hover: ResMut<PartHover>) {
     if let Some(p) = parts.get(over.entity).ok().and_then(|p| scene.spatial.parts.get(p.index)) {
         hover.0 = Some(p.component.clone());
     }
 }
-pub(crate) fn part_out(_: On<Pointer<Out>>, mut hover: ResMut<PartHover>) {
+pub(crate) fn part_out(_: On<bevy::picking::events::PointerOut>, mut hover: ResMut<PartHover>) {
     hover.0 = None;
 }
 

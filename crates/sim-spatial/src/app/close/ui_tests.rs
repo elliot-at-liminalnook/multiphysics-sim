@@ -134,6 +134,11 @@ fn pending_close_keyboard_scope_over_retained_form_restores_focus() {
             .in_set(InputFocusSystems::Dispatch).after(bevy::input::InputSystems));
     crate::app::configure_sets(&mut app);
     activation::install(&mut app);
+    // 0.20 tab navigation filters on `InheritedVisibility`; stand in for
+    // production's propagation (see the ui_kit activation fixture).
+    app.add_systems(PreUpdate, (|mut vis: Query<&mut bevy::camera::visibility::InheritedVisibility>| {
+        for mut v in &mut vis { *v = bevy::camera::visibility::InheritedVisibility::VISIBLE; }
+    }).before(activation::ActivationSet::Eligibility));
     let window = app.world_mut().spawn((Window::default(), bevy::window::PrimaryWindow)).id();
     let font = fonts(); let k = Kit::new(&font);
     let underlying = app.world_mut().spawn((Node::default(), ModalFocus, AccessibleLabel("Retained CAD form".into()))).id();

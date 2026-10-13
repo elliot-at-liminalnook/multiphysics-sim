@@ -15,7 +15,7 @@ use crate::ui_kit::form::FormHit;
 use crate::ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextDraft, TextField, TextFocus};
 use crate::ui_kit::{LEFT_WIDTH, STATUSBAR, SWITCHER_STRIP, TOPBAR};
 use bevy::ecs::system::SystemParam;
-use bevy::picking::events::{Click, Drag, DragDrop, DragEnd, DragEnter, DragLeave, DragOver, DragStart, Pointer, Press};
+use bevy::picking::events::{PointerClick, PointerDrag, PointerDragDrop, PointerDragEnd, PointerDragEnter, PointerDragLeave, PointerDragOver, PointerDragStart, PointerPress};
 use bevy::picking::pointer::PointerButton;
 use bevy::prelude::*;
 use bevy::ui::{ComputedNode, UiGlobalTransform};
@@ -73,19 +73,20 @@ pub(in crate::cad) fn search(keys: Option<ResMut<ButtonInput<KeyCode>>>, windows
     doc.tree.claim = Some(Claim::Search);
 }
 
-/// The pointer messages the rows read (Bevy picking writes each `Pointer<E>`
-/// as a message too, in PreUpdate: `bevy_picking::events::pointer_events`).
+/// The pointer messages the rows read (Bevy picking writes each flat
+/// `Pointer…` event as a message too, in PreUpdate:
+/// `bevy_picking::events::pointer_events`).
 #[derive(SystemParam)]
 pub(super) struct PointerMsgs<'w, 's> {
-    press: MessageReader<'w, 's, Pointer<Press>>,
-    click: MessageReader<'w, 's, Pointer<Click>>,
-    start: MessageReader<'w, 's, Pointer<DragStart>>,
-    drag: MessageReader<'w, 's, Pointer<Drag>>,
-    enter: MessageReader<'w, 's, Pointer<DragEnter>>,
-    over: MessageReader<'w, 's, Pointer<DragOver>>,
-    leave: MessageReader<'w, 's, Pointer<DragLeave>>,
-    drop: MessageReader<'w, 's, Pointer<DragDrop>>,
-    end: MessageReader<'w, 's, Pointer<DragEnd>>,
+    press: MessageReader<'w, 's, PointerPress>,
+    click: MessageReader<'w, 's, PointerClick>,
+    start: MessageReader<'w, 's, PointerDragStart>,
+    drag: MessageReader<'w, 's, PointerDrag>,
+    enter: MessageReader<'w, 's, PointerDragEnter>,
+    over: MessageReader<'w, 's, PointerDragOver>,
+    leave: MessageReader<'w, 's, PointerDragLeave>,
+    drop: MessageReader<'w, 's, PointerDragDrop>,
+    end: MessageReader<'w, 's, PointerDragEnd>,
 }
 impl PointerMsgs<'_, '_> {
     fn clear(&mut self) {
@@ -263,7 +264,7 @@ pub(super) fn rows(
                 }
             }
             PointerButton::Secondary => {
-                let at = ev.pointer_location.position;
+                let at = ev.pointer.position;
                 if let Ok(row) = look.rows.get(ev.entity) {
                     let mut a = TreeArgs::on(TreeOp::Menu, &row.id);
                     (a.open, a.at) = (Some(true), Some([at.x, at.y]));
@@ -307,7 +308,7 @@ pub(super) fn rows(
     // The target: the last entity entered or moved over this frame; a
     // leave from a live row with nothing entered clears it (a leave from a
     // rebuilt row's despawned entity resolves to nothing and is ignored).
-    let hover = msgs.enter.read().map(|e| (e.entity, e.pointer_location.position)).chain(msgs.over.read().map(|e| (e.entity, e.pointer_location.position))).last();
+    let hover = msgs.enter.read().map(|e| (e.entity, e.pointer.position)).chain(msgs.over.read().map(|e| (e.entity, e.pointer.position))).last();
     // Every message is read (`any` would leave the rest for the next frame).
     let left = msgs.leave.read().filter(|e| look.find(e.entity).is_some()).count() > 0;
     let armed = g.drag.as_ref().is_some_and(|d| d.armed);
@@ -334,7 +335,7 @@ pub(super) fn rows(
             continue;
         }
         let Some((ids, began)) = doc.tree.drag.as_ref().map(|d| (d.ids.clone(), d.began)) else { continue };
-        let target = match look.plan(&doc, &ids, ev.entity, ev.pointer_location.position) {
+        let target = match look.plan(&doc, &ids, ev.entity, ev.pointer.position) {
             None => continue,
             Some(Ok(target)) => target,
             Some(Err(why)) => {

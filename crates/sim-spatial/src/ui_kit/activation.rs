@@ -6,8 +6,13 @@ use bevy::ui::InteractionDisabled;
 use crate::builder::ui_api::Enabled;
 
 /// Transient widget identity; never a model index or durable document owner.
+/// `Interaction` + `FocusPolicy::Block` preserve what the deprecated
+/// `bevy::ui::Button` used to require (0.20 removed it from the bundle):
+/// several consumers still poll `Interaction`; repaint has moved to
+/// `Hovered`/`Pressed`, the rest migrate consumer by consumer.
 #[derive(Component, Default)]
-#[require(bevy::ui_widgets::Button, bevy::ui_widgets::ActivateOnPress, Outline = Outline::new(Val::Px(2.), Val::Px(2.), Color::NONE))]
+#[allow(deprecated)]
+#[require(bevy::ui_widgets::Button, bevy::ui_widgets::ActivateOnPress, bevy::ui::Interaction, bevy::ui::FocusPolicy = bevy::ui::FocusPolicy::Block, Outline = Outline::new(Val::Px(2.), Val::Px(2.), Color::NONE))]
 pub(crate) struct Ordinary;
 /// Explicit paired/continuous gesture opt-out. No generic keyboard activation.
 #[derive(Component)]
@@ -294,7 +299,7 @@ pub(crate) fn validate_sources(mut commands: Commands, registry: Option<Res<crat
 // All observers for the same pointer target run before the deferred Activate.
 // Cause authorization is recorded synchronously, so observer registration order
 // never authorizes a secondary pointer press as an ordinary action.
-fn pointer_intent(event: On<bevy::picking::events::Pointer<bevy::picking::events::Press>>, controls: Query<(Has<KeyboardOnly>, Has<InteractionDisabled>), With<Ordinary>>, nodes: Query<(Option<&Node>, Option<&Visibility>, Option<&Enabled>, Option<&ChildOf>)>, mut gate: ResMut<PointerGate>, mut focus: ResMut<InputFocus>, mut visible: ResMut<InputFocusVisible>) {
+fn pointer_intent(event: On<bevy::picking::events::PointerPress>, controls: Query<(Has<KeyboardOnly>, Has<InteractionDisabled>), With<Ordinary>>, nodes: Query<(Option<&Node>, Option<&Visibility>, Option<&Enabled>, Option<&ChildOf>)>, mut gate: ResMut<PointerGate>, mut focus: ResMut<InputFocus>, mut visible: ResMut<InputFocusVisible>) {
     let Ok((keyboard_only, disabled)) = controls.get(event.entity) else { return };
     if !controls.contains(event.entity) { return; }
     if event.button == bevy::picking::pointer::PointerButton::Primary && !keyboard_only && !disabled && eligible(event.entity, &nodes) {

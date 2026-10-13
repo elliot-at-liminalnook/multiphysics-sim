@@ -1,6 +1,7 @@
 //! Question and self-explanation cards, the locked-rest marker, the
 //! review list and figures.
 use super::*;
+use bevy::ui_widgets::Button;
 use super::sketch::sketch_canvas;
 
 fn badge(k: &Kit, text: &str, color: Color) -> impl Bundle {

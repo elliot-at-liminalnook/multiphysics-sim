@@ -1,5 +1,6 @@
 //! Written regression fixtures. This batch does not execute them.
 use super::*;
+use bevy::ui_widgets::Button;
 fn document() -> CadDocument {
     let mut d = CadDocument::new(crate::cad::CadTarget::Service("http://127.0.0.1:1".into()));
     d.connection = crate::cad::Connection::Connected;

@@ -3,6 +3,7 @@
 //! `system_actions::UiAction`, which activates a control's action through
 //! `dispatch` or makes the gesture a click would, without pixel input.
 use super::*;
+use bevy::ui_widgets::Button;
 use super::system_actions::UiAction;
 use serde::Serialize;
 use std::hash::{Hash, Hasher};

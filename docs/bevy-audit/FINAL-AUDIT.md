@@ -526,4 +526,39 @@ commits, targeted tests only — the runs named per item, nothing broader).
   execution: first run 36 passed with only the new name test expecting the
   production filename from an isolated fixture path; corrected and the
   single regression test then passed.
+- **Item 8 (bevy 0.19.1 → 0.20.0) — done.** Versions bumped in the root
+  and `sim-spatial` manifests (the 0.19 feature list resolves unchanged;
+  `accesskit =0.24.1` still matches `bevy_a11y` 0.20). The 139 first-check
+  errors were three classes: flat pointer events (`Pointer<Press>` →
+  `PointerPress`, etc.; tree-row `pointer_location` → `pointer.position`;
+  test triggers rebuilt as flat event literals), the deprecated `bevy_ui`
+  `Button` (every kit control now names `bevy::ui_widgets::Button` — one
+  shadowing import per file, queries included; zero deprecated-Button
+  warnings), and `CalculatedClip` (the lesson viewport now un-projects
+  each inherited clip rect through `world_to_clip_local`). `Ordinary`
+  carries `Interaction` + `FocusPolicy::Block` as required components —
+  exactly what the deprecated bundle used to add — so the existing
+  `Interaction` polling consumers keep working; the two repaint systems
+  the audit names migrated to `Hovered`/`Pressed` (`Look`/`Tint` require
+  `Hovered`; `Pressed` removal is collected via `RemovedComponents`).
+  Remaining `Interaction` consumers (sliders, jog, text press, double-click
+  rows; 54 deprecation warnings) migrate consumer-by-consumer, not in this
+  bump. §15 greps: no `TextScroll`, `Sprite`, manual `WorldQuery`,
+  `DeferredWorld`, `MeshTag`, bind-group, `FilteredResources`,
+  `AssetId::invalid` or `bevy_shape` use; `NextState` only ever `.set()`;
+  `Tonemapping` paths and one-arg `Font::from_bytes` compile unchanged;
+  kit text sets `FontSize::Px` explicitly, so the `Rem(1.)` default is
+  moot; the two `&mut World` systems already register through plain
+  `add_systems`. One behavioral find: 0.20's tab navigation skips
+  `InheritedVisibility=false` subtrees, which broke four windowless
+  fixtures that never ran visibility propagation (production gets it from
+  `DefaultPlugins` in PostUpdate); each fixture now stands in for
+  propagation with a PreUpdate marker system. Verified against the
+  pre-bump base in a scratch worktree (the modal tests pass there without
+  the stand-in). Targeted: lib + tests compile with 0 errors;
+  `ui_kit:: inspect_view::tests builder::placement::tests
+  app::picker::activation_tests` (59 passed after the fixture stand-in),
+  `cad::tree::tests robot::hardware::actions::input::tests
+  ordering_guard app::settings::` (pass), `app::close` (17),
+  `cad::surfaces::form cad::files::form` (11 with picker batch).
 

@@ -5,6 +5,7 @@
 //! `system_actions::apply`, the builder's one handler. Edits go through
 //! `Builder::apply` (the validated command path and the shared undo history).
 use super::*;
+use bevy::ui_widgets::Button;
 use super::system_actions::SystemAction;
 use crate::app::actions::Act;
 use crate::app::switch::{ModeSwitch, WindowAction};

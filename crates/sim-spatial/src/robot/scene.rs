@@ -3,6 +3,7 @@
 //! view area (the orbit itself is the shared `crate::camera`), selection
 //! highlight and inspector scrolling.
 use super::*;
+use bevy::ui_widgets::Button;
 
 /// UI thread, FILE mode: stats the opened file every `source::POLL`;
 /// a changed stat writes the one Reload action (trigger watch), applied next frame.

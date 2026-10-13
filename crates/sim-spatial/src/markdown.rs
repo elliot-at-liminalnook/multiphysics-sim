@@ -1,5 +1,6 @@
 //! Reusable native Markdown presentation. Callers own link actions and persistence.
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use sim_markdown::{Align, Document, Kind, Link, Span, Table};
 
 pub struct Theme {

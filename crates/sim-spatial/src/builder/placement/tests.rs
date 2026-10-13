@@ -517,22 +517,17 @@ fn actual_bevy_drag_start_and_end_observers_keep_selected_group_identity() {
             target: NormalizedRenderTarget::TextureView(ManualTextureViewHandle(0)),
             position: Vec2::ZERO,
         };
-        app.world_mut().trigger(
-            Pointer::new(
-                PointerId::Mouse,
-                location.clone(),
-                DragStart {
-                    button: PointerButton::Primary,
-                    hit: HitData::new(
-                        Entity::PLACEHOLDER,
-                        1.,
-                        Some(Vec3::new(0.2, 0.02, 0.)),
-                        None,
-                    ),
-                },
-                entity,
+        app.world_mut().trigger(bevy::picking::events::PointerDragStart {
+            entity,
+            pointer: bevy::picking::events::Pointer::new(PointerId::Mouse, location.clone()),
+            button: PointerButton::Primary,
+            hit: HitData::new(
+                Entity::PLACEHOLDER,
+                1.,
+                Some(Vec3::new(0.2, 0.02, 0.)),
+                None,
             ),
-        );
+        });
         assert_eq!(
             app.world()
                 .resource::<Builder>()
@@ -542,17 +537,12 @@ fn actual_bevy_drag_start_and_end_observers_keep_selected_group_identity() {
                 .names,
             vec!["a", "assembly"]
         );
-        app.world_mut().trigger(
-            Pointer::new(
-                PointerId::Mouse,
-                location,
-                DragEnd {
-                    button: PointerButton::Primary,
-                    distance: Vec2::X * 10.,
-                },
-                entity,
-            ),
-        );
+        app.world_mut().trigger(bevy::picking::events::PointerDragEnd {
+            entity,
+            pointer: bevy::picking::events::Pointer::new(PointerId::Mouse, location),
+            button: PointerButton::Primary,
+            distance: Vec2::X * 10.,
+        });
         assert!(
             app.world()
                 .resource::<Builder>()

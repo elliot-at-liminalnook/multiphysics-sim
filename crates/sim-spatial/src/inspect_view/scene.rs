@@ -169,7 +169,7 @@ pub(crate) fn spawn_parts(
 /// selection), the lesson page's `Pick` in Lessons.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn pick_part(
-    click: On<Pointer<Click>>,
+    click: On<bevy::picking::events::PointerClick>,
     parts: Query<&Part>,
     scene: Res<SpatialScene>,
     keys: Option<Res<ButtonInput<KeyCode>>>,

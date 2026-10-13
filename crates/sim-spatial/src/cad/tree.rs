@@ -44,8 +44,9 @@
 //!   {"name"}` with the name stripped (unchanged: nothing sent; empty:
 //!   refused by name, the field stays); Escape or a press elsewhere ends it.
 //! - **Drag and drop** (`input::rows`, `move`; `_drop`, widgets.py:366-381):
-//!   Bevy picking's `Pointer<DragStart/Drag/DragEnter/DragOver/DragLeave/
-//!   DragDrop/DragEnd>` messages on the rows. A drop on a group moves into
+//!   Bevy picking's `PointerDragStart`/`PointerDrag`/`PointerDragEnter`/
+//!   `PointerDragOver`/`PointerDragLeave`/`PointerDragDrop`/
+//!   `PointerDragEnd` messages on the rows. A drop on a group moves into
 //!   it (parent = the group, index None), on any other row in front of it
 //!   (its parent, `index_of`), under the rows to the top level; it moves
 //!   the selection when the dragged row is selected, else that row: one
@@ -77,13 +78,13 @@
 //! pending plain press on a selected row, the drag's slop, target and end)
 //! is one `Local` spanning several events, and the rows are despawned and
 //! rebuilt during a drag, so one Input system reads Bevy picking's pointer
-//! messages in order instead. Every `Pointer<E>` is both an `EntityEvent`
-//! and a `Message` (`bevy_picking-0.19.1/src/events.rs:71-84`), written by
-//! `pointer_events` beside each trigger (events.rs:597-614 the writers;
-//! 824-835 `DragEnter`, 1007-1031 `DragDrop` then `DragEnd` on release) in
-//! PreUpdate's `PickingSystems::Hover` (lib.rs:428-454). Messages do not
-//! bubble (the triggers propagate through `PointerTraversal`,
-//! events.rs:95-125), so a hit on a row's chip resolves to the row by
+//! messages in order instead. Every flat `Pointer…` event is both an
+//! `EntityEvent` and a `Message` (`bevy_picking-0.20.0/src/events.rs`),
+//! written by `pointer_events` beside each trigger (`PointerDragDrop`
+//! then `PointerDragEnd` on release) in PreUpdate's
+//! `PickingSystems::Hover`. Messages do not bubble (the triggers
+//! propagate through `PointerTraversal`), so a hit on a row's chip
+//! resolves to the row by
 //! walking `ChildOf`, and the row's labels are `Pickable::IGNORE`
 //! (lib.rs:198-245) so presses land on the row itself.
 //!

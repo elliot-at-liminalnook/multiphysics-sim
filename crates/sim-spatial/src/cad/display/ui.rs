@@ -33,6 +33,7 @@ use crate::cad::surfaces::COMMAND_BAR;
 use crate::camera::{CameraAction, Orbit, OrbitRules, ViewPreset, display_to_robocad};
 use crate::ui_kit::{BAR, BORDER, DANGER, Kit, RIGHT_WIDTH, TOPBAR, UiFonts, size, wrap};
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy::ui::FocusPolicy;
 use bevy::ui::prelude::AccessibleLabel;
 

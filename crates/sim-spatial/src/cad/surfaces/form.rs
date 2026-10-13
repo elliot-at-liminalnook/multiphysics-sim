@@ -468,10 +468,14 @@ pub(in crate::cad) mod suspension_fixture {
         let Some((_id, field, window, target)) = pending.0.take() else { return };
         assert!(fields.get(field).unwrap().suspended,
             "containment must record the departing editor before Hover can assign pointer focus");
-        commands.trigger(bevy::picking::events::Pointer::new(
-            bevy::picking::pointer::PointerId::Mouse,
-            bevy::picking::pointer::Location { target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO },
-            bevy::picking::events::Press { button: bevy::picking::pointer::PointerButton::Primary, hit: bevy::picking::backend::HitData::new(window, 0., None, None), count: 1 }, target));
+        commands.trigger(bevy::picking::events::PointerPress {
+            entity: target,
+            pointer: bevy::picking::events::Pointer::new(
+                bevy::picking::pointer::PointerId::Mouse,
+                bevy::picking::pointer::Location { target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO },
+            ),
+            button: bevy::picking::pointer::PointerButton::Primary, hit: bevy::picking::backend::HitData::new(window, 0., None, None), count: 1,
+        });
     }
     pub fn first_pointer_cancel(app: &mut App, window: Entity, id: FieldId) {
         let editor = field(app, id);
@@ -502,6 +506,11 @@ pub(in crate::cad) mod suspension_fixture {
             .add_systems(PostUpdate, crate::cad::activation::stamp);
         crate::app::configure_sets(&mut app);
         activation::install(&mut app);
+        // 0.20 tab navigation filters on `InheritedVisibility`; stand in
+        // for production's propagation (see the ui_kit activation fixture).
+        app.add_systems(PreUpdate, (|mut vis: Query<&mut bevy::camera::visibility::InheritedVisibility>| {
+            for mut v in &mut vis { *v = bevy::camera::visibility::InheritedVisibility::VISIBLE; }
+        }).before(activation::ActivationSet::Eligibility));
         app.init_resource::<PendingPointer>()
             .configure_sets(PreUpdate, (
                 bevy::picking::PickingSystems::ProcessInput,
@@ -523,10 +532,14 @@ pub(in crate::cad) mod suspension_fixture {
     }
     pub fn press(app: &mut App, window: Entity, entity: Entity) {
         let camera = app.world_mut().spawn_empty().id();
-        app.world_mut().trigger(bevy::picking::events::Pointer::new(
-            bevy::picking::pointer::PointerId::Mouse,
-            bevy::picking::pointer::Location { target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO },
-            bevy::picking::events::Press { button: bevy::picking::pointer::PointerButton::Primary, hit: bevy::picking::backend::HitData::new(camera, 0., None, None), count: 1 }, entity));
+        app.world_mut().trigger(bevy::picking::events::PointerPress {
+            entity,
+            pointer: bevy::picking::events::Pointer::new(
+                bevy::picking::pointer::PointerId::Mouse,
+                bevy::picking::pointer::Location { target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(), position: Vec2::ZERO },
+            ),
+            button: bevy::picking::pointer::PointerButton::Primary, hit: bevy::picking::backend::HitData::new(camera, 0., None, None), count: 1,
+        });
         app.update();
     }
     pub fn request(app: &mut App, window: Entity) {

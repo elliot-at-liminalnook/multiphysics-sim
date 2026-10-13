@@ -2,6 +2,7 @@
 //! parameters, ports, snapping, implementation), library cards, datasheets,
 //! live readouts and the source preview.
 use super::*;
+use bevy::ui_widgets::Button;
 
 pub(super) fn inspector(commands: &mut Commands, k: &Kit, b: &Builder, scene: &SpatialScene, selected: &BTreeSet<String>) {
     // The dock is itself the scroll area: its layout scrolls vertically (the

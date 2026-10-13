@@ -7,6 +7,7 @@ use crate::builder::ui_api::Enabled;
 use crate::robot::hardware::Hardware;
 use crate::robot::hardware::panel::{JogButton, PanelSlider};
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 
 /// Input: a pressed panel button's action (not while disabled). The jog
 /// buttons are hold-to-move ([`jog_buttons`]).
@@ -183,19 +184,19 @@ mod activation_fixtures {
         // No release/click is supplied: activation is intentionally on press.
         let window = world.spawn_empty().id();
         let camera = world.spawn_empty().id();
-        world.trigger(bevy::picking::events::Pointer::new(
-            bevy::picking::pointer::PointerId::Mouse,
-            bevy::picking::pointer::Location {
-                target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(),
-                position: Vec2::ZERO,
-            },
-            bevy::picking::events::Press {
-                button: bevy::picking::pointer::PointerButton::Primary,
-                hit: bevy::picking::backend::HitData::new(camera, 0.0, None, None),
-                count: 1,
-            },
-            stop,
-        ));
+        world.trigger(bevy::picking::events::PointerPress {
+            entity: stop,
+            pointer: bevy::picking::events::Pointer::new(
+                bevy::picking::pointer::PointerId::Mouse,
+                bevy::picking::pointer::Location {
+                    target: bevy::camera::RenderTarget::Window(bevy::window::WindowRef::Entity(window)).normalize(Some(window)).unwrap(),
+                    position: Vec2::ZERO,
+                },
+            ),
+            button: bevy::picking::pointer::PointerButton::Primary,
+            hit: bevy::picking::backend::HitData::new(camera, 0.0, None, None),
+            count: 1,
+        });
         app.update();
         let actions: Vec<_> = app.world_mut().resource_mut::<Messages<Act<HardwareAction>>>().drain().map(|a| a.action).collect();
         assert_eq!(actions.len(), 1);

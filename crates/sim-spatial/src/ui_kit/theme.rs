@@ -128,6 +128,7 @@ impl UiFonts {
 /// when the pointer or the tint changes. Build one with a preset or
 /// [`Tint::new`], not a struct literal (the source guard checks this).
 #[derive(Component, Clone, Copy, PartialEq, Debug)]
+#[require(bevy::picking::hover::Hovered)]
 pub(crate) struct Tint {
     pub(crate) idle: Color,
     pub(crate) hover: Color,
@@ -153,6 +154,7 @@ impl Tint {
 /// toggles a button's state (a lit segment, the current tab) writes a new
 /// `Look` and `ui_kit::repaint_buttons` restyles it, hover included.
 #[derive(Component, Clone, Copy, PartialEq, Eq, Debug)]
+#[require(bevy::picking::hover::Hovered)]
 pub(crate) enum Look {
     /// The one main action of a panel (Run): accent fill.
     Primary,

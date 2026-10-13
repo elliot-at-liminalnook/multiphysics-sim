@@ -357,7 +357,7 @@ impl Builder {
     }
 }
 pub(crate) fn start_part(
-    e: On<Pointer<DragStart>>,
+    e: On<bevy::picking::events::PointerDragStart>,
     parts: Query<&Part>,
     scene: Res<SpatialScene>,
     builder: Option<ResMut<Builder>>,
@@ -405,7 +405,7 @@ pub(crate) fn start_part(
     b.panel_dirty = true;
 }
 pub(super) fn start_palette(
-    e: On<Pointer<DragStart>>,
+    e: On<bevy::picking::events::PointerDragStart>,
     actions: Query<&BuildAction>,
     mut b: ResMut<Builder>,
 ) {
@@ -644,7 +644,7 @@ fn poll_drop(b: &mut Builder, scene: &SpatialScene, drag: &mut DragState) -> Opt
 }
 
 /// A global observer: it also sees drags in modes without a builder.
-pub(super) fn end_drag(e: On<Pointer<DragEnd>>, b: Option<ResMut<Builder>>) {
+pub(super) fn end_drag(e: On<bevy::picking::events::PointerDragEnd>, b: Option<ResMut<Builder>>) {
     let Some(mut b) = b else { return };
     if e.button == PointerButton::Primary {
         if let Some(d) = b.drag.as_mut() {

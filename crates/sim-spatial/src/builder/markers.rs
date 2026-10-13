@@ -1,6 +1,7 @@
 //! CAD-style, constant-size viewport pins. Keyed entities survive panel rebuilds.
 use super::*;
 use bevy::ui::FocusPolicy;
+use bevy::ui_widgets::Button;
 use crate::ui_kit::UiFonts;
 
 #[derive(Clone, serde::Serialize)]

@@ -2,6 +2,7 @@
 //! never study truth. Every submission carries the identity displayed at focus.
 use super::{StudyAction, StudyOwner, StudyStamp};
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use crate::{app::actions::Act, builder::ui_api::Enabled, ui_kit::text::{FieldEvent, FieldId, FieldMsg, TextFocus}};
 use sim_runtime::experiment_study::commands::{Command, ParameterGroup};
 use std::collections::BTreeMap;

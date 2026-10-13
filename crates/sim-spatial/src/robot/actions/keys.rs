@@ -151,7 +151,7 @@ pub(in crate::robot) fn speed_keys(keys: Res<ButtonInput<KeyCode>>, typing: Typi
 }
 
 /// A click on a link in the 3D view selects it (the same `SelectLink` as the list).
-pub(in crate::robot) fn pick_link(click: On<Pointer<Click>>, links: Query<&LinkMesh>, view: Res<RobotView>, mut out: MessageWriter<Act<RobotAction>>) {
+pub(in crate::robot) fn pick_link(click: On<bevy::picking::events::PointerClick>, links: Query<&LinkMesh>, view: Res<RobotView>, mut out: MessageWriter<Act<RobotAction>>) {
     if click.button != bevy::picking::pointer::PointerButton::Primary {
         return;
     }

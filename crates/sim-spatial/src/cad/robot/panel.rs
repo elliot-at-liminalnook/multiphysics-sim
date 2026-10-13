@@ -38,6 +38,7 @@ use crate::cad::panel::{CadButton, material};
 use crate::cad::surfaces::registry;
 use crate::ui_kit::{ACCENT, ACCENT_BG, DANGER, Kit, Look, OK, SUBTLE, TEXT, Tint, VALUE, WARN, size, wrap};
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy::ui::prelude::AccessibleLabel;
 use serde_json::{Value, json};
 use sim_api::Outcome;

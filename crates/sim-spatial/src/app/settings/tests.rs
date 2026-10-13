@@ -205,22 +205,13 @@ fn delayed_save_completion_cannot_acknowledge_newer_dirty_choices() {
     assert!(owner.diagnostic.is_none());
 }
 #[test]
-fn reflected_group_registration_exposes_actual_source_contract() {
-    let mut app = App::new();
-    app.register_type::<PreferenceGroup>();
-    let types = app.world().resource::<AppTypeRegistry>().read();
-    assert!(
-        types
-            .get(std::any::TypeId::of::<PreferenceGroup>())
-            .unwrap()
-            .data::<ReflectSettingsGroup>()
-            .is_some()
-    );
-    assert_eq!(
-        PreferenceGroup::settings_source(),
-        Some("viewer-preferences")
-    );
-    assert_eq!(PreferenceGroup::settings_group_name(), "preferences");
+fn the_on_disk_preferences_names_are_the_stored_ones() {
+    // The stored file and its group key, byte-identical since before the
+    // bevy-settings seam was removed; renaming either orphans every
+    // existing user's preferences.
+    assert_eq!(super::PREFERENCES_FILE, "viewer-preferences");
+    assert_eq!(super::PREFERENCES_GROUP, "preferences");
+    assert_eq!(format!("{}.json", super::PREFERENCES_FILE), "viewer-preferences.json");
 }
 
 #[test]

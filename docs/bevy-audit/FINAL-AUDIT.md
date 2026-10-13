@@ -516,4 +516,14 @@ commits, targeted tests only — the runs named per item, nothing broader).
   re-chain. Targeted:
   `cargo test -p sim-spatial --lib -- ordering_guard robot::tests`
   (11 passed).
+- **Item 9 (`bevy-settings`/Reflect seam) — done by removal.** The
+  registered `PreferenceGroup` had no consumer, so it, per-frame JSON
+  publication into it, `SettingsGroup` registration/assertion, and the
+  `bevy-settings` dependency are removed. The former group and file names
+  are now typed constants (`preferences` and `viewer-preferences`), so the
+  existing on-disk contract is byte-identical. A focused regression test
+  pins both names and the derived `.json` filename. Targeted settings
+  execution: first run 36 passed with only the new name test expecting the
+  production filename from an isolated fixture path; corrected and the
+  single regression test then passed.
 

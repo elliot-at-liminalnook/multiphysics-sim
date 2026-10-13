@@ -13,7 +13,6 @@ mod drain_tests;
 use super::{ViewerMode, recent::Recents, switch::Document};
 use crate::{drive_input::BindingsFile, jobs::Job, robot::hardware::settings::Settings};
 use bevy::prelude::*;
-use bevy_settings::{ReflectSettingsGroup, SettingsGroup};
 pub use plugin::{SettingsPlugin, SettingsSet};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -23,18 +22,14 @@ use std::{
     time::Instant,
 };
 
-/// Registered Bevy settings contract. JSON payloads retain unknown fields;
-/// validated typed projections below are the only consumer-facing values.
-#[derive(Resource, Reflect, SettingsGroup, Default, Clone)]
-#[reflect(Resource, Default, SettingsGroup)]
-#[settings_group(group = "preferences", file = "viewer-preferences")]
-pub struct PreferenceGroup {
-    pub recents: String,
-    pub hardware: String,
-    pub cad: String,
-    /// The stored drive bindings (`sim.drive-bindings/1`), empty while the defaults are in effect.
-    pub drive_bindings: String,
-}
+/// The on-disk preferences contract (was the `bevy-settings` group's
+/// names, kept byte-identical when the consumer-less Reflect seam was
+/// removed): the unified file is `<config dir>/<PREFERENCES_FILE>.json`
+/// and its one group key is `PREFERENCES_GROUP`. JSON payloads retain
+/// unknown fields; validated typed projections below are the only
+/// consumer-facing values.
+pub(super) const PREFERENCES_GROUP: &str = "preferences";
+pub(super) const PREFERENCES_FILE: &str = "viewer-preferences";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct FastenerDefaults {

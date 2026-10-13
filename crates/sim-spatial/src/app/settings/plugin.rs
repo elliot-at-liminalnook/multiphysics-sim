@@ -11,19 +11,10 @@ impl Plugin for SettingsPlugin {
     fn build(&self, app: &mut App) {
         crate::app::actions::register::<super::actions::SettingsAction>(app);
         app.add_systems(Update, super::actions::apply.in_set(ViewerSet::Actions));
-        app.register_type::<PreferenceGroup>()
-            .init_resource::<PreferenceGroup>()
-            .init_resource::<SettingsOwner>()
+        app.init_resource::<SettingsOwner>()
             .configure_sets(Update, SettingsSet::Publish.in_set(ViewerSet::JobResults))
             .add_systems(Startup, start)
             .add_systems(Update, tick.in_set(SettingsSet::Publish));
-        // Registration is an actual contract, not a marker derive. The seam
-        // uses its group/source mapping and publishes only validated projections.
-        let registry = app.world().resource::<AppTypeRegistry>().read();
-        let registration = registry
-            .get(std::any::TypeId::of::<PreferenceGroup>())
-            .expect("registered preference group");
-        assert!(registration.data::<ReflectSettingsGroup>().is_some());
     }
 }
 fn start(mut owner: ResMut<SettingsOwner>) {
@@ -41,7 +32,6 @@ fn start(mut owner: ResMut<SettingsOwner>) {
 }
 fn tick(
     mut owner: ResMut<SettingsOwner>,
-    mut group: ResMut<PreferenceGroup>,
     redraw: Option<MessageWriter<bevy::window::RequestRedraw>>,
 ) {
     let previous_status = owner.status();
@@ -54,15 +44,6 @@ fn tick(
         && let Some(error) = &owner.diagnostic
     {
         bevy::log::warn!("viewer preferences: {error}; retry with settings_retry");
-    }
-    let next = PreferenceGroup {
-        recents: serde_json::to_string(&owner.recents).unwrap_or_default(),
-        hardware: serde_json::to_string(&owner.hardware).unwrap_or_default(),
-        cad: serde_json::to_string(&owner.cad).unwrap_or_default(),
-        drive_bindings: owner.drive_bindings.as_ref().and_then(|b| serde_json::to_string(b).ok()).unwrap_or_default(),
-    };
-    if group.recents != next.recents || group.hardware != next.hardware || group.cad != next.cad || group.drive_bindings != next.drive_bindings {
-        *group = next;
     }
     if (owner.load.is_some() || owner.save.is_some() || owner.canonical.is_some()
         || owner.dirty() && !owner.blocked && owner.normalization_error.is_none())

@@ -7,7 +7,6 @@ license.workspace = true
 [dependencies]
 sim-cad = { path = "../sim-cad" }
 sim-print = { path = "../sim-print" }
-bevy-settings = "=0.19.1"
 # Direct accesskit (Bevy does not re-export it since 0.15): accessibility
 # roles for the kit's own nodes. Version must match bevy_a11y's.
 accesskit = "=0.24.1"

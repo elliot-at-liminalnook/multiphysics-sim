@@ -1,6 +1,5 @@
 use super::*;
 use crate::jobs::Pool;
-use bevy_settings::SettingsGroup;
 use std::{
     path::{Path, PathBuf},
 };
@@ -20,7 +19,7 @@ impl Paths {
             unified: dir.as_ref().map(|d| {
                 d.join(format!(
                     "{}.json",
-                    PreferenceGroup::settings_source().unwrap()
+                    PREFERENCES_FILE
                 ))
             }),
             recent: dir.map(|d| d.join(super::super::recent::FILE_NAME)),
@@ -133,11 +132,11 @@ pub(super) fn load(paths: &Paths) -> Result<Loaded, String> {
             None => serde_json::json!({}),
         };
         let h = read(&paths.hardware)?.unwrap_or_else(|| serde_json::json!({}));
-        serde_json::json!({"schema":SCHEMA,"hardware_source":paths.hardware.to_string_lossy(), PreferenceGroup::settings_group_name(): {"recents":r,"hardware":h,"cad":{}}})
+        serde_json::json!({"schema":SCHEMA,"hardware_source":paths.hardware.to_string_lossy(), PREFERENCES_GROUP: {"recents":r,"hardware":h,"cad":{}}})
     };
     validate_archive(&raw)?;
     let group = raw
-        .get(PreferenceGroup::settings_group_name())
+        .get(PREFERENCES_GROUP)
         .ok_or("preferences group missing")?;
     let r = recents(group.get("recents").ok_or("recents missing")?)?;
     let hraw = group.get("hardware").ok_or("hardware missing")?;
@@ -318,7 +317,7 @@ pub(super) fn snapshot(
     if result.get("preserved_source").is_none() {
         result["preserved_source"] = raw.clone();
     }
-    let group = &mut result[PreferenceGroup::settings_group_name()];
+    let group = &mut result[PREFERENCES_GROUP];
     let old_r = group["recents"].clone();
     let mut next_r = serde_json::to_value(r).map_err(|e| e.to_string())?;
     if let Some(modes) = next_r["modes"].as_object_mut() {
@@ -393,7 +392,7 @@ pub(super) fn snapshot(
 /// bindings keeps no group at all, so later default changes reach it.
 pub(super) fn with_drive_bindings(mut snapshot: Value, bindings: Option<&BindingsFile>) -> Result<Value, String> {
     let group = snapshot
-        .get_mut(PreferenceGroup::settings_group_name())
+        .get_mut(PREFERENCES_GROUP)
         .and_then(Value::as_object_mut)
         .ok_or("preferences group missing from the snapshot")?;
     match bindings {

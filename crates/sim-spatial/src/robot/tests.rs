@@ -46,3 +46,60 @@ fn robot_run_identity_changes_with_reset_and_reload() {
     assert_ne!(after, reset, "a reload (even of the same file) is a new run identity");
     assert_eq!(after, format!("{} (run generation 5)", path.display()));
 }
+
+/// The Section SubStates pilot: the state exists only inside Robot mode,
+/// mirrors `RobotView::section` (still the authoritative value), spawns
+/// the Comments body on entering the section (rereading as Refresh does)
+/// and despawns it on leaving (`DespawnOnExit`).
+#[test]
+fn section_substate_mirrors_view_and_scopes_the_comments_body() {
+    let mut app = App::new();
+    app.add_plugins((bevy::MinimalPlugins, bevy::state::app::StatesPlugin))
+        .insert_state(ViewerMode::Build)
+        .insert_resource(crate::ui_kit::UiFonts { regular: Default::default(), italic: Default::default(), mono: Default::default(), medium: Default::default(), semibold: Default::default(), icons: Default::default() })
+        .insert_resource(RobotView::new(PathBuf::from("pilot.simrobot.json"), None, None));
+    section_state(&mut app);
+    threads::build(&mut app);
+    let root = app.world_mut().spawn((Node::default(), threads::ThreadsRoot)).id();
+
+    let section = |app: &App| app.world().get_resource::<State<Section>>().map(|s| *s.get());
+    let bodies = |app: &mut App| {
+        let world = app.world_mut();
+        let mut query = world.query_filtered::<Entity, With<threads::ThreadsSectionBody>>();
+        query.iter(world).collect::<Vec<_>>()
+    };
+
+    app.update();
+    assert_eq!(section(&app), None, "no Section state outside Robot mode");
+
+    app.world_mut().resource_mut::<NextState<ViewerMode>>().set(ViewerMode::Robot);
+    app.update();
+    app.update();
+    assert_eq!(section(&app), Some(Section::Link), "the file default section, mirrored");
+    assert!(bodies(&mut app).is_empty());
+
+    // ShowSection's effect on the view, as the action handler leaves it;
+    // the mirror projects it and the next transition enters Comments.
+    app.world_mut().resource_mut::<RobotView>().section = Section::Comments;
+    app.world_mut().resource_mut::<threads::RobotThreads>().error = Some("stale".into());
+    app.update();
+    app.update();
+    assert_eq!(section(&app), Some(Section::Comments));
+    assert!(app.world().resource::<threads::RobotThreads>().error.is_none(), "entering Comments rereads (Refresh clears the error)");
+    let live = bodies(&mut app);
+    assert_eq!(live.len(), 1, "OnEnter spawned the scoped Comments body");
+    let body = live[0];
+    assert_eq!(app.world().get::<ChildOf>(body).map(|c| c.parent()), Some(root));
+    assert!(app.world().get::<Children>(body).is_some_and(|c| !c.is_empty()), "the section drew into its scoped body");
+
+    // Leaving the section despawns the body; leaving Robot mode removes
+    // the SubState entirely.
+    app.world_mut().resource_mut::<RobotView>().section = Section::Link;
+    app.update();
+    app.update();
+    assert_eq!(section(&app), Some(Section::Link));
+    assert!(bodies(&mut app).is_empty(), "DespawnOnExit took the Comments body");
+    app.world_mut().resource_mut::<NextState<ViewerMode>>().set(ViewerMode::Build);
+    app.update();
+    assert_eq!(section(&app), None, "the SubState leaves with Robot mode");
+}

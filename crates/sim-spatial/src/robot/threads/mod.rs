@@ -57,6 +57,8 @@ mod tests;
 
 pub(crate) use act::{ThreadsAct, from_rest, handle};
 pub(super) use panel::{ThreadsRoot, input};
+#[cfg(test)]
+pub(super) use panel::ThreadsSectionBody;
 
 /// The start of a thread's warning when its part is on no link of the export.
 pub(crate) const NOT_ON_LINK: &str = "Not on any link of this export";
@@ -472,7 +474,11 @@ pub(super) fn build(app: &mut App) {
     app.init_resource::<RobotThreads>()
         .add_text_field(panel::COMPOSE, panel::compose_field())
         .add_systems(OnExit(ModeScope::Robot), reset)
-        .add_systems(Update, (read::results.in_set(ViewerSet::JobResults), panel::draw.in_set(ViewerSet::Present)).run_if(in_state(ViewerMode::Robot)));
+        .add_systems(OnEnter(Section::Comments), panel::enter_section)
+        // Reads and landed changes keep running in every Robot section (a
+        // REST caller may be waiting); only the draw is section-scoped.
+        .add_systems(Update, read::results.in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Robot)))
+        .add_systems(Update, panel::draw.in_set(ViewerSet::Present).run_if(in_state(Section::Comments)));
 }
 
 /// The section is shown.

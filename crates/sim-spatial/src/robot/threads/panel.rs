@@ -20,7 +20,7 @@ use super::{Base, LinkKeys, Parents, Placed, RobotThreads, ThreadsAct, anchor_li
 use crate::app::actions::Act;
 use super::NO_UNDO;
 use crate::cad::threads::{CadAnchor, attachment, thread_of};
-use crate::robot::{RobotAction, RobotView};
+use crate::robot::{RobotAction, RobotView, Section};
 use crate::ui_kit::activation::Activated;
 use crate::ui_kit::text::{EnterKey, FieldEvent, FieldId, FieldMsg, TextDraft, TextField, TextFocus};
 use crate::ui_kit::threads::{self as kit, Composer, Host, Shown};
@@ -41,6 +41,29 @@ pub(crate) fn compose_field() -> TextField {
 /// Where the section is drawn (in the inspector's scroll area, `ui::setup`).
 #[derive(Component)]
 pub(crate) struct ThreadsRoot;
+
+/// The Comments section's live contents under [`ThreadsRoot`]: spawned by
+/// [`enter_section`] on entering `Section::Comments` and despawned by
+/// `DespawnOnExit` on leaving it, so no drawn thread or composer input
+/// outlives the section.
+#[derive(Component)]
+pub(crate) struct ThreadsSectionBody;
+
+/// OnEnter(Section::Comments): reread the CAD source (as the manual
+/// Refresh act does) and spawn the section's scoped body.
+pub(crate) fn enter_section(mut commands: Commands, roots: Query<Entity, With<ThreadsRoot>>, bodies: Query<Entity, With<ThreadsSectionBody>>, mut st: ResMut<RobotThreads>) {
+    st.read.again();
+    st.error = None;
+    let Ok(root) = roots.single() else { return };
+    if bodies.is_empty() {
+        commands.spawn((
+            Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(6.0), flex_shrink: 0.0, ..default() },
+            ThreadsSectionBody,
+            DespawnOnExit(Section::Comments),
+            ChildOf(root),
+        ));
+    }
+}
 
 /// A press on the composer's parts.
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
@@ -119,14 +142,19 @@ impl Host<CadAnchor> for RobotHost<'_> {
     }
 }
 
-/// Present: the section, rebuilt when the thread state changes or what it
-/// is drawn from (the section, the subject, the loaded model) does.
+/// Present (Comments section only): the section body, rebuilt when the
+/// thread state changes or what it is drawn from (the subject, the
+/// loaded model) does. Leaving the section despawns the body itself
+/// (`DespawnOnExit`), so this never has to clear for another section.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn draw(mut commands: Commands, view: Res<RobotView>, st: Res<RobotThreads>, fonts: Res<UiFonts>, roots: Query<Entity, With<ThreadsRoot>>, mut last: Local<Option<(Entity, (bool, Option<Base>, Option<&'static str>, u64))>>) {
+pub(crate) fn draw(mut commands: Commands, view: Res<RobotView>, st: Res<RobotThreads>, fonts: Res<UiFonts>, roots: Query<Entity, With<ThreadsSectionBody>>, mut last: Local<Option<(Entity, (bool, Option<Base>, Option<&'static str>, u64))>>) {
     let Ok(root) = roots.single() else {
         *last = None;
         return;
     };
+    // The view's field leads the SubState mirror by one transition pass:
+    // honor it here so leaving the section clears the body the same frame
+    // the tab changes, before `DespawnOnExit` removes the body itself.
     let on = shown(&view);
     let key = (on, base_of(&view), link_note(view.cad_link.as_ref()), view.ui_revision);
     if !st.is_changed() && last.as_ref().is_some_and(|(e, k)| *e == root && *k == key) {

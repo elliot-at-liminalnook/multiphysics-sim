@@ -599,4 +599,28 @@ commits, targeted tests only — the runs named per item, nothing broader).
   shared asset, and clearing selection swaps back. Targeted:
   `cargo test -p sim-spatial --lib -- inspect_view::tests animation::`
   (7 passed) and `cargo check -p sim-spatial --lib --tests` (clean).
+- **Item 10b (robot `Section` SubStates pilot) — done as a one-way ECS
+  projection.** `Section` now derives `SubStates` sourced on
+  `ViewerMode::Robot` (default `Link`), registered by
+  `robot::section_state` in `RobotPlugin`. `RobotView::section` stays
+  authoritative — the data-level constructors, action handlers and
+  `robot_state`'s same-frame answer all read/write it as before — and
+  `sync_section_state` (SimSync, after Actions) mirrors it into
+  `NextState<Section>`; the pilot deliberately does not invert that
+  ownership, since a SubState transition lands a frame later than the
+  REST reply that must already name the new section. First lifecycle
+  consumer: entering `Section::Comments` rereads the CAD source (as
+  the manual Refresh act does) and spawns a `ThreadsSectionBody`
+  under `ThreadsRoot` carrying `DespawnOnExit(Section::Comments)`;
+  the panel draw is gated on `in_state(Section::Comments)` and draws
+  into that body (still honoring the view field during the one-pass
+  mirror lag so leaving clears the same frame), while thread reads
+  and landed changes keep running in every Robot section for REST
+  callers waiting on them. Focused test: no `Section` state outside
+  Robot mode, the file default mirrors to `Link`, entering Comments
+  spawns and draws the scoped body and clears the stale error,
+  leaving the section despawns it, and leaving Robot mode removes
+  the state. Targeted:
+  `cargo test -p sim-spatial --lib -- robot::tests:: robot::threads::tests robot::actions::tests`
+  (21 passed).
 

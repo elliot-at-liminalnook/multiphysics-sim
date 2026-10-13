@@ -130,9 +130,18 @@ pub struct RobotView {
 }
 
 /// Inspector sections, switched by tab click or `system_ui`.
-#[derive(Clone, Copy, Serialize, Deserialize, Debug, PartialEq, Eq)]
+///
+/// `RobotView::section` remains the authoritative value: it is set by the
+/// data-level constructors and action handlers and answered in the same
+/// frame by `robot_state`. This SubState is its ECS projection, mirrored
+/// one-way by `sync_section_state` so state lifecycle and gating can use
+/// Bevy's machinery (the Comments body in `threads::panel`) without moving
+/// the headless/REST contract onto a next-frame transition.
+#[derive(SubStates, Clone, Copy, Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Default)]
+#[source(ViewerMode = ViewerMode::Robot)]
 #[serde(rename_all = "snake_case")]
 pub enum Section {
+    #[default]
     Link,
     Joints,
     Drives,
@@ -155,6 +164,28 @@ impl Section {
             Section::Comments => "Comments",
         }
     }
+}
+
+/// SimSync: mirror the view's authoritative section into the ECS
+/// SubState (one-way; see [`Section`]). Runs after the action stage, so
+/// a tab click or a replaced view is projected in the same frame and
+/// transitions at the next state-transition pass.
+fn sync_section_state(view: Option<Res<RobotView>>, current: Option<Res<State<Section>>>, mut next: ResMut<NextState<Section>>) {
+    let Some(view) = view else { return };
+    let pending = match &*next {
+        NextState::Pending(section) | NextState::PendingIfDifferent(section) => Some(*section),
+        NextState::Unchanged => None,
+    };
+    let effective = pending.or_else(|| current.map(|state| *state.get()));
+    if effective != Some(view.section) {
+        next.set_if_different(view.section);
+    }
+}
+
+/// Register the section SubState and its mirror (`RobotPlugin`, and the
+/// windowless pilot test).
+pub(crate) fn section_state(app: &mut App) {
+    app.add_sub_state::<Section>().add_systems(Update, sync_section_state.in_set(ViewerSet::SimSync).run_if(in_state(ViewerMode::Robot)));
 }
 
 mod actions;
@@ -232,6 +263,7 @@ impl Plugin for RobotPlugin {
     fn build(&self, app: &mut App) {
         crate::app::actions::register::<RobotAction>(app);
         configure_sets(app);
+        section_state(app);
         hardware::build(app);
         panel_ui::add_field(app);
         view_tools::add_field(app);

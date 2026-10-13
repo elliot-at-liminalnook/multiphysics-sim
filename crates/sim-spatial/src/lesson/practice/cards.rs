@@ -61,7 +61,7 @@ pub(in crate::lesson) fn quiz_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &
                 let tint = if picked { Tint::new(HOVER_BG, HOVER_BG) } else { Tint::SURFACE };
                 c.spawn((Button, crate::ui_kit::activation::Ordinary, LessonAction::QuizPick(q.id.clone(), i), tint, AccessibleLabel::new(format!("{}: {}", (b'A' + i as u8) as char, o.text)), Node { border_radius: BorderRadius::all(Val::Px(6.)), padding: UiRect::axes(Val::Px(12.), Val::Px(9.)), border: UiRect::all(Val::Px(1.5)), column_gap: Val::Px(10.), align_items: AlignItems::Center, flex_shrink: 0., ..default() }, BackgroundColor(tint.idle), BorderColor::all(border))).with_children(|row| {
                     row.spawn(k.text(format!("{}", (b'A' + i as u8) as char), 12., if picked { ACCENT } else { FAINT }, 2));
-                    row.spawn((k.text(&o.text, 13.5, TEXT, 0), Node { flex_shrink: 1., min_width: Val::Px(0.), ..default() }));
+                    row.spawn((k.text(&o.text, 13.5, TEXT, 0), Node { flex_grow: 1., flex_shrink: 1., min_width: Val::Px(0.), ..default() }));
                 });
             }
         } else if q.kind == QuizKind::Sketch {
@@ -161,7 +161,7 @@ pub(in crate::lesson) fn quiz_card(col: &mut ChildSpawnerCommands, k: &Kit, l: &
             c.spawn(Node { column_gap: Val::Px(8.), align_items: AlignItems::FlexStart, ..default() }).with_children(|r| {
                 // A prediction is only committed here; the run judges it below.
                 r.spawn((k.text(if q.pretest { "Noted." } else if q.kind.predicts() && v.correct { "Locked in." } else if v.correct { "Right." } else { "Not yet." }, 13., if v.correct || q.pretest { OK } else { WARN }, 2), Node { flex_shrink: 0., ..default() }));
-                r.spawn((k.text(if v.feedback.is_empty() { if v.correct { "Correct." } else { "Not quite — try again." } } else { v.feedback.as_str() }, 13., TEXT, 0), Node { flex_shrink: 1., min_width: Val::Px(0.), ..default() }));
+                r.spawn((k.text(if v.feedback.is_empty() { if v.correct { "Correct." } else { "Not quite — try again." } } else { v.feedback.as_str() }, 13., TEXT, 0), Node { flex_grow: 1., flex_shrink: 1., min_width: Val::Px(0.), ..default() }));
             });
             if let (false, Some(r)) = (v.correct, l.remedy.get(&q.id)) {
                 super::super::extras::remedy_card(c, k, l, r, theme);
@@ -336,4 +336,61 @@ pub(in crate::lesson) fn figure(col: &mut ChildSpawnerCommands, k: &Kit, l: &Lea
             c.spawn((Text::new(caption), TextFont { font: k.f.italic.clone().into(), font_size: FontSize::Px(12.5), ..default() }, TextColor(SUBTLE), TextLayout::new(Justify::Center, bevy::text::LineBreak::WordBoundary), Node { max_width: Val::Px(680.), ..default() }));
         }
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bevy::ecs::system::RunSystemOnce;
+
+    /// Choice labels must claim the row's remaining width. With only
+    /// shrink-and-zero-minimum they can collapse to the text measure's
+    /// one-glyph minimum, wrapping a normal label one character per line.
+    #[test]
+    fn quiz_option_labels_grow_to_fill_their_row() {
+        let dir = std::env::temp_dir().join(format!("learn-quiz-layout-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(dir.join("lessons")).unwrap();
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let mut learn = Learn::new(dir.join("lessons"), root.join("library/systems"), sim_runtime::registry());
+        learn.progress = sim_lesson::progress::Progress::default();
+
+        let mut world = World::new();
+        world.insert_resource(learn);
+        world.insert_resource(crate::ui_kit::UiFonts { regular: Handle::default(), italic: Handle::default(), mono: Handle::default(), icons: Default::default(), medium: Handle::default(), semibold: Handle::default() });
+        let quiz: Quiz = serde_json::from_value(serde_json::json!({
+            "id": "board-jobs",
+            "question": "Which part makes the steady 5 V?",
+            "options": [
+                { "text": "The regulator", "correct": true },
+                { "text": "The H-bridge" },
+                { "text": "The battery" }
+            ]
+        }))
+        .unwrap();
+        let block = sim_lesson::Block { id: quiz.id.clone(), line: 1, end_line: 1, start: 0, end: 0, hash: String::new(), section: String::new(), kind: sim_lesson::BlockKind::Quiz(Box::new(quiz.clone())) };
+        world
+            .run_system_once(move |mut commands: Commands, learn: Res<Learn>, fonts: Res<crate::ui_kit::UiFonts>| {
+                let k = Kit::new(&fonts);
+                let theme = crate::builder::ui::markdown_theme(&k);
+                commands.spawn(Node { flex_direction: FlexDirection::Column, width: Val::Px(800.), ..default() }).with_children(|col| {
+                    quiz_card(col, &k, &learn, &block, &quiz, &theme);
+                });
+            })
+            .unwrap();
+        world.flush();
+
+        let mut options = Vec::new();
+        let mut query = world.query::<(&Text, &Node)>();
+        for (text, node) in query.iter(&world) {
+            if ["The regulator", "The H-bridge", "The battery"].contains(&text.as_str()) {
+                options.push((text.to_string(), node.flex_grow, node.flex_shrink, node.min_width));
+            }
+        }
+        assert_eq!(options.len(), 3, "all three option labels spawn: {options:?}");
+        for (text, grow, shrink, min_width) in options {
+            assert_eq!((grow, shrink, min_width), (1., 1., Val::Px(0.)), "{text} must fill the option row while still wrapping when it is narrow");
+        }
+        let _ = std::fs::remove_dir_all(dir);
+    }
 }

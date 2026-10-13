@@ -323,13 +323,16 @@ fn spawn(mut commands: Commands, fonts: Res<UiFonts>, mut draft: ResMut<NameDraf
             AccessibleLabel::new("CAD inspector"),
         ))
         .with_children(|right| {
-            right.spawn((k.scroll_area(Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, ..default() }, 0.0), InspectorScroll)).with_children(|area| {
+            let mut area = right.spawn((k.scroll_area(Node { flex_grow: 1.0, min_height: Val::Px(0.0), flex_direction: FlexDirection::Column, ..default() }, 0.0), InspectorScroll));
+            let area_id = area.id();
+            area.with_children(|area| {
                 area.spawn(Node { padding: UiRect::all(Val::Px(14.0)), ..column(4.0) }).with_children(|body| {
                     for part in [Part::Experiments, Part::ExperimentReview, Part::Motion, Part::Components, Part::Composition, Part::Comments, Part::References, Part::Name, Part::Inspector, Part::Physical, Part::Attributes, Part::Robot, Part::Materials, Part::Print, Part::History, Part::Commands] {
                         body.spawn((column(4.0), CadList::new(part)));
                     }
                 });
             });
+            right.spawn(k.scrollbar(area_id));
         });
     // Normal padding: the mode switcher has its own strip under the status
     // bar (`SWITCHER_STRIP`), so no right-end room is kept for it here.

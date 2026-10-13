@@ -1,6 +1,7 @@
 //! Scroll areas: the node, the wheel step and the clamp. Which panel a
 //! wheel moves is still each mode's choice (its columns, by pointer
 //! position), so the modes read the wheel through [`wheel_delta`].
+use super::theme::FAINT;
 use super::widgets::Kit;
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
@@ -14,6 +15,18 @@ impl Kit<'_> {
     /// to find it again for the wheel.
     pub(crate) fn scroll_area(&self, layout: Node, offset: f32) -> impl Bundle + use<> {
         (Node { overflow: Overflow::scroll_y(), ..layout }, ScrollPosition(Vec2::new(0.0, offset)))
+    }
+
+    /// A visible vertical scrollbar for the scroll area `target`, overlaid
+    /// on its right edge (spawn it in the area's parent, which the area
+    /// fills). Bevy's headless `Scrollbar` sizes and drags the thumb and
+    /// writes the target's `ScrollPosition` directly.
+    pub(crate) fn scrollbar(&self, target: Entity) -> impl Bundle + use<> {
+        (
+            bevy::ui_widgets::Scrollbar { target, orientation: bevy::ui_widgets::ControlOrientation::Vertical, min_thumb_length: 24.0 },
+            Node { position_type: PositionType::Absolute, right: Val::Px(0.0), top: Val::Px(0.0), bottom: Val::Px(0.0), width: Val::Px(8.0), ..default() },
+            children![(bevy::ui_widgets::ScrollbarThumb { border_radius: BorderRadius::all(Val::Px(4.0)), border: UiRect::all(Val::Px(0.0)) }, BackgroundColor(FAINT))],
+        )
     }
 }
 

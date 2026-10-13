@@ -139,6 +139,22 @@ impl Kit<'_> {
         self.button(label, action, Look::Chip(on), enabled)
     }
 
+    /// A checkbox carrying its label (RoboCAD's checkbox look): a chip-painted
+    /// kit button (a press is `action`, as every kit control) that is also
+    /// Bevy's headless `Checkbox` — assistive technology reads the CheckBox
+    /// role and the `Checked` state, and Enter/Space while focused toggle it
+    /// through the same activation path. `Checked` mirrors `checked` at
+    /// spawn; the caller's state stays authoritative (no
+    /// `checkbox_self_update`: panels rebuild on the toggle, and a refused
+    /// toggle must not leave the widget flipped).
+    pub(crate) fn checkbox<A: Component>(&self, parent: &mut ChildSpawnerCommands, label: &str, action: A, checked: bool, enabled: bool) {
+        let mut entity = parent.spawn(self.chip(label, action, checked, enabled));
+        entity.insert((bevy::ui_widgets::Checkbox, bevy::a11y::AccessibilityNode(accesskit::Node::new(accesskit::Role::CheckBox))));
+        if checked {
+            entity.insert(bevy::ui::Checked);
+        }
+    }
+
     /// One option of a segmented control (`on`: chosen). Put segments in a
     /// [`Kit::segments`] frame.
     pub(crate) fn segment<A: Component>(&self, label: &str, action: A, on: bool, enabled: bool) -> impl Bundle + use<A> {

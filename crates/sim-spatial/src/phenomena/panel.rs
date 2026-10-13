@@ -208,7 +208,7 @@ pub(super) fn setup(mut commands: Commands, fonts: Res<UiFonts>, mut images: Res
         .spawn((k.dock(Dock::Left { top: TOPBAR, bottom: 0.0, width: LEFT_WIDTH }, Node { flex_direction: FlexDirection::Column, padding: UiRect::all(Val::Px(12.0)), row_gap: Val::Px(8.0), ..default() }), DespawnOnExit(ModeScope::Phenomena)))
         .with_children(|p| {
             k.header(p, "Exhibits", "Click one, or ] and [ for the next and previous; 1–9 and 0 open the first ten.");
-            p.spawn((k.scroll_area(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), flex_grow: 1.0, min_height: Val::Px(0.0), ..default() }, 0.0), ExhibitList));
+            p.spawn((k.scroll_area(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), flex_grow: 1.0, min_height: Val::Px(0.0), ..default() }, 0.0), ExhibitList, bevy::ui_widgets::ListBox));
         });
     // Every dock ends above the switcher strip (`SWITCHER_STRIP`, added by
     // the kit), so the right dock and chart strip need no switcher room.
@@ -246,6 +246,18 @@ pub(super) fn setup(mut commands: Commands, fonts: Res<UiFonts>, mut images: Res
 
 /// Input: a press on a kit button or list row writes its action (a
 /// disabled button writes nothing; its control names why).
+/// The exhibit list box's keyboard selection (arrows move the active row,
+/// Enter/Space choose it): the same action a row press writes. A pointer
+/// click also produces this, after the press already selected the row, so
+/// a row that is already current is skipped.
+pub(super) fn exhibit_picked(change: On<bevy::ui_widgets::ValueChange<Entity>>, rows: Query<&ExhibitRow>, gallery: Option<Res<Gallery>>, mut out: MessageWriter<Act<PhenomenaAction>>) {
+    let Ok(row) = rows.get(change.value) else { return };
+    if gallery.as_ref().and_then(|g| g.ready()).map(|f| f.current) == Some(row.0) {
+        return;
+    }
+    out.write(Act::ui(PhenomenaAction::PhenomenaSelect { exhibit: ExhibitRef::Number(row.0 + 1) }));
+}
+
 pub(super) fn buttons(clicks: Query<(&PhenomenaButton, Option<&Enabled>), With<crate::ui_kit::activation::Activated>>, mut out: MessageWriter<Act<PhenomenaAction>>) {
     for (button, enabled) in &clicks {
         if enabled.is_none_or(|e| e.0) {
@@ -323,13 +335,19 @@ pub(super) fn rebuild(mut commands: Commands, fonts: Res<UiFonts>, gallery: Opti
             let mut entity = commands.entity(*list);
             entity.despawn_related::<Children>();
             if let Some(f) = frame {
+                let mut current_row = None;
                 entity.with_children(|p| {
                     for (i, e) in f.catalogue.iter().enumerate() {
                         let subtitle = if i < 10 { format!("Exhibit {}  ·  key {}", i + 1, (i + 1) % 10) } else { format!("Exhibit {}", i + 1) };
                         let action = PhenomenaButton(PhenomenaAction::PhenomenaSelect { exhibit: ExhibitRef::Number(i + 1) });
-                        p.spawn((k.list_item(sim_core::icons::for_type(e.title), SUBTLE, &glyphs(e.title), &subtitle, action, i == f.current), ExhibitRow(i)));
+                        let mut row = p.spawn((k.list_item(sim_core::icons::for_type(e.title), SUBTLE, &glyphs(e.title), &subtitle, action, i == f.current), ExhibitRow(i), bevy::ui_widgets::ListItem, bevy::a11y::AccessibilityNode(accesskit::Node::new(accesskit::Role::ListItem))));
+                        if i == f.current {
+                            row.insert(bevy::ui::Selected);
+                            current_row = Some(row.id());
+                        }
                     }
                 });
+                entity.insert(bevy::ui_widgets::ActiveDescendant(current_row));
             }
         }
     }

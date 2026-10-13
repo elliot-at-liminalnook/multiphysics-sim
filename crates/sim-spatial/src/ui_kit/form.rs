@@ -278,7 +278,7 @@ impl Kit<'_> {
             FieldKind::Check => {
                 // RoboCAD's checkbox carries its own label ("As live instances").
                 cell.spawn(Node { flex_shrink: 0.0, ..default() }).with_children(|line| {
-                    line.spawn(self.chip(row.label, hit(FormHit::Check(i)), evaluate(&row.kind, row.text) == Ok(FieldValue::Check(true)), true));
+                    self.checkbox(line, row.label, hit(FormHit::Check(i)), evaluate(&row.kind, row.text) == Ok(FieldValue::Check(true)), true);
                 });
             }
             FieldKind::Number { .. } | FieldKind::Vector { .. } | FieldKind::Json | FieldKind::Text => {

@@ -472,4 +472,18 @@ commits, targeted tests only — the runs named per item, nothing broader).
   in the remaining modes first. Targeted:
   `cargo test -p sim-spatial --lib -- inspect_view::tests view::tests cad::panel`
   (33 passed).
+- **Item 5 (Checkbox, ListBox pilot, Scrollbar) — done.** `Kit::checkbox`
+  is a chip-painted kit button that is also Bevy's headless `Checkbox`
+  (CheckBox role, `Checked` mirrored at spawn; no `checkbox_self_update`
+  — the caller's draft is authoritative and panels rebuild on toggle, so
+  self-update would double-flip the AT state on a refused toggle); form
+  `Check` rows use it. `Kit::scrollbar` wraps the headless `Scrollbar`;
+  piloted on the CAD inspector dock, whose scroll area fills it.
+  The phenomena exhibit list is a `ListBox`: rows carry `ListItem` +
+  ListItem role, the current row is `Selected` and the
+  `ActiveDescendant`, and a `ValueChange<Entity>` observer writes the
+  same select action a press does (skipping the already-current row a
+  click also produces), giving the list arrow-key navigation.
+  Targeted: `cargo test -p sim-spatial --lib -- ui_kit::tests phenomena::`
+  (26 passed).
 

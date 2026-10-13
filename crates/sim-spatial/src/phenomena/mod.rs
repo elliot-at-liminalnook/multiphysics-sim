@@ -108,6 +108,7 @@ pub struct PhenomenaPlugin;
 impl Plugin for PhenomenaPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(PhenomenaCorePlugin)
+            .add_observer(panel::exhibit_picked)
             .add_systems(OnEnter(ModeScope::Phenomena), (scene::setup, panel::setup))
             .add_systems(
                 Update,

@@ -21,15 +21,17 @@ import time
 import uuid
 
 import codex_backend
+import muse_backend
 import outer_loop
 import shared_notebook
 import disk_preflight
 
 HERE = Path(__file__).resolve().parent
-BACKENDS = ("claude", "codex")
+BACKENDS = ("claude", "codex", "muse")
+BACKEND_LABEL = {"claude": "Claude", "codex": "Codex", "muse": "Muse"}
 # The modules a coordinator runs. A running process keeps the code it started
 # with, so the dashboard compares this fingerprint with the files on disk.
-CODE_FILES = ("pair.py", "codex_backend.py", "outer_loop.py", "shared_notebook.py", "disk_preflight.py")
+CODE_FILES = ("pair.py", "codex_backend.py", "muse_backend.py", "outer_loop.py", "shared_notebook.py", "disk_preflight.py")
 FEATURES = ("backends", "restart")
 
 
@@ -491,6 +493,8 @@ class Runner:
     def available(self, backend):
         if backend == "codex":
             return bool(shutil.which(self.codex_settings()["executable"]))
+        if backend == "muse":
+            return bool(shutil.which(self.muse_settings()["executable"]))
         return bool(shutil.which(self.config.get("claude") or "claude"))
 
     def usage_level(self, backend, now=None):
@@ -518,7 +522,9 @@ class Runner:
         backend is installed and has room."""
         preferred = self.backend(role)
         policy = self.auto_switch()
-        if not policy["enabled"]:
+        # Auto-switching needs a usage window to react to, and Muse reports
+        # none: it never triggers a switch, and isn't a fallback either.
+        if not policy["enabled"] or preferred == "muse":
             return preferred, None
         level, resets = self.usage_level(preferred)
         if level < policy["at"]:
@@ -552,6 +558,9 @@ class Runner:
     def codex_settings(self):
         return {"executable": "codex", "model": None, "reasoning_effort": None, "fast": False, **(self.fresh_config().get("codex") or {})}
 
+    def muse_settings(self):
+        return {"executable": "muse", "model": None, "effort": None, **(self.fresh_config().get("muse") or {})}
+
     def prompt_file(self, name):
         """Run-local prompt copy when present (edited while stopped), else the installed one."""
         local = self.root / "prompts" / name
@@ -583,14 +592,17 @@ class Runner:
         if backend == "codex":
             capped = self.shell_limits(role)
             text += "\n\n" + codex_backend.role_note(self.config.get("shell_seconds", 10) if capped else 0)
+        elif backend == "muse":
+            capped = self.shell_limits(role)
+            text += "\n\n" + muse_backend.role_note(self.config.get("shell_seconds", 10) if capped else None)
         return text
 
     def call(self, role, prompt, scope=None):
         """One agent turn. A role keeps its session only while `scope` (the
         assignment or batch) is unchanged and the session is short; otherwise it
         starts fresh and relies on the task contract and notebook for context.
-        The backend (Claude Code or Codex CLI) is chosen per call, and a session
-        belongs to the backend that started it."""
+        The backend (Claude Code, Codex CLI or Muse) is chosen per call, and
+        a session belongs to the backend that started it."""
         shared_notebook.setup(self.root, self.state, self.config)
         prompt += shared_notebook.context(self.root, role)
         prompt += disk_preflight.context(self.repo)
@@ -600,6 +612,7 @@ class Runner:
         scopes = self.state.setdefault("session_scopes", {})
         counts = self.state.setdefault("session_calls", {})
         backends = self.state.setdefault("session_backends", {})
+        postures = self.state.setdefault("session_postures", {})
         session = self.state["sessions"].get(role)
         if session and backends.get(session, "claude") != backend:
             # Sessions don't move between backends. The new backend starts fresh
@@ -611,6 +624,21 @@ class Runner:
                 prompt = (f"(The previous {role} turn ran on {backends.get(session, 'claude')} and was cut short. You are "
                           f"continuing it on {backend} in a fresh session. Its edits in the project folder are intact: "
                           "check git status, CURRENT.md and the journal, then finish the same task.)\n\n" + prompt)
+            session = None
+        if (backend == "muse" and session
+                and postures.get(session, muse_backend.posture(self.config["audit_only"]))
+                != muse_backend.posture(self.config["audit_only"])):
+            # A Muse session's edit posture is fixed at creation (a session
+            # created read-only stays read-only when resumed), so a posture
+            # change retires the session exactly like a backend change.
+            if self.state.get("retry_session") == session:
+                self.state.pop("retry_session")
+                if self.state.get("limit_resume") == session:
+                    self.state.pop("limit_resume")
+                prompt = ("(The previous turn's Muse session was created with a different edit posture, which a "
+                          "Muse session keeps for its whole life, so you are continuing in a fresh session. Its "
+                          "edits in the project folder are intact: check git status, CURRENT.md and the journal, "
+                          "then finish the same task.)\n\n" + prompt)
             session = None
         # Resume tokens belong to one session; another role's call must not use them up.
         retrying = bool(session) and self.state.get("retry_session") == session
@@ -627,12 +655,17 @@ class Runner:
         if session and not retrying and (role == "director" or scopes.get(role) != scope or
                                          counts.get(session, 0) >= self.config.get("max_session_calls", 8)):
             session = None
-        # Claude Code takes the session ID we choose; Codex names a new session itself.
-        sid = session or (str(uuid.uuid4()) if backend == "claude" else None)
+        # Claude Code and Muse take the session ID we choose; Codex names a new session itself.
+        sid = session or (str(uuid.uuid4()) if backend in ("claude", "muse") else None)
         instructions = self.instructions(role, backend)
         known = self.state.setdefault("session_instructions", {})
-        if backend == "codex" and session and known.get(session) != codex_backend.digest(instructions):
-            prompt = codex_backend.updated_instructions(instructions) + prompt
+        module = {"codex": codex_backend, "muse": muse_backend}.get(backend)
+        if module and session and known.get(session) != module.digest(instructions):
+            prompt = module.updated_instructions(instructions) + prompt
+        elif backend == "muse" and not session:
+            # Muse has no system/developer-prompt flag: a fresh session's
+            # whole brief (standing instructions + task) rides in the prompt.
+            prompt = muse_backend.fresh_prompt(instructions, prompt)
         self.state["calls"] += 1
         prefix = self.root / "logs" / f"{self.state['calls']:04d}-{role}"
         prefix.with_suffix(".prompt.md").write_text(prompt)
@@ -651,6 +684,8 @@ class Runner:
         if sid:
             counts[sid] = counts.get(sid, 0) + 1
             backends[sid] = backend
+            if backend == "muse":
+                postures[sid] = muse_backend.posture(self.config["audit_only"])
         self.save()
         # fast_roles picks the roles; Codex also needs codex.fast (off by default:
         # its priority tier spends the usage allowance faster).
@@ -685,10 +720,12 @@ class Runner:
             if self.config.get("model"):
                 argv += ["--model", self.config["model"]]
             env = self.env(**self.shell_limits(role))
+        elif backend == "muse":
+            argv, env = self.muse_command(role, schema, sid, cap, prefix.with_suffix(".prompt.md"))
         else:
             argv, env = self.codex_command(role, schema, session, fast, instructions, cap)
         print(f"{role}: call {self.state['calls']} ({prefix.name}{', resumed' if session else ', fresh session'}"
-              f"{', fast mode' if fast else ''}{', codex' if backend == 'codex' else ''})", flush=True)
+              f"{', fast mode' if fast else ''}{', ' + backend if backend != 'claude' else ''})", flush=True)
         code, out, err = self.process(argv, prefix, prompt, env=env)
         raw = out.read_text()
         if backend == "claude":
@@ -700,6 +737,10 @@ class Runner:
                 result = results[-1] if results else None
             info = rate_limit_info(raw)
             started = any(e.get("type") == "assistant" for e in events)
+        elif backend == "muse":
+            result = muse_backend.parse(raw)
+            info = None  # the exec stream carries no usage windows
+            started = muse_backend.started(raw)
         else:
             result = codex_backend.parse(raw, fast)
             tid = (result or {}).get("session_id") or codex_backend.thread_id(raw)
@@ -715,20 +756,21 @@ class Runner:
         if result is None or code or result.get("is_error") or result.get("subtype") != "success":
             text = " ".join([str((result or {}).get("result", "")), (err.read_text()[-4000:] if err.exists() else ""), raw[-12000:]])
             reset = limit_reset(info, text, time.time(), self.config.get("limit_retry_minutes", 15) * 60)
-            if reset:
+            # Muse reports no usage windows, so its failures (limit-looking
+            # text included) go through the ordinary retry-with-backoff path.
+            if reset and backend != "muse":
                 self.settle_limited_call(role, sid, reservation, result, started)
-                raise UsageLimit(reset, f"{role} call {self.state['calls']} stopped by a Claude usage limit"
-                                 if backend == "claude" else f"{role} call {self.state['calls']} stopped by a Codex usage limit",
+                raise UsageLimit(reset, f"{role} call {self.state['calls']} stopped by a {BACKEND_LABEL[backend]} usage limit",
                                  weekly_limit(info, text, reset, time.time()), backend)
         if result is None:
-            self.fail_call(role, sid, reservation, started, "Claude's output ended without a final result (crash or cut-off)"
-                           if backend == "claude" else "Codex's output ended without a turn result (crash or cut-off)")
+            self.fail_call(role, sid, reservation, started,
+                           f"{BACKEND_LABEL[backend]}'s output ended without "
+                           f"{'a final result' if backend == 'claude' else 'a turn result'} (crash or cut-off)")
         if result.get("session_id") != sid:
-            self.fail_call(role, sid, reservation, False, "Claude returned an unexpected session ID"
-                           if backend == "claude" else "Codex returned an unexpected session ID")
+            self.fail_call(role, sid, reservation, False, f"{BACKEND_LABEL[backend]} returned an unexpected session ID")
         self.state["sessions"][role] = sid
-        if backend == "codex":
-            known[sid] = codex_backend.digest(instructions)
+        if module:
+            known[sid] = module.digest(instructions)
             tokens = self.state.setdefault("tokens", {}).setdefault(backend, {})
             for key, value in (result.get("usage") or {}).items():
                 if isinstance(value, (int, float)):
@@ -738,7 +780,7 @@ class Runner:
             reason = result.get("fast_mode_disabled_reason") or result.get("fast_mode_state") or "unknown"
             shared_notebook.append(self.root, {"id": f"fast-mode-off-{reason}", "author": "coordinator",
                 "kind": "Fast mode unavailable", "summary": f"Fast mode was requested for the {role} but "
-                f"{'Claude Code' if backend == 'claude' else 'Codex'} ran it at normal speed ({reason}). The run continues.",
+                f"{'Claude Code' if backend == 'claude' else BACKEND_LABEL[backend]} ran it at normal speed ({reason}). The run continues.",
                 "notes": [], "source": str(out)})
         total = result.get("total_cost_usd")
         prior = self.state["session_costs"].get(sid, 0.0)
@@ -749,7 +791,7 @@ class Runner:
         self.state.pop("inflight")
         self.save()
         if code or result.get("is_error") or result.get("subtype") != "success":
-            self.fail_call(role, sid, 0.0, started, f"{'Claude' if backend == 'claude' else 'Codex'} reported "
+            self.fail_call(role, sid, 0.0, started, f"{BACKEND_LABEL[backend]} reported "
                            f"{result.get('subtype') or 'an error'}: " + str(result.get("result") or "")[:300])
         if result.get("permission_denials"):
             # Not a boundary any more (agents run without permission prompts);
@@ -792,6 +834,36 @@ class Runner:
             if value:
                 shared_notebook.append(self.root, {"id": f"codex-{name}", "author": "coordinator",
                     "kind": "Limit not available on Codex", "summary": why, "notes": [], "source": str(self.root / "config.json")})
+        return argv, env
+
+    def muse_command(self, role, schema, sid, cap, prompt_path):
+        """argv and environment for a Muse turn (see muse_backend)."""
+        settings = self.muse_settings()
+        executable = shutil.which(settings["executable"]) or settings["executable"]
+        schemas = self.root / "schemas"
+        schemas.mkdir(exist_ok=True)
+        schema_path = schemas / f"{role}.json"
+        write_json(schema_path, schema)
+        agents = self.root / "prompts" / "subagents.json"
+        agents = agents if agents.exists() else HERE / "prompts" / "subagents.json"
+        argv = muse_backend.command(executable, workspace=self.repo, session=sid,
+                                    schema_path=schema_path, prompt_path=prompt_path,
+                                    audit_only=self.config["audit_only"], model=settings.get("model"),
+                                    effort=settings.get("effort"),
+                                    max_turns=self.config.get("max_turns"),
+                                    agents=None if self.config["audit_only"] else muse_backend.agent_overlay(agents))
+        limits = self.shell_limits(role)
+        env = self.env(**limits)
+        if limits:
+            # Muse has no coordinator-set per-command cap: slow commands run inside `within`.
+            env["PAIR_SHELL_SECONDS"] = str(self.config.get("shell_seconds", 10))
+        for name, value, why in (("dollar-caps", cap is not None, "Muse reports no usage dollars, so the dollar "
+                                  "ceilings don't stop Muse calls; the turn time limit still applies."),
+                                 ("fast-mode", role in self.fast_roles(), "Muse has no fast or priority mode, so "
+                                  "fast_roles doesn't change Muse calls.")):
+            if value:
+                shared_notebook.append(self.root, {"id": f"muse-{name}", "author": "coordinator",
+                    "kind": "Limit not available on Muse", "summary": why, "notes": [], "source": str(self.root / "config.json")})
         return argv, env
 
     def fail_call(self, role, sid, reserved, started, reason):
@@ -1330,6 +1402,7 @@ def initialize(args):
               "fast_roles": list(args.fast_roles if getattr(args, "fast_roles", None) is not None else ["worker"]),
               "backend": getattr(args, "backend", None) or "claude", "role_backends": {},
               "codex": {"executable": "codex", "model": None, "reasoning_effort": None, "fast": False},
+              "muse": {"executable": "muse", "model": None, "effort": None},
               "auto_switch": {"enabled": True, "at": 0.95}}
     for name in ("max_rounds", "max_hours", "turn_minutes", "max_turns", "budget_usd", "call_budget_usd"):
         config[name] = getattr(args, name, None)
@@ -1348,7 +1421,8 @@ def initialize(args):
 
 
 def switch_backend(root, name=None, role=None, clear_role=None, codex_model=None, codex_effort=None, codex_executable=None,
-                   codex_fast=None, auto_switch=None, switch_at=None):
+                   codex_fast=None, auto_switch=None, switch_at=None, muse_model=None, muse_effort=None,
+                   muse_executable=None):
     """Change which CLI runs the agents. Safe while a coordinator runs: it reads
     the choice at each call, a turn in progress finishes where it started, and a
     role whose backend changed starts a fresh session on the new one."""
@@ -1366,6 +1440,10 @@ def switch_backend(root, name=None, role=None, clear_role=None, codex_model=None
     for key, value in (("model", codex_model), ("reasoning_effort", codex_effort), ("executable", codex_executable)):
         if value is not None:
             codex[key] = value or (None if key != "executable" else "codex")
+    muse = {"executable": "muse", "model": None, "effort": None, **(config.get("muse") or {})}
+    for key, value in (("model", muse_model), ("effort", muse_effort), ("executable", muse_executable)):
+        if value is not None:
+            muse[key] = value or (None if key != "executable" else "muse")
     auto = {"enabled": True, "at": 0.95, **(config.get("auto_switch") or {})}
     if auto_switch is not None:
         auto["enabled"] = bool(auto_switch)
@@ -1373,17 +1451,20 @@ def switch_backend(root, name=None, role=None, clear_role=None, codex_model=None
         if not 0 < switch_at <= 1:
             raise ValueError("The switch point is a fraction of a usage window, above 0 and at most 1 (0.95 = 95%)")
         auto["at"] = switch_at
-    config.update(role_backends=roles, codex=codex, auto_switch=auto)
+    config.update(role_backends=roles, codex=codex, muse=muse, auto_switch=auto)
     config.setdefault("backend", "claude")
     write_json(root / "config.json", config)
     effective = {r: roles.get(r) or config["backend"] for r in ("director", "orchestrator", "worker")}
-    found = shutil.which(codex["executable"]) if "codex" in effective.values() else True
-    uses_codex = "codex" in effective.values()
+    warnings = [f"\nWarning: `{exe}` is not on PATH."
+                for backend, exe in (("codex", codex["executable"]), ("muse", muse["executable"]))
+                if backend in effective.values() and not shutil.which(exe)]
+    uses_codex, uses_muse = "codex" in effective.values(), "muse" in effective.values()
     return ("Backends: " + ", ".join(f"{r} {b}" for r, b in effective.items())
             + (f" · codex model {codex['model'] or 'default'}, effort {codex['reasoning_effort'] or 'default'}, "
                f"fast {'on' if codex['fast'] else 'off'}" if uses_codex else "")
+            + (f" · muse model {muse['model'] or 'default'}, effort {muse['effort'] or 'default'}" if uses_muse else "")
             + (f" · auto-switch at {auto['at']:.0%}" if auto["enabled"] else " · auto-switch off")
-            + ("" if found else f"\nWarning: `{codex['executable']}` is not on PATH."))
+            + "".join(warnings))
 
 
 def configure_outer(root, enabled, max_batches):
@@ -1461,7 +1542,10 @@ def main():
     switch.add_argument("--codex-effort", help="Codex reasoning effort (empty string: the model's default)")
     switch.add_argument("--codex-executable", help="Path or name of the codex binary")
     switch.add_argument("--codex-fast", choices=["on", "off"], help="Codex fast mode (priority tier) for fast_roles; default off")
-    switch.add_argument("--auto-switch", choices=["on", "off"], help="Move a role to the other backend when its own is nearly used up (default on)")
+    switch.add_argument("--muse-model", help="Muse model (empty string: Muse's default)")
+    switch.add_argument("--muse-effort", help="Muse effort (empty string: the model's default)")
+    switch.add_argument("--muse-executable", help="Path or name of the muse binary")
+    switch.add_argument("--auto-switch", choices=["on", "off"], help="Move a role between Claude and Codex when its own is nearly used up (default on; Muse reports no usage windows, so it never auto-switches)")
     switch.add_argument("--switch-at", type=float, help="Usage-window percentage that triggers it (default 95)")
     for name in ("run", "resume", "status", "stop", "restart", "enable-outer", "watch-outer"):
         p = sub.add_parser(name)
@@ -1482,7 +1566,9 @@ def main():
                                  args.codex_effort, args.codex_executable,
                                  None if args.codex_fast is None else args.codex_fast == "on",
                                  None if args.auto_switch is None else args.auto_switch == "on",
-                                 None if args.switch_at is None else args.switch_at / 100))
+                                 None if args.switch_at is None else args.switch_at / 100,
+                                 muse_model=args.muse_model, muse_effort=args.muse_effort,
+                                 muse_executable=args.muse_executable))
             return 0
         if args.command == "enable-outer":
             configure_outer(root, True, args.max_batches)

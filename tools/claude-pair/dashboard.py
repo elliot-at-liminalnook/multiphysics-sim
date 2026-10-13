@@ -16,6 +16,7 @@ import time
 from urllib.parse import unquote, urlparse
 
 import codex_backend
+import muse_backend
 import pair
 import workflow
 import shared_notebook
@@ -116,6 +117,16 @@ def codex_stream(path):
         return False
 
 
+def muse_stream(path):
+    """True when a call's stdout is a `muse exec --json` session-log stream."""
+    try:
+        with path.open() as f:
+            record = json.loads(f.readline())
+        return (record.get("stream") or {}).get("kind") == "session" and isinstance(record.get("payload"), dict)
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
 def parse_events(path, limit, since=None, until=None):
     raw = tail(path, limit)
     if not raw.strip():
@@ -126,6 +137,11 @@ def parse_events(path, limit, since=None, until=None):
         activity, result = codex_backend.activity(raw, tid, since, until)
         if result is not None:
             result["session_id"] = tid
+        return activity, result
+    if muse_stream(path):
+        activity, result = muse_backend.activity(raw)
+        if result is not None:
+            result["backend"] = "muse"
         return activity, result
     try:
         whole = json.loads(raw)
@@ -228,16 +244,26 @@ def git_summary(config):
     return summary
 
 
+def backend_model(config, result):
+    backend = (result or {}).get("backend")
+    if backend == "codex":
+        return "Codex · " + ((config.get("codex") or {}).get("model") or "default model")
+    if backend == "muse":
+        return "Muse · " + (result.get("model") or (config.get("muse") or {}).get("model") or "default model")
+    return None
+
+
 def codex_model(config, result):
-    if (result or {}).get("backend") != "codex":
-        return None
-    return "Codex · " + ((config.get("codex") or {}).get("model") or "default model")
+    return backend_model(config, result) if (result or {}).get("backend") == "codex" else None
 
 
 def backend_view(config):
     codex = {"executable": "codex", "model": None, "reasoning_effort": None, "fast": False, **(config.get("codex") or {})}
+    muse = {"executable": "muse", "model": None, "effort": None, **(config.get("muse") or {})}
     return {"default": config.get("backend") or "claude", "roles": config.get("role_backends") or {}, "codex": codex,
-            "codex_found": bool(shutil.which(codex["executable"])), "claude_found": bool(shutil.which(config.get("claude") or "claude"))}
+            "codex_found": bool(shutil.which(codex["executable"])), "muse": muse,
+            "muse_found": bool(shutil.which(muse["executable"])),
+            "claude_found": bool(shutil.which(config.get("claude") or "claude"))}
 
 
 def coordinator_view(root, state, active):
@@ -299,7 +325,7 @@ def last_claude_reading(root):
     if _claude_reading.get("key") != key:
         found = None
         for output in logs[:200]:
-            if codex_stream(output):
+            if codex_stream(output) or muse_stream(output):
                 continue
             found = pair.rate_limit_info(tail(output, 400000))
             if found:
@@ -368,7 +394,7 @@ def view(root):
                         "result": (result or {}).get("structured_output"),
                         "error": (result or {}).get("result", "") if (result or {}).get("is_error") else "",
                         "stderr": tail(root / "logs" / (stem + ".stderr"), 12000),
-                        "model": next(iter((result or {}).get("modelUsage", {})), None) or codex_model(config, result),
+                        "model": next(iter((result or {}).get("modelUsage", {})), None) or backend_model(config, result),
                         "backend": (result or {}).get("backend") or ("codex" if codex_stream(output) else "claude"),
                         "tokens": (result or {}).get("usage"),
                         "started_at": prompt.stat().st_mtime,
@@ -645,10 +671,14 @@ class Handler(BaseHTTPRequestHandler):
                     roles = data.get("roles") or {}
                     if data.get("backend") not in pair.BACKENDS or not isinstance(roles, dict) or set(roles) - {"director", "orchestrator", "worker"} \
                             or any(v not in (None, "", *pair.BACKENDS) for v in roles.values()):
-                        return self.send(400, {"error": "Choose claude or codex for the run, and for each role claude, codex or the run's default"})
+                        return self.send(400, {"error": "Choose claude, codex or muse for the run, and for each role claude, codex, muse or the run's default"})
                     model, effort = data.get("codex_model"), data.get("codex_effort")
                     if any(v is not None and (not isinstance(v, str) or len(v) > 100) for v in (model, effort)):
                         return self.send(400, {"error": "Codex model and effort are short text, or empty for the default"})
+                    muse_model, muse_effort = data.get("muse_model"), data.get("muse_effort")
+                    if any(v is not None and (not isinstance(v, str) or len(v) > 100)
+                           for v in (muse_model, muse_effort)):
+                        return self.send(400, {"error": "Muse model and effort are short text, or empty for the default"})
                     config = pair.read_json(root / "config.json")
                     config["backend"] = data["backend"]
                     config["role_backends"] = {r: b for r, b in roles.items() if b}
@@ -657,8 +687,14 @@ class Handler(BaseHTTPRequestHandler):
                         return self.send(400, {"error": "Codex fast mode is on or off"})
                     previous = config.get("codex") or {}
                     config["codex"] = {"executable": "codex", **previous,
-                                       "model": (model or "").strip() or None, "reasoning_effort": (effort or "").strip() or None,
+                                       "model": previous.get("model") if model is None else model.strip() or None,
+                                       "reasoning_effort": previous.get("reasoning_effort") if effort is None else effort.strip() or None,
                                        "fast": previous.get("fast", False) if fast is None else fast}
+                    muse_config = {"executable": "muse", **(config.get("muse") or {})}
+                    for key, value in (("model", muse_model), ("effort", muse_effort)):
+                        if value is not None:  # absent: keep what's saved (the quick toggle omits them)
+                            muse_config[key] = value.strip() or None
+                    config["muse"] = muse_config
                     auto = data.get("auto_switch")
                     if auto is not None:
                         if not isinstance(auto, dict) or type(auto.get("enabled")) is not bool or \
@@ -667,8 +703,9 @@ class Handler(BaseHTTPRequestHandler):
                         config["auto_switch"] = {"enabled": auto["enabled"], "at": float(auto["at"])}
                     pair.write_json(root / "config.json", config)
                     view_ = backend_view(config)
-                    uses_codex = "codex" in [view_["roles"].get(r) or view_["default"] for r in ("director", "orchestrator", "worker")]
-                    warning = "" if view_["codex_found"] or not uses_codex else " Warning: codex is not on PATH."
+                    uses = [view_["roles"].get(r) or view_["default"] for r in ("director", "orchestrator", "worker")]
+                    warning = ((" Warning: codex is not on PATH." if "codex" in uses and not view_["codex_found"] else "")
+                               + (" Warning: muse is not on PATH." if "muse" in uses and not view_["muse_found"] else ""))
                     return self.send(200, {"ok": True, "message": "Backend saved. Each role switches at its next call; a turn "
                                            "in progress finishes where it started." + warning})
                 if path == "/api/limits":

@@ -1,9 +1,9 @@
-"""Claude Code and Codex CLI are interchangeable backends, and switching between
-them never breaks a run, in either direction.
+"""Claude Code, Codex CLI and Muse are interchangeable backends, and
+switching between them never breaks a run, in any direction.
 
-One fake stands in for both CLIs at the process boundary. It fails the test if
-either CLI is ever asked to resume a session it did not create, and records
-every call so each scenario can check exactly what each CLI was given.
+One fake stands in for all three CLIs at the process boundary. It fails the
+test if any CLI is ever asked to resume a session it did not create, and
+records every call so each scenario can check exactly what each CLI was given.
 """
 import contextlib
 import copy
@@ -20,6 +20,7 @@ import uuid
 
 import codex_backend
 import dashboard
+import muse_backend
 import pair
 import test_pair as fixtures
 
@@ -49,14 +50,14 @@ def final_plan():
 
 
 class FakeCLIs:
-    """Both agent CLIs. Behaviours queue per call: ok, interrupt (stopped
+    """All three agent CLIs. Behaviours queue per call: ok, interrupt (stopped
     mid-turn), interrupt-early (stopped before the session started), limit
     (usage limit), garbage (a final message that isn't the schema)."""
 
     def __init__(self, runner, home):
         self.runner, self.home = runner, Path(home)
         self.calls, self.violations = [], []
-        self.created = {"claude": set(), "codex": set()}
+        self.created = {"claude": set(), "codex": set(), "muse": set()}
         self.script, self.results = [], {}
         self.spawns = []  # per Codex call: subagent names it spawns
 
@@ -77,6 +78,8 @@ class FakeCLIs:
         out, err = prefix.with_suffix(".stdout"), prefix.with_suffix(".stderr")
         err.write_text("")
         behaviour = self.script.pop(0) if self.script else "ok"
+        if Path(argv[0]).name == "muse":
+            return self.muse(argv, role, out, err, stdin, env, behaviour)
         if Path(argv[0]).name == "codex" or argv[1:2] == ["exec"]:
             return self.codex(argv, role, out, err, stdin, env, behaviour)
         return self.claude(argv, role, out, err, stdin, env, behaviour)
@@ -88,7 +91,7 @@ class FakeCLIs:
                 self.violation(f"claude was asked to resume {sid}, a session it never created")
         else:
             sid, resumed = argv[argv.index("--session-id") + 1], False
-            if sid in self.created["codex"] or sid in self.created["claude"]:
+            if sid in self.created["codex"] or sid in self.created["claude"] or sid in self.created["muse"]:
                 self.violation(f"claude was given an existing session ID {sid} as new")
         self.calls.append({"backend": "claude", "role": role, "session": sid, "resumed": resumed, "argv": argv,
                            "prompt": stdin, "env": env})
@@ -147,6 +150,43 @@ class FakeCLIs:
         lines = started + [json.dumps({"type": "item.completed", "item": {"id": "item_1", "type": "agent_message", "text": final}}),
                            json.dumps({"type": "turn.completed", "usage": {"input_tokens": 1000, "cached_input_tokens": 500,
                                                                            "output_tokens": 50, "reasoning_output_tokens": 0}})]
+        out.write_text("\n".join(lines) + "\n")
+        return 0, out, err
+
+    def muse(self, argv, role, out, err, stdin, env, behaviour):
+        """`muse exec --json`: session-log envelopes on stdout, the answer in
+        the `run_terminal` payload. The prompt must arrive by file."""
+        sid = argv[argv.index("--session-id") + 1]
+        if sid in self.created["claude"] or sid in self.created["codex"]:
+            self.violation(f"muse was given session {sid}, created by another backend")
+        resumed = sid in self.created["muse"]
+        prompt_path = Path(argv[argv.index("--prompt-file") + 1])
+        prompt = prompt_path.read_text() if prompt_path.exists() else None
+        if prompt is None or prompt != stdin:
+            self.violation("muse must get the same prompt by --prompt-file that the coordinator logged")
+        if "--output-schema" not in argv or not Path(argv[argv.index("--output-schema") + 1]).exists():
+            self.violation("muse must get the role schema as a file")
+        self.calls.append({"backend": "muse", "role": role, "session": sid, "resumed": resumed, "argv": argv,
+                           "prompt": prompt, "env": env})
+        def record(payload):
+            return json.dumps({"schema_version": "1.0", "stream": {"kind": "session", "id": sid},
+                               "recorded_at": int(time.time() * 1_000_000), "payload": payload})
+        started = [record({"kind": "run_model_configured", "model_id": "test-model", "display_label": "test"}),
+                   record({"kind": "run_started", "prompt": prompt})]
+        if behaviour == "interrupt-early":
+            raise InterruptedError("Stop requested")
+        self.created["muse"].add(sid)
+        if behaviour == "interrupt":
+            out.write_text("\n".join(started) + "\n")
+            raise InterruptedError("Stop requested")
+        if behaviour == "limit":
+            lines = started + [record({"kind": "run_terminal", "terminal": "failed",
+                                        "text": "You've hit your usage limit", "reason": "rate_limit"})]
+            out.write_text("\n".join(lines) + "\n")
+            return 1, out, err
+        final = "not json at all" if behaviour == "garbage" else json.dumps(self.result_for(role))
+        lines = started + [record({"kind": "run_output_delta", "text": final}),
+                           record({"kind": "run_terminal", "terminal": "completed", "text": final, "reason": "done"})]
         out.write_text("\n".join(lines) + "\n")
         return 0, out, err
 
@@ -811,13 +851,150 @@ class DashboardCompatibility(Base):
         self.call("orchestrator", scope="batch:mission")
         self.assertEqual([c["backend"] for c in self.fake.calls], ["codex", "claude"])
         self.assertEqual(pair.read_json(self.root / "config.json")["codex"]["model"], "gpt-6-sol")
+        self.assertEqual(post({"backend": "muse", "roles": {}, "muse_model": "m1", "muse_effort": "high"}), 200)
+        self.call("worker")
+        self.assertEqual(self.last()["backend"], "muse")
+        saved = pair.read_json(self.root / "config.json")
+        self.assertEqual((saved["backend"], saved["muse"]["model"], saved["muse"]["effort"]), ("muse", "m1", "high"))
+        self.assertEqual(saved["codex"]["model"], "gpt-6-sol", "switching to Muse kept the Codex settings")
         self.assertEqual(post({"backend": "gemini"}), 400)
         self.assertEqual(post({"backend": "claude", "roles": {"janitor": "codex"}}), 400)
 
 
+class MuseBackend(Base):
+    def test_a_fresh_call_carries_the_brief_by_prompt_file_and_resumes_by_chosen_id(self):
+        self.use("muse")
+        self.call("worker")
+        first = self.last()
+        argv = first["argv"]
+        self.assertEqual(argv[1:5], ["exec", "--provider", "meta", "--workspace"])
+        self.assertIn("--yolo", argv)
+        self.assertNotIn("--disable-write", argv)
+        self.assertTrue(first["prompt"].startswith("STANDING INSTRUCTIONS"), "a fresh Muse session's brief rides in the prompt")
+        self.assertIn("task for worker", first["prompt"])
+        self.call("worker")
+        second = self.last()
+        self.assertEqual((second["session"], second["resumed"]), (first["session"], True))
+        self.assertNotIn("STANDING INSTRUCTIONS", second["prompt"], "unchanged instructions aren't resent on resume")
+        self.assertEqual(self.runner.state["session_backends"][first["session"]], "muse")
+        self.assertEqual(self.runner.state["session_postures"][first["session"]], "work")
+
+    def test_an_instruction_change_is_restated_on_resume(self):
+        self.use("muse")
+        self.call("worker")
+        sid = self.last()["session"]
+        self.runner.state["session_instructions"][sid] = "stale"
+        self.call("worker")
+        self.assertTrue(self.last()["prompt"].startswith("INSTRUCTION UPDATE"))
+        self.assertEqual(self.last()["session"], sid)
+
+    def test_an_audit_posture_change_retires_the_session(self):
+        """A Muse session keeps its creation-time edit posture, so flipping
+        audit-only must start a fresh session in the new posture."""
+        self.use("muse")
+        self.call("worker")
+        first = self.last()["session"]
+        for audit, posture in ((True, "audit"), (False, "work")):
+            config = pair.read_json(self.root / "config.json")
+            config["audit_only"] = audit
+            pair.write_json(self.root / "config.json", config)
+            runner = self.fresh_runner()
+            self.call("worker", runner=runner)
+            call = self.last()
+            self.assertNotEqual(call["session"], first)
+            self.assertFalse(call["resumed"])
+            self.assertEqual("--disable-write" in call["argv"], audit)
+            self.assertEqual("--yolo" in call["argv"], not audit)
+            self.assertEqual(runner.state["session_postures"][call["session"]], posture)
+            first = call["session"]
+
+    def test_switching_to_and_from_muse_starts_fresh(self):
+        sequence = ["claude", "muse", "muse", "codex", "muse", "claude"]
+        previous = None
+        for backend in sequence:
+            self.use(backend)
+            self.call("worker")
+            call = self.last()
+            self.assertEqual(call["backend"], backend)
+            self.assertEqual(call["resumed"], backend == previous, f"{previous} -> {backend}")
+            sid = self.runner.state["sessions"]["worker"]
+            self.assertEqual(self.runner.state["session_backends"][sid], backend)
+            previous = backend
+
+    def test_muse_never_auto_switches(self):
+        future = time.time() + 3600
+        self.use("muse")
+        self.runner.state["backend_limits"] = {"muse": {"until": future, "weekly": False}}
+        self.assertEqual(self.runner.choose_backend("worker"), ("muse", None))
+        self.use("claude")
+        self.runner.state["backend_limits"].update({"claude": {"until": future, "weekly": False},
+                                                    "codex": {"until": future, "weekly": False}})
+        self.assertEqual(self.runner.choose_backend("worker"), ("claude", None),
+                         "with both metered backends full, Muse is not the automatic fallback")
+
+    def test_a_limit_looking_failure_retries_the_session(self):
+        self.use("muse")
+        self.fake.script = ["limit"]
+        with self.assertRaises(pair.CallFailed):
+            self.call("worker")
+        self.assertEqual(self.runner.state.get("retry_session"), self.last()["session"])
+        self.assertNotIn("backend_limits", self.runner.state)
+
+    def test_switch_backend_records_muse_settings(self):
+        message = pair.switch_backend(self.root, "muse", muse_model="m1", muse_effort="high")
+        self.assertIn("muse model m1", message)
+        settings = self.fresh_runner().muse_settings()
+        self.assertEqual((settings["model"], settings["effort"]), ("m1", "high"))
+        pair.switch_backend(self.root, "muse", muse_model="")
+        self.assertIsNone(self.fresh_runner().muse_settings()["model"])
+
+    def test_the_dashboard_reads_a_muse_turn(self):
+        self.use("muse")
+        self.call("worker")
+        dashboard._events_cache.clear()
+        call = [c for c in dashboard.view(self.root)["calls"] if c["role"] == "worker"][-1]
+        self.assertEqual(call["model"], "Muse · test-model")
+        self.assertEqual(call["result"]["summary"], "Created proof")
+        self.assertIn("session", [a["kind"] for a in call["activity"]])
+
+    def test_command_parse_and_activity_contracts(self):
+        argv = muse_backend.command("muse", workspace="/w", session="sid-1",
+                                    schema_path="/s.json", prompt_path="/p.md", audit_only=True, max_turns=3)
+        self.assertIn("--disable-write", argv)
+        self.assertNotIn("--yolo", argv)
+        self.assertEqual(argv[argv.index("--max-model-steps") + 1], "3")
+        overlay = json.loads(muse_backend.agent_overlay(HERE / "prompts" / "subagents.json"))["agents"]
+        tools = {a["name"]: a["tools"] for a in overlay}
+        self.assertIn("edit_file", tools["pair-implementer"])
+        self.assertNotIn("Read", tools["pair-reviewer"])
+        def record(payload):
+            return json.dumps({"stream": {"kind": "session", "id": "sid-1"},
+                               "recorded_at": 1_700_000_000_000_000, "payload": payload})
+        raw = "\n".join([
+            record({"kind": "run_model_configured", "model_id": "muse-x"}),
+            record({"kind": "run_started", "prompt": "go"}),
+            record({"kind": "tool_result", "call_id": "c1", "text": "read ok",
+                    "correlation_facts": {"tool_name": "read_file", "outcome": "success"}}),
+            record({"kind": "tool_result", "call_id": "c2", "text": "denied",
+                    "correlation_facts": {"tool_name": "write_file", "outcome": "error"}}),
+            record({"kind": "run_output_delta", "text": '{"value": "OR'}),
+            record({"kind": "run_output_delta", "text": 'CHID"}'}),
+            record({"kind": "run_terminal", "terminal": "completed", "text": '{"value": "ORCHID"}', "reason": "done"})])
+        parsed = muse_backend.parse(raw)
+        self.assertEqual(parsed["structured_output"], {"value": "ORCHID"})
+        self.assertEqual((parsed["session_id"], parsed["model"], parsed["subtype"]), ("sid-1", "muse-x", "success"))
+        self.assertEqual([d["tool_name"] for d in parsed["permission_denials"]], ["write_file"])
+        self.assertTrue(muse_backend.started(raw))
+        rows, _ = muse_backend.activity(raw)
+        self.assertEqual([r["text"] for r in rows if r["kind"] == "message"], ['{"value": "ORCHID"}'])
+        self.assertEqual([(r["name"], r["status"]) for r in rows if r["kind"] == "tool"],
+                         [("read_file", "done"), ("write_file", "error")])
+        self.assertIsNone(muse_backend.parse("no terminal record here"))
+
+
 class LiveToggle(Base):
     def test_toggling_while_a_turn_is_in_flight_finishes_it_where_it_started(self):
-        for first, second in (("claude", "codex"), ("codex", "claude")):
+        for first, second in (("claude", "codex"), ("codex", "claude"), ("muse", "claude"), ("claude", "muse")):
             with self.subTest(f"{first} -> {second}"):
                 self.setUp()
                 self.use(first)

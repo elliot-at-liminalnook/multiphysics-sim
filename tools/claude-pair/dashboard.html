@@ -15,7 +15,7 @@
   <span class="conn" id="conn">Connecting</span>
   <span class="chip" id="status"><span class="dot"></span><span id="status-text">Connecting</span></span>
   <div class="segmented backend-toggle" id="backend-toggle" role="group" aria-label="Agent backend">
-    <button data-backend="claude" aria-pressed="false">Claude</button><button data-backend="codex" aria-pressed="false">Codex</button>
+    <button data-backend="claude" aria-pressed="false">Claude</button><button data-backend="codex" aria-pressed="false">Codex</button><button data-backend="muse" aria-pressed="false">Muse</button>
   </div>
   <button class="btn danger" id="stop" disabled>Stop</button>
   <button class="btn primary" id="start" disabled>Start</button>
@@ -180,14 +180,16 @@
         <div class="card-head"><h2>Agent backend</h2><span class="right faint" id="backend-note" style="font-size:12px"></span></div>
         <div class="card-body">
           <div class="fields">
-            <div class="field"><label for="backend-default">All roles</label><select class="input" id="backend-default"><option value="claude">Claude Code</option><option value="codex">Codex CLI</option></select></div>
-            <div class="field"><label for="backend-director">Director</label><select class="input" id="backend-director"><option value="">Same as all roles</option><option value="claude">Claude Code</option><option value="codex">Codex CLI</option></select></div>
-            <div class="field"><label for="backend-orchestrator">Orchestrator</label><select class="input" id="backend-orchestrator"><option value="">Same as all roles</option><option value="claude">Claude Code</option><option value="codex">Codex CLI</option></select></div>
-            <div class="field"><label for="backend-worker">Worker</label><select class="input" id="backend-worker"><option value="">Same as all roles</option><option value="claude">Claude Code</option><option value="codex">Codex CLI</option></select></div>
+            <div class="field"><label for="backend-default">All roles</label><select class="input" id="backend-default"><option value="claude">Claude Code</option><option value="codex">Codex CLI</option><option value="muse">Muse</option></select></div>
+            <div class="field"><label for="backend-director">Director</label><select class="input" id="backend-director"><option value="">Same as all roles</option><option value="claude">Claude Code</option><option value="codex">Codex CLI</option><option value="muse">Muse</option></select></div>
+            <div class="field"><label for="backend-orchestrator">Orchestrator</label><select class="input" id="backend-orchestrator"><option value="">Same as all roles</option><option value="claude">Claude Code</option><option value="codex">Codex CLI</option><option value="muse">Muse</option></select></div>
+            <div class="field"><label for="backend-worker">Worker</label><select class="input" id="backend-worker"><option value="">Same as all roles</option><option value="claude">Claude Code</option><option value="codex">Codex CLI</option><option value="muse">Muse</option></select></div>
             <div class="field"><label for="codex-model">Codex model</label><input class="input" id="codex-model" placeholder="Codex default"></div>
             <div class="field"><label for="codex-fast">Codex fast mode</label><label class="toggle"><span class="switch"><input type="checkbox" id="codex-fast"><span></span></span>Priority tier for the fast-mode roles (uses the allowance faster)</label></div>
-            <div class="field"><label for="auto-switch">Switch when nearly used up</label><label class="toggle"><span class="switch"><input type="checkbox" id="auto-switch"><span></span></span>Move a role to the other backend at <input class="input" id="switch-at" type="number" min="1" max="100" step="1" style="width:64px;display:inline-block;margin:0 4px">% of a usage window</label></div>
+            <div class="field"><label for="auto-switch">Switch when nearly used up</label><label class="toggle"><span class="switch"><input type="checkbox" id="auto-switch"><span></span></span>Move a role to the other backend at <input class="input" id="switch-at" type="number" min="1" max="100" step="1" style="width:64px;display:inline-block;margin:0 4px">% of a usage window (Claude↔Codex only; Muse reports no usage windows)</label></div>
             <div class="field"><label for="codex-effort">Codex reasoning</label><select class="input" id="codex-effort"><option value="">Model default</option><option>low</option><option>medium</option><option>high</option><option>xhigh</option><option>max</option></select></div>
+            <div class="field"><label for="muse-model">Muse model</label><input class="input" id="muse-model" placeholder="Muse default"></div>
+            <div class="field"><label for="muse-effort">Muse effort</label><select class="input" id="muse-effort"><option value="">Model default</option><option>low</option><option>medium</option><option>high</option><option>xhigh</option><option>max</option></select></div>
           </div>
           <dl class="kv" id="backend-roles" style="margin:10px 0 0"></dl>
           <div class="row-end"><span class="note">Applies at each role's next call, even while the run is going; a turn in progress finishes where it started. A role that changes backend starts a fresh session there, and the plan, checklist and notebook carry over.</span><button class="btn small" id="save-backend">Save backend</button></div>

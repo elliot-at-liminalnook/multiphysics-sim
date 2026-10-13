@@ -566,14 +566,17 @@ function renderBackend() {
     if (document.activeElement !== $('codex-model')) $('codex-model').value = b.codex.model || '';
     $('codex-effort').value = b.codex.reasoning_effort || '';
     $('codex-fast').checked = !!b.codex.fast;
+    if (document.activeElement !== $('muse-model')) $('muse-model').value = b.muse?.model || '';
+    $('muse-effort').value = b.muse?.effort || '';
     const auto = data.usage?.auto_switch || { enabled: true, at: 0.95 };
     $('auto-switch').checked = auto.enabled;
     if (document.activeElement !== $('switch-at')) $('switch-at').value = Math.round(auto.at * 100);
   }
   const uses = BACKEND_ROLES.map(r => b.roles[r] || b.default);
-  text('backend-note', uses.includes('codex') && !b.codex_found ? 'codex is not on PATH' : uses.join(' · '));
+  const missing = [uses.includes('codex') && !b.codex_found ? 'codex is not on PATH' : '', uses.includes('muse') && !b.muse_found ? 'muse is not on PATH' : ''].filter(Boolean);
+  text('backend-note', missing.length ? missing.join(' · ') : uses.join(' · '));
 }
-const BACKEND_NAME = { claude: 'Claude', codex: 'Codex' };
+const BACKEND_NAME = { claude: 'Claude', codex: 'Codex', muse: 'Muse' };
 function backendSummary() {
   const rb = data.role_backends || {};
   return BACKEND_ROLES.map(r => {
@@ -687,14 +690,16 @@ document.querySelectorAll('#backend-toggle button').forEach(btn => btn.onclick =
     if (finishing.length) msg += ` The ${ROLES[finishing[0]].name.toLowerCase()}'s turn in progress finishes on ${BACKEND_NAME[rb[finishing[0]].running]}.`;
     if (data.coordinator?.outdated) msg += ' The running coordinator applies it after it restarts (see the banner).';
     if (target === 'codex' && !data.backend?.codex_found) msg += ' Warning: codex is not on PATH.';
+    if (target === 'muse' && !data.backend?.muse_found) msg += ' Warning: muse is not on PATH.';
     dirty.backend = false; toast(msg); await refresh();
   } catch (e) { toast(e.message); } finally { busy = false; render(); }
 });
-for (const id of ['backend-default', 'codex-model', 'codex-effort', 'codex-fast', 'auto-switch', 'switch-at', ...BACKEND_ROLES.map(r => 'backend-' + r)]) $(id).addEventListener('input', () => { dirty.backend = true; });
+for (const id of ['backend-default', 'codex-model', 'codex-effort', 'codex-fast', 'muse-model', 'muse-effort', 'auto-switch', 'switch-at', ...BACKEND_ROLES.map(r => 'backend-' + r)]) $(id).addEventListener('input', () => { dirty.backend = true; });
 $('save-backend').onclick = async () => {
   try {
     toast((await post('backend', { backend: $('backend-default').value, roles: Object.fromEntries(BACKEND_ROLES.map(r => [r, $('backend-' + r).value || null])),
       codex_model: $('codex-model').value, codex_effort: $('codex-effort').value, codex_fast: $('codex-fast').checked,
+      muse_model: $('muse-model').value, muse_effort: $('muse-effort').value,
       auto_switch: { enabled: $('auto-switch').checked, at: Math.min(100, Math.max(1, Number($('switch-at').value) || 95)) / 100 } })).message);
     dirty.backend = false; await refresh();
   } catch (e) { toast(e.message); }

@@ -265,21 +265,22 @@ The Director's current prompt, activity, reasoning summary, hopper, selected tas
 and completed batches with review receipts are visible in the dashboard. Older
 batch decisions also remain in the conversation history and log files.
 
-## Codex backend
+## Codex and Muse backends
 
-Every role can run on Claude Code (the default) or OpenAI's Codex CLI, and you
-can switch at any time, per role or for all of them:
+Every role can run on Claude Code (the default), OpenAI's Codex CLI or Meta's
+Muse (`muse exec`), and you can switch at any time, per role or for all of them:
 
 ```sh
 python3 tools/claude-pair/pair.py backend codex                  # every role
-python3 tools/claude-pair/pair.py backend claude --role director # one role
+python3 tools/claude-pair/pair.py backend muse --role worker     # one role
 python3 tools/claude-pair/pair.py backend --clear-role director  # follow the default again
 python3 tools/claude-pair/pair.py backend --codex-model gpt-6-sol --codex-effort high
+python3 tools/claude-pair/pair.py backend --muse-model muse-wonder-full-1.0 --muse-effort high
 ```
 
-or use the **Claude | Codex toggle in the dashboard header** (all roles; a
+or use the **Claude | Codex | Muse toggle in the dashboard header** (all roles; a
 dashed outline means roles differ) or **Settings → Agent backend** (per role,
-plus the Codex model and reasoning). The choice is read at each call, so it
+plus each backend's model and reasoning). The choice is read at each call, so it
 works while a run is going: a turn in progress finishes on the backend it
 started on, and the role's next call uses the new one. Settings shows, per
 role, where it runs now and where its next call goes.
@@ -305,6 +306,9 @@ reports a limit again right after a switch, the run waits or pauses exactly as
 before, so it never switches back and forth. Turn it off or move the point with
 `pair.py backend --auto-switch off` / `--switch-at 90`, or in Settings. The
 dashboard shows a usage meter per backend and a banner while a switch is in effect.
+Automatic switching is Claude↔Codex only: Muse's exec stream reports no usage
+windows, so a Muse role never triggers a switch and Muse is never the
+automatic fallback.
 
 **Continuity.** Everything that carries the run (batch, plan, checklist,
 assignment, reports, journal, decisions, ledger) belongs to the coordinator, not
@@ -316,29 +320,39 @@ assignment, from the task contract and the notebook. A turn that was cut short
 continuing on the other backend and to check the folder for its partial work.
 `test_backends.py` locks this in for every direction and situation.
 
-**How each feature maps** (verified against codex-cli 0.157.1 on 2026-10-01):
+**How each feature maps** (Codex verified against codex-cli 0.157.1 on
+2026-10-01; Muse probed against Muse Code 1.4.6 on 2026-10-12):
 
-| | Claude Code | Codex CLI |
-|---|---|---|
-| Call | `claude --print --output-format stream-json` | `codex exec --json`, prompt on stdin |
-| Structured result | `--json-schema` | `--output-schema` (the same three schemas) |
-| Role instructions | `--append-system-prompt`, re-sent every call | `developer_instructions` on a new session; on resume Codex keeps the old ones, so changed instructions are restated at the top of the prompt |
-| Personal setup kept out | `--setting-sources project`, empty MCP, `--no-chrome` | `--ignore-user-config`; memories, browser, computer use and apps off |
-| Permissions | `--dangerously-skip-permissions` | `--dangerously-bypass-approvals-and-sandbox` |
-| Audit-only | read-only tools | read-only sandbox, no subagents |
-| Subagents | `--agents prompts/subagents.json` | the same file, as `pair_implementer` / `pair_reviewer` roles (`-c agents.<name>.…`, files in `.claude-pair/codex-agents/`) spawned with `spawn_agent` |
-| 10-second shell rule | Claude Code stops each command | no such setting: `shims/cargo` runs cargo under `within`, and the role is told to wrap other slow commands |
-| Fast mode | `fastMode` setting for `fast_roles` | off unless `codex.fast` is on (`backend --codex-fast on`, or Settings); then `service_tier = "priority"` for `fast_roles`. Off by default because the priority tier uses the allowance faster |
-| Usage limits | `rate_limit_event` in the stream | `rate_limits` in the session rollout (`~/.codex/sessions`), shown on the same meters |
-| Cost | dollar estimate per session | tokens only, so the dollar caps don't stop Codex calls (the journal says so); the turn time limit applies to both |
-| Model-turn cap | `--max-turns` | none (the journal says so) |
-| Dashboard | stream events | stream plus rollouts; subagent lanes come from their own rollouts. Codex encrypts subagent briefs, so a Codex lane shows its role, actions and reply but not its brief |
+| | Claude Code | Codex CLI | Muse |
+|---|---|---|---|
+| Call | `claude --print --output-format stream-json` | `codex exec --json`, prompt on stdin | `muse exec --provider meta --json`, prompt by `--prompt-file` (exec ignores stdin) |
+| Structured result | `--json-schema` | `--output-schema` (the same three schemas) | `--output-schema` (Meta providers only); the answer is the stream's `run_terminal` text |
+| Sessions | coordinator-chosen `--session-id` / `--resume` | Codex names the thread; `exec resume <id>` | coordinator-chosen `--session-id`, created on first use and resumed by the same flag |
+| Role instructions | `--append-system-prompt`, re-sent every call | `developer_instructions` on a new session; on resume Codex keeps the old ones, so changed instructions are restated at the top of the prompt | no system/developer-prompt flag exists: standing instructions ride in the first turn's prompt, and again at the top of the prompt when they change |
+| Personal setup kept out | `--setting-sources project`, empty MCP, `--no-chrome` | `--ignore-user-config`; memories, browser, computer use and apps off | `--no-foreign-personal-context`, `--disable-reminders` (the repo's own `AGENTS.md` still loads) |
+| Permissions | `--dangerously-skip-permissions` | `--dangerously-bypass-approvals-and-sandbox` | `--yolo` (trust + no approval prompts + no sandbox) |
+| Audit-only | read-only tools | read-only sandbox, no subagents | `--disable-write` (dedicated edit tools off) inside the sandbox, no subagents. A Muse session keeps the edit posture it was created with, so flipping audit-only retires the session |
+| Subagents | `--agents prompts/subagents.json` | the same file, as `pair_implementer` / `pair_reviewer` roles (`-c agents.<name>.…`, files in `.claude-pair/codex-agents/`) spawned with `spawn_agent` | the same file as an ephemeral `--agents {"agents": [...]}` overlay, tool names translated to Muse's vocabulary |
+| 10-second shell rule | Claude Code stops each command | no such setting: `shims/cargo` runs cargo under `within`, and the role is told to wrap other slow commands | same as Codex: the cargo shim plus the role note (Muse's own shell wait is longer) |
+| Fast mode | `fastMode` setting for `fast_roles` | off unless `codex.fast` is on (`backend --codex-fast on`, or Settings); then `service_tier = "priority"` for `fast_roles`. Off by default because the priority tier uses the allowance faster | none (the journal says so) |
+| Usage limits | `rate_limit_event` in the stream | `rate_limits` in the session rollout (`~/.codex/sessions`), shown on the same meters | none reported: no meters, no auto-switch; failures retry with the ordinary backoff |
+| Cost | dollar estimate per session | tokens only, so the dollar caps don't stop Codex calls (the journal says so); the turn time limit applies to both | no token or dollar accounting in the stream, so the dollar caps don't stop Muse calls either (the journal says so) |
+| Model-turn cap | `--max-turns` | none (the journal says so) | `--max-model-steps` |
+| Dashboard | stream events | stream plus rollouts; subagent lanes come from their own rollouts. Codex encrypts subagent briefs, so a Codex lane shows its role, actions and reply but not its brief | stream events (model text deltas coalesced; tools by name and outcome) |
 
 **Setup.** `codex login` once, and keep the CLI current (`codex update`):
 0.157.1 lacked `gpt-6.1-sol`; 0.160.0 has it and was verified end to end on
 2026-10-01 (fresh call, exact instructions, resume after an instruction change,
 a `pair_reviewer` subagent, fast mode). `--codex-executable` points the run at
 another binary. Without `--codex-model` Codex uses its default.
+
+For Muse there is nothing extra to set up beyond the installed `muse` binary
+(`--muse-executable` points elsewhere; `--muse-model` and `--muse-effort` are
+optional). The probes behind the table ran in
+throwaway repos: schema-shaped replies, a fresh session editing a file, a
+resumed session recalling it, and a session created `--disable-write` staying
+read-only when resumed without the flag — the reason audit-only flips retire a
+Muse session.
 
 ## Verify the coordinator
 

@@ -207,6 +207,10 @@ pub struct CompanionView {
 /// The copy of a part shown in the split view's right half.
 #[derive(Component)]
 pub(crate) struct CompanionPart(pub usize);
+/// The original part entity a split copy mirrors, so the copy follows
+/// its material handle when the original swaps shared/private handles.
+#[derive(Component)]
+pub(crate) struct CompanionSource(pub Entity);
 #[derive(Component)]
 pub(crate) struct SplitCamera;
 #[derive(Component)]
@@ -259,8 +263,8 @@ pub(crate) fn split(
     mut commands: Commands,
     scene: Res<SpatialScene>,
     window: Query<&Window>,
-    originals: Query<(&Part, &Mesh3d, &MeshMaterial3d<StandardMaterial>), Without<CompanionPart>>,
-    mut copies: Query<(Entity, &CompanionPart, &mut Transform), Without<SplitCamera>>,
+    originals: Query<(Entity, &Part, &Mesh3d, &MeshMaterial3d<StandardMaterial>), Without<CompanionPart>>,
+    mut copies: Query<(Entity, &CompanionPart, &CompanionSource, &mut Transform, &mut MeshMaterial3d<StandardMaterial>), Without<SplitCamera>>,
     mut main: Query<(&mut Camera, &Orbit, &Transform, Ref<Projection>), (Without<SplitCamera>, Without<InsetCamera>, Without<CompanionPart>)>,
     mut split: Query<(&mut Camera, &mut Transform, &mut Projection), (With<SplitCamera>, Without<Orbit>, Without<CompanionPart>)>,
     mut labels: Query<(&mut Node, &mut Visibility, &Children, &SplitLabel)>,
@@ -271,7 +275,7 @@ pub(crate) fn split(
     let (mut main_camera, _orbit, main_transform, main_projection) = main.single_mut()?;
     let (mut camera, mut transform, mut projection) = split.single_mut()?;
     let Some(c) = active else {
-        for (e, _, _) in &copies {
+        for (e, _, _, _, _) in &copies {
             commands.entity(e).try_despawn();
         }
         camera.is_active = false;
@@ -282,11 +286,18 @@ pub(crate) fn split(
     };
     let offset = split_offset(&scene);
     if copies.is_empty() {
-        for (part, mesh, material) in &originals {
-            commands.spawn((CompanionPart(part.index), Mesh3d(mesh.0.clone()), MeshMaterial3d(material.0.clone()), Transform::default(), SceneContent));
+        for (source, part, mesh, material) in &originals {
+            commands.spawn((CompanionPart(part.index), CompanionSource(source), Mesh3d(mesh.0.clone()), MeshMaterial3d(material.0.clone()), Transform::default(), SceneContent));
         }
     }
-    for (_, copy, mut t) in &mut copies {
+    let material_by_source: std::collections::HashMap<Entity, Handle<StandardMaterial>> = originals.iter().map(|(source, _, _, material)| (source, material.0.clone())).collect();
+    for (_, copy, source, mut t, mut material) in &mut copies {
+        // Follow the original's current handle: update_parts now swaps
+        // between shared and private materials instead of mutating one
+        // asset every copy would keep seeing.
+        if let Some(current) = material_by_source.get(&source.0) && material.0 != *current {
+            material.0 = current.clone();
+        }
         let mut pose = crate::animation::part_transform_at(&scene, copy.0, c.frame.as_ref());
         pose.translation += offset;
         *t = pose;

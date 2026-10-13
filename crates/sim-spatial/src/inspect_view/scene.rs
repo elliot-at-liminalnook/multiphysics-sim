@@ -7,6 +7,74 @@ use crate::{animation, builder, inspect, lesson, linked, models, physics_view, u
 use bevy::{core_pipeline::tonemapping::Tonemapping, picking::mesh_picking::MeshPickingCamera, prelude::*};
 use sim_inspect::selection::SelectionTarget;
 use sim_inspect::spatial::{SpatialCommand, SpatialShape};
+use std::collections::HashMap;
+
+/// One spawned part's display material: the shared material for its
+/// untinted look, plus a private material created lazily on its first
+/// tint (thermal colour, selection, ghost/emphasis alpha or heat glow).
+/// Untinted parts with the same look share one material asset; tinted
+/// parts mutate only their private asset, exactly as every part did
+/// before this cache.
+#[derive(Component)]
+pub(crate) struct PartMaterial {
+    base: Color,
+    metallic: f32,
+    roughness: f32,
+    shared: Handle<StandardMaterial>,
+    private: Option<Handle<StandardMaterial>>,
+}
+
+/// Untinted part materials by (colour, metallic, roughness), in the
+/// spirit of CAD's `CadMaterials`: one asset per look, shared by every
+/// part spawned with that look.
+#[derive(Resource, Default)]
+pub(crate) struct PartMaterials {
+    shared: HashMap<([u32; 4], u32, u32), Handle<StandardMaterial>>,
+}
+
+impl PartMaterials {
+    fn part(&mut self, materials: &mut Assets<StandardMaterial>, base: Color, metallic: f32, roughness: f32) -> PartMaterial {
+        let rgba = base.to_srgba();
+        let key = ([rgba.red.to_bits(), rgba.green.to_bits(), rgba.blue.to_bits(), rgba.alpha.to_bits()], metallic.to_bits(), roughness.to_bits());
+        let shared = self
+            .shared
+            .entry(key)
+            .or_insert_with(|| materials.add(StandardMaterial { base_color: base, metallic, perceptual_roughness: roughness, ..default() }))
+            .clone();
+        PartMaterial { base, metallic, roughness, shared, private: None }
+    }
+}
+
+/// Put `appearance` on a cached part: swap back to the shared material
+/// when the appearance is the untinted base look again, otherwise write
+/// the part's private material (creating it on first tint).
+fn apply_part_material(materials: &mut Assets<StandardMaterial>, handle: &mut MeshMaterial3d<StandardMaterial>, part: &mut PartMaterial, base_color: Color, alpha_mode: AlphaMode, emissive: LinearRgba) {
+    if alpha_mode == AlphaMode::Opaque && emissive == LinearRgba::BLACK && base_color == part.base {
+        if handle.0 != part.shared {
+            handle.0 = part.shared.clone();
+        }
+        return;
+    }
+    let private = match &part.private {
+        Some(private) => private.clone(),
+        None => {
+            let private = materials.add(StandardMaterial { base_color, metallic: part.metallic, perceptual_roughness: part.roughness, alpha_mode, emissive, ..default() });
+            part.private = Some(private.clone());
+            if handle.0 != private {
+                handle.0 = private;
+            }
+            return;
+        }
+    };
+    if handle.0 != private {
+        handle.0 = private.clone();
+    }
+    if let Some(mut material) = materials.get_mut(&private) {
+        material.base_color = base_color;
+        material.alpha_mode = alpha_mode;
+        material.emissive = emissive;
+    }
+}
 
 pub(super) fn setup_scene(
     mut commands: Commands,
@@ -14,6 +82,7 @@ pub(super) fn setup_scene(
     fonts: Res<ui_kit::UiFonts>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut part_materials: ResMut<PartMaterials>,
     mut models: Option<ResMut<models::ModelLibrary>>,
 ) {
     let k = ui_kit::Kit::new(&fonts);
@@ -104,7 +173,7 @@ pub(super) fn setup_scene(
         Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -0.4, 2.4, 0.0)),
     ));
     linked::spawn_nets(&mut commands, &scene, &mut meshes, &mut materials);
-    spawn_parts(&mut commands, &scene, &mut meshes, &mut materials, models.as_deref_mut());
+    spawn_parts(&mut commands, &scene, &mut meshes, &mut materials, Some(&mut part_materials), models.as_deref_mut());
 }
 
 pub(crate) fn spawn_parts(
@@ -112,8 +181,16 @@ pub(crate) fn spawn_parts(
     scene: &SpatialScene,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
+    part_materials: Option<&mut PartMaterials>,
     mut models: Option<&mut models::ModelLibrary>,
 ) {
+    // Callers without the plugin's cache resource still share within
+    // this one spawn: the spawned parts keep the handles alive.
+    let mut local_cache = PartMaterials::default();
+    let part_materials = match part_materials {
+        Some(cache) => cache,
+        None => &mut local_cache,
+    };
     for (index, part) in scene.spatial.parts.iter().enumerate() {
         let transform = Transform::from_translation(Vec3::from_array(part.position)).with_rotation(Quat::from_array(part.rotation_xyzw));
         let component_type = scene.description.components.get(&part.component).map(|c| c.component_type.as_str()).unwrap_or("");
@@ -123,9 +200,15 @@ pub(crate) fn spawn_parts(
         });
         if let Some(pieces) = pieces {
             for piece in pieces {
+                let material = part_materials.part(materials, piece.color, piece.metallic, if piece.metallic > 0.5 { 0.32 } else { 0.55 });
                 let mut entity = commands.spawn((
                     Mesh3d(piece.mesh.clone()),
-                    MeshMaterial3d(materials.add(StandardMaterial { base_color: piece.color, metallic: piece.metallic, perceptual_roughness: if piece.metallic > 0.5 { 0.32 } else { 0.55 }, ..default() })),
+                    MeshMaterial3d(material.shared.clone()),
+                    material,
+                    // Explicit: on 0.20 `Mesh3d` only gains `Visibility`
+                    // from VisibilityPlugin's runtime registration, and
+                    // `update_parts` writes it.
+                    Visibility::default(),
                     transform,
                     Part { index },
                     ModelColor(piece.color),
@@ -143,14 +226,12 @@ pub(crate) fn spawn_parts(
             SpatialShape::Sphere { radius } => meshes.add(Sphere::new(radius)),
         };
         let [r, g, b] = part.color_srgb;
+        let material = part_materials.part(materials, Color::srgb(r, g, b), 0.25, 0.42);
         let mut entity = commands.spawn((
             Mesh3d(mesh),
-            MeshMaterial3d(materials.add(StandardMaterial {
-                base_color: Color::srgb(r, g, b),
-                metallic: 0.25,
-                perceptual_roughness: 0.42,
-                ..default()
-            })),
+            MeshMaterial3d(material.shared.clone()),
+            material,
+            Visibility::default(),
             Transform::from_translation(Vec3::from_array(part.position))
                 .with_rotation(Quat::from_array(part.rotation_xyzw)),
             Part { index },
@@ -224,15 +305,16 @@ pub(crate) fn update_parts(
         &Part,
         &mut Transform,
         &mut Visibility,
-        &MeshMaterial3d<StandardMaterial>,
+        &mut MeshMaterial3d<StandardMaterial>,
         Option<&ModelColor>,
+        Option<&mut PartMaterial>,
     ), Without<view::CompanionPart>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     if !scene.is_changed() {
         return;
     }
-    for (part, mut transform, mut visibility, handle, model) in &mut parts {
+    for (part, mut transform, mut visibility, mut handle, model, part_material) in &mut parts {
         let p = &scene.spatial.parts[part.index];
         *transform = animation::part_transform(&scene, part.index);
         *visibility = if scene.state.hidden.contains(&p.component) {
@@ -240,44 +322,52 @@ pub(crate) fn update_parts(
         } else {
             Visibility::Inherited
         };
-        if let Some(mut material) = materials.get_mut(&handle.0) {
-            let thermal = animation::part_color(&scene, part.index);
-            let selected = scene.details.components.contains(&p.component);
-            let [r, g, b] = thermal.unwrap_or(p.color_srgb);
-            if let Some(ModelColor(color)) = model {
-                // Models keep their colours; temperature tints them, selection glows.
-                material.base_color = if thermal.is_some() { Color::srgb(r, g, b).mix(color, 0.35) } else { *color };
-            } else {
-                material.base_color = if selected && thermal.is_none() {
-                    Color::srgb(0.96, 0.70, 0.26)
-                } else {
-                    Color::srgb(r, g, b)
-                };
+        let thermal = animation::part_color(&scene, part.index);
+        let selected = scene.details.components.contains(&p.component);
+        let [r, g, b] = thermal.unwrap_or(p.color_srgb);
+        let mut base_color = if let Some(ModelColor(color)) = model {
+            // Models keep their colours; temperature tints them, selection glows.
+            if thermal.is_some() { Color::srgb(r, g, b).mix(color, 0.35) } else { *color }
+        } else if selected && thermal.is_none() {
+            Color::srgb(0.96, 0.70, 0.26)
+        } else {
+            Color::srgb(r, g, b)
+        };
+        let alpha_mode = if scene.ghost.contains(&p.component) {
+            base_color = base_color.with_alpha(0.13);
+            AlphaMode::Blend
+        } else if let Some(alpha) = view::emphasis(&scene, &p.component) {
+            // Spotlight and X-ray: everything else goes see-through.
+            base_color = base_color.with_alpha(alpha);
+            AlphaMode::Blend
+        } else if physics_view::has_internals(&scene, &p.id) {
+            // See-through housing: the moving pieces inside are drawn.
+            base_color = base_color.with_alpha(0.28);
+            AlphaMode::Blend
+        } else {
+            AlphaMode::Opaque
+        };
+        let glow = animation::part_temperature(&scene, part.index).filter(|_| scene.state.overlays.contains(&sim_inspect::spatial::Overlay::Heat)).map(|k| ((k - 293.15) / 60.).clamp(0., 1.) as f32).unwrap_or(0.);
+        let emissive = if glow > 0.01 {
+            LinearRgba::new(1.4 * glow, 0.38 * glow, 0.08 * glow, 1.)
+        } else if selected && model.is_some() {
+            LinearRgba::new(0.30, 0.19, 0.03, 1.)
+        } else if selected && thermal.is_some() {
+            LinearRgba::new(0.12, 0.07, 0.01, 1.)
+        } else {
+            LinearRgba::BLACK
+        };
+        match part_material {
+            Some(mut part_material) => apply_part_material(&mut materials, &mut handle, &mut part_material, base_color, alpha_mode, emissive),
+            // Parts spawned outside `spawn_parts` keep the exact legacy
+            // contract: their own material asset is mutated in place.
+            None => {
+                if let Some(mut material) = materials.get_mut(&handle.0) {
+                    material.base_color = base_color;
+                    material.alpha_mode = alpha_mode;
+                    material.emissive = emissive;
+                }
             }
-            if scene.ghost.contains(&p.component) {
-                material.base_color = material.base_color.with_alpha(0.13);
-                material.alpha_mode = AlphaMode::Blend;
-            } else if let Some(alpha) = view::emphasis(&scene, &p.component) {
-                // Spotlight and X-ray: everything else goes see-through.
-                material.base_color = material.base_color.with_alpha(alpha);
-                material.alpha_mode = AlphaMode::Blend;
-            } else if physics_view::has_internals(&scene, &p.id) {
-                // See-through housing: the moving pieces inside are drawn.
-                material.base_color = material.base_color.with_alpha(0.28);
-                material.alpha_mode = AlphaMode::Blend;
-            } else {
-                material.alpha_mode = AlphaMode::Opaque;
-            }
-            let glow = animation::part_temperature(&scene, part.index).filter(|_| scene.state.overlays.contains(&sim_inspect::spatial::Overlay::Heat)).map(|k| ((k - 293.15) / 60.).clamp(0., 1.) as f32).unwrap_or(0.);
-            material.emissive = if glow > 0.01 {
-                LinearRgba::new(1.4 * glow, 0.38 * glow, 0.08 * glow, 1.)
-            } else if selected && model.is_some() {
-                LinearRgba::new(0.30, 0.19, 0.03, 1.)
-            } else if selected && thermal.is_some() {
-                LinearRgba::new(0.12, 0.07, 0.01, 1.)
-            } else {
-                LinearRgba::BLACK
-            };
         }
     }
 }

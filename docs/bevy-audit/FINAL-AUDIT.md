@@ -577,5 +577,26 @@ commits, targeted tests only — the runs named per item, nothing broader).
   performance effect is unverified; correctness evidence is schedule
   construction only. Targeted:
   `cargo test -p sim-spatial --lib -- app::ordering_tests ordering_guard`
-  (8 passed).
+  (10 passed).
+- **Item 10a (inspect material-handle cache) — done.** A
+  `PartMaterials` resource now caches one shared `StandardMaterial`
+  per untinted spawn look (sRGBA colour, metallic, roughness), in
+  the `CadMaterials` pattern. Each spawned part carries a
+  `PartMaterial` with that shared handle and a private handle created
+  lazily on its first tint (thermal colour, selection,
+  ghost/emphasis/internals alpha, or heat glow); `update_parts` swaps
+  `MeshMaterial3d` handles and mutates only the private asset, so the
+  exact prior colour/alpha/emissive formulas and values are preserved
+  and same-look parts no longer each allocate a material. Parts not
+  spawned by `spawn_parts` keep the legacy mutate-own-asset path (the
+  existing animation test pins it). Split-view copies record their
+  source entity and follow its current handle, preserving the old
+  shared-asset mirroring. Spawning now also includes `Visibility`
+  explicitly: on 0.20 `Mesh3d` gains it only from `VisibilityPlugin`'s
+  runtime registration, while `update_parts` writes it. Focused test:
+  two same-look parts share one handle until one is selected, the
+  selection tint lands on a private handle without recolouring the
+  shared asset, and clearing selection swaps back. Targeted:
+  `cargo test -p sim-spatial --lib -- inspect_view::tests animation::`
+  (7 passed) and `cargo check -p sim-spatial --lib --tests` (clean).
 

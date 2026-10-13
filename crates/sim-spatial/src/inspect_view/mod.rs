@@ -15,7 +15,7 @@ use bevy::prelude::*;
 pub(crate) use camera::{spatial_rules, sync_camera};
 use crate::camera::CameraSet;
 use scene::{draw_guides, setup_scene};
-pub(crate) use scene::{spawn_parts, update_parts};
+pub(crate) use scene::{PartMaterials, spawn_parts, update_parts};
 use sim_inspect::selection::{SelectionDetails, SelectionTarget};
 use sim_inspect::{
     InspectionError, SystemDescription,
@@ -339,6 +339,7 @@ impl Plugin for SpatialViewerPlugin {
         notes::build(app);
         app.init_resource::<physics_view::Labels>()
             .init_resource::<view::PartHover>()
+            .init_resource::<PartMaterials>()
             .add_systems(OnEnter(ModeScope::Inspect), (setup_scene, setup_ui))
             .add_systems(OnEnter(ModeScope::Builder), (setup_scene, setup_ui))
             // Buttons, keys, the notes panel and the overlay bar write the view's actions.

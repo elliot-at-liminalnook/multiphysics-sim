@@ -74,6 +74,7 @@ pub(super) fn rebuild_scene(
     ui_roots: Query<Entity, With<UiRoot>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut part_materials: Option<ResMut<crate::inspect_view::PartMaterials>>,
     mut images: ResMut<Assets<Image>>,
     mut orbit: Single<&mut Orbit>,
     mut models: Option<ResMut<crate::models::ModelLibrary>>,
@@ -152,7 +153,7 @@ pub(super) fn rebuild_scene(
     for e in &ui_roots {
         commands.entity(e).despawn();
     }
-    spawn_parts(&mut commands, &scene, &mut meshes, &mut materials, models.as_deref_mut());
+    spawn_parts(&mut commands, &scene, &mut meshes, &mut materials, part_materials.as_deref_mut(), models.as_deref_mut());
     linked::spawn_nets(&mut commands, &scene, &mut meshes, &mut materials);
     // Reference images of the current level, as textured planes.
     let definition = builder.definition_id();

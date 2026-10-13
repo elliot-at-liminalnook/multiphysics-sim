@@ -223,3 +223,54 @@ fn click_parts_row_and_rest_select_make_the_same_shared_selection() {
     assert_eq!(selected(&app), clicked);
     assert_eq!(shown(&app), SelectionTarget::component(id));
 }
+
+#[test]
+fn same_look_parts_share_a_material_until_one_is_tinted() {
+    use bevy::ecs::system::RunSystemOnce;
+    let mut scene = fixture();
+    // Force two primitive parts to the same spawn look.
+    scene.spatial.parts[1].color_srgb = scene.spatial.parts[0].color_srgb;
+    let base = scene.spatial.parts[0].color_srgb;
+    let first_component = scene.spatial.parts[0].component.clone();
+    let mut app = App::new();
+    app.insert_resource(scene)
+        .insert_resource(Assets::<Mesh>::default())
+        .insert_resource(Assets::<StandardMaterial>::default())
+        .init_resource::<super::scene::PartMaterials>()
+        .add_systems(Update, super::scene::update_parts);
+    app.world_mut()
+        .run_system_once(|mut commands: Commands, scene: Res<SpatialScene>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>, mut cache: ResMut<super::scene::PartMaterials>| {
+            super::scene::spawn_parts(&mut commands, &scene, &mut meshes, &mut materials, Some(&mut cache), None);
+        })
+        .unwrap();
+    let handles = |app: &mut App| {
+        let world = app.world_mut();
+        let mut query = world.query::<(&Part, &MeshMaterial3d<StandardMaterial>)>();
+        let mut by_index: Vec<(usize, Handle<StandardMaterial>)> = query.iter(world).map(|(part, material)| (part.index, material.0.clone())).collect();
+        by_index.sort_by_key(|(index, _)| *index);
+        by_index
+    };
+    let spawned = handles(&mut app);
+    let shared = spawned.iter().find(|(index, _)| *index == 0).unwrap().1.clone();
+    assert_eq!(spawned.iter().find(|(index, _)| *index == 1).unwrap().1, shared, "same-look parts share one material asset");
+    // Let `update_parts` initialize its change tick before the tint.
+    app.update();
+
+    // Tint only the first part (selection): it gets a private material,
+    // and the shared asset the second part still uses is not recoloured.
+    app.world_mut().resource_mut::<SpatialScene>().details.components.insert(first_component);
+    app.update();
+    let tinted = handles(&mut app);
+    let first = tinted.iter().find(|(index, _)| *index == 0).unwrap().1.clone();
+    assert_ne!(first, shared);
+    assert_eq!(tinted.iter().find(|(index, _)| *index == 1).unwrap().1, shared);
+    let materials = app.world().resource::<Assets<StandardMaterial>>();
+    assert_eq!(materials.get(&first).unwrap().base_color, Color::srgb(0.96, 0.70, 0.26));
+    assert_eq!(materials.get(&shared).unwrap().base_color, Color::srgb(base[0], base[1], base[2]));
+
+    // Clearing the tint swaps the first part back to the shared handle.
+    app.world_mut().resource_mut::<SpatialScene>().details.components.clear();
+    app.update();
+    let restored = handles(&mut app);
+    assert_eq!(restored.iter().find(|(index, _)| *index == 0).unwrap().1, shared);
+}

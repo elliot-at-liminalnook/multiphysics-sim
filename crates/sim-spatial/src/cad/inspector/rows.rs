@@ -27,7 +27,7 @@
 //! Buttons take their action and enabled state from
 //! `physical_edit::controls_of` (what `system_ui` lists).
 use super::exact::Stamp;
-use super::physical_edit::{JointField, RowField, controls_of, py_g};
+use super::physical_edit::{JointField, PhysicalEdit, RowField, controls_of, py_g};
 use super::{current_revision, field, node, numbers};
 use crate::cad::actions::CadAction;
 use crate::cad::document::CadDocument;
@@ -157,7 +157,7 @@ pub(crate) fn current_text(doc: &CadDocument, id: &str, field: RowField) -> Stri
 }
 
 /// What the rows show, for the part's key.
-pub(crate) fn key(doc: &CadDocument, selection: &[SelectionItem]) -> String {
+pub(crate) fn key(doc: &CadDocument, edit: &PhysicalEdit, selection: &[SelectionItem]) -> String {
     let now = Stamp::of(doc, selection);
     let id = selection.first_node();
     let n = id.and_then(|id| node(doc, id)).map(|n| (&n.name, &n.kind, &n.color, &n.material));
@@ -166,10 +166,10 @@ pub(crate) fn key(doc: &CadDocument, selection: &[SelectionItem]) -> String {
     let over = id.map(|id| overrides(doc, id).map(|o| o.map(|o| Value::Object(o.clone()).to_string())));
     let results = id.and_then(|id| doc.robot.data.node_results(id)).map(|r| r.results.to_string());
     let stale = doc.robot.data.results().and_then(|r| r.stale);
-    let controls: Vec<(String, String, bool)> = controls_of(doc, selection).into_iter().map(|c| (c.0, c.1, c.3.is_ok())).collect();
+    let controls: Vec<(String, String, bool)> = controls_of(doc, edit, selection).into_iter().map(|c| (c.0, c.1, c.3.is_ok())).collect();
     let fetch = (doc.physical.as_ref().map(|(r, res)| (*r, res.as_ref().err())), doc.physical_job.is_some(), doc.robot.data.reading(), doc.robot.data.summary_error());
-    let facts = doc.physical_edit.exact.facts(&now);
-    format!("{:?}", (now.nodes, facts, n, joint, phys, over, results, stale, &doc.physical_edit.draft, controls, fetch, doc.connected()))
+    let facts = edit.exact.facts(&now);
+    format!("{:?}", (now.nodes, facts, n, joint, phys, over, results, stale, &edit.draft, controls, fetch, doc.connected()))
 }
 
 /// The controls (`controls_of`): (id, label, action, ready).
@@ -185,8 +185,8 @@ fn button(p: &mut ChildSpawnerCommands, k: &Kit, controls: &Controls, id: &str, 
 /// One typed row: its label, its field (the draft while typed) and under
 /// it the draft's error or how to commit.
 #[allow(clippy::too_many_arguments)]
-fn input_row(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, id: &str, which: RowField, label: &str, text: &str, placeholder: &str) {
-    let draft = doc.physical_edit.draft.as_ref().filter(|d| d.node == id && d.field == which);
+fn input_row(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, edit: &PhysicalEdit, id: &str, which: RowField, label: &str, text: &str, placeholder: &str) {
+    let draft = edit.draft.as_ref().filter(|d| d.node == id && d.field == which);
     let shown = draft.map_or(text, |d| d.draft.text.as_str());
     p.spawn(Node { flex_direction: FlexDirection::Column, row_gap: Val::Px(2.0), padding: UiRect::vertical(Val::Px(2.0)), flex_shrink: 0.0, ..default() }).with_children(|c| {
         c.spawn(k.text(label, size::BODY, SUBTLE, 0));
@@ -204,14 +204,14 @@ fn input_row(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, id: &str,
 }
 
 /// The physical rows for the selection (see the module doc).
-pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem]) {
+pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, edit: &PhysicalEdit, selection: &[SelectionItem]) {
     let now = Stamp::of(doc, selection);
     if now.nodes.is_empty() {
         return;
     }
-    let controls = controls_of(doc, selection);
+    let controls = controls_of(doc, edit, selection);
     p.spawn(k.section("Properties"));
-    let facts = doc.physical_edit.exact.facts(&now).unwrap_or_else(|| format!("{} item(s)\nExact measurements available on request.", now.nodes.len()));
+    let facts = edit.exact.facts(&now).unwrap_or_else(|| format!("{} item(s)\nExact measurements available on request.", now.nodes.len()));
     p.spawn(k.text(facts, size::BODY, VALUE, 0));
     p.spawn(wrap()).with_children(|r| {
         button(r, k, &controls, "cad:inspect:exact", Look::Secondary);
@@ -220,13 +220,13 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, sel
     p.spawn(k.caption("Volume, area and mass from RoboCAD's exact geometry, off this window's thread (up to 60 s). Cancel, an edit or a selection change stops waiting; the request already sent finishes in RoboCAD."));
     let Some(n) = selection.first_node().and_then(|id| node(doc, id)) else { return };
     p.spawn(k.section("Colour"));
-    input_row(p, k, doc, &n.id, RowField::Color, "Colour (r, g, b; 0–1)", &colour_text(n), "material colour: type r, g, b");
+    input_row(p, k, doc, edit, &n.id, RowField::Color, "Colour (r, g, b; 0–1)", &colour_text(n), "material colour: type r, g, b");
     if n.color.is_none() {
         p.spawn(k.caption("Drawn in its material's colour."));
     }
     p.spawn(wrap()).with_children(|r| button(r, k, &controls, "cad:inspect:material-colour", Look::Ghost));
     if n.kind == "joint" {
-        joint(p, k, doc, n, &controls);
+        joint(p, k, doc, edit, n, &controls);
     }
     if let Some(line) = doc.robot.data.node_results(&n.id).and_then(|r| results_line(&r.results)) {
         p.spawn(k.text(line, size::BODY, VALUE, 0));
@@ -238,7 +238,7 @@ pub(crate) fn draw(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, sel
 }
 
 /// The joint as RoboCAD's `GET /robot` lists it, Edit joint…, and its physics rows.
-fn joint(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, n: &NodeSummary, controls: &Controls) {
+fn joint(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, edit: &PhysicalEdit, n: &NodeSummary, controls: &Controls) {
     p.spawn(k.section("Joint"));
     match doc.robot.data.summary().and_then(|s| s.joints.iter().find(|j| j.id == n.id)) {
         Some(j) => joint_fields(p, k, j),
@@ -262,7 +262,7 @@ fn joint(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, n: &NodeSumma
     for f in JointField::ALL {
         let r = row(f, phys, over);
         let placeholder = if f == JointField::DriveBacklash { "Unmeasured" } else { "not in RoboCAD's physical model" };
-        input_row(p, k, doc, &n.id, RowField::Joint(f), &r.label, &r.text, placeholder);
+        input_row(p, k, doc, edit, &n.id, RowField::Joint(f), &r.label, &r.text, placeholder);
         if let Some(note) = r.note {
             p.spawn(k.caption(format!("Full rotational lost-motion width at the drive connection, additional to motor gearbox backlash. Editing declares an estimate; clearing marks it unmeasured. Radial bearing clearance is separate. {note}")));
         }

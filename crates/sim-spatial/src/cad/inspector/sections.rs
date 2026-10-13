@@ -11,18 +11,18 @@ use bevy::prelude::*;
 use serde_json::Value;
 use crate::cad::types::SelectionItem;
 
-pub(in crate::cad) fn physical_key(doc: &CadDocument, selection: &[SelectionItem]) -> String {
+pub(in crate::cad) fn physical_key(doc: &CadDocument, edit: &super::PhysicalEdit, selection: &[SelectionItem]) -> String {
     // Not the model itself (collision meshes make it large): its revision,
     // whether it failed, and the selection pick the shown link.
     let physical = doc.physical.as_ref().map(|(r, result)| (*r, result.as_ref().err()));
     // The physical rows under it have their own key (`rows::key`).
-    format!("{:?} {}", (selection.first_node(), physical, current_revision(doc), doc.physical_job.is_some()), super::rows::key(doc, selection))
+    format!("{:?} {}", (selection.first_node(), physical, current_revision(doc), doc.physical_job.is_some()), super::rows::key(doc, edit, selection))
 }
 
 /// The physical link holding the inspected body, then the physical rows
 /// (`rows`: colour, joint, joint physics, results, exact measurements,
 /// material properties).
-pub(in crate::cad) fn physical(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, selection: &[SelectionItem]) {
+pub(in crate::cad) fn physical(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument, edit: &super::PhysicalEdit, selection: &[SelectionItem]) {
     if let Some(local) = &doc.local {
         for (label, mass) in [("Visible assembly (including instances)", &local.masses.assembly), ("Physical source assembly (body/sheet inventory)", &local.masses.physical_assembly)] {
             p.spawn(k.section(label));
@@ -37,7 +37,7 @@ pub(in crate::cad) fn physical(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadD
         p.spawn(k.note("Exact B-rep properties are authoritative. Triangles are display only."));
     }
     link(p, k, doc, selection);
-    super::rows::draw(p, k, doc, selection);
+    super::rows::draw(p, k, doc, edit, selection);
 }
 
 /// The physical link holding the inspected body, from the physical model.
@@ -138,19 +138,47 @@ pub(in crate::cad) fn attributes(p: &mut ChildSpawnerCommands, k: &Kit, doc: &Ca
     });
 }
 
-/// RoboCAD's undo and redo labels, most recent first (read-only).
+/// Which of the retained history blocks a text node shows.
+#[derive(Component, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum HistoryText {
+    Undo,
+    Redo,
+}
+
+/// One history block's text: the labels most recent first, or the empty note.
+fn history_lines(doc: &CadDocument, which: HistoryText) -> String {
+    let (labels, empty) = match which {
+        HistoryText::Undo => (&doc.history.undo, "Nothing to undo."),
+        HistoryText::Redo => (&doc.history.redo, "Nothing to redo."),
+    };
+    if labels.is_empty() {
+        return empty.to_string();
+    }
+    labels.iter().rev().map(|(l, _)| l.as_str()).collect::<Vec<_>>().join("\n")
+}
+
+/// RoboCAD's undo and redo labels, most recent first (read-only). The
+/// retained pilot part: spawned once per document source, its two text
+/// blocks are updated in place by [`sync_history`] instead of rebuilt.
 pub(in crate::cad) fn history(p: &mut ChildSpawnerCommands, k: &Kit, doc: &CadDocument) {
     p.spawn(k.section("History"));
-    // In-process edits (`local::History`): each is one undo step.
-    let undo: Vec<String> = doc.history.undo.iter().map(|(l, _)| l.clone()).collect();
-    let redo: Vec<String> = doc.history.redo.iter().map(|(l, _)| l.clone()).collect();
-    for (title, labels, empty) in [("Undo (most recent first)", &undo, "Nothing to undo."), ("Redo (most recent first)", &redo, "Nothing to redo.")] {
+    for (title, which) in [("Undo (most recent first)", HistoryText::Undo), ("Redo (most recent first)", HistoryText::Redo)] {
         p.spawn(k.text(title, size::BODY, TEXT, 1));
-        if labels.is_empty() {
-            p.spawn(k.note(empty));
-        }
-        for label in labels.iter().rev() {
-            p.spawn((k.text(label.clone(), size::SMALL, SUBTLE, 0), Node { margin: UiRect::left(Val::Px(8.0)), ..default() }));
+        p.spawn((k.text(history_lines(doc, which), size::SMALL, SUBTLE, 0), Node { margin: UiRect::left(Val::Px(8.0)), ..default() }, which));
+    }
+}
+
+/// Keep the retained history blocks current as edits land (the document's
+/// change tick is the trigger; identical text is not reassigned).
+pub(crate) fn sync_history(doc: Option<Res<CadDocument>>, mut texts: Query<(&mut Text, &HistoryText)>) {
+    let Some(doc) = doc else { return };
+    if !doc.is_changed() {
+        return;
+    }
+    for (mut text, which) in &mut texts {
+        let want = history_lines(&doc, *which);
+        if text.0 != want {
+            text.0 = want;
         }
     }
 }

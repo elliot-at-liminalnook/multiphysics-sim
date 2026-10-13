@@ -180,12 +180,12 @@ pub(crate) fn settle(state: &mut ExactState, now: &Stamp) -> bool {
 
 /// Whether the button is enabled now (RoboCAD's: no run, and some selected
 /// node is a body, sheet or instance; here also connected).
-pub(crate) fn ready(doc: &CadDocument, selection: &[SelectionItem]) -> Result<(), String> {
+pub(crate) fn ready(doc: &CadDocument, edit: &super::PhysicalEdit, selection: &[SelectionItem]) -> Result<(), String> {
     let nodes = Stamp::of(doc, selection).nodes;
     if nodes.is_empty() {
         return Err("Nothing selected.".into());
     }
-    if doc.physical_edit.exact.running() {
+    if edit.exact.running() {
         return Err("exact measurements are being calculated".into());
     }
     if !nodes.iter().any(|id| super::node(doc, id).is_some_and(|n| MEASURABLE.contains(&n.kind.as_str()))) {
@@ -199,27 +199,27 @@ pub(crate) fn ready(doc: &CadDocument, selection: &[SelectionItem]) -> Result<()
 
 /// Start a run over the selected nodes (a run in flight is replaced, as
 /// RoboCAD's `_measure_selection` cancels the previous one).
-pub(crate) fn start(doc: &mut CadDocument, selection: &[SelectionItem]) -> Result<Value, String> {
+pub(crate) fn start(doc: &mut CadDocument, edit: &mut super::PhysicalEdit, selection: &[SelectionItem]) -> Result<Value, String> {
     let stamp = Stamp::of(doc, selection);
-    if doc.physical_edit.exact.running() {
-        doc.physical_edit.exact.run = None;
+    if edit.exact.running() {
+        edit.exact.run = None;
     }
-    ready(doc, selection)?;
+    ready(doc, edit, selection)?;
     let local = doc.local.clone().ok_or("no CAD document is open")?;
     let ids = stamp.nodes.clone();
     let job = Job::spawn(Pool::Compute, doc.generation, "cad-exact-measurement", move |ctx| measure(&local, &ids, ctx));
     let nodes = stamp.nodes.clone();
-    doc.physical_edit.exact = ExactState { run: Some(ExactRun::new(stamp, job)), result: None, status: None };
+    edit.exact = ExactState { run: Some(ExactRun::new(stamp, job)), result: None, status: None };
     doc.touch();
     Ok(json!({"message": "Calculating exact measurements… You can keep working.", "nodes": nodes, "limit_s": LIMIT.as_secs()}))
 }
 
 /// Stop waiting for the run in flight (RoboCAD finishes the request
 /// already sent; see the module doc).
-pub(crate) fn cancel(doc: &mut CadDocument) -> Result<Value, String> {
-    let Some(run) = doc.physical_edit.exact.run.take() else { return Err("no exact measurement is running".into()) };
+pub(crate) fn cancel(doc: &mut CadDocument, edit: &mut super::PhysicalEdit) -> Result<Value, String> {
+    let Some(run) = edit.exact.run.take() else { return Err("no exact measurement is running".into()) };
     let message = format!("Exact measurements cancelled. {SENT}");
-    doc.physical_edit.exact.status = Some((run.stamp, message.clone()));
+    edit.exact.status = Some((run.stamp, message.clone()));
     // The status line says it too (the user asked; `sync` does the same for a selection change).
     doc.show(Ok(message.clone()));
     Ok(json!({"message": message}))
@@ -286,9 +286,9 @@ pub(crate) fn state_json(state: &ExactState) -> Value {
 }
 
 /// JobResults: [`settle`] against the document and the shared selection now.
-pub(crate) fn sync(doc: Option<ResMut<CadDocument>>, selection: CadSelection) {
-    let Some(mut doc) = doc else { return };
-    let e = &doc.physical_edit.exact;
+pub(crate) fn sync(doc: Option<ResMut<CadDocument>>, edit: Option<ResMut<super::PhysicalEdit>>, selection: CadSelection) {
+    let (Some(mut doc), Some(mut edit)) = (doc, edit) else { return };
+    let e = &edit.exact;
     if e.run.is_none() && e.result.is_none() && e.status.is_none() {
         return;
     }
@@ -298,12 +298,12 @@ pub(crate) fn sync(doc: Option<ResMut<CadDocument>>, selection: CadSelection) {
     // since nothing else this frame owns it. A run dropped by an edit or a
     // document change says why on the facts line only: the edit's send line
     // or a reconnect's "connecting…" owns the status line then.
-    let selection_only = doc.physical_edit.exact.run.as_ref().is_some_and(|r| {
+    let selection_only = edit.exact.run.as_ref().is_some_and(|r| {
         let then = &r.stamp;
         then.generation == now.generation && then.revision == now.revision && then.edit_seq == now.edit_seq && then.nodes != now.nodes
     });
-    if settle(&mut doc.physical_edit.exact, &now) {
-        let why = selection_only.then(|| doc.physical_edit.exact.status.as_ref().map(|(_, why)| why.clone())).flatten();
+    if settle(&mut edit.exact, &now) {
+        let why = selection_only.then(|| edit.exact.status.as_ref().map(|(_, why)| why.clone())).flatten();
         match why {
             Some(why) => doc.show(Ok(why)),
             None => doc.touch(),

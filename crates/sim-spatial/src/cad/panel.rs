@@ -402,6 +402,7 @@ fn refresh(
     selection: CadSelection,
     (components, composition): (Res<super::components::ComponentsState>, Res<super::composition::CadCompositionState>),
     (experiments, review, motion): (Res<super::experiments::ExperimentsState>, Res<super::experiment_review::ReviewState>, Res<super::motion::MotionState>),
+    physical: Res<super::inspector::PhysicalEdit>,
 ) {
     let root = roots.map(|s| *s);
     let stamp = doc.as_deref().map(super::activation::render_key);
@@ -431,7 +432,7 @@ fn refresh(
             Part::Motion => format!("{}:{stamp:?}", super::motion::key(&motion)),
             Part::Components => format!("{}:{stamp:?}", super::components::key(&components)),
             Part::Composition => format!("{}:{stamp:?}", super::composition::key(&composition)),
-            _ => part_key(part, doc, &selection, topology, &draft, plane),
+            _ => part_key(part, doc, &physical, &selection, topology, &draft, plane),
         };
         let key = format!("{content_key}|source={:?}", doc.map(super::activation::render_key));
         if list.key.as_ref() == Some(&key) {
@@ -460,7 +461,7 @@ fn refresh(
                 Part::Composition => super::composition::draw(p, &k, doc, &composition),
                 Part::Name => super::inspector::name(p, &k, doc, &selection, &draft),
                 Part::Inspector => super::inspector::inspector(p, &k, doc, &selection, topology),
-                Part::Physical => super::inspector::physical(p, &k, doc, &selection),
+                Part::Physical => super::inspector::physical(p, &k, doc, &physical, &selection),
                 Part::Attributes => super::inspector::attributes(p, &k, doc, &selection),
                 Part::Robot => super::robot::panel::draw(p, &k, doc, &selection),
                 Part::Materials => super::materials::draw(p, &k, doc, &selection),
@@ -473,7 +474,7 @@ fn refresh(
 }
 
 /// What a part shows now, as a comparable text.
-fn part_key(part: Part, doc: Option<&CadDocument>, selection: &[SelectionItem], topology: Option<&super::topology::CadTopology>, draft: &NameDraft, plane: Option<&super::CadActivePlane>) -> String {
+fn part_key(part: Part, doc: Option<&CadDocument>, physical: &super::inspector::PhysicalEdit, selection: &[SelectionItem], topology: Option<&super::topology::CadTopology>, draft: &NameDraft, plane: Option<&super::CadActivePlane>) -> String {
     let Some(doc) = doc else { return "no document".to_string() };
     match part {
         Part::Top => format!("{:?}", (doc.document_name(), connection_state(&doc.connection), dirty(doc), doc.health.is_some(), top_controls(doc, selection), plane_line(doc, plane))),
@@ -486,12 +487,13 @@ fn part_key(part: Part, doc: Option<&CadDocument>, selection: &[SelectionItem], 
         Part::Experiments | Part::ExperimentReview | Part::Motion | Part::Components | Part::Composition => unreachable!("persistent feature keys are read by refresh"),
         Part::Name => super::inspector::name_key(doc, selection, draft),
         Part::Inspector => super::inspector::inspector_key(doc, selection, topology),
-        Part::Physical => super::inspector::physical_key(doc, selection),
+        Part::Physical => super::inspector::physical_key(doc, physical, selection),
         Part::Attributes => super::inspector::attributes_key(doc, selection),
         Part::Robot => super::robot::panel::key(doc, selection),
         Part::Materials => super::materials::key(doc, selection),
         Part::Print => super::print::jobs_panel::key(doc),
-        Part::History => format!("{:?}", doc.doc.as_ref().map(|d| &d.history)),
+        // Retained: spawned once per source, kept current by `sections::sync_history`.
+        Part::History => "retained".to_string(),
         Part::Commands => super::inspector::commands_key(doc),
     }
 }

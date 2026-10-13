@@ -158,6 +158,7 @@ fn retained_capture_cannot_publish_annotation_into_a_replaced_document() {
         experiments: &mut crate::cad::experiments::ExperimentsState::default(),
         review: &mut review,
         motion: &mut crate::cad::motion::MotionState::default(),
+        physical: &mut crate::cad::inspector::PhysicalEdit::default(),
         camera: vec![],
     };
     let stale = ReviewArgs {

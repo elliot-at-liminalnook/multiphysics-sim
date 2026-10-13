@@ -55,17 +55,18 @@ pub(crate) fn submit(doc: &CadDocument, d: &RowDraft) -> Result<Option<CadAction
 /// Input: the physical rows' drafts (see the module doc).
 pub(in crate::cad) fn entry(
     doc: Option<ResMut<CadDocument>>,
+    edit: Option<ResMut<super::PhysicalEdit>>,
     presses: Query<&PhysicalField, With<crate::ui_kit::activation::Activated>>,
     mut msgs: MessageReader<FieldMsg>,
     mut text: TextFocus,
     mut out: MessageWriter<Act<CadAction>>,
     selection: CadSelection,
 ) {
-    let Some(mut doc) = doc else {
+    let (Some(mut doc), Some(mut edit)) = (doc, edit) else {
         msgs.clear();
         return;
     };
-    let before = doc.physical_edit.draft.clone();
+    let before = edit.draft.clone();
     let mut draft = before.clone();
     for m in msgs.read().filter(|m| m.field == PHYSICAL) {
         match &m.event {
@@ -128,7 +129,7 @@ pub(in crate::cad) fn entry(
         text.blur(PHYSICAL);
     }
     if draft != before {
-        doc.physical_edit.draft = draft;
+        edit.draft = draft;
         // The panels refresh on the document's revision.
         doc.touch();
     }

@@ -269,6 +269,9 @@ pub(crate) fn clear(world: &mut World) {
     if let Some(mut plane) = world.get_resource_mut::<CadActivePlane>() {
         *plane = CadActivePlane::default();
     }
+    if let Some(mut physical) = world.get_resource_mut::<inspector::PhysicalEdit>() {
+        *physical = inspector::PhysicalEdit::default();
+    }
     world.remove_resource::<CadView>();
     world.remove_resource::<display::CadDisplay>();
     world.remove_resource::<views::CadViews>();

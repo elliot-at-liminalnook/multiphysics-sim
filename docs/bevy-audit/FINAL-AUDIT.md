@@ -486,4 +486,19 @@ commits, targeted tests only — the runs named per item, nothing broader).
   click also produces), giving the list arrow-key navigation.
   Targeted: `cargo test -p sim-spatial --lib -- ui_kit::tests phenomena::`
   (26 passed).
+- **Item 6 (retained pilot + first resource split) — done.**
+  `PhysicalEdit` (the inspector rows' draft and exact-measurement job)
+  is its own `Resource`, split out of `CadDocument` on the
+  `ComponentsState` pattern (init in the inspector's `CoreParts`,
+  threaded through `Cx`, `exact::*`, `entry`, the rows, the panel
+  refresh and `cad_state`; reset in `cad::clear`). The History part is
+  the retained pilot: spawned once per document source with a constant
+  part key, its undo/redo text blocks are updated in place by
+  `sections::sync_history` on the document's change tick — the part's
+  `format!("{:?}", history)` rebuild key is deleted. (Visual note: the
+  history labels now render as two multi-line text blocks instead of
+  one row per label.) Targeted:
+  `cargo test -p sim-spatial --lib -- cad::inspector cad::snapshot cad::panel`
+  (18 passed; the panel test world inits the new resource like its
+  siblings).
 

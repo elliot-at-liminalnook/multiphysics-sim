@@ -23,18 +23,23 @@ pub(in crate::cad) struct Parts<'a> {
     experiments: Option<&'a super::experiments::ExperimentsState>,
     review: Option<&'a super::experiment_review::ReviewState>,
     motion: Option<&'a super::motion::MotionState>,
+    physical: Option<&'a super::inspector::PhysicalEdit>,
 }
 impl<'a> Parts<'a> {
     pub(in crate::cad) fn defaults(mut self, defaults: &'a crate::app::settings::CadDefaults) -> Self {
         self.defaults = Some(defaults); self
     }
     pub(in crate::cad) fn of(display: Option<&'a super::display::CadDisplay>, views: Option<&'a super::views::CadViews>, files: Option<&'a super::files::CadFiles>) -> Self {
-        Self { defaults: None, display, views, files, components: None, composition: None, experiments: None, review: None, motion: None }
+        Self { defaults: None, display, views, files, components: None, composition: None, experiments: None, review: None, motion: None, physical: None }
     }
     pub(in crate::cad) fn experiments(mut self, experiments: &'a super::experiments::ExperimentsState, review: &'a super::experiment_review::ReviewState, motion: &'a super::motion::MotionState) -> Self {
         self.experiments = Some(experiments);
         self.review = Some(review);
         self.motion = Some(motion);
+        self
+    }
+    pub(in crate::cad) fn physical(mut self, physical: &'a super::inspector::PhysicalEdit) -> Self {
+        self.physical = Some(physical);
         self
     }
     pub(in crate::cad) fn authoring(mut self, components: &'a super::components::ComponentsState, composition: &'a super::composition::CadCompositionState) -> Self {
@@ -116,7 +121,7 @@ pub(in crate::cad) fn state_json(doc: &CadDocument, selection: &[SelectionItem],
     // cad-physical-inspect: the robot description and panel, materials, the inspector's physical rows, results.
     state["robot"] = super::robot::state_json(doc);
     state["materials"] = super::materials::state_json(doc, selection);
-    state["inspector_physical"] = super::inspector::physical_state_json(doc);
+    state["inspector_physical"] = parts.physical.map_or(Value::Null, super::inspector::physical_state_json);
     state["results"] = super::results::state_json(doc);
     state["print"] = super::print::state_json(doc, parts.defaults);
     // cad-organize.
@@ -145,10 +150,11 @@ pub(in crate::cad) fn publish(
     selection: CadSelection,
     (components, composition): (Res<super::components::ComponentsState>, Res<super::composition::CadCompositionState>),
     (experiments, review, motion): (Res<super::experiments::ExperimentsState>, Res<super::experiment_review::ReviewState>, Res<super::motion::MotionState>),
+    physical: Res<super::inspector::PhysicalEdit>,
 ) {
     let (Some(mut rest), Some(doc)) = (rest, doc) else { return };
     if rest.0.snapshot_due() {
-        let state = state_json(&doc, &selection.items(), meshes.as_deref(), plane.as_deref(), Parts::of(display.as_deref(), views.as_deref(), files.as_deref()).authoring(&components, &composition).experiments(&experiments, &review, &motion).defaults(&settings.cad));
+        let state = state_json(&doc, &selection.items(), meshes.as_deref(), plane.as_deref(), Parts::of(display.as_deref(), views.as_deref(), files.as_deref()).authoring(&components, &composition).experiments(&experiments, &review, &motion).physical(&physical).defaults(&settings.cad));
         let mut shown = state.clone();
         shown["viewer_mode"] = json!(ViewerMode::Cad.name());
         rest.0.publish("cad_state", state);

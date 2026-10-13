@@ -74,9 +74,6 @@ pub struct CadDocument {
     pub robot: super::robot::RobotState,
     /// cad-physical-inspect: the materials panel (search, the open form).
     pub materials: super::materials::MaterialsState,
-    /// cad-physical-inspect: the inspector's physical rows (drafts, the
-    /// exact measurement job).
-    pub physical_edit: super::inspector::PhysicalEdit,
     /// cad-physical-inspect: results, the stress overlay, physical export
     /// and the live link.
     pub results: super::results::ResultsState,
@@ -188,7 +185,6 @@ impl CadDocument {
             physical: None,
             robot: Default::default(),
             materials: Default::default(),
-            physical_edit: Default::default(),
             results: Default::default(),
             print: Default::default(),
             tree: Default::default(),

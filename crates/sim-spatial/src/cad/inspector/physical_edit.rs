@@ -79,9 +79,10 @@ pub(crate) struct RowDraft {
     pub began: u64,
 }
 
-/// The inspector's physical rows' state on the document (reset with it):
-/// the row being typed and the exact measurement.
-#[derive(Default)]
+/// The inspector's physical rows' state (its own resource since the first
+/// `CadDocument` split; reset with the document in `cad::clear`): the row
+/// being typed and the exact measurement.
+#[derive(Resource, Default)]
 pub struct PhysicalEdit {
     pub(crate) draft: Option<RowDraft>,
     pub(crate) exact: ExactState,
@@ -219,8 +220,8 @@ pub(in crate::cad) fn handle_physical(action: &CadAction, call: &mut Call, cx: &
     let doc = &mut *cx.doc;
     let began = Some(args.revision.unwrap_or_else(|| doc.shown_revision()));
     match args.op {
-        InspectorOp::Exact => Outcome::Done(exact::start(doc, &selection)),
-        InspectorOp::ExactCancel => Outcome::Done(exact::cancel(doc)),
+        InspectorOp::Exact => Outcome::Done(exact::start(doc, cx.physical, &selection)),
+        InspectorOp::ExactCancel => Outcome::Done(exact::cancel(doc, cx.physical)),
         InspectorOp::Color | InspectorOp::MaterialColor => {
             let id = match target(doc, args, &selection) {
                 Ok(id) => id,
@@ -268,14 +269,14 @@ pub(in crate::cad) fn handle_physical(action: &CadAction, call: &mut Call, cx: &
 /// The inspector's physical buttons as `system_ui` lists them and the rows
 /// draw them: (id, label, action, ready).
 pub(in crate::cad) fn physical_controls(cx: &Cx) -> Vec<(String, String, CadAction, Result<(), String>)> {
-    controls_of(cx.doc, &cx.shared.items())
+    controls_of(cx.doc, cx.physical, &cx.shared.items())
 }
 
 /// The controls for `doc` and the selection.
-pub(crate) fn controls_of(doc: &CadDocument, selection: &[SelectionItem]) -> Vec<(String, String, CadAction, Result<(), String>)> {
+pub(crate) fn controls_of(doc: &CadDocument, physical: &PhysicalEdit, selection: &[SelectionItem]) -> Vec<(String, String, CadAction, Result<(), String>)> {
     let edit = doc.edit_refusal().map_or(Ok(()), Err);
-    let mut out = vec![("cad:inspect:exact".to_string(), "Calculate exact measurements".to_string(), InspectorArgs::of(InspectorOp::Exact, None), exact::ready(doc, selection))];
-    if doc.physical_edit.exact.running() {
+    let mut out = vec![("cad:inspect:exact".to_string(), "Calculate exact measurements".to_string(), InspectorArgs::of(InspectorOp::Exact, None), exact::ready(doc, physical, selection))];
+    if physical.exact.running() {
         out.push(("cad:inspect:exact-cancel".into(), "Cancel exact measurements".into(), InspectorArgs::of(InspectorOp::ExactCancel, None), Ok(())));
     }
     let Some(n) = selection.first_node().and_then(|id| super::node(doc, id)) else { return out };
@@ -293,8 +294,7 @@ pub(crate) fn controls_of(doc: &CadDocument, selection: &[SelectionItem]) -> Vec
 }
 
 /// `cad_state.inspector_physical`: the row being typed and the exact measurement.
-pub(in crate::cad) fn physical_state_json(doc: &CadDocument) -> Value {
-    let e = &doc.physical_edit;
+pub(in crate::cad) fn physical_state_json(e: &PhysicalEdit) -> Value {
     let draft = e.draft.as_ref().map(|d| {
         let field = match d.field {
             RowField::Color => "color".to_string(),
@@ -327,14 +327,15 @@ pub(in crate::cad) fn build_physical(app: &mut App) {
 }
 
 /// CadCorePlugin's windowless part: the exact measurement's poll and its
-/// cancel rule (`exact::sync`), and the physical model's refetch for an
-/// inspected joint or an open material properties dialog (`refresh::sync`).
+/// cancel rule (`exact::sync`), the physical model's refetch for an
+/// inspected joint or an open material properties dialog (`refresh::sync`),
+/// and the retained history part's in-place text (`sections::sync_history`).
 pub(crate) struct CoreParts;
 impl Plugin for CoreParts {
     fn build(&self, app: &mut App) {
-        app.add_systems(
+        app.init_resource::<PhysicalEdit>().add_systems(
             Update,
-            (exact::sync, super::refresh::sync).after(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)),
+            (exact::sync, super::refresh::sync, super::sections::sync_history).after(crate::cad::CadSet::Results).in_set(ViewerSet::JobResults).run_if(in_state(ViewerMode::Cad)),
         );
     }
 }

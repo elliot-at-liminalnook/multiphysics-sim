@@ -388,6 +388,7 @@ pub(super) fn apply(
     (mut selection, mut registry): (ResMut<Selection>, ResMut<DocumentRegistry>),
     (mut components, mut composition): (ResMut<super::components::ComponentsState>, ResMut<super::composition::CadCompositionState>),
     (mut experiments, mut review, mut motion): (ResMut<super::experiments::ExperimentsState>, ResMut<super::experiment_review::ReviewState>, ResMut<super::motion::MotionState>),
+    mut physical: ResMut<super::inspector::PhysicalEdit>,
 ) {
     let Some(mut doc) = doc else {
         actions::apply(&mut messages, &mut in_flight, &mut replies, |_, _| Outcome::Done(Err("CAD mode has no document open".into())));
@@ -415,7 +416,7 @@ pub(super) fn apply(
             files: files.as_deref_mut(),
             components: &mut *components,
             composition: &mut *composition,
-            experiments: &mut *experiments, review: &mut *review, motion: &mut *motion,
+            experiments: &mut *experiments, review: &mut *review, motion: &mut *motion, physical: &mut *physical,
             camera: Vec::new(),
         };
         cx.doc.preview_read_only = cx.review.active || cx.motion.active;
@@ -470,6 +471,8 @@ pub(crate) struct Cx<'a> {
     pub experiments: &'a mut super::experiments::ExperimentsState,
     pub review: &'a mut super::experiment_review::ReviewState,
     pub motion: &'a mut super::motion::MotionState,
+    /// The inspector's physical rows (split out of `CadDocument`).
+    pub physical: &'a mut super::inspector::PhysicalEdit,
     /// Camera intents a CAD command stands for (a named view, ortho, a
     /// saved view's restore), written as `Act<CameraAction>` after the
     /// handler (the shared camera applies them).

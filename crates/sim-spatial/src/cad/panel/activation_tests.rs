@@ -23,6 +23,7 @@ fn fixture() -> World {
     world.insert_resource(UiFonts { regular: default(), italic: default(), mono: default(), icons: default(), medium: default(), semibold: default() });
     world.init_resource::<NameDraft>();
     world.init_resource::<crate::cad::components::ComponentsState>();
+    world.init_resource::<crate::cad::inspector::PhysicalEdit>();
     world.init_resource::<crate::cad::composition::CadCompositionState>();
     world.init_resource::<crate::cad::experiments::ExperimentsState>();
     world.init_resource::<crate::cad::experiment_review::ReviewState>();

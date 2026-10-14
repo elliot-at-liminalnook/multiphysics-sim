@@ -47,26 +47,47 @@ hands control to the Director to choose other work.
 
 ## The current focus
 
-Assign only work toward the mission's "Current focus": **everything in
-Rust, in one process, with no RoboCAD server and no robot driver server.**
-Each assignment names the server dependency it removes and the workflows
-that stop needing it, and points the worker at the reference to port from
-(RoboCAD's Python under `cad/robocad/`, the server examples under
-`crates/sim-runtime/examples/`).
+Assign only work toward the mission's "Current focus": **every robot has an
+algorithmic path from a CAD revision to a built, tested, shipped unit**, in
+a product that feels professional, consistent and easy to follow from start
+to finish. Each assignment names the lifecycle workflow it makes possible,
+the person who uses it, and the existing pieces to build on (the robot
+project, `sim-print` and CAD print, the actuator registry, `sim_cad::physical`,
+the component registry). Pass the epic's ambition through whole; don't trim
+a large epic into a safe slice.
 
 In review, reject:
-- new or kept calls to `sim_runtime::cad_client` or a hardware server's
-  HTTP client in a workflow the assignment covers;
-- logic left in an example binary instead of a shared library;
-- a superseded client path that wasn't deleted;
-- for hardware, any safety rule weaker than the server's (motion session
-  ownership, STOP everywhere, hold-to-move release, travel windows,
-  watchdogs, recorded limits).
+- a workflow that stops short of its result (a library with no screen, a
+  screen with no REST command, a plan nobody can act on);
+- a fact with two sources: sourcing data copied into CAD or configs,
+  measured values hand-copied, a list kept by hand that CAD could derive;
+- a derived plan (BOM, print plan, assembly sequence, build order, shipping
+  manifest) that doesn't record the CAD, catalog and settings revisions it
+  came from, or doesn't show when it is stale;
+- missing data silently filled in, or a price, lead time or stock level
+  without a date and source; estimates not labelled as estimates;
+- a new concept, file type, vocabulary or navigation path where the project
+  already has one;
+- screens that leave the person unsure where they are, what to do next or
+  why a step isn't ready; numbers without units; long work on the UI
+  thread; edits without undo;
+- any new call to `sim_runtime::cad_client` or a hardware server's HTTP
+  client, and any code that would purchase, order, request a quote or
+  contact a supplier or carrier.
 
 Verify by reading. Accept a step when you have traced its whole path in the
 code yourself, from the control a person uses to its effect, and it is
 complete and correct (cite path:line). Don't ask the worker to build, run
 or test anything.
+
+## Hold the experience to a professional bar
+
+Every assignment says which screens it touches and what a person should
+find easy afterward. Every review reads the UI code as a person would meet
+it: the entry point from the project's step strip, the layout, the words,
+the empty and error states, what happens during long work, and the way back.
+An awkward flow is a reason to revise, like a bug. Keep optional polish in
+the hopper, but not polish the epic's own workflow needs to be usable.
 
 ## Every epic ships its AI surface
 

@@ -69,6 +69,31 @@ code when something looks stale, and say so in coordination_notes.
   `serve_motor_bench.rs`: the hardware servers the in-process leg driver
   replaces. Read them as the reference, including every safety rule.
 
+## Lifecycle starting points (design to delivery)
+
+Nothing models suppliers, a BOM, assembly sequences, inventory or shipping
+yet (2026-10-13). Build on these rather than beside them:
+
+- **Robot project:** `crates/sim-runtime/src/robot_project.rs`
+  (`sim.robot-project/2`) and `crates/sim-spatial/src/project/`; the step
+  strip and plan are in `docs/robot-pipeline.md`. Make (part files tied to
+  the tested CAD hash) is the last step today; new stages extend the strip.
+- **Printed parts:** `sim-print` (registry of printer, filament and joint
+  values, `plan`, voxel stress, `promote` for coupon results) and CAD print
+  in `crates/sim-spatial/src/cad/print/` (studies, checks, jobs tracker,
+  fastener tool).
+- **One accepted source with provenance:** the actuator registry,
+  `crates/sim-runtime/src/actuator_registry.rs` over
+  `examples/actuators/hx30hm/accepted/registry.json`, with promotion. A parts
+  catalog should follow its pattern.
+- **What CAD already knows:** `sim_cad::physical` (bodies, mass, materials,
+  motors from the library, assumptions) and the component registry behind
+  CAD components.
+- **Selection and budgets:** datasheets (`crates/sim-runtime/tests/datasheets.rs`)
+  and `examples/full-robot/measured-actuator-integration/battery-selection/`.
+- **Robots to try it on:** `examples/robot-pipeline/`, `examples/robot-kit/`
+  (rover, drone, gripper, belt axis, arm), `examples/wheeled-robot/`.
+
 ## Data and history
 
 - `runs/` is ignored and very large; `EXPLORATION_DATA.md` says what must be

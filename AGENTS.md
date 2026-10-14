@@ -1,7 +1,9 @@
 # Project rules
 
 Build a fast, reproducible CAD → physics → controller → measured-result loop for
-robot design and eventual sim-to-real learning.
+robot design and eventual sim-to-real learning, and carry each robot on from
+there to sourced parts, fabrication, assembly, bring-up and shipping in one
+professional, consistent tool.
 
 - **CAD owns the robot's physical definition.** Store materials, mass/inertia,
   joints, transmissions, friction/compliance, actuators, sensors, and limits in
@@ -26,6 +28,22 @@ robot design and eventual sim-to-real learning.
   Other external-language integrations (the controller seam's clients, the
   browser) are compatibility surfaces, not the default architecture for new
   work.
+- **The interface is modern Bevy.** Screens are written in `sim-spatial` on
+  the pinned Bevy (0.19.1) and use its facilities: states, feature plugins
+  and public system sets, messages and observers, picking, `bevy_ui`
+  widgets through the UI kit, `ViewportNode`, assets. Read each signature in
+  the pinned source; never write pre-0.19 patterns or hand-roll what the
+  engine provides (`tools/claude-pair/prompts/bevy.md`). Keep the interface
+  polished and its flow obvious: one visual language, the project's words for
+  things, clear next steps and reasons a step isn't ready.
+- **Every robot has a computed path to being built.** BOMs, fabrication and
+  print plans, assembly sequences, build orders and shipping manifests are
+  derived from a CAD revision by shared Rust libraries, deterministically, and
+  record the CAD, catalog and settings revisions they came from. Sourcing data
+  (suppliers, part numbers, prices, lead times, stock) has one source, the
+  parts catalog, with a date and a source on every value; CAD references it
+  and never copies it. Missing data stays visibly missing. Agents never
+  purchase, order, request quotes or contact suppliers.
 - **Contribute to the shared library first.** Reuse an existing component, extend
   it, or add a reusable component with a focused example. Keep robot-specific
   topology, parameters, and policies in configuration/examples. Do not introduce
@@ -92,3 +110,38 @@ robot design and eventual sim-to-real learning.
   accuracy.
 - **Paid compute needs a ceiling.** Cloud runs need the user's approval, a stated
   cost, an automatic shutdown, periodic result sync, and termination when done.
+
+## Writing
+
+These rules apply to everything written in this project: documentation,
+code comments, commit messages, guides, UI text, and agents' reports and
+answers. Write as a technically capable colleague explaining something to
+the reader. Assume the reader can understand difficult ideas, but don't
+assume they already know every specialized term.
+
+- Answer the actual question early. Then explain enough for the reader to
+  understand the mechanism, evaluate the claim, or take the next step. Keep
+  the scope focused; don't expand into adjacent topics unless they
+  materially affect the answer.
+- Use ordinary, complete sentences. Name the component doing the action and
+  connect causes to effects. Keep precise technical terms, defining
+  unfamiliar ones when first needed. Prefer a concrete sequence or example
+  to abstract descriptions of benefits. Split sentences that contain several
+  distinct ideas.
+- Use connected paragraphs for explanations. Use numbered steps for
+  procedures, and lists or tables when the information is genuinely easier
+  to compare that way. Don't turn a causal explanation into labeled
+  fragments.
+- Avoid ceremonial introductions, generic praise, sales language, forced
+  metaphors, and contrasts written merely to sound insightful. Don't
+  announce that you are being clear or concise.
+- Distinguish established facts from assumptions and hypotheses. Make
+  uncertainty specific. Correct mistaken premises directly. Preserve
+  qualifications that affect correctness.
+- Remove repetition before removing explanatory steps. A longer text is
+  appropriate when the problem requires it; each paragraph should contribute
+  something the reader needs.
+- Ask a clarification question when missing information blocks a useful or
+  reliable answer. Otherwise, state the relevant assumption and proceed.
+  Stop when the request is satisfied, without automatically adding
+  follow-up offers.

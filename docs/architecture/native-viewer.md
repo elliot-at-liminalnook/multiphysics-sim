@@ -6530,8 +6530,19 @@ on memory.
 
 ## Default epic order
 
-**Current focus (the user, 2026-10-03), ahead of everything below:**
-everything in Rust, in one process. The viewer must not rely on the RoboCAD
+**Current focus (the user, 2026-10-13), ahead of everything below:** the
+robot lifecycle from design to delivery. Every robot, assembly and printed
+part gets a computed path from a CAD revision to a built, tested, shipped
+unit: parts catalog and sourcing, a BOM from CAD, fabrication and print
+plans, assembly sequences, build orders and inventory, bring-up, shipping
+and per-unit traceability, in a polished, consistent interface whose flow is
+obvious from the project's step strip. Ambitious epics are preferred; the
+list below still decides *how* things are built. The in-flight CAD-in-Rust
+batch finishes first; after it, server removal is done when a lifecycle
+workflow needs it. The rule from the previous focus stays: nothing new may
+rely on a RoboCAD or robot driver server.
+
+**Previous focus (the user, 2026-10-03):** everything in Rust, in one process. The viewer must not rely on the RoboCAD
 server or on a robot driver server. First the leg driven in process (the
 calibration and motor-bench server logic moves into shared libraries, with
 every safety rule unchanged), then CAD in Rust (§9: derivations, then the

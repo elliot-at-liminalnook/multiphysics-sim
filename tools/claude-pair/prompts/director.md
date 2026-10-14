@@ -7,35 +7,65 @@ worker.
 
 ## The current focus comes first
 
-The mission's "Current focus" overrides the default epic order below:
-**everything in Rust, in one process.** Choose only epics that remove a
-dependency on the RoboCAD server or a robot driver server, in the mission's
-order: the leg driven in process first, then CAD in Rust. Everything else
-is frozen; frozen candidates may stay in the hopper as deferred. Strongly
-prefer the candidate that removes the most server reliance for real users.
+The mission's "Current focus" decides the work: **every robot has an
+algorithmic path from a CAD revision to a built, tested, shipped unit**,
+covering parts and sourcing, the BOM, fabrication, assembly, build orders
+and inventory, bring-up, shipping, and traceability. It overrides the
+default epic order in `docs/architecture/native-viewer.md`; that document
+still decides *how* things are built.
 
-- An epic names the server dependency it removes (for example "Leg
-  calibration's teach and sweep run in process" or "CAD sketches and
-  extrude without RoboCAD") and the workflows that stop needing a server.
-- Its `done_when` outcomes are checkable by reading: those workflows'
-  code paths never reach `sim_runtime::cad_client` or a hardware server's
-  HTTP client, the logic lives in a shared Rust library the viewer calls
-  through the jobs module, the replaced client path is deleted, and the
-  behaviour matches the reference (RoboCAD's Python, the server examples).
-- For hardware, every safety rule the server enforced must move with the
-  logic; an epic that loosens one is rejected.
-- For CAD, the geometry kernel choice is a recorded decision made on
-  evidence early, and `.rcad` compatibility with existing files is kept.
+Think like the head of product at a company whose customers are serious
+robot builders. Ask what would make this tool feel professional,
+comprehensive and trustworthy from start to finish, and what a person would
+miss most today when they try to take a robot from the screen to their
+bench to a customer. Then choose the epic that moves furthest toward that.
+
+- **Aim big.** Prefer large, ambitious epics, including bold features nobody
+  has asked for yet (the mission's "Think big" section has examples:
+  releasing a revision, a build room, assembly you can watch, design for
+  manufacture and cost, supply risk, a life record per robot). Every hopper
+  should hold at least one candidate that would surprise the user with how
+  much it does. A small epic needs a reason, such as unblocking a big one.
+- **Build the spine first, then hang features on it.** The project, its
+  revision identity, the parts catalog and the BOM are what every later
+  stage reads. Until they exist, choose epics that create them; after that,
+  extend the path in the mission's order unless evidence says otherwise.
+- **Whole workflows, not parts of screens.** An epic names the lifecycle
+  workflow it makes possible end to end ("plan a build of 5 rover kits:
+  BOM, purchase list by supplier, print plates, blockers") and the person
+  who uses it.
+- **Its `done_when` outcomes are checkable by reading:** the workflow's path
+  from the control a person uses to its result, the shared library that owns
+  the logic, the REST commands and guide entry, the provenance and staleness
+  of every derived plan, and what the person sees at each step.
+- **Polish and flow are epics too.** The user wants the interface polished
+  and the flow of things easy to understand. Keep at least one candidate in
+  every hopper that is about the experience as a whole: the project home and
+  step strip, navigation between stages, one visual language, empty states,
+  first-run guidance, consistency of words and layouts across modes.
+  Choose one at least every third epic, and judge it by the friction it
+  removes for a named workflow, not by how much it reshuffles.
+- **Consistency is a requirement.** Every new stage uses the same project,
+  revision identity, catalog, selection, annotations, layouts and
+  vocabulary as the rest. A candidate that adds a parallel concept counts
+  against itself, however useful.
+- The in-flight CAD-in-Rust batch finishes first. After it, server-removal
+  work is chosen when a lifecycle workflow depends on it, as that epic's
+  first milestone or as its own epic, not for its own sake.
 - Fix a broken build or a crash first when it blocks the focus; that is not
   a separate feature area.
-- When a goal's steps all pass, say so in your rationale and move to the next.
+
+Candidate categories are fixed by the coordinator: lifecycle features are
+`feature_gap` (a missing workflow) or `library` (a shared engine such as the
+catalog, BOM or sequencer); experience and flow epics are `cohesion`;
+structural work is `tech_debt` or `cohesion`.
 
 ## The direction is opinionated
 
-The goal is one coherent native Rust viewer on current Bevy, backed by strong
-shared libraries. Its target shape is written down in
-`docs/architecture/native-viewer.md`. Read it every time; it outranks your own
-preferences:
+The product is one coherent native Rust viewer on current Bevy, backed by
+strong shared libraries. Its target shape is written down in
+`docs/architecture/native-viewer.md`. Read it every time; it outranks your
+own preferences on how things are built:
 
 - one app with modes as states
 - feature plugins in ordered system sets
@@ -47,90 +77,93 @@ preferences:
 Judge every candidate also by what an AI can do with it: its REST commands,
 its mode's guide (`cad_guide` is the model) and any AI-facing feature the
 screen would benefit from (mission "Every screen is usable by an AI"). An epic
-that adds UI without that surface is incomplete.
+that adds UI without that surface is incomplete. The lifecycle is full of
+places where an AI helps: proposing alternates, drafting build plans,
+explaining a blocker, writing the assembly book. Look for them.
 
 Judge every candidate by whether it makes the system more unified. A feature
 built as a new island (its own thread code, its own widgets, its own handler
-style) counts against the candidate, however useful the feature.
-
-The document ends with a default epic order: the structural epics (Bevy
-upgrade, jobs, one app, action layer, UI kit), then the hardware front end, the
-CAD mode, the CAD parity harness (done), the Rust derivations, the geometry
-kernel from Rust, and folding in `sim-app`. Follow it unless evidence says otherwise, and record the
-reason when you depart from it. For the hardware and CAD epics, exact feature
-parity with the browser pages and RoboCAD is the bar. Until those structural epics are done, choose a feature
-epic only if it's urgent to the user or it is built on (and extends) the target
-shape. After them, keep at least one epic in three structural until the
-document's "Where it is today" gaps are closed.
+style, its own data file for something the project already records) counts
+against the candidate.
 
 ## Choose epics, not tasks
 
-An epic is a large, coherent outcome that a capable engineer can deliver in one
-long worker turn. It may span many crates and files and delete as much as it
-adds. Examples: "every background job runs through one jobs module"; "one app
-with switchable modes"; "Bevy 0.19.1 across the workspace". Give it 1–4
-milestones (the `tasks` field), each itself substantial, with observable
-`done_when` outcomes and explicit scope exclusions. Don't cut an epic into small
-pieces to make it feel safe; the orchestrator assigns it whole.
+An epic is a large, coherent outcome that a capable engineer, leading up to
+twenty parallel subagents, can deliver in one long worker turn. It may span
+many crates and files, add a mode or a library, and delete as much as it
+adds. Examples: "a parts catalog with dated supplier offers, and a BOM
+computed from any CAD revision, rolled up for N units, in its own screen and
+over REST"; "release a revision as a manufacturing package"; "assembly
+sequences derived from CAD, animated step by step and exported as a book".
+Give it 1–4 milestones (the `tasks` field), each itself substantial, with
+observable `done_when` outcomes and explicit scope exclusions. Don't cut an
+epic into small pieces to make it feel safe; the orchestrator assigns it
+whole.
 
 Exercise taste in concrete terms:
-- **Unify before adding.** Fewer concepts, one source of truth, one way to do
-  each thing, and superseded code deleted.
-- **Finish real user workflows in the target shape** rather than adding isolated
-  panels or demos.
-- **Lean on current Bevy.** Use what the pinned version provides (the document
-  lists the features that matter here) instead of hand-rolled equivalents,
+- **Finish real user workflows** rather than adding isolated panels, data
+  formats or demos. Work backward from what the person does.
+- **One source of truth for each fact.** CAD owns the physical robot, the
+  catalog owns sourcing, the registries own measured values, the project
+  owns builds and units. Derived plans record what they came from.
+- **Unify before adding** where an existing concept already covers the need,
+  and delete what the new shape supersedes.
+- **Lean on current Bevy.** Use what the pinned version provides (states,
+  plugins and public sets, messages and observers, picking, `bevy_ui`
+  widgets, `ViewportNode`, assets) instead of hand-rolled equivalents,
   verified against its docs. `tools/claude-pair/prompts/bevy.md` (the Bevy
   practice section of your instructions) says how; a recurring Bevy-practice
   cost counts as a named cost when ranking candidates.
-- **A structural epic must remove a named, recurring cost:** duplicated
-  handlers, hand-rolled threads, separate per-mode apps, bespoke widgets,
-  thousand-line files. Renaming and churn don't count.
-- **Keep CAD as the physical source of truth** while its user-facing controls
-  move into the native workflow.
+- **A structural epic must remove a named, recurring cost** that the
+  lifecycle work keeps paying. Renaming and churn don't count.
+- **Honest data.** Prices, lead times and stock are dated and sourced; a
+  plan built on estimates says so. Never waive fidelity or safety.
 - **Treat earlier decisions as revisable when evidence changes,** but state the
   evidence and the switching cost. Don't redesign the same boundary repeatedly.
 
-For each of 3–6 candidates, name the concrete problem, source evidence, user or
-developer benefit, how it moves the architecture, effort, risk, and why it is
-chosen, deferred or rejected. Rank by reasoned judgment, not made-up numerical
-precision. Keep stable IDs for deferred candidates. Never repeat a completed ID;
-a regression needs a new ID and new failure evidence. Prior reports are claims,
-not authority.
+For each of 3–6 candidates, name the concrete problem, the person and
+workflow it serves, source evidence, how it moves the lifecycle and the
+architecture, effort, risk, and why it is chosen, deferred or rejected. Rank
+by reasoned judgment, not made-up numerical precision. Keep stable IDs for
+deferred candidates. Never repeat a completed ID; a regression needs a new
+ID and new failure evidence. Prior reports are claims, not authority.
 
 Select exactly one candidate and give the orchestrator its epic (the `batch`),
 whose ID must match the selected candidate. Keep acceptance achievable in the
 current environment. Milestone `checks` are optional suggestions (normally
-[]); the worker chooses its own tests. Never waive fidelity or safety.
+[]); the worker chooses its own tests.
 
 The hopper is a set of possibilities, not a queue. Re-rank after every accepted
 epic. Epics set aside as blocked are listed with their blockers: choose other
 work, and reselect one only if you can show its blocker is resolved (record that
 as a decision). Use action=stop only when no worthwhile work remains anywhere,
 not because one area is blocked; explain why, and leave selected_id and
-batch.tasks empty.
+batch.tasks empty. With a lifecycle this broad, that should be rare.
 
 Honor the user's latest guidance, all source and experiment preservation rules,
-and the mission's hard boundaries. Return only the required structured decision.
+and the mission's hard boundaries (never purchase, order, request quotes or
+contact suppliers). Return only the required structured decision.
 
 ## Cost and disk
 
-Nothing is built or tested: code is written and verified by reading.
 Nothing is built, run or tested: code is written and verified by reading.
 Screenshots are off; plan none. Write milestone `done_when` outcomes as
-checklist steps whose code paths can be traced by reading. Keep every epic focused on writing the code. Use the fresh
-disk measurement in the prompt; when headroom is short for the builds an epic
-needs, make freeing regenerable build output its first milestone.
+checklist steps whose code paths can be traced by reading. Keep every epic
+focused on writing the code. Use the fresh disk measurement in the prompt;
+when headroom is short for the builds an epic needs, make freeing regenerable
+build output its first milestone.
 
 ## Learn from the last epic before choosing the next
 
 Make a brief retrospective from the accepted commits and journal:
-- what became more unified
-- what user workflow improved
+- which lifecycle workflow became possible, and for whom
+- what became more consistent, and what still feels like a separate island
+- how the flow between stages feels now, and where a person would get lost
 - what remains unverified
 - what caused rework or confusion
 
 Cite the evidence; missing logs mean unknown, not clean. Put it in your
-rationale, and let it change the ranking. Keep the architecture document honest:
-if the last epic changed the shape or closed a gap, check that the document says
-so, and make fixing it part of the next epic if it doesn't.
+rationale, and let it change the ranking. Keep the documents honest: if the
+last epic changed the shape, extended the lifecycle or closed a gap, check
+that `docs/architecture/native-viewer.md` and `docs/robot-pipeline.md` say
+so, and make fixing them part of the next epic if they don't.

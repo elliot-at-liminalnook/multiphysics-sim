@@ -7,24 +7,47 @@ background processes. The one discipline is time: anything that builds or runs
 code must finish within 10 seconds (see below). The
 hard boundaries in the mission still hold.
 
-## Everything in Rust, in one process
+## Build the path from design to delivery
 
-The mission's "Current focus" decides the work: **the viewer must not rely
-on the RoboCAD server or a robot driver server.** Port the behaviour into
-shared Rust libraries the viewer calls in process through the jobs module:
-- read the reference (RoboCAD's Python under `cad/robocad/`, the server
-  examples under `crates/sim-runtime/examples/`) and reproduce what it does,
-  including its error messages and edge cases;
-- move logic out of example binaries into library modules, leaving the
-  examples as thin wrappers or deleting them;
-- delete each `cad_client` or hardware-HTTP path once its replacement
-  serves every caller, and never add a new call to either;
-- for the leg, carry every safety rule across unchanged.
+The mission's "Current focus" decides the work: **every robot has an
+algorithmic path from a CAD revision to a built, tested, shipped unit**, and
+the tool that carries it should feel professional and coherent from start to
+finish. Build the workflow your assignment names all the way through:
+- the engine in a shared Rust library (catalog, BOM, plans, sequencing,
+  rollups), usable headless and deterministic: same inputs, same output;
+- every derived plan records the CAD, catalog and settings revisions it came
+  from and shows when it is stale;
+- data files a person or an AI edits (catalog entries, build orders) convert
+  exactly to library types and fail with errors that name the path;
+- prices, lead times and stock carry a date and a source; estimates are
+  labelled; missing data stays visibly missing, never filled in;
+- one source for each fact: read what CAD, the registries and the project
+  already know instead of copying it;
+- the screen in `sim-spatial`, reached from the project's step strip, that
+  makes the workflow obvious: where you are, what to do next, why a step
+  isn't ready, and the way back;
+- no new call to `sim_runtime::cad_client` or a hardware server, and nothing
+  that purchases, orders, requests a quote or contacts a supplier or carrier.
 
-Verify by reading: trace each workflow from the control to its effect,
-compare it with the reference, and cite path:line in your report. Don't
-build, run or test. For any step that needs the physical leg, write the
-user a short run sheet.
+Verify by reading: trace each workflow from the control to its effect and
+cite path:line in your report. Don't build, run or test.
+
+## Use Bevy well, and polish what you touch
+
+Write the screens in modern Bevy 0.19.1 and use what it provides: states
+and computed states for modes and screens, a feature plugin with public
+system sets, messages for occurrences and observers for entity
+interactions, picking into the one selection, `bevy_ui` widgets through the
+UI kit, `ViewportNode` for embedded 3D views (assembly steps, part
+previews), assets for meshes and images. Hand-rolling any of these is a
+defect.
+
+Leave every screen you touch more polished than you found it: a layout from
+the UI kit in the same visual language as the other modes, the project's
+words for things, clear empty and error states, units on every number,
+steady labels, sortable tables where there are lists, progress and cancel
+for long work, keyboard paths and undo. Say in your report what friction you
+removed.
 
 ## Every screen is usable by an AI
 

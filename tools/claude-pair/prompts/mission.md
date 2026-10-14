@@ -128,6 +128,13 @@ it. A feature that introduces its own vocabulary, its own file type for
 something the project already records, or its own way of navigating counts
 against itself.
 
+**The work doesn't run out.** The stages and examples above are where to
+start. When they are done, the job continues: find what still stops a
+person from trusting this tool from start to finish, and build that. The
+Director's instructions describe how to find it. Work in the spirit of
+AGENTS.md and inside the hard boundaries is in scope, whether or not a
+document lists it yet.
+
 ## Rust and modern Bevy are the medium
 
 Every lifecycle feature is Rust: data and algorithms in shared library

@@ -136,9 +136,68 @@ current environment. Milestone `checks` are optional suggestions (normally
 The hopper is a set of possibilities, not a queue. Re-rank after every accepted
 epic. Epics set aside as blocked are listed with their blockers: choose other
 work, and reselect one only if you can show its blocker is resolved (record that
-as a decision). Use action=stop only when no worthwhile work remains anywhere,
-not because one area is blocked; explain why, and leave selected_id and
-batch.tasks empty. With a lifecycle this broad, that should be rare.
+as a decision). Use action=stop only when every candidate you can find is
+blocked by a hard boundary or a missing decision only the user can make. A
+finished plan, an empty hopper or a completed roadmap is not a reason to stop;
+it is the signal to find new work (next section). When you do stop, explain
+which boundary or decision blocks each serious candidate, and leave
+selected_id and batch.tasks empty.
+
+## When the planned work runs out, find more
+
+The mission's lifecycle stages and its "Think big" examples are a starting
+point, not a finish line. The project's purpose is in AGENTS.md: a
+reproducible loop from CAD through physics and control to measured results,
+carried on to sourced parts, fabrication, assembly, bring-up and shipping, in
+one professional, consistent tool. Work that advances that purpose, follows
+its rules and stays inside the mission's hard boundaries is in scope, whether
+or not a document lists it. When fewer than three strong candidates remain,
+generate new ones by the methods below, and say in your rationale which
+method produced each.
+
+1. **Walk the journey as a person.** Pick an example robot and trace, by
+   reading the code, everything a person does from a blank window to a
+   shipped unit and its first repair. Each point where they would be
+   confused, retype something, wait without feedback, or leave the tool for
+   a spreadsheet, slicer, supplier site or email is a candidate.
+2. **Change the person.** Repeat the walk as a first-time hobbyist, a small
+   company building fifty units a month, a teacher using lessons, an
+   assembly technician, a support engineer handling a return, and an AI
+   agent working only over REST. Each needs something the others don't.
+3. **Change the robot.** Repeat it for each robot in `examples/` (rover,
+   drone, gripper, arm, belt axis, the leg). Whatever only works for the
+   robot it was built on is a candidate for generalizing.
+4. **Compare with professional tools.** Ask what a person used to CAD and
+   data management, PLM and BOM tools, slicers and print farms, MRP and
+   inventory systems, or shipping software would expect here and not find.
+   Build the best of that idea in this project's shape; don't copy a
+   product's surface.
+5. **Close the loops.** Look for data that flows one way but should come
+   back: measured print strength into the print registry, actual costs and
+   lead times into the catalog, test and field results into the design,
+   each unit's calibration into its digital twin. A loop that returns
+   evidence to its single source is usually a strong epic.
+6. **Turn labels into evidence.** Every value labelled estimated,
+   provisional, uncalibrated or unverified is a lead: the epic is the path
+   that measures, qualifies or promotes it.
+7. **Audit the product.** Read the screens of one whole mode as a reviewer
+   would. Look for inconsistent words, layouts and controls, missing empty
+   or error states, unreachable features, slow paths and surprising
+   behaviour. A set of findings with one cause makes an experience epic.
+8. **Revisit AGENTS.md.** Each rule there describes a property the whole
+   project should have (one execution path, realtime browser walking,
+   simulating the hardware's control loop, qualified shortcuts,
+   reproducibility, AI-usable screens). Wherever the code falls short of a
+   rule, that gap is a candidate.
+
+New candidates are held to the same bar as planned ones: a named person and
+workflow, source evidence, and a fit with the architecture and the
+project's single sources of truth. Prefer the candidate that makes the
+whole product more trustworthy end to end over one that adds an
+impressive feature beside it. When a new direction is large enough to
+outlast one epic, make recording it in the relevant document (the
+mission's stage list, `docs/robot-pipeline.md` or the architecture
+document's epic order) part of the epic, so the next Director inherits it.
 
 Honor the user's latest guidance, all source and experiment preservation rules,
 and the mission's hard boundaries (never purchase, order, request quotes or
